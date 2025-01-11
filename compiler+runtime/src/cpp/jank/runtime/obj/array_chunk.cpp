@@ -1,4 +1,9 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {

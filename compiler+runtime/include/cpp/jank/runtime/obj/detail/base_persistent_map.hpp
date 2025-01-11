@@ -1,8 +1,15 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
+
 namespace jank::runtime
 {
   native_bool is_map(object_ptr o);
+  native_bool equal(object_ptr l, object_ptr r);
+  void to_string(object_ptr o, fmt::memory_buffer &buff);
+  void to_code_string(object_ptr o, fmt::memory_buffer &buff);
 
   namespace behavior::detail
   {
@@ -22,26 +29,39 @@ namespace jank::runtime::obj::detail
     using sequence_type = static_object<ST>;
 
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_map_like{ true };
 
     base_persistent_map() = default;
-
-    base_persistent_map(native_box<obj::persistent_array_map> const meta)
-      : meta{ meta }
-    {
-    }
 
     /* behavior::object_like */
     native_bool equal(object const &o) const
     {
-      object_ptr p{ const_cast<object *>(&o) };
-
-      if(!is_map(p))
+      if(&o == &base)
       {
-        return false;
+        return true;
       }
 
-      /* TODO: Is this enough? Value comparison may be needed. */
-      return to_hash() == hash::visit(p);
+      return visit_map_like(
+        [&](auto const typed_o) -> native_bool {
+          if(typed_o->count() != count())
+          {
+            return false;
+          }
+
+          for(auto const &entry : static_cast<parent_type const *>(this)->data)
+          {
+            auto const found(typed_o->contains(entry.first));
+
+            if(!found || !runtime::equal(entry.second, typed_o->get(entry.first)))
+            {
+              return false;
+            }
+          }
+
+          return true;
+        },
+        []() { return false; },
+        &o);
     }
 
     static void to_string_impl(typename V::const_iterator const &begin,

@@ -3,8 +3,15 @@
 #include <bit>
 #include <fmt/format.h>
 
+#include <jank/type.hpp>
+
 namespace jank
 {
+  namespace hash
+  {
+    uint32_t integer(native_hash const input);
+  }
+
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
@@ -421,6 +428,7 @@ namespace jank
       {
         return false;
       }
+      /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
       return traits_type::compare(data(), s.data(), s_sz) == 0;
     }
 
@@ -452,6 +460,7 @@ namespace jank
       {
         return false;
       }
+      /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
       return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
     }
 
@@ -633,7 +642,6 @@ namespace jank
     [[gnu::const]]
     constexpr native_bool is_blank() const noexcept
     {
-      native_bool ret{ true };
       for(auto const c : *this)
       {
         if(!std::isspace(c))
@@ -641,7 +649,7 @@ namespace jank
           return false;
         }
       }
-      return ret;
+      return true;
     }
 
     /*** Hashing. ***/
@@ -762,6 +770,7 @@ namespace jank
         constexpr uint8_t word_width{ sizeof(size_type) };
         /* NOTE: We're writing in reverse order here, but it uses one less instruction and
          * is marginally faster than duplicating the code each each case to write in order. */
+        /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
         switch((byte_size + word_width - 1) / word_width)
         {
           case 3:

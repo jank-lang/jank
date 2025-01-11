@@ -1,12 +1,14 @@
 #pragma once
 
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 
 namespace jank::runtime
 {
   object_ptr add(object_ptr l, object_ptr r);
   object_ptr add(obj::integer_ptr l, object_ptr r);
   object_ptr add(object_ptr l, obj::integer_ptr r);
+  object_ptr add(object_ptr l, obj::ratio_ptr r);
   native_integer add(obj::integer_ptr l, obj::integer_ptr r);
   native_real add(obj::real_ptr l, obj::real_ptr r);
   native_real add(obj::real_ptr l, object_ptr r);
@@ -24,6 +26,10 @@ namespace jank::runtime
   object_ptr add(object_ptr l, native_integer r);
   object_ptr add(native_integer l, object_ptr r);
   native_integer add(native_integer l, native_integer r);
+
+  obj::ratio_ptr add(obj::ratio_ptr l, obj::ratio_ptr r);
+  object_ptr add(obj::ratio_ptr l, obj::integer_ptr r);
+  obj::ratio_ptr add(obj::integer_ptr l, obj::ratio_ptr r);
 
   object_ptr sub(object_ptr l, object_ptr r);
   object_ptr sub(obj::integer_ptr l, object_ptr r);
@@ -178,6 +184,8 @@ namespace jank::runtime
   native_integer abs(native_integer l);
   native_real abs(native_real l);
 
+  native_real tan(object_ptr l);
+
   native_real sqrt(object_ptr l);
   native_real sqrt(obj::integer_ptr l);
   native_real sqrt(obj::real_ptr l);
@@ -241,4 +249,7 @@ namespace jank::runtime
   native_real to_real(object_ptr o);
 
   native_bool is_number(object_ptr o);
+  native_bool is_integer(object_ptr o);
+  native_bool is_real(object_ptr o);
+  native_bool is_boolean(object_ptr o);
 }

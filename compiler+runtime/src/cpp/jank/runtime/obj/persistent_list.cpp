@@ -1,14 +1,18 @@
 #include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
 
 namespace jank::runtime
 {
-  obj::persistent_list::static_object(runtime::detail::native_persistent_list &&d)
-    : data{ std::move(d) }
+  obj::persistent_list::static_object(runtime::detail::native_persistent_list const &d)
+    : data{ d }
   {
   }
 
-  obj::persistent_list::static_object(runtime::detail::native_persistent_list const &d)
+  obj::persistent_list::static_object(object_ptr const meta,
+                                      runtime::detail::native_persistent_list const &d)
     : data{ d }
+    , meta{ meta }
   {
   }
 

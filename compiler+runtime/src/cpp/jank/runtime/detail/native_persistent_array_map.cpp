@@ -1,12 +1,13 @@
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/core.hpp>
 
 namespace jank::runtime::detail
 {
   /* TODO: Int sequence to clean this up? */
-  object_ptr *make_next_array(object_ptr const * const prev,
-                              size_t const length,
-                              object_ptr const key,
-                              object_ptr const value)
+  static object_ptr *make_next_array(object_ptr const * const prev,
+                                     size_t const length,
+                                     object_ptr const key,
+                                     object_ptr const value)
   {
     switch(length)
     {
@@ -216,6 +217,12 @@ namespace jank::runtime::detail
     return hash = hash::unordered(begin(), end());
   }
 
+  native_persistent_array_map::iterator::iterator(object_ptr const * const data, size_t const index)
+    : data{ data }
+    , index{ index }
+  {
+  }
+
   native_persistent_array_map::iterator::value_type
   native_persistent_array_map::iterator::operator*() const
   {
@@ -251,19 +258,9 @@ namespace jank::runtime::detail
     return *this;
   }
 
-  native_persistent_array_map::iterator native_persistent_array_map::begin()
-  {
-    return iterator{ data, 0 };
-  }
-
   native_persistent_array_map::const_iterator native_persistent_array_map::begin() const
   {
     return const_iterator{ data, 0 };
-  }
-
-  native_persistent_array_map::iterator native_persistent_array_map::end()
-  {
-    return iterator{ data, length };
   }
 
   native_persistent_array_map::const_iterator native_persistent_array_map::end() const

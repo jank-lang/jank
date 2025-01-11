@@ -1,12 +1,17 @@
-#include <libzippp.h>
-
 #include <regex>
+#include <iostream>
+
+#include <libzippp.h>
 
 #include <boost/filesystem.hpp>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/runtime/module/loader.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime::module
 {
@@ -37,24 +42,14 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_persistent_string module_to_native_ns_old(native_transient_string module)
+  native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
-    static std::regex const dash{ "-" };
     static std::regex const dot{ "\\." };
-    static std::regex const last_module{ "\\$[a-zA-Z_0-9]+$" };
-    static std::regex const dollar{ "\\$" };
 
-    fmt::println("// BINGBONG module in: {}", module);
+    std::string ret{ runtime::munge(module) };
+    ret = std::regex_replace(ret, dot, "_");
 
-    std::string ret{ module };
-    ret = std::regex_replace(ret, dash, "_");
-    ret = std::regex_replace(ret, dot, "::");
-    ret = std::regex_replace(ret, last_module, "");
-    ret = std::regex_replace(ret, dollar, "::");
-
-    fmt::println("// BINGBONG module out: {}", ret);
-
-    return ret;
+    return fmt::format("jank_load_{}", ret);
   }
 
   /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
@@ -128,8 +123,9 @@ namespace jank::runtime::module
     return module.find('$') != module.rfind('$');
   }
 
+  /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
-  void visit_jar_entry(file_entry const &entry, F const &fn)
+  static void visit_jar_entry(file_entry const &entry, F const &fn)
   {
     auto const &path(entry.archive_path.unwrap());
     libzippp::ZipArchive zf{ std::string{ path } };
@@ -143,11 +139,11 @@ namespace jank::runtime::module
     fn(zip_entry.readAsText());
   }
 
-  void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                      boost::filesystem::path const &resource_path,
-                      file_entry const &entry)
+  static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                             boost::filesystem::path const &resource_path,
+                             file_entry const &entry)
   {
-    boost::filesystem::path p{ native_transient_string{ entry.path } };
+    boost::filesystem::path const p{ native_transient_string{ entry.path } };
     /* We need the file path relative to the class path, since the class
      * path portion is not included in part of the module name. For example,
      * the file may live in `src/jank/clojure/core.jank` but the module
@@ -189,15 +185,15 @@ namespace jank::runtime::module
         res.first->second.cpp = entry;
       }
     }
-    else if(ext == ".pcm")
+    else if(ext == ".o")
     {
       registered = true;
       loader::entry e;
-      e.pcm = entry;
+      e.o = entry;
       auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
-        res.first->second.pcm = entry;
+        res.first->second.o = entry;
       }
     }
 
@@ -211,8 +207,9 @@ namespace jank::runtime::module
     }
   }
 
-  void register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                          boost::filesystem::path const &path)
+  static void
+  register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                     boost::filesystem::path const &path)
   {
     for(auto const &f : boost::filesystem::recursive_directory_iterator{ path })
     {
@@ -223,8 +220,8 @@ namespace jank::runtime::module
     }
   }
 
-  void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                    native_persistent_string_view const &path)
+  static void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                           native_persistent_string_view const &path)
   {
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
@@ -245,8 +242,8 @@ namespace jank::runtime::module
     }
   }
 
-  void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                     native_persistent_string_view const &path)
+  static void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                            native_persistent_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the classpath, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
@@ -255,7 +252,7 @@ namespace jank::runtime::module
       return;
     }
 
-    boost::filesystem::path p{ boost::filesystem::canonical(path).lexically_normal() };
+    boost::filesystem::path const p{ boost::filesystem::canonical(path).lexically_normal() };
     if(boost::filesystem::is_directory(p))
     {
       register_directory(entries, p);
@@ -330,40 +327,13 @@ namespace jank::runtime::module
   result<void, native_persistent_string>
   loader::load_ns(native_persistent_string_view const &module)
   {
-    profile::timer timer{ "load_ns" };
+    profile::timer const timer{ "load_ns" };
 
     //fmt::println("loading ns {}", module);
-
-    native_bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
-    native_bool const needs_init{ !compiling && entries.contains(fmt::format("{}--init", module)) };
-    if(needs_init)
+    auto res(load(module));
+    if(res.is_err())
     {
-      profile::timer timer{ "load_ns __init" };
-      //fmt::println("loading ns __init {}", module);
-      auto ret(load(fmt::format("{}--init", module)));
-      if(ret.is_err())
-      {
-        return ret;
-      }
-      //fmt::println("evaling ns __init {}", module);
-      rt_ctx.jit_prc.eval_string(
-        fmt::format("{}::__ns__init::__init();", runtime::module::module_to_native_ns(module)));
-    }
-
-    {
-      profile::timer timer{ "load_ns compilation" };
-      auto res(load(module));
-      if(res.is_err())
-      {
-        return res;
-      }
-    }
-
-    if(needs_init)
-    {
-      profile::timer timer{ "load_ns effects" };
-      rt_ctx.jit_prc.eval_string(
-        fmt::format("{}::__ns{{ }}.call();", runtime::module::module_to_native_ns(module)));
+      return res;
     }
 
     return ok();
@@ -399,9 +369,9 @@ namespace jank::runtime::module
     }
     else
     {
-      if(entry->second.pcm.is_some())
+      if(entry->second.o.is_some())
       {
-        res = load_pcm(entry->second.pcm.unwrap());
+        res = load_o(module, entry->second.o.unwrap());
       }
       else if(entry->second.cpp.is_some())
       {
@@ -427,9 +397,24 @@ namespace jank::runtime::module
     return ok();
   }
 
-  result<void, native_persistent_string> loader::load_pcm(file_entry const &) const
+  result<void, native_persistent_string>
+  loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
-    return err("Not yet implemented: PCM loading");
+    profile::timer const timer{ fmt::format("load object {}", module) };
+    if(entry.archive_path.is_some())
+    {
+      /* TODO: Load object code from string. */
+      //visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_object(module, str); });
+    }
+    else
+    {
+      rt_ctx.jit_prc.load_object(entry.path);
+    }
+
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    load();
+
+    return ok();
   }
 
   result<void, native_persistent_string> loader::load_cpp(file_entry const &entry) const
@@ -485,8 +470,8 @@ namespace jank::runtime::module
                                     jank::detail::to_runtime_data(e.second.cljc),
                                     make_box("cpp"),
                                     jank::detail::to_runtime_data(e.second.cpp),
-                                    make_box("pcm"),
-                                    jank::detail::to_runtime_data(e.second.pcm)));
+                                    make_box("o"),
+                                    jank::detail::to_runtime_data(e.second.o)));
     }
 
     return runtime::obj::persistent_array_map::create_unique(make_box("__type"),

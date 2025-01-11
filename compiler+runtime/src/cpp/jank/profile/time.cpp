@@ -2,7 +2,7 @@
 
 namespace jank::profile
 {
-  constexpr native_persistent_string_view tag{ "jank::profile" };
+  static constexpr native_persistent_string_view tag{ "jank::profile" };
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static native_bool enabled{};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -29,6 +29,11 @@ namespace jank::profile
                      opts.profiler_file);
       }
     }
+  }
+
+  native_bool is_enabled()
+  {
+    return enabled;
   }
 
   void enter(native_persistent_string_view const &region)

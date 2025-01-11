@@ -1,3 +1,5 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/volatile.hpp>
 
 namespace jank::runtime

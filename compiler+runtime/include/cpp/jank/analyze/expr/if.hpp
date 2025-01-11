@@ -17,6 +17,19 @@ namespace jank::analyze::expr
     native_box<E> then{};
     option<native_box<E>> else_;
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+      if(then)
+      {
+        then->propagate_position(pos);
+      }
+      if(else_.is_some())
+      {
+        else_.unwrap()->propagate_position(pos);
+      }
+    }
+
     object_ptr to_runtime_data() const
     {
       return merge(

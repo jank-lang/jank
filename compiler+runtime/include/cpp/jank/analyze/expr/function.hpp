@@ -6,6 +6,11 @@
 #include <jank/analyze/expression_base.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
+namespace jank::analyze
+{
+  struct expression;
+}
+
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
@@ -14,6 +19,9 @@ namespace jank::analyze::expr
   {
     static constexpr native_bool pointer_free{ true };
 
+    native_box<expression> fn{};
+    native_persistent_string name;
+    native_persistent_string unique_name;
     size_t param_count{};
     native_bool is_variadic{};
     native_bool is_tail_recursive{};
@@ -21,6 +29,9 @@ namespace jank::analyze::expr
   };
 
   using function_context_ptr = native_box<function_context>;
+
+  template <typename E>
+  struct function;
 
   template <typename E>
   struct function_arity
@@ -33,7 +44,7 @@ namespace jank::analyze::expr
     object_ptr to_runtime_data() const
     {
       object_ptr param_maps(make_box<obj::persistent_vector>());
-      for(auto const &e : params)
+      for(auto const e : params)
       {
         param_maps = conj(param_maps, e);
       }
@@ -69,6 +80,28 @@ namespace jank::analyze::expr
     native_persistent_string unique_name;
     native_vector<function_arity<E>> arities;
     obj::persistent_hash_map_ptr meta{};
+
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
+    /* Aggregates all `frame->captures` from each arity so that we can know the overall
+     * captures for all arities of this fn. This is necessary for codegen to IR, since we
+     * generate a context struct which is shared across all arities, even if one arity
+     * doesn't use any captures. */
+    native_unordered_map<obj::symbol_ptr, analyze::local_binding const *> captures() const
+    {
+      native_unordered_map<obj::symbol_ptr, analyze::local_binding const *> ret;
+      for(auto const &arity : arities)
+      {
+        for(auto const &capture : arity.frame->captures)
+        {
+          ret.emplace(capture.first, &capture.second);
+        }
+      }
+      return ret;
+    }
 
     object_ptr to_runtime_data() const
     {

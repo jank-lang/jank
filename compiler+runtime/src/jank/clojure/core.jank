@@ -9,12 +9,13 @@
   (fn* unquote-splicing [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
-(def type
-  (fn* type [o]
-    (native/raw "__value = make_box(magic_enum::enum_name(~{ o }->type));")))
+(def type clojure.core-native/type)
 
 ; Exceptions
 (def ex-info
+  "Create an instance of ExceptionInfo, a RuntimeException subclass
+   that carries a map of additional data."
+  ; TODO: Arity 3
   (fn* ex-info [msg map]
     {:error msg
      :data map}))
@@ -22,159 +23,168 @@
 ; Relations.
 ;; Miscellaneous.
 (def nil?
-  (fn* nil? [o]
-    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ true } : ~{ false }")))
+  "Returns true if x is nil, false otherwise."
+  clojure.core-native/nil?)
 
-(def
-  ^{:doc "Tests if 2 arguments are the same object"}
-  identical?
-  (fn* identical? [l r]
-    (native/raw "__value = (~{ l } == ~{ r }) ? ~{ true } : ~{ false }")))
+(def identical?
+  "Tests if 2 arguments are the same object, meaning the same pointer address."
+  clojure.core-native/identical?)
+
+(def =
+  "Equality. Returns true if x equals y, false if not. It also works
+   for nil and compares numbers and collections in a type-independent
+   manner. Clojure's immutable data structures define equals() (and
+   thus =) as a value, not an identity, comparison."
+  clojure.core-native/=)
+
+(def ==
+  "Returns non-nil if nums all have the equivalent
+   value (type-independent), otherwise false"
+  clojure.core-native/==)
 
 ;; Collections.
 (def empty?
-  (fn* empty? [o]
-    (native/raw "__value = make_box(is_empty(~{ o }));")))
-
+  "Returns true if coll has no items - same as (not (seq coll))."
+  clojure.core-native/empty?)
 (def empty
-  (fn* empty [o]
-    (native/raw "__value = runtime::empty(~{ o });")))
-
+  "Returns an empty collection of the same category as coll, or nil"
+  clojure.core-native/empty)
 (def count
-  (fn* count [o]
-    (if (nil? o)
-      0
-      (native/raw "__value = make_box(sequence_length(~{ o }));"))))
+  "Returns the number of items in the collection. (count nil) returns
+   0.  Also works on strings, arrays, and Java Collections and Maps"
+  clojure.core-native/count)
 
 (def boolean
-  (fn* boolean [o]
-    (native/raw "__value = make_box(truthy(~{ o }));")))
+  "Coerce to boolean"
+  clojure.core-native/boolean)
 (def int
-  (fn* int [o]
-    (native/raw "__value = make_box(to_int(~{ o }));")))
+  "Coerce to int"
+  clojure.core-native/integer)
 (def float
-  (fn* float [o]
-    (native/raw "__value = make_box(to_real(~{ o }));")))
+  "Coerce to float"
+  clojure.core-native/real)
 
 ; Lists.
 (def seq
-  (fn* seq [o]
-    (native/raw "__value = jank::runtime::seq(~{ o });")))
+  "Returns a seq on the collection. If the collection is
+   empty, returns nil.  (seq nil) returns nil. seq also works on
+   Strings, native Java arrays (of reference types) and any objects
+   that implement Iterable. Note that seqs cache values, thus seq
+   should not be used on any Iterable whose iterator repeatedly
+   returns the same mutable object."
+  clojure.core-native/seq)
 (def fresh-seq
-  (fn* fresh-seq [o]
-    (native/raw "__value = jank::runtime::fresh_seq(~{ o });")))
+  clojure.core-native/fresh-seq)
 (def first
-  (fn* first [o]
-    (native/raw "__value = jank::runtime::first(~{ o });")))
+  "Returns the first item in the collection. Calls seq on its
+   argument. If coll is nil, returns nil."
+  clojure.core-native/first)
 (def ffirst
+  "Same as (first (first x))"
   (fn* ffirst [o]
     (first (first o))))
-; Returns a fresh seq.
 (def next
-  (fn* next [o]
-    (native/raw "__value = jank::runtime::next(~{ o });")))
+  "Returns a seq of the items after the first. Calls seq on its
+   argument.  If there are no more items, returns nil."
+  clojure.core-native/next)
 (def next-in-place
-  (fn* next-in-place [o]
-    (native/raw "__value = jank::runtime::next_in_place(~{ o });")))
+  clojure.core-native/next-in-place)
 (def nnext
+  "Same as (next (next x))"
   (fn* nnext [o]
-    (next-in-place (next o))))
+    (next (next o))))
 (def second
-  (fn* second [o]
-    (native/raw "__value = jank::runtime::second(~{ o });")))
+  "Same as (first (next x))"
+  clojure.core-native/second)
 (def rest
-  (fn* rest [o]
-    (native/raw "__value = jank::runtime::rest(~{ o });")))
-
+  "Returns a possibly empty seq of the items after the first. Calls seq on its
+   argument."
+  clojure.core-native/rest)
 (def cons
-  (fn* cons [head tail]
-    (native/raw "__value = runtime::cons(~{ head }, ~{ tail });")))
-
+  "Returns a new seq where x is the first element and seq is
+   the rest."
+  clojure.core-native/cons)
 (def coll?
-  (fn* coll? [o]
-    (native/raw "__value = make_box(is_collection(~{ o }));")))
-
+  "Returns true if x implements IPersistentCollection"
+  clojure.core-native/coll?)
 (def seq?
-  (fn* seq? [o]
-    (native/raw "__value = make_box(is_seq(~{ o }));")))
-
+  "Return true if x implements ISeq"
+  clojure.core-native/seq?)
 (def list?
-  (fn* list? [o]
-    ; TODO: Visit and use a behavior for this check instead. It should apply to conses and others.
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_list);")))
-
+  "Returns true if x implements IPersistentList"
+  clojure.core-native/list?)
 (def list
-  (fn* list [& items]
-    (native/raw "__value = runtime::list(~{ items });")))
+  "Creates a new list containing the items."
+  clojure.core-native/list)
 
 ;; Vectors.
 (def vector?
-  (fn* vector? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_vector);")))
-
+  "Return true if x implements IPersistentVector"
+  clojure.core-native/vector?)
 (def vec
-  (fn* vec [coll]
-    (native/raw "__value = runtime::vec(~{ coll });")))
+  "Creates a new vector containing the contents of coll. Java arrays
+   will be aliased and should not be modified."
+  clojure.core-native/vec)
 
-; Returns a persistent vector of the items in vector from
-; start (inclusive) to end (exclusive).  If end is not supplied,
-; defaults to (count vector). This operation is O(1) and very fast, as
-; the resulting vector shares structure with the original and no
-; trimming is done.
 (def subvec
+  "Returns a persistent vector of the items in vector from
+   start (inclusive) to end (exclusive).  If end is not supplied,
+   defaults to (count vector). This operation is O(1) and very fast, as
+   the resulting vector shares structure with the original and no
+   trimming is done."
   (fn* subvec
     ([v start]
      (subvec v start (count v)))
     ([v start end]
-     (let* [start (int start)
-            end (int end)]
-       (native/raw "__value = runtime::subvec(~{ v }, ~{ start }->data, ~{ end }->data);")))))
+     (clojure.core-native/subvec v start end))))
 
-(def conj)
 (def conj
+  "conj[oin]. Returns a new collection with the xs
+   'added'. (conj nil item) returns (item).
+   (conj coll) returns coll. (conj) returns [].
+   The 'addition' may happen at different 'places' depending
+   on the concrete type."
   (fn* conj
     ([]
      [])
     ([coll]
      coll)
     ([coll x]
-     (native/raw "__value = jank::runtime::conj(~{ coll }, ~{ x });"))
+     (clojure.core-native/conj coll x))
     ([coll x & args]
      (let* [res (conj coll x)]
        (if (empty? args)
          res
          (recur res (first args) (next args)))))))
 
-; Return the last item in coll, in linear time
 (def last
+  "Return the last item in coll, in linear time."
   (fn* last [s]
     (if (next s)
       (recur (next s))
       (first s))))
 
-; Return a seq of all but the last item in coll, in linear time
 (def butlast
+  "Return a seq of all but the last item in coll, in linear time."
   (fn* butlast [s]
     (loop* [ret []
             s s]
-      (if (next s)
-        (recur (conj ret (first s)) (next s))
-        (seq ret)))))
+           (if (next s)
+             (recur (conj ret (first s)) (next s))
+             (seq ret)))))
 
 ;; Maps.
 (def map?
-  (fn* map? [o]
-    (native/raw "__value = make_box
-                 (
-                   ~{ o }->type == object_type::persistent_array_map
-                   || ~{ o }->type == object_type::persistent_hash_map
-                   || ~{ o }->type == object_type::persistent_sorted_map
-                 );")))
-
+  "Return true if x implements IPersistentMap"
+  clojure.core-native/map?)
 (def assoc
+  "assoc[iate]. When applied to a map, returns a new map of the
+   same (hashed/sorted) type, that contains the mapping of key(s) to
+   val(s). When applied to a vector, returns a new vector that
+   contains val at index. Note - index must be <= (count vector)."
   (fn* assoc
     ([map key val]
-     (native/raw "__value = jank::runtime::assoc(~{ map }, ~{ key }, ~{ val });"))
+     (clojure.core-native/assoc map key val))
     ([map key val & kvs]
      (let* [res (assoc map key val)]
        (if kvs
@@ -184,57 +194,90 @@
          res)))))
 
 ;; Strings.
-(def pr-str
-  (fn* pr-str [o]
-    (native/raw "__value = make_box(runtime::to_code_string(~{ o }))")))
-
 (def string?
-  (fn* string? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::persistent_string);")))
-
+  "Return true if x is a String"
+  clojure.core-native/string?)
 (def str
+  "With no args, returns the empty string. With one arg x, returns
+   x.toString().  (str nil) returns the empty string. With more than
+   one arg, returns the concatenation of the str values of the args."
   (fn* str
     ([]
      "")
     ([o]
-     (native/raw "__value = make_box(runtime::to_string(~{ o }));"))
+     (clojure.core-native/to-string o))
     ([o & args]
-     (native/raw "__value = make_box<obj::persistent_string>(runtime::str(~{ o }, ~{ args }));"))))
+     (clojure.core-native/str o args))))
 
 ;; Symbols.
 (def symbol?
-  (fn* symbol? [o]
-    (native/raw "__value = make_box(~{ o }->type == object_type::symbol)")))
+  "Return true if x is a Symbol"
+  clojure.core-native/symbol?)
+(def
+  symbol
+  "Returns a Symbol with the given namespace and name. Arity-1 works
+   on strings, keywords, and vars."
+  (fn* symbol
+    ([o]
+     (clojure.core-native/->unqualified-symbol o))
+    ([ns o]
+     (if (nil? ns)
+       (symbol o)
+       (clojure.core-native/->qualified-symbol ns o)))))
+(def simple-symbol?
+  "Return true if x is a symbol without a namespace"
+  clojure.core-native/simple-symbol?)
+(def qualified-symbol?
+  "Return true if x is a symbol with a namespace"
+  clojure.core-native/qualified-symbol?)
 
 ; Relations.
 ;; Miscellaneous.
 (def true?
-  (fn* true? [o]
-    (native/raw "__value = runtime::equal(~{ o }, ~{ true }) ? ~{ true } : ~{ false }")))
+  "Returns true if x is the value true, false otherwise."
+  clojure.core-native/true?)
 (def false?
-  (fn* false? [o]
-    (native/raw "__value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }")))
+  "Returns true if x is the value false, false otherwise."
+  clojure.core-native/false?)
 (def not
-  (fn* not [o]
-    (native/raw "if(o == obj::nil::nil_const())
-                 { __value = ~{ true }; }
-                 else
-                 { __value = runtime::equal(~{ o }, ~{ false }) ? ~{ true } : ~{ false }; }")))
+  "Returns true if x is logical false, false otherwise."
+  clojure.core-native/not)
 (def some?
-  (fn* some? [o]
-    (native/raw "__value = (o == obj::nil::nil_const()) ? ~{ false } : ~{ true }")))
-
+  "Returns true if x is not nil, false otherwise."
+  clojure.core-native/some?)
 
 ;; Metadata
 (def meta
-  (fn* meta [o]
-    (native/raw "__value = runtime::meta(~{ o });")))
+  "Returns the metadata of obj, returns nil if there is no metadata."
+  clojure.core-native/meta)
 (def with-meta
-  (fn* with-meta [o m]
-    (native/raw "__value = runtime::with_meta(~{ o }, ~{ m });")))
+  "Returns an object of the same type and value as obj, with
+   map m as its metadata."
+  clojure.core-native/with-meta)
 (def reset-meta!
-  (fn* reset-meta! [o m]
-    (native/raw "__value = runtime::reset_meta(~{ o }, ~{ m })")))
+  "Atomically resets the metadata for a namespace/var/ref/agent/atom"
+  clojure.core-native/reset-meta!)
+
+;; Input/output.
+(def print
+  "Prints the object(s) to the output stream that is the current value
+   of *out*.  print and println produce output for human consumption."
+  clojure.core-native/print)
+(def println
+  "Same as print followed by (newline)"
+  clojure.core-native/println)
+(def pr
+  "Prints the object(s) to the output stream that is the current value
+   of *out*.  Prints the object(s), separated by spaces if there is
+   more than one.  By default, pr and prn print in a way that objects
+   can be read by the reader"
+  clojure.core-native/pr)
+(def prn
+  "Same as pr followed by (newline). Observes *flush-on-newline*"
+  clojure.core-native/prn)
+(def pr-str
+  "pr to a string, returning it"
+  clojure.core-native/pr-str)
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -253,7 +296,7 @@
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
                          ;elide implicit macro args
-                         arglist (if (native/raw "__value = make_box(runtime::equal(~{ '&form }, ~{ (first arglist) }));")
+                         arglist (if (= '&form (first arglist))
                                    (subvec arglist 2 (count arglist))
                                    arglist)
                          body (next fdecl)]
@@ -268,21 +311,21 @@
       (if (seq? (first fdecl))
         (loop* [ret []
                 fdecls fdecl]
-          (if fdecls
-            (recur (conj ret (asig (first fdecls))) (next fdecls))
-            (seq ret)))
+               (if fdecls
+                 (recur (conj ret (asig (first fdecls))) (next fdecls))
+                 (seq ret)))
         (list (asig fdecl))))))
 
 ; Macros.
 (def ^{:macro true
        :doc "Same as (def name (fn [params* ] exprs*)) or (def
-            name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
-            to the var metadata. prepost-map defines a map with optional keys
-            :pre and :post that contain collections of pre or post conditions."}
+             name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
+             to the var metadata. prepost-map defines a map with optional keys
+             :pre and :post that contain collections of pre or post conditions."}
   defn
   (fn* defn [&form &env name & fdecl]
     ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
-    (if (native/raw "__value = make_box(~{ name }->type != object_type::symbol);")
+    (if (not (symbol? name))
       (throw "First argument to defn must be a symbol"))
     (let* [m (if (string? (first fdecl))
                {:doc (first fdecl)}
@@ -310,38 +353,39 @@
                     ifn (first inline)
                     iname (second inline)]
                ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-               (if (if (native/raw "__value = make_box(runtime::equal(~{ 'fn }, ~{ ifn }));")
-                     (if (native/raw "__value = make_box(~{ name }->type == object_type::symbol);")
+               (if (if (= 'fn ifn)
+                     (if (symbol? iname)
                        false
                        true))
                  ;; inserts the same fn name to the inline fn if it does not have one
-                 (assoc m :inline (cons ifn (cons (native/raw "auto const n(expect_object<obj::symbol>(~{ name }));
-                                                              __value = make_box<obj::symbol>(n->name + \"__inliner\");")
+                 (assoc m :inline (cons ifn (cons (symbol (str iname "__inliner"))
                                                   (next inline))))
                  m))
            m (conj (if (meta name) (meta name) {}) m)]
       (list 'def (with-meta name m)
             (with-meta (cons `fn (cons name fdecl)) {:rettag (:tag m)})))))
 
-(defn macroexpand-1 [form]
-  (native/raw "__value = __rt_ctx->macroexpand1(~{ form });"))
-(defn macroexpand [form]
-  (native/raw "__value = __rt_ctx->macroexpand(~{ form });"))
+(def macroexpand-1
+  "If form represents a macro form, returns its expansion,
+   else returns form."
+  clojure.core-native/macroexpand-1)
+(def macroexpand
+  "Repeatedly calls macroexpand-1 on form until it no longer
+   represents a macro form, then returns it.  Note neither
+   macroexpand-1 nor macroexpand expand macros in subforms."
+  clojure.core-native/macroexpand)
 
-; Returns a new symbol with a unique name. If a prefix string is
-; supplied, the name is prefix# where # is some unique number. If
-; prefix is not supplied, the prefix is 'G__'.
-(defn gensym
-  ([]
-   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol());"))
-  ([prefix]
-   (native/raw "__value = make_box<obj::symbol>(runtime::context::unique_symbol(runtime::to_string(~{ prefix })));")))
+(def gensym
+  "Returns a new symbol with a unique name. If a prefix string is
+   supplied, the name is prefix# where # is some unique number. If
+   prefix is not supplied, the prefix is 'G__'."
+  clojure.core-native/gensym)
 
 (defn
   ^{:macro true
     :doc "Like defn, but the resulting function name is declared as a
-         macro and will be used as a macro by the compiler when it is
-         called."}
+          macro and will be used as a macro by the compiler when it is
+          called."}
   defmacro
   [&form &env name & args]
   (let [prefix (loop [p (list name) args args]
@@ -389,21 +433,26 @@
   [name & decls]
   (cons `defn (cons (with-meta name (assoc (meta name) :private true)) decls)))
 
-(defmacro when [condition & body]
+(defmacro when
+  "Evaluates test. If logical true, evaluates body in an implicit do."
+  [condition & body]
   (list 'if condition
         (cons 'do body)
         nil))
 
-(defmacro when-not [condition & body]
+(defmacro when-not
+  "Evaluates test. If logical false, evaluates body in an implicit do."
+  [condition & body]
   (list 'if (list 'clojure.core/not condition)
         (cons 'do body)
         nil))
 
-; Takes a set of test/expr pairs. It evaluates each test one at a
-; time. If a test returns logical true, cond evaluates and returns
-; the value of the corresponding expr and doesn't evaluate any of the
-; other tests or exprs. (cond) returns nil.
-(defmacro cond [& clauses]
+(defmacro cond
+  "Takes a set of test/expr pairs. It evaluates each test one at a
+   time. If a test returns logical true, cond evaluates and returns
+   the value of the corresponding expr and doesn't evaluate any of the
+   other tests or exprs. (cond) returns nil."
+  [& clauses]
   (when clauses
     (list 'if (first clauses)
           (if (next clauses)
@@ -412,131 +461,139 @@
               (list 'throw (list 'clojure.core/ex-info "invalid cond" {:err err}))))
           (cons 'clojure.core/cond (next (next clauses))))))
 
-(defmacro let [args & body]
-  (cons 'let* (cons args body)))
-
 ; The full `apply` will be defined below, but it requires more helpers to support
 ; all of its arities.
-(defn- apply* [f args]
-  (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
+(def apply* clojure.core-native/apply*)
 
 (defmacro or
+  "Evaluates exprs one at a time, from left to right. If a form
+   returns a logical true value, or returns that value and doesn't
+   evaluate any of the other expressions, otherwise it returns the
+   value of the last expression. (or) returns nil."
   ([]
    nil)
   ([x]
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
+     (list `let [x-res x]
            (list 'if x-res
                  x-res
-                 (cons 'clojure.core/or more))))))
+                 (cons `or more))))))
 
 (defmacro and
+  "Evaluates exprs one at a time, from left to right. If a form
+   returns logical false (nil or false), and returns that value and
+   doesn't evaluate any of the other expressions, otherwise it returns
+   the value of the last expr. (and) returns true."
   ([]
    true)
   ([x]
    x)
   ([x & more]
    (let [x-res (gensym)]
-     (list 'clojure.core/let [x-res x]
+     (list `let [x-res x]
            (list 'if x-res
-                 (cons 'clojure.core/and more)
+                 (cons `and more)
                  x-res)))))
 
-(defmacro ^{:jank/link-name "assert_"} assert
+(defmacro assert
   "Evaluates expr and throws an exception if it does not evaluate to
-  logical true."
+   logical true."
   ([x]
    (when *assert*
-     (list 'clojure.core/when-not x
-           (list 'throw (list 'clojure.core/ex-info
+     (list `when-not x
+           (list 'throw (list `ex-info
                               "assertion failed"
                               {:assertion (pr-str x)})))))
   ([x message]
    (when *assert*
-     (list 'clojure.core/when-not x
-           (list 'throw (list 'clojure.core/ex-info
+     (list `when-not x
+           (list 'throw (list `ex-info
                               "assertion failed"
                               {:assertion (pr-str x)
                                :message message}))))))
 
-; Ignores body, yields nil
 (defmacro comment
+  "Ignores body, yields nil"
   [& body])
 
 ;; Transients.
+(def transientable?
+  "Returns a whether the collection can be made transient."
+  clojure.core-native/transientable?)
 
-; XXX: Clojure doesn't specify this fn, but I find it useful.
-(defn transientable? [o]
-  (native/raw "__value = make_box(is_transientable(~{ o }));"))
-
-(defn transient
+(def transient
   "Returns a new, transient version of the collection, in constant time."
-  [o]
-  (native/raw "__value = runtime::transient(~{ o });"))
+  clojure.core-native/transient)
 
-(defn persistent!
+(def persistent!
   "Returns a new, persistent version of the transient collection, in
-  constant time. The transient collection cannot be used after this
-  call, any such use will throw an exception."
-  [o]
-  (native/raw "__value = runtime::persistent(~{ o });"))
+   constant time. The transient collection cannot be used after this
+   call, any such use will throw an exception."
+  clojure.core-native/persistent!)
 
 (defn conj!
+  "Adds x to the transient collection, and return coll. The 'addition'
+   may happen at different 'places' depending on the concrete type."
   ([]
    (transient []))
   ([coll]
    coll)
   ([coll x]
-   (native/raw "__value = runtime::conj_in_place(~{ coll }, ~{ x });")))
+   (clojure.core-native/conj-in-place! coll x)))
 
 (defn assoc!
+  "When applied to a transient map, adds mapping of key(s) to
+   val(s). When applied to a transient vector, sets the val at index.
+   Note - index must be <= (count vector). Returns coll."
   ([coll k v]
-   (native/raw "__value = runtime::assoc_in_place(~{ coll }, ~{ k }, ~{ v });"))
+   (clojure.core-native/assoc-in-place! coll k v))
   ([coll k v & kvs]
-    (let [ret (assoc! coll k v)]
-      (if kvs
-        (recur ret (first kvs) (second kvs) (nnext kvs))
-        ret))))
+   (let [ret (assoc! coll k v)]
+     (if kvs
+       (recur ret (first kvs) (second kvs) (nnext kvs))
+       ret))))
 
 (defn dissoc!
+  "Returns a transient map that doesn't contain a mapping for key(s)."
   ([coll k]
-   (native/raw "__value = runtime::dissoc_in_place(~{ coll }, ~{ k });"))
+   (clojure.core-native/dissoc-in-place! coll k))
   ([coll k & ks]
-    (let [ret (dissoc! coll k)]
-      (if ks
-        (recur ret (first ks) (next ks))
-        ret))))
+   (let [ret (dissoc! coll k)]
+     (if ks
+       (recur ret (first ks) (next ks))
+       ret))))
 
 (defn pop!
-  ([coll]
-   (native/raw "auto transient_coll(try_object<obj::transient_vector>(~{ coll }));
-                __value = transient_coll->pop_in_place();")))
+  "Removes the last item from a transient vector. If
+   the collection is empty, throws an exception. Returns coll"
+  [coll]
+  (clojure.core-native/pop-in-place! coll))
 
 (defn disj!
+  "disj[oin]. Returns a transient set of the same (hashed/sorted) type, that
+   does not contain key(s)."
   ([set] set)
   ([set elem]
-   (native/raw "auto typed_set(try_object<obj::transient_hash_set>(~{ set }));
-                __value = typed_set->disjoin_in_place(~{ elem });"))
+   (clojure.core-native/disj-in-place! set elem))
   ([set elem & elems]
-    (let [ret (disj! set elem)]
-      (if elems
-        (recur ret (first elems) (next elems))
-        ret))))
+   (let [ret (disj! set elem)]
+     (if elems
+       (recur ret (first elems) (next elems))
+       ret))))
 
 ;; Functions.
-(defn spread
-  {:private true}
+(defn- spread
   [arglist]
   (cond
     (nil? arglist) nil
     (nil? (next arglist)) (seq (first arglist))
     :else (cons (first arglist) (spread (next arglist)))))
 
-; Creates a new seq containing the items prepended to the rest, the
-; last of which will be treated as a sequence.
 (defn list*
+  "Creates a new seq containing the items prepended to the rest, the
+   last of which will be treated as a sequence."
   ([args]
    (seq args))
   ([a args]
@@ -548,31 +605,34 @@
   ([a b c d & more]
    (cons a (cons b (cons c (cons d (spread more)))))))
 
-; Applies fn f to the argument list formed by prepending intervening arguments to args.
 (defn apply
+  "Applies fn f to the argument list formed by prepending intervening arguments to args."
   ([f args]
-   (native/raw "__value = runtime::apply_to(~{ f }, ~{ args });"))
+   (clojure.core-native/apply-to f args))
   ([f x args]
-   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x args) });"))
+   (clojure.core-native/apply-to f (list* x args)))
   ([f x y args]
-   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y args) });"))
+   (clojure.core-native/apply-to f (list* x y args)))
   ([f x y z args]
-   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (list* x y z args) });"))
+   (clojure.core-native/apply-to f (list* x y z args)))
   ([f a b c d & args]
-   (native/raw "__value = runtime::apply_to(~{ f }, ~{ (cons a (cons b (cons c (cons d (spread args))))) });")))
+   (clojure.core-native/apply-to f (cons a (cons b (cons c (cons d (spread args))))))))
 
-; Returns a function that takes any number of arguments and returns x.
-(defn constantly [x]
+(defn constantly
+  "Returns a function that takes any number of arguments and returns x."
+  [x]
   (fn [& args]
     x))
 
-; Returns its argument.
-(defn identity [x]
+(defn identity
+  "Returns its argument."
+  [x]
   x)
 
-; Takes a fn f and returns a fn that takes the same arguments as f,
-; has the same effects, if any, and returns the opposite truth value.
-(defn complement [f]
+(defn complement
+  "Takes a fn f and returns a fn that takes the same arguments as f,
+   has the same effects, if any, and returns the opposite truth value."
+  [f]
   (fn
     ([] (not (f)))
     ([x] (not (f x)))
@@ -582,17 +642,17 @@
 ; Utils.
 (defn deref
   "Also reader macro: @ref/@agent/@var/@atom/@delay/@future/@promise. Within a transaction,
-  returns the in-transaction-value of ref, else returns the
-  most-recently-committed value of ref. When applied to a var, agent
-  or atom, returns its current state. When applied to a delay, forces
-  it if not already forced. When applied to a future, will block if
-  computation not complete. When applied to a promise, will block
-  until a value is delivered.  The variant taking a timeout can be
-  used for blocking references (futures and promises), and will return
-  timeout-val if the timeout (in milliseconds) is reached before a
-  value is available. See also - realized?."
+   returns the in-transaction-value of ref, else returns the
+   most-recently-committed value of ref. When applied to a var, agent
+   or atom, returns its current state. When applied to a delay, forces
+   it if not already forced. When applied to a future, will block if
+   computation not complete. When applied to a promise, will block
+   until a value is delivered.  The variant taking a timeout can be
+   used for blocking references (futures and promises), and will return
+   timeout-val if the timeout (in milliseconds) is reached before a
+   value is available. See also - realized?."
   ([ref]
-   (native/raw "__value = runtime::behavior::deref(~{ ref });"))
+   (clojure.core-native/deref ref))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]
    ;(if (instance? clojure.lang.IBlockingDeref ref)
@@ -600,15 +660,13 @@
    ;  (deref-future ref timeout-ms timeout-val))
    ))
 
-(defn reduced
+(def reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
-  [x]
-  (native/raw "__value = make_box<obj::reduced>(~{ x });"))
+  clojure.core-native/reduced)
 
-(defn reduced?
+(def reduced?
   "Returns true if x is the result of a call to reduced"
-  ([x]
-   (native/raw "__value = make_box(~{ x }->type == object_type::reduced);")))
+  clojure.core-native/reduced?)
 
 (defn ensure-reduced
   "If x is already reduced?, returns it, else returns (reduced x)"
@@ -626,26 +684,27 @@
 
 (defn reduce
   "f should be a function of 2 arguments. If val is not supplied,
-  returns the result of applying f to the first 2 items in coll, then
-  applying f to that result and the 3rd item, etc. If coll contains no
-  items, f must accept no arguments as well, and reduce returns the
-  result of calling f with no arguments.  If coll has only 1 item, it
-  is returned and f is not called.  If val is supplied, returns the
-  result of applying f to val and the first item in coll, then
-  applying f to that result and the 2nd item, etc. If coll contains no
-  items, returns val and f is not called."
+   returns the result of applying f to the first 2 items in coll, then
+   applying f to that result and the 3rd item, etc. If coll contains no
+   items, f must accept no arguments as well, and reduce returns the
+   result of calling f with no arguments.  If coll has only 1 item, it
+   is returned and f is not called.  If val is supplied, returns the
+   result of applying f to val and the first item in coll, then
+   applying f to that result and the 2nd item, etc. If coll contains no
+   items, returns val and f is not called."
   ([f coll]
    (let [s (seq coll)]
      (if s
        (reduce f (first s) (next s))
        (f))))
-  ([f val coll]
-   (native/raw "__value = runtime::reduce(~{ f }, ~{ val }, ~{ coll });")))
+  ([f init coll]
+   ; TODO: Chunking support.
+   (clojure.core-native/reduce f init coll)))
 
 (defn completing
   "Takes a reducing function f of 2 args and returns a fn suitable for
-  transduce by adding an arity-1 signature that calls cf (default -
-  identity) on the result argument."
+   transduce by adding an arity-1 signature that calls cf (default -
+   identity) on the result argument."
   ([f] (completing f identity))
   ([f cf]
    (fn
@@ -655,13 +714,13 @@
 
 (defn transduce
   "reduce with a transformation of rf (xf). If init is not
-  supplied, (rf) will be called to produce it. f should be a reducing
-  step function that accepts both 1 and 2 arguments, if it accepts
-  only 2 you can add the arity-1 with 'completing'. Returns the result
-  of applying (the transformed) xf to init and the first item in coll,
-  then applying xf to that result and the 2nd item, etc. If coll
-  contains no items, returns init and rf is not called. Note that
-  certain transforms may inject or skip items."
+   supplied, (rf) will be called to produce it. f should be a reducing
+   step function that accepts both 1 and 2 arguments, if it accepts
+   only 2 you can add the arity-1 with 'completing'. Returns the result
+   of applying (the transformed) xf to init and the first item in coll,
+   then applying xf to that result and the 2nd item, etc. If coll
+   contains no items, returns init and rf is not called. Note that
+   certain transforms may inject or skip items."
   ([xform rf coll]
    (transduce xform rf (rf) coll))
   ([xform rf init coll]
@@ -679,7 +738,7 @@
 
 (defn cat
   "A transducer which concatenates the contents of each input, which must be a
-  collection, into the reduction."
+   collection, into the reduction."
   [rf]
   (let [rrf (preserving-reduced rf)]
     (fn
@@ -690,54 +749,52 @@
 
 (defn run!
   "Runs the supplied procedure (via reduce), for purposes of side
-  effects, on successive items in the collection. Returns nil"
+   effects, on successive items in the collection. Returns nil"
   [proc coll]
   (reduce #(proc %2) nil coll)
   nil)
 
 (defn comp
   "Takes a set of functions and returns a fn that is the composition
-  of those fns.  The returned fn takes a variable number of args,
-  applies the rightmost of fns to the args, the next
-  fn (right-to-left) to the result, etc."
+   of those fns.  The returned fn takes a variable number of args,
+   applies the rightmost of fns to the args, the next
+   fn (right-to-left) to the result, etc."
   ([] identity)
   ([f] f)
   ([f g]
-   (fn
-     ([] (f (g)))
-     ([x] (f (g x)))
-     ([x y] (f (g x y)))
-     ([x y z] (f (g x y z)))
-     ([x y z & args] (f (apply g x y z args)))))
+   (let [a 1] (fn
+                ([] (f (g)))
+                ([x] (f (g x)))
+                ([x y] (f (g x y)))
+                ([x y z] (f (g x y z)))
+                ([x y z & args] (f (apply g x y z args))))))
   ([f g & fs]
    (reduce comp (list* f g fs))))
 
-(defn peek
+(def peek
   "For a list or queue, same as first, for a vector, same as, but much
-  more efficient than, last. If the collection is empty, returns nil."
-  [coll]
-  (native/raw "__value = runtime::peek(~{ coll });"))
+   more efficient than, last. If the collection is empty, returns nil."
+  clojure.core-native/peek)
 
-(defn pop
+(def pop
   "For a list or queue, returns a new list/queue without the first
-  item, for a vector, returns a new vector without the last item. If
-  the collection is empty, throws an exception. Note - not the same
-  as next/butlast."
-  [coll]
-  (native/raw "__value = runtime::pop(~{ coll });"))
+   item, for a vector, returns a new vector without the last item. If
+   the collection is empty, throws an exception. Note - not the same
+   as next/butlast."
+  clojure.core-native/pop)
 
 (defn vary-meta
   "Returns an object of the same type and value as obj, with
-  (apply f (meta obj) args) as its metadata."
+   (apply f (meta obj) args) as its metadata."
   [o f & args]
   (with-meta o (apply f (meta o) args)))
 
 (defn alter-meta!
   "Atomically sets the metadata for a namespace/var/ref/agent/atom to be:
 
-  (apply f its-current-meta args)
+   (apply f its-current-meta args)
 
-  f must be free of side-effects"
+   f must be free of side-effects"
   [o f & args]
   ; TODO: Atomics.
   (reset-meta! o (apply f (meta o) args)))
@@ -745,106 +802,90 @@
 ;; Atoms.
 (defn atom
   "Creates and returns an Atom with an initial value of x and zero or
-  more options (in any order):
+   more options (in any order):
 
-  :meta metadata-map
+   :meta metadata-map
 
-  :validator validate-fn
+   :validator validate-fn
 
-  If metadata-map is supplied, it will become the metadata on the
-  atom. validate-fn must be nil or a side-effect-free fn of one
-  argument, which will be passed the intended new state on any state
-  change. If the new state is unacceptable, the validate-fn should
-  return false or throw an exception."
+   If metadata-map is supplied, it will become the metadata on the
+   atom. validate-fn must be nil or a side-effect-free fn of one
+   argument, which will be passed the intended new state on any state
+   change. If the new state is unacceptable, the validate-fn should
+   return false or throw an exception."
   ([x]
-   (native/raw "__value = make_box<obj::atom>(~{ x });"))
+   (clojure.core-native/atom x))
   ; TODO: Validators.
-  #_([x & options] (setup-reference (atom x) options)))
+  #_([x & options]
+     (setup-reference (atom x) options)))
 
-(defn swap!
+(def swap!
   "Atomically swaps the value of atom to be:
-  (apply f current-value-of-atom args). Note that f may be called
-  multiple times, and thus should be free of side effects.  Returns
-  the value that was swapped in."
-  ([atom f]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f });"))
-  ([atom f x]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x });"))
-  ([atom f x y]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y });"))
-  ([atom f x y & args]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (apply f current-value-of-atom args). Note that f may be called
+   multiple times, and thus should be free of side effects. Returns
+   the value that was swapped in."
+  clojure.core-native/swap!)
 
-(defn swap-vals!
+(def swap-vals!
   "Atomically swaps the value of atom to be:
-  (apply f current-value-of-atom args). Note that f may be called
-  multiple times, and thus should be free of side effects.
-  Returns [old new], the value of the atom before and after the swap."
-  ([atom f]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f });"))
-  ([atom f x]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x });"))
-  ([atom f x y]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y });"))
-  ([atom f x y & args]
-   (native/raw "__value = try_object<obj::atom>(~{ atom })->swap_vals(~{ f }, ~{ x }, ~{ y }, ~{ args });")))
+   (apply f current-value-of-atom args). Note that f may be called
+   multiple times, and thus should be free of side effects.
+   Returns [old new], the value of the atom before and after the swap."
+  clojure.core-native/swap-vals!)
 
-(defn compare-and-set!
+(def compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
-  current value of the atom is identical to oldval. Returns true if
-  set happened, else false"
-  [atom oldval newval]
-  (native/raw "__value = try_object<obj::atom>(~{ atom })->compare_and_set(~{ oldval }, ~{ newval });"))
+   current value of the atom is identical to oldval. Returns true if
+   set happened, else false"
+  clojure.core-native/compare-and-set!)
 
-(defn reset!
+(def reset!
   "Sets the value of atom to newval without regard for the
-  current value. Returns newval."
-  [atom newval]
-  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset(~{ newval });"))
+   current value. Returns newval."
+  clojure.core-native/reset!)
 
-(defn reset-vals!
+(def reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
-  [atom newval]
-  (native/raw "__value = try_object<obj::atom>(~{ atom })->reset_vals(~{ newval });"))
+  clojure.core-native/reset-vals!)
 
 ;; Volatiles.
-(defn volatile!
-  "Creates and returns a Volatile with an initial value of val."
-  [val]
-  (native/raw "__value = make_box<obj::volatile_>(~{ val });"))
+(def volatile!
+  "Creates and returns a volatile with an initial value of val."
+  clojure.core-native/volatile!)
 
-(defn vreset!
+(def vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
-  [vol newval]
-  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ newval });"))
+  clojure.core-native/vreset!)
 
-; XXX: In Clojure, this is a macro (for perf reasons). However, building native/raw
-; forms from macros is quite cumbersome right now. A function will do until it doesn't.
-(defn vswap!
+; TODO: In Clojure, this is a macro (for perf reasons).
+(def vswap!
   "Non-atomically swaps the value of the volatile as if:
-  (apply f current-value-of-vol args). Returns the value that
-  was swapped in."
-  [vol f & args]
-  (native/raw "__value = try_object<obj::volatile_>(~{ vol })->reset(~{ (apply f (deref vol) args) });"))
+   (apply f current-value-of-vol args). Returns the value that
+   was swapped in."
+  clojure.core-native/vswap!)
 
-(defn volatile?
+(def volatile?
   "Returns true if x is a volatile."
-  [x]
-  (native/raw "__value = make_box(~{ x }->type == object_type::volatile_);"))
+  clojure.core-native/volatile?)
 
-(defn delay* [f]
-  (native/raw "__value = make_box<obj::delay>(~{ f });"))
+(def ^:private delay* clojure.core-native/delay*)
 
-(defmacro delay [& body]
-  (list 'delay* (cons 'fn (cons '[] body))))
+(defmacro delay
+  "Takes a body of expressions and yields a Delay object that will
+   invoke the body only the first time it is forced (with force or deref/@), and
+   will cache the result and return it on all subsequent force
+   calls. See also - realized?"
+  [& body]
+  (list `delay* (cons `fn (cons '[] body))))
 
-(defn force [o]
-  (native/raw "__value = runtime::force(~{ o });"))
+(def force
+  "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
+  clojure.core-native/delay*)
 
-; Primitives.
-;; Arithmetic.
+;; Primitives.
+;;; Arithmetic.
 (defn
   ^{:arities {2 {:supports-unboxed-input? true
                  :unboxed-output? true}}}
@@ -854,9 +895,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = runtime::add(~{ l }, ~{ r });"))
+   (clojure.core-native/+ l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::add(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native/+ l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -868,9 +909,9 @@
   ([x]
    (- 0 x))
   ([l r]
-   (native/raw "__value = runtime::sub(~{ l }, ~{ r });"))
+   (clojure.core-native/- l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::sub(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native/- l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -884,9 +925,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = runtime::mul(~{ l }, ~{ r });"))
+   (clojure.core-native/* l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::mul(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native/* l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -898,106 +939,74 @@
   ([x]
    (/ 1 x))
   ([l r]
-   (native/raw "__value = runtime::div(~{ l }, ~{ r });"))
+   (clojure.core-native// l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::div(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native// l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
 ;; Bit operations.
 ; TODO: Unboxing and inlining for these.
-(defn bit-not
+(def bit-not
   "Bitwise complement"
-  [x]
-  (native/raw "__value = make_box(runtime::bit_not(~{ x }));"))
+  clojure.core-native/bit-not)
 
 (defn bit-and
   "Bitwise and"
   ([x y]
-   (native/raw "__value = make_box(runtime::bit_and(~{ x }, ~{ y }));"))
+   (clojure.core-native/bit-and x y))
   ([x y & more]
    (reduce bit-and (bit-and x y) more)))
 
 (defn bit-or
   "Bitwise or"
   ([x y]
-   (native/raw "__value = make_box(runtime::bit_or(~{ x }, ~{ y }));"))
+   (clojure.core-native/bit-or x y))
   ([x y & more]
    (reduce bit-or (bit-or x y) more)))
 
 (defn bit-xor
   "Bitwise exclusive or"
   ([x y]
-   (native/raw "__value = make_box(runtime::bit_xor(~{ x }, ~{ y }));"))
+   (clojure.core-native/bit-xor x y))
   ([x y & more]
    (reduce bit-xor (bit-xor x y) more)))
 
 (defn bit-and-not
   "Bitwise and with complement"
   ([x y]
-   (native/raw "__value = make_box(runtime::bit_and_not(~{ x }, ~{ y }));"))
+   (clojure.core-native/bit-and-not x y))
   ([x y & more]
    (reduce bit-and-not (bit-and-not x y) more)))
 
-(defn bit-clear
+(def bit-clear
   "Clear bit at index n"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_clear(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-clear)
 
-(defn bit-set
+(def bit-set
   "Set bit at index n"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_set(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-set)
 
-(defn bit-flip
+(def bit-flip
   "Flip bit at index n"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_flip(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-flip)
 
-(defn bit-test
+(def bit-test
   "Test bit at index n"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_test(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-test)
 
-(defn bit-shift-left
+(def bit-shift-left
   "Bitwise shift left"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_shift_left(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-shift-left)
 
-(defn bit-shift-right
+(def bit-shift-right
   "Bitwise shift right"
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_shift_right(~{ x }, ~{ n }));"))
+  clojure.core-native/bit-shift-right)
 
-(defn unsigned-bit-shift-right
+(def unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
-  [x n]
-  (native/raw "__value = make_box(runtime::bit_unsigned_shift_right(~{ x }, ~{ n }));"))
-
-(defn =
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(runtime::equal(~{ l }, ~{ r }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::equal(~{ r }, ~{ (first args) }));"))
-     false)))
-
-(defn ==
-  ([x]
-   true)
-  ([l r]
-   (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));"))
-  ([l r & args]
-   (if (native/raw "__value = make_box(runtime::is_equiv(~{ l }, ~{ r }));")
-     (if (next args)
-       (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::is_equiv(~{ r }, ~{ (first args) }));"))
-     false)))
+  clojure.core-native/unsigned-bit-shift-right)
 
 (defn not=
   ([x]
@@ -1014,12 +1023,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));"))
+   (clojure.core-native/< l r))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::lt(~{ l }, ~{ r }));")
+   (if (clojure.core-native/< l r)
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ (first args) }));"))
+       (clojure.core-native/< r (first args)))
      false)))
 
 (defn
@@ -1029,12 +1038,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));"))
+   (clojure.core-native/<= l r))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::lte(~{ l }, ~{ r }));")
+   (if (clojure.core-native/<= l r)
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ (first args) }));"))
+       (clojure.core-native/<= r (first args)))
      false)))
 
 (defn
@@ -1044,12 +1053,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));"))
+   (clojure.core-native/< r l))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::lt(~{ r }, ~{ l }));")
+   (if (clojure.core-native/< r l)
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::lt(~{ (first args) }, ~{ r }));"))
+       (clojure.core-native/< (first args) r))
      false)))
 
 (defn
@@ -1059,12 +1068,12 @@
   ([x]
    true)
   ([l r]
-   (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));"))
+   (clojure.core-native/<= r l))
   ([l r & args]
-   (if (native/raw "__value = make_box(runtime::lte(~{ r }, ~{ l }));")
+   (if (clojure.core-native/<= r l)
      (if (next args)
        (recur r (first args) (next args))
-       (native/raw "__value = make_box(runtime::lte(~{ (first args) }, ~{ r }));"))
+       (clojure.core-native/<= (first args) r))
      false)))
 
 (defn
@@ -1074,9 +1083,9 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = runtime::min(~{ l }, ~{ r });"))
+   (clojure.core-native/min l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::min(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native/min l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1088,80 +1097,94 @@
   ([x]
    x)
   ([l r]
-   (native/raw "__value = runtime::max(~{ l }, ~{ r });"))
+   (clojure.core-native/max l r))
   ([l r & args]
-   (let [res (native/raw "__value = runtime::max(~{ l }, ~{ r });")]
+   (let [res (clojure.core-native/max l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
-(defn inc [n]
-  (native/raw "__value = runtime::inc(~{ n });"))
-(defn dec [n]
-  (native/raw "__value = runtime::dec(~{ n });"))
+(def inc
+  "Returns a number one greater than num. Does not auto-promote
+   longs, will throw on overflow. See also: inc'"
+  clojure.core-native/inc)
+(def dec
+  "Returns a number one less than num. Does not auto-promote
+   longs, will throw on overflow. See also: dec"
+  clojure.core-native/dec)
 
-(defn pos? [n]
-  (native/raw "__value = make_box(runtime::is_pos(~{ n }));"))
-(defn neg? [n]
-  (native/raw "__value = make_box(runtime::is_neg(~{ n }));"))
-(defn zero? [n]
-  (native/raw "__value = make_box(runtime::is_zero(~{ n }));"))
+(def pos?
+  "Returns true if num is greater than zero, else false"
+  clojure.core-native/pos?)
+(def neg?
+  "Returns true if num is less than zero, else false"
+  clojure.core-native/neg?)
+(def zero?
+  "Returns true if num is zero, else false"
+  clojure.core-native/zero?)
 
-(defn rem [num div]
-  (native/raw "__value = runtime::rem(~{ num }, ~{ div });"))
-(defn mod [num div]
+(def rem
+  "Returns the remainder of dividing numerator by denominator."
+  clojure.core-native/rem)
+(defn mod
+  "Modulus of num and div. Truncates toward negative infinity."
+  [num div]
   (let [m (rem num div)]
     (if (or (zero? m) (= (pos? num) (pos? div)))
       m
       (+ m div))))
 
 ;; Numbers.
-(defn integer? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::integer)"))
-(defn float? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::real)"))
-(defn boolean? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::boolean)"))
-(defn number? [o]
-  (native/raw "__value = make_box(is_number(~{ o }));"))
+(def integer?
+  "Returns true if n is an integer"
+  clojure.core-native/integer?)
+(def float?
+  "Returns true if n is a floating point number"
+  clojure.core-native/real?)
+(def boolean?
+  "Returns true if x is a boolean"
+  clojure.core-native/boolean?)
+(def number?
+  "Returns true if x is a number"
+  clojure.core-native/number?)
 
-(defn even? [o]
-  (native/raw "__value = make_box(is_even(~{ o }));"))
-(defn odd? [o]
-  (native/raw "__value = make_box(is_odd(~{ o }));"))
+(def even?
+  "Returns true if n is even, throws an exception if n is not an integer"
+  clojure.core-native/even?)
+(def odd?
+  "Returns true if n is odd, throws an exception if n is not an integer"
+  clojure.core-native/odd?)
 
 ;; Random.
-(defn
-  ^{:arities {0 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
-  rand
+(defn rand
+  "Returns a random floating point number between 0 (inclusive) and
+   n (default 1) (exclusive)."
   ([]
-   (native/raw "__value = make_box(jank::runtime::rand());"))
+   (clojure.core-native/rand))
   ([n]
    (* (rand) n)))
 
-; Strings.
+;; Strings.
+(def subs
+  "Returns the substring of s beginning at start inclusive, and ending
+   at end (defaults to length of string), exclusive."
+  clojure.core-native/subs)
 
-(defn subs
-  ([s start]
-   (native/raw "__value = runtime::subs(~{ s }, ~{ start });"))
-  ([s start end]
-   (native/raw "__value = runtime::subs(~{ s }, ~{ start }, ~{ end });")))
-
-(defn- first-index-of [s m]
-  (native/raw "__value = make_box(runtime::first_index_of(~{ s }, ~{ m }));"))
-(defn- last-index-of [s m]
-  (native/raw "__value = make_box(runtime::last_index_of(~{ s }, ~{ m }));"))
+(def ^:private first-index-of clojure.core-native/first-index-of)
+(def ^:private last-index-of clojure.core-native/last-index-of)
 
 ;; Sequences (again).
-(defn sequential? [o]
-  (native/raw "__value = make_box(is_sequential(~{ o }));"))
+(def sequential?
+  "Returns true if coll implements sequential"
+  clojure.core-native/sequential?)
 
-(defn reverse [coll]
-  (reduce conj () coll))
+(defn reverse
+  "Returns a seq of the items in coll in reverse order. Not lazy."
+  [coll]
+  (reduce conj '() coll))
 
-; XXX: This will be redefined later on, to be lazy.
-(defn concat
+; XXX: The real concat will be defined later on, to be lazy.
+(defn- concat*
   ([]
    '())
   ([x]
@@ -1172,20 +1195,21 @@
            y
            (reverse x)))
   ([x y & zs]
-   (let [r (concat x y)]
+   (let [r (concat* x y)]
      (if (empty? zs)
        r
        (recur r (first zs) (rest zs))))))
 
-; Returns true if (pred x) is logical true for every x in coll, else false.
-(defn every? [pred coll]
+(defn every?
+  "Returns true if (pred x) is logical true for every x in coll, else false."
+  [pred coll]
   (cond
     (nil? (seq coll)) true
     (pred (first coll)) (recur pred (next coll))
     :else false))
 
-; Creates a new vector containing the args.
 (defn vector
+  "Creates a new vector containing the args."
   ([]
    [])
   ([a]
@@ -1196,68 +1220,67 @@
    [a b c])
   ([a b c d]
    [a b c d])
-	([a b c d e]
+  ([a b c d e]
    [a b c d e])
-	([a b c d e f]
+  ([a b c d e f]
    [a b c d e f])
   ([a b c d e f & args]
    ; TODO: LazilyPersistentVector
-   (vec (concat [a b c d e f] args))))
+   (vec (concat* [a b c d e f] args))))
 
-(defn lazy-seq* [fun]
-  (native/raw "__value = make_box<obj::lazy_sequence>(~{ fun });"))
+(def ^:private lazy-seq* clojure.core-native/lazy-seq*)
 
-; Takes a body of expressions that returns an ISeq or nil, and yields
-; a Seqable object that will invoke the body only the first time seq
-; is called, and will cache the result and return it on all subsequent
-; seq calls. See also - realized?
-(defmacro lazy-seq [& body]
-  `(lazy-seq* (fn lazy-seq# [] ~@body)))
+(defmacro lazy-seq
+  "Takes a body of expressions that returns an ISeq or nil, and yields
+   a Seqable object that will invoke the body only the first time seq
+   is called, and will cache the result and return it on all subsequent
+   seq calls. See also - realized?"
+  [& body]
+  (list `lazy-seq* (list* `fn 'lazy-seq# [] body)))
 
-(defn chunk-buffer [capacity]
-  (native/raw "__value = make_box<obj::chunk_buffer>(~{ capacity });"))
+(def chunk-buffer
+  clojure.core-native/chunk-buffer)
 
-(defn chunk-append [b x]
-  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
-               buffer->append(~{ x });"))
+(def chunk-append
+  clojure.core-native/chunk-append)
 
-(defn chunk [b]
-  (native/raw "auto const buffer(try_object<obj::chunk_buffer>(b));
-               __value = buffer->chunk();"))
+(def chunk
+  clojure.core-native/chunk)
 
-(defn chunk-first [o]
-  (native/raw "__value = runtime::chunk_first(~{ o });"))
+(def chunk-first
+  clojure.core-native/chunk-first)
 
-(defn chunk-next [o]
-  (native/raw "__value = runtime::chunk_next(~{ o });"))
+(def chunk-next
+  clojure.core-native/chunk-next)
 
-(defn chunk-rest [o]
-  (native/raw "__value = runtime::chunk_rest(~{ o });"))
+(def chunk-rest
+  clojure.core-native/chunk-rest)
 
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
     rest
-    (native/raw "__value = make_box<obj::chunked_cons>(~{ chunk }, ~{ (seq rest) });")))
+    (clojure.core-native/chunk-cons chunk rest)))
 
-(defn chunked-seq? [o]
-  (native/raw "__value = make_box(is_chunked_seq(~{ o }));"))
+(def chunked-seq?
+  clojure.core-native/chunk-seq?)
 
-; Repeatedly executes body (presumably for side-effects) with
-; bindings and filtering as provided by `for`.  Does not retain
-; the head of the sequence. Returns nil.
 ; TODO: Support more bindings
 ; TODO: Support `for` functionality
-(defmacro doseq [bindings & body]
+(defmacro doseq
+  "Repeatedly executes body (presumably for side-effects) with
+   bindings and filtering as provided by `for`.  Does not retain
+   the head of the sequence. Returns nil."
+  [bindings & body]
   (let [arg (first bindings)
         s (second bindings)]
-    (list 'clojure.core/reduce (concat (list 'clojure.core/fn ['_ arg])
-                                       body
-                                       [nil])
+    (list 'clojure.core/reduce (concat* (list 'clojure.core/fn ['_ arg])
+                                        body
+                                        [nil])
           nil
           s)))
 
-; Returns a lazy seq representing the concatenation of the elements in the supplied colls.
 (defn concat
+  "Returns a lazy seq representing the concatenation of the elements in the supplied colls."
   ([] (lazy-seq nil))
   ([x] (lazy-seq x))
   ([x y]
@@ -1269,58 +1292,58 @@
            (cons (first s) (concat (rest s) y)))
          y))))
   ([x y & zs]
-   (let [cat (fn cat [xys zs]
-               (lazy-seq
-                 (let [xys (seq xys)]
-                   (if xys
-                     (if (chunked-seq? xys)
-                       (chunk-cons (chunk-first xys)
-                                   (cat (chunk-rest xys) zs))
-                       (cons (first xys) (cat (rest xys) zs)))
-                     (when zs
-                       (cat (first zs) (next zs)))))))]
-     (cat (concat x y) zs))))
+   (let [cat* (fn cat* [xys zs]
+                (lazy-seq
+                  (let [xys (seq xys)]
+                    (if xys
+                      (if (chunked-seq? xys)
+                        (chunk-cons (chunk-first xys)
+                                    (cat* (chunk-rest xys) zs))
+                        (cons (first xys) (cat* (rest xys) zs)))
+                      (when zs
+                        (cat* (first zs) (next zs)))))))]
+     (cat* (concat x y) zs))))
 
 (defn juxt
   "Takes a set of functions and returns a fn that is the juxtaposition
-  of those fns.  The returned fn takes a variable number of args, and
-  returns a vector containing the result of applying each fn to the
-  args (left-to-right).
-  ((juxt a b c) x) => [(a x) (b x) (c x)]"
+   of those fns. The returned fn takes a variable number of args, and
+   returns a vector containing the result of applying each fn to the
+   args (left-to-right).
+   ((juxt a b c) x) => [(a x) (b x) (c x)]"
   ([f]
-     (fn
-       ([] [(f)])
-       ([x] [(f x)])
-       ([x y] [(f x y)])
-       ([x y z] [(f x y z)])
-       ([x y z & args] [(apply f x y z args)])))
+   (fn
+     ([] [(f)])
+     ([x] [(f x)])
+     ([x y] [(f x y)])
+     ([x y z] [(f x y z)])
+     ([x y z & args] [(apply f x y z args)])))
   ([f g]
-     (fn
-       ([] [(f) (g)])
-       ([x] [(f x) (g x)])
-       ([x y] [(f x y) (g x y)])
-       ([x y z] [(f x y z) (g x y z)])
-       ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
+   (fn
+     ([] [(f) (g)])
+     ([x] [(f x) (g x)])
+     ([x y] [(f x y) (g x y)])
+     ([x y z] [(f x y z) (g x y z)])
+     ([x y z & args] [(apply f x y z args) (apply g x y z args)])))
   ([f g h]
-     (fn
-       ([] [(f) (g) (h)])
-       ([x] [(f x) (g x) (h x)])
-       ([x y] [(f x y) (g x y) (h x y)])
-       ([x y z] [(f x y z) (g x y z) (h x y z)])
-       ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
+   (fn
+     ([] [(f) (g) (h)])
+     ([x] [(f x) (g x) (h x)])
+     ([x y] [(f x y) (g x y) (h x y)])
+     ([x y z] [(f x y z) (g x y z) (h x y z)])
+     ([x y z & args] [(apply f x y z args) (apply g x y z args) (apply h x y z args)])))
   ([f g h & fs]
-     (let [fs (list* f g h fs)]
-       (fn
-         ([] (reduce #(conj %1 (%2)) [] fs))
-         ([x] (reduce #(conj %1 (%2 x)) [] fs))
-         ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
-         ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
-         ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
+   (let [fs (list* f g h fs)]
+     (fn
+       ([] (reduce #(conj %1 (%2)) [] fs))
+       ([x] (reduce #(conj %1 (%2 x)) [] fs))
+       ([x y] (reduce #(conj %1 (%2 x y)) [] fs))
+       ([x y z] (reduce #(conj %1 (%2 x y z)) [] fs))
+       ([x y z & args] (reduce #(conj %1 (apply %2 x y z args)) [] fs))))))
 
 (defn partial
   "Takes a function f and fewer than the normal arguments to f, and
-  returns a fn that takes a variable number of additional args. When
-  called, the returned function calls f with args + additional args."
+   returns a fn that takes a variable number of additional args. When
+   called, the returned function calls f with args + additional args."
   ([f] f)
   ([f arg1]
    (fn
@@ -1348,10 +1371,10 @@
 
 (defn fnil
   "Takes a function f, and returns a function that calls f, replacing
-  a nil first argument to f with the supplied value x. Higher arity
-  versions can replace arguments in the second and third
-  positions (y, z). Note that the function f can take any number of
-  arguments, not just the one(s) being nil-patched."
+   a nil first argument to f with the supplied value x. Higher arity
+   versions can replace arguments in the second and third
+   positions (y, z). Note that the function f can take any number of
+   arguments, not just the one(s) being nil-patched."
   ([f x]
    (fn
      ([a] (f (if (nil? a) x a)))
@@ -1369,11 +1392,12 @@
      ([a b c] (f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c)))
      ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
 
-; Returns the first logical true value of (pred x) for any x in coll,
-; else nil.  One common idiom is to use a set as pred, for example
-; this will return :fred if :fred is in the sequence, otherwise nil:
-; (some #{:fred} coll)
-(defn some [pred coll]
+(defn some
+  "Returns the first logical true value of (pred x) for any x in coll,
+   else nil.  One common idiom is to use a set as pred, for example
+   this will return :fred if :fred is in the sequence, otherwise nil:
+   (some #{:fred} coll)"
+  [pred coll]
   (let [s (seq coll)]
     (when s
       (or (pred (first s)) (recur pred (next s))))))
@@ -1381,129 +1405,131 @@
 
 (defn every-pred
   "Takes a set of predicates and returns a function f that returns true if all of its
-  composing predicates return a logical true value against all of its arguments, else it returns
-  false. Note that f is short-circuiting in that it will stop execution on the first
-  argument that triggers a logical false result against the original predicates."
+   composing predicates return a logical true value against all of its arguments, else it returns
+   false. Note that f is short-circuiting in that it will stop execution on the first
+   argument that triggers a logical false result against the original predicates."
   ([p]
-     (fn ep1
-       ([] true)
-       ([x] (boolean (p x)))
-       ([x y] (boolean (and (p x) (p y))))
-       ([x y z] (boolean (and (p x) (p y) (p z))))
-       ([x y z & args] (boolean (and (ep1 x y z)
-                                     (every? p args))))))
+   (fn ep1
+     ([] true)
+     ([x] (boolean (p x)))
+     ([x y] (boolean (and (p x) (p y))))
+     ([x y z] (boolean (and (p x) (p y) (p z))))
+     ([x y z & args] (boolean (and (ep1 x y z)
+                                   (every? p args))))))
   ([p1 p2]
-     (fn ep2
-       ([] true)
-       ([x] (boolean (and (p1 x) (p2 x))))
-       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
-       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
-       ([x y z & args] (boolean (and (ep2 x y z)
-                                     (every? #(and (p1 %) (p2 %)) args))))))
+   (fn ep2
+     ([] true)
+     ([x] (boolean (and (p1 x) (p2 x))))
+     ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
+     ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
+     ([x y z & args] (boolean (and (ep2 x y z)
+                                   (every? #(and (p1 %) (p2 %)) args))))))
   ([p1 p2 p3]
-     (fn ep3
-       ([] true)
-       ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
-       ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
-       ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
-       ([x y z & args] (boolean (and (ep3 x y z)
-                                     (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
+   (fn ep3
+     ([] true)
+     ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
+     ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y))))
+     ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z))))
+     ([x y z & args] (boolean (and (ep3 x y z)
+                                   (every? #(and (p1 %) (p2 %) (p3 %)) args))))))
   ([p1 p2 p3 & ps]
-     (let [ps (list* p1 p2 p3 ps)]
-       (fn epn
-         ([] true)
-         ([x] (every? #(% x) ps))
-         ([x y] (every? #(and (% x) (% y)) ps))
-         ([x y z] (every? #(and (% x) (% y) (% z)) ps))
-         ([x y z & args] (boolean (and (epn x y z)
-                                       (every? #(every? % args) ps))))))))
+   (let [ps (list* p1 p2 p3 ps)]
+     (fn epn
+       ([] true)
+       ([x] (every? #(% x) ps))
+       ([x y] (every? #(and (% x) (% y)) ps))
+       ([x y z] (every? #(and (% x) (% y) (% z)) ps))
+       ([x y z & args] (boolean (and (epn x y z)
+                                     (every? #(every? % args) ps))))))))
 
 (defn some-fn
   "Takes a set of predicates and returns a function f that returns the first logical true value
-  returned by one of its composing predicates against any of its arguments, else it returns
-  logical false. Note that f is short-circuiting in that it will stop execution on the first
-  argument that triggers a logical true result against the original predicates."
+   returned by one of its composing predicates against any of its arguments, else it returns
+   logical false. Note that f is short-circuiting in that it will stop execution on the first
+   argument that triggers a logical true result against the original predicates."
   ([p]
-     (fn sp1
-       ([] nil)
-       ([x] (p x))
-       ([x y] (or (p x) (p y)))
-       ([x y z] (or (p x) (p y) (p z)))
-       ([x y z & args] (or (sp1 x y z)
-                           (some p args)))))
+   (fn sp1
+     ([] nil)
+     ([x] (p x))
+     ([x y] (or (p x) (p y)))
+     ([x y z] (or (p x) (p y) (p z)))
+     ([x y z & args] (or (sp1 x y z)
+                         (some p args)))))
   ([p1 p2]
-     (fn sp2
-       ([] nil)
-       ([x] (or (p1 x) (p2 x)))
-       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
-       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
-       ([x y z & args] (or (sp2 x y z)
-                           (some #(or (p1 %) (p2 %)) args)))))
+   (fn sp2
+     ([] nil)
+     ([x] (or (p1 x) (p2 x)))
+     ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
+     ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
+     ([x y z & args] (or (sp2 x y z)
+                         (some #(or (p1 %) (p2 %)) args)))))
   ([p1 p2 p3]
-     (fn sp3
-       ([] nil)
-       ([x] (or (p1 x) (p2 x) (p3 x)))
-       ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
-       ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
-       ([x y z & args] (or (sp3 x y z)
-                           (some #(or (p1 %) (p2 %) (p3 %)) args)))))
+   (fn sp3
+     ([] nil)
+     ([x] (or (p1 x) (p2 x) (p3 x)))
+     ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y) (p3 x) (p3 y)))
+     ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z) (p3 x) (p3 y) (p3 z)))
+     ([x y z & args] (or (sp3 x y z)
+                         (some #(or (p1 %) (p2 %) (p3 %)) args)))))
   ([p1 p2 p3 & ps]
-     (let [ps (list* p1 p2 p3 ps)]
-       (fn spn
-         ([] nil)
-         ([x] (some #(% x) ps))
-         ([x y] (some #(or (% x) (% y)) ps))
-         ([x y z] (some #(or (% x) (% y) (% z)) ps))
-         ([x y z & args] (or (spn x y z)
-                             (some #(some % args) ps)))))))
+   (let [ps (list* p1 p2 p3 ps)]
+     (fn spn
+       ([] nil)
+       ([x] (some #(% x) ps))
+       ([x y] (some #(or (% x) (% y)) ps))
+       ([x y z] (some #(or (% x) (% y) (% z)) ps))
+       ([x y z & args] (or (spn x y z)
+                           (some #(some % args) ps)))))))
 
 
 (defn not-any? [pred coll]
   (not (some pred coll)))
 
-; Threads the expr through the forms. Inserts x as the
-; second item in the first form, making a list of it if it is not a
-; list already. If there are more forms, inserts the first form as the
-; second item in second form, etc.
-(defmacro -> [x & forms]
+(defmacro ->
+  "Threads the expr through the forms. Inserts x as the
+   second item in the first form, making a list of it if it is not a
+   list already. If there are more forms, inserts the first form as the
+   second item in second form, etc."
+  [x & forms]
   (loop* [x x
           forms forms]
-    (if forms
-      (let [form (first forms)
-            threaded (if (seq? form)
-                       (with-meta `(~(first form) ~x ~@(next form)) (meta form))
-                       (list form x))]
-        (recur threaded (next forms)))
-      x)))
+         (if forms
+           (let [form (first forms)
+                 threaded (if (seq? form)
+                            (with-meta `(~(first form) ~x ~@(next form)) (meta form))
+                            (list form x))]
+             (recur threaded (next forms)))
+           x)))
 
-; Threads the expr through the forms. Inserts x as the
-; last item in the first form, making a list of it if it is not a
-; list already. If there are more forms, inserts the first form as the
-; last item in second form, etc.
-(defmacro ->> [x & forms]
+(defmacro ->>
+  "Threads the expr through the forms. Inserts x as the
+   last item in the first form, making a list of it if it is not a
+   list already. If there are more forms, inserts the first form as the
+   last item in second form, etc."
+  [x & forms]
   (loop* [x x
           forms forms]
-    (if forms
-      (let [form (first forms)
-            threaded (if (seq? form)
-                       (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
-                       (list form x))]
-        (recur threaded (next forms)))
-      x)))
+         (if forms
+           (let [form (first forms)
+                 threaded (if (seq? form)
+                            (with-meta `(~(first form) ~@(next form)  ~x) (meta form))
+                            (list form x))]
+             (recur threaded (next forms)))
+           x)))
 
 ;; Maps.
-(defn hash-map
-  ([]
-   ; XXX: Clojure returns an array map for this arity, but that sucks.
-   (native/raw "__value = obj::persistent_hash_map::empty();"))
-  ([& kvs]
-   (native/raw "__value = obj::persistent_hash_map::create_from_seq(~{ kvs });")))
+; XXX: Clojure returns an array map for the nullary arity, but that sucks.
+(def hash-map
+  "keyval => key val
+   Returns a new hash map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/hash-map)
 
-(defn sorted-map
-  ([]
-   (native/raw "__value = obj::persistent_sorted_map::empty();"))
-  ([& kvs]
-   (native/raw "__value = obj::persistent_sorted_map::create_from_seq(~{ kvs });")))
+(def sorted-map
+  "keyval => key val
+   Returns a new sorted map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/sorted-map)
 
 (defn key
   "Returns the key of the map entry."
@@ -1515,139 +1541,143 @@
   [e]
   (second e))
 
-(defn keys [m]
+(defn keys
+  "Returns a sequence of the map's keys, in the same order as (seq map)."
+  [m]
   ; TODO: Use a proper key seq instead.
   (reduce (fn [acc kv]
             (conj acc (first kv)))
           []
           m))
 
-(defn vals [m]
+(defn vals
+  "Returns a sequence of the map's values, in the same order as (seq map)."
+  [m]
   ; TODO: Use a proper val seq instead.
   (reduce (fn [acc kv]
             (conj acc (second kv)))
           []
           m))
 
-(defn get
-  ([m k]
-   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k });"))
-  ([m k fallback]
-   (native/raw "__value = jank::runtime::get(~{ m }, ~{ k }, ~{ fallback });")))
-(defn get-in
-  ([m ks]
-   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks });"))
-  ([m ks fallback]
-   (native/raw "__value = jank::runtime::get_in(~{ m }, ~{ ks }, ~{ fallback });")))
+(def get
+  "Returns the value mapped to key, not-found or nil if key not present
+   in associative collection, set, string, array, or ILookup instance."
+  clojure.core-native/get)
+(def get-in
+  "Returns the value in a nested associative structure,
+   where ks is a sequence of keys. Returns nil if the key
+   is not present, or the not-found value if supplied."
+  clojure.core-native/get-in)
 
 (defn dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
-  that does not contain a mapping for key(s)."
+   that does not contain a mapping for key(s)."
   ([m]
    m)
   ([m k]
-   (native/raw "__value = jank::runtime::dissoc(~{ m }, ~{ k });"))
+   (clojure.core-native/dissoc m k))
   ([m k & ks]
    (let* [ret (dissoc m k)]
      (if ks
        (recur ret (first ks) (next ks))
        ret))))
 
-; Returns true if key is present in the given collection, otherwise
-; returns false.  Note that for numerically indexed collections like
-; vectors and Java arrays, this tests if the numeric key is within the
-; range of indexes. 'contains?' operates constant or logarithmic time;
-; it will not perform a linear search for a value.  See also 'some'.
-(defn contains? [coll k]
-  (native/raw "__value = make_box(jank::runtime::contains(~{ coll }, ~{ k }));"))
+(def contains?
+  "Returns true if key is present in the given collection, otherwise
+   returns false.  Note that for numerically indexed collections like
+   vectors and Java arrays, this tests if the numeric key is within the
+   range of indexes. 'contains?' operates constant or logarithmic time;
+   it will not perform a linear search for a value.  See also 'some'."
+  clojure.core-native/contains?)
 
-; Returns the map entry for key, or nil if key not present.
-(defn find [coll k]
-  (native/raw "__value = jank::runtime::find(~{ coll }, ~{ k });"))
+(def find
+  "Returns the map entry for key, or nil if key not present."
+  clojure.core-native/find)
 
-; Returns a map containing only those entries in map whose key is in keys
-(defn select-keys [m ks]
+(defn select-keys
+  "Returns a map containing only those entries in map whose key is in keys"
+  [m ks]
   (reduce (fn [acc k]
-            (let [e (native/raw "__value = jank::runtime::find(~{ m }, ~{ k });")]
+            (let [e (find m k)]
               (if e
                 (conj acc e)
                 acc)))
           {}
           ks))
 
-; Returns a map with the keys mapped to the corresponding vals.
-(defn zipmap [keys vals]
+(defn zipmap
+  "Returns a map with the keys mapped to the corresponding vals."
+  [keys vals]
   (loop* [map (transient (hash-map))
           ks (seq keys)
           vs (seq vals)]
-    (if (and ks vs)
-      (recur (assoc! map (first ks) (first vs))
-             (next ks)
-             (next vs))
-      (persistent! map))))
+         (if (and ks vs)
+           (recur (assoc! map (first ks) (first vs))
+                  (next ks)
+                  (next vs))
+           (persistent! map))))
 
 ;; Sets.
-(defn hash-set
+(def hash-set
   "Returns a new hash set with supplied keys.  Any equal keys are
-  handled as if by repeated uses of conj."
-  ([]
-   #{})
-  ([& keys]
-   (native/raw "__value = obj::persistent_hash_set::create_from_seq(~{ keys });")))
+   handled as if by repeated uses of conj."
+  clojure.core-native/hash-set)
 
-(defn sorted-set
+(def sorted-set
   "Returns a new sorted set with supplied keys.  Any equal keys are
-  handled as if by repeated uses of conj."
-  ([& keys]
-   (native/raw "__value = obj::persistent_sorted_set::create_from_seq(~{ keys });")))
+   handled as if by repeated uses of conj."
+  clojure.core-native/sorted-set)
 
 (defn sorted-set-by
   "Returns a new sorted set with supplied keys, using the supplied
-  comparator.  Any equal keys are handled as if by repeated uses of
-  conj."
+   comparator.  Any equal keys are handled as if by repeated uses of
+   conj."
   ([comparator & keys]
    (throw "not yet implemented: sorted-set-by")))
 
 (defn disj
   "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
-  does not contain key(s)."
+   does not contain key(s)."
   ([set]
    set)
   ([set key]
-   (native/raw "__value = jank::runtime::disj(~{ set }, ~{ key });"))
+   (clojure.core-native/disj set key))
   ([set key & ks]
    (let* [res (disj set key)]
      (if (empty? ks)
        res
        (recur res (first ks) (next ks))))))
 
-(defn set? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::persistent_hash_set);"))
+(def set?
+  "Returns true if x implements IPersistentSet"
+  clojure.core-native/set?)
 
-; Returns a set of the distinct elements of coll.
-(defn set [coll]
+(defn set
+  "Returns a set of the distinct elements of coll."
+  [coll]
   (if (set? coll)
     (with-meta coll nil)
-    ; TODO: Transient
-    (reduce (fn [acc e]
-              (conj acc e))
-            (native/raw "__value = make_box<obj::persistent_hash_set>();")
-            coll)))
+    (persistent! (reduce (fn [acc e]
+                           (conj! acc e))
+                         (transient #{})
+                         coll))))
 
 ;; Other.
-(defn hash [o]
-  (native/raw "__value = make_box(hash::visit(~{ o }));"))
+(def hash
+  "Returns the hash code of its argument. Note this is the hash code
+   consistent with =, and thus is different than .hashCode for Integer,
+   Short, Byte and Clojure collections."
+  clojure.core-native/hash)
 
-(defn named?
-  {:private true}
-  [o]
-  (native/raw "__value = make_box(is_named(~{ o }));"))
+(def ^:private named? clojure.core-native/named?)
 
-(defn name [o]
-  (native/raw "__value = make_box(runtime::name(~{ o }));"))
+(def name
+  "Returns the name String of a string, symbol or keyword."
+  clojure.core-native/name)
 
-(defn namespace [o]
-  (native/raw "__value = make_box(runtime::namespace_(~{ o }));"))
+(def namespace
+  "Returns the namespace String of a symbol or keyword, or nil if not present."
+  clojure.core-native/namespace)
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -1661,11 +1691,31 @@
      (step n coll))))
 
 ;; Vars.
-(defn var? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::var)"))
+(def var?
+  "Returns true if v is a var."
+  clojure.core-native/var?)
+(def var-get
+  "Gets the value in the var object."
+  clojure.core-native/var-get)
 
-; TODO: Make this private.
-(defmacro assert-macro-args
+(def alter-var-root
+  "Atomically alters the root binding of var v by applying f to its
+   current value plus any args"
+  clojure.core-native/alter-var-root)
+
+(defn bound?
+  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+   Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
+  [& vars]
+  (every? clojure.core-native/var-bound? vars))
+
+(defn thread-bound?
+  "Returns true if all of the vars provided as arguments have thread-local bindings.
+   Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
+  [& vars]
+  (every? clojure.core-native/var-thread-bound? vars))
+
+(defmacro ^:private assert-macro-args
   [& pairs]
   (list 'do
         (list 'clojure.core/when-not (first pairs)
@@ -1687,8 +1737,8 @@
 (defmacro if-let
   "bindings => binding-form test
 
-  If test is true, evaluates then with binding-form bound to the value of
-  test, if not, yields else"
+   If test is true, evaluates then with binding-form bound to the value of
+   test, if not, yields else"
   ([bindings then]
    `(if-let ~bindings ~then nil))
   ([bindings then else & oldform]
@@ -1696,7 +1746,8 @@
      (vector? bindings) "a vector for its binding"
      (nil? oldform) "1 or 2 forms after binding vector"
      (= 2 (count bindings)) "exactly 2 forms in binding vector")
-   (let [form (get bindings 0) tst (get bindings 1)]
+   (let [form (get bindings 0)
+         tst (get bindings 1)]
      `(let [temp# ~tst]
         (if temp#
           (let [~form temp#]
@@ -1706,7 +1757,7 @@
 (defmacro when-let
   "bindings => binding-form test
 
-  When test is true, evaluates body with binding-form bound to the value of test"
+   When test is true, evaluates body with binding-form bound to the value of test"
   [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
@@ -1721,8 +1772,8 @@
 (defmacro if-some
   "bindings => binding-form test
 
-  If test is not nil, evaluates then with binding-form bound to the
-  value of test, if not, yields else"
+   If test is not nil, evaluates then with binding-form bound to the
+   value of test, if not, yields else"
   ([bindings then]
    `(if-some ~bindings ~then nil))
   ([bindings then else & oldform]
@@ -1740,8 +1791,8 @@
 (defmacro when-some
   "bindings => binding-form test
 
-  When test is not nil, evaluates body with binding-form bound to the
-  value of test"
+   When test is not nil, evaluates body with binding-form bound to the
+   value of test"
   [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
@@ -1757,8 +1808,8 @@
 (defmacro dotimes
   "bindings => name n
 
-  Repeatedly executes body (presumably for side-effects) with name
-  bound to integers from 0 through n-1."
+   Repeatedly executes body (presumably for side-effects) with name
+   bound to integers from 0 through n-1."
   [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
@@ -1772,40 +1823,40 @@
            ; TODO: unchecked-inc
            (recur (inc ~i)))))))
 
+(def push-thread-bindings
+  "WARNING: This is a low-level function. Prefer high-level macros like
+   binding where ever possible.
 
-; WARNING: This is a low-level function. Prefer high-level macros like
-; binding where ever possible.
-;
-; Takes a map of Var/value pairs. Binds each Var to the associated value for
-; the current thread. Each call *MUST* be accompanied by a matching call to
-; pop-thread-bindings wrapped in a try-finally!
-;
-;   (push-thread-bindings bindings)
-;   (try
-;     ...
-;     (finally
-;       (pop-thread-bindings)))
-(defn push-thread-bindings [bindings]
-  (native/raw "__rt_ctx->push_thread_bindings(~{ bindings }).expect_ok();"))
+   Takes a map of Var/value pairs. Binds each Var to the associated value for
+   the current thread. Each call *MUST* be accompanied by a matching call to
+   pop-thread-bindings wrapped in a try-finally!
 
-; Pop one set of bindings pushed with push-binding before. It is an error to
-; pop bindings without pushing before.
-(defn pop-thread-bindings []
-  (native/raw "__rt_ctx->pop_thread_bindings().expect_ok();"))
+   (push-thread-bindings bindings)
+   (try
+   ...
+   (finally
+   (pop-thread-bindings)))"
+  clojure.core-native/push-thread-bindings)
 
-; Get a map with the Var/value pairs which is currently in effect for the
-; current thread.
-(defn get-thread-bindings []
-  (native/raw "__value = __rt_ctx->get_thread_bindings();"))
+(def pop-thread-bindings
+  "Pop one set of bindings pushed with push-binding before. It is an error to
+   pop bindings without pushing before."
+  clojure.core-native/pop-thread-bindings)
 
-; binding => var-symbol init-expr
-;
-; Creates new bindings for the (already-existing) vars, with the
-; supplied initial values, executes the exprs in an implicit do, then
-; re-establishes the bindings that existed before.  The new bindings
-; are made in parallel (unlike let); all init-exprs are evaluated
-; before the vars are bound to their new values.
-(defmacro binding [bindings & body]
+(def get-thread-bindings
+  "Get a map with the Var/value pairs which is currently in effect for the
+   current thread."
+  clojure.core-native/get-thread-bindings)
+
+(defmacro binding
+  "binding => var-symbol init-expr
+
+   Creates new bindings for the (already-existing) vars, with the
+   supplied initial values, executes the exprs in an implicit do, then
+   re-establishes the bindings that existed before.  The new bindings
+   are made in parallel (unlike let); all init-exprs are evaluated
+   before the vars are bound to their new values."
+  [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
     (even? (count bindings)) "an even number of forms in binding vector")
@@ -1825,77 +1876,26 @@
          (finally
            (pop-thread-bindings))))))
 
-;; Input/output.
-(defn println [& args]
-  ; TODO: Move println back into here once I sort out two things:
-  ; 1. Escaped strings, so I can do the space in between each
-  ; 2. The linker errors showing up when using fmt::format_to here
-  (native/raw "__value = jank::runtime::context::println(~{ args });"))
-
-(defn print [o]
-  (native/raw "__value = jank::runtime::context::print(~{ o });"))
-
-(defn prn [o]
-  ; TODO: Representation printing.
-  (println o))
-
 ;; Keywords.
-(defn keyword? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::keyword)"))
-(defn simple-keyword? [o]
-  (native/raw "__value = make_box
-               (
-                 ~{ o }->type == object_type::keyword
-                 && expect_object<obj::keyword>(~{ o })->sym.ns.empty()
-               );"))
-(defn qualified-keyword? [o]
-  (native/raw "__value = make_box
-               (
-                 ~{ o }->type == object_type::keyword
-                 && !expect_object<obj::keyword>(~{ o })->sym.ns.empty()
-               );"))
+(def keyword?
+  "Return true if x is a Keyword"
+  clojure.core-native/keyword?)
+(def simple-keyword?
+  "Return true if x is a keyword without a namespace"
+  clojure.core-native/simple-keyword?)
+(def qualified-keyword?
+  "Return true if x is a keyword with a namespace"
+  clojure.core-native/qualified-keyword?)
 
-; Returns a Keyword with the given namespace and name.  Do not use :
-; in the keyword strings, it will be added automatically.
 (defn keyword
+  "Returns a Keyword with the given namespace and name.  Do not use :
+   in the keyword strings, it will be added automatically."
   ([name]
    (if (keyword? name)
      name
-     (native/raw "__value = __rt_ctx->intern_keyword(runtime::to_string(~{ name })).expect_ok();")))
+     (clojure.core-native/keyword "" name)))
   ([ns name]
-   (native/raw "__value = __rt_ctx->intern_keyword
-                (
-                  runtime::to_string(~{ ns }),
-                  runtime::to_string(~{ name })
-                ).expect_ok();")))
-
-(defn simple-symbol? [o]
-  (native/raw "__value = make_box
-               (
-                 ~{ o }->type == object_type::symbol
-                 && expect_object<obj::symbol>(~{ o })->ns.empty()
-               );"))
-(defn qualified-symbol? [o]
-  (native/raw "__value = make_box
-               (
-                 ~{ o }->type == object_type::symbol
-                 && !expect_object<obj::symbol>(~{ o })->ns.empty()
-               );"))
-
-; Returns a Symbol with the given namespace and name. Arity-1 works
-; on strings, keywords, and vars.
-(defn symbol
-  ([o]
-   (cond
-     (symbol? o) o
-     (string? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::persistent_string>(~{ o })->data);")
-     (var? o) (native/raw "__value = expect_object<runtime::var>(~{ o })->name;")
-     (keyword? o) (native/raw "__value = make_box<obj::symbol>(expect_object<obj::keyword>(~{ o })->sym);")
-     :else (throw (ex-info :cannot-convert-to-symbol {:o o}))))
-  ([ns o]
-   (if (nil? ns)
-     (symbol o)
-     (native/raw "__value = make_box<obj::symbol>(runtime::to_string(~{ ns }), runtime::to_string(~{ o }));"))))
+   (clojure.core-native/keyword ns name)))
 
 (defn ident?
   "Returns true if x is a symbol or keyword"
@@ -1913,38 +1913,36 @@
   (boolean (and (ident? x) (namespace x) true)))
 
 ;; Sequences.
-(defn iterate [f x]
-  (native/raw "__value = make_box<obj::iterator>(~{ f }, ~{ x });"))
+(def iterate
+  "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
+   f must be free of side-effects"
+  clojure.core-native/iterate)
 
 ; TODO: integer_range
-(defn range
-  ([]
-   (iterate inc 0))
-  ([end]
-   (native/raw "__value = obj::range::create(~{ end });"))
-  ([start end]
-   (native/raw "__value = obj::range::create(~{ start }, ~{ end });"))
-  ([start end step]
-   (native/raw "__value = obj::range::create(~{ start }, ~{ end }, ~{ step });")))
+(def range
+  "Returns a lazy seq of nums from start (inclusive) to end
+   (exclusive), by step, where start defaults to 0, step to 1, and end to
+   infinity. When step is equal to 0, returns an infinite sequence of
+   start. When start is equal to end, returns empty list."
+  clojure.core-native/range)
 
-(defn nth
+(def nth
   "Returns the value at the index. get returns nil if index out of
-  bounds, nth throws an exception unless not-found is supplied.  nth
-  also works for strings, Java arrays, regex Matchers and Lists, and,
-  in O(n) time, for sequences."
-  ([coll index]
-   (native/raw "__value = runtime::nth(~{ coll }, ~{ index });"))
-  ([coll index not-found]
-   (native/raw "__value = runtime::nth(~{ coll }, ~{ index }, ~{ not-found });")))
+   bounds, nth throws an exception unless not-found is supplied.  nth
+   also works for strings, Java arrays, regex Matchers and Lists, and,
+   in O(n) time, for sequences."
+  clojure.core-native/nth)
 
-; Returns the nth next of coll, (seq coll) when n is 0.
-(defn nthnext [coll n]
+(defn nthnext
+  "Returns the nth next of coll, (seq coll) when n is 0."
+  [coll n]
   (if (and (seq coll) (pos? n))
     (recur (next coll) (dec n))
     coll))
 
-; Returns the nth rest of coll, coll when n is 0.
-(defn nthrest [coll n]
+(defn nthrest
+  "Returns the nth rest of coll, coll when n is 0."
+  [coll n]
   (let [xs (and (pos? n) (seq coll))]
     (if xs
       (recur (rest coll) (dec n))
@@ -1952,7 +1950,7 @@
 
 (defn take-nth
   "Returns a lazy seq of every nth item in coll.  Returns a stateful
-  transducer when no collection is provided."
+   transducer when no collection is provided."
   ([n]
    (fn [rf]
      (let [iv (volatile! -1)]
@@ -1969,13 +1967,13 @@
      (when-let [s (seq coll)]
        (cons (first s) (take-nth n (drop n s)))))))
 
-; Returns a lazy sequence consisting of the result of applying f to
-; the set of first items of each coll, followed by applying f to the
-; set of second items in each coll, until any one of the colls is
-; exhausted.  Any remaining items in other colls are ignored. Function
-; f should accept number-of-colls arguments. Returns a transducer when
-; no collection is provided.
 (defn map
+  "Returns a lazy sequence consisting of the result of applying f to
+   the set of first items of each coll, followed by applying f to the
+   set of second items in each coll, until any one of the colls is
+   exhausted.  Any remaining items in other colls are ignored. Function
+   f should accept number-of-colls arguments. Returns a transducer when
+   no collection is provided."
   ([f]
    (fn [rf]
      (fn
@@ -1998,19 +1996,19 @@
          (cons (f (first s)) (map f (rest s)))))))
   ([f c1 c2]
    (lazy-seq
-    (let [s1 (seq c1)
-          s2 (seq c2)]
-      (when (and s1 s2)
-        (cons (f (first s1) (first s2))
-              (map f (rest s1) (rest s2)))))))
+     (let [s1 (seq c1)
+           s2 (seq c2)]
+       (when (and s1 s2)
+         (cons (f (first s1) (first s2))
+               (map f (rest s1) (rest s2)))))))
   ([f c1 c2 c3]
    (lazy-seq
-    (let [s1 (seq c1)
-          s2 (seq c2)
-          s3 (seq c3)]
-      (when (and s1 s2 s3)
-        (cons (f (first s1) (first s2) (first s3))
-              (map f (rest s1) (rest s2) (rest s3)))))))
+     (let [s1 (seq c1)
+           s2 (seq c2)
+           s3 (seq c3)]
+       (when (and s1 s2 s3)
+         (cons (f (first s1) (first s2) (first s3))
+               (map f (rest s1) (rest s2) (rest s3)))))))
   ([f c1 c2 c3 & colls]
    (let [step (fn step [cs]
                 (lazy-seq
@@ -2021,8 +2019,8 @@
 
 (defmacro doto
   "Evaluates x then calls all of the methods and functions with the
-  value of x supplied at the front of the given arguments.  The forms
-  are evaluated in order.  Returns x."
+   value of x supplied at the front of the given arguments.  The forms
+   are evaluated in order.  Returns x."
   [x & forms]
   (let [gx (gensym)]
     `(let [~gx ~x]
@@ -2037,10 +2035,10 @@
 
 (defn map-indexed
   "Returns a lazy sequence consisting of the result of applying f to 0
-  and the first item of coll, followed by applying f to 1 and the second
-  item in coll, etc, until coll is exhausted. Thus function f should
-  accept 2 arguments, index and item. Returns a stateful transducer when
-  no collection is provided."
+   and the first item of coll, followed by applying f to 1 and the second
+   item in coll, etc, until coll is exhausted. Thus function f should
+   accept 2 arguments, index and item. Returns a stateful transducer when
+   no collection is provided."
   ([f]
    (fn [rf]
      (let [i (volatile! -1)]
@@ -2052,53 +2050,53 @@
   ([f coll]
    (let [mapi (fn mapi [idx coll]
                 (lazy-seq
-                 (when-let [s (seq coll)]
-                   (if (chunked-seq? s)
-                     (let [c (chunk-first s)
-                           size (int (count c))
-                           b (chunk-buffer size)]
-                       (dotimes [i size]
-                         (chunk-append b (f (+ idx i) (nth c i))))
-                       (chunk-cons (chunk b) (mapi (+ idx size) (chunk-rest s))))
-                     (cons (f idx (first s)) (mapi (inc idx) (rest s)))))))]
+                  (when-let [s (seq coll)]
+                    (if (chunked-seq? s)
+                      (let [c (chunk-first s)
+                            size (int (count c))
+                            b (chunk-buffer size)]
+                        (dotimes [i size]
+                          (chunk-append b (f (+ idx i) (nth c i))))
+                        (chunk-cons (chunk b) (mapi (+ idx size) (chunk-rest s))))
+                      (cons (f idx (first s)) (mapi (inc idx) (rest s)))))))]
      (mapi 0 coll))))
 
 (defn keep
   "Returns a lazy sequence of the non-nil results of (f item). Note,
-  this means false return values will be included.  f must be free of
-  side-effects.  Returns a transducer when no collection is provided."
+   this means false return values will be included.  f must be free of
+   side-effects.  Returns a transducer when no collection is provided."
   ([f]
    (fn [rf]
      (fn
        ([] (rf))
        ([result] (rf result))
        ([result input]
-          (let [v (f input)]
-            (if (nil? v)
-              result
-              (rf result v)))))))
+        (let [v (f input)]
+          (if (nil? v)
+            result
+            (rf result v)))))))
   ([f coll]
    (lazy-seq
-    (when-let [s (seq coll)]
-      (if (chunked-seq? s)
-        (let [c (chunk-first s)
-              size (count c)
-              b (chunk-buffer size)]
-          (dotimes [i size]
-            (let [x (f (nth c i))]
-              (when-not (nil? x)
-                (chunk-append b x))))
-          (chunk-cons (chunk b) (keep f (chunk-rest s))))
-        (let [x (f (first s))]
-          (if (nil? x)
-            (keep f (rest s))
-            (cons x (keep f (rest s))))))))))
+     (when-let [s (seq coll)]
+       (if (chunked-seq? s)
+         (let [c (chunk-first s)
+               size (count c)
+               b (chunk-buffer size)]
+           (dotimes [i size]
+             (let [x (f (nth c i))]
+               (when-not (nil? x)
+                 (chunk-append b x))))
+           (chunk-cons (chunk b) (keep f (chunk-rest s))))
+         (let [x (f (first s))]
+           (if (nil? x)
+             (keep f (rest s))
+             (cons x (keep f (rest s))))))))))
 
 (defn keep-indexed
   "Returns a lazy sequence of the non-nil results of (f index item). Note,
-  this means false return values will be included.  f must be free of
-  side-effects.  Returns a stateful transducer when no collection is
-  provided."
+   this means false return values will be included.  f must be free of
+   side-effects.  Returns a stateful transducer when no collection is
+   provided."
   ([f]
    (fn [rf]
      (let [iv (volatile! -1)]
@@ -2106,31 +2104,34 @@
          ([] (rf))
          ([result] (rf result))
          ([result input]
-            (let [i (vswap! iv inc)
-                  v (f i input)]
-              (if (nil? v)
-                result
-                (rf result v))))))))
+          (let [i (vswap! iv inc)
+                v (f i input)]
+            (if (nil? v)
+              result
+              (rf result v))))))))
   ([f coll]
    (let [keepi (fn keepi [idx coll]
                  (lazy-seq
-                  (when-let [s (seq coll)]
-                    (if (chunked-seq? s)
-                      (let [c (chunk-first s)
-                            size (count c)
-                            b (chunk-buffer size)]
-                        (dotimes [i size]
-                          (let [x (f (+ idx i) (nth c i))]
-                            (when-not (nil? x)
-                              (chunk-append b x))))
-                        (chunk-cons (chunk b) (keepi (+ idx size) (chunk-rest s))))
-                      (let [x (f idx (first s))]
-                        (if (nil? x)
-                          (keepi (inc idx) (rest s))
-                          (cons x (keepi (inc idx) (rest s)))))))))]
+                   (when-let [s (seq coll)]
+                     (if (chunked-seq? s)
+                       (let [c (chunk-first s)
+                             size (count c)
+                             b (chunk-buffer size)]
+                         (dotimes [i size]
+                           (let [x (f (+ idx i) (nth c i))]
+                             (when-not (nil? x)
+                               (chunk-append b x))))
+                         (chunk-cons (chunk b) (keepi (+ idx size) (chunk-rest s))))
+                       (let [x (f idx (first s))]
+                         (if (nil? x)
+                           (keepi (inc idx) (rest s))
+                           (cons x (keepi (inc idx) (rest s)))))))))]
      (keepi 0 coll))))
 
 (defn take
+  "Returns a lazy sequence of the first n items in coll, or all items if
+   there are fewer than n. Returns a stateful transducer when
+   no collection is provided."
   ([n]
    (fn [rf]
      (let [nv (volatile! n)]
@@ -2154,15 +2155,15 @@
 
 (defn repeatedly
   "Takes a function of no args, presumably with side effects, and
-  returns an infinite (or length n if supplied) lazy sequence of calls
-  to it"
+   returns an infinite (or length n if supplied) lazy sequence of calls
+   to it"
   ([f] (lazy-seq (cons (f) (repeatedly f))))
   ([n f] (take n (repeatedly f))))
 
 (defn take-while
   "Returns a lazy sequence of successive items from coll while
-  (pred item) returns logical true. pred must be free of side-effects.
-  Returns a transducer when no collection is provided"
+   (pred item) returns logical true. pred must be free of side-effects.
+   Returns a transducer when no collection is provided"
   ([pred]
    (fn [rf]
      (fn
@@ -2174,13 +2175,13 @@
           (reduced result))))))
   ([pred coll]
    (lazy-seq
-    (when-let [s (seq coll)]
-      (when (pred (first s))
-        (cons (first s) (take-while pred (rest s))))))))
+     (when-let [s (seq coll)]
+       (when (pred (first s))
+         (cons (first s) (take-while pred (rest s))))))))
 
 (defn drop
   "Returns a lazy sequence of all but the first n items in coll.
-  Returns a stateful transducer when no collection is provided."
+   Returns a stateful transducer when no collection is provided."
   ([n]
    (fn [rf]
      (let [nv (volatile! n)]
@@ -2201,15 +2202,15 @@
                     s)))]
      (lazy-seq (step n coll)))))
 
-; Return a lazy sequence of all but the last n (default 1) items in coll
 (defn drop-last
+  "Return a lazy sequence of all but the last n (default 1) items in coll"
   ([coll] (drop-last 1 coll))
   ([n coll] (map (fn [x _] x) coll (drop n coll))))
 
 (defn drop-while
   "Returns a lazy sequence of the items in coll starting from the
-  first item for which (pred item) returns logical false.  Returns a
-  stateful transducer when no collection is provided."
+   first item for which (pred item) returns logical false.  Returns a
+   stateful transducer when no collection is provided."
   ([pred]
    (fn [rf]
      (let [dv (volatile! true)]
@@ -2231,29 +2232,28 @@
                     s)))]
      (lazy-seq (step pred coll)))))
 
-; Returns a lazy (infinite!) sequence of repetitions of the items in coll.
-(defn cycle [coll]
+(defn cycle
+  "Returns a lazy (infinite!) sequence of repetitions of the items in coll."
+  [coll]
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
 
-; Returns a lazy (infinite!, or length n if supplied) sequence of xs.
-(defn repeat
-  ; TODO: Custom repeat object
-  ([x]
-   (lazy-seq (cons x (repeat x))))
-  ([n x]
-   (take n (repeat x))))
+(def repeat
+  "Returns a lazy (infinite!, or length n if supplied) sequence of val."
+  clojure.core-native/repeat)
 
-; Returns a vector of [(take n coll) (drop n coll)]
-(defn split-at [n coll]
+(defn split-at
+  "Returns a vector of [(take n coll) (drop n coll)]"
+  [n coll]
   [(take n coll) (drop n coll)])
 
-; Returns a vector of [(take-while pred coll) (drop-while pred coll)]
-(defn split-with [pred coll]
+(defn split-with
+  "Returns a vector of [(take-while pred coll) (drop-while pred coll)]"
+  [pred coll]
   [(take-while pred coll) (drop-while pred coll)])
 
-; Returns a lazy seq of the first item in each coll, then the second etc.
 (defn interleave
+  "Returns a lazy seq of the first item in each coll, then the second etc."
   ([] ())
   ([c1] (lazy-seq c1))
   ([c1 c2]
@@ -2270,7 +2270,7 @@
 
 (defn interpose
   "Returns a lazy seq of the elements of coll separated by sep.
-  Returns a stateful transducer when no collection is provided."
+   Returns a stateful transducer when no collection is provided."
   ([sep]
    (fn [rf]
      (let [started (volatile! false)]
@@ -2289,12 +2289,12 @@
   ([sep coll]
    (drop 1 (interleave (repeat sep) coll))))
 
-; When lazy sequences are produced via functions that have side
-; effects, any effects other than those needed to produce the first
-; element in the seq do not occur until the seq is consumed. dorun can
-; be used to force any effects. Walks through the successive nexts of
-; the seq, does not retain the head and returns nil.
 (defn dorun
+  "When lazy sequences are produced via functions that have side
+   effects, any effects other than those needed to produce the first
+   element in the seq do not occur until the seq is consumed. dorun can
+   be used to force any effects. Walks through the successive nexts of
+   the seq, does not retain the head and returns nil."
   ([coll]
    (when-let [s (seq coll)]
      (recur (next s))))
@@ -2302,13 +2302,13 @@
    (when (and (seq coll) (pos? n))
      (recur (dec n) (next coll)))))
 
-; When lazy sequences are produced via functions that have side
-; effects, any effects other than those needed to produce the first
-; element in the seq do not occur until the seq is consumed. doall can
-; be used to force any effects. Walks through the successive nexts of
-; the seq, retains the head and returns it, thus causing the entire
-; seq to reside in memory at one time.
 (defn doall
+  "When lazy sequences are produced via functions that have side
+   effects, any effects other than those needed to produce the first
+   element in the seq do not occur until the seq is consumed. doall can
+   be used to force any effects. Walks through the successive nexts of
+   the seq, retains the head and returns it, thus causing the entire
+   seq to reside in memory at one time."
   ([coll]
    (dorun coll)
    coll)
@@ -2316,12 +2316,12 @@
    (dorun n coll)
    coll))
 
-; Returns a lazy sequence of lists of n items each, at offsets step
-; apart. If step is not supplied, defaults to n, i.e. the partitions
-; do not overlap. If a pad collection is supplied, use its elements as
-; necessary to complete last partition upto n items. In case there are
-; not enough padding elements, return a partition with less than n items.
 (defn partition
+  "Returns a lazy sequence of lists of n items each, at offsets step
+   apart. If step is not supplied, defaults to n, i.e. the partitions
+   do not overlap. If a pad collection is supplied, use its elements as
+   necessary to complete last partition upto n items. In case there are
+   not enough padding elements, return a partition with less than n items."
   ([n coll]
    (partition n n coll))
   ([n step coll]
@@ -2340,8 +2340,8 @@
 
 (defn partition-all
   "Returns a lazy sequence of lists like partition, but may include
-  partitions with fewer than n items at the end.  Returns a stateful
-  transducer when no collection is provided."
+   partitions with fewer than n items at the end.  Returns a stateful
+   transducer when no collection is provided."
   ([n]
    (fn [rf]
      ;; OPTIMIZE: jvm clojure uses an array here for perf
@@ -2370,8 +2370,8 @@
 
 (defn partition-by
   "Applies f to each value in coll, splitting it each time f returns a
-  new value.  Returns a lazy seq of partitions.  Returns a stateful
-  transducer when no collection is provided."
+   new value.  Returns a lazy seq of partitions.  Returns a stateful
+   transducer when no collection is provided."
   ([f]
    (fn [rf]
      ;; OPTIMIZE: jvm clojure uses an array here for perf
@@ -2401,52 +2401,54 @@
                 ret))))))))
   ([f coll]
    (lazy-seq
-    (when-let [s (seq coll)]
-      (let [fst (first s)
-            fv (f fst)
-            run (cons fst (take-while #(= fv (f %)) (next s)))]
-        (cons run (partition-by f (lazy-seq (drop (count run) s)))))))))
+     (when-let [s (seq coll)]
+       (let [fst (first s)
+             fv (f fst)
+             run (cons fst (take-while #(= fv (f %)) (next s)))]
+         (cons run (partition-by f (lazy-seq (drop (count run) s)))))))))
 
 (defn frequencies
   "Returns a map from distinct items in coll to the number of times
-  they appear."
+   they appear."
   [coll]
   ;; OPTIMIZE: transient
   (reduce (fn [counts x]
             (assoc counts x (inc (get counts x 0))))
-          {} coll))
+          {}
+          coll))
 
 (defn group-by
   "Returns a map of the elements of coll keyed by the result of
-  f on each element. The value at each key will be a vector of the
-  corresponding elements, in the order they appeared in coll."
+   f on each element. The value at each key will be a vector of the
+   corresponding elements, in the order they appeared in coll."
   [f coll]
   ;; OPTIMIZE: transient
   (reduce
-   (fn [ret x]
-     (let [k (f x)]
-       (assoc ret k (conj (get ret k []) x))))
-   {} coll))
+    (fn [ret x]
+      (let [k (f x)]
+        (assoc ret k (conj (get ret k []) x))))
+    {}
+    coll))
 
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
-  per reduce) of coll by f, starting with init."
+   per reduce) of coll by f, starting with init."
   ([f coll]
    (lazy-seq
-    (if-let [s (seq coll)]
-      (reductions f (first s) (rest s))
-      (list (f)))))
+     (if-let [s (seq coll)]
+       (reductions f (first s) (rest s))
+       (list (f)))))
   ([f init coll]
    (if (reduced? init)
      (list (deref init))
      (cons init
            (lazy-seq
-            (when-let [s (seq coll)]
-              (reductions f (f init (first s)) (rest s))))))))
+             (when-let [s (seq coll)]
+               (reductions f (f init (first s)) (rest s))))))))
 
 (defn into
   "Returns a new coll consisting of to-coll with all of the items of
-  from-coll conjoined. A transducer may be supplied."
+   from-coll conjoined. A transducer may be supplied."
   ([] [])
   ([to] to)
   ([to from]
@@ -2563,19 +2565,19 @@
 
 (defmacro let
   "binding => binding-form init-expr
-  binding-form => name, or destructuring-form
-  destructuring-form => map-destructure-form, or seq-destructure-form
+   binding-form => name, or destructuring-form
+   destructuring-form => map-destructure-form, or seq-destructure-form
 
-  Evaluates the exprs in a lexical context in which the symbols in
-  the binding-forms are bound to their respective init-exprs or parts
-  therein.
+   Evaluates the exprs in a lexical context in which the symbols in
+   the binding-forms are bound to their respective init-exprs or parts
+   therein.
 
-  See https://clojure.org/reference/special_forms#binding-forms for
-  more information about destructuring."
+   See https://clojure.org/reference/special_forms#binding-forms for
+   more information about destructuring."
   [bindings & body]
   (assert-macro-args
-     (vector? bindings) "a vector for its binding"
-     (even? (count bindings)) "an even number of forms in binding vector")
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
   `(let* ~(destructure bindings) ~@body))
 
 (defn maybe-destructured
@@ -2598,13 +2600,13 @@
 
 (defmacro fn
   "params => positional-params*, or positional-params* & rest-param
-  positional-param => binding-form
-  rest-param => binding-form
-  binding-form => name, or destructuring-form
+   positional-param => binding-form
+   rest-param => binding-form
+   binding-form => name, or destructuring-form
 
-  Defines a function.
+   Defines a function.
 
-  See https://clojure.org/reference/special_forms#fn for more information"
+   See https://clojure.org/reference/special_forms#fn for more information"
   [& sigs]
   (let [name (if (symbol? (first sigs)) (first sigs) nil)
         sigs (if name (next sigs) sigs)
@@ -2659,26 +2661,31 @@
 
 (defmacro loop
   "Evaluates the exprs in a lexical context in which the symbols in
-  the binding-forms are bound to their respective init-exprs or parts
-  therein. Acts as a recur target."
-  [bindings & body]
+   the binding-forms are bound to their respective init-exprs or parts
+   therein. Acts as a recur target."
+  [all-bindings & body]
   (assert-macro-args
-    (vector? bindings) "a vector for its binding"
-    (even? (count bindings)) "an even number of forms in binding vector")
-  (let [db (destructure bindings)]
-    (if (= db bindings)
-      `(loop* ~bindings ~@body)
-      (let [vs (take-nth 2 (drop 1 bindings))
-            bs (take-nth 2 bindings)
-            gs (map (fn [b] (if (symbol? b) b (gensym))) bs)
-            bfs (reduce (fn [ret [b v g]]
-                          (if (symbol? b)
-                            (conj ret g v)
-                            (conj ret g v b g)))
-                        [] (map vector bs vs gs))]
-        `(let ~bfs
-           (loop* ~(vec (interleave gs gs))
-                  (let ~(vec (interleave bs gs))
+    (vector? all-bindings) "a vector for its binding"
+    (even? (count all-bindings)) "an even number of forms in binding vector")
+  (let [db (destructure all-bindings)]
+    (if (= db all-bindings)
+      `(loop* ~all-bindings ~@body)
+      (let [values (take-nth 2 (drop 1 all-bindings))
+            bindings (take-nth 2 all-bindings)
+            syms (map (fn [b]
+                        (if (symbol? b)
+                          b
+                          (gensym)))
+                      bindings)
+            final-bindings (reduce (fn [ret [b v g]]
+                                     (if (symbol? b)
+                                       (conj ret g v)
+                                       (conj ret g v b g)))
+                                   []
+                                   (map vector bindings values syms))]
+        `(let ~final-bindings
+           (loop* ~(vec (interleave syms syms))
+                  (let ~(vec (interleave bindings syms))
                     ~@body)))))))
 
 (defmacro for
@@ -2690,11 +2697,11 @@
    binding-forms.  Supported modifiers are: :let [binding-form expr ...],
    :while test, :when test.
 
-  (take 100 (for [x (range 100000000) y (range 1000000) :while (< y x)] [x y]))"
+   (take 100 (for [x (range 100000000) y (range 1000000) :while (< y x)] [x y]))"
   [seq-exprs body-expr]
   (assert-macro-args
-     (vector? seq-exprs) "a vector for its binding"
-     (even? (count seq-exprs)) "an even number of forms in binding vector")
+    (vector? seq-exprs) "a vector for its binding"
+    (even? (count seq-exprs)) "an even number of forms in binding vector")
   (let [to-groups (fn [seq-exprs]
                     (reduce (fn [groups [k v]]
                               (if (keyword? k)
@@ -2720,16 +2727,17 @@
                                         (if fs#
                                           (concat fs# (~giter (rest ~gxs)))
                                           (recur (rest ~gxs))))
-                                     :else `(cons ~body-expr
-                                                  (~giter (rest ~gxs)))))]
+                                     :else (do
+                                             `(cons ~body-expr
+                                                    (~giter (rest ~gxs))))))]
                       (if next-groups
-                        ; Not the inner-most loop.
+                        ; not the inner-most loop
                         `(fn ~giter [~gxs]
                            (lazy-seq
                              (loop [~gxs ~gxs]
                                (when-first [~bind ~gxs]
                                  ~(do-mod mod-pairs)))))
-                        ; Inner-most loop.
+                        ; inner-most loop
                         (let [gi (gensym "i__")
                               gb (gensym "b__")
                               do-cmod (fn do-cmod [[[k v :as pair] & etc]]
@@ -2777,8 +2785,8 @@
 
 (defn get-in
   "Returns the value in a nested associative structure,
-  where ks is a sequence of keys. Returns nil if the key
-  is not present, or the not-found value if supplied."
+   where ks is a sequence of keys. Returns nil if the key
+   is not present, or the not-found value if supplied."
   ([m ks]
    (reduce get m ks))
   ([m ks not-found]
@@ -2793,8 +2801,8 @@
 
 (defn assoc-in
   "Associates a value in a nested associative structure, where ks is a
-  sequence of keys and v is the new value and returns a new nested structure.
-  If any levels do not exist, hash-maps will be created."
+   sequence of keys and v is the new value and returns a new nested structure.
+   If any levels do not exist, hash-maps will be created."
   [m [k & ks] v]
   (if ks
     (assoc m k (assoc-in (get m k) ks v))
@@ -2802,10 +2810,10 @@
 
 (defn update-in
   "'Updates' a value in a nested associative structure, where ks is a
-  sequence of keys and f is a function that will take the old value
-  and any supplied args and return the new value, and returns a new
-  nested structure.  If any levels do not exist, hash-maps will be
-  created."
+   sequence of keys and f is a function that will take the old value
+   and any supplied args and return the new value, and returns a new
+   nested structure.  If any levels do not exist, hash-maps will be
+   created."
   [m ks f & args]
   (let [up (fn up [m ks f args]
              (let [[k & ks] ks]
@@ -2816,9 +2824,9 @@
 
 (defn update
   "'Updates' a value in an associative structure, where k is a
-  key and f is a function that will take the old value
-  and any supplied args and return the new value, and returns a new
-  structure.  If the key does not exist, nil is passed as the old value."
+   key and f is a function that will take the old value
+   and any supplied args and return the new value, and returns a new
+   structure.  If the key does not exist, nil is passed as the old value."
   ([m k f]
    (assoc m k (f (get m k))))
   ([m k f x]
@@ -2833,7 +2841,7 @@
 (defmacro when-first
   "bindings => x xs
 
-  Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
+   Roughly the same as (when (seq xs) (let [x (first xs)] body)) but xs is evaluated only once"
   [bindings & body]
   (assert-macro-args
     (vector? bindings) "a vector for its binding"
@@ -2843,21 +2851,22 @@
        (let [~x (first xs#)]
          ~@body))))
 
-; Returns a seq of the last n items in coll.  Depending on the type
-; of coll may be no better than linear time.  For vectors, see also subvec.
-(defn take-last [n coll]
+(defn take-last
+  "Returns a seq of the last n items in coll.  Depending on the type
+   of coll may be no better than linear time.  For vectors, see also subvec."
+  [n coll]
   (loop [s (seq coll)
          lead (seq (drop n coll))]
     (if lead
       (recur (next s) (next lead))
       s)))
 
-; Returns a vector consisting of the result of applying f to the
-; set of first items of each coll, followed by applying f to the set
-; of second items in each coll, until any one of the colls is
-; exhausted.  Any remaining items in other colls are ignored. Function
-; f should accept number-of-colls arguments.
 (defn mapv
+  "Returns a vector consisting of the result of applying f to the
+   set of first items of each coll, followed by applying f to the set
+   of second items in each coll, until any one of the colls is
+   exhausted.  Any remaining items in other colls are ignored. Function
+   f should accept number-of-colls arguments."
   ([f coll]
    (-> (reduce (fn [v o]
                  (conj! v (f o)))
@@ -2871,9 +2880,10 @@
   ([f c1 c2 c3 & colls]
    (into [] (apply map f c1 c2 c3 colls))))
 
-; Returns a vector of the items in coll for which
-; (pred item) returns logical true. pred must be free of side-effects.
-(defn filterv [pred coll]
+(defn filterv
+  "Returns a vector of the items in coll for which
+   (pred item) returns logical true. pred must be free of side-effects."
+  [pred coll]
   (-> (reduce (fn [v o]
                 (if (pred o)
                   (conj! v o)
@@ -2884,8 +2894,8 @@
 
 (defn mapcat
   "Returns the result of applying concat to the result of applying map
-  to f and colls. Thus function f should return a collection. Returns
-  a transducer when no collections are provided"
+   to f and colls. Thus function f should return a collection. Returns
+   a transducer when no collections are provided"
   ([f] (comp (map f) cat))
   ; TODO: Variadic.
   ([f coll]
@@ -2897,18 +2907,18 @@
    that can have children (but may not).  children must be a fn of one
    arg that returns a sequence of the children. Will only be called on
    nodes for which branch? returns true. Root is the root node of the
-  tree."
+   tree."
   [branch? children root]
   (let [walk (fn walk [node]
                (lazy-seq
-                (cons node
-                      (when (branch? node)
-                        (mapcat walk (children node))))))]
+                 (cons node
+                       (when (branch? node)
+                         (mapcat walk (children node))))))]
     (walk root)))
 
 (defn distinct
   "Returns a lazy sequence of the elements of coll with duplicates removed.
-  Returns a stateful transducer when no collection is provided."
+   Returns a stateful transducer when no collection is provided."
   ([]
    (fn [rf]
      (let [seen (volatile! #{})]
@@ -2923,12 +2933,12 @@
   ([coll]
    (let [step (fn step [xs seen]
                 (lazy-seq
-                 ((fn [[f :as xs] seen]
-                    (when-let [s (seq xs)]
-                      (if (contains? seen f)
-                        (recur (rest s) seen)
-                        (cons f (step (rest s) (conj seen f))))))
-                  xs seen)))]
+                  ((fn [[f :as xs] seen]
+                     (when-let [s (seq xs)]
+                       (if (contains? seen f)
+                         (recur (rest s) seen)
+                         (cons f (step (rest s) (conj seen f))))))
+                   xs seen)))]
      (step coll #{}))))
 
 (defn distinct?
@@ -2937,7 +2947,8 @@
   ([x y] (not (= x y)))
   ([x y & more]
    (if (not= x y)
-     (loop [s #{x y} [x & etc :as xs] more]
+     (loop [s #{x y}
+            [x & etc :as xs] more]
        (if xs
          (if (contains? s x)
            false
@@ -2945,10 +2956,10 @@
          true))
      false)))
 
-; Returns a lazy sequence of the items in coll for which
-; (pred item) returns logical true. pred must be free of side-effects.
-; Returns a transducer when no collection is provided.
 (defn filter
+  "Returns a lazy sequence of the items in coll for which
+   (pred item) returns logical true. pred must be free of side-effects.
+   Returns a transducer when no collection is provided."
   ([pred]
    (fn [rf]
      (fn
@@ -2977,16 +2988,16 @@
 
 (defn flatten
   "Takes any nested combination of sequential things (lists, vectors,
-  etc.) and returns their contents as a single, flat lazy sequence.
-  (flatten nil) returns an empty sequence."
+   etc.) and returns their contents as a single, flat lazy sequence.
+   (flatten nil) returns an empty sequence."
   [x]
   (filter (complement sequential?)
           (rest (tree-seq sequential? seq x))))
 
-; Returns a lazy sequence of the items in coll for which
-; (pred item) returns logical false. pred must be free of side-effects.
-; Returns a transducer when no collection is provided.
 (defn remove
+  "Returns a lazy sequence of the items in coll for which
+   (pred item) returns logical false. pred must be free of side-effects.
+   Returns a transducer when no collection is provided."
   ([pred]
    (filter (complement pred)))
   ([pred coll]
@@ -2994,7 +3005,7 @@
 
 (defn dedupe
   "Returns a lazy sequence removing consecutive duplicates in coll.
-  Returns a transducer when no collection is provided."
+   Returns a transducer when no collection is provided."
   ([]
    (fn [rf]
      (let [pv (volatile! ::none)]
@@ -3010,56 +3021,56 @@
   ([coll]
    (let [step (fn step [prior xs]
                 (lazy-seq
-                 (when-some [[x & more] (seq xs)]
-                   (if (= x prior)
-                     (step prior more)
-                     (cons x (step x more))))))]
+                  (when-some [[x & more] (seq xs)]
+                    (if (= x prior)
+                      (step prior more)
+                      (cons x (step x more))))))]
      (step ::none coll))))
 
 (defmacro condp
   "Takes a binary predicate, an expression, and a set of clauses.
-  Each clause can take the form of either:
+   Each clause can take the form of either:
 
-  test-expr result-expr
+   test-expr result-expr
 
-  test-expr :>> result-fn
+   test-expr :>> result-fn
 
-  Note :>> is an ordinary keyword.
+   Note :>> is an ordinary keyword.
 
-  For each clause, (pred test-expr expr) is evaluated. If it returns
-  logical true, the clause is a match. If a binary clause matches, the
-  result-expr is returned, if a ternary clause matches, its result-fn,
-  which must be a unary function, is called with the result of the
-  predicate as its argument, the result of that call being the return
-  value of condp. A single default expression can follow the clauses,
-  and its value will be returned if no clause matches. If no default
-  expression is provided and no clause matches, an
-  IllegalArgumentException is thrown."
+   For each clause, (pred test-expr expr) is evaluated. If it returns
+   logical true, the clause is a match. If a binary clause matches, the
+   result-expr is returned, if a ternary clause matches, its result-fn,
+   which must be a unary function, is called with the result of the
+   predicate as its argument, the result of that call being the return
+   value of condp. A single default expression can follow the clauses,
+   and its value will be returned if no clause matches. If no default
+   expression is provided and no clause matches, an
+   IllegalArgumentException is thrown."
   [pred expr & clauses]
   (let [gpred (gensym "pred__")
         gexpr (gensym "expr__")
         emit (fn emit [pred expr args]
                (let [[[a b c :as clause] more]
-                       (split-at (if (= :>> (second args)) 3 2) args)
-                       n (count clause)]
+                     (split-at (if (= :>> (second args)) 3 2) args)
+                     n (count clause)]
                  (cond
-                  (= 0 n) `(throw (str "No matching clause: " ~expr))
-                  (= 1 n) a
-                  (= 2 n) `(if (~pred ~a ~expr)
-                             ~b
-                             ~(emit pred expr more))
-                  :else `(if-let [p# (~pred ~a ~expr)]
-                           (~c p#)
-                           ~(emit pred expr more)))))]
+                   (= 0 n) `(throw (str "No matching clause: " ~expr))
+                   (= 1 n) a
+                   (= 2 n) `(if (~pred ~a ~expr)
+                              ~b
+                              ~(emit pred expr more))
+                   :else `(if-let [p# (~pred ~a ~expr)]
+                            (~c p#)
+                            ~(emit pred expr more)))))]
     `(let [~gpred ~pred
            ~gexpr ~expr]
        ~(emit gpred gexpr clauses))))
 
 (defmacro cond->
   "Takes an expression and a set of test/form pairs. Threads expr (via ->)
-  through each form for which the corresponding test
-  expression is true. Note that, unlike cond branching, cond-> threading does
-  not short circuit after the first true test expression."
+   through each form for which the corresponding test
+   expression is true. Note that, unlike cond branching, cond-> threading does
+   not short circuit after the first true test expression."
   [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
@@ -3078,9 +3089,9 @@
 
 (defmacro cond->>
   "Takes an expression and a set of test/form pairs. Threads expr (via ->>)
-  through each form for which the corresponding test expression
-  is true.  Note that, unlike cond branching, cond->> threading does not short circuit
-  after the first true test expression."
+   through each form for which the corresponding test expression
+   is true.  Note that, unlike cond branching, cond->> threading does not short circuit
+   after the first true test expression."
   [expr & clauses]
   (assert (even? (count clauses)))
   (let [g (gensym)
@@ -3094,8 +3105,8 @@
 
 (defmacro as->
   "Binds name to expr, evaluates the first form in the lexical context
-  of that binding, then binds name to that result, repeating for each
-  successive form, returning the result of the last form."
+   of that binding, then binds name to that result, repeating for each
+   successive form, returning the result of the last form."
   [expr name & forms]
   `(let [~name ~expr
          ~@(interleave (repeat name) (butlast forms))]
@@ -3105,7 +3116,7 @@
 
 (defmacro some->
   "When expr is not nil, threads it into the first form (via ->),
-  and when that result is not nil, through the next etc"
+   and when that result is not nil, through the next etc"
   [expr & forms]
   (let [g (gensym)
         steps (map (fn [step] `(if (nil? ~g) nil (-> ~g ~step)))
@@ -3118,7 +3129,7 @@
 
 (defmacro some->>
   "When expr is not nil, threads it into the first form (via ->>),
-  and when that result is not nil, through the next etc"
+   and when that result is not nil, through the next etc"
   [expr & forms]
   (let [g (gensym)
         steps (map (fn [step] `(if (nil? ~g) nil (->> ~g ~step)))
@@ -3130,86 +3141,53 @@
           (last steps)))))
 
 ;; Functions.
-(defn ifn? [o]
-  (native/raw "__value = make_box(is_callable(~{ o }));"))
-(defn fn? [o]
-  (native/raw "auto const fn
-              (
-               ~{ o }->type == object_type::native_function_wrapper
-               || ~{ o }->type == object_type::jit_function
-               );
-              __value = make_box(fn);"))
-
-; Vars.
-(defn var? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::var);"))
-
-(defn var-get [v]
-  (native/raw "__value = try_object<runtime::var>(~{ v })->deref();"))
-
-(defn alter-var-root
-  "Atomically alters the root binding of var v by applying f to its
-  current value plus any args"
-  [v f & args]
-  (native/raw "__value = try_object<runtime::var>(~{ v })->alter_root(~{ f }, ~{ args });"))
-
-(defn bound?
-  "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
-  Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
-  [& vars]
-  (every? (fn [v]
-            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->is_bound());"))
-          vars))
-
-(defn thread-bound?
-  "Returns true if all of the vars provided as arguments have thread-local bindings.
-  Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
-  [& vars]
-  (every? (fn [v]
-            (native/raw "__value = make_box(try_object<runtime::var>(~{ v })->get_thread_binding() != nullptr);"))
-          vars))
+(def ifn?
+  "Returns true if x implements IFn. Note that many data structures
+   (e.g. sets and maps) implement IFn"
+  clojure.core-native/ifn?)
+(def fn?
+  "Returns true if x implements Fn, i.e. is an object created via fn."
+  clojure.core-native/fn?)
 
 ;; Multimethods.
 (defn- check-valid-options
   "Throws an exception if the given option map contains keys not listed
-  as valid, else returns nil."
+   as valid, else returns nil."
   [options & valid-keys]
   (when (seq (apply disj (apply hash-set (keys options)) valid-keys))
     (throw (apply str "Only these options are valid: "
                   (first valid-keys)
                   (map #(str ", " %) (rest valid-keys))))))
 
-(defn- multi-fn? [o]
-  (native/raw "__value = make_box(~{ o }->type == object_type::multi_function);"))
+(def ^:private multi-fn? clojure.core-native/multi-fn?)
 
-(defn- multi-fn* [name dispatch-fn default hierarchy]
-  (native/raw "__value = make_box<obj::multi_function>(~{ name }, ~{ dispatch-fn }, ~{ default }, ~{ hierarchy });"))
+(def ^:private multi-fn* clojure.core-native/multi-fn*)
 
 (def global-hierarchy)
 
 (defmacro defmulti
   "Creates a new multimethod with the associated dispatch function.
-  The docstring and attr-map are optional.
+   The docstring and attr-map are optional.
 
-  Options are key-value pairs and may be one of:
+   Options are key-value pairs and may be one of:
 
-  :default
+   :default
 
-  The default dispatch value, defaults to :default
+   The default dispatch value, defaults to :default
 
-  :hierarchy
+   :hierarchy
 
-  The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
+   The value used for hierarchical dispatch (e.g. ::square is-a ::shape)
 
-  Hierarchies are type-like relationships that do not depend upon type
-  inheritance. By default Clojure's multimethods dispatch off of a
-  global hierarchy map.  However, a hierarchy relationship can be
-  created with the derive function used to augment the root ancestor
-  created with make-hierarchy.
+   Hierarchies are type-like relationships that do not depend upon type
+   inheritance. By default Clojure's multimethods dispatch off of a
+   global hierarchy map.  However, a hierarchy relationship can be
+   created with the derive function used to augment the root ancestor
+   created with make-hierarchy.
 
-  Multimethods expect the value of the hierarchy option to be supplied as
-  a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
-  or the var special form)."
+   Multimethods expect the value of the hierarchy option to be supplied as
+   a reference type e.g. a var (i.e. via the Var-quote dispatch macro #'
+   or the var special form)."
   [mm-name & options]
   (let [docstring (if (string? (first options))
                     (first options)
@@ -3241,45 +3219,38 @@
          (when-not (multi-fn? (deref v#))
            (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
 
-(defn- defmethod* [multifn dispatch-val fun]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->add_method(~{ dispatch-val }, ~{ fun });"))
+(def ^:private defmethod* clojure.core-native/defmethod*)
 
 (defmacro defmethod
   "Creates and installs a new method of multimethod associated with dispatch-value. "
   [multifn dispatch-val & fn-tail]
   `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
 
-(defn remove-all-methods
+(def remove-all-methods
   "Removes all of the methods of multimethod."
-  [multifn]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->reset();"))
+  clojure.core-native/remove-all-methods)
 
-(defn remove-method
+(def remove-method
   "Removes the method of multimethod associated with dispatch-value."
-  [multifn dispatch-val]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->remove_method(~{ dispatch-val });"))
+  clojure.core-native/remove-method)
 
-(defn prefer-method
+(def prefer-method
   "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
-  when there is a conflict"
-  [multifn dispatch-val-x dispatch-val-y]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_method(~{ dispatch-val-x }, ~{ dispatch-val-y });"))
+   when there is a conflict"
+  clojure.core-native/prefer-method)
 
-(defn methods
+(def methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-  [multifn]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->method_table;"))
+  clojure.core-native/methods)
 
-(defn get-method
+(def get-method
   "Given a multimethod and a dispatch value, returns the dispatch fn
-  that would apply to that value, or nil if none apply and no default"
-  [multifn dispatch-val]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->get_fn(~{ dispatch-val });"))
+   that would apply to that value, or nil if none apply and no default"
+  clojure.core-native/get-method)
 
-(defn prefers
+(def prefers
   "Given a multimethod, returns a map of preferred value -> set of other values"
-  [multifn]
-  (native/raw "__value = try_object<obj::multi_function>(~{ multifn })->prefer_table;"))
+  clojure.core-native/prefers)
 
 ;; Hierarchies.
 (defn make-hierarchy
@@ -3293,10 +3264,10 @@
 
 (defn isa?
   "Returns true if (= child parent), or child is directly or indirectly derived from
-  parent, either via a Java type inheritance relationship or a
-  relationship established via derive. h must be a hierarchy obtained
-  from make-hierarchy, if not supplied defaults to the global
-  hierarchy"
+   parent, either via a Java type inheritance relationship or a
+   relationship established via derive. h must be a hierarchy obtained
+   from make-hierarchy, if not supplied defaults to the global
+   hierarchy"
   ([child parent]
    (isa? global-hierarchy child parent))
   ([h child parent]
@@ -3312,9 +3283,9 @@
 
 (defn parents
   "Returns the immediate parents of tag, either via a Java type
-  inheritance relationship or a relationship established via derive. h
-  must be a hierarchy obtained from make-hierarchy, if not supplied
-  defaults to the global hierarchy"
+   inheritance relationship or a relationship established via derive. h
+   must be a hierarchy obtained from make-hierarchy, if not supplied
+   defaults to the global hierarchy"
   ([tag]
    (parents global-hierarchy tag))
   ([h tag]
@@ -3322,9 +3293,9 @@
 
 (defn ancestors
   "Returns the immediate and indirect parents of tag, either via a Java type
-  inheritance relationship or a relationship established via derive. h
-  must be a hierarchy obtained from make-hierarchy, if not supplied
-  defaults to the global hierarchy"
+   inheritance relationship or a relationship established via derive. h
+   must be a hierarchy obtained from make-hierarchy, if not supplied
+   defaults to the global hierarchy"
   ([tag]
    (ancestors global-hierarchy tag))
   ([h tag]
@@ -3332,10 +3303,10 @@
 
 (defn descendants
   "Returns the immediate and indirect children of tag, through a
-  relationship established via derive. h must be a hierarchy obtained
-  from make-hierarchy, if not supplied defaults to the global
-  hierarchy. Note: does not work on Java type inheritance
-  relationships."
+   relationship established via derive. h must be a hierarchy obtained
+   from make-hierarchy, if not supplied defaults to the global
+   hierarchy. Note: does not work on Java type inheritance
+   relationships."
   ([tag]
    (descendants global-hierarchy tag))
   ([h tag]
@@ -3343,10 +3314,10 @@
 
 (defn derive
   "Establishes a parent/child relationship between parent and
-  tag. Parent must be a namespace-qualified symbol or keyword and
-  child can be either a namespace-qualified symbol or keyword or a
-  class. h must be a hierarchy obtained from make-hierarchy, if not
-  supplied defaults to, and modifies, the global hierarchy."
+   tag. Parent must be a namespace-qualified symbol or keyword and
+   child can be either a namespace-qualified symbol or keyword or a
+   class. h must be a hierarchy obtained from make-hierarchy, if not
+   supplied defaults to, and modifies, the global hierarchy."
   ([tag parent]
    (assert (namespace parent))
    (assert (and (named? tag) (namespace tag)))
@@ -3381,8 +3352,8 @@
 
 (defn underive
   "Removes a parent/child relationship between parent and
-  tag. h must be a hierarchy obtained from make-hierarchy, if not
-  supplied defaults to, and modifies, the global hierarchy."
+   tag. h must be a hierarchy obtained from make-hierarchy, if not
+   supplied defaults to, and modifies, the global hierarchy."
   ([tag parent]
    (alter-var-root #'global-hierarchy underive tag parent) nil)
   ([h tag parent]
@@ -3403,7 +3374,7 @@
 
 (defmacro defonce
   "defs name to have the root value of the expr iff the named var has no root value,
-  else expr is unevaluated"
+   else expr is unevaluated"
   [name expr]
   `(let [v# (def ~name)]
      (when-not (bound? v#)
@@ -3415,8 +3386,8 @@
 
 (def ^:private max-mask-bits 13)
 (def ^:private max-switch-table-size (bit-shift-left 1 max-mask-bits))
-(def ^:private int-min-value (native/raw "__value = make_box(std::numeric_limits<native_integer>::min());"))
-(def ^:private int-max-value (native/raw "__value = make_box(std::numeric_limits<native_integer>::max());"))
+(def ^:private int-min-value clojure.core-native/int-min)
+(def ^:private int-max-value clojure.core-native/int-max)
 
 (defn- maybe-min-hash
   "Takes a collection of hashes and returns [shift mask] or nil if none found"
@@ -3430,8 +3401,8 @@
 
 (defn- case-map
   "Transforms a sequence of test constants and a corresponding sequence of then
-  expressions into a sorted map to be consumed by case*. The form of the map
-  entries are {(case-f test) [(test-f test) then]}."
+   expressions into a sorted map to be consumed by case*. The form of the map
+   entries are {(case-f test) [(test-f test) then]}."
   [case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests)
@@ -3441,15 +3412,15 @@
 
 (defn- fits-table?
   "Returns true if the collection of ints can fit within the
-  max-table-switch-size, false otherwise."
+   max-table-switch-size, false otherwise."
   [ints]
   (< (- (apply max (seq ints)) (apply min (seq ints))) max-switch-table-size))
 
 (defn- prep-ints
   "Takes a sequence of int-sized test constants and a corresponding sequence of
-  then expressions. Returns a tuple of [shift mask case-map switch-type] where
-  case-map is a map of int case values to [test then] tuples, and switch-type
-  is either :sparse or :compact."
+   then expressions. Returns a tuple of [shift mask case-map switch-type] where
+   case-map is a map of int case values to [test then] tuples, and switch-type
+   is either :sparse or :compact."
   [tests thens]
   (if (fits-table? tests)
     ; compact case ints, no shift-mask
@@ -3463,17 +3434,17 @@
 
 (defn- merge-hash-collisions
   "Takes a case expression, default expression, and a sequence of test constants
-  and a corresponding sequence of then expressions. Returns a tuple of
-  [tests thens skip-check-set] where no tests have the same hash. Each set of
-  input test constants with the same hash is replaced with a single test
-  constant (the case int), and their respective thens are combined into:
-  (condp = expr
-    test-1 then-1
-    ...
-    test-n then-n
-    default).
-  The skip-check is a set of case ints for which post-switch equivalence
-  checking must not be done (the cases holding the above condp thens)."
+   and a corresponding sequence of then expressions. Returns a tuple of
+   [tests thens skip-check-set] where no tests have the same hash. Each set of
+   input test constants with the same hash is replaced with a single test
+   constant (the case int), and their respective thens are combined into:
+   (condp = expr
+   test-1 then-1
+   ...
+   test-n then-n
+   default).
+   The skip-check is a set of case ints for which post-switch equivalence
+   checking must not be done (the cases holding the above condp thens)."
   [expr-sym default tests thens]
   (let [buckets (loop [m {} ks tests vs thens]
                   (if (and ks vs)
@@ -3498,11 +3469,11 @@
 
 (defn- prep-hashes
   "Takes a sequence of test constants and a corresponding sequence of then
-  expressions. Returns a tuple of [shift mask case-map switch-type skip-check]
-  where case-map is a map of int case values to [test then] tuples, switch-type
-  is either :sparse or :compact, and skip-check is a set of case ints for which
-  post-switch equivalence checking must not be done (occurs with hash
-  collisions)."
+   expressions. Returns a tuple of [shift mask case-map switch-type skip-check]
+   where case-map is a map of int case values to [test then] tuples, switch-type
+   is either :sparse or :compact, and skip-check is a set of case ints for which
+   post-switch equivalence checking must not be done (occurs with hash
+   collisions)."
   [expr-sym default tests thens]
   (let [hashes (into #{} (map hash tests))]
     (if (== (count tests) (count hashes))
@@ -3526,26 +3497,26 @@
 (defmacro case
   "Takes an expression, and a set of clauses.
 
-  Each clause can take the form of either:
+   Each clause can take the form of either:
 
-  test-constant result-expr
+   test-constant result-expr
 
-  (test-constant1 ... test-constantN)  result-expr
+   (test-constant1 ... test-constantN)  result-expr
 
-  The test-constants are not evaluated. They must be compile-time
-  literals, and need not be quoted.  If the expression is equal to a
-  test-constant, the corresponding result-expr is returned. A single
-  default expression can follow the clauses, and its value will be
-  returned if no clause matches. If no default expression is provided
-  and no clause matches, an IllegalArgumentException is thrown.
+   The test-constants are not evaluated. They must be compile-time
+   literals, and need not be quoted.  If the expression is equal to a
+   test-constant, the corresponding result-expr is returned. A single
+   default expression can follow the clauses, and its value will be
+   returned if no clause matches. If no default expression is provided
+   and no clause matches, an IllegalArgumentException is thrown.
 
-  Unlike cond and condp, case does a constant-time dispatch, the
-  clauses are not considered sequentially.  All manner of constant
-  expressions are acceptable in case, including numbers, strings,
-  symbols, keywords, and (Clojure) composites thereof. Note that since
-  lists are used to group multiple constants that map to the same
-  expression, a vector can be used to match a list if needed. The
-  test-constants need not be all of the same type."
+   Unlike cond and condp, case does a constant-time dispatch, the
+   clauses are not considered sequentially.  All manner of constant
+   expressions are acceptable in case, including numbers, strings,
+   symbols, keywords, and (Clojure) composites thereof. Note that since
+   lists are used to group multiple constants that map to the same
+   expression, a vector can be used to match a list if needed. The
+   test-constants need not be all of the same type."
   {:added "1.2"}
 
   [e & clauses]
@@ -3561,11 +3532,11 @@
                            (throw (str "Duplicate case test constant: " test))
                            (assoc m test expr)))
             pairs (reduce
-                       (fn [m [test expr]]
-                         (if (seq? test)
-                           (reduce #(assoc-test %1 %2 expr) m test)
-                           (assoc-test m test expr)))
-                       {} pairs)
+                    (fn [m [test expr]]
+                      (if (seq? test)
+                        (reduce #(assoc-test %1 %2 expr) m test)
+                        (assoc-test m test expr)))
+                    {} pairs)
             tests (keys pairs)
             thens (vals pairs)
             mode (cond
@@ -3591,34 +3562,31 @@
 
 ;; Miscellaneous.
 ; TODO: jank.core
-(defn sleep [ms]
-  (let [ms (int ms)]
-    (native/raw "std::this_thread::sleep_for(std::chrono::milliseconds(~{ ms }->data));")))
+(def sleep clojure.core-native/sleep)
+(def current-time clojure.core-native/current-time)
 
-; Evaluates expr and prints the time it took. Returns the value of expr.
-(defmacro time [expr]
-  (let [now `#(native/raw "auto const t(std::chrono::high_resolution_clock::now());
-                          __value = make_box(std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count());")]
-    `(let [start# (~now)
-           ret# ~expr
-           end# (~now)]
-       (println (str "Elapsed time: " (/ (- end# start#) 1000000.0) " ms"))
-       ret#)))
+(defmacro time
+  "Evaluates expr and prints the time it took. Returns the value of expr."
+  [expr]
+  `(let [start# (current-time)
+         ret# ~expr
+         end# (current-time)]
+     (println (str "Elapsed time: " (/ (- end# start#) 1000000.0) " ms"))
+     ret#))
 
-; Temporarily redefines Vars during a call to func. Each val of
-; binding-map will replace the root value of its key which must be
-; a Var. After func is called with no args, the root values of all
-; the Vars will be set back to their old values. These temporary
-; changes will be visible in all threads. Useful for mocking out
-; functions during testing.
-(defn with-redefs-fn [binding-map fun]
+(defn with-redefs-fn
+  "Temporarily redefines Vars during a call to func. Each val of
+   binding-map will replace the root value of its key which must be
+   a Var. After func is called with no args, the root values of all
+   the Vars will be set back to their old values. These temporary
+   changes will be visible in all threads. Useful for mocking out
+   functions during testing."
+  [binding-map fun]
   (let [root-bind (fn [m]
                     (doseq [kv m]
-                      (native/raw "try_object<runtime::var>(~{ (first kv) })->bind_root(~{ (second kv) });")))
+                      (clojure.core-native/var-bind-root (first kv) (second kv))))
         old-vals (zipmap (keys binding-map)
-                         (map (fn [v]
-                                (native/raw "__value = try_object<runtime::var>(~{ v })->get_root();"))
-                              (keys binding-map)))]
+                         (map clojure.core-native/var-get-root (keys binding-map)))]
     (try
       (root-bind binding-map)
       (fun)
@@ -3627,60 +3595,71 @@
       (finally
         (root-bind old-vals)))))
 
-; binding => var-symbol temp-value-expr
-;
-; Temporarily redefines Vars while executing the body.  The
-; temp-value-exprs will be evaluated and each resulting value will
-; replace in parallel the root value of its Var.  After the body is
-; executed, the root values of all the Vars will be set back to their
-; old values.  These temporary changes will be visible in all threads.
-; Useful for mocking out functions during testing.
-(defmacro with-redefs [bindings & body]
-  (list 'clojure.core/with-redefs-fn
+(defmacro with-redefs
+  "binding => var-symbol temp-value-expr
+
+   Temporarily redefines Vars while executing the body.  The
+   temp-value-exprs will be evaluated and each resulting value will
+   replace in parallel the root value of its Var.  After the body is
+   executed, the root values of all the Vars will be set back to their
+   old values.  These temporary changes will be visible in all threads.
+   Useful for mocking out functions during testing."
+  [bindings & body]
+  (list `with-redefs-fn
         (zipmap (map (fn [v]
                        (list 'var v))
                      (take-nth 2 bindings))
                 (take-nth 2 (next bindings)))
-        (list* 'clojure.core/fn []
+        (list* `fn []
                body)))
 
-; Namespaces.
-(defn in-ns [sym]
-  (if (symbol? sym)
-    (native/raw "__rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(expect_object<obj::symbol>(sym))).expect_ok();")
-    (throw "argument to in-ns must be a symbol")))
+;; Namespaces.
+(def in-ns
+  "Sets *ns* to the namespace named by the symbol, creating it if needed."
+  clojure.core-native/in-ns)
 
-; Namespaces (again).
-(defn create-ns [sym]
-  (native/raw "__value = __rt_ctx->intern_ns(try_object<obj::symbol>(~{ sym }));"))
+(def create-ns
+  "Create a new namespace named by the symbol if one doesn't already
+   exist, returns it or the already-existing namespace of the same
+   name."
+  clojure.core-native/create-ns)
 
-(defn find-ns [sym]
-  (native/raw "__value = __rt_ctx->find_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
-               if(!__value)
-               { __value = obj::nil::nil_const(); }"))
+(def find-ns
+  "Returns the namespace named by the symbol or nil if it doesn't exist."
+  clojure.core-native/create-ns)
 
-(defn remove-ns [sym]
-  (native/raw "__value = __rt_ctx->remove_ns(try_object<obj::symbol>(~{ sym })).unwrap_or(nullptr);
-               if(!__value)
-               { __value = obj::nil::nil_const(); }"))
+(def remove-ns
+  "Removes the namespace named by the symbol. Use with caution.
+   Cannot be used to remove the clojure namespace."
+  clojure.core-native/remove-ns)
 
-(defn the-ns [ns-or-sym]
-  (if (native/raw "__value = make_box(~{ ns-or-sym }->type == object_type::ns);")
+(defn the-ns
+  "If passed a namespace, returns it. Else, when passed a symbol,
+   returns the namespace named by it, throwing an exception if not
+   found."
+  [ns-or-sym]
+  (if (clojure.core-native/ns? ns-or-sym)
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
         (throw (ex-info :not-an-ns-or-sym {:value ns-or-sym}))
         found))))
 
-(defn ns-name [ns-sym]
+(defn ns-name
+  "Returns the name of the namespace, a symbol."
+  [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (native/raw "__value = expect_object<runtime::ns>(~{ ns })->name;")))
+    (clojure.core-native/ns-name ns)))
 
-(defn ns-map [ns-sym]
+(defn ns-map
+  "Returns a map of all the mappings for the namespace."
+  [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (native/raw "__value = expect_object<runtime::ns>(~{ ns })->get_mappings();")))
+    (clojure.core-native/ns-map ns)))
 
-(defn ns-publics [ns-sym]
+(defn ns-publics
+  "Returns a map of the public intern mappings for the namespace."
+  [ns-sym]
   (let [ns (the-ns ns-sym)]
     ; TODO: It may be faster to start with the whole map and dissoc.
     ; TODO: Good use case for transients.
@@ -3689,7 +3668,7 @@
                     v (second kv)]
                 ; TODO: Check for visibility.
                 (if (var? v)
-                  (if (native/raw "__value = make_box(~{ ns } == expect_object<runtime::var>(~{ v })->n);")
+                  (if (= ns (clojure.core-native/var-ns v))
                     (assoc acc k v)
                     acc)
                   acc)))
@@ -3698,17 +3677,14 @@
 
 (defn ns-resolve
   "Returns the var to which a symbol will be resolved in the
-  namespace (unless found in the environment), else nil.  Note that
-  if the symbol is fully qualified, the var to which it resolves
-  need not be present in the namespace."
+   namespace (unless found in the environment), else nil.  Note that
+   if the symbol is fully qualified, the var to which it resolves
+   need not be present in the namespace."
   ([ns sym]
-    (ns-resolve ns nil sym))
+   (ns-resolve ns nil sym))
   ([ns env sym]
-    (when-not (contains? env sym)
-      (native/raw "auto const n(try_object<runtime::ns>(~{ (the-ns ns) }));
-                   auto const found(n->find_var(try_object<obj::symbol>(~{ sym })));
-                   if(found.is_some())
-                   { __value = found.unwrap(); }"))))
+   (when-not (contains? env sym)
+     (clojure.core-native/ns-resolve (the-ns ns) sym))))
 
 (defn resolve
   "Same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
@@ -3735,15 +3711,31 @@
   (when pred
     (throw (ex-info :assertion-failure {:msg msg}))))
 
-(defn alias [alias ns-sym]
+(defn alias
+  "Add an alias in the current namespace to another
+   namespace. Arguments are two symbols: the alias to be used, and
+   the symbolic name of the target namespace. Use :as in the ns macro in preference
+   to calling this directly."
+  [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
-    (native/raw "expect_object<ns>(~{ *ns* })->add_alias
-                 (
-                   try_object<obj::symbol>(~{ alias }),
-                   expect_object<ns>(~{ ns-obj })
-                 ).expect_ok();")))
+    (clojure.core-native/alias *ns* ns-obj alias)))
 
-(defn refer [ns-sym & filters]
+(defn refer
+  "refers to all public vars of ns, subject to filters.
+   filters can include at most one each of:
+
+   :exclude list-of-symbols
+   :only list-of-symbols
+   :rename map-of-fromsymbol-tosymbol
+
+   For each public interned var in the namespace named by the symbol,
+   adds a mapping from the name of the var to the var to the current
+   namespace.  Throws an exception if name is already mapped to
+   something else in the current namespace. Filters can be used to
+   select a subset, via inclusion or exclusion, or to provide a mapping
+   to a symbol different from the var's name, in order to prevent
+   clashes. Use :use in the ns macro in preference to calling this directly."
+  [ns-sym & filters]
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
             (throw (ex-info :unknown-namespace {:value ns-sym})))
@@ -3761,26 +3753,27 @@
                       sym (rename sym sym)]
                   (when (nil? v)
                     (throw (ex-info :var-does-not-exist {:value sym})))
-                  (native/raw "expect_object<runtime::ns>(~{ *ns* })->refer
-                              (
-                               try_object<obj::symbol>(~{ sym }),
-                               expect_object<runtime::var>(~{ v })
-                               ).expect_ok();"))))
+                  (clojure.core-native/refer *ns* sym v))))
             nil
             to-refer)))
 
-(defn load [& paths]
+(defn load
+  "Loads Clojure code from resources in classpath. A path is interpreted as
+   classpath-relative if it begins with a slash or relative to the root
+   directory for the current namespace otherwise."
+  [& paths]
   (if (empty? paths)
     nil
     (let [path (first paths)]
       ; TODO: Check for cyclic deps, once we have dynamic vars.
-      (native/raw "__rt_ctx->load_module(runtime::to_string(~{ path })).expect_ok();")
+      (clojure.core-native/load-module path)
       (recur (rest paths)))))
 
-; Loads a lib given its name. If `need-ns?`, ensures that the associated
-; namespace exists after loading. If `require?`, records the load so any
-; duplicate loads can be skipped.
-(defn- load-one [lib need-ns? require?]
+(defn- load-one
+  "Loads a lib given its name. If `need-ns?`, ensures that the associated
+   namespace exists after loading. If `require?`, records the load so any
+   duplicate loads can be skipped."
+  [lib need-ns? require?]
   (load (root-resource lib))
   (throw-if (and need-ns? (not (find-ns lib)))
             (str "namespace " lib " not found after loading " (root-resource lib)))
@@ -3791,11 +3784,12 @@
     ; (commute *loaded-libs* conj lib))
     ))
 
-; Loads a lib given its name and forces a load of any libs it directly or
-; indirectly loads. If need-ns, ensures that the associated namespace
-; exists after loading. If require, records the load so any duplicate loads
-; can be skipped.
-(defn- load-all [lib need-ns? require?]
+(defn- load-all
+  "Loads a lib given its name and forces a load of any libs it directly or
+   indirectly loads. If need-ns, ensures that the associated namespace
+   exists after loading. If require, records the load so any duplicate loads
+   can be skipped."
+  [lib need-ns? require?]
   ; TODO: Port once we have dynamic vars
   ;(dosync
   ; (commute *loaded-libs* #(reduce conj %1 %2)
@@ -3804,8 +3798,9 @@
   ;            @*loaded-libs*)))
   nil)
 
-; Loads a lib with options
-(defn- load-lib [lib & options]
+(defn- load-lib
+  "Loads a lib with options"
+  [lib & options]
   (let [opts (apply hash-map options)
         ; TODO: Map destructuring.
         as (:as opts)
@@ -3817,7 +3812,7 @@
         as-alias (:as-alias opts)
         ; TODO: Dynamic var
         ;loaded (contains? @*loaded-libs* lib)
-        loaded? (native/raw "__value = make_box(__rt_ctx->module_loader.is_loaded(runtime::to_string(~{ lib })));")
+        loaded? (clojure.core-native/module-loaded? lib)
         need-ns? (or as use)
         load (cond reload-all load-all
                    reload load-one
@@ -3844,16 +3839,12 @@
     (when (or use (:refer filter-opts))
       (apply refer lib (mapcat seq filter-opts)))))
 
-; Loads libs, interpreting libspecs, prefix lists, and flags for
-; forwarding to load-lib
-(defn- load-libs [& args]
+(defn- load-libs
+  "Loads libs, interpreting libspecs, prefix lists, and flags for
+   forwarding to load-lib"
+  [& args]
   (let [flags (filter keyword? args)
-        ; TODO: Implement `interleave` and `repeat`.
-        ;opts (interleave flags (repeat true))
-        opts (reduce (fn [acc flag]
-                       (concat acc [flag true]))
-                     []
-                     flags)
+        opts (interleave flags (repeat true))
         args (remove keyword? args)]
     (let [supported #{:as :reload :reload-all :require :use :verbose :refer :as-alias}
           unsupported (seq (remove supported flags))]
@@ -3864,20 +3855,100 @@
       (throw-if (not (libspec? arg)) (str "not a libspec: " arg))
       (apply load-lib (prependss arg opts)))))
 
-(defn compile [path]
-  (native/raw "__rt_ctx->compile_module(runtime::to_string(~{ path })).expect_ok();"))
+(defn compile
+  "Compiles the namespace named by the symbol lib into a set of
+   classfiles. The source for the lib must be in a proper
+   classpath-relative directory. The output files will go into the
+   directory specified by *compile-path*, and that directory too must
+   be in the classpath."
+  [path]
+  (clojure.core-native/compile path))
 
-(defn require [& args]
+(defn require
+  "Loads libs, skipping any that are already loaded. Each argument is
+   either a libspec that identifies a lib, a prefix list that identifies
+   multiple libs whose names share a common prefix, or a flag that modifies
+   how all the identified libs are loaded. Use :require in the ns macro
+   in preference to calling this directly.
+
+   Libs
+
+   A 'lib' is a named set of resources in classpath whose contents define a
+   library of Clojure code. Lib names are symbols and each lib is associated
+   with a Clojure namespace and a Java package that share its name. A lib's
+   name also locates its root directory within classpath using Java's
+   package name to classpath-relative path mapping. All resources in a lib
+   should be contained in the directory structure under its root directory.
+   All definitions a lib makes should be in its associated namespace.
+
+   'require loads a lib by loading its root resource. The root resource path
+   is derived from the lib name in the following manner:
+   Consider a lib named by the symbol 'x.y.z; it has the root directory
+   <classpath>/x/y/, and its root resource is <classpath>/x/y/z.clj, or
+   <classpath>/x/y/z.cljc if <classpath>/x/y/z.clj does not exist. The
+   root resource should contain code to create the lib's
+   namespace (usually by using the ns macro) and load any additional
+   lib resources.
+
+   Libspecs
+
+   A libspec is a lib name or a vector containing a lib name followed by
+   options expressed as sequential keywords and arguments.
+
+   Recognized options:
+   :as takes a symbol as its argument and makes that symbol an alias to the
+   lib's namespace in the current namespace.
+   :as-alias takes a symbol as its argument and aliases like :as, however
+   the lib will not be loaded. If the lib has not been loaded, a new
+   empty namespace will be created (as with create-ns).
+   :refer takes a list of symbols to refer from the namespace or the :all
+   keyword to bring in all public vars.
+
+   Prefix Lists
+
+   It's common for Clojure code to depend on several libs whose names have
+   the same prefix. When specifying libs, prefix lists can be used to reduce
+   repetition. A prefix list contains the shared prefix followed by libspecs
+   with the shared prefix removed from the lib names. After removing the
+   prefix, the names that remain must not contain any periods.
+
+   Flags
+
+   A flag is a keyword.
+   Recognized flags: :reload, :reload-all, :verbose
+   :reload forces loading of all the identified libs even if they are
+   already loaded (has no effect on libspecs using :as-alias)
+   :reload-all implies :reload and also forces loading of all libs that the
+   identified libs directly or indirectly load via require or use
+   (has no effect on libspecs using :as-alias)
+   :verbose triggers printing information about each load, alias, and refer
+
+   Example:
+
+   The following would load the libraries clojure.zip and clojure.set
+   abbreviated as 's'.
+
+   (require '(clojure zip [set :as s]))"
+  [& args]
   (apply load-libs :require args))
 
-(defn use [& args]
+(defn use
+  "Like 'require, but also refers to each lib's namespace using
+   clojure.core/refer. Use :use in the ns macro in preference to calling
+   this directly.
+
+   'use accepts additional options in libspecs: :exclude, :only, :rename.
+   The arguments and semantics for :exclude, :only, and :rename are the same
+   as those documented for clojure.core/refer."
+  [& args]
   (apply load-libs :require :use args))
 
-; Sets *ns* to the namespace named by name (unevaluated), creating it
-; if needed. References can be zero or more of: (:refer-clojure ...)
-; (:require ...) (:use ...) (:import ...) (:load ...)
-; with the syntax of refer-clojure/require/use/import/load respectively.
-(defmacro ns [name & references]
+(defmacro ns
+  "Sets *ns* to the namespace named by name (unevaluated), creating it
+   if needed. References can be zero or more of: (:refer-clojure ...)
+   (:require ...) (:use ...) (:import ...) (:load ...)
+   with the syntax of refer-clojure/require/use/import/load respectively."
+  [name & references]
   (let [process-reference (fn [reference]
                             (let [kname (first reference)
                                   args (rest reference)]
@@ -3888,6 +3959,7 @@
         refer-full-clojure? (not-any? (fn [ref]
                                         (= :refer-clojure (first ref)))
                                       references)]
+    ; TODO: Rewrite this with syntax quoting.
     (list 'do
           (list 'clojure.core/in-ns (list 'quote name))
           ; TODO: with-loading-context
@@ -3896,12 +3968,12 @@
                     [(list 'clojure.core/refer '(quote clojure.core))])
                   (map process-reference references))
           (list 'if (list '= (list 'quote name) (list 'quote 'clojure.core))
-            'nil
-            (list 'let (vector 'name (list 'quote name))
-              (list 'native/raw "__rt_ctx->module_loader.set_loaded(runtime::to_string(~{ name }));")
-              ; TODO: Dynamic vars
-              ;(dosync (commute @#'*loaded-libs* conj '~name))
-              'nil))
+                'nil
+                (list 'let (vector 'name (list 'quote name))
+                      (list 'clojure.core-native/set-module-loaded 'name)
+                      ; TODO: Dynamic vars
+                      ;(dosync (commute @#'*loaded-libs* conj '~name))
+                      'nil))
           )))
 
 (defmacro refer-clojure

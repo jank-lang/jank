@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/obj/detail/iterator_sequence.hpp>
+#include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime
 {
@@ -19,6 +20,7 @@ namespace jank::runtime
                                      runtime::detail::native_persistent_list::iterator>
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
 
     static_object() = default;
     static_object(static_object &&) = default;

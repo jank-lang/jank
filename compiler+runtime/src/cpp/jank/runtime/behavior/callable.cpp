@@ -2,17 +2,21 @@
 
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/obj/native_array_sequence.hpp>
-#include <jank/runtime/obj/native_vector_sequence.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/util/make_array.hpp>
 
 namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ptr dynamic_call(object_ptr const source)
+  object_ptr dynamic_call(object_ptr source)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -38,8 +42,13 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source, object_ptr const a1)
+  object_ptr dynamic_call(object_ptr source, object_ptr const a1)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -80,8 +89,13 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source, object_ptr const a1, object_ptr const a2)
+  object_ptr dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -122,11 +136,14 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3)
+  object_ptr
+  dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2, object_ptr const a3)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -162,12 +179,17 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
                           object_ptr const a4)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -205,13 +227,18 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
                           object_ptr const a4,
                           object_ptr const a5)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -251,7 +278,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -259,6 +286,11 @@ namespace jank::runtime
                           object_ptr const a5,
                           object_ptr const a6)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -312,7 +344,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -321,6 +353,11 @@ namespace jank::runtime
                           object_ptr const a6,
                           object_ptr const a7)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -378,7 +415,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -388,6 +425,11 @@ namespace jank::runtime
                           object_ptr const a7,
                           object_ptr const a8)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -449,7 +491,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -460,6 +502,11 @@ namespace jank::runtime
                           object_ptr const a8,
                           object_ptr const a9)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -523,7 +570,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -535,6 +582,11 @@ namespace jank::runtime
                           object_ptr const a9,
                           object_ptr const a10)
   {
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -643,7 +695,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr const source,
+  object_ptr dynamic_call(object_ptr source,
                           object_ptr const a1,
                           object_ptr const a2,
                           object_ptr const a3,
@@ -656,6 +708,12 @@ namespace jank::runtime
                           object_ptr const a10,
                           obj::persistent_list_ptr const rest)
   {
+    /* TODO: Move call fns into var so we can remove these checks. */
+    if(source->type == object_type::var)
+    {
+      source = runtime::deref(source);
+    }
+
     return visit_object(
       [=](auto const typed_source) -> object_ptr {
         using T = typename decltype(typed_source)::value_type;
@@ -819,92 +877,89 @@ namespace jank::runtime
           case 1:
             return dynamic_call(source, s->first());
           case 2:
-            return dynamic_call(source, s->first(), runtime::next_in_place(s)->first());
+            return dynamic_call(source, s->first(), s->next_in_place()->first());
           case 3:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 4:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 5:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 6:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 7:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 8:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 9:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           case 10:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first());
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first());
           default:
             return dynamic_call(source,
                                 s->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
-                                runtime::next_in_place(s)->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
+                                s->next_in_place()->first(),
                                 obj::persistent_list::create(next_in_place(s)));
         }
-      },
-      [&]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(args)) };
       },
       args);
   }

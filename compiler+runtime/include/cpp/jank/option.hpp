@@ -7,6 +7,8 @@
 
 #include <fmt/ostream.h>
 
+#include <jank/type.hpp>
+
 namespace jank
 {
   struct none_t
@@ -32,7 +34,7 @@ namespace jank
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<T const *>(o.data) };
+        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
       }
     }
 
@@ -42,7 +44,7 @@ namespace jank
       o.set = false;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<T const *>(o.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
       }
     }
 
@@ -67,17 +69,18 @@ namespace jank
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<D const *>(o.data) };
+        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
       }
     }
 
     template <typename D>
-    constexpr option(option<D> &&o, std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
+    requires(std::is_constructible_v<T, D>)
+    constexpr option(option<D> &&o)
       : set{ std::move(o.set) }
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<D *>(o.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
       }
       o.reset();
     }
@@ -97,7 +100,7 @@ namespace jank
       set = rhs.set;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ *reinterpret_cast<T const *>(rhs.data) };
+        new(reinterpret_cast<T *>(data)) T{ rhs.unwrap_unchecked() };
       }
       return *this;
     }
@@ -113,7 +116,7 @@ namespace jank
       set = std::move(rhs.set);
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(*reinterpret_cast<T const *>(rhs.data)) };
+        new(reinterpret_cast<T *>(data)) T{ std::move(rhs.unwrap_unchecked()) };
       }
       rhs.reset();
       return *this;
@@ -126,8 +129,9 @@ namespace jank
     }
 
     template <typename D>
+    requires(std::is_constructible_v<T, D>)
     // NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): It gets this wrong.
-    constexpr std::enable_if_t<std::is_constructible_v<T, D>, option<T> &> operator=(D &&rhs)
+    constexpr option<T> &operator=(D &&rhs)
     {
       reset();
 
@@ -140,7 +144,7 @@ namespace jank
     {
       if(set)
       {
-        reinterpret_cast<T *>(reinterpret_cast<T *>(data))->~T();
+        reinterpret_cast<T *>(data)->~T();
       }
       set = false;
     }
@@ -169,11 +173,21 @@ namespace jank
       return *reinterpret_cast<T const *>(data);
     }
 
+    constexpr T &unwrap_unchecked()
+    {
+      return *reinterpret_cast<T *>(data);
+    }
+
+    constexpr T const &unwrap_unchecked() const
+    {
+      return *reinterpret_cast<T const *>(data);
+    }
+
     constexpr T &unwrap_or(T &fallback)
     {
       if(set)
       {
-        return *reinterpret_cast<T *>(data);
+        return unwrap_unchecked();
       }
       return fallback;
     }
@@ -183,7 +197,27 @@ namespace jank
     {
       if(set)
       {
-        return *reinterpret_cast<T const *>(data);
+        return unwrap_unchecked();
+      }
+      return std::move(fallback);
+    }
+
+    template <typename F>
+    constexpr auto map(F &&f) const -> option<decltype(f(std::declval<T>()))>
+    {
+      if(set)
+      {
+        return f(unwrap_unchecked());
+      }
+      return none_t{};
+    }
+
+    template <typename F>
+    constexpr T map_or(T fallback, F &&f) const
+    {
+      if(set)
+      {
+        return f(unwrap_unchecked());
       }
       return std::move(fallback);
     }
@@ -196,7 +230,7 @@ namespace jank
       }
       else if(set)
       {
-        return *reinterpret_cast<T const *>(data) != *reinterpret_cast<T const *>(rhs.data);
+        return unwrap_unchecked() != rhs.unwrap_unchecked();
       }
 
       return false;

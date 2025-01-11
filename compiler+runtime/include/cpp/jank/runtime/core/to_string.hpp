@@ -1,5 +1,8 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/seqable.hpp>
+
 namespace jank::runtime
 {
   native_persistent_string to_string(object const *o);

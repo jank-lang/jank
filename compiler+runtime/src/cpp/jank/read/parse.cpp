@@ -1,15 +1,13 @@
+#include <codecvt>
+
 #include <magic_enum.hpp>
 
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/persistent_hash_set.hpp>
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/keyword.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::read::parse
 {
@@ -272,9 +270,9 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            native_persistent_string msg{ fmt::format("unexpected token kind: {}",
-                                                      magic_enum::enum_name(latest_token.kind)) };
-            return err(error{ latest_token.pos, std::move(msg) });
+            return err(error{
+              latest_token.pos,
+              fmt::format("unexpected token kind: {}", magic_enum::enum_name(latest_token.kind)) });
           }
       }
     }
@@ -942,10 +940,9 @@ namespace jank::read::parse
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
-    /* TODO: Characters. */
     else if(form->type == object_type::keyword || form->type == object_type::persistent_string
             || form->type == object_type::integer || form->type == object_type::real
-            || form->type == object_type::nil)
+            || form->type == object_type::character || form->type == object_type::nil)
     {
       return form;
     }
@@ -1277,10 +1274,19 @@ namespace jank::read::parse
     {
       return err(error{ token.pos, "Divide by zero" });
     }
-    return object_source_info{ make_box<obj::real>(static_cast<native_real>(ratio_data.numerator)
-                                                   / ratio_data.denominator),
-                               token,
-                               token };
+    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) } ;
+    if(ratio->type == object_type::ratio)
+    {
+      return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
+    }
+    else if(ratio->type == object_type::integer)
+    {
+      return object_source_info{ expect_object<obj::integer>(ratio), token, token };
+    }
+    else
+    {
+      return err(error{ token.pos, "Internal parsing error" });
+    }
   }
 
   processor::object_result processor::parse_real()

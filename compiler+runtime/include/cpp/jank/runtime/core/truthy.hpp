@@ -5,6 +5,7 @@
 
 namespace jank::runtime
 {
+  native_bool truthy(object const *o);
   native_bool truthy(object_ptr o);
   native_bool truthy(obj::nil_ptr);
   native_bool truthy(obj::boolean_ptr const o);

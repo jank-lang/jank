@@ -1,7 +1,7 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime
 {
@@ -9,6 +9,9 @@ namespace jank::runtime
   {
     using persistent_list = static_object<object_type::persistent_list>;
     using persistent_list_ptr = native_box<persistent_list>;
+
+    using persistent_vector = static_object<object_type::persistent_vector>;
+    using persistent_vector_ptr = native_box<persistent_vector>;
   }
 
   template <typename T>
@@ -56,23 +59,6 @@ namespace jank::runtime
 
   object_ptr next_in_place(object_ptr s);
 
-  /* TODO: core header post-erasure? */
-  //template <typename T>
-  //requires behavior::sequenceable<T>
-  //auto rest(native_box<T> const seq)
-  //{
-  //  if(!seq || seq == obj::nil::nil_const())
-  //  {
-  //    return obj::persistent_list::empty();
-  //  }
-  //  auto const ret(seq->next());
-  //  if(ret == nullptr)
-  //  {
-  //    return obj::persistent_list::empty();
-  //  }
-  //  return ret;
-  //}
-
   object_ptr rest(object_ptr s);
 
   template <typename T>
@@ -93,20 +79,23 @@ namespace jank::runtime
 
   object_ptr second(object_ptr s);
 
-  native_bool is_nil(object_ptr o);
-  native_bool is_some(object_ptr o);
   native_bool is_empty(object_ptr o);
   native_bool is_seq(object_ptr o);
   native_bool is_sequential(object_ptr o);
   native_bool is_collection(object_ptr o);
+  native_bool is_list(object_ptr o);
+  native_bool is_vector(object_ptr o);
   native_bool is_map(object_ptr o);
+  native_bool is_set(object_ptr o);
   native_bool is_transientable(object_ptr o);
 
   object_ptr transient(object_ptr o);
   object_ptr persistent(object_ptr o);
   object_ptr conj_in_place(object_ptr coll, object_ptr o);
+  object_ptr disj_in_place(object_ptr coll, object_ptr o);
   object_ptr assoc_in_place(object_ptr coll, object_ptr k, object_ptr v);
   object_ptr dissoc_in_place(object_ptr coll, object_ptr k);
+  object_ptr pop_in_place(object_ptr coll);
 
   object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
@@ -127,50 +116,31 @@ namespace jank::runtime
   object_ptr pop(object_ptr o);
   object_ptr empty(object_ptr o);
 
-  object_ptr chunk_first(object_ptr o);
-  object_ptr chunk_next(object_ptr o);
-  object_ptr chunk_rest(object_ptr o);
-  native_bool is_chunked_seq(object_ptr o);
-
   native_persistent_string str(object_ptr o, object_ptr args);
 
   obj::persistent_list_ptr list(object_ptr s);
   obj::persistent_vector_ptr vec(object_ptr s);
 
-  template <typename It>
-  native_bool equal(object const &o, It const begin, It const end)
-  {
-    return visit_object(
-      [](auto const typed_o, auto const begin, auto const end) -> native_bool {
-        using T = typename decltype(typed_o)::value_type;
-
-        /* nil is seqable, but we don't want it to be equal to an empty collection.
-           An empty seq itself is nil, but that's different. */
-        if constexpr(std::same_as<T, obj::nil> || !behavior::seqable<T>)
-        {
-          return false;
-        }
-        else
-        {
-          auto seq(typed_o->fresh_seq());
-          auto it(begin);
-          for(; it != end; ++it, seq = runtime::next_in_place(seq))
-          {
-            if(seq == nullptr || !runtime::equal(*it, seq->first()))
-            {
-              return false;
-            }
-          }
-          return seq == nullptr && it == end;
-        }
-      },
-      &o,
-      begin,
-      end);
-  }
+  native_bool sequence_equal(object_ptr l, object_ptr r);
 
   size_t sequence_length(object_ptr const s);
   size_t sequence_length(object_ptr const s, size_t const max);
 
   object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
+  object_ptr reduced(object_ptr o);
+  native_bool is_reduced(object_ptr o);
+
+  object_ptr chunk_buffer(object_ptr capacity);
+  object_ptr chunk_append(object_ptr buff, object_ptr val);
+  object_ptr chunk(object_ptr buff);
+  object_ptr chunk_first(object_ptr o);
+  object_ptr chunk_next(object_ptr o);
+  object_ptr chunk_rest(object_ptr o);
+  object_ptr chunk_cons(object_ptr chunk, object_ptr rest);
+  native_bool is_chunked_seq(object_ptr o);
+
+  object_ptr iterate(object_ptr fn, object_ptr o);
+
+  object_ptr repeat(object_ptr val);
+  object_ptr repeat(object_ptr n, object_ptr val);
 }

@@ -1,7 +1,6 @@
-#include <iostream>
-#include <sstream>
-
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
 {
@@ -23,7 +22,7 @@ namespace jank::runtime
     return &base == &o;
   }
 
-  void to_string_impl(obj::symbol const &sym, fmt::memory_buffer &buff)
+  static void to_string_impl(obj::symbol const &sym, fmt::memory_buffer &buff)
   {
     std::back_inserter(buff) = ':';
     sym.to_string(buff);
@@ -53,7 +52,7 @@ namespace jank::runtime
 
   native_integer obj::keyword::compare(object const &o) const
   {
-    return visit_type<obj::keyword>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+    return compare(*expect_object<obj::keyword>(&o));
   }
 
   native_integer obj::keyword::compare(obj::keyword const &s) const

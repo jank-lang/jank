@@ -1,4 +1,6 @@
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {
@@ -284,20 +286,14 @@ namespace jank::runtime
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
   object_ptr munge(object_ptr const o)
   {
-    return visit_object(
-      [](auto const typed_o) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(std::same_as<T, obj::persistent_string>)
-        {
-          return make_box<obj::persistent_string>(munge(typed_o->data));
-        }
-        else
-        {
-          throw std::runtime_error{ "munging only supported for strings right now" };
-        }
-      },
-      o);
+    if(auto const s = dyn_cast<obj::persistent_string>(o))
+    {
+      return make_box<obj::persistent_string>(munge(s->data));
+    }
+    else
+    {
+      throw std::runtime_error{ "munging only supported for strings right now" };
+    }
   }
 
   native_persistent_string demunge(native_persistent_string const &o)
@@ -313,13 +309,13 @@ namespace jank::runtime
     for(auto const &pair : demunge_chars)
     {
       size_t pos{};
-      size_t pattern_length{ pair.first.length() };
+      auto const pattern_length{ pair.first.length() };
       native_transient_string tmp;
       tmp.reserve(ret.size());
 
       while(true)
       {
-        size_t found = ret.find(pair.first, pos);
+        auto const found{ ret.find(pair.first, pos) };
         if(found == native_transient_string::npos)
         {
           tmp.append(ret, pos, ret.size() - pos);

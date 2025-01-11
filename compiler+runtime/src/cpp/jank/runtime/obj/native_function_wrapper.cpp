@@ -1,6 +1,8 @@
-#include <iostream>
+#include <magic_enum.hpp>
 
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
 {
@@ -57,7 +59,7 @@ namespace jank::runtime
   };
 
   template <typename... Args>
-  object_ptr apply_function(obj::native_function_wrapper const &f, Args &&...args)
+  static object_ptr apply_function(obj::native_function_wrapper const &f, Args &&...args)
   {
     constexpr size_t arg_count{ sizeof...(Args) };
     using arity = typename build_arity<arg_count>::type;
@@ -66,7 +68,17 @@ namespace jank::runtime
     auto const * const func_ptr(f.data.template get<function_type>());
     if(!func_ptr)
     {
-      throw std::runtime_error{ fmt::format("invalid function arity; tried {}", arg_count) };
+      native_persistent_string name{ f.to_string() };
+      if(f.meta.is_some())
+      {
+        auto const name_kw(__rt_ctx->intern_keyword("name").expect_ok());
+        auto const name_meta(runtime::get(f.meta.unwrap(), name_kw));
+        if(name_meta != obj::nil::nil_const())
+        {
+          name = to_string(name_meta);
+        }
+      }
+      throw invalid_arity<sizeof...(Args)>{ name };
     }
 
     return (*func_ptr)(std::forward<Args>(args)...);

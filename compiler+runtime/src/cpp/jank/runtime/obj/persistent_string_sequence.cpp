@@ -1,4 +1,7 @@
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
+#include <jank/runtime/core/make_box.hpp>
 
 namespace jank::runtime
 {
@@ -23,7 +26,7 @@ namespace jank::runtime
 
   void obj::persistent_string_sequence::to_string(fmt::memory_buffer &buff) const
   {
-    return runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
+    runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
   native_persistent_string obj::persistent_string_sequence::to_string() const

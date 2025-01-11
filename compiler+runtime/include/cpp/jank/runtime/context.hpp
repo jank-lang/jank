@@ -1,6 +1,5 @@
 #pragma once
 
-#include <mutex>
 #include <list>
 
 #include <folly/Synchronized.h>
@@ -14,9 +13,17 @@
 #include <jank/jit/processor.hpp>
 #include <jank/util/cli.hpp>
 
-namespace jank::jit
+namespace jank
 {
-  struct processor;
+  namespace jit
+  {
+    struct processor;
+  }
+
+  namespace codegen
+  {
+    struct reusable_context;
+  }
 }
 
 namespace jank::runtime
@@ -31,7 +38,6 @@ namespace jank::runtime
   {
     context();
     context(util::cli::options const &opts);
-    context(context const &);
     context(context &&) = delete;
     ~context();
 
@@ -68,14 +74,10 @@ namespace jank::runtime
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
-    obj::persistent_string_ptr native_source(object_ptr o);
-
-    static object_ptr print(object_ptr o);
-    static object_ptr print(object_ptr o, object_ptr more);
-    static object_ptr println(object_ptr more);
 
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
+    object_ptr read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ptr>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
@@ -96,8 +98,7 @@ namespace jank::runtime
     result<void, native_persistent_string>
     compile_module(native_persistent_string_view const &module);
 
-    void write_module(native_persistent_string_view const &module,
-                      native_persistent_string_view const &contents) const;
+    string_result<void> write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
@@ -148,5 +149,6 @@ namespace jank::runtime
       thread_binding_frames;
   };
 
+  /* NOLINTNEXTLINE */
   extern context *__rt_ctx;
 }

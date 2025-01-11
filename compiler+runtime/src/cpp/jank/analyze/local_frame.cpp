@@ -2,6 +2,9 @@
 
 #include <fmt/core.h>
 
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
@@ -13,23 +16,16 @@ namespace jank::analyze
   {
     return obj::persistent_array_map::create_unique(make_box("__type"),
                                                     make_box("lifted_var"),
-                                                    make_box("native_name"),
-                                                    make_box<obj::symbol>(native_name),
                                                     make_box("var_name"),
                                                     var_name);
   }
 
   object_ptr lifted_constant::to_runtime_data() const
   {
-    return obj::persistent_array_map::create_unique(
-      make_box("__type"),
-      make_box("lifted_constant"),
-      make_box("native_name"),
-      make_box<obj::symbol>(native_name),
-      make_box("unboxed_native_name"),
-      jank::detail::to_runtime_data(unboxed_native_name),
-      make_box("data"),
-      data);
+    return obj::persistent_array_map::create_unique(make_box("__type"),
+                                                    make_box("lifted_constant"),
+                                                    make_box("data"),
+                                                    data);
   }
 
   object_ptr local_binding::to_runtime_data() const
@@ -67,6 +63,7 @@ namespace jank::analyze
       return *this;
     }
 
+    /* TODO: Is this operator used? It's missing some members. */
     type = rhs.type;
     parent = rhs.parent;
     locals = rhs.locals;
@@ -88,9 +85,9 @@ namespace jank::analyze
     return *this;
   }
 
-  option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
-                                                   obj::symbol_ptr sym,
-                                                   native_bool const allow_captures)
+  static option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
+                                                          obj::symbol_ptr sym,
+                                                          native_bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -146,9 +143,31 @@ namespace jank::analyze
     }
   }
 
-  option<local_frame::find_result> local_frame::find_originating_local(obj::symbol_ptr sym)
+  option<local_frame::find_result> local_frame::find_originating_local(obj::symbol_ptr const sym)
   {
     return find_local_impl(this, sym, false);
+  }
+
+  option<expr::function_context_ptr> local_frame::find_named_recursion(obj::symbol_ptr const sym)
+  {
+    auto const sym_str(sym->to_string());
+    for(local_frame_ptr it{ this }; it != nullptr;)
+    {
+      if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
+      {
+        return it->fn_ctx;
+      }
+
+      if(it->parent.is_some())
+      {
+        it = it->parent.unwrap();
+      }
+      else
+      {
+        break;
+      }
+    }
+    return none;
   }
 
   local_frame const &local_frame::find_closest_fn_frame(local_frame const &frame)
@@ -200,7 +219,7 @@ namespace jank::analyze
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ context::unique_symbol(munge(qualified_sym->name)), qualified_sym };
+    lifted_var lv{ qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
@@ -228,23 +247,15 @@ namespace jank::analyze
       return;
     }
 
-    auto name(context::unique_symbol("const"));
-    option<obj::symbol> unboxed_name{ visit_object(
-      [&](auto const typed_constant) -> option<obj::symbol> {
-        using T = typename decltype(typed_constant)::value_type;
-
-        if constexpr(behavior::number_like<T>)
-        {
-          return obj::symbol{ name.ns, name.name + "__unboxed" };
-        }
-        else
-        {
-          return none;
-        }
+    auto const name(context::unique_symbol("const"));
+    auto const unboxed_name{ visit_number_like(
+      [&](auto const) -> option<obj::symbol> {
+        return obj::symbol{ name.ns, name.name + "__unboxed" };
       },
+      []() -> option<obj::symbol> { return none; },
       constant) };
 
-    lifted_constant l{ std::move(name), std::move(unboxed_name), constant };
+    lifted_constant l{ constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 

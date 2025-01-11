@@ -17,6 +17,7 @@ namespace jank::runtime
     using value_type = runtime::detail::native_persistent_hash_set;
 
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_set_like{ true };
 
     static_object() = default;
     static_object(static_object &&) noexcept = default;
@@ -67,7 +68,7 @@ namespace jank::runtime
     native_box<static_object> conj(object_ptr head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr);
+    object_ptr call(object_ptr) const;
 
     /* behavior::transientable */
     obj::transient_hash_set_ptr to_transient() const;

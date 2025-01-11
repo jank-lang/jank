@@ -21,10 +21,10 @@ namespace jank::runtime
     static native_box<static_object> create(native_box<static_object> s);
 
     static_object() = default;
-    static_object(static_object &&) = default;
+    static_object(static_object &&) noexcept = default;
     static_object(static_object const &) = default;
-    static_object(value_type &&d);
     static_object(value_type const &d);
+    static_object(object_ptr meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */

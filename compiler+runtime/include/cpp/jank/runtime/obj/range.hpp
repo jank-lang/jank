@@ -1,6 +1,9 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/obj/cons.hpp>
 
 namespace jank::runtime
 {
@@ -12,6 +15,7 @@ namespace jank::runtime
   struct static_object<object_type::range> : gc
   {
     static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool is_sequential{ true };
     static constexpr native_integer chunk_size{ 32 };
 
     using bounds_check_t = native_bool (*)(object_ptr, object_ptr);

@@ -1,7 +1,5 @@
-#include <unistd.h>
-
 #include <array>
-#include <iostream>
+#include <ostream>
 
 #include <jank/read/lex.hpp>
 
@@ -16,37 +14,40 @@ namespace jank::read::lex
   namespace detail
   {
     template <class T, std::size_t N, std::size_t... I>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&a)[N], std::index_sequence<I...>)
+    static constexpr std::array<std::remove_cv_t<T>, N>
+    to_array_impl(T (&a)[N], std::index_sequence<I...>)
     {
       return { { a[I]... } };
     }
 
     template <class T, std::size_t N>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
+    static constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
     {
       return detail::to_array_impl(a, std::make_index_sequence<N>{});
     }
   }
 
-  constexpr std::array<token, 0> make_tokens()
+  static constexpr std::array<token, 0> make_tokens()
   {
     return {};
   }
 
   template <size_t N>
-  constexpr std::array<token, N> make_tokens(token const (&arr)[N])
+  static constexpr std::array<token, N> make_tokens(token const (&arr)[N])
   {
     return detail::to_array(arr);
   }
 
   template <size_t N>
-  constexpr std::array<result<token, error>, N> make_results(result<token, error> const (&arr)[N])
+  static constexpr std::array<result<token, error>, N>
+  make_results(result<token, error> const (&arr)[N])
   {
     return detail::to_array(arr);
   }
 
   template <size_t N>
-  bool operator==(native_vector<result<token, error>> const &v, std::array<token, N> const &a)
+  static bool
+  operator==(native_vector<result<token, error>> const &v, std::array<token, N> const &a)
   {
     if(v.size() != N)
     {
@@ -56,8 +57,8 @@ namespace jank::read::lex
   }
 
   template <size_t N>
-  bool operator==(native_vector<result<token, error>> const &v,
-                  std::array<result<token, error>, N> const &a)
+  static bool operator==(native_vector<result<token, error>> const &v,
+                         std::array<result<token, error>, N> const &a)
   {
     if(v.size() != N)
     {
@@ -68,7 +69,7 @@ namespace jank::read::lex
 
   /* This really helps with doctest comparison outputs. */
   template <typename T>
-  std::ostream &operator<<(std::ostream &os, native_vector<T> const &rs)
+  static std::ostream &operator<<(std::ostream &os, native_vector<T> const &rs)
   {
     os << "[ ";
     for(auto const &r : rs)
@@ -79,7 +80,7 @@ namespace jank::read::lex
   }
 
   template <typename T, size_t N>
-  std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
+  static std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
   {
     os << "[ ";
     for(auto const &r : rs)
@@ -522,7 +523,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::real, 0.0l }
+                { 0, 2, token_kind::real, 0.0 }
         }));
       }
 
@@ -532,7 +533,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, 0.0l }
+                { 0, 3, token_kind::real, 0.0 }
         }));
       }
 
@@ -542,7 +543,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 3, token_kind::real, -1.0l }
+                { 0, 3, token_kind::real, -1.0 }
         }));
       }
 
@@ -552,7 +553,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::real, -1.5l }
+                { 0, 4, token_kind::real, -1.5 }
         }));
       }
 
@@ -562,7 +563,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 10, token_kind::real, -1234.1234l }
+                { 0, 10, token_kind::real, -1234.1234 }
         }));
       }
 
@@ -631,7 +632,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 5, token_kind::real, 12.34l },
+                  token{ 0, 5, token_kind::real, 12.34 },
                   error{ 5, "expected whitespace before next token" },
                   token{ 5, 3, token_kind::symbol, "abc"sv },
           }));
@@ -644,7 +645,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   token{ 0, token_kind::open_paren },
-                  token{ 1, 5, token_kind::real, 12.34l },
+                  token{ 1, 5, token_kind::real, 12.34 },
                   token{ 6, token_kind::close_paren },
           }));
         }
@@ -658,12 +659,12 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{  0, 3,      token_kind::real,   1000.0l },
-                  token{  4, 4,      token_kind::real,   -100.0l },
-                  token{  9, 5,      token_kind::real,    0.002l },
-                  token{ 15, 7,      token_kind::real, 2.23e-07l },
-                  token{ 23, 7,      token_kind::real, -1.2e+19l },
-                  token{ 30, 2, token_kind::character,   "\\a"sv },
+                  token{  0, 3,      token_kind::real,   1000.0 },
+                  token{  4, 4,      token_kind::real,   -100.0 },
+                  token{  9, 5,      token_kind::real,    0.002 },
+                  token{ 15, 7,      token_kind::real, 2.23e-07 },
+                  token{ 23, 7,      token_kind::real, -1.2e+19 },
+                  token{ 30, 2, token_kind::character,  "\\a"sv },
           }));
         }
 
@@ -674,7 +675,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "unexpected end of real, expecting exponent" },
-                  token{ 3, 5, token_kind::real, 2.3l },
+                  token{ 3, 5, token_kind::real, 2.3 },
                   error{ 9, 13, "unexpected end of real, expecting exponent" },
                   error{ 14, 19, "unexpected end of real, expecting exponent" },
           }));
@@ -686,7 +687,7 @@ namespace jank::read::lex
           native_vector<result<token, error>> tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 4, token_kind::real, 12.3l },
+                  token{ 0, 4, token_kind::real, 12.3 },
                   error{ 5, 9, "invalid number" },
                   error{ 9, "expected whitespace before next token" },
                   token{ 9, token_kind::symbol, "-"sv },
@@ -702,7 +703,7 @@ namespace jank::read::lex
                 == make_results({
                   error{ 0, 3, "invalid number" },
                   error{ 3, "unexpected character: ." },
-                  token{ 5, 4, token_kind::real, 12.3l },
+                  token{ 5, 4, token_kind::real, 12.3 },
                   error{ 10, 14, "invalid number" },
                   error{ 14, "unexpected character: ." },
                   error{ 15, "expected whitespace before next token" },
@@ -724,7 +725,7 @@ namespace jank::read::lex
                   error{ 13, 16, "unexpected end of real, expecting exponent" },
                   error{ 16, "expected whitespace before next token" },
                   token{ 16, 3, token_kind::symbol, "Foo"sv },
-                  token{ 20, 3, token_kind::real, 300000.0l },
+                  token{ 20, 3, token_kind::real, 300000.0 },
                   error{ 23, "expected whitespace before next token" },
                   token{ 23, 3, token_kind::symbol, "fOo"sv },
           }));

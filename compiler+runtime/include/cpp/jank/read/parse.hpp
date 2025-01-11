@@ -1,10 +1,12 @@
 #pragma once
 
-#include <codecvt>
+#include <list>
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>
 #include <jank/read/lex.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/var.hpp>
 
 namespace jank::runtime
 {

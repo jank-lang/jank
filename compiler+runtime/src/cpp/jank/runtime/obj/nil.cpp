@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 
 namespace jank::runtime
 {
@@ -15,7 +16,7 @@ namespace jank::runtime
 
   native_persistent_string const &obj::nil::to_string() const
   {
-    static native_persistent_string s{ "nil" };
+    static native_persistent_string const s{ "nil" };
     return s;
   }
 

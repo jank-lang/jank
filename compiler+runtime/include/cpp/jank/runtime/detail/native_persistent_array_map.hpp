@@ -1,7 +1,12 @@
 #pragma once
 
+#include <type_traits>
+
+#include <jank/runtime/object.hpp>
+
 namespace jank::runtime::detail
 {
+  /* TODO: Move this somewhere more general. It's used by other collections. */
   struct in_place_unique
   {
   };
@@ -46,6 +51,10 @@ namespace jank::runtime::detail
       using pointer = value_type *;
       using reference = value_type &;
 
+      iterator(object_ptr const *data, size_t index);
+      iterator(iterator const &) = default;
+      iterator(iterator &&) noexcept = default;
+
       value_type operator*() const;
 
       iterator &operator++();
@@ -62,10 +71,7 @@ namespace jank::runtime::detail
 
     using const_iterator = iterator;
 
-    iterator begin();
     const_iterator begin() const;
-
-    iterator end();
     const_iterator end() const;
 
     size_t size() const;

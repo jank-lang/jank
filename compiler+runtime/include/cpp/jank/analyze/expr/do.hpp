@@ -11,6 +11,15 @@ namespace jank::analyze::expr
   {
     native_vector<native_box<E>> values{};
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+      if(!values.empty())
+      {
+        values[values.size() - 1]->propagate_position(pos);
+      }
+    }
+
     object_ptr to_runtime_data() const
     {
       object_ptr body_maps{ make_box<obj::persistent_vector>() };

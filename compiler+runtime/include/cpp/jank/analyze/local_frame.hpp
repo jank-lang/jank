@@ -1,10 +1,12 @@
 #pragma once
 
-#include <unordered_map>
-
-#include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/option.hpp>
+
+namespace jank::runtime
+{
+  struct context;
+}
 
 namespace jank::analyze
 {
@@ -18,7 +20,6 @@ namespace jank::analyze
 
   struct lifted_var
   {
-    runtime::obj::symbol native_name{};
     runtime::obj::symbol_ptr var_name{};
 
     runtime::object_ptr to_runtime_data() const;
@@ -28,8 +29,6 @@ namespace jank::analyze
    * rather than just doing both. */
   struct lifted_constant
   {
-    runtime::obj::symbol native_name{};
-    option<runtime::obj::symbol> unboxed_native_name{};
     runtime::object_ptr data{};
 
     runtime::object_ptr to_runtime_data() const;
@@ -38,7 +37,6 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
-    native_persistent_string native_name;
     option<native_box<expression>> value_expr{};
     native_box<struct local_frame> originating_frame{};
     native_bool needs_box{ true };
@@ -52,12 +50,14 @@ namespace jank::analyze
 
   struct local_frame : gc
   {
-    enum class frame_type
+    enum class frame_type : uint8_t
     {
       root,
       fn,
       let,
-      catch_
+      try_,
+      catch_,
+      finally
     };
 
     static constexpr native_bool pointer_free{ false };
@@ -87,6 +87,8 @@ namespace jank::analyze
      * originating local. */
     option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
 
+    option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
+
     static native_bool within_same_fn(native_box<local_frame>, native_box<local_frame>);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
@@ -104,10 +106,18 @@ namespace jank::analyze
 
     frame_type type;
     option<native_box<local_frame>> parent;
+    /* TODO: local_binding_ptr */
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
-    native_unordered_map<runtime::object_ptr, lifted_constant> lifted_constants;
+    native_unordered_map<runtime::object_ptr,
+                         lifted_constant,
+                         std::hash<runtime::object_ptr>,
+                         runtime::very_equal_to>
+      lifted_constants;
+    /* This is only set if the frame type is fn. */
+    expr::function_context_ptr fn_ctx{};
+    /* TODO: Remove this. */
     runtime::context &rt_ctx;
   };
 

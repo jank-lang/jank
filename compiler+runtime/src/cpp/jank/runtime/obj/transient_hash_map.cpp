@@ -1,4 +1,12 @@
+#include <magic_enum.hpp>
+
 #include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime
 {
@@ -139,12 +147,12 @@ namespace jank::runtime
     return make_box<obj::persistent_hash_map>(std::move(data).persistent());
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o)
+  object_ptr obj::transient_hash_map::call(object_ptr const o) const
   {
     return get(o);
   }
 
-  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback)
+  object_ptr obj::transient_hash_map::call(object_ptr const o, object_ptr const fallback) const
   {
     return get(o, fallback);
   }

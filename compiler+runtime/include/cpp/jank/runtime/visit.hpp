@@ -1,7 +1,5 @@
 #pragma once
 
-#include <magic_enum.hpp>
-
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -10,6 +8,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/character.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
@@ -30,9 +29,13 @@
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/obj/range.hpp>
+#include <jank/runtime/obj/repeat.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/native_pointer_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/obj/persistent_list_sequence.hpp>
@@ -46,100 +49,13 @@
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::runtime
 {
-  namespace detail
-  {
-    template <typename T>
-    struct object_type_to_enum;
-
-    template <object_type O>
-    struct object_type_to_enum<static_object<O>>
-    {
-      static constexpr object_type value{ O };
-    };
-  }
-
-  /* Most of the system is polymorphic using type-erased objects. Given any object, an erase call
-   * will get you what you need. If you don't need to type-erase, though, don't! */
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(native_box<T> const o)
-  {
-    return &o->base;
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(native_box<T const> const o)
-  {
-    return const_cast<object_ptr>(&o->base);
-  }
-
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(object_ptr const o)
-  {
-    return o;
-  }
-
-  template <typename T>
-  requires behavior::object_like<std::decay_t<std::remove_pointer_t<T>>>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(T const o)
-  {
-    return const_cast<object *>(&o->base);
-  }
-
-  /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
-   * However, if you're absolutely certain you know the type of an erased object, I guess
-   * you can use this. */
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> try_object(object const * const o)
-  {
-    assert(o);
-    if(o->type != detail::object_type_to_enum<T>::value)
-    {
-      /* TODO: Use fmt when possible. */
-      throw std::runtime_error{ "invalid object type" };
-      //throw std::runtime_error{ fmt::format(
-      //  "invalid object type (expected {}, found {})",
-      //  magic_enum::enum_name(detail::object_type_to_enum<T>::value),
-      //  magic_enum::enum_name(o->type)) };
-    }
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
-                                 - offsetof(T, base));
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> expect_object(object_ptr const o)
-  {
-    assert(o);
-    assert(o->type == detail::object_type_to_enum<T>::value);
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> expect_object(object const * const o)
-  {
-    assert(o);
-    assert(o->type == detail::object_type_to_enum<T>::value);
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
-                                 - offsetof(T, base));
-  }
-
   template <typename T, typename F, typename... Args>
   requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_object(F const &fn, native_box<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
@@ -150,7 +66,7 @@ namespace jank::runtime
 
   template <typename F, typename... Args>
   requires visitable<F, Args...>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
     assert(const_erased);
@@ -286,6 +202,16 @@ namespace jank::runtime
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::ratio:
+        {
+          return fn(expect_object<obj::ratio>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_array_sequence:
         {
           return fn(expect_object<obj::native_array_sequence>(erased), std::forward<Args>(args)...);
@@ -358,9 +284,20 @@ namespace jank::runtime
                     std::forward<Args>(args)...);
         }
         break;
+      case object_type::native_pointer_wrapper:
+        {
+          return fn(expect_object<obj::native_pointer_wrapper>(erased),
+                    std::forward<Args>(args)...);
+        }
+        break;
       case object_type::jit_function:
         {
           return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::jit_closure:
+        {
+          return fn(expect_object<obj::jit_closure>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::multi_function:
@@ -380,7 +317,12 @@ namespace jank::runtime
         break;
       case object_type::reduced:
         {
-          return fn(expect_object<obj::volatile_>(erased), std::forward<Args>(args)...);
+          return fn(expect_object<obj::reduced>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::delay:
+        {
+          return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::delay:
@@ -410,17 +352,9 @@ namespace jank::runtime
         break;
       default:
         {
-          /* TODO: Use fmt when possible. */
-          throw std::runtime_error{ "invalid object type" };
-          //throw std::runtime_error
-          //{
-          //  fmt::format
-          //  (
-          //    "invalid object type: {} raw value {}",
-          //    magic_enum::enum_name(erased->type),
-          //    static_cast<int>(erased->type)
-          //  )
-          //};
+          throw std::runtime_error{ fmt::format("invalid object type: {} raw value {}",
+                                                magic_enum::enum_name(erased->type),
+                                                static_cast<int>(erased->type)) };
         }
         break;
     }
@@ -428,7 +362,7 @@ namespace jank::runtime
 
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
   {
     if(const_erased->type == detail::object_type_to_enum<T>::value)
@@ -437,13 +371,14 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ "invalid object type" };
+      throw std::runtime_error{ "invalid object type: "
+                                + std::to_string(static_cast<int>(const_erased->type)) };
     }
   }
 
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto
   visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
@@ -522,6 +457,11 @@ namespace jank::runtime
           return fn(expect_object<obj::range>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::repeat:
+        {
+          return fn(expect_object<obj::repeat>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::native_array_sequence:
         {
           return fn(expect_object<obj::native_array_sequence>(erased), std::forward<Args>(args)...);
@@ -593,13 +533,106 @@ namespace jank::runtime
 
   /* Throws if the object isn't seqable. */
   template <typename F1, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_seqable(F1 const &fn, object const * const const_erased, Args &&...args)
   {
     return visit_seqable(
       fn,
-      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not seqable: " + to_string(const_erased) };
+      [=]() -> decltype(fn(obj::cons_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not seqable: " + to_code_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
+  }
+
+  template <typename F1, typename F2, typename... Args>
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  [[gnu::hot]]
+  constexpr auto
+  visit_map_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(erased->type)
+    {
+      case object_type::persistent_array_map:
+        {
+          return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_hash_map:
+        {
+          return fn(expect_object<obj::persistent_hash_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_map:
+        {
+          return fn(expect_object<obj::persistent_sorted_map>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      /* Not map-like. */
+      default:
+        return else_fn();
+    }
+#pragma clang diagnostic pop
+  }
+
+  /* Throws if the object isn't map-like. */
+  template <typename F1, typename... Args>
+  [[gnu::hot]]
+  constexpr auto visit_map_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_map_like(
+      fn,
+      [=]() -> decltype(fn(obj::persistent_hash_map_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not map-like: " + to_code_string(const_erased) };
+      },
+      const_erased,
+      std::forward<Args>(args)...);
+  }
+
+  template <typename F1, typename F2, typename... Args>
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  [[gnu::hot]]
+  constexpr auto
+  visit_set_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  {
+    assert(const_erased);
+    auto * const erased(const_cast<object *>(const_erased));
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(erased->type)
+    {
+      case object_type::persistent_hash_set:
+        {
+          return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::persistent_sorted_set:
+        {
+          return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      /* Not map-like. */
+      default:
+        return else_fn();
+    }
+#pragma clang diagnostic pop
+  }
+
+  /* Throws if the object isn't set-like. */
+  template <typename F1, typename... Args>
+  [[gnu::hot]]
+  constexpr auto visit_set_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  {
+    return visit_set_like(
+      fn,
+      [=]() -> decltype(fn(obj::persistent_hash_set_ptr{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not set-like: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);
@@ -607,7 +640,7 @@ namespace jank::runtime
 
   template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object const *>)
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_number_like(F1 const &fn,
                                    F2 const &else_fn,
                                    object const * const const_erased,
@@ -630,6 +663,11 @@ namespace jank::runtime
           return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::ratio:
+        {
+          return fn(expect_object<obj::ratio>(erased), std::forward<Args>(args)...);
+        }
+        break;
       default:
         return else_fn();
     }
@@ -638,13 +676,13 @@ namespace jank::runtime
 
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  [[gnu::hot]]
   constexpr auto visit_number_like(F1 const &fn, object const * const const_erased, Args &&...args)
   {
     return visit_number_like(
       fn,
       [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not a number: " + to_string(const_erased) };
+        throw std::runtime_error{ "not a number: " + to_code_string(const_erased) };
       },
       const_erased,
       std::forward<Args>(args)...);

@@ -1,5 +1,8 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq_ext.hpp>
+#include <jank/runtime/behavior/sequential.hpp>
 
 namespace jank::runtime
 {
@@ -50,7 +53,57 @@ namespace jank::runtime
 
   native_bool obj::persistent_vector::equal(object const &o) const
   {
-    return runtime::equal(o, data.begin(), data.end());
+    if(&o == &base)
+    {
+      return true;
+    }
+    if(auto const v = dyn_cast<obj::persistent_vector>(&o))
+    {
+      if(data.size() != v->data.size())
+      {
+        return false;
+      }
+      for(size_t i{}; i < data.size(); ++i)
+      {
+        if(!runtime::equal(data[i], v->data[i]))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+    else
+    {
+      return visit_object(
+        [&](auto const typed_o) -> native_bool {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(behavior::sequential<T>)
+          {
+            size_t i{};
+            auto e(typed_o->fresh_seq());
+            for(; e != nullptr; e = e->next_in_place())
+            {
+              if(!runtime::equal(data[i], e->first()))
+              {
+                return false;
+              }
+
+              if(++i == data.size())
+              {
+                e = e->next_in_place();
+                break;
+              }
+            }
+            return e == nullptr && i == data.size();
+          }
+          else
+          {
+            return false;
+          }
+        },
+        &o);
+    }
   }
 
   void obj::persistent_vector::to_string(fmt::memory_buffer &buff) const

@@ -2,6 +2,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <jank/runtime/object.hpp>
+#include <jank/result.hpp>
+
 namespace jank::runtime
 {
   struct context;
@@ -27,6 +30,7 @@ namespace jank::runtime::module
 
   native_persistent_string path_to_module(boost::filesystem::path const &path);
   native_persistent_string module_to_path(native_persistent_string_view const &module);
+  native_persistent_string module_to_load_function(native_persistent_string_view const &module);
   native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
@@ -48,7 +52,7 @@ namespace jank::runtime::module
     * subsequent matches are ignored. */
     struct entry
     {
-      option<file_entry> pcm;
+      option<file_entry> o;
       option<file_entry> cpp;
       option<file_entry> jank;
       option<file_entry> cljc;
@@ -67,7 +71,8 @@ namespace jank::runtime::module
     void set_loaded(native_persistent_string_view const &);
     result<void, native_persistent_string> load_ns(native_persistent_string_view const &module);
     result<void, native_persistent_string> load(native_persistent_string_view const &module);
-    result<void, native_persistent_string> load_pcm(file_entry const &entry) const;
+    result<void, native_persistent_string>
+    load_o(native_persistent_string const &module, file_entry const &entry) const;
     result<void, native_persistent_string> load_cpp(file_entry const &entry) const;
     result<void, native_persistent_string> load_jank(file_entry const &entry) const;
     result<void, native_persistent_string> load_cljc(file_entry const &entry) const;

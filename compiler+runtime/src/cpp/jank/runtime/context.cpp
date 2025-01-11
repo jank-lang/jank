@@ -1,19 +1,27 @@
 #include <exception>
 
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/TargetParser/Host.h>
+
 #include <fmt/compile.h>
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/codegen/llvm_processor.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::runtime
 {
@@ -29,7 +37,7 @@ namespace jank::runtime
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ opts.optimization_level }
+    : jit_prc{ opts }
     , output_dir{ opts.compilation_path }
     , module_loader{ *this, opts.class_path }
   {
@@ -57,6 +65,7 @@ namespace jank::runtime
     gensym_env_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
 
+    /* TODO: Remove this once native/raw is entirely gone. */
     intern_ns(make_box<obj::symbol>("native"));
 
     /* This won't be set until clojure.core is loaded. */
@@ -66,57 +75,6 @@ namespace jank::runtime
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref())))
       .expect_ok();
-  }
-
-  /* TODO: Remove this. */
-  context::context(context const &ctx)
-    : jit_prc{ ctx.jit_prc.optimization_level }
-    , module_dependencies{ ctx.module_dependencies }
-    , output_dir{ ctx.output_dir }
-    , module_loader{ *this, ctx.module_loader.paths }
-  {
-    {
-      auto ns_lock(namespaces.wlock());
-      for(auto const &ns : *ctx.namespaces.rlock())
-      {
-        ns_lock->insert({ ns.first, ns.second->clone(*this) });
-      }
-      *keywords.wlock() = *ctx.keywords.rlock();
-    }
-
-    auto &tbfs(thread_binding_frames[this]);
-    auto const &other_tbfs(thread_binding_frames[&ctx]);
-    for(auto const &v : other_tbfs)
-    {
-      thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-      for(auto it(v.bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
-      {
-        auto const entry(it->first());
-        auto const var(expect_object<var>(entry->data[0]));
-        auto const value(entry->data[1]);
-        auto const new_var(intern_var(var->n->name->name, var->name->name).expect_ok());
-        frame.bindings = frame.bindings->assoc(new_var, value);
-      }
-
-      /* We push to the back, since we're looping from the front of the other list. If we
-       * pushed to the front of this one, we'd reverse the order. */
-      tbfs.push_back(std::move(frame));
-    }
-
-    auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
-    current_ns_var = core->intern_var(make_box<obj::symbol>("clojure.core/*ns*"));
-
-    in_ns_var = intern_var(make_box<obj::symbol>("clojure.core/in-ns")).expect_ok();
-    compile_files_var
-      = intern_var(make_box<obj::symbol>("clojure.core/*compile-files*")).expect_ok();
-    assert_var = core->intern_var(make_box<obj::symbol>("clojure.core/*assert*"));
-
-    current_module_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
-    no_recur_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
-    gensym_env_var
-      = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
   }
 
   context::~context()
@@ -137,7 +95,7 @@ namespace jank::runtime
 
   option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
-    profile::timer timer{ "rt find_var" };
+    profile::timer const timer{ "rt find_var" };
     if(!sym->ns.empty())
     {
       ns_ptr ns{};
@@ -185,7 +143,7 @@ namespace jank::runtime
 
   object_ptr context::eval_string(native_persistent_string_view const &code)
   {
-    profile::timer timer{ "rt eval_string" };
+    profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -194,34 +152,49 @@ namespace jank::runtime
     for(auto const &form : p_prc)
     {
       auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
-      ret = evaluate::eval(*this, jit_prc, expr.expect_ok());
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
+      ret = evaluate::eval(expr.expect_ok());
       exprs.emplace_back(expr.expect_ok());
     }
 
     if(truthy(compile_files_var->deref()))
     {
-      auto const &current_module(
-        expect_object<obj::persistent_string>(current_module_var->deref())->data);
-      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc));
-      wrapped_exprs.name = "__ns";
-      wrapped_exprs.unique_name = wrapped_exprs.name;
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
-      codegen::processor cg_prc{ *this, wrapped_exprs, module, codegen::compilation_target::ns };
-      write_module(current_module, cg_prc.declaration_str());
-      write_module(fmt::format("{}--init", current_module), cg_prc.module_init_str(current_module));
+      /* TODO: Pass in module_to_load_function result */
+      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
+      auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
+      fn.name = module::module_to_load_function(module);
+      fn.unique_name = fn.name;
+      codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
+      cg_prc.gen().expect_ok();
+      write_module(std::move(cg_prc.ctx)).expect_ok();
     }
 
     assert(ret);
     return ret;
   }
 
+  object_ptr context::read_string(native_persistent_string_view const &code)
+  {
+    profile::timer const timer{ "rt read_string" };
+    read::lex::processor l_prc{ code };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+
+    object_ptr ret{ obj::nil::nil_const() };
+    for(auto const &form : p_prc)
+    {
+      ret = form.expect_ok().unwrap().ptr;
+    }
+
+    return ret;
+  }
+
   native_vector<analyze::expression_ptr>
   context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
-    profile::timer timer{ "rt analyze_string" };
+    profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -229,10 +202,10 @@ namespace jank::runtime
     for(auto const &form : p_prc)
     {
       auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_type::statement));
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       if(eval)
       {
-        evaluate::eval(*this, jit_prc, expr.expect_ok());
+        evaluate::eval(expr.expect_ok());
       }
       ret.emplace_back(expr.expect_ok());
     }
@@ -255,7 +228,7 @@ namespace jank::runtime
       absolute_module = module::nest_module(ns->to_string(), module);
     }
 
-    binding_scope preserve{ *this };
+    binding_scope const preserve{ *this };
 
     try
     {
@@ -285,33 +258,59 @@ namespace jank::runtime
   {
     module_dependencies.clear();
 
-    binding_scope preserve{ *this,
-                            obj::persistent_hash_map::create_unique(
-                              std::make_pair(compile_files_var, obj::boolean::true_const()),
-                              std::make_pair(current_module_var, make_box(module))) };
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(compile_files_var, obj::boolean::true_const()),
+                                    std::make_pair(current_module_var, make_box(module))) };
 
     return load_module(fmt::format("/{}", module));
   }
 
-  void context::write_module(native_persistent_string_view const &module,
-                             native_persistent_string_view const &contents) const
+  string_result<void>
+  context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
-    profile::timer timer{ "write_module" };
-    boost::filesystem::path const dir{ native_transient_string{ output_dir } };
-    if(!boost::filesystem::exists(dir))
+    profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
+    boost::filesystem::path const module_path{
+      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
+    };
+    boost::filesystem::create_directories(module_path.parent_path());
+
+    /* TODO: Is there a better place for this block of code? */
+    std::error_code file_error{};
+    llvm::raw_fd_ostream os(module_path.c_str(), file_error, llvm::sys::fs::OpenFlags::OF_None);
+    if(file_error)
     {
-      boost::filesystem::create_directories(dir);
+      return err(fmt::format("failed to open module file {} with error {}",
+                             module_path.c_str(),
+                             file_error.message()));
+    }
+    //codegen_ctx->module->print(llvm::outs(), nullptr);
+
+    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
+    std::string target_error;
+    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple, target_error) };
+    if(!target)
+    {
+      return err(target_error);
+    }
+    llvm::TargetOptions const opt;
+    auto const target_machine{
+      target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
+    };
+    if(!target_machine)
+    {
+      return err(fmt::format("failed to create target machine for {}", target_triple));
+    }
+    llvm::legacy::PassManager pass;
+
+    if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
+    {
+      return err(fmt::format("failed to write module to object file for {}", target_triple));
     }
 
-    /* TODO: This needs to go into sub directories. Also, we should register these modules with
-     * the loader upon writing. */
-    {
-      std::ofstream ofs{
-        fmt::format("{}/{}.cpp", module::module_to_path(output_dir), runtime::munge(module))
-      };
-      ofs << contents;
-      ofs.flush();
-    }
+    pass.run(*codegen_ctx->module);
+
+    return ok();
   }
 
   native_persistent_string context::unique_string()
@@ -427,7 +426,7 @@ namespace jank::runtime
   result<var_ptr, native_persistent_string>
   context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
-    profile::timer timer{ "intern_var" };
+    profile::timer const timer{ "intern_var" };
     if(qualified_sym->ns.empty())
     {
       return err(
@@ -474,7 +473,7 @@ namespace jank::runtime
   result<obj::keyword_ptr, native_persistent_string>
   context::intern_keyword(native_persistent_string_view const &s)
   {
-    profile::timer timer{ "rt intern_keyword" };
+    profile::timer const timer{ "rt intern_keyword" };
 
     auto locked_keywords(keywords.wlock());
     auto const found(locked_keywords->find(s));
@@ -490,29 +489,24 @@ namespace jank::runtime
 
   object_ptr context::macroexpand1(object_ptr const o)
   {
-    profile::timer timer{ "rt macroexpand1" };
-    return visit_object(
+    profile::timer const timer{ "rt macroexpand1" };
+    return visit_seqable(
       [this](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(!std::same_as<T, obj::persistent_list>)
+        if constexpr(!behavior::sequenceable<T>)
         {
           return typed_o;
         }
         else
         {
-          if(typed_o->data.empty())
+          auto const first_sym_obj(dyn_cast<obj::symbol>(first(typed_o)));
+          if(!first_sym_obj)
           {
             return typed_o;
           }
 
-          auto const first_sym_obj(typed_o->data.first().unwrap());
-          if(first_sym_obj->type != object_type::symbol)
-          {
-            return typed_o;
-          }
-
-          auto const var(find_var(expect_object<obj::symbol>(first_sym_obj)));
+          auto const var(find_var(first_sym_obj));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
           if(var.is_none() || var.unwrap()->meta.is_none())
           {
@@ -526,11 +520,12 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const args(make_box<obj::persistent_list>(
-            typed_o->data.rest().conj(obj::nil::nil_const()).conj(typed_o)));
+          /* TODO: Provide &env. */
+          auto const args(cons(cons(rest(typed_o), obj::nil::nil_const()), typed_o));
           return apply_to(var.unwrap()->deref(), args);
         }
       },
+      [=]() { return o; },
       o);
   }
 
@@ -542,90 +537,6 @@ namespace jank::runtime
       return macroexpand(expanded);
     }
     return o;
-  }
-
-  obj::persistent_string_ptr context::native_source(object_ptr const o)
-  {
-    /* We use a clean analyze::processor so we don't share lifted items from other REPL
-     * evaluations. */
-    analyze::processor an_prc{ *this };
-    auto const expr(an_prc.analyze(o, analyze::expression_type::nested).expect_ok());
-    auto const wrapped_expr(evaluate::wrap_expression(expr));
-    auto const &module(
-      expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
-        ->to_string());
-    codegen::processor cg_prc{ *this, wrapped_expr, module, codegen::compilation_target::repl };
-
-    return make_box(util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-  }
-
-  object_ptr context::print(object_ptr const o)
-  {
-    auto const s(runtime::to_string(o));
-    std::fwrite(s.data(), 1, s.size(), stdout);
-    return obj::nil::nil_const();
-  }
-
-  object_ptr context::print(object_ptr const o, object_ptr const more)
-  {
-    visit_object(
-      [o](auto const typed_more) {
-        using T = typename decltype(typed_more)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
-          runtime::to_string(o, buff);
-          runtime::to_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
-          {
-            fmt::format_to(inserter, " ");
-            runtime::to_string(it->first(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_more->to_string()) };
-        }
-      },
-      more);
-    return obj::nil::nil_const();
-  }
-
-  object_ptr context::println(object_ptr const more)
-  {
-    visit_object(
-      [](auto const typed_more) {
-        using T = typename decltype(typed_more)::value_type;
-
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          std::putc('\n', stdout);
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          fmt::memory_buffer buff;
-          auto inserter(std::back_inserter(buff));
-          runtime::to_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
-          {
-            fmt::format_to(inserter, " ");
-            runtime::to_string(it->first(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-          std::putc('\n', stdout);
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_more->to_string()) };
-        }
-      },
-      more);
-    return obj::nil::nil_const();
   }
 
   context::binding_scope::binding_scope(context &rt_ctx)

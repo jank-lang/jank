@@ -13,6 +13,11 @@ namespace jank::analyze::expr
     runtime::obj::persistent_list_ptr args{};
     native_vector<native_box<E>> arg_exprs;
 
+    void propagate_position(expression_position const pos)
+    {
+      position = pos;
+    }
+
     runtime::object_ptr to_runtime_data() const
     {
       runtime::object_ptr arg_expr_maps(make_box<runtime::obj::persistent_vector>());

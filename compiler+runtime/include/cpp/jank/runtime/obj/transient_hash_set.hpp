@@ -1,5 +1,8 @@
 #pragma once
 
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/detail/type.hpp>
+
 namespace jank::runtime
 {
   template <>
@@ -39,13 +42,13 @@ namespace jank::runtime
     native_box<persistent_type> to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr const);
-    object_ptr call(object_ptr const, object_ptr const fallback);
+    object_ptr call(object_ptr const) const;
+    object_ptr call(object_ptr const, object_ptr const fallback) const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const elem);
-    object_ptr get(object_ptr const elem, object_ptr const fallback);
-    object_ptr get_entry(object_ptr const elem);
+    object_ptr get(object_ptr const elem) const;
+    object_ptr get(object_ptr const elem, object_ptr const fallback) const;
+    object_ptr get_entry(object_ptr const elem) const;
     native_bool contains(object_ptr const elem) const;
 
     native_box<static_object> disjoin_in_place(object_ptr const elem);
