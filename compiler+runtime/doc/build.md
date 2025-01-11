@@ -12,6 +12,14 @@ For Arch:
 sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2
 ```
 
+For Nix:
+
+Simply enter the provided development shell which provides all necessary dependencies before compiling jank itself.
+
+```
+nix develop ".#"
+```
+
 For macOS, try this:
 
 ```bash

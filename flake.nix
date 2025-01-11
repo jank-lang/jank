@@ -37,13 +37,8 @@
             # Libs.
             boehmgc
             boost
-            cli11
-            fmt
-            immer
             libzip
-            magic-enum
             openssl
-            readline
           ];
         };
       };
