@@ -17,13 +17,19 @@
         formatter = pkgs.alejandra;
         devShells.default = (pkgs.mkShell.override { stdenv = pkgs.llvmPackages.stdenv; }) {
           packages = with pkgs; [
-            # Build deps.
+            ## Required tools.
             cmake
             ninja
             pkg-config
             clang
 
-            # Dev tools.
+            ## Required libs.
+            boehmgc
+            boost
+            libzip
+            openssl
+
+            ## Dev tools.
             entr
             gcovr
             lcov
@@ -33,17 +39,11 @@
             # For clangd
             llvm
             llvmPackages.libclang
-
-            # Libs.
-            boehmgc
-            boost
-            libzip
-            openssl
-
-            # Dev libs.
-            doctest
             # For clang-tidy.
             llvmPackages.clang-tools
+
+            ## Dev libs.
+            doctest
           ];
         };
       };

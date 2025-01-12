@@ -108,6 +108,9 @@ include(cmake/analysis.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+# Also include the system includes in the compile_commands.json so that weird
+# systems like NixOS can have tooling work properly.
+set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
