@@ -255,6 +255,9 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
+# We want all deps built as static libs.
+set(BUILD_SHARED_LIBS OFF)
+
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
