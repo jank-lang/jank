@@ -39,6 +39,11 @@
             boost
             libzip
             openssl
+
+            # Dev libs.
+            doctest
+            # For clang-tidy.
+            llvmPackages.clang-tools
           ];
         };
       };
