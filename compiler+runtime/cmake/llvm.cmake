@@ -1,5 +1,5 @@
 # LLVM/Clang default paths
-option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" ON)
+option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 if(NOT DEFINED llvm_dir)
   if(jank_local_clang)
     set(llvm_dir "${CMAKE_BINARY_DIR}/llvm-install/usr/local")

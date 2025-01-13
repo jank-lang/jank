@@ -98,5 +98,4 @@ cd -
 export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
-Now configure and build jank as normal, but pass
-`-Dllvm_dir=build/llvm-install/usr/local` when you configure.
+Now configure and build jank as normal, but pass `-Djank_local_clang=on` when you configure.

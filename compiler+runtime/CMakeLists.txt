@@ -128,7 +128,7 @@ function(jank_hook_llvm target)
   set(tgt "${target}")
   target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
-  target_link_directories("${tgt}" PRIVATE ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib)
+  target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
 endfunction()
 # ---- Clang/LLVM ----
 
