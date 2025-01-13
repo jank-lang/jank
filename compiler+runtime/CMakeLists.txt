@@ -86,16 +86,11 @@ set(
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
-  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
 )
 
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
-  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
-  # TODO: Fix these.
-  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
-  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
@@ -271,9 +266,10 @@ target_link_libraries(
   fmt::fmt
   bdwgc::gc bdwgc::gccpp
   libzippp::libzippp
-  libclang.so
-  libclang-cpp.so
-  libLLVM.so
+  # TODO: How can we force clang/llvm to be shared?
+  clang
+  clang-cpp
+  LLVM
   Boost::filesystem
   OpenSSL::Crypto
 )
@@ -283,13 +279,6 @@ jank_hook_llvm(jank_lib)
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
-
-target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
-)
 
 target_compile_options(
   jank_lib

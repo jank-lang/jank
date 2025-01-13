@@ -10,15 +10,15 @@ jobs:
       fail-fast: false
       matrix:
         # TODO: sanitize: [On, Off]
-        os: [ubuntu-24.04]
+        os: [ubuntu-24.10]
         # TODO: Enable release once we no longer have a Clang crash:
         # https://github.com/jank-lang/jank/actions/runs/12269972895/job/34234432107
         build_type: [Debug]
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-24.10
             cc: clang-14
             cxx: clang++-14
-          - os: ubuntu-24.04
+          - os: ubuntu-24.10
             build_type: Debug
             codecov: on
             analysis: on
