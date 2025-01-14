@@ -38,13 +38,13 @@ namespace jank::runtime::module
 
   native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
+    static native_persistent_string const dot{ "\\." };
     return runtime::munge_extra(module, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
+    static native_persistent_string const dot{ "\\." };
     std::string ret{ runtime::munge_extra(module, dot, "_") };
 
     return fmt::format("jank_load_{}", ret);

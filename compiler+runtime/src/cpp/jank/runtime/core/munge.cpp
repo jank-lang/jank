@@ -286,11 +286,12 @@ namespace jank::runtime
   }
 
   native_persistent_string munge_extra(native_persistent_string const &o,
-                                       std::regex const &search,
+                                       native_persistent_string const &search,
                                        char const * const replace)
   {
-    std::string ret{ munge(o) };
-    return std::regex_replace(ret, search, replace);
+    native_transient_string const ret{ munge(o) };
+    std::regex const search_regex{ search.c_str() };
+    return std::regex_replace(ret, search_regex, replace);
   }
 
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */

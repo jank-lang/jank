@@ -75,7 +75,7 @@ extern "C"
     return __rt_ctx->read_string(s_obj->data);
   }
 
-  void jank_ns_set_symbol_counter(char const * const ns, uint64_t count)
+  void jank_ns_set_symbol_counter(char const * const ns, uint64_t const count)
   {
     auto const ns_obj(__rt_ctx->intern_ns(ns));
     ns_obj->symbol_counter.store(count);

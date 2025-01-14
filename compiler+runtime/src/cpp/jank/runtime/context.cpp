@@ -323,7 +323,7 @@ namespace jank::runtime
 
   native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
   {
-    static std::regex const dot{ "\\." };
+    static native_persistent_string const dot{ "\\." };
     auto const ns{ current_ns() };
     return fmt::format(FMT_COMPILE("{}-{}-{}"),
                        runtime::munge_extra(ns->name->get_name(), dot, "_"),

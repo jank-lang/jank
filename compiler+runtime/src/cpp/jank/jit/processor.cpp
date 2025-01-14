@@ -191,7 +191,7 @@ namespace jank::jit
     auto &ee{ interpreter->getExecutionEngine().get() };
     llvm::orc::SymbolNameSet to_remove{};
     to_remove.insert(ee.mangleAndIntern(name.c_str()));
-    auto const error = ee.getMainJITDylib().remove(to_remove);
+    auto const error{ ee.getMainJITDylib().remove(to_remove) };
 
     if(error.isA<llvm::orc::SymbolsCouldNotBeRemoved>())
     {
