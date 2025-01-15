@@ -237,7 +237,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
@@ -254,17 +253,17 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
-include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
+find_package(BDWgc REQUIRED)
 
 target_link_libraries(
   jank_lib PRIVATE
   fmt::fmt
-  bdwgc::gc bdwgc::gccpp
+  ${BDWGC_LIBRARIES}
   libzippp::libzippp
   # TODO: How can we force clang/llvm to be shared?
   clang

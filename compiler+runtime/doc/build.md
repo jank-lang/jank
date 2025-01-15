@@ -6,13 +6,13 @@ scripts to compile your own. See the section on compiling Clang/LLVM below.
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs clang llvm pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2
+sudo pacman -S git git-lfs clang llvm pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2 gc
 ```
 
 For Nix:
@@ -27,7 +27,7 @@ nix develop ".#"
 For macOS:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19
+brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19 bdw-gc
 
 # Ensure you have this set up in your shell.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
