@@ -86,16 +86,11 @@ set(
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
-  $<$<PLATFORM_ID:Darwin>:-I/opt/homebrew/include>
 )
 
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
-  $<$<PLATFORM_ID:Darwin>:-L/opt/homebrew/lib>
-  # TODO: Fix these.
-  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libunwind.a>
-  $<$<PLATFORM_ID:Darwin>:${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib/libc++abi.a>
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
@@ -108,6 +103,9 @@ include(cmake/analysis.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
+# Also include the system includes in the compile_commands.json so that weird
+# systems like NixOS can have tooling work properly.
+set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
@@ -130,7 +128,7 @@ function(jank_hook_llvm target)
   set(tgt "${target}")
   target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
-  target_link_directories("${tgt}" PRIVATE ${CMAKE_BINARY_DIR}/llvm-install/usr/local/lib)
+  target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
 endfunction()
 # ---- Clang/LLVM ----
 
@@ -239,7 +237,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
@@ -252,22 +249,26 @@ set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 
+# We want all deps built as static libs.
+set(BUILD_SHARED_LIBS OFF)
+
 include(FetchContent)
-include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
+find_package(BDWgc REQUIRED)
 
 target_link_libraries(
   jank_lib PRIVATE
   fmt::fmt
-  bdwgc::gc bdwgc::gccpp
+  ${BDWGC_LIBRARIES}
   libzippp::libzippp
-  libclang.so
-  libclang-cpp.so
-  libLLVM.so
+  # TODO: How can we force clang/llvm to be shared?
+  clang
+  clang-cpp
+  LLVM
   Boost::filesystem
   OpenSSL::Crypto
 )
@@ -277,13 +278,6 @@ jank_hook_llvm(jank_lib)
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
-
-target_include_directories(
-    jank_lib
-    SYSTEM
-    PUBLIC
-    "$<$<PLATFORM_ID:Darwin>:/opt/homebrew/include>"
-)
 
 target_compile_options(
   jank_lib

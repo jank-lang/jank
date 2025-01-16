@@ -82,6 +82,7 @@ namespace jank::analyze
         case frame_type::finally:
           return "finally";
       }
+      return "unknown";
     }
 
     static constexpr native_bool pointer_free{ false };

@@ -13,6 +13,8 @@ namespace jank::util
 
     string_builder();
     string_builder(size_t capacity);
+    string_builder(string_builder const &) = delete;
+    string_builder(string_builder &&) = default;
     ~string_builder();
 
     string_builder &operator()(native_bool d) &;
