@@ -136,6 +136,17 @@ namespace jank::codegen
       auto const global_ctor_fn(ctx->global_ctor_block->getParent());
       ctx->builder->CreateCall(global_ctor_fn, {});
 
+      /* This dance is performed to keep symbol names unique across all the modules.
+       * Considering LLVM JIT symbols to be global, we need to define them with
+       * unique names to avoid conflicts during JIT recompilation/reloading.
+       *
+       * The approach, right now, is for each namespace, we will keep a counter
+       * and will increase it every time we define a new symbol. When we JIT reload
+       * the same namespace again, we will define new symbols.
+       *
+       * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
+       * on intial load.
+       */
       auto const current_ns{ __rt_ctx->current_ns() };
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),

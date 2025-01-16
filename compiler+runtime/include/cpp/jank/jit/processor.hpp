@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
+#include <fmt/format.h>
 #include <memory>
 
 #include <clang/Interpreter/Interpreter.h>
@@ -45,7 +46,7 @@ namespace jank::jit
         return symbol.get().toPtr<T>();
       }
 
-      return err("Failed to find symbol");
+      return err(fmt::format("Failed to find the symbol: '{}'", name.c_str()));
     }
 
     result<void, native_persistent_string>

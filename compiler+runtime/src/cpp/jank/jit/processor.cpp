@@ -195,7 +195,7 @@ namespace jank::jit
 
     if(error.isA<llvm::orc::SymbolsCouldNotBeRemoved>())
     {
-      return err(fmt::format("Failed to remove the symbol: {}", name));
+      return err(fmt::format("Failed to remove the symbol: '{}'", name));
     }
     return ok();
   }
