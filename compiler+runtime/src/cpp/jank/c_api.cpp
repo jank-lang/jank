@@ -75,9 +75,17 @@ extern "C"
     return __rt_ctx->read_string(s_obj->data);
   }
 
+  void jank_ns_set_symbol_counter(char const * const ns, uint64_t const count)
+  {
+    auto const ns_obj(__rt_ctx->intern_ns(ns));
+    ns_obj->symbol_counter.store(count);
+  }
+
   jank_object_ptr jank_var_intern(jank_object_ptr const ns, jank_object_ptr const name)
   {
     auto const ns_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(ns)));
+    __rt_ctx->intern_ns(ns_obj->data);
+
     auto const name_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(name)));
     return erase(__rt_ctx->intern_var(ns_obj->data, name_obj->data).expect_ok());
   }

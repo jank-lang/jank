@@ -26,9 +26,9 @@ namespace jank::codegen
 
   reusable_context::reusable_context(native_persistent_string const &module_name)
     : module_name{ module_name }
-    , ctor_name{ runtime::munge(runtime::context::unique_string("jank_global_init")) }
+    , ctor_name{ runtime::munge(__rt_ctx->unique_string("jank_global_init")) }
     , llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
-    , module{ std::make_unique<llvm::Module>(runtime::context::unique_string(module_name).c_str(),
+    , module{ std::make_unique<llvm::Module>(__rt_ctx->unique_string(module_name).c_str(),
                                              *llvm_ctx) }
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
     , global_ctor_block{ llvm::BasicBlock::Create(*llvm_ctx, "entry") }
@@ -135,6 +135,29 @@ namespace jank::codegen
     {
       auto const global_ctor_fn(ctx->global_ctor_block->getParent());
       ctx->builder->CreateCall(global_ctor_fn, {});
+
+      /* This dance is performed to keep symbol names unique across all the modules.
+       * Considering LLVM JIT symbols to be global, we need to define them with
+       * unique names to avoid conflicts during JIT recompilation/reloading.
+       *
+       * The approach, right now, is for each namespace, we will keep a counter
+       * and will increase it every time we define a new symbol. When we JIT reload
+       * the same namespace again, we will define new symbols.
+       *
+       * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
+       * on intial load.
+       */
+      auto const current_ns{ __rt_ctx->current_ns() };
+      auto const fn_type(
+        llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty() },
+                                false));
+      auto const fn(ctx->module->getOrInsertFunction("jank_ns_set_symbol_counter", fn_type));
+
+      ctx->builder->CreateCall(
+        fn,
+        { gen_c_string(current_ns->name->get_name()),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
     for(size_t i{}; i < arity.params.size(); ++i)

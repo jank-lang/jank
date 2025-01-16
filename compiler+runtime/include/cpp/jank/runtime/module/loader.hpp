@@ -95,9 +95,6 @@ namespace jank::runtime::module
 
     loader(context &rt_ctx, native_persistent_string_view const &ps);
 
-    native_bool is_loaded(native_persistent_string_view const &) const;
-    void set_loaded(native_persistent_string_view const &);
-
     string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
     string_result<void> load(native_persistent_string_view const &module, origin const ori);
 
@@ -115,6 +112,5 @@ namespace jank::runtime::module
     /* This maps module strings to entries. Module strings are like fully qualified Java
      * class names. */
     native_unordered_map<native_persistent_string, entry> entries;
-    native_set<native_persistent_string> loaded;
   };
 }

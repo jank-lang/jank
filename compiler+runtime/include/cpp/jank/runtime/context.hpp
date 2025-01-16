@@ -107,10 +107,10 @@ namespace jank::runtime
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    static native_persistent_string unique_string();
-    static native_persistent_string unique_string(native_persistent_string_view const &prefix);
-    static obj::symbol unique_symbol();
-    static obj::symbol unique_symbol(native_persistent_string_view const &prefix);
+    native_persistent_string unique_string();
+    native_persistent_string unique_string(native_persistent_string_view const &prefix);
+    obj::symbol unique_symbol();
+    obj::symbol unique_symbol(native_persistent_string_view const &prefix);
 
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
     folly::Synchronized<native_unordered_map<native_persistent_string, obj::keyword_ptr>> keywords;

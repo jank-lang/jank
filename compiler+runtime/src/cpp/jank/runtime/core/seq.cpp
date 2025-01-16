@@ -8,6 +8,7 @@
 #include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/collection_like.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
@@ -670,11 +671,7 @@ namespace jank::runtime
       [&](auto const typed_s) -> native_bool {
         using S = typename decltype(typed_s)::value_type;
 
-        if constexpr(behavior::associatively_readable<S>)
-        {
-          return typed_s->contains(key);
-        }
-        if constexpr(std::same_as<S, obj::persistent_hash_set>)
+        if constexpr(behavior::associatively_readable<S> || behavior::set_like<S>)
         {
           return typed_s->contains(key);
         }
