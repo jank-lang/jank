@@ -1,13 +1,13 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
-#include <fmt/format.h>
 #include <memory>
 
 #include <clang/Interpreter/Interpreter.h>
 
 #include <jank/result.hpp>
 #include <jank/util/cli.hpp>
+#include <jank/util/string_builder.hpp>
 
 namespace llvm
 {
@@ -46,7 +46,9 @@ namespace jank::jit
         return symbol.get().toPtr<T>();
       }
 
-      return err(fmt::format("Failed to find the symbol: '{}'", name.c_str()));
+      util::string_builder sb;
+      sb("Failed for find symbol: '")(name)("'");
+      return err(sb.release());
     }
 
     result<void, native_persistent_string>
