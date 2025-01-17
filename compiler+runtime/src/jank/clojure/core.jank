@@ -3655,6 +3655,11 @@
   "Returns the namespace named by the symbol or nil if it doesn't exist."
   clojure.core-native/find-ns)
 
+(def find-var
+  "Returns the global var named by the namespace-qualified symbol, or
+  nil if no var with that name."
+  clojure.core-native/find-var)
+
 (def remove-ns
   "Removes the namespace named by the symbol. Use with caution.
    Cannot be used to remove the clojure namespace."
@@ -4208,15 +4213,13 @@
   ([x y & more]
    (reduce1 -' (-' x y) more)))
 
-(defn abs
+(def abs
   "Returns the absolute value of a.
   If a is Long/MIN_VALUE => Long/MIN_VALUE
   If a is a double and zero => +0.0
   If a is a double and ##Inf or ##-Inf => ##Inf
   If a is a double and ##NaN => ##NaN"
-  [a]
-  ;; (clojure.lang.Numbers/abs a)
-  (throw "TODO: port"))
+  clojure.core-native/abs)
 
 (defn dec'
   "Returns a number one less than num. Supports arbitrary precision.
@@ -4338,11 +4341,7 @@
 (defn int?
   "Return true if x is a fixed precision integer"
   [x]
-  #_(or (instance? Long x)
-        (instance? Integer x)
-        (instance? Short x)
-        (instance? Byte x))
-  (throw "TODO: port"))
+  (integer? x))
 
 (defn pos-int?
   "Return true if x is a positive fixed precision integer"
@@ -4362,16 +4361,15 @@
 (defn double?
   "Return true if x is a Double"
   [x]
-  #_(instance? Double x)
-  (throw "TODO: port"))
+  (float? x))
 
 ;;map stuff
 
 (defn map-entry?
   "Return true if x is a map entry"
   [x]
-	#_(instance? java.util.Map$Entry x)
-  (throw "TODO: port"))
+  (and (vector? x)
+       (== 2 (count x))))
 
 (defn rseq
   "Returns, in constant time, a seq of the items in rev (which
@@ -4417,15 +4415,6 @@
 
 ;;;;;;;;; var stuff
 
-(defmacro ^{:private true} assert-args
-  [& pairs]
-  `(do (when-not ~(first pairs)
-         (throw (IllegalArgumentException.
-                  (str (first ~'&form) " requires " ~(second pairs) " in " ~'*ns* ":" (:line (meta ~'&form))))))
-     ~(let [more (nnext pairs)]
-        (when more
-          (list* `assert-args more)))))
-
 (defn with-bindings*
   "Takes a map of Var/value pairs. Installs for the given Vars the associated
   values as thread-local bindings. Then calls f with the supplied arguments.
@@ -4462,13 +4451,6 @@
   thread, but needs the same bindings in place."
   [& fntail]
   `(bound-fn* (fn ~@fntail)))
-
-(defn find-var
-  "Returns the global var named by the namespace-qualified symbol, or
-  nil if no var with that name."
-  [sym]
-  ;; (. clojure.lang.Var (find sym))
-  (throw "TODO: port"))
 
 (defn- binding-conveyor-fn
   [f]
@@ -4967,11 +4949,9 @@
 
 ;; evaluation
 
-(defn eval
+(def eval
   "Evaluates the form data structure (not text!) and returns the result."
-  [form]
-  ;; (. clojure.lang.Compiler (eval form))
-  (throw "TODO: port"))
+  clojure.core-native/eval)
 
 (defn await
   "Blocks the current thread (indefinitely!) until all actions
@@ -5139,23 +5119,17 @@
   ;; (clojure.lang.RT/uncheckedDoubleCast x)
   (throw "TODO: port"))
 
-(defn ratio?
+(def ratio?
   "Returns true if n is a Ratio"
-  [n]
-  ;; (instance? clojure.lang.Ratio n)
-  (throw "TODO: port"))
+  clojure.core-native/ratio?)
 
-(defn numerator
+(def numerator
   "Returns the numerator part of a Ratio."
-  [r]
-  ;; (.numerator ^clojure.lang.Ratio r)
-  (throw "TODO: port"))
+  clojure.core-native/numerator)
 
-(defn denominator
+(def denominator
   "Returns the denominator part of a Ratio."
-  [r]
-  ;; (.denominator ^clojure.lang.Ratio r)
-  (throw "TODO: port"))
+  clojure.core-native/denominator)
 
 (defn decimal?
   "Returns true if n is a BigDecimal"
@@ -5320,9 +5294,9 @@
   of the inits, and a finally clause that calls (.close name) on each
   name in reverse order."
   [bindings & body]
-  ;; (assert-args
-  ;;    (vector? bindings) "a vector for its binding"
-  ;;    (even? (count bindings)) "an even number of forms in binding vector")
+  (assert-macro-args
+   (vector? bindings) "a vector for its binding"
+   (even? (count bindings)) "an even number of forms in binding vector")
   ;; (cond
   ;;   (= (count bindings) 0) `(do ~@body)
   ;;   (symbol? (bindings 0)) `(let ~(subvec bindings 0 2)
@@ -5582,9 +5556,9 @@
   to the var objects themselves, and must be accessed with var-get and
   var-set"
   [name-vals-vec & body]
-  ;; (assert-args
-  ;;    (vector? name-vals-vec) "a vector for its binding"
-  ;;    (even? (count name-vals-vec)) "an even number of forms in binding vector")
+  (assert-macro-args
+   (vector? name-vals-vec) "a vector for its binding"
+   (even? (count name-vals-vec)) "an even number of forms in binding vector")
   ;; `(let [~@(interleave (take-nth 2 name-vals-vec)
   ;;                      (repeat '(.. clojure.lang.Var create setDynamic)))]
   ;;    (. clojure.lang.Var (pushThreadBindings (hash-map ~@name-vals-vec)))

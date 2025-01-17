@@ -200,6 +200,12 @@ namespace clojure::core_native
       ?: obj::nil::nil_const();
   }
 
+  static object_ptr find_var(object_ptr const sym)
+  {
+    return __rt_ctx->find_var(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
+      ?: obj::nil::nil_const();
+  }
+
   static object_ptr remove_ns(object_ptr const sym)
   {
     return __rt_ctx->remove_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
@@ -264,6 +270,11 @@ namespace clojure::core_native
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
     return obj::nil::nil_const();
+  }
+
+  static object_ptr eval(object_ptr const expr)
+  {
+    return expr;
   }
 }
 
@@ -381,12 +392,15 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("max", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&max));
   intern_fn("inc", static_cast<object_ptr (*)(object_ptr)>(&inc));
   intern_fn("dec", static_cast<object_ptr (*)(object_ptr)>(&dec));
+  intern_fn("numerator", &numerator);
+  intern_fn("denominator", &denominator);
   intern_fn("pos?", &is_pos);
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
   intern_fn("rem", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&rem));
   intern_fn("integer?", &is_integer);
   intern_fn("real?", &is_real);
+  intern_fn("ratio?", &is_ratio);
   intern_fn("boolean?", &is_boolean);
   intern_fn("number?", &is_number);
   intern_fn("even?", &is_even);
@@ -451,6 +465,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("create-ns", &core_native::intern_ns);
   intern_fn("in-ns", &core_native::in_ns);
   intern_fn("find-ns", &core_native::find_ns);
+  intern_fn("find-var", &core_native::find_var);
   intern_fn("remove-ns", &core_native::remove_ns);
   intern_fn("ns?", &core_native::is_ns);
   intern_fn("ns-name", &core_native::ns_name);
@@ -461,6 +476,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("refer", &core_native::refer);
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);
+  intern_fn("eval", &core_native::eval);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));

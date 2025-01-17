@@ -246,6 +246,9 @@ namespace jank::runtime
 
   native_real rand();
 
+  native_integer numerator(object_ptr o);
+  native_integer denominator(object_ptr o);
+
   native_integer to_int(object_ptr l);
   native_integer to_int(obj::integer_ptr l);
   native_integer to_int(obj::real_ptr l);
@@ -257,5 +260,6 @@ namespace jank::runtime
   native_bool is_number(object_ptr o);
   native_bool is_integer(object_ptr o);
   native_bool is_real(object_ptr o);
+  native_bool is_ratio(object_ptr o);
   native_bool is_boolean(object_ptr o);
 }
