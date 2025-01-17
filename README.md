@@ -56,6 +56,7 @@ There are pre-compiled binaries for Ubuntu 24.10, which are built to follow the
 ```
 
 ## Docs
+* [Installing jank](./compiler+runtime/doc/install.md)
 * [Building jank](./compiler+runtime/doc/build.md)
 
 ## Sponsors
