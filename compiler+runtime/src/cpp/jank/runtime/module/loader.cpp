@@ -38,20 +38,14 @@ namespace jank::runtime::module
 
   native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "/");
-
-    return ret;
+    static native_persistent_string const dot{ "\\." };
+    return runtime::munge_extra(module, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "_");
+    static native_persistent_string const dot{ "\\." };
+    std::string ret{ runtime::munge_extra(module, dot, "_") };
 
     return fmt::format("jank_load_{}", ret);
   }
@@ -343,16 +337,6 @@ namespace jank::runtime::module
     return boost::filesystem::last_write_time(native_transient_string{ source_path });
   }
 
-  native_bool loader::is_loaded(native_persistent_string_view const &module) const
-  {
-    return loaded.contains(module);
-  }
-
-  void loader::set_loaded(native_persistent_string_view const &module)
-  {
-    loaded.emplace(module);
-  }
-
   string_result<loader::find_result>
   loader::find(native_persistent_string_view const &module, origin const ori)
   {
@@ -389,6 +373,7 @@ namespace jank::runtime::module
        * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
        * making it hard to share them. */
       if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
+         && entry->second.o.unwrap().exists()
          && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
         auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
@@ -440,11 +425,6 @@ namespace jank::runtime::module
 
   string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
   {
-    if(loader::is_loaded(module))
-    {
-      return ok();
-    }
-
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -477,8 +457,6 @@ namespace jank::runtime::module
       return res;
     }
 
-    loader::set_loaded(module);
-
     return ok();
   }
 
@@ -486,6 +464,23 @@ namespace jank::runtime::module
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ fmt::format("load object {}", module) };
+
+    /* While loading an object, if the main ns loading symbol exists, then
+     * we don't need to load the object file again.
+     *
+     * Existence of the `jank_load_<module>` symbol (also a function),
+     * means that all the required symbols exist and are already defined.
+     * We call this symbol to re-initialize all the vars in the namespace.
+     * */
+    auto const load_function_name{ module_to_load_function(module) };
+
+    auto const existing_load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name) };
+    if(existing_load.is_ok())
+    {
+      existing_load.expect_ok()();
+      return ok();
+    }
+
     if(entry.archive_path.is_some())
     {
       /* TODO: Load object code from string. */
@@ -496,7 +491,7 @@ namespace jank::runtime::module
       rt_ctx.jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
     load();
 
     return ok();

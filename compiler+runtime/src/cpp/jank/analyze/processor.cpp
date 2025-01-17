@@ -312,7 +312,7 @@ namespace jank::analyze
           {
             /* C++ doesn't allow multiple params with the same name, so we generate a unique
              * name for shared params. */
-            param = make_box<runtime::obj::symbol>(runtime::context::unique_string("shadowed"));
+            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
             break;
           }
         }
@@ -387,7 +387,7 @@ namespace jank::analyze
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
-      unique_name = runtime::context::unique_string(name);
+      unique_name = __rt_ctx->unique_string(name);
       if(length < 3)
       {
         return err(error{ fmt::format("fn missing forms: {}", full_list->to_string()) });
@@ -397,7 +397,7 @@ namespace jank::analyze
     }
     else
     {
-      name = runtime::context::unique_string("fn");
+      name = __rt_ctx->unique_string("fn");
       unique_name = name;
     }
 

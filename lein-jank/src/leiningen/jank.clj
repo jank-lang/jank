@@ -14,7 +14,7 @@
           :extra-env (System/getenv)}
          "jank"
          command
-         "--class-path"
+         "--module-path"
          classpath
          "--"
          args))
