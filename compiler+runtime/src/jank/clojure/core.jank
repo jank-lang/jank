@@ -4364,7 +4364,7 @@
    :added "1.0"}
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_multiply x y))
-  )
+  (throw "TODO: port"))
 
 (defn unchecked-multiply
   "Returns the product of x and y, both long.
