@@ -1,5 +1,20 @@
 (def ^:dynamic *ns*)
+(def ^:dynamic *in* nil)
 (def ^:dynamic *out* nil)
+(def ^:dynamic *command-line-args* nil)
+(def ^:dynamic *warn-on-reflection* nil)
+(def ^:dynamic *file* nil)
+(def ^:dynamic *compile-path* nil)
+(def ^:dynamic *compile-files* nil)
+(def ^:dynamic *unchecked-math* nil)
+(def ^:dynamic *compiler-options* nil)
+(def ^:dynamic *err* nil)
+(def ^:dynamic *flush-on-newline* nil)
+(def ^:dynamic *print-meta* nil)
+(def ^:dynamic *print-dup* nil)
+(def ^:dynamic *print-readably* nil)
+(def ^:dynamic *read-eval* nil)
+(def ^:dynamic *assert* nil)
 
 ; Syntax quoting.
 (def unquote
@@ -4019,5 +4034,3409 @@
        (clojure.core-native/var-bind-root v val)
        (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
        v)))
+
+(defn nfirst
+  "Same as (next (first x))"
+  [x]
+  (next (first x)))
+
+(defn fnext
+  "Same as (first (next x))"
+  [x]
+  (first (next x)))
+
+(defn instance?
+  "Evaluates x and tests if it is an instance of the class
+  c. Returns true or false"
+  [c x]
+  ;; (. c (isInstance x))
+  (throw "TODO: port"))
+
+(defn char?
+  "Return true if x is a Character"
+  [x]
+  ;;  (instance? Character x)
+  (throw "TODO: port"))
+
+(def ^{:private true :dynamic true}
+  assert-valid-fdecl (fn [fdecl]))
+
+(defn to-array
+  "Returns an array of Objects containing the contents of coll, which
+  can be any Collection.  Maps to java.util.Collection.toArray()."
+  [coll]
+  ;; (. clojure.lang.RT (toArray coll))
+  (throw "TODO: port"))
+
+(defn cast
+  "Throws a ClassCastException if x is not a c, else returns x."
+  [c x] 
+  ;; (. c (cast x))
+  (throw "TODO: port"))
+
+(defn sorted-map-by
+  "keyval => key val
+  Returns a new sorted map with supplied mappings, using the supplied
+  comparator.  If any keys are equal, they are handled as if by
+  repeated uses of assoc."
+  ([comparator & keyvals]
+  ;;  (clojure.lang.PersistentTreeMap/create comparator keyvals)
+   (throw "TODO: port")))
+
+(defn any?
+  "Returns true given any argument."
+  [x] true)
+
+(defn find-keyword
+  "Returns a Keyword with the given namespace and name if one already
+  exists.  This function will not intern a new keyword. If the keyword
+  has not already been interned, it will return nil.  Do not use :
+  in the keyword strings, it will be added automatically."
+  ([name]
+  ;;  (cond (keyword? name) name
+  ;;        (symbol? name) (clojure.lang.Keyword/find ^clojure.lang.Symbol name)
+  ;;        (string? name) (clojure.lang.Keyword/find ^String name))
+   (throw "TODO: port"))
+  ([ns name]
+  ;;  (clojure.lang.Keyword/find ns name)
+   (throw "TODO: port")))
+
+(defn delay?
+  "returns true if x is a Delay created with delay"
+  [x]
+  ;; (instance? clojure.lang.Delay x)
+  (throw "TODO: port"))
+
+(defmacro if-not
+  "Evaluates test. If logical false, evaluates and returns then expr, 
+  otherwise else expr, if supplied, else nil."
+  ([test then] `(if-not ~test ~then nil))
+  ([test then else]
+   `(if (not ~test) ~then ~else)))
+
+(defn compare
+  "Comparator. Returns a negative number, zero, or a positive number
+  when x is logically 'less than', 'equal to', or 'greater than'
+  y. Same as Java x.compareTo(y) except it also works for nil, and
+  compares numbers and collections in a type-independent manner. x
+  must implement Comparable"
+  [x y]
+  ;; (. clojure.lang.Util (compare x y))
+  (throw "TODO: port"))
+
+(defn inc'
+  "Returns a number one greater than num. Supports arbitrary precision.
+  See also: inc"
+  [x]
+  ;; (. clojure.lang.Numbers (incP x))
+  (throw "TODO: port"))
+
+;; reduce is defined again later after InternalReduce loads
+(defn-
+  reduce1
+       ([f coll]
+             (let [s (seq coll)]
+               (if s
+         (reduce1 f (first s) (next s))
+                 (f))))
+       ([f val coll]
+        ;;   (let [s (seq coll)]
+        ;;     (if s
+        ;;       (if (chunked-seq? s)
+        ;;         (recur f 
+        ;;                (.reduce (chunk-first s) f val)
+        ;;                (chunk-next s))
+        ;;         (recur f (f val (first s)) (next s)))
+        ;;  val))
+        (throw "TODO: port")))
+
+;; ;;math stuff
+;; (defn ^:private nary-inline
+;;   ([op] (nary-inline op op))
+;;   ([op unchecked-op]
+;;      (fn
+;;        ([x] (let [op (if *unchecked-math* unchecked-op op)]
+;;               `(. clojure.lang.Numbers (~op ~x))))
+;;        ([x y] (let [op (if *unchecked-math* unchecked-op op)]
+;;                 `(. clojure.lang.Numbers (~op ~x ~y))))
+;;        ([x y & more]
+;;           (let [op (if *unchecked-math* unchecked-op op)]
+;;             (reduce1
+;;              (fn [a b] `(. clojure.lang.Numbers (~op ~a ~b)))
+;;              `(. clojure.lang.Numbers (~op ~x ~y)) more))))))
+
+;; (defn ^:private >1? [n] (clojure.lang.Numbers/gt n 1))
+
+;; (defn ^:private >0? [n] (clojure.lang.Numbers/gt n 0))
+
+(defn +'
+  "Returns the sum of nums. (+') returns 0. Supports arbitrary precision.
+  See also: +"
+  ([] 0)
+  ([x]
+  ;;  (cast Number x)
+   (throw "TODO: port"))
+  ([x y]
+  ;;  (. clojure.lang.Numbers (addP x y))
+   (throw "TODO: port"))
+  ([x y & more]
+   (reduce1 +' (+' x y) more)))
+
+(defn *'
+  "Returns the product of nums. (*') returns 1. Supports arbitrary precision.
+  See also: *"
+  ([] 1)
+  ([x]
+  ;;  (cast Number x)
+   (throw "TODO: port"))
+  ([x y]
+  ;;  (. clojure.lang.Numbers (multiplyP x y))
+  (throw "TODO: port"))
+  ([x y & more]
+   (reduce1 *' (*' x y) more)))
+
+(defn -'
+  "If no ys are supplied, returns the negation of x, else subtracts
+  the ys from x and returns the result. Supports arbitrary precision.
+  See also: -"
+  ([x]
+  ;;  (. clojure.lang.Numbers (minusP x))
+   (throw "TODO: port"))
+  ([x y]
+  ;;  (. clojure.lang.Numbers (minusP x y))
+   (throw "TODO: port"))
+  ([x y & more]
+   (reduce1 -' (-' x y) more)))
+
+(defn abs
+  "Returns the absolute value of a.
+  If a is Long/MIN_VALUE => Long/MIN_VALUE
+  If a is a double and zero => +0.0
+  If a is a double and ##Inf or ##-Inf => ##Inf
+  If a is a double and ##NaN => ##NaN"
+  [a]
+  ;; (clojure.lang.Numbers/abs a)
+  (throw "TODO: port"))
+
+(defn dec'
+  "Returns a number one less than num. Supports arbitrary precision.
+  See also: dec"
+  [x]
+  ;; (. clojure.lang.Numbers (decP x))
+  (throw "TODO: port"))
+
+(defn unchecked-inc-int
+  "Returns a number one greater than x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_inc x))
+  (throw "TODO: port"))
+
+(defn unchecked-inc
+  "Returns a number one greater than x, a long.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_inc x))
+  (throw "TODO: port"))
+
+(defn unchecked-dec-int
+  "Returns a number one less than x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_dec x))
+  (throw "TODO: port"))
+
+(defn unchecked-dec
+  "Returns a number one less than x, a long.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_dec x))
+  (throw "TODO: port"))
+
+(defn unchecked-negate-int
+  "Returns the negation of x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_negate x))
+  (throw "TODO: port"))
+
+(defn unchecked-negate
+  "Returns the negation of x, a long.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_minus x))
+  (throw "TODO: port"))
+
+(defn unchecked-add-int
+  "Returns the sum of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_add x y))
+  (throw "TODO: port"))
+
+(defn unchecked-add
+  "Returns the sum of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_add x y))
+  (throw "TODO: port"))
+
+(defn unchecked-subtract-int
+  "Returns the difference of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_subtract x y))
+  (throw "TODO: port"))
+
+(defn unchecked-subtract
+  "Returns the difference of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_minus x y))
+  (throw "TODO: port"))
+
+(defn unchecked-multiply-int
+  "Returns the product of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_multiply x y))
+  (throw "TODO: port"))
+
+(defn unchecked-multiply
+  "Returns the product of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_multiply x y))
+  (throw "TODO: port"))
+
+(defn unchecked-divide-int
+  "Returns the division of x by y, both int.
+  Note - uses a primitive operator subject to truncation."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_divide x y))
+  (throw "TODO: port"))
+
+(defn unchecked-remainder-int
+  "Returns the remainder of division of x by y, both int.
+  Note - uses a primitive operator subject to truncation."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_remainder x y))
+  (throw "TODO: port"))
+
+(defn quot
+  "quot[ient] of dividing numerator by denominator."
+  [num div]
+  ;; (. clojure.lang.Numbers (quotient num div))
+  (throw "TODO: port"))
+
+(defn rationalize
+  "returns the rational value of num"
+  [num]
+  ;; (. clojure.lang.Numbers (rationalize num))
+  (throw "TODO: port"))
+
+(defn int?
+  "Return true if x is a fixed precision integer"
+  [x]
+  #_(or (instance? Long x)
+        (instance? Integer x)
+        (instance? Short x)
+        (instance? Byte x))
+  (throw "TODO: port"))
+
+(defn pos-int?
+  "Return true if x is a positive fixed precision integer"
+  [x] (and (int? x)
+           (pos? x)))
+
+(defn neg-int?
+  "Return true if x is a negative fixed precision integer"
+  [x] (and (int? x)
+           (neg? x)))
+
+(defn nat-int?
+  "Return true if x is a non-negative fixed precision integer"
+  [x] (and (int? x)
+           (not (neg? x))))
+
+(defn double?
+  "Return true if x is a Double"
+  [x]
+  #_(instance? Double x)
+  (throw "TODO: port"))
+
+;;map stuff
+
+(defn map-entry?
+  "Return true if x is a map entry"
+  [x]
+	#_(instance? java.util.Map$Entry x)
+  (throw "TODO: port"))
+
+(defn rseq
+  "Returns, in constant time, a seq of the items in rev (which
+  can be a vector or sorted-map), in reverse order. If rev is empty returns nil"
+  [#_clojure.lang.Reversible rev]
+    ;; (. rev (rseq))
+  (throw "TODO: port"))
+
+(defmacro locking
+  "Executes exprs in an implicit do, while holding the monitor of x.
+  Will release the monitor of x in all circumstances."
+  [x & body]
+  `(let [lockee# ~x]
+     (try
+       (let [locklocal# lockee#]
+         (monitor-enter locklocal#)
+         (try
+           ~@body
+           (finally
+            (monitor-exit locklocal#)))))))
+
+;; (defmacro ..
+;;   "form => fieldName-symbol or (instanceMethodName-symbol args*)
+
+;;   Expands into a member access (.) of the first member on the first
+;;   argument, followed by the next member on the result, etc. For
+;;   instance:
+
+;;   (.. System (getProperties) (get \"os.name\"))
+
+;;   expands to:
+
+;;   (. (. System (getProperties)) (get \"os.name\"))
+
+;;   but is easier to write, read, and understand."
+;;   ([x form]
+;;   ;;  `(. ~x ~form)
+;;    (throw "TODO: port"))
+;;   ([x form & more]
+;;   ;;  `(.. (. ~x ~form) ~@more))
+;;   (throw "TODO: port"))
+
+
+;;;;;;;;; var stuff
+
+(defmacro ^{:private true} assert-args
+  [& pairs]
+  `(do (when-not ~(first pairs)
+         (throw (IllegalArgumentException.
+                  (str (first ~'&form) " requires " ~(second pairs) " in " ~'*ns* ":" (:line (meta ~'&form))))))
+     ~(let [more (nnext pairs)]
+        (when more
+          (list* `assert-args more)))))
+
+(defn with-bindings*
+  "Takes a map of Var/value pairs. Installs for the given Vars the associated
+  values as thread-local bindings. Then calls f with the supplied arguments.
+  Pops the installed bindings after f returned. Returns whatever f returns."
+  [binding-map f & args]
+  (push-thread-bindings binding-map)
+  (try
+    (apply f args)
+    (catch e (throw e))
+    (finally
+      (pop-thread-bindings))))
+
+(defmacro with-bindings
+  "Takes a map of Var/value pairs. Installs for the given Vars the associated
+  values as thread-local bindings. Then executes body. Pops the installed
+  bindings after body was evaluated. Returns the value of body."
+  [binding-map & body]
+  `(with-bindings* ~binding-map (fn [] ~@body)))
+
+(defn bound-fn*
+  "Returns a function, which will install the same bindings in effect as in
+  the thread at the time bound-fn* was called and then call f with any given
+  arguments. This may be used to define a helper function which runs on a
+  different thread, but needs the same bindings in place."
+  [f]
+  (let [bindings (get-thread-bindings)]
+    (fn [& args]
+      (apply with-bindings* bindings f args))))
+
+(defmacro bound-fn
+  "Returns a function defined by the given fntail, which will install the
+  same bindings in effect as in the thread at the time bound-fn was called.
+  This may be used to define a helper function which runs on a different
+  thread, but needs the same bindings in place."
+  [& fntail]
+  `(bound-fn* (fn ~@fntail)))
+
+(defn find-var
+  "Returns the global var named by the namespace-qualified symbol, or
+  nil if no var with that name."
+  [sym]
+  ;; (. clojure.lang.Var (find sym))
+  (throw "TODO: port"))
+
+(defn- binding-conveyor-fn
+  [f]
+  ;; (let [frame (clojure.lang.Var/cloneThreadBindingFrame)]
+  ;;   (fn 
+  ;;     ([]
+  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
+  ;;        (f))
+  ;;     ([x]
+  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
+  ;;        (f x))
+  ;;     ([x y]
+  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
+  ;;        (f x y))
+  ;;     ([x y z]
+  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
+  ;;        (f x y z))
+  ;;     ([x y z & args] 
+  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
+  ;;        (apply f x y z args))))
+  (throw "TODO: port"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Refs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn-
+  setup-reference [#_clojure.lang.ARef r options]
+  ;; (let [opts (apply hash-map options)]
+  ;;   (when (:meta opts)
+  ;;     (.resetMeta r (:meta opts)))
+  ;;   (when (:validator opts)
+  ;;     (.setValidator r (:validator opts)))
+  ;;   r)
+  (throw "TODO: port"))
+
+(defn agent
+  "Creates and returns an agent with an initial value of state and
+  zero or more options (in any order):
+
+  :meta metadata-map
+
+  :validator validate-fn
+
+  :error-handler handler-fn
+
+  :error-mode mode-keyword
+
+  If metadata-map is supplied, it will become the metadata on the
+  agent. validate-fn must be nil or a side-effect-free fn of one
+  argument, which will be passed the intended new state on any state
+  change. If the new state is unacceptable, the validate-fn should
+  return false or throw an exception.  handler-fn is called if an
+  action throws an exception or if validate-fn rejects a new state --
+  see set-error-handler! for details.  The mode-keyword may be either
+  :continue (the default if an error-handler is given) or :fail (the
+  default if no error-handler is given) -- see set-error-mode! for
+  details."
+  ([state & options]
+    ;;  (let [a (new clojure.lang.Agent state)
+    ;;        opts (apply hash-map options)]
+    ;;    (setup-reference a options)
+    ;;    (when (:error-handler opts)
+    ;;      (.setErrorHandler a (:error-handler opts)))
+    ;;    (.setErrorMode a (or (:error-mode opts)
+    ;;                         (if (:error-handler opts) :continue :fail)))
+    ;;    a)
+   (throw "TODO: port")))
+
+(defn set-agent-send-executor!
+  "Sets the ExecutorService to be used by send"
+  [executor]
+  ;; (set! clojure.lang.Agent/pooledExecutor executor)
+  (throw "TODO: port"))
+
+(defn set-agent-send-off-executor!
+  "Sets the ExecutorService to be used by send-off"
+  [executor]
+  ;; (set! clojure.lang.Agent/soloExecutor executor)
+  (throw "TODO: port"))
+
+(defn send-via
+  "Dispatch an action to an agent. Returns the agent immediately.
+  Subsequently, in a thread supplied by executor, the state of the agent
+  will be set to the value of:
+
+  (apply action-fn state-of-agent args)"
+  [executor #_clojure.lang.Agent a f & args]
+  ;; (.dispatch a (binding [*agent* a] (binding-conveyor-fn f)) args executor)
+  (throw "TODO: port"))
+
+(defn send
+  "Dispatch an action to an agent. Returns the agent immediately.
+  Subsequently, in a thread from a thread pool, the state of the agent
+  will be set to the value of:
+
+  (apply action-fn state-of-agent args)"
+  [#_clojure.lang.Agent a f & args]
+  ;; (apply send-via clojure.lang.Agent/pooledExecutor a f args)
+  (throw "TODO: port"))
+
+(defn send-off
+  "Dispatch a potentially blocking action to an agent. Returns the
+  agent immediately. Subsequently, in a separate thread, the state of
+  the agent will be set to the value of:
+
+  (apply action-fn state-of-agent args)"
+  [#_clojure.lang.Agent a f & args]
+  ;; (apply send-via clojure.lang.Agent/soloExecutor a f args)
+  (throw "TODO: port"))
+
+(defn release-pending-sends
+  "Normally, actions sent directly or indirectly during another action
+  are held until the action completes (changes the agent's
+  state). This function can be used to dispatch any pending sent
+  actions immediately. This has no impact on actions sent during a
+  transaction, which are still held until commit. If no action is
+  occurring, does nothing. Returns the number of actions dispatched."
+  []
+  ;; (clojure.lang.Agent/releasePendingSends)
+  (throw "TODO: port"))
+
+(defn add-watch
+  "Adds a watch function to an agent/atom/var/ref reference. The watch
+  fn must be a fn of 4 args: a key, the reference, its old-state, its
+  new-state. Whenever the reference's state might have been changed,
+  any registered watches will have their functions called. The watch fn
+  will be called synchronously, on the agent's thread if an agent,
+  before any pending sends if agent or ref. Note that an atom's or
+  ref's state may have changed again prior to the fn call, so use
+  old/new-state rather than derefing the reference. Note also that watch
+  fns may be called from multiple threads simultaneously. Var watchers
+  are triggered only by root binding changes, not thread-local
+  set!s. Keys must be unique per reference, and can be used to remove
+  the watch with remove-watch, but are otherwise considered opaque by
+  the watch mechanism."
+  [#_clojure.lang.IRef reference key fn]
+  ;; (.addWatch reference key fn)
+  (throw "TODO: port"))
+
+(defn remove-watch
+  "Removes a watch (set by add-watch) from a reference"
+  [#_clojure.lang.IRef reference key]
+  ;; (.removeWatch reference key)
+  (throw "TODO: port"))
+
+(defn agent-error
+  "Returns the exception thrown during an asynchronous action of the
+  agent if the agent is failed.  Returns nil if the agent is not
+  failed."
+  [#_clojure.lang.Agent a]
+  ;; (.getError a)
+  (throw "TODO: port"))
+
+(defn restart-agent
+  "When an agent is failed, changes the agent state to new-state and
+  then un-fails the agent so that sends are allowed again.  If
+  a :clear-actions true option is given, any actions queued on the
+  agent that were being held while it was failed will be discarded,
+  otherwise those held actions will proceed.  The new-state must pass
+  the validator if any, or restart will throw an exception and the
+  agent will remain failed with its old state and error.  Watchers, if
+  any, will NOT be notified of the new state.  Throws an exception if
+  the agent is not failed."
+  [#_clojure.lang.Agent a, new-state & options]
+  ;; (let [opts (apply hash-map options)]
+  ;;   (.restart a new-state (if (:clear-actions opts) true false)))
+  (throw "TODO: port"))
+
+(defn set-error-handler!
+  "Sets the error-handler of agent a to handler-fn.  If an action
+  being run by the agent throws an exception or doesn't pass the
+  validator fn, handler-fn will be called with two arguments: the
+  agent and the exception."
+  [#_clojure.lang.Agent a, handler-fn]
+  ;; (.setErrorHandler a handler-fn)
+  (throw "TODO: port"))
+
+(defn error-handler
+  "Returns the error-handler of agent a, or nil if there is none.
+  See set-error-handler!"
+  [#_clojure.lang.Agent a]
+  ;; (.getErrorHandler a)
+  (throw "TODO: port"))
+
+(defn set-error-mode!
+  "Sets the error-mode of agent a to mode-keyword, which must be
+  either :fail or :continue.  If an action being run by the agent
+  throws an exception or doesn't pass the validator fn, an
+  error-handler may be called (see set-error-handler!), after which,
+  if the mode is :continue, the agent will continue as if neither the
+  action that caused the error nor the error itself ever happened.
+  
+  If the mode is :fail, the agent will become failed and will stop
+  accepting new 'send' and 'send-off' actions, and any previously
+  queued actions will be held until a 'restart-agent'.  Deref will
+  still work, returning the state of the agent before the error."
+  [#_clojure.lang.Agent a, mode-keyword]
+  ;; (.setErrorMode a mode-keyword)
+  (throw "TODO: port"))
+
+(defn error-mode
+  "Returns the error-mode of agent a.  See set-error-mode!"
+  [#_clojure.lang.Agent a]
+  ;; (.getErrorMode a)
+  (throw "TODO: port"))
+
+(defn agent-errors
+  "DEPRECATED: Use 'agent-error' instead.
+  Returns a sequence of the exceptions thrown during asynchronous
+  actions of the agent."
+  [a]
+  (when-let [e (agent-error a)]
+    (list e)))
+
+(defn clear-agent-errors
+  "DEPRECATED: Use 'restart-agent' instead.
+  Clears any exceptions thrown during asynchronous actions of the
+  agent, allowing subsequent actions to occur."
+  [#_clojure.lang.Agent a]
+  ;; (restart-agent a (.deref a))
+  (throw "TODO: port"))
+
+(defn shutdown-agents
+  "Initiates a shutdown of the thread pools that back the agent
+  system. Running actions will complete, but no new actions will be
+  accepted"
+  []
+  ;; (. clojure.lang.Agent shutdown)
+  (throw "TODO: port"))
+
+(defn ref
+  "Creates and returns a Ref with an initial value of x and zero or
+  more options (in any order):
+
+  :meta metadata-map
+
+  :validator validate-fn
+
+  :min-history (default 0)
+  :max-history (default 10)
+
+  If metadata-map is supplied, it will become the metadata on the
+  ref. validate-fn must be nil or a side-effect-free fn of one
+  argument, which will be passed the intended new state on any state
+  change. If the new state is unacceptable, the validate-fn should
+  return false or throw an exception. validate-fn will be called on
+  transaction commit, when all refs have their final values.
+
+  Normally refs accumulate history dynamically as needed to deal with
+  read demands. If you know in advance you will need history you can
+  set :min-history to ensure it will be available when first needed (instead
+  of after a read fault). History is limited, and the limit can be set
+  with :max-history."
+  ([x]
+  ;;  (new clojure.lang.Ref x)
+   (throw "TODO: port"))
+  ([x & options] 
+  ;;  (let [r  ^clojure.lang.Ref (setup-reference (ref x) options)
+  ;;        opts (apply hash-map options)]
+  ;;   (when (:max-history opts)
+  ;;     (.setMaxHistory r (:max-history opts)))
+  ;;   (when (:min-history opts)
+  ;;     (.setMinHistory r (:min-history opts)))
+  ;;   r)
+   (throw "TODO: port")))
+
+(defn- deref-future
+  ([#_java.util.concurrent.Future fut]
+    ;;  (.get fut)
+   (throw "TODO: port"))
+  ([#_java.util.concurrent.Future fut timeout-ms timeout-val]
+    ;;  (try (.get fut timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
+    ;;       (catch java.util.concurrent.TimeoutException e
+    ;;         timeout-val))
+   (throw "TODO: port")))
+
+(defn set-validator!
+  "Sets the validator-fn for a var/ref/agent/atom. validator-fn must be nil or a
+  side-effect-free fn of one argument, which will be passed the intended
+  new state on any state change. If the new state is unacceptable, the
+  validator-fn should return false or throw an exception. If the current state (root
+  value if var) is not acceptable to the new validator, an exception
+  will be thrown and the validator will not be changed."
+  [#_clojure.lang.IRef iref validator-fn]
+  ;; (. iref (setValidator validator-fn))
+  (throw "TODO: port"))
+
+(defn get-validator
+  "Gets the validator-fn for a var/ref/agent/atom."
+ [#_clojure.lang.IRef iref]
+  ;; (. iref (getValidator))
+  (throw "TODO: port"))
+
+(defn commute
+  "Must be called in a transaction. Sets the in-transaction-value of
+  ref to:
+
+  (apply fun in-transaction-value-of-ref args)
+
+  and returns the in-transaction-value of ref.
+
+  At the commit point of the transaction, sets the value of ref to be:
+
+  (apply fun most-recently-committed-value-of-ref args)
+
+  Thus fun should be commutative, or, failing that, you must accept
+  last-one-in-wins behavior.  commute allows for more concurrency than
+  ref-set."
+  [#_clojure.lang.Ref ref fun & args]
+    ;; (. ref (commute fun args))
+  (throw "TODO: port"))
+
+(defn alter
+  "Must be called in a transaction. Sets the in-transaction-value of
+  ref to:
+
+  (apply fun in-transaction-value-of-ref args)
+
+  and returns the in-transaction-value of ref."
+  [#_clojure.lang.Ref ref fun & args]
+    ;; (. ref (alter fun args))
+  (throw "TODO: port"))
+
+(defn ref-set
+  "Must be called in a transaction. Sets the value of ref.
+  Returns val."
+  [#_clojure.lang.Ref ref val]
+    ;; (. ref (set val))
+  (throw "TODO: port"))
+
+(defn ref-history-count
+  "Returns the history count of a ref"
+  [#_clojure.lang.Ref ref]
+    ;; (.getHistoryCount ref)
+  (throw "TODO: port"))
+
+(defn ref-min-history
+  "Gets the min-history of a ref, or sets it and returns the ref"
+  ([#_clojure.lang.Ref ref]
+    ;; (.getMinHistory ref)
+   (throw "TODO: port"))
+  ([#_clojure.lang.Ref ref n]
+    ;; (.setMinHistory ref n)
+   (throw "TODO: port")))
+
+(defn ref-max-history
+  "Gets the max-history of a ref, or sets it and returns the ref"
+  ([#_clojure.lang.Ref ref]
+    ;; (.getMaxHistory ref)
+   (throw "TODO: port"))
+  ([#_clojure.lang.Ref ref n]
+    ;; (.setMaxHistory ref n)
+   (throw "TODO: port")))
+
+(defn ensure
+  "Must be called in a transaction. Protects the ref from modification
+  by other transactions.  Returns the in-transaction-value of
+  ref. Allows for more concurrency than (ref-set ref @ref)"
+  [#_clojure.lang.Ref ref]
+    ;; (. ref (touch))
+    ;; (. ref (deref))
+  (throw "TODO: port"))
+
+(defmacro sync
+  "transaction-flags => TBD, pass nil for now
+
+  Runs the exprs (in an implicit do) in a transaction that encompasses
+  exprs and any nested calls.  Starts a transaction if none is already
+  running on this thread. Any uncaught exception will abort the
+  transaction and flow out of sync. The exprs may be run more than
+  once, but any effects on Refs will be atomic."
+  [flags-ignored-for-now & body]
+  ;; `(. clojure.lang.LockingTransaction
+  ;;     (runInTransaction (fn [] ~@body)))
+  (throw "TODO: port"))
+
+(defmacro io!
+  "If an io! block occurs in a transaction, throws an
+  IllegalStateException, else runs body in an implicit do. If the
+  first expression in body is a literal string, will use that as the
+  exception message."
+  [& body]
+  ;; (let [message (when (string? (first body)) (first body))
+  ;;       body (if message (next body) body)]
+  ;;   `(if (clojure.lang.LockingTransaction/isRunning)
+  ;;      (throw (new IllegalStateException ~(or message "I/O in transaction")))
+  ;;      (do ~@body)))
+  (throw "TODO: port"))
+
+;;;;;;;;;;;;;;;;;;; sequence fns  ;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn sequence
+  "Coerces coll to a (possibly empty) sequence, if it is not already
+  one. Will not force a lazy seq. (sequence nil) yields (), When a
+  transducer is supplied, returns a lazy sequence of applications of
+  the transform to the items in coll(s), i.e. to the set of first
+  items of each coll, followed by the set of second
+  items in each coll, until any one of the colls is exhausted.  Any
+  remaining items in other colls are ignored. The transform should accept
+  number-of-colls arguments"
+  ([coll]
+     (if (seq? coll) coll
+         (or (seq coll) ())))
+  ([xform coll]
+    ;;  (or (clojure.lang.RT/chunkIteratorSeq
+    ;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
+    ;;    ())
+   (throw "TODO: port"))
+  ([xform coll & colls]
+    ;;  (or (clojure.lang.RT/chunkIteratorSeq
+    ;;      (clojure.lang.TransformerIterator/createMulti
+    ;;        xform
+    ;;        (map #(clojure.lang.RT/iter %) (cons coll colls))))
+    ;;    ())
+   (throw "TODO: port")))
+
+(defn not-every?
+  "Returns false if (pred x) is logical true for every x in
+  coll, else true."
+  [pred coll]
+  (not (every? pred coll)))
+
+(defmacro declare
+  "defs the supplied var names with no bindings, useful for making forward declarations."
+  [& names] `(do ~@(map #(list 'def (vary-meta % assoc :declared true)) names)))
+
+(defn replicate
+  "DEPRECATED: Use 'repeat' instead.
+   Returns a lazy seq of n xs."
+  [n x] (take n (repeat x)))
+
+(defn merge
+  "Returns a map that consists of the rest of the maps conj-ed onto
+  the first.  If a key occurs in more than one map, the mapping from
+  the latter (left-to-right) will be the mapping in the result."
+  [& maps]
+  (when (some identity maps)
+    (reduce1 #(conj (or %1 {}) %2) maps)))
+
+(defn merge-with
+  "Returns a map that consists of the rest of the maps conj-ed onto
+  the first.  If a key occurs in more than one map, the mapping(s)
+  from the latter (left-to-right) will be combined with the mapping in
+  the result by calling (f val-in-result val-in-latter)."
+  [f & maps]
+  (when (some identity maps)
+    (let [merge-entry (fn [m e]
+			(let [k (key e) v (val e)]
+			  (if (contains? m k)
+			    (assoc m k (f (get m k) v))
+			    (assoc m k v))))
+          merge2 (fn [m1 m2]
+		   (reduce1 merge-entry (or m1 {}) (seq m2)))]
+      (reduce1 merge2 maps))))
+
+(defn line-seq
+  "Returns the lines of text from rdr as a lazy sequence of strings.
+  rdr must implement java.io.BufferedReader."
+  [#_java.io.BufferedReader rdr]
+  ;; (when-let [line (.readLine rdr)]
+  ;;   (cons line (lazy-seq (line-seq rdr))))
+  (throw "TODO: port"))
+
+(defn comparator
+  "Returns an implementation of java.util.Comparator based upon pred."
+  [pred]
+    (fn [x y]
+      (cond (pred x y) -1 (pred y x) 1 :else 0)))
+
+(defn sort
+  "Returns a sorted sequence of the items in coll. If no comparator is
+  supplied, uses compare.  comparator must implement
+  java.util.Comparator.  Guaranteed to be stable: equal elements will
+  not be reordered.  If coll is a Java array, it will be modified.  To
+  avoid this, sort a copy of the array."
+  ([coll]
+   (sort compare coll))
+  ([#_java.util.Comparator comp coll]
+  ;;  (if (seq coll)
+  ;;    (let [a (to-array coll)]
+  ;;      (. java.util.Arrays (sort a comp))
+  ;;      (with-meta (seq a) (meta coll)))
+  ;;    ())
+   (throw "TODO: port")))
+
+(defn sort-by
+  "Returns a sorted sequence of the items in coll, where the sort
+  order is determined by comparing (keyfn item).  If no comparator is
+  supplied, uses compare.  comparator must implement
+  java.util.Comparator.  Guaranteed to be stable: equal elements will
+  not be reordered.  If coll is a Java array, it will be modified.  To
+  avoid this, sort a copy of the array."
+  ([keyfn coll]
+   (sort-by keyfn compare coll))
+  ([keyfn #_java.util.Comparator comp coll]
+  ;;  (sort (fn [x y] (. comp (compare (keyfn x) (keyfn y)))) coll)
+   (throw "TODO: port")))
+
+;; evaluation
+
+(defn eval
+  "Evaluates the form data structure (not text!) and returns the result."
+  [form]
+  ;; (. clojure.lang.Compiler (eval form))
+  (throw "TODO: port"))
+
+(defn await
+  "Blocks the current thread (indefinitely!) until all actions
+  dispatched thus far, from this thread or agent, to the agent(s) have
+  occurred.  Will block on failed agents.  Will never return if
+  a failed agent is restarted with :clear-actions true or shutdown-agents was called."
+  [& agents]
+  ;; (io! "await in transaction"
+  ;;   (when *agent*
+  ;;     (throw (new Exception "Can't await in agent action")))
+  ;;   (let [latch (new java.util.concurrent.CountDownLatch (count agents))
+  ;;         count-down (fn [agent] (. latch (countDown)) agent)]
+  ;;     (doseq [agent agents]
+  ;;       (send agent count-down))
+  ;;     (. latch (await))))
+  (throw "TODO: port"))
+
+(defn await1 [#_clojure.lang.Agent a]
+  ;; (when (pos? (.getQueueCount a))
+  ;;   (await a))
+  ;;   a
+  (throw "TODO: port"))
+
+(defn await-for
+  "Blocks the current thread until all actions dispatched thus
+  far (from this thread or agent) to the agents have occurred, or the
+  timeout (in milliseconds) has elapsed. Returns logical false if
+  returning due to timeout, logical true otherwise."
+  [timeout-ms & agents]
+    ;; (io! "await-for in transaction"
+    ;;  (when *agent*
+    ;;    (throw (new Exception "Can't await in agent action")))
+    ;;  (let [latch (new java.util.concurrent.CountDownLatch (count agents))
+    ;;        count-down (fn [agent] (. latch (countDown)) agent)]
+    ;;    (doseq [agent agents]
+    ;;        (send agent count-down))
+    ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
+  (throw "TODO: port"))
+
+;redef into with batch support
+(defn- into1
+  "Returns a new coll consisting of to-coll with all of the items of
+  from-coll conjoined."
+  [to from]
+  ;; (if (instance? clojure.lang.IEditableCollection to)
+  ;;   (persistent! (reduce1 conj! (transient to) from))
+  ;;   (reduce1 conj to from))
+  (throw "TODO: port"))
+
+(defmacro import 
+  "import-list => (package-symbol class-name-symbols*)
+
+  For each name in class-name-symbols, adds a mapping from name to the
+  class named by package.name to the current namespace. Use :import in the ns
+  macro in preference to calling this directly."
+  [& import-symbols-or-lists]
+  (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %) 
+                   import-symbols-or-lists)]
+    `(do ~@(map #(list 'clojure.core/import* %)
+                (reduce1 (fn [v spec] 
+                          (if (symbol? spec)
+                            (conj v (name spec))
+                            (let [p (first spec) cs (rest spec)]
+                              (into1 v (map #(str p "." %) cs)))))
+                        [] specs)))))
+
+(defn into-array
+  "Returns an array with components set to the values in aseq. The array's
+  component type is type if provided, or the type of the first value in
+  aseq if present, or Object. All values in aseq must be compatible with
+  the component type. Class objects for the primitive types can be obtained
+  using, e.g., Integer/TYPE."
+  ([aseq]
+    ;;  (clojure.lang.RT/seqToTypedArray (seq aseq))
+   (throw "TODO: port"))
+  ([type aseq]
+    ;;  (clojure.lang.RT/seqToTypedArray type (seq aseq))
+   (throw "TODO: port")))
+
+(defn-
+  array [& items]
+  (into-array items))
+
+(defn class
+  "Returns the Class of x"
+  #_Class [#_Object x]
+  ;; (if (nil? x) x (. x (getClass)))
+  (throw "TODO: port"))
+
+(defn num
+  "Coerce to Number"
+  [x]
+  ;; (. clojure.lang.Numbers (num x))
+  (throw "TODO: port"))
+
+(defn long
+  "Coerce to long"
+  [#_Number x]
+  ;; (clojure.lang.RT/longCast x)
+  (throw "TODO: port"))
+
+(defn double
+  "Coerce to double"
+  [#_Number x]
+  ;; (clojure.lang.RT/doubleCast x)
+  (throw "TODO: port"))
+
+(defn short
+  "Coerce to short"
+  [#_Number x]
+  ;; (clojure.lang.RT/shortCast x)
+  (throw "TODO: port"))
+
+(defn byte
+  "Coerce to byte"
+  [#_Number x]
+  ;; (clojure.lang.RT/byteCast x)
+  (throw "TODO: port"))
+
+(defn char
+  "Coerce to char"
+  [x]
+  ;; (. clojure.lang.RT (charCast x))
+  (throw "TODO: port"))
+
+(defn unchecked-byte
+  "Coerce to byte. Subject to rounding or truncation."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedByteCast x)
+  (throw "TODO: port"))
+
+(defn unchecked-short
+  "Coerce to short. Subject to rounding or truncation."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedShortCast x)
+  (throw "TODO: port"))
+
+(defn unchecked-char
+  "Coerce to char. Subject to rounding or truncation."
+  [x]
+  ;; (. clojure.lang.RT (uncheckedCharCast x))
+  (throw "TODO: port"))
+
+(defn unchecked-int
+  "Coerce to int. Subject to rounding or truncation."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedIntCast x)
+  (throw "TODO: port"))
+
+(defn unchecked-long
+  "Coerce to long. Subject to rounding or truncation."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedLongCast x)
+  (throw "TODO: port"))
+
+(defn unchecked-float
+  "Coerce to float. Subject to rounding."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedFloatCast x)
+  (throw "TODO: port"))
+
+(defn unchecked-double
+  "Coerce to double. Subject to rounding."
+  [#_Number x]
+  ;; (clojure.lang.RT/uncheckedDoubleCast x)
+  (throw "TODO: port"))
+
+(defn ratio?
+  "Returns true if n is a Ratio"
+  [n]
+  ;; (instance? clojure.lang.Ratio n)
+  (throw "TODO: port"))
+
+(defn numerator
+  "Returns the numerator part of a Ratio."
+  [r]
+  ;; (.numerator ^clojure.lang.Ratio r)
+  (throw "TODO: port"))
+
+(defn denominator
+  "Returns the denominator part of a Ratio."
+  [r]
+  ;; (.denominator ^clojure.lang.Ratio r)
+  (throw "TODO: port"))
+
+(defn decimal?
+  "Returns true if n is a BigDecimal"
+  [n]
+  ;; (instance? BigDecimal n)
+  (throw "TODO: port"))
+
+(defn rational? 
+  "Returns true if n is a rational number"
+  [n]
+  (or (integer? n) (ratio? n) (decimal? n)))
+
+(defn bigint
+  "Coerce to BigInt"
+  [x]
+  ;; (cond
+  ;;   (instance? clojure.lang.BigInt x) x
+  ;;   (instance? BigInteger x) (clojure.lang.BigInt/fromBigInteger x)
+  ;;   (decimal? x) (bigint (.toBigInteger ^BigDecimal x))
+  ;;   (float? x)  (bigint (. BigDecimal valueOf (double x)))
+  ;;   (ratio? x) (bigint (.bigIntegerValue ^clojure.lang.Ratio x))
+  ;;   (number? x) (clojure.lang.BigInt/valueOf (long x))
+  ;;   :else (bigint (BigInteger. x)))
+  (throw "TODO: port"))
+
+(defn biginteger
+  "Coerce to BigInteger"
+  [x]
+  ;; (cond
+  ;;   (instance? BigInteger x) x
+  ;;   (instance? clojure.lang.BigInt x) (.toBigInteger ^clojure.lang.BigInt x)
+  ;;   (decimal? x) (.toBigInteger ^BigDecimal x)
+  ;;   (float? x) (.toBigInteger (. BigDecimal valueOf (double x)))
+  ;;   (ratio? x) (.bigIntegerValue ^clojure.lang.Ratio x)
+  ;;   (number? x) (BigInteger/valueOf (long x))
+  ;;   :else (BigInteger. x))
+  (throw "TODO: port"))
+
+(defn bigdec
+  "Coerce to BigDecimal"
+  [x]
+  ;; (cond
+  ;;   (decimal? x) x
+  ;;   (float? x) (. BigDecimal valueOf (double x))
+  ;;   (ratio? x) (/ (BigDecimal. (.numerator ^clojure.lang.Ratio x)) (.denominator ^clojure.lang.Ratio x))
+  ;;   (instance? clojure.lang.BigInt x) (.toBigDecimal ^clojure.lang.BigInt x)
+  ;;   (instance? BigInteger x) (BigDecimal. ^BigInteger x)
+  ;;   (number? x) (BigDecimal/valueOf (long x))
+  ;;   :else (BigDecimal. x))
+   (throw "TODO: port"))
+
+(def ^:dynamic ^:private print-initialized false)
+
+(defmulti print-method (fn [x writer]
+                         (let [t (get (meta x) :type)]
+                           (if (keyword? t) t (class x)))))
+
+(defmulti print-dup (fn [x writer] (class x)))
+
+(def ^:private #_String system-newline
+    ;;  (System/getProperty "line.separator")
+  "\n")
+
+(defn newline
+  "Writes a platform-specific newline to *out*"
+  []
+    ;; (. *out* (append system-newline))
+    ;; nil
+  (throw "TODO: port"))
+
+(defn flush
+  "Flushes the output stream that is the current value of
+  *out*"
+  []
+    ;; (. *out* (flush))
+    ;; nil
+  (throw "TODO: port"))
+
+(defn read
+  "Reads the next object from stream, which must be an instance of
+  java.io.PushbackReader or some derivee.  stream defaults to the
+  current value of *in*.
+
+  Opts is a persistent map with valid keys:
+    :read-cond - :allow to process reader conditionals, or
+                 :preserve to keep all branches
+    :features - persistent set of feature keywords for reader conditionals
+    :eof - on eof, return value unless :eofthrow, then throw.
+           if not specified, will throw
+
+  Note that read can execute code (controlled by *read-eval*),
+  and as such should be used only with trusted sources.
+
+  For data structure interop use clojure.edn/read"
+  ([]
+   (read *in*))
+  ([stream]
+   (read stream true nil))
+  ([stream eof-error? eof-value]
+   (read stream eof-error? eof-value false))
+  ([stream eof-error? eof-value recursive?]
+  ;;  (. clojure.lang.LispReader (read stream (boolean eof-error?) eof-value recursive?))
+   (throw "TODO: port"))
+  ([opts stream]
+  ;;  (. clojure.lang.LispReader (read stream opts))
+   (throw "TODO: port")))
+
+(defn read+string
+  "Like read, and taking the same args. stream must be a LineNumberingPushbackReader.
+  Returns a vector containing the object read and the (whitespace-trimmed) string read."
+  ([] (read+string *in*))
+  ([stream] (read+string stream true nil))
+  ([stream eof-error? eof-value] (read+string stream eof-error? eof-value false))
+  ([#_clojure.lang.LineNumberingPushbackReader stream eof-error? eof-value recursive?]
+  ;;  (try
+  ;;    (.captureString stream)
+  ;;    (let [o (read stream eof-error? eof-value recursive?)
+  ;;          s (.trim (.getString stream))]
+  ;;      [o s])
+  ;;    (catch Throwable ex
+  ;;      (.getString stream)
+  ;;      (throw ex)))
+   (throw "TODO: port"))
+  ([opts #_clojure.lang.LineNumberingPushbackReader stream]
+  ;;  (try
+  ;;    (.captureString stream)
+  ;;    (let [o (read opts stream)
+  ;;          s (.trim (.getString stream))]
+  ;;      [o s])
+  ;;    (catch Throwable ex
+  ;;      (.getString stream)
+  ;;      (throw ex)))
+   (throw "TODO: port")))
+
+(defn read-line
+  "Reads the next line from stream that is the current value of *in* ."
+  []
+  ;; (if (instance? clojure.lang.LineNumberingPushbackReader *in*)
+  ;;   (.readLine ^clojure.lang.LineNumberingPushbackReader *in*)
+  ;;   (.readLine ^java.io.BufferedReader *in*))
+  (throw "TODO: port"))
+
+(defn read-string
+  "Reads one object from the string s. Optionally include reader
+  options, as specified in read.
+
+  Note that read-string can execute code (controlled by *read-eval*),
+  and as such should be used only with trusted sources.
+
+  For data structure interop use clojure.edn/read-string"
+  ([s]
+  ;;  (clojure.lang.RT/readString s)
+   (throw "TODO: port"))
+  ([opts s]
+  ;;  (clojure.lang.RT/readString s opts)
+   (throw "TODO: port")))
+
+(defmacro with-open
+  "bindings => [name init ...]
+
+  Evaluates body in a try expression with names bound to the values
+  of the inits, and a finally clause that calls (.close name) on each
+  name in reverse order."
+  [bindings & body]
+  ;; (assert-args
+  ;;    (vector? bindings) "a vector for its binding"
+  ;;    (even? (count bindings)) "an even number of forms in binding vector")
+  ;; (cond
+  ;;   (= (count bindings) 0) `(do ~@body)
+  ;;   (symbol? (bindings 0)) `(let ~(subvec bindings 0 2)
+  ;;                             (try
+  ;;                               (with-open ~(subvec bindings 2) ~@body)
+  ;;                               (finally
+  ;;                                 (. ~(bindings 0) ~'close))))
+  ;;   :else (throw (IllegalArgumentException.
+  ;;                  "with-open only allows Symbols in bindings")))
+  (throw "TODO: port"))
+
+(defmacro memfn
+  "Expands into code that creates a fn that expects to be passed an
+  object and any args and calls the named instance method on the
+  object passing the args. Use when you want to treat a Java method as
+  a first-class fn. name may be type-hinted with the method receiver's
+  type in order to avoid reflective calls."
+  [name & args]
+  ;; (let [t (with-meta (gensym "target")
+  ;;           (meta name))]
+  ;;   `(fn [~t ~@args]
+  ;;      (. ~t (~name ~@args))))
+  (throw "TODO: port"))
+
+;; (import '(java.lang.reflect Array))
+
+(defn alength
+  "Returns the length of the Java array. Works on arrays of all
+  types."
+  [array]
+  ;; (. clojure.lang.RT (alength array))
+  (throw "TODO: port"))
+
+(defn aclone
+  "Returns a clone of the Java array. Works on arrays of known
+  types."
+  [array]
+  ;; (. clojure.lang.RT (aclone array))
+  (throw "TODO: port"))
+
+(defn aget
+  "Returns the value at the index/indices. Works on Java arrays of all
+  types."
+  ([array idx]
+  ;;  (clojure.lang.Reflector/prepRet (.getComponentType (class array)) (. Array (get array idx)))
+   (throw "TODO: port"))
+  ([array idx & idxs]
+   (apply aget (aget array idx) idxs)))
+
+(defn aset
+  "Sets the value at the index/indices. Works on Java arrays of
+  reference types. Returns val."
+  ([array idx val]
+  ;;  (. Array (set array idx val))
+  ;;  val
+   (throw "TODO: port"))
+  ([array idx idx2 & idxv]
+   (apply aset (aget array idx) idx2 idxv)))
+
+(defmacro
+  ^{:private true}
+  def-aset [name method coerce]
+    `(defn ~name
+       {:arglists '([~'array ~'idx ~'val] [~'array ~'idx ~'idx2 & ~'idxv])}
+       ([array# idx# val#]
+        ;; (. Array (~method array# idx# (~coerce val#)))
+        ;; val#
+        (throw "TODO: port"))
+       ([array# idx# idx2# & idxv#]
+        (apply ~name (aget array# idx#) idx2# idxv#))))
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of int. Returns val."}
+  aset-int setInt int)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of long. Returns val."}
+  aset-long setLong long)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of boolean. Returns val."}
+  aset-boolean setBoolean boolean)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of float. Returns val."}
+  aset-float setFloat float)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of double. Returns val."}
+  aset-double setDouble double)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of short. Returns val."}
+  aset-short setShort short)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of byte. Returns val."}
+  aset-byte setByte byte)
+
+(def-aset
+  ^{:doc "Sets the value at the index/indices. Works on arrays of char. Returns val."}
+  aset-char setChar char)
+
+(defn make-array
+  "Creates and returns an array of instances of the specified class of
+  the specified dimension(s).  Note that a class object is required.
+  Class objects can be obtained by using their imported or
+  fully-qualified name.  Class objects for the primitive types can be
+  obtained using, e.g., Integer/TYPE."
+  ([#_Class type len]
+  ;;  (. Array (newInstance type (int len)))
+   (throw "TODO: port"))
+  ([#_Class type dim & more-dims]
+  ;;  (let [dims (cons dim more-dims)
+  ;;        ^"[I" dimarray (make-array (. Integer TYPE)  (count dims))]
+  ;;    (dotimes [i (alength dimarray)]
+  ;;      (aset-int dimarray i (nth dims i)))
+  ;;    (. Array (newInstance type dimarray))))
+   (throw "TODO: port")))
+
+(defn to-array-2d
+  "Returns a (potentially-ragged) 2-dimensional array of Objects
+  containing the contents of coll, which can be any Collection of any
+  Collection."
+  [#_java.util.Collection coll]
+    ;; (let [ret (make-array (. Class (forName "[Ljava.lang.Object;")) (. coll (size)))]
+    ;;   (loop [i 0 xs (seq coll)]
+    ;;     (when xs
+    ;;       (aset ret i (to-array (first xs)))
+    ;;       (recur (inc i) (next xs))))
+    ;;   ret)
+  (throw "TODO: port"))
+
+(defn create-struct
+  "Returns a structure basis object."
+  [& keys]
+    ;; (. clojure.lang.PersistentStructMap (createSlotMap keys))
+  (throw "TODO: port"))
+
+(defmacro defstruct
+  "Same as (def name (create-struct keys...))"
+  [name & keys]
+  `(def ~name (create-struct ~@keys)))
+
+(defn struct-map
+  "Returns a new structmap instance with the keys of the
+  structure-basis. keyvals may contain all, some or none of the basis
+  keys - where values are not supplied they will default to nil.
+  keyvals can also contain keys not in the basis."
+  [s & inits]
+    ;; (. clojure.lang.PersistentStructMap (create s inits))
+  (throw "TODO: port"))
+
+(defn struct
+  "Returns a new structmap instance with the keys of the
+  structure-basis. vals must be supplied for basis keys in order -
+  where values are not supplied they will default to nil."
+  [s & vals]
+    ;; (. clojure.lang.PersistentStructMap (construct s vals))
+  (throw "TODO: port"))
+
+(defn accessor
+  "Returns a fn that, given an instance of a structmap with the basis,
+  returns the value at the key.  The key must be in the basis. The
+  returned function should be (slightly) more efficient than using
+  get, but such use of accessors should be limited to known
+  performance-critical areas."
+  [s key]
+    ;; (. clojure.lang.PersistentStructMap (getAccessor s key))
+  (throw "TODO: port"))
+
+(defn load-reader
+  "Sequentially read and evaluate the set of forms contained in the
+  stream/file"
+  [rdr]
+  ;; (. clojure.lang.Compiler (load rdr))
+  (throw "TODO: port"))
+
+(defn load-string
+  "Sequentially read and evaluate the set of forms contained in the
+  string"
+  [s]
+  ;; (let [rdr (-> (java.io.StringReader. s)
+  ;;               (clojure.lang.LineNumberingPushbackReader.))]
+  ;;   (load-reader rdr))
+  (throw "TODO: port"))
+
+(defn-
+  filter-key [keyfn pred amap]
+    (loop [ret {} es (seq amap)]
+      (if es
+        (if (pred (keyfn (first es)))
+          (recur (assoc ret (key (first es)) (val (first es))) (next es))
+          (recur ret (next es)))
+        ret)))
+
+(defn all-ns
+  "Returns a sequence of all namespaces."
+  []
+  ;; (clojure.lang.Namespace/all)
+  (throw "TODO: port"))
+
+(defn ns-unmap
+  "Removes the mappings for the symbol from the namespace."
+  [ns sym]
+  ;; (.unmap (the-ns ns) sym)
+  (throw "TODO: port"))
+
+(defn ns-imports
+  "Returns a map of the import mappings for the namespace."
+  [ns]
+  ;; (filter-key val (partial instance? Class) (ns-map ns))
+  (throw "TODO: port"))
+
+(defn ns-interns
+  "Returns a map of the intern mappings for the namespace."
+  [ns]
+  ;; (let [ns (the-ns ns)]
+  ;;   (filter-key val (fn [^clojure.lang.Var v] (and (instance? clojure.lang.Var v)
+  ;;                                (= ns (.ns v))))
+  ;;               (ns-map ns)))
+  (throw "TODO: port"))
+
+(defn ns-refers
+  "Returns a map of the refer mappings for the namespace."
+  [ns]
+  ;; (let [ns (the-ns ns)]
+  ;;   (filter-key val (fn [^clojure.lang.Var v] (and (instance? clojure.lang.Var v)
+  ;;                                (not= ns (.ns v))))
+  ;;               (ns-map ns)))
+  (throw "TODO: port"))
+
+(defn ns-aliases
+  "Returns a map of the aliases for the namespace."
+  [ns]
+  ;; (.getAliases (the-ns ns))
+  (throw "TODO: port"))
+
+(defn ns-unalias
+  "Removes the alias for the symbol from the namespace."
+  [ns sym]
+  ;; (.removeAlias (the-ns ns) sym)
+  (throw "TODO: port"))
+
+(defn var-set
+  "Sets the value in the var object to val. The var must be
+ thread-locally bound."
+  [#_clojure.lang.Var x val]
+  ;; (. x (set val))
+  (throw "TODO: port"))
+
+(defmacro with-local-vars
+  "varbinding=> symbol init-expr
+
+  Executes the exprs in a context in which the symbols are bound to
+  vars with per-thread bindings to the init-exprs.  The symbols refer
+  to the var objects themselves, and must be accessed with var-get and
+  var-set"
+  [name-vals-vec & body]
+  ;; (assert-args
+  ;;    (vector? name-vals-vec) "a vector for its binding"
+  ;;    (even? (count name-vals-vec)) "an even number of forms in binding vector")
+  ;; `(let [~@(interleave (take-nth 2 name-vals-vec)
+  ;;                      (repeat '(.. clojure.lang.Var create setDynamic)))]
+  ;;    (. clojure.lang.Var (pushThreadBindings (hash-map ~@name-vals-vec)))
+  ;;    (try
+  ;;     ~@body
+  ;;     (finally (. clojure.lang.Var (popThreadBindings)))))
+  (throw "TODO: port"))
+
+(defn array-map
+  "Constructs an array-map. If any keys are equal, they are handled as
+  if by repeated uses of assoc."
+  ([]
+  ;;  (. clojure.lang.PersistentArrayMap EMPTY)
+   (throw "TODO: port"))
+  ([& keyvals]
+    ;;  (let [ary (to-array keyvals)]
+    ;;    (if (odd? (alength ary))
+    ;;      (throw (IllegalArgumentException. (str "No value supplied for key: " (last keyvals))))
+    ;;      (clojure.lang.PersistentArrayMap/createAsIfByAssoc ary)))
+   (throw "TODO: port")))
+
+(defn seq-to-map-for-destructuring
+  "Builds a map from a seq as described in
+  https://clojure.org/reference/special_forms#keyword-arguments"
+  [s]
+  ;; (if (next s)
+  ;;   (clojure.lang.PersistentArrayMap/createAsIfByAssoc (to-array s))
+  ;;   (if (seq s) (first s) clojure.lang.PersistentArrayMap/EMPTY))
+  (throw "TODO: port"))
+
+;redefine fn with destructuring and pre/post conditions
+(defmacro fn
+  "params => positional-params*, or positional-params* & rest-param
+  positional-param => binding-form
+  rest-param => binding-form
+  binding-form => name, or destructuring-form
+
+  Defines a function.
+
+  See https://clojure.org/reference/special_forms#fn for more information"
+  {:special-form true,
+   :forms '[(fn name? [params* ] exprs*) (fn name? ([params* ] exprs*)+)]}
+  [& sigs]
+    (let [name (if (symbol? (first sigs)) (first sigs) nil)
+          sigs (if name (next sigs) sigs)
+          sigs (if (vector? (first sigs)) 
+                 (list sigs) 
+                 (if (seq? (first sigs))
+                   sigs
+                   ;; Assume single arity syntax
+                  ;;  (throw (IllegalArgumentException. 
+                  ;;           (if (seq sigs)
+                  ;;             (str "Parameter declaration " 
+                  ;;                  (first sigs)
+                  ;;                  " should be a vector")
+                  ;;             (str "Parameter declaration missing"))))
+                   (throw (if (seq sigs)
+                            (str "Parameter declaration " 
+                                 (first sigs)
+                                 " should be a vector")
+                            (str "Parameter declaration missing")))))
+          psig (fn* [sig]
+                 ;; Ensure correct type before destructuring sig
+                 (when (not (seq? sig))
+                  ;;  (throw (IllegalArgumentException.
+                  ;;           (str "Invalid signature " sig
+                  ;;                " should be a list")))
+                   (throw (str "Invalid signature " sig
+                               " should be a list")))
+                 (let [[params & body] sig
+                       _ (when (not (vector? params))
+                          ;;  (throw (IllegalArgumentException. 
+                          ;;           (if (seq? (first sigs))
+                          ;;             (str "Parameter declaration " params
+                          ;;                  " should be a vector")
+                          ;;             (str "Invalid signature " sig
+                          ;;                  " should be a list"))))
+                           (throw (if (seq? (first sigs))
+                                    (str "Parameter declaration " params
+                                         " should be a vector")
+                                    (str "Invalid signature " sig
+                                         " should be a list"))))
+                       conds (when (and (next body) (map? (first body))) 
+                                           (first body))
+                       body (if conds (next body) body)
+                       conds (or conds (meta params))
+                       pre (:pre conds)
+                       post (:post conds)                       
+                       body (if post
+                              `((let [~'% ~(if (< 1 (count body)) 
+                                            `(do ~@body) 
+                                            (first body))]
+                                 ~@(map (fn* [c] `(assert ~c)) post)
+                                 ~'%))
+                              body)
+                       body (if pre
+                              (concat (map (fn* [c] `(assert ~c)) pre) 
+                                      body)
+                              body)]
+                   (maybe-destructured params body)))
+          new-sigs (map psig sigs)]
+      (with-meta
+        (if name
+          (list* 'fn* name new-sigs)
+          (cons 'fn* new-sigs))
+        (meta &form))))
+
+(defmacro lazy-cat
+  "Expands to code which yields a lazy sequence of the concatenation
+  of the supplied colls.  Each coll expr is not evaluated until it is
+  needed. 
+
+  (lazy-cat xs ys zs) === (concat (lazy-seq xs) (lazy-seq ys) (lazy-seq zs))"
+  [& colls]
+  `(concat ~@(map #(list `lazy-seq %) colls)))
+
+(defmacro with-out-str
+  "Evaluates exprs in a context in which *out* is bound to a fresh
+  StringWriter.  Returns the string created by any nested printing
+  calls."
+  [& body]
+  ;; `(let [s# (new java.io.StringWriter)]
+  ;;    (binding [*out* s#]
+  ;;      ~@body
+  ;;      (str s#)))
+  (throw "TODO: port"))
+
+(defmacro with-in-str
+  "Evaluates body in a context in which *in* is bound to a fresh
+  StringReader initialized with the string s."
+  [s & body]
+  `(with-open [s# (-> (java.io.StringReader. ~s) clojure.lang.LineNumberingPushbackReader.)]
+     (binding [*in* s#]
+       ~@body)))
+
+(defn prn-str
+  "prn to a string, returning it"
+  [& xs]
+  ;; (with-out-str
+  ;;  (apply prn xs))
+  (throw "TODO: port"))
+
+
+(defn print-str
+  "print to a string, returning it"
+  [& xs]
+    ;; (with-out-str
+    ;;  (apply print xs))
+  (throw "TODO: port"))
+
+(defn println-str
+  "println to a string, returning it"
+  [& xs]
+    ;; (with-out-str
+    ;;  (apply println xs))
+  (throw "TODO: port"))
+
+(defn ^:private elide-top-frames
+  [#_Throwable ex class-name]
+  ;; (let [tr (.getStackTrace ex)]
+  ;;   (doto ex
+  ;;     (.setStackTrace
+  ;;       (when tr
+  ;;         (into-array StackTraceElement
+  ;;           (drop-while #(= class-name (.getClassName ^StackTraceElement %1)) tr))))))
+  (throw "TODO: port"))
+
+(defn ex-data
+  "Returns exception data (a map) if ex is an IExceptionInfo.
+   Otherwise returns nil."
+  [ex]
+  ;; (when (instance? IExceptionInfo ex)
+  ;;   (.getData ^IExceptionInfo ex))
+  (throw "TODO: port"))
+
+(defn ex-message
+  "Returns the message attached to ex if ex is a Throwable.
+  Otherwise returns nil."
+  [ex]
+  ;; (when (instance? Throwable ex)
+  ;;   (.getMessage Throwable ex))
+  (throw "TODO: port"))
+
+(defn ex-cause
+  "Returns the cause of ex if ex is a Throwable.
+  Otherwise returns nil."
+  [ex]
+  ;; (when (instance? Throwable ex)
+  ;;   (.getCause ^Throwable ex))
+  (throw "TODO: port"))
+
+(defn test
+  "test [v] finds fn at key :test in var metadata and calls it,
+  presuming failure will throw exception"
+  [v]
+    (let [f (:test (meta v))]
+      (if f
+        (do (f) :ok)
+        :no-test)))
+
+(defn re-pattern
+  "Returns an instance of java.util.regex.Pattern, for use, e.g. in
+  re-matcher."
+  [s]
+  ;; (if (instance? java.util.regex.Pattern s)
+  ;;   s
+  ;;   (. java.util.regex.Pattern (compile s)))
+  (throw "TODO: port"))
+
+(defn re-matcher
+  "Returns an instance of java.util.regex.Matcher, for use, e.g. in
+  re-find."
+  [#_java.util.regex.Pattern re s]
+    ;; (. re (matcher s))
+  (throw "TODO: port"))
+
+(defn re-groups
+  "Returns the groups from the most recent match/find. If there are no
+  nested groups, returns a string of the entire match. If there are
+  nested groups, returns a vector of the groups, the first element
+  being the entire match."
+  [#_java.util.regex.Matcher m]
+    ;; (let [gc  (. m (groupCount))]
+    ;;   (if (zero? gc)
+    ;;     (. m (group))
+    ;;     (loop [ret [] c 0]
+    ;;       (if (<= c gc)
+    ;;         (recur (conj ret (. m (group c))) (inc c))
+    ;;         ret))))
+  (throw "TODO: port"))
+
+(defn re-seq
+  "Returns a lazy sequence of successive matches of pattern in string,
+  using java.util.regex.Matcher.find(), each such match processed with
+  re-groups."
+  [#_java.util.regex.Pattern re s]
+  ;; (let [m (re-matcher re s)]
+  ;;   ((fn step []
+  ;;      (when (. m (find))
+  ;;        (cons (re-groups m) (lazy-seq (step)))))))
+  (throw "TODO: port"))
+
+(defn re-matches
+  "Returns the match, if any, of string to pattern, using
+  java.util.regex.Matcher.matches().  Uses re-groups to return the
+  groups."
+  [#_java.util.regex.Pattern re s]
+    ;; (let [m (re-matcher re s)]
+    ;;   (when (. m (matches))
+    ;;     (re-groups m)))
+  (throw "TODO: port"))
+
+(defn re-find
+  "Returns the next regex match, if any, of string to pattern, using
+  java.util.regex.Matcher.find().  Uses re-groups to return the
+  groups."
+  ([#_java.util.regex.Matcher m]
+  ;;  (when (. m (find))
+  ;;    (re-groups m))
+   (throw "TODO: port"))
+  ([#_java.util.regex.Pattern re s]
+  ;;  (let [m (re-matcher re s)]
+  ;;    (re-find m))
+   (throw "TODO: port")))
+
+(defn rand-int
+  "Returns a random integer between 0 (inclusive) and n (exclusive)."
+  [n] (int (rand n)))
+
+(defn file-seq
+  "A tree seq on java.io.Files"
+  [dir]
+    ;; (tree-seq
+    ;;  (fn [^java.io.File f] (. f (isDirectory)))
+    ;;  (fn [^java.io.File d] (seq (. d (listFiles))))
+    ;;  dir)
+  (throw "TODO: port"))
+
+(defn xml-seq
+  "A tree seq on the xml elements as per xml/parse"
+  [root]
+    (tree-seq
+     (complement string?)
+     (comp seq :content)
+     root))
+
+(defn special-symbol?
+  "Returns true if s names a special form"
+  [s]
+    ;; (contains? (. clojure.lang.Compiler specials) s)
+  (throw "TODO: port"))
+
+(defn max-key
+  "Returns the x for which (k x), a number, is greatest.
+
+  If there are multiple such xs, the last one is returned."
+  ([k x] x)
+  ([k x y] (if (> (k x) (k y)) x y))
+  ([k x y & more]
+   (let [kx (k x) ky (k y)
+         [v kv] (if (> kx ky) [x kx] [y ky])]
+     (loop [v v kv kv more more]
+       (if more
+         (let [w (first more)
+               kw (k w)]
+           (if (>= kw kv)
+             (recur w kw (next more))
+             (recur v kv (next more))))
+         v)))))
+
+(defn min-key
+  "Returns the x for which (k x), a number, is least.
+
+  If there are multiple such xs, the last one is returned."
+  ([k x] x)
+  ([k x y] (if (< (k x) (k y)) x y))
+  ([k x y & more]
+   (let [kx (k x) ky (k y)
+         [v kv] (if (< kx ky) [x kx] [y ky])]
+     (loop [v v kv kv more more]
+       (if more
+         (let [w (first more)
+               kw (k w)]
+           (if (<= kw kv)
+             (recur w kw (next more))
+             (recur v kv (next more))))
+         v)))))
+
+(defn replace
+  "Given a map of replacement pairs and a vector/collection, returns a
+  vector/seq with any elements = a key in smap replaced with the
+  corresponding val in smap.  Returns a transducer when no collection
+  is provided."
+  ([smap]
+     (map #(if-let [e (find smap %)] (val e) %)))
+  ([smap coll]
+     (if (vector? coll)
+       (reduce1 (fn [v i]
+                  (if-let [e (find smap (nth v i))]
+                    (assoc v i (val e))
+                    v))
+                coll (range (count coll)))
+       (map #(if-let [e (find smap %)] (val e) %) coll))))
+
+(defmacro dosync
+  "Runs the exprs (in an implicit do) in a transaction that encompasses
+  exprs and any nested calls.  Starts a transaction if none is already
+  running on this thread. Any uncaught exception will abort the
+  transaction and flow out of dosync. The exprs may be run more than
+  once, but any effects on Refs will be atomic."
+  [& exprs]
+  `(sync nil ~@exprs))
+
+(defmacro with-precision
+  "Sets the precision and rounding mode to be used for BigDecimal operations.
+
+  Usage: (with-precision 10 (/ 1M 3))
+  or:    (with-precision 10 :rounding HALF_DOWN (/ 1M 3))
+
+  The rounding mode is one of CEILING, FLOOR, HALF_UP, HALF_DOWN,
+  HALF_EVEN, UP, DOWN and UNNECESSARY; it defaults to HALF_UP."
+  [precision & exprs]
+    ;; (let [[body rm] (if (= (first exprs) :rounding)
+    ;;                   [(next (next exprs))
+    ;;                    `((. java.math.RoundingMode ~(second exprs)))]
+    ;;                   [exprs nil])]
+    ;;   `(binding [*math-context* (java.math.MathContext. ~precision ~@rm)]
+    ;;      ~@body))
+  (throw "TODO: port"))
+
+(defn- mk-bound-fn
+  [#_clojure.lang.Sorted sc test key]
+  ;; (fn [e]
+  ;;   (test (.. sc comparator (compare (. sc entryKey e) key)) 0))
+  (throw "TODO: port"))
+
+(defn subseq
+  "sc must be a sorted collection, test(s) one of <, <=, > or
+  >=. Returns a seq of those entries with keys ek for
+  which (test (.. sc comparator (compare ek key)) 0) is true"
+  ([#_clojure.lang.Sorted sc test key]
+  ;;  (let [include (mk-bound-fn sc test key)]
+  ;;    (if (#{> >=} test)
+  ;;      (when-let [[e :as s] (. sc seqFrom key true)]
+  ;;        (if (include e) s (next s)))
+  ;;      (take-while include (. sc seq true))))
+   (throw "TODO: port"))
+  ([#_clojure.lang.Sorted sc start-test start-key end-test end-key]
+  ;;  (when-let [[e :as s] (. sc seqFrom start-key true)]
+  ;;    (take-while (mk-bound-fn sc end-test end-key)
+  ;;                (if ((mk-bound-fn sc start-test start-key) e) s (next s))))
+   (throw "TODO: port")))
+
+(defn rsubseq
+  "sc must be a sorted collection, test(s) one of <, <=, > or
+  >=. Returns a reverse seq of those entries with keys ek for
+  which (test (.. sc comparator (compare ek key)) 0) is true"
+  ([#_clojure.lang.Sorted sc test key]
+  ;;  (let [include (mk-bound-fn sc test key)]
+  ;;    (if (#{< <=} test)
+  ;;      (when-let [[e :as s] (. sc seqFrom key false)]
+  ;;        (if (include e) s (next s)))
+  ;;      (take-while include (. sc seq false))))
+   (throw "TODO: port"))
+  ([#_clojure.lang.Sorted sc start-test start-key end-test end-key]
+  ;;  (when-let [[e :as s] (. sc seqFrom end-key false)]
+  ;;    (take-while (mk-bound-fn sc start-test start-key)
+  ;;                (if ((mk-bound-fn sc end-test end-key) e) s (next s))))
+   (throw "TODO: port")))
+
+(defn add-classpath
+  "DEPRECATED 
+
+  Adds the url (String or URL object) to the classpath per
+  URLClassLoader.addURL"
+  [url]
+  (println "WARNING: add-classpath is deprecated")
+  ;; (clojure.lang.RT/addURL url)
+  (throw "TODO: port"))
+
+(defn mix-collection-hash
+  "Mix final collection hash for ordered or unordered collections.
+   hash-basis is the combined collection hash, count is the number
+   of elements included in the basis. Note this is the hash code
+   consistent with =, different from .hashCode.
+   See http://clojure.org/data_structures#hash for full algorithms."
+  #_long
+  [#_long hash-basis #_long count]
+  ;; (clojure.lang.Murmur3/mixCollHash hash-basis count)
+  (throw "TODO: port"))
+
+(defn hash-ordered-coll
+  "Returns the hash code, consistent with =, for an external ordered
+   collection implementing Iterable.
+   See http://clojure.org/data_structures#hash for full algorithms."
+  #_long
+  [coll]
+  ;; (clojure.lang.Murmur3/hashOrdered coll)
+  (throw "TODO: port"))
+
+(defn hash-unordered-coll
+  "Returns the hash code, consistent with =, for an external unordered
+   collection implementing Iterable. For maps, the iterator should
+   return map entries whose hash is computed as
+     (hash-ordered-coll [k v]).
+   See http://clojure.org/data_structures#hash for full algorithms."
+  #_long
+  [coll]
+  ;; (clojure.lang.Murmur3/hashUnordered coll)
+  (throw "TODO: port"))
+
+(defmacro definline
+  "Experimental - like defmacro, except defines a named function whose
+  body is the expansion, calls to which may be expanded inline as if
+  it were a macro. Cannot be used with variadic (&) args."
+  [name & decl]
+  (let [[pre-args [args expr]] (split-with (comp not vector?) decl)]
+    `(do
+       (defn ~name ~@pre-args ~args ~(apply (eval (list `fn args expr)) args))
+       (alter-meta! (var ~name) assoc :inline (fn ~name ~args ~expr))
+       (var ~name))))
+
+(defmacro amap
+  "Maps an expression across an array a, using an index named idx, and
+  return value named ret, initialized to a clone of a, then setting 
+  each element of ret to the evaluation of expr, returning the new 
+  array ret."
+  [a idx ret expr]
+  `(let [a# ~a l# (alength a#)
+         ~ret (aclone a#)]
+     (loop  [~idx 0]
+       (if (< ~idx  l#)
+         (do
+           (aset ~ret ~idx ~expr)
+           (recur (unchecked-inc ~idx)))
+         ~ret))))
+
+(defmacro areduce
+  "Reduces an expression across an array a, using an index named idx,
+  and return value named ret, initialized to init, setting ret to the 
+  evaluation of expr at each step, returning ret."
+  [a idx ret init expr]
+  `(let [a# ~a l# (alength a#)]
+     (loop  [~idx 0 ~ret ~init]
+       (if (< ~idx l#)
+         (recur (unchecked-inc-int ~idx) ~expr)
+         ~ret))))
+
+(defn float-array
+  "Creates an array of floats"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers float_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
+   (throw "TODO: port") ))
+
+(defn boolean-array
+  "Creates an array of booleans"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers boolean_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers boolean_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn byte-array
+  "Creates an array of bytes"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers byte_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers byte_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn char-array
+  "Creates an array of chars"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers char_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers char_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn short-array
+  "Creates an array of shorts"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers short_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers short_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn double-array
+  "Creates an array of doubles"
+  ([size-or-seq] 
+  ;;  (. clojure.lang.Numbers double_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers double_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn object-array
+  "Creates an array of objects"
+  ([size-or-seq]
+  ;;  (. clojure.lang.RT object_array size-or-seq)
+   (throw "TODO: port")))
+
+(defn int-array
+  "Creates an array of ints"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers int_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers int_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+(defn long-array
+  "Creates an array of longs"
+  ([size-or-seq]
+  ;;  (. clojure.lang.Numbers long_array size-or-seq)
+   (throw "TODO: port"))
+  ([size init-val-or-seq]
+  ;;  (. clojure.lang.Numbers long_array size init-val-or-seq)
+   (throw "TODO: port")))
+
+;; definline doesn't work without eval
+
+;; (definline booleans
+;;   "Casts to boolean[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers booleans ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline bytes
+;;   "Casts to bytes[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers bytes ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline chars
+;;   "Casts to chars[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers chars ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline shorts
+;;   "Casts to shorts[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers shorts ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline floats
+;;   "Casts to float[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers floats ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline ints
+;;   "Casts to int[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers ints ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline doubles
+;;   "Casts to double[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers doubles ~xs)
+;;   (throw "TODO: port"))
+
+;; (definline longs
+;;   "Casts to long[]"
+;;   [xs]
+;;   ;; `(. clojure.lang.Numbers longs ~xs)
+;;   (throw "TODO: port"))
+
+(defn bytes?
+  "Return true if x is a byte array"
+  [x]
+  ;; (if (nil? x)
+  ;;   false
+  ;;   (-> x class .getComponentType (= Byte/TYPE)))
+  (throw "TODO: port"))
+
+(defn seque
+  "Creates a queued seq on another (presumably lazy) seq s. The queued
+  seq will produce a concrete seq in the background, and can get up to
+  n items ahead of the consumer. n-or-q can be an integer n buffer
+  size, or an instance of java.util.concurrent BlockingQueue. Note
+  that reading from a seque can block if the reader gets ahead of the
+  producer."
+  ([s] (seque 100 s))
+  ([n-or-q s]
+  ;;  (let [^BlockingQueue q (if (instance? BlockingQueue n-or-q)
+  ;;                            n-or-q
+  ;;                            (LinkedBlockingQueue. (int n-or-q)))
+  ;;        NIL (Object.) ;nil sentinel since LBQ doesn't support nils
+  ;;        agt (agent (lazy-seq s)) ; never start with nil; that signifies we've already put eos
+  ;;        log-error (fn [q e]
+  ;;                    (if (.offer q q)
+  ;;                      (throw e)
+  ;;                      e))
+  ;;        fill (fn [s]
+  ;;               (when s
+  ;;                 (if (instance? Exception s) ; we failed to .offer an error earlier
+  ;;                   (log-error q s)
+  ;;                   (try
+  ;;                     (loop [[x & xs :as s] (seq s)]
+  ;;                       (if s
+  ;;                         (if (.offer q (if (nil? x) NIL x))
+  ;;                           (recur xs)
+  ;;                           s)
+  ;;                         (when-not (.offer q q) ; q itself is eos sentinel
+  ;;                           ()))) ; empty seq, not nil, so we know to put eos next time
+  ;;                     (catch Exception e
+  ;;                       (log-error q e))))))
+  ;;        drain (fn drain []
+  ;;                (lazy-seq
+  ;;                 (let [x (.take q)]
+  ;;                   (if (identical? x q) ;q itself is eos sentinel
+  ;;                     (do @agt nil)  ;touch agent just to propagate errors
+  ;;                     (do
+  ;;                       (send-off agt fill)
+  ;;                       (release-pending-sends)
+  ;;                       (cons (if (identical? x NIL) nil x) (drain)))))))]
+  ;;    (send-off agt fill)
+  ;;    (drain))
+     (throw "TODO: port")))
+
+(defn class?
+  "Returns true if x is an instance of Class"
+  [x]
+  ;; (instance? Class x)
+  (throw "TODO: port"))
+
+(defn- is-annotation? [c]
+  ;; (and (class? c)
+  ;;      (.isAssignableFrom java.lang.annotation.Annotation c))
+  (throw "TODO: port"))
+
+(defn- is-runtime-annotation? [#_Class c]
+  ;; (boolean 
+  ;;  (and (is-annotation? c)
+  ;;       (when-let [^java.lang.annotation.Retention r 
+  ;;                  (.getAnnotation c java.lang.annotation.Retention)] 
+  ;;         (= (.value r) java.lang.annotation.RetentionPolicy/RUNTIME))))
+  (throw "TODO: port"))
+
+(defn- descriptor [#_Class c]
+  ;; (clojure.asm.Type/getDescriptor c)
+  (throw "TODO: port"))
+
+(declare process-annotation)
+
+(defn- add-annotation [#_clojure.asm.AnnotationVisitor av name v]
+  ;; (cond
+  ;;  (vector? v) (let [avec (.visitArray av name)]
+  ;;                (doseq [vval v]
+  ;;                  (add-annotation avec "value" vval))
+  ;;                (.visitEnd avec))
+  ;;  (symbol? v) (let [ev (eval v)]
+  ;;                (cond 
+  ;;                 (instance? java.lang.Enum ev)
+  ;;                 (.visitEnum av name (descriptor (class ev)) (str ev))
+  ;;                 (class? ev) (.visit av name (clojure.asm.Type/getType ev))
+  ;;                 :else (throw (IllegalArgumentException. 
+  ;;                               (str "Unsupported annotation value: " v " of class " (class ev))))))
+  ;;  (seq? v) (let [[nested nv] v
+  ;;                 c (resolve nested)
+  ;;                 nav (.visitAnnotation av name (descriptor c))]
+  ;;             (process-annotation nav nv)
+  ;;             (.visitEnd nav))
+  ;;  :else (.visit av name v))
+  (throw "TODO: port"))
+
+(defn- process-annotation [av v]
+  (if (map? v) 
+    (doseq [[k v] v]
+      (add-annotation av (name k) v))
+    (add-annotation av "value" v)))
+
+(defn- add-annotations
+  ([visitor m] (add-annotations visitor m nil))
+  ([visitor m i]
+    ;;  (doseq [[k v] m]
+    ;;    (when (symbol? k)
+    ;;      (when-let [c (resolve k)]
+    ;;        (when (is-annotation? c)
+    ;;                                     ;this is known duck/reflective as no common base of ASM Visitors
+    ;;          (let [av (if i
+    ;;                     (.visitParameterAnnotation visitor i (descriptor c) 
+    ;;                                                (is-runtime-annotation? c))
+    ;;                     (.visitAnnotation visitor (descriptor c) 
+    ;;                                       (is-runtime-annotation? c)))]
+    ;;            (process-annotation av v)
+    ;;            (.visitEnd av))))))
+   (throw "TODO: port")))
+
+(defn bases
+  "Returns the immediate superclass and direct interfaces of c, if any"
+  [#_Class c]
+  ;; (when c
+  ;;   (let [i (seq (.getInterfaces c))
+  ;;         s (.getSuperclass c)]
+  ;;     (if s (cons s i) i)))
+  (throw "TODO: port"))
+
+(defn supers
+  "Returns the immediate and indirect superclasses and interfaces of c, if any"
+  [#_Class class]
+  (loop [ret (set (bases class)) cs ret]
+    (if (seq cs)
+      (let [c (first cs) bs (bases c)]
+        (recur (into1 ret bs) (into1 (disj cs c) bs)))
+      (not-empty ret))))
+
+  
+(defn resultset-seq
+  "Creates and returns a lazy sequence of structmaps corresponding to
+  the rows in the java.sql.ResultSet rs"
+  [#_java.sql.ResultSet rs]
+    ;; (let [rsmeta (. rs (getMetaData))
+    ;;       idxs (range 1 (inc (. rsmeta (getColumnCount))))
+    ;;       keys (map (comp keyword #(.toLowerCase ^String %))
+    ;;                 (map (fn [i] (. rsmeta (getColumnLabel i))) idxs))
+    ;;       check-keys
+    ;;             (or (apply distinct? keys)
+    ;;                 (throw (Exception. "ResultSet must have unique column labels")))
+    ;;       row-struct (apply create-struct keys)
+    ;;       row-values (fn [] (map (fn [^Integer i] (. rs (getObject i))) idxs))
+    ;;       rows (fn thisfn []
+    ;;              (when (. rs (next))
+    ;;                (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
+    ;;   (rows))
+  (throw "TODO: port"))
+
+(defn iterator-seq
+  "Returns a seq on a java.util.Iterator. Note that most collections
+  providing iterators implement Iterable and thus support seq directly.
+  Seqs cache values, thus iterator-seq should not be used on any
+  iterator that repeatedly returns the same mutable object."
+  [iter]
+  ;; (clojure.lang.RT/chunkIteratorSeq iter)
+  (throw "TODO: port"))
+
+(defn enumeration-seq
+  "Returns a seq on a java.util.Enumeration"
+  [e]
+  ;; (clojure.lang.EnumerationSeq/create e)
+  (throw "TODO: port"))
+
+(defn format
+  "Formats a string using java.lang.String.format, see java.util.Formatter for format
+  string syntax"
+  #_String [fmt & args]
+  ;; (String/format fmt (to-array args))
+  (throw "TODO: port"))
+
+(defn printf
+  "Prints formatted output, as per format"
+  [fmt & args]
+  (print (apply format fmt args)))
+
+(declare gen-class)
+
+(defmacro with-loading-context [& body]
+  ;; `((fn loading# [] 
+  ;;       (. clojure.lang.Var (pushThreadBindings {clojure.lang.Compiler/LOADER  
+  ;;                                                (.getClassLoader (.getClass ^Object loading#))}))
+  ;;       (try
+  ;;        ~@body
+  ;;        (finally
+  ;;         (. clojure.lang.Var (popThreadBindings))))))
+  (throw "TODO: port"))
+
+(defonce ^:dynamic
+  ^{:private true :doc
+     "True while a verbose load is pending"}
+  *loading-verbosely* false)
+
+(defn- root-directory
+  "Returns the root resource path for a lib"
+  [lib]
+  ;; (let [d (root-resource lib)]
+  ;;   (subs d 0 (.lastIndexOf d "/")))
+  (throw "TODO: port"))
+
+(defn- serialized-require
+  "Like 'require', but serializes loading.
+  Interim function preferred over 'require' for known asynchronous loads.
+  Future changes may make these equivalent."
+  [& args]
+  ;; (locking clojure.lang.RT/REQUIRE_LOCK
+  ;;   (apply require args))
+  (throw "TODO: port"))
+
+(defn requiring-resolve
+  "Resolves namespace-qualified sym per 'resolve'. If initial resolve
+fails, attempts to require sym's namespace and retries."
+  [sym]
+  ;; (if (qualified-symbol? sym)
+  ;;   (or (resolve sym)
+  ;;       (do (-> sym namespace symbol serialized-require)
+  ;;           (resolve sym)))
+  ;;   (throw (IllegalArgumentException. (str "Not a qualified symbol: " sym))))
+  (throw "TODO: port"))
+
+(defn loaded-libs
+  "Returns a sorted set of symbols naming the currently loaded libs"
+  [] @*loaded-libs*)
+
+(defn seqable?
+  "Return true if the seq function is supported for x"
+  [x]
+  ;; (clojure.lang.RT/canSeq x)
+  (throw "TODO: port"))
+
+(defn associative?
+ "Returns true if coll implements Associative"
+  [coll]
+  ;; (instance? clojure.lang.Associative coll)
+  (throw "TODO: port"))
+
+(defn sorted?
+ "Returns true if coll implements Sorted"
+  [coll]
+  ;; (instance? clojure.lang.Sorted coll)
+  (throw "TODO: port"))
+
+(defn counted?
+ "Returns true if coll implements count in constant time"
+  [coll]
+  ;; (instance? clojure.lang.Counted coll)
+  (throw "TODO: port"))
+
+(defn reversible?
+ "Returns true if coll implements Reversible"
+  [coll]
+  ;; (instance? clojure.lang.Reversible coll)
+  (throw "TODO: port"))
+
+(defn indexed?
+  "Return true if coll implements Indexed, indicating efficient lookup by index"
+  [coll]
+  ;; (instance? clojure.lang.Indexed coll)
+  (throw "TODO: port"))
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the most recent value printed"}
+ *1)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the second most recent value printed"}
+ *2)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the third most recent value printed"}
+ *3)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the most recent exception caught by the repl"}
+ *e)
+
+(def ^:dynamic
+  ^{:doc "Bound to true in a repl thread"}
+  *repl* false)
+
+(defn trampoline
+  "trampoline can be used to convert algorithms requiring mutual
+  recursion without stack consumption. Calls f with supplied args, if
+  any. If f returns a fn, calls that fn with no arguments, and
+  continues to repeat, until the return value is not a fn, then
+  returns that non-fn value. Note that if you want to return a fn as a
+  final value, you must wrap it in some data structure and unpack it
+  after trampoline returns."
+  ([f]
+     (let [ret (f)]
+       (if (fn? ret)
+         (recur ret)
+         ret)))
+  ([f & args]
+     (trampoline #(apply f args))))
+
+(defmacro while
+  "Repeatedly executes body while test expression is true. Presumes
+  some side-effect will cause test to become false/nil. Returns nil"
+  [test & body]
+  `(loop []
+     (when ~test
+       ~@body
+       (recur))))
+
+(defn memoize
+  "Returns a memoized version of a referentially transparent function. The
+  memoized version of the function keeps a cache of the mapping from arguments
+  to results and, when calls with the same arguments are repeated often, has
+  higher performance at the expense of higher memory use."
+  [f]
+  (let [mem (atom {})]
+    (fn [& args]
+      (if-let [e (find @mem args)]
+        (val e)
+        (let [ret (apply f args)]
+          (swap! mem assoc args ret)
+          ret)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; var documentation ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro add-doc-and-meta {:private true} [name docstring meta]
+  `(alter-meta! (var ~name) merge (assoc ~meta :doc ~docstring)))
+
+;; (add-doc-and-meta *file*
+;;   "The path of the file being evaluated, as a String.
+
+;;   When there is no file, e.g. in the REPL, the value is not defined."
+;;   {})
+
+;; (add-doc-and-meta *command-line-args*
+;;   "A sequence of the supplied command line arguments, or nil if
+;;   none were supplied"
+;;   {})
+
+;; (add-doc-and-meta *warn-on-reflection*
+;;   "When set to true, the compiler will emit warnings when reflection is
+;;   needed to resolve Java method calls or field accesses.
+
+;;   Defaults to false."
+;;   {})
+
+;; (add-doc-and-meta *compile-path*
+;;   "Specifies the directory where 'compile' will write out .class
+;;   files. This directory must be in the classpath for 'compile' to
+;;   work.
+
+;;   Defaults to \"classes\""
+;;   {})
+
+;; (add-doc-and-meta *compile-files*
+;;   "Set to true when compiling files, false otherwise."
+;;   {})
+
+;; (add-doc-and-meta *unchecked-math*
+;;   "While bound to true, compilations of +, -, *, inc, dec and the
+;;   coercions will be done without overflow checks. While bound
+;;   to :warn-on-boxed, same behavior as true, and a warning is emitted
+;;   when compilation uses boxed math. Default: false."
+;;   {})
+
+;; (add-doc-and-meta *compiler-options*
+;;   "A map of keys to options.
+;;   Note, when binding dynamically make sure to merge with previous value.
+;;   Supported options:
+;;   :elide-meta - a collection of metadata keys to elide during compilation.
+;;   :disable-locals-clearing - set to true to disable clearing, useful for using a debugger
+;;   :direct-linking - set to true to use direct static invocation of functions, rather than vars
+;;     Note that call sites compiled with direct linking will not be affected by var redefinition.
+;;     Use ^:redef (or ^:dynamic) on a var to prevent direct linking and allow redefinition.
+;;   See https://clojure.org/reference/compilation for more information."
+;;   {})
+
+;; (add-doc-and-meta *in*
+;;   "A java.io.Reader object representing standard input for read operations.
+
+;;   Defaults to System/in, wrapped in a LineNumberingPushbackReader"
+;;   {})
+
+;; (add-doc-and-meta *err*
+;;   "A java.io.Writer object representing standard error for print operations.
+
+;;   Defaults to System/err, wrapped in a PrintWriter"
+;;   {})
+
+;; (add-doc-and-meta *flush-on-newline*
+;;   "When set to true, output will be flushed whenever a newline is printed.
+
+;;   Defaults to true."
+;;   {})
+
+;; (add-doc-and-meta *print-meta*
+;;   "If set to logical true, when printing an object, its metadata will also
+;;   be printed in a form that can be read back by the reader.
+
+;;   Defaults to false."
+;;   {})
+
+;; (add-doc-and-meta *print-dup*
+;;   "When set to logical true, objects will be printed in a way that preserves
+;;   their type when read in later.
+
+;;   Defaults to false."
+;;   {})
+
+;; (add-doc-and-meta *print-readably*
+;;   "When set to logical false, strings and characters will be printed with
+;;   non-alphanumeric characters converted to the appropriate escape sequences.
+
+;;   Defaults to true"
+;;   {})
+
+;; (add-doc-and-meta *read-eval*
+;;  "Defaults to true (or value specified by system property, see below)
+;;   ***This setting implies that the full power of the reader is in play,
+;;   including syntax that can cause code to execute. It should never be
+;;   used with untrusted sources. See also: clojure.edn/read.***
+
+;;   When set to logical false in the thread-local binding,
+;;   the eval reader (#=) and record/type literal syntax are disabled in read/load.
+;;   Example (will fail): (binding [*read-eval* false] (read-string \"#=(* 2 21)\"))
+
+;;   The default binding can be controlled by the system property
+;;   'clojure.read.eval' System properties can be set on the command line
+;;   like this:
+
+;;   java -Dclojure.read.eval=false ...
+
+;;   The system property can also be set to 'unknown' via
+;;   -Dclojure.read.eval=unknown, in which case the default binding
+;;   is :unknown and all reads will fail in contexts where *read-eval*
+;;   has not been explicitly bound to either true or false. This setting
+;;   can be a useful diagnostic tool to ensure that all of your reads
+;;   occur in considered contexts. You can also accomplish this in a
+;;   particular scope by binding *read-eval* to :unknown
+;;   "
+;;   {})
+
+;; (add-doc-and-meta *assert*
+;;   "When set to logical false, 'assert' will omit assertion checks in
+;;   compiled code. Defaults to true."
+;;   {})
+
+(defn future?
+  "Returns true if x is a future"
+  [x]
+  ;; (instance? java.util.concurrent.Future x)
+  (throw "TODO: port"))
+
+(defn future-done?
+  "Returns true if future f is done"
+  [#_java.util.concurrent.Future f]
+  ;; (.isDone f)
+  (throw "TODO: port"))
+
+(defmacro letfn 
+  "fnspec ==> (fname [params*] exprs) or (fname ([params*] exprs)+)
+
+  Takes a vector of function specs and a body, and generates a set of
+  bindings of functions to their names. All of the names are available
+  in all of the definitions of the functions, as well as the body."
+  {:forms '[(letfn [fnspecs*] exprs*)],
+   :special-form true, :url nil}
+  [fnspecs & body] 
+  `(letfn* ~(vec (interleave (map first fnspecs) 
+                             (map #(cons `fn %) fnspecs)))
+           ~@body))
+
+(defn stream-reduce!
+  "Works like reduce but takes a java.util.stream.BaseStream as its source.
+  Honors 'reduced', is a terminal operation on the stream"
+  ([f #_java.util.stream.BaseStream s]
+  ;;  (clojure.core.protocols/iterator-reduce! (.iterator s) f)
+   (throw "TODO: port"))
+  ([f init #_java.util.stream.BaseStream s]
+  ;;  (clojure.core.protocols/iterator-reduce! (.iterator s) f init)
+   (throw "TODO: port")))
+
+(defn stream-seq!
+  "Takes a java.util.stream.BaseStream instance s and returns a seq of its
+  contents. This is a terminal operation on the stream."
+  [#_java.util.stream.BaseStream stream]
+  ;; (iterator-seq (.iterator stream))
+  (throw "TODO: port"))
+
+(defn stream-transduce!
+  "Works like transduce but takes a java.util.stream.BaseStream as its source.
+  This is a terminal operation on the stream."
+  ([xform f #_java.util.stream.BaseStream stream]
+   (stream-transduce! xform f (f) stream))
+  ([xform f init #_java.util.stream.BaseStream stream]
+   (let [f (xform f)
+         ret (stream-reduce! f init stream)]
+     (f ret))))
+
+(defn stream-into!
+  "Returns a new coll consisting of coll with all of the items of the
+  stream conjoined. This is a terminal operation on the stream."
+  ([to #_java.util.stream.BaseStream stream]
+  ;;  (if (instance? clojure.lang.IEditableCollection to)
+  ;;    (with-meta (persistent! (stream-reduce! conj! (transient to) stream)) (meta to))
+  ;;    (stream-reduce! conj to stream))
+   (throw "TODO: port"))
+  ([to xform #_java.util.stream.BaseStream stream]
+  ;;  (if (instance? clojure.lang.IEditableCollection to)
+  ;;    (with-meta (persistent! (stream-transduce! xform conj! (transient to) stream)) (meta to))
+  ;;    (stream-transduce! xform conj to stream))
+   (throw "TODO: port")))
+
+
+(defmacro ^:private when-class [class-name & body]
+  ;; `(try
+  ;;    (Class/forName ^String ~class-name)
+  ;;    ~@body
+  ;;    (catch ClassNotFoundException _#))
+  (throw "TODO: port"))
+
+;; (defprotocol Inst
+;;   (inst-ms* [inst]))
+
+;; (extend-protocol Inst
+;;   java.util.Date
+;;   (inst-ms* [inst] (.getTime ^java.util.Date inst)))
+
+;; (defn inst-ms
+;;   "Return the number of milliseconds since January 1, 1970, 00:00:00 GMT"
+;;   [inst]
+;;   (inst-ms* inst))
+
+;; (defn inst?
+;;   "Return true if x satisfies Inst"
+;;   [x]
+;;   (satisfies? Inst x))
+
+;; (extend-protocol clojure.core/Inst
+;;   java.time.Instant
+;;   (inst-ms* [inst] (.toEpochMilli ^java.time.Instant inst)))
+
+(defn uuid?
+  "Return true if x is a java.util.UUID"
+  [x]
+  ;; (instance? java.util.UUID x)
+  (throw "TODO: port"))
+
+(defn random-uuid
+  "Returns a pseudo-randomly generated java.util.UUID instance (i.e. type 4).
+
+  See: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#randomUUID--"
+  #_java.util.UUID []
+  ;; (java.util.UUID/randomUUID)
+  (throw "TODO: port"))
+
+;; (extend-protocol clojure.core.protocols/IKVReduce
+;;  nil
+;;  (kv-reduce
+;;   [_ f init]
+;;   init)
+
+;;  ;;slow path default
+;;  java.lang.Object
+;;  (kv-reduce
+;;   [amap f init]
+;;   (reduce (fn [ret ^java.util.Map$Entry me]
+;;             (f ret
+;;                (.getKey me)
+;;                (.getValue me)))
+;;           init
+;;           amap))
+
+;;  clojure.lang.IKVReduce
+;;  (kv-reduce
+;;   [amap f init]
+;;   (.kvreduce amap f init)))
+
+(defn reduce-kv
+  "Reduces an associative collection. f should be a function of 3
+  arguments. Returns the result of applying f to init, the first key
+  and the first value in coll, then applying f to that result and the
+  2nd key and value, etc. If coll contains no entries, returns init
+  and f is not called. Note that reduce-kv is supported on vectors,
+  where the keys will be the ordinals."  
+  ([f init coll]
+    ;;  (clojure.core.protocols/kv-reduce coll f init)
+   (throw "TODO: port")))
+
+(defn- normalize-slurp-opts
+  [opts]
+  (if (string? (first opts))
+    (do
+      (println "WARNING: (slurp f enc) is deprecated, use (slurp f :encoding enc).")
+      [:encoding (first opts)])
+    opts))
+
+(defn slurp
+  "Opens a reader on f and reads all its contents, returning a string.
+  See clojure.java.io/reader for a complete list of supported arguments."
+  ([f & opts]
+    ;;  (let [opts (normalize-slurp-opts opts)
+    ;;        sw (java.io.StringWriter.)]
+    ;;    (with-open [^java.io.Reader r (apply jio/reader f opts)]
+    ;;      (jio/copy r sw)
+    ;;      (.toString sw)))
+   (throw "TODO: port")))
+
+(defn spit
+  "Opposite of slurp.  Opens f with writer, writes content, then
+  closes f. Options passed to clojure.java.io/writer."
+  [f content & options]
+  ;; (with-open [^java.io.Writer w (apply jio/writer f options)]
+  ;;   (.write w (str content)))
+  (throw "TODO: port"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
+(defn future-call 
+  "Takes a function of no args and yields a future object that will
+  invoke the function in another thread, and will cache the result and
+  return it on all subsequent calls to deref/@. If the computation has
+  not yet finished, calls to deref/@ will block, unless the variant
+  of deref with timeout is used. See also - realized?."
+  [f]
+  ;; (let [f (binding-conveyor-fn f)
+  ;;       fut (.submit clojure.lang.Agent/soloExecutor ^Callable f)]
+  ;;   (reify 
+  ;;    clojure.lang.IDeref 
+  ;;    (deref [_] (deref-future fut))
+  ;;    clojure.lang.IBlockingDeref
+  ;;    (deref
+  ;;     [_ timeout-ms timeout-val]
+  ;;     (deref-future fut timeout-ms timeout-val))
+  ;;    clojure.lang.IPending
+  ;;    (isRealized [_] (.isDone fut))
+  ;;    java.util.concurrent.Future
+  ;;     (get [_] (.get fut))
+  ;;     (get [_ timeout unit] (.get fut timeout unit))
+  ;;     (isCancelled [_] (.isCancelled fut))
+  ;;     (isDone [_] (.isDone fut))
+  ;;     (cancel [_ interrupt?] (.cancel fut interrupt?))))
+  (throw "TODO: port"))
+
+(defmacro future
+  "Takes a body of expressions and yields a future object that will
+  invoke the body in another thread, and will cache the result and
+  return it on all subsequent calls to deref/@. If the computation has
+  not yet finished, calls to deref/@ will block, unless the variant of
+  deref with timeout is used. See also - realized?."
+  [& body]
+  ;; `(future-call (^{:once true} fn* [] ~@body))
+  (throw "TODO: port"))
+
+(defn future-cancel
+  "Cancels the future, if possible."
+  [#_java.util.concurrent.Future f]
+  ;; (.cancel f true)
+  (throw "TODO: port"))
+
+(defn future-cancelled?
+  "Returns true if future f is cancelled"
+  [#_java.util.concurrent.Future f]
+  ;; (.isCancelled f)
+  (throw "TODO: port"))
+
+(defn pmap
+  "Like map, except f is applied in parallel. Semi-lazy in that the
+  parallel computation stays ahead of the consumption, but doesn't
+  realize the entire result unless required. Only useful for
+  computationally intensive functions where the time of f dominates
+  the coordination overhead."
+  ([f coll]
+  ;;  (let [n (+ 2 (.. Runtime getRuntime availableProcessors))
+  ;;        rets (map #(future (f %)) coll)
+  ;;        step (fn step [[x & xs :as vs] fs]
+  ;;               (lazy-seq
+  ;;                (if-let [s (seq fs)]
+  ;;                  (cons (deref x) (step xs (rest s)))
+  ;;                  (map deref vs))))]
+  ;;    (step rets (drop n rets)))
+   (throw "TODO: port"))
+  ([f coll & colls]
+  ;;  (let [step (fn step [cs]
+  ;;               (lazy-seq
+  ;;                (let [ss (map seq cs)]
+  ;;                  (when (every? identity ss)
+  ;;                    (cons (map first ss) (step (map rest ss)))))))]
+  ;;    (pmap #(apply f %) (step (cons coll colls))))
+   (throw "TODO: port")))
+
+  
+(defn pcalls
+  "Executes the no-arg fns in parallel, returning a lazy sequence of
+  their values"
+  [& fns] (pmap #(%) fns))
+
+(defmacro pvalues
+  "Returns a lazy sequence of the values of the exprs, which are
+  evaluated in parallel"
+  [& exprs]
+  `(pcalls ~@(map #(list `fn [] %) exprs)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; clojure version number ;;;;;;;;;;;;;;;;;;;;;;
+
+;; (let [^java.util.Properties
+;;       properties (with-open [version-stream (.getResourceAsStream
+;;                                              (clojure.lang.RT/baseLoader)
+;;                                              "clojure/version.properties")]
+;;                    (doto (new java.util.Properties)
+;;                      (.load version-stream)))
+;;       version-string (.getProperty properties "version")
+;;       [_ major minor incremental qualifier snapshot]
+;;       (re-matches
+;;        #"(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9_]+))?(?:-(SNAPSHOT))?"
+;;        version-string)
+;;       clojure-version {:major       (Integer/valueOf ^String major)
+;;                        :minor       (Integer/valueOf ^String minor)
+;;                        :incremental (Integer/valueOf ^String incremental)
+;;                        :qualifier   (if (= qualifier "SNAPSHOT") nil qualifier)}]
+;;   (def ^:dynamic *clojure-version*
+;;     (if (.contains version-string "SNAPSHOT")
+;;       (clojure.lang.RT/assoc clojure-version :interim true)
+;;       clojure-version)))
+
+;; (add-doc-and-meta *clojure-version*
+;;   "The version info for Clojure core, as a map containing :major :minor 
+;;   :incremental and :qualifier keys. Feature releases may increment 
+;;   :minor and/or :major, bugfix releases will increment :incremental. 
+;;   Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
+;;   {:added "1.0"})
+
+(defn
+  clojure-version 
+  "Returns clojure version as a printable string."
+  []
+  ;; (str (:major *clojure-version*)
+  ;;      "."
+  ;;      (:minor *clojure-version*)
+  ;;      (when-let [i (:incremental *clojure-version*)]
+  ;;        (str "." i))
+  ;;      (when-let [q (:qualifier *clojure-version*)]
+  ;;        (when (pos? (count q)) (str "-" q)))
+  ;;      (when (:interim *clojure-version*)
+  ;;        "-SNAPSHOT"))
+  (throw "TODO: port"))
+
+(defn promise
+  "Returns a promise object that can be read with deref/@, and set,
+  once only, with deliver. Calls to deref/@ prior to delivery will
+  block, unless the variant of deref with timeout is used. All
+  subsequent derefs will return the same delivered value without
+  blocking. See also - realized?."
+  []
+  ;; (let [d (java.util.concurrent.CountDownLatch. 1)
+  ;;       v (atom d)]
+  ;;   (reify 
+  ;;    clojure.lang.IDeref
+  ;;      (deref [_] (.await d) @v)
+  ;;    clojure.lang.IBlockingDeref
+  ;;      (deref
+  ;;       [_ timeout-ms timeout-val]
+  ;;       (if (.await d timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
+  ;;         @v
+  ;;         timeout-val))  
+  ;;    clojure.lang.IPending
+  ;;     (isRealized [this]
+  ;;      (zero? (.getCount d)))
+  ;;    clojure.lang.IFn
+  ;;    (invoke
+  ;;     [this x]
+  ;;     (when (and (pos? (.getCount d))
+  ;;                (compare-and-set! v d x))
+  ;;       (.countDown d)
+  ;;       this))))
+  (throw "TODO: port"))
+
+(defn deliver
+  "Delivers the supplied value to the promise, releasing any pending
+  derefs. A subsequent call to deliver on a promise will have no effect."
+  [promise val] (promise val))
+
+(defn rand-nth
+  "Return a random element of the (sequential) collection. Will have
+  the same performance characteristics as nth for the given
+  collection."
+  [coll]
+  (nth coll (rand-int (count coll))))
+
+(defn splitv-at
+  "Returns a vector of [(into [] (take n) coll) (drop n coll)]"
+  [n coll]
+  [(into [] (take n) coll) (drop n coll)])
+
+(defn partitionv
+  "Returns a lazy sequence of vectors of n items each, at offsets step
+  apart. If step is not supplied, defaults to n, i.e. the partitions
+  do not overlap. If a pad collection is supplied, use its elements as
+  necessary to complete last partition upto n items. In case there are
+  not enough padding elements, return a partition with less than n items."
+  ([n coll]
+   (partitionv n n coll))
+  ([n step coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [p (into [] (take n) s)]
+         (when (= n (count p))
+           (cons p (partitionv n step (nthrest s step))))))))
+  ([n step pad coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [p (into [] (take n) s)]
+         (if (= n (count p))
+           (cons p (partitionv n step pad (nthrest s step)))
+           (list (into [] (take n) (concat p pad)))))))))
+
+(defn partitionv-all
+  "Returns a lazy sequence of vector partitions, but may include
+  partitions with fewer than n items at the end.
+  Returns a stateful transducer when no collection is provided."
+  ([n]
+   (partition-all n))
+  ([n coll]
+   (partitionv-all n n coll))
+  ([n step coll]
+   (lazy-seq
+     (when-let [s (seq coll)]
+       (let [seg (into [] (take n) coll)]
+         (cons seg (partitionv-all n step (drop step s))))))))
+
+(defn shuffle
+  "Return a random permutation of coll"
+  [#_java.util.Collection coll]
+  ;; (let [al (java.util.ArrayList. coll)]
+  ;;   (java.util.Collections/shuffle al)
+  ;;   (clojure.lang.RT/vector (.toArray al)))
+  (throw "TODO: port"))
+
+(defn bounded-count
+  "If coll is counted? returns its count, else will count at most the first n
+  elements of coll using its seq"
+  [n coll]
+  (if (counted? coll)
+    (count coll)
+    (loop [i 0 s (seq coll)]
+      (if (and s (< i n))
+        (recur (inc i) (next s))
+        i))))
+
+(defn bounded-count
+  "If coll is counted? returns its count, else will count at most the first n
+  elements of coll using its seq"
+  [n coll]
+  (if (counted? coll)
+    (count coll)
+    (loop [i 0 s (seq coll)]
+      (if (and s (< i n))
+        (recur (inc i) (next s))
+        i))))
+
+(defn- ^{:dynamic true} assert-valid-fdecl
+  "A good fdecl looks like (([a] ...) ([a b] ...)) near the end of defn."
+  [fdecl]
+  (when (empty? fdecl) (throw "Parameter declaration missing"))
+  (let [argdecls (map 
+                   #(if (seq? %)
+                      (first %)
+                      (throw (if (seq? (first fdecl))
+                               (str "Invalid signature \""
+                                    %
+                                    "\" should be a list")
+                               (str "Parameter declaration \""
+                                    %
+                                    "\" should be a vector"))))
+                   fdecl)
+        bad-args (seq (remove #(vector? %) argdecls))]
+    (when bad-args
+      (throw (str "Parameter declaration \"" (first bad-args) 
+                  "\" should be a vector")))))
+
+(defn realized?
+  "Returns true if a value has been produced for a promise, delay, future or lazy sequence."
+  [#_clojure.lang.IPending x]
+  ;; (.isRealized x)
+  (throw "TODO: port"))
+
+(defn random-sample
+  "Returns items from coll with random probability of prob (0.0 -
+  1.0).  Returns a transducer when no collection is provided."
+  ([prob]
+     (filter (fn [_] (< (rand) prob))))
+  ([prob coll]
+     (filter (fn [_] (< (rand) prob)) coll)))
+
+;; (deftype Eduction [xform coll]
+;;    Iterable
+;;    (iterator [_]
+;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
+
+;;    clojure.lang.IReduceInit
+;;    (reduce [_ f init]
+;;      ;; NB (completing f) isolates completion of inner rf from outer rf
+;;      (transduce xform (completing f) init coll))
+
+;;    clojure.lang.Sequential)
+
+;; (defn eduction
+;;   "Returns a reducible/iterable application of the transducers
+;;   to the items in coll. Transducers are applied in order as if
+;;   combined with comp. Note that these applications will be
+;;   performed every time reduce/iterator is called."
+;;   [& xforms]
+;;   (Eduction. (apply comp (butlast xforms)) (last xforms)))
+
+;; (defmethod print-method Eduction [c, ^Writer w]
+;;   (if *print-readably*
+;;     (do
+;;       (print-sequential "(" pr-on " " ")" c w))
+;;     (print-object c w)))
+
+(defn iteration
+  "Creates a seqable/reducible via repeated calls to step,
+  a function of some (continuation token) 'k'. The first call to step
+  will be passed initk, returning 'ret'. Iff (somef ret) is true,
+  (vf ret) will be included in the iteration, else iteration will
+  terminate and vf/kf will not be called. If (kf ret) is non-nil it
+  will be passed to the next step call, else iteration will terminate.
+
+  This can be used e.g. to consume APIs that return paginated or batched data.
+
+   step - (possibly impure) fn of 'k' -> 'ret'
+
+   :somef - fn of 'ret' -> logical true/false, default 'some?'
+   :vf - fn of 'ret' -> 'v', a value produced by the iteration, default 'identity'
+   :kf - fn of 'ret' -> 'next-k' or nil (signaling 'do not continue'), default 'identity'
+   :initk - the first value passed to step, default 'nil'
+
+  It is presumed that step with non-initk is unreproducible/non-idempotent.
+  If step with initk is unreproducible it is on the consumer to not consume twice."
+  [step & {:keys [somef vf kf initk]
+            :or {vf identity
+                 kf identity
+                 somef some?
+                 initk nil}}]
+  ;; (reify
+  ;;  clojure.lang.Seqable
+  ;;  (seq [_]
+  ;;       ((fn next [ret]
+  ;;          (when (somef ret)
+  ;;            (cons (vf ret)
+  ;;                  (when-some [k (kf ret)]
+  ;;                    (lazy-seq (next (step k)))))))
+  ;;        (step initk)))
+  ;;  clojure.lang.IReduceInit
+  ;;  (reduce [_ rf init]
+  ;;          (loop [acc init
+  ;;                 ret (step initk)]
+  ;;            (if (somef ret)
+  ;;              (let [acc (rf acc (vf ret))]
+  ;;                (if (reduced? acc)
+  ;;                  @acc
+  ;;                  (if-some [k (kf ret)]
+  ;;                    (recur acc (step k))
+  ;;                    acc)))
+  ;;              acc))))
+  (throw "TODO: port"))
+
+(defn tagged-literal?
+  "Return true if the value is the data representation of a tagged literal"
+  [value]
+  ;; (instance? clojure.lang.TaggedLiteral value)
+  (throw "TODO: port"))
+
+(defn tagged-literal
+  "Construct a data representation of a tagged literal from a
+  tag symbol and a form."
+  [#_clojure.lang.Symbol tag form]
+  ;; (clojure.lang.TaggedLiteral/create tag form)
+  (throw "TODO: port"))
+
+(defn reader-conditional?
+  "Return true if the value is the data representation of a reader conditional"
+  [value]
+  ;; (instance? clojure.lang.ReaderConditional value)
+  (throw "TODO: port"))
+
+(defn reader-conditional
+  "Construct a data representation of a reader conditional.
+  If true, splicing? indicates read-cond-splicing."
+  [form #_Boolean splicing?]
+  ;; (clojure.lang.ReaderConditional/create form splicing?)
+  (throw "TODO: port"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
+
+(def default-data-readers
+  "Default map of data reader functions provided by Clojure. May be
+  overridden by binding *data-readers*."
+  (merge
+    ;; {'uuid #'clojure.uuid/default-uuid-reader}
+    ;; (when-class "java.sql.Timestamp"
+    ;;   {'inst #'clojure.instant/read-instant-date})
+   ))
+
+(def ^:dynamic *data-readers*
+  "Map from reader tag symbols to data reader Vars.
+
+  When Clojure starts, it searches for files named 'data_readers.clj'
+  and 'data_readers.cljc' at the root of the classpath. Each such file
+  must contain a literal map of symbols, like this:
+
+      {foo/bar my.project.foo/bar
+       foo/baz my.project/baz}
+
+  The first symbol in each pair is a tag that will be recognized by
+  the Clojure reader. The second symbol in the pair is the
+  fully-qualified name of a Var which will be invoked by the reader to
+  parse the form following the tag. For example, given the
+  data_readers.clj file above, the Clojure reader would parse this
+  form:
+
+      #foo/bar [1 2 3]
+
+  by invoking the Var #'my.project.foo/bar on the vector [1 2 3]. The
+  data reader function is invoked on the form AFTER it has been read
+  as a normal Clojure data structure by the reader.
+
+  Reader tags without namespace qualifiers are reserved for
+  Clojure. Default reader tags are defined in
+  clojure.core/default-data-readers but may be overridden in
+  data_readers.clj, data_readers.cljc, or by rebinding this Var."
+  {})
+
+(def ^:dynamic *default-data-reader-fn* 
+  "When no data reader is found for a tag and *default-data-reader-fn*
+  is non-nil, it will be called with two arguments,
+  the tag and the value.  If *default-data-reader-fn* is nil (the
+  default), an exception will be thrown for the unknown tag."
+  nil)
+
+(defn- data-reader-urls []
+  ;; (let [cl (.. Thread currentThread getContextClassLoader)]
+  ;;   (concat
+  ;;     (enumeration-seq (.getResources cl "data_readers.clj"))
+  ;;     (enumeration-seq (.getResources cl "data_readers.cljc"))))
+  (throw "TODO: port"))
+
+(defn- data-reader-var [sym]
+  (intern (create-ns (symbol (namespace sym)))
+          (symbol (name sym))))
+
+(defn- load-data-reader-file [mappings #_java.net.URL url]
+  ;; (with-open [rdr (clojure.lang.LineNumberingPushbackReader.
+  ;;                  (java.io.InputStreamReader.
+  ;;                   (.openStream url) "UTF-8"))]
+  ;;   (binding [*file* (.getFile url)]
+  ;;     (let [read-opts (if (.endsWith (.getPath url) "cljc")
+  ;;                       {:eof nil :read-cond :allow}
+  ;;                       {:eof nil})
+  ;;           new-mappings (read read-opts rdr)]
+  ;;       (when (not (map? new-mappings))
+  ;;         (throw (ex-info (str "Not a valid data-reader map")
+  ;;                         {:url url})))
+  ;;       (reduce
+  ;;        (fn [m [k v]]
+  ;;          (when (not (symbol? k))
+  ;;            (throw (ex-info (str "Invalid form in data-reader file")
+  ;;                            {:url url
+  ;;                             :form k})))
+  ;;          (let [v-var (data-reader-var v)]
+  ;;            (when (and (contains? mappings k)
+  ;;                       (not= (mappings k) v-var))
+  ;;              (throw (ex-info "Conflicting data-reader mapping"
+  ;;                              {:url url
+  ;;                               :conflict k
+  ;;                               :mappings m})))
+  ;;            (assoc m k v-var)))
+  ;;        mappings
+  ;;        new-mappings))))
+  (throw "TODO: port"))
+
+(defn- load-data-readers []
+  ;; (alter-var-root #'*data-readers*
+  ;;                 (fn [mappings]
+  ;;                   (reduce load-data-reader-file
+  ;;                           mappings (data-reader-urls))))
+  (throw "TODO: port"))
+
+;; (try
+;;  (load-data-readers)
+;;  (catch #_Throwable t
+;;    (.printStackTrace t)
+;;    (throw t)))
+
+(defonce ^:private tapset (atom #{}))
+
+;; (defonce ^:private ^java.util.concurrent.ArrayBlockingQueue tapq (java.util.concurrent.ArrayBlockingQueue. 1024))
+
+(defonce ^:private tap-loop
+  ;; (delay
+  ;;  (doto (Thread.
+  ;;         #(let [t (.take tapq)
+  ;;                x (if (identical? ::tap-nil t) nil t)
+  ;;                taps @tapset]
+  ;;            (doseq [tap taps]
+  ;;              (try
+  ;;                (tap x)
+  ;;                (catch Throwable ex)))
+  ;;            (recur))
+  ;;         "clojure.core/tap-loop")
+  ;;    (.setDaemon true)
+  ;;    (.start)))
+  nil)
+
+(defn add-tap
+  "adds f, a fn of one argument, to the tap set. This function will be called with anything sent via tap>.
+  This function may (briefly) block (e.g. for streams), and will never impede calls to tap>,
+  but blocking indefinitely may cause tap values to be dropped.
+  Remember f in order to remove-tap"
+  [f]
+  (force tap-loop)
+  (swap! tapset conj f)
+  nil)
+
+(defn remove-tap
+  "Remove f from the tap set."
+  [f]
+  (swap! tapset disj f)
+  nil)
+
+(defn tap>
+  "sends x to any taps. Will not block. Returns true if there was room in the queue,
+  false if not (dropped)."
+  [x]
+  (force tap-loop)
+  ;; (.offer tapq (if (nil? x) ::tap-nil x))
+  (throw "TODO: port"))
+
+(defn update-vals
+  "m f => {k (f v) ...}
+
+  Given a map m and a function f of 1-argument, returns a new map where the keys of m
+  are mapped to result of applying f to the corresponding values of m."
+  [m f]
+  ;; (with-meta
+  ;;   (persistent!
+  ;;    (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
+  ;;               (if (instance? clojure.lang.IEditableCollection m)
+  ;;                 (transient m)
+  ;;                 (transient {}))
+  ;;               m))
+  ;;   (meta m))
+  (throw "TODO: port"))
+
+(defn update-keys
+  "m f => {(f k) v ...}
+
+  Given a map m and a function f of 1-argument, returns a new map whose
+  keys are the result of applying f to the keys of m, mapped to the
+  corresponding values of m.
+  f must return a unique key for each key of m, else the behavior is undefined."
+  [m f]
+  (let [ret (persistent!
+             (reduce-kv (fn [acc k v] (assoc! acc (f k) v))
+                        (transient {})
+                        m))]
+    (with-meta ret (meta m))))
+
+(defn- parsing-err
+  "Construct message for parsing for non-string parsing error"
+  #_String [val]
+  ;; (str "Expected string, got " (if (nil? val) "nil" (-> val class .getName)))
+  (throw "TODO: port"))
+
+(defn parse-long
+  "Parse string of decimal digits with optional leading -/+ and return a
+  Long value, or nil if parse fails"
+  #_Long [#_String s]
+  ;; (if (string? s)
+  ;;   (try
+  ;;     (Long/valueOf s)
+  ;;     (catch NumberFormatException _ nil))
+  ;;   (throw (IllegalArgumentException. (parsing-err s))))
+  (throw "TODO: port"))
+
+(defn parse-double
+  "Parse string with floating point components and return a Double value,
+  or nil if parse fails.
+
+  Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
+  #_Double [#_String s]
+  ;; (if (string? s)
+  ;;   (try
+  ;;     (Double/valueOf s)
+  ;;     (catch NumberFormatException _ nil))
+  ;;   (throw (IllegalArgumentException. (parsing-err s))))
+  (throw "TODO: port"))
+
+(defn parse-uuid
+  "Parse a string representing a UUID and return a java.util.UUID instance,
+  or nil if parse fails.
+
+  Grammar: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#toString--"
+  #_java.util.UUID [#_String s]
+  ;; (try
+  ;;   (java.util.UUID/fromString s)
+  ;;   (catch IllegalArgumentException _ nil))
+  (throw "TODO: port"))
+
+(defn parse-boolean
+  "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
+  [#_String s]
+  ;; (if (string? s)
+  ;;   (case s
+  ;;     "true" true
+  ;;     "false" false
+  ;;     nil)
+  ;;   (throw (IllegalArgumentException. (parsing-err s))))
+  (throw "TODO: port"))
+
+(defn NaN?
+  "Returns true if num is NaN, else false"
+  [#_double num]
+  ;; (Double/isNaN num)
+  (throw "TODO: port"))
+
+(defn infinite?
+  "Returns true if num is negative or positive infinity, else false"
+  [#_double num]
+  ;; (Double/isInfinite num)
+  (throw "TODO: port"))
 
 (println "Bottom of clojure.core")
