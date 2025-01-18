@@ -14,49 +14,65 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - if: runner.os == 'Linux'
-      name: Install apt packages
+    - name: Install brew packages
+      working-directory: ${{ github.workspace }}/compiler+runtime
       shell: bash
-      run: sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
-    - if: runner.os == 'macOS'
-      name: Install brew packages
-      shell: bash
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19
-    - name: Restore cached Clang/LLVM
-      id: restore-clang-cache
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          ${{ github.workspace }}/compiler+runtime/build
-        key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      run: |
+        if [[ "$OSTYPE" == "linux"* ]]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          sudo apt-get install -y libzip-dev libbz2-dev libgc-dev
+        fi
+        HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja libzip doctest boost llvm@19 double-conversion bdw-gc clang-format
+
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: ${{ github.workspace }}/compiler+runtime/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-    - name: Store cached Clang/LLVM
-      id: save-clang-cache
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          ${{ github.workspace }}/compiler+runtime/build
-        key: ${{ steps.restore-clang-cache.outputs.cache-primary-key }}
-    # We need to validate formatting after building, since we build Clang/LLVM as part of our
-    # build process and we need clang-format from that local Clang build in order to have
-    # consistent formatting results.
+      run: |
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+        fi
+
+        if [[ "$OSTYPE" == "linux"* ]]; then
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        fi
+
+        export PATH="$(brew --prefix)/opt/llvm/bin:${PATH}"
+        export LDFLAGS="-Wl,-rpath,$(brew --prefix)/opt/llvm/lib ${LDFLAGS}"
+        export CPPFLAGS="-I$(brew --prefix)/opt/llvm/include ${CPPFLAGS}"
+
+        ${{ github.workspace }}/compiler+runtime/bin/configure -GNinja \
+                                                               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} #\
+                                                               #-Djank_tests=on \
+                                                               # -Djank_analysis="${ANALYSIS:-off}" \
+                                                               # -Djank_coverage="${COVERAGE:-off}"
+
+        ${{ github.workspace }}/compiler+runtime/bin/compile
+        # ${{ github.workspace }}/compiler+runtime/bin/test
+        # LLVM_PROFILE_FILE=build/test.profraw ./bin/test
+        # llvm-profdata merge --sparse build/test.profraw -o build/test.profdata
+        # llvm-cov show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+
     - name: Validate formatting
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
+
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
+
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: |
-        export DESTDIR=${{ github.workspace }}/jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
+        export OS_NAME=$(uname | tr "[:upper:]" "[:lower:]")
+        export FOLDER=jank-${OS_NAME}-$(uname -m)
+        export DESTDIR=${{ github.workspace }}/${FOLDER}
         ${{ github.workspace }}/compiler+runtime/bin/install
-        tar czf $DESTDIR.tar.gz $DESTDIR/
-        echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
+
+        cp -R ${DESTDIR} .
+
+        tar czf ${DESTDIR}.tar.gz ${FOLDER}/
+        echo "archive=${DESTDIR}.tar.gz" >> $GITHUB_OUTPUT

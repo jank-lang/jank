@@ -3,7 +3,11 @@
 set -euo pipefail
 
 success=true
-clang_format="./build/llvm-install/usr/local/bin/clang-format"
+if [[ -e "./build/llvm-install" ]]; then
+    clang_format="./build/llvm-install/usr/local/bin/clang-format"
+else
+    clang_format="$(command -v clang-format)"
+fi
 
 while IFS= read -r -d '' file
 do

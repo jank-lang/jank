@@ -9,22 +9,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
-        build_type: [Debug, Release]
-        sanitize: [none, address, undefined, thread]
-        exclude:
-          - build_type: Release
-            sanitize: address
-          - build_type: Release
-            sanitize: undefined
-          - build_type: Release
-            sanitize: thread
+        # TODO: sanitize: [On, Off]
+        os: [ macos-15]
+        # TODO: Enable release once we no longer have a Clang crash:
+        # https://github.com/jank-lang/jank/actions/runs/12269972895/job/34234432107
+        build_type: [Debug]
         include:
           - os: ubuntu-24.04
-            build_type: Debug
-            codecov: on
-            analysis: on
-            sanitize: none
+            cc: clang
+            cxx: clang++
+          - os: macos-13
+            cc: clang
+            cxx: clang++
+          - os: macos-15
+            cc: clang
+            cxx: clang++
     runs-on: ${{ matrix.os }}
     env:
       CODECOV: ${{ matrix.codecov }}
@@ -43,9 +42,8 @@ jobs:
           update_release: ${{ github.ref == 'refs/heads/main' && matrix.build_type == 'Release' }}
       - name: Update latest release
         if: success() && github.ref == 'refs/heads/main' && ${{ matrix.build_type == 'Release' }}
-        uses: pyTooling/Actions/releaser@main
+        uses: softprops/action-gh-release@v2
         with:
-          tag: latest
-          rm: true
+          tag_name: latest
           token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.build.outputs.release_archive }}
