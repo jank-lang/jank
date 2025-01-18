@@ -7336,6 +7336,11 @@ fails, attempts to require sym's namespace and retries."
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
   [s]
   (if (string? s)
+    ;; TODO: switch `parse-boolean` to case implementation when avaiable
+    #_(case s
+        "true" true
+        "false" false
+        nil)
     (cond
       (= "true" s) true
       (= "false" s) false
