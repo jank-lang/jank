@@ -274,7 +274,7 @@ namespace clojure::core_native
 
   static object_ptr eval(object_ptr const expr)
   {
-    return expr;
+    return __rt_ctx->eval(expr);
   }
 }
 
