@@ -558,7 +558,7 @@ namespace jank::runtime
 #pragma clang diagnostic ignored "-Wfloat-equal"
             if (typed_r_data == 0LL) {
 #pragma clang diagnostic pop
-              return make_box(-1); // TODO - throw exception
+              throw erase(make_box("Illegal divide by zero in 'quot'"));
             } else {
               return make_box(long(typed_l_data / typed_r_data));
             }
