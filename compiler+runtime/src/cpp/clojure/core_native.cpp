@@ -283,7 +283,8 @@ namespace clojure::core_native
     return __rt_ctx->read_string(runtime::to_string(str));
   }
 
-  static object_ptr jank_version() {
+  static object_ptr jank_version()
+  {
     return make_box(JANK_VERSION);
   }
 }
