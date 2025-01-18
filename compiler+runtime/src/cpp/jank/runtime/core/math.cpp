@@ -556,10 +556,13 @@ namespace jank::runtime
             auto const typed_r_data{ to_number(typed_r->data) };
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-            if (typed_r_data == 0LL) {
+            if(typed_r_data == 0LL)
+            {
 #pragma clang diagnostic pop
               throw erase(make_box("Illegal divide by zero in 'quot'"));
-            } else {
+            }
+            else
+            {
               return make_box(long(typed_l_data / typed_r_data));
             }
           },
