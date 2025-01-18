@@ -269,6 +269,12 @@ namespace jank::runtime
     return load_module(fmt::format("/{}", module), module::origin::latest);
   }
 
+  object_ptr context::eval(object_ptr const o)
+  {
+    auto const expr(an_prc.analyze(o, analyze::expression_position::value));
+    return evaluate::eval(expr.expect_ok());
+  }
+
   string_result<void>
   context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
