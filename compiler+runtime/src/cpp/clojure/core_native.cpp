@@ -286,16 +286,8 @@ namespace clojure::core_native
     return __rt_ctx->read_string(runtime::to_string(str));
   }
 
-  static object_ptr hash_unordered_coll(object_ptr const o) {
-    return make_box(hash::unordered(o));
-  }
-
   static object_ptr jank_version() {
     return make_box(JANK_VERSION);
-  }
-
-  static object_ptr compare(object_ptr const x, object_ptr const y) {
-    return make_box(runtime::compare(x, y));
   }
 }
 
@@ -413,7 +405,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
   intern_fn("<", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lt));
   intern_fn("<=", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lte));
-  intern_fn("compare", &core_native::compare);
+  intern_fn("compare", &runtime::compare);
   intern_fn("min", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&min));
   intern_fn("max", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&max));
   intern_fn("inc", static_cast<object_ptr (*)(object_ptr)>(&inc));
@@ -504,7 +496,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);
   intern_fn("eval", &core_native::eval);
-  intern_fn("hash-unordered-coll", &core_native::hash_unordered_coll);
+  intern_fn("hash-unordered-coll", static_cast<native_hash (*)(object const *)>(&hash::unordered));
   intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
 
