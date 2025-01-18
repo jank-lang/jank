@@ -293,6 +293,10 @@ namespace clojure::core_native
   static object_ptr jank_version() {
     return make_box(JANK_VERSION);
   }
+
+  static object_ptr compare(object_ptr const x, object_ptr const y) {
+    return make_box(runtime::compare(x, y));
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native()
@@ -409,6 +413,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
   intern_fn("<", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lt));
   intern_fn("<=", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lte));
+  intern_fn("compare", &core_native::compare);
   intern_fn("min", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&min));
   intern_fn("max", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&max));
   intern_fn("inc", static_cast<object_ptr (*)(object_ptr)>(&inc));
