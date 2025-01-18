@@ -276,6 +276,23 @@ namespace clojure::core_native
   {
     return __rt_ctx->eval(expr);
   }
+
+// TODO: implement opts
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+  static object_ptr read_string(object_ptr const opts, object_ptr const str)
+#pragma clang diagnostic pop
+  {
+    return __rt_ctx->read_string(runtime::to_string(str));
+  }
+
+  static object_ptr hash_unordered_coll(object_ptr const o) {
+    return make_box(hash::unordered(o));
+  }
+
+  static object_ptr jank_version() {
+    return make_box(JANK_VERSION);
+  }
 }
 
 jank_object_ptr jank_load_clojure_core_native()
@@ -323,15 +340,18 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("cons", &cons);
   intern_fn("coll?", &is_collection);
   intern_fn("seq?", &is_seq);
+  intern_fn("seqable?", &is_seqable);
   intern_fn("list?", &is_list);
   intern_fn("vector?", &is_vector);
   intern_fn("vec", &vec);
   intern_fn("subvec", &core_native::subvec);
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
+  intern_fn("associative?", &is_associative);
   intern_fn("assoc", &assoc);
   intern_fn("pr-str", static_cast<native_persistent_string (*)(object const *)>(&to_code_string));
   intern_fn("string?", &is_string);
+  intern_fn("char?", &is_char);
   intern_fn("to-string", static_cast<native_persistent_string (*)(object const *)>(&to_string));
   intern_fn("str", static_cast<native_persistent_string (*)(object_ptr, object_ptr)>(&str));
   intern_fn("symbol?", &is_symbol);
@@ -347,6 +367,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("->unqualified-symbol", &core_native::to_unqualified_symbol);
   intern_fn("->qualified-symbol", &core_native::to_qualified_symbol);
   intern_fn("apply*", &apply_to);
+  intern_fn("counted?", &is_counter);
   intern_fn("transientable?", &is_transientable);
   intern_fn("transient", &transient);
   intern_fn("persistent!", &persistent);
@@ -398,6 +419,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
   intern_fn("rem", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&rem));
+  intern_fn("quot", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&quot));
   intern_fn("integer?", &is_integer);
   intern_fn("real?", &is_real);
   intern_fn("ratio?", &is_ratio);
@@ -477,6 +499,9 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);
   intern_fn("eval", &core_native::eval);
+  intern_fn("hash-unordered-coll", &core_native::hash_unordered_coll);
+  intern_fn("read-string", &core_native::read_string);
+  intern_fn("jank-version", &core_native::jank_version);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));

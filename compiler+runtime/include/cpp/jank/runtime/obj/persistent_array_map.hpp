@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
 namespace jank::runtime::obj
@@ -78,6 +79,9 @@ namespace jank::runtime::obj
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
+
+    /* behavior::transientable */
+    obj::transient_hash_map_ptr to_transient() const;
 
     value_type data{};
   };

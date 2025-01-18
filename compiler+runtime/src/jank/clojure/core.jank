@@ -127,6 +127,9 @@
 (def seq?
   "Return true if x implements ISeq"
   clojure.core-native/seq?)
+(def seqable?
+  "Return true if the seq function is supported for x"
+  clojure.core-native/seqable?)
 (def list?
   "Returns true if x implements IPersistentList"
   clojure.core-native/list?)
@@ -194,6 +197,9 @@
 (def map?
   "Return true if x implements IPersistentMap"
   clojure.core-native/map?)
+(def associative?
+ "Returns true if coll implements Associative"
+  clojure.core-native/associative?)
 (def assoc
   "assoc[iate]. When applied to a map, returns a new map of the
    same (hashed/sorted) type, that contains the mapping of key(s) to
@@ -214,6 +220,11 @@
 (def string?
   "Return true if x is a String"
   clojure.core-native/string?)
+
+(def char?
+  "Return true if x is a Character"
+  clojure.core-native/char?)
+
 (def str
   "With no args, returns the empty string. With one arg x, returns
    x.toString().  (str nil) returns the empty string. With more than
@@ -1143,6 +1154,10 @@
 (def rem
   "Returns the remainder of dividing numerator by denominator."
   clojure.core-native/rem)
+(def quot
+  "quot[ient] of dividing numerator by denominator."
+  clojure.core-native/quot)
+
 (defn mod
   "Modulus of num and div. Truncates toward negative infinity."
   [num div]
@@ -4059,12 +4074,6 @@
   ;; (. c (isInstance x))
   (throw "TODO: port"))
 
-(defn char?
-  "Return true if x is a Character"
-  [x]
-  ;;  (instance? Character x)
-  (throw "TODO: port"))
-
 (def ^{:private true :dynamic true}
   assert-valid-fdecl (fn [fdecl]))
 
@@ -4138,25 +4147,6 @@
   ;; (. clojure.lang.Numbers (incP x))
   (throw "TODO: port"))
 
-;; reduce is defined again later after InternalReduce loads
-(defn-
-  reduce1
-       ([f coll]
-             (let [s (seq coll)]
-               (if s
-         (reduce1 f (first s) (next s))
-                 (f))))
-       ([f val coll]
-        ;;   (let [s (seq coll)]
-        ;;     (if s
-        ;;       (if (chunked-seq? s)
-        ;;         (recur f 
-        ;;                (.reduce (chunk-first s) f val)
-        ;;                (chunk-next s))
-        ;;         (recur f (f val (first s)) (next s)))
-        ;;  val))
-        (throw "TODO: port")))
-
 ;; ;;math stuff
 ;; (defn ^:private nary-inline
 ;;   ([op] (nary-inline op op))
@@ -4187,7 +4177,7 @@
   ;;  (. clojure.lang.Numbers (addP x y))
    (throw "TODO: port"))
   ([x y & more]
-   (reduce1 +' (+' x y) more)))
+   (reduce +' (+' x y) more)))
 
 (defn *'
   "Returns the product of nums. (*') returns 1. Supports arbitrary precision.
@@ -4200,7 +4190,7 @@
   ;;  (. clojure.lang.Numbers (multiplyP x y))
   (throw "TODO: port"))
   ([x y & more]
-   (reduce1 *' (*' x y) more)))
+   (reduce *' (*' x y) more)))
 
 (defn -'
   "If no ys are supplied, returns the negation of x, else subtracts
@@ -4213,7 +4203,7 @@
   ;;  (. clojure.lang.Numbers (minusP x y))
    (throw "TODO: port"))
   ([x y & more]
-   (reduce1 -' (-' x y) more)))
+   (reduce -' (-' x y) more)))
 
 (def abs
   "Returns the absolute value of a.
@@ -4326,12 +4316,6 @@
   Note - uses a primitive operator subject to truncation."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_remainder x y))
-  (throw "TODO: port"))
-
-(defn quot
-  "quot[ient] of dividing numerator by denominator."
-  [num div]
-  ;; (. clojure.lang.Numbers (quotient num div))
   (throw "TODO: port"))
 
 (defn rationalize
@@ -4888,7 +4872,7 @@
   the latter (left-to-right) will be the mapping in the result."
   [& maps]
   (when (some identity maps)
-    (reduce1 #(conj (or %1 {}) %2) maps)))
+    (reduce #(conj (or %1 {}) %2) maps)))
 
 (defn merge-with
   "Returns a map that consists of the rest of the maps conj-ed onto
@@ -4903,8 +4887,8 @@
 			    (assoc m k (f (get m k) v))
 			    (assoc m k v))))
           merge2 (fn [m1 m2]
-		   (reduce1 merge-entry (or m1 {}) (seq m2)))]
-      (reduce1 merge2 maps))))
+		   (reduce merge-entry (or m1 {}) (seq m2)))]
+      (reduce merge2 maps))))
 
 (defn line-seq
   "Returns the lines of text from rdr as a lazy sequence of strings.
@@ -4993,16 +4977,6 @@
     ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
   (throw "TODO: port"))
 
-;redef into with batch support
-(defn- into1
-  "Returns a new coll consisting of to-coll with all of the items of
-  from-coll conjoined."
-  [to from]
-  ;; (if (instance? clojure.lang.IEditableCollection to)
-  ;;   (persistent! (reduce1 conj! (transient to) from))
-  ;;   (reduce1 conj to from))
-  (throw "TODO: port"))
-
 (defmacro import 
   "import-list => (package-symbol class-name-symbols*)
 
@@ -5013,11 +4987,11 @@
   (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %) 
                    import-symbols-or-lists)]
     `(do ~@(map #(list 'clojure.core/import* %)
-                (reduce1 (fn [v spec] 
+                (reduce (fn [v spec] 
                           (if (symbol? spec)
                             (conj v (name spec))
                             (let [p (first spec) cs (rest spec)]
-                              (into1 v (map #(str p "." %) cs)))))
+                              (into v (map #(str p "." %) cs)))))
                         [] specs)))))
 
 (defn into-array
@@ -5283,11 +5257,9 @@
 
   For data structure interop use clojure.edn/read-string"
   ([s]
-  ;;  (clojure.lang.RT/readString s)
-   (throw "TODO: port"))
+   (read-string {} s))
   ([opts s]
-  ;;  (clojure.lang.RT/readString s opts)
-   (throw "TODO: port")))
+   (clojure.core-native/read-string opts s)))
 
 (defmacro with-open
   "bindings => [name init ...]
@@ -5898,7 +5870,7 @@
      (map #(if-let [e (find smap %)] (val e) %)))
   ([smap coll]
      (if (vector? coll)
-       (reduce1 (fn [v i]
+       (reduce (fn [v i]
                   (if-let [e (find smap (nth v i))]
                     (assoc v i (val e))
                     v))
@@ -6001,16 +5973,13 @@
   ;; (clojure.lang.Murmur3/hashOrdered coll)
   (throw "TODO: port"))
 
-(defn hash-unordered-coll
+(def hash-unordered-coll
   "Returns the hash code, consistent with =, for an external unordered
    collection implementing Iterable. For maps, the iterator should
    return map entries whose hash is computed as
      (hash-ordered-coll [k v]).
    See http://clojure.org/data_structures#hash for full algorithms."
-  #_long
-  [coll]
-  ;; (clojure.lang.Murmur3/hashUnordered coll)
-  (throw "TODO: port"))
+  clojure.core-native/hash-unordered-coll)
 
 (defmacro definline
   "Experimental - like defmacro, except defines a named function whose
@@ -6314,7 +6283,7 @@
   (loop [ret (set (bases class)) cs ret]
     (if (seq cs)
       (let [c (first cs) bs (bases c)]
-        (recur (into1 ret bs) (into1 (disj cs c) bs)))
+        (recur (into ret bs) (into (disj cs c) bs)))
       (not-empty ret))))
 
   
@@ -6412,29 +6381,15 @@ fails, attempts to require sym's namespace and retries."
   "Returns a sorted set of symbols naming the currently loaded libs"
   [] @*loaded-libs*)
 
-(defn seqable?
-  "Return true if the seq function is supported for x"
-  [x]
-  ;; (clojure.lang.RT/canSeq x)
-  (throw "TODO: port"))
-
-(defn associative?
- "Returns true if coll implements Associative"
-  [coll]
-  ;; (instance? clojure.lang.Associative coll)
-  (throw "TODO: port"))
-
 (defn sorted?
  "Returns true if coll implements Sorted"
   [coll]
   ;; (instance? clojure.lang.Sorted coll)
   (throw "TODO: port"))
 
-(defn counted?
+(def counted?
  "Returns true if coll implements count in constant time"
-  [coll]
-  ;; (instance? clojure.lang.Counted coll)
-  (throw "TODO: port"))
+  clojure.core-native/counted?)
 
 (defn reversible?
  "Returns true if coll implements Reversible"
@@ -6771,7 +6726,7 @@ fails, attempts to require sym's namespace and retries."
   where the keys will be the ordinals."  
   ([f init coll]
     ;;  (clojure.core.protocols/kv-reduce coll f init)
-   (throw "TODO: port")))
+   (reduce (fn [s [k v]] (f s k v)) init coll)))
 
 (defn- normalize-slurp-opts
   [opts]
@@ -6915,20 +6870,9 @@ fails, attempts to require sym's namespace and retries."
 ;;   Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
 ;;   {:added "1.0"})
 
-(defn
-  clojure-version 
+(def clojure-version
   "Returns clojure version as a printable string."
-  []
-  ;; (str (:major *clojure-version*)
-  ;;      "."
-  ;;      (:minor *clojure-version*)
-  ;;      (when-let [i (:incremental *clojure-version*)]
-  ;;        (str "." i))
-  ;;      (when-let [q (:qualifier *clojure-version*)]
-  ;;        (when (pos? (count q)) (str "-" q)))
-  ;;      (when (:interim *clojure-version*)
-  ;;        "-SNAPSHOT"))
-  (throw "TODO: port"))
+  clojure.core-native/jank-version)
 
 (defn promise
   "Returns a promise object that can be read with deref/@, and set,
@@ -7327,15 +7271,14 @@ fails, attempts to require sym's namespace and retries."
   Given a map m and a function f of 1-argument, returns a new map where the keys of m
   are mapped to result of applying f to the corresponding values of m."
   [m f]
-  ;; (with-meta
-  ;;   (persistent!
-  ;;    (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
-  ;;               (if (instance? clojure.lang.IEditableCollection m)
-  ;;                 (transient m)
-  ;;                 (transient {}))
-  ;;               m))
-  ;;   (meta m))
-  (throw "TODO: port"))
+  (with-meta
+    (persistent!
+     (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
+                (if (transientable? m)
+                  (transient m)
+                  (transient {}))
+                m))
+    (meta m)))
 
 (defn update-keys
   "m f => {(f k) v ...}
@@ -7353,9 +7296,8 @@ fails, attempts to require sym's namespace and retries."
 
 (defn- parsing-err
   "Construct message for parsing for non-string parsing error"
-  #_String [val]
-  ;; (str "Expected string, got " (if (nil? val) "nil" (-> val class .getName)))
-  (throw "TODO: port"))
+  [val]
+  (str "Expected string, got " (if (nil? val) "nil" (type val))))
 
 (defn parse-long
   "Parse string of decimal digits with optional leading -/+ and return a
@@ -7394,14 +7336,13 @@ fails, attempts to require sym's namespace and retries."
 
 (defn parse-boolean
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
-  [#_String s]
-  ;; (if (string? s)
-  ;;   (case s
-  ;;     "true" true
-  ;;     "false" false
-  ;;     nil)
-  ;;   (throw (IllegalArgumentException. (parsing-err s))))
-  (throw "TODO: port"))
+  [s]
+  (if (string? s)
+    (cond
+      (= "true" s) true
+      (= "false" s) false
+      :else nil)
+    (throw (parsing-err s))))
 
 (defn NaN?
   "Returns true if num is NaN, else false"

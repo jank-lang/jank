@@ -140,4 +140,10 @@ namespace jank::runtime::obj
     }
     return found;
   }
+
+  obj::transient_hash_map_ptr persistent_array_map::to_transient() const
+  {
+    // TODO: implement transient_array_map or fill persistent_hash_map with data from transient_array_map
+    return make_box<persistent_hash_map>()->to_transient();
+  }
 }

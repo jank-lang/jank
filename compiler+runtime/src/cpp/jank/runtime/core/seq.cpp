@@ -57,6 +57,16 @@ namespace jank::runtime
       o);
   }
 
+  native_bool is_seqable(object_ptr o) {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::seqable<T>;
+      },
+      o);
+  }
+
   native_bool is_sequential(object_ptr const o)
   {
     return visit_object(
@@ -98,10 +108,31 @@ namespace jank::runtime
             || o->type == object_type::persistent_sorted_map);
   }
 
+  native_bool is_associative(object_ptr o) {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return (behavior::associatively_readable<T>
+                && behavior::associatively_writable<T>);
+      },
+      o);
+  }
+
   native_bool is_set(object_ptr const o)
   {
     return (o->type == object_type::persistent_hash_set
             || o->type == object_type::persistent_sorted_set);
+  }
+
+  native_bool is_counter(object_ptr o) {
+    return visit_object(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        return behavior::countable<T>;
+      },
+      o);
   }
 
   native_bool is_transientable(object_ptr const o)
