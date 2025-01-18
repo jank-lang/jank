@@ -277,11 +277,8 @@ namespace clojure::core_native
     return __rt_ctx->eval(expr);
   }
 
-// TODO: implement opts
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-  static object_ptr read_string(object_ptr const opts, object_ptr const str)
-#pragma clang diagnostic pop
+  // TODO: implement opts for `read-string`
+  static object_ptr read_string(object_ptr const /* opts */, object_ptr const str)
   {
     return __rt_ctx->read_string(runtime::to_string(str));
   }
