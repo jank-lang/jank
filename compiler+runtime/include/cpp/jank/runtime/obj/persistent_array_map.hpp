@@ -3,12 +3,12 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
 namespace jank::runtime::obj
 {
   using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  using transient_hash_map_ptr = native_box<struct transient_hash_map>;
 
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     object_ptr call(object_ptr, object_ptr) const;
 
     /* behavior::transientable */
-    obj::transient_hash_map_ptr to_transient() const;
+    transient_hash_map_ptr to_transient() const;
 
     value_type data{};
   };
