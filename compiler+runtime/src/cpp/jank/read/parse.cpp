@@ -2,7 +2,10 @@
 
 #include <fmt/format.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <jank/native_persistent_string/fmt.hpp>
+#pragma clang diagnostic pop
 #include <jank/read/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>
@@ -47,7 +50,6 @@ namespace jank::read::parse
        * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
 #pragma clang diagnostic pop
-
       native_persistent_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
@@ -959,7 +961,7 @@ namespace jank::read::parse
         auto gensym(get(env, sym));
         if(gensym->type == object_type::nil)
         {
-          gensym = make_box<obj::symbol>(context::unique_symbol(sym->name));
+          gensym = make_box<obj::symbol>(__rt_ctx->unique_symbol(sym->name));
           __rt_ctx->gensym_env_var->set(assoc(env, sym, gensym)).expect_ok();
         }
         sym = expect_object<obj::symbol>(gensym);

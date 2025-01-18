@@ -14,6 +14,7 @@ export CC="${llvm_dir}/usr/local/bin/clang"
 export CXX="${llvm_dir}/usr/local/bin/clang++"
 
 ./bin/configure -GNinja \
+                -Djank_local_clang=on \
                 -Djank_tests=on \
                 -Djank_analysis="${ANALYSIS:-off}" \
                 "$@"
@@ -22,6 +23,7 @@ export CXX="${llvm_dir}/usr/local/bin/clang++"
 if [[ "${CODECOV:-off}" == "on" ]];
 then
   ./bin/configure -GNinja \
+                  -Djank_local_clang=on \
                   -Djank_tests=on \
                   -Djank_coverage=on \
                   -Djank_analysis=off \

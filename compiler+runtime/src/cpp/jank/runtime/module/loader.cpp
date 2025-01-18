@@ -1,3 +1,4 @@
+#include <boost/filesystem/operations.hpp>
 #include <regex>
 #include <iostream>
 
@@ -37,20 +38,14 @@ namespace jank::runtime::module
 
   native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "/");
-
-    return ret;
+    static native_persistent_string const dot{ "\\." };
+    return runtime::munge_extra(module, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
-
-    std::string ret{ runtime::munge(module) };
-    ret = std::regex_replace(ret, dot, "_");
+    static native_persistent_string const dot{ "\\." };
+    std::string ret{ runtime::munge_extra(module, dot, "_") };
 
     return fmt::format("jank_load_{}", ret);
   }
@@ -139,7 +134,7 @@ namespace jank::runtime::module
     }
 
     auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
-    fn(zip_entry.readAsText());
+    fn(zip_entry);
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
@@ -202,11 +197,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //fmt::println("register_entry {} {} {} {}",
-      //             entry.archive_path,
-      //             entry.path,
-      //             module_path.string(),
-      //             path_to_module(module_path));
+      //   fmt::println("register_entry {} {} {} {}",
+      //               entry.archive_path.unwrap_or("None"),
+      //               entry.path,
+      //               module_path.string(),
+      //               path_to_module(module_path));
     }
   }
 
@@ -317,17 +312,33 @@ namespace jank::runtime::module
       make_box(path));
   }
 
-  native_bool loader::is_loaded(native_persistent_string_view const &module) const
+  native_bool file_entry::exists() const
   {
-    return loaded.contains(module);
+    auto const is_archive{ archive_path.is_some() };
+    if(is_archive && !boost::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
+    {
+      return false;
+    }
+    else
+    {
+      native_bool source_exists{};
+      if(is_archive)
+      {
+        visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
+      }
+
+      return source_exists || boost::filesystem::exists(native_transient_string{ path });
+    }
   }
 
-  void loader::set_loaded(native_persistent_string_view const &module)
+  std::time_t file_entry::last_modified_at() const
   {
-    loaded.emplace(module);
+    auto const source_path{ archive_path.unwrap_or(path) };
+    return boost::filesystem::last_write_time(native_transient_string{ source_path });
   }
 
-  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
+  string_result<loader::find_result>
+  loader::find(native_persistent_string_view const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
@@ -338,53 +349,113 @@ namespace jank::runtime::module
       return err(fmt::format("unable to find module: {}", module));
     }
 
-    string_result<void> res{ err(fmt::format("no sources for registered module: {}", module)) };
-
-    //fmt::println("loading nested module {}", module);
-
-    /* When we're compiling, we always load from source. Otherwise, we
-     * load from source if we specifically chose to do so. */
-    bool const compiling{ truthy(rt_ctx.compile_files_var->deref()) };
-    if(compiling || ori == origin::source)
+    if(ori == origin::source)
     {
       if(entry->second.jank.is_some())
       {
-        res = load_jank(entry->second.jank.unwrap());
+        return find_result{ entry->second, module_type::jank };
       }
       else if(entry->second.cljc.is_some())
       {
-        res = load_cljc(entry->second.cljc.unwrap());
+        return find_result{ entry->second, module_type::cljc };
       }
     }
     else
     {
-      /* TODO: origin must be latest, so we need to find that. Even if there
-       * is a binary, we need to only choose it if it's as new, or newer, than
-       * the source. */
-      if(entry->second.o.is_some())
+      /* Ignoring object files from the archives here for security and portability
+       * reasons.
+       *
+       * Security:
+       * A dependency can include a binary version of a module that doesn't belong
+       * to it.
+       *
+       * Portability:
+       * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
+       * making it hard to share them. */
+      if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
+         && entry->second.o.unwrap().exists()
+         && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
       {
-        res = load_o(module, entry->second.o.unwrap());
+        auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
+
+        std::time_t source_modified_time{};
+        module_type module_type{};
+
+        if(entry->second.jank.is_some() && entry->second.jank.unwrap().exists())
+        {
+          source_modified_time = entry->second.jank.unwrap().last_modified_at();
+          module_type = module_type::jank;
+        }
+        else if(entry->second.cljc.is_some() && entry->second.cljc.unwrap().exists())
+        {
+          source_modified_time = entry->second.cljc.unwrap().last_modified_at();
+          module_type = module_type::cljc;
+        }
+        else
+        {
+          return err(
+            fmt::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
+        }
+
+        if(boost::filesystem::last_write_time(o_file_path) >= source_modified_time)
+        {
+          return find_result{ entry->second, module_type::o };
+        }
+        else
+        {
+          return find_result{ entry->second, module_type };
+        }
       }
       else if(entry->second.cpp.is_some())
       {
-        res = load_cpp(entry->second.cpp.unwrap());
+        return find_result{ entry->second, module_type::cpp };
       }
       else if(entry->second.jank.is_some())
       {
-        res = load_jank(entry->second.jank.unwrap());
+        return find_result{ entry->second, module_type::jank };
       }
       else if(entry->second.cljc.is_some())
       {
-        res = load_cljc(entry->second.cljc.unwrap());
+        return find_result{ entry->second, module_type::cljc };
       }
+    }
+
+    return err(fmt::format("no sources for registered module: {}", module));
+  }
+
+  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
+  {
+    auto const &found_module{ loader::find(module, ori) };
+    if(found_module.is_err())
+    {
+      return err(found_module.expect_err());
+    }
+
+    string_result<void> res(err(fmt::format("Couldn't load module: {}", module)));
+
+    auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
+    auto const &module_sources{ found_module.expect_ok().sources };
+
+    switch(module_type_to_load)
+    {
+      case module_type::jank:
+        res = load_jank(module_sources.jank.unwrap());
+        break;
+      case module_type::o:
+        res = load_o(module, module_sources.o.unwrap());
+        break;
+      case module_type::cpp:
+        res = load_cpp(module_sources.cpp.unwrap());
+        break;
+      case module_type::cljc:
+        res = load_cljc(module_sources.cljc.unwrap());
+        break;
     }
 
     if(res.is_err())
     {
       return res;
     }
-
-    loaded.emplace(module);
 
     return ok();
   }
@@ -393,6 +464,23 @@ namespace jank::runtime::module
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ fmt::format("load object {}", module) };
+
+    /* While loading an object, if the main ns loading symbol exists, then
+     * we don't need to load the object file again.
+     *
+     * Existence of the `jank_load_<module>` symbol (also a function),
+     * means that all the required symbols exist and are already defined.
+     * We call this symbol to re-initialize all the vars in the namespace.
+     * */
+    auto const load_function_name{ module_to_load_function(module) };
+
+    auto const existing_load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name) };
+    if(existing_load.is_ok())
+    {
+      existing_load.expect_ok()();
+      return ok();
+    }
+
     if(entry.archive_path.is_some())
     {
       /* TODO: Load object code from string. */
@@ -403,7 +491,7 @@ namespace jank::runtime::module
       rt_ctx.jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(module_to_load_function(module)) };
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
     load();
 
     return ok();
@@ -413,7 +501,9 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.eval_string(str); });
+      visit_jar_entry(entry, [&](auto const &zip_entry) {
+        rt_ctx.jit_prc.eval_string(zip_entry.readAsText());
+      });
     }
     else
     {
@@ -433,7 +523,8 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry, [&](auto const &str) { rt_ctx.eval_string(str); });
+      visit_jar_entry(entry,
+                      [&](auto const &zip_entry) { rt_ctx.eval_string(zip_entry.readAsText()); });
     }
     else
     {

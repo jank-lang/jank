@@ -1,6 +1,9 @@
 #include <bit>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <codecvt>
 #include <locale>
+#pragma clang diagnostic pop
 
 #include <jank/util/string_builder.hpp>
 
@@ -155,7 +158,10 @@ namespace jank::util
 
   string_builder &string_builder::operator()(char32_t const d) &
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+#pragma clang diagnostic pop
     return (*this)(converter.to_bytes(d));
   }
 

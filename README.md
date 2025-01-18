@@ -25,9 +25,9 @@ For the current progress of jank and its usability, see the tables here: https:/
 The current tl;dr for jank's usability is: **still getting there, but not ready for
 use yet. Check back in a few months!**
 
-## Latest binaries
-There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
-`main` branch. You can download a tarball with everything you need here: https://github.com/jank-lang/jank/releases/tag/latest
+## Docs
+* [Installing jank](./compiler+runtime/doc/install.md)
+* [Building jank](./compiler+runtime/doc/build.md)
 
 ## Appetizer
 ```clojure
@@ -54,9 +54,6 @@ There are pre-compiled binaries for Ubuntu 24.04, which are built to follow the
   (let [duration (c++/std.chrono.milliseconds ms)]
     (c++/std.this_thread.sleep_for duration)))
 ```
-
-## Docs
-* [Building jank](./compiler+runtime/doc/build.md)
 
 ## Sponsors
 If you'd like your name, company, or logo here, you can

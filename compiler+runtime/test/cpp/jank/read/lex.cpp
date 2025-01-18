@@ -634,12 +634,12 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{  0,  3,          "invalid number: chars 'g' are invalid for radix 16" },
-                error{  4,  8,          "invalid number: chars '-' are invalid for radix 16" },
-                error{  9, 14,          "invalid number: chars '.' are invalid for radix 16" },
-                error{ 15, 21,          "invalid number: chars '-' are invalid for radix 16" },
+                error{  0,  3,       "invalid number: chars 'g' are invalid for radix 16" },
+                error{  4,  8,       "invalid number: chars '-' are invalid for radix 16" },
+                error{  9, 14,       "invalid number: chars '.' are invalid for radix 16" },
+                error{ 15, 21,       "invalid number: chars '-' are invalid for radix 16" },
                 error{ 22, 24, "unexpected end of radix 16 number, expecting more digits" },
-                error{ 25, 27,          "invalid number: chars 'x' are invalid for radix 10" }
+                error{ 25, 27,       "invalid number: chars 'x' are invalid for radix 10" }
         }));
       }
 
@@ -718,10 +718,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{  0,  3,        "invalid number: chars '3' are invalid for radix 2" },
-                error{  4,  8,       "invalid number: chars 'z' are invalid for radix 35" },
-                error{  9, 14,        "invalid number: chars 'e' are invalid for radix 8" },
-                error{ 15, 22,       "invalid number: chars '-' are invalid for radix 19" },
+                error{  0,  3,     "invalid number: chars '3' are invalid for radix 2" },
+                error{  4,  8,    "invalid number: chars 'z' are invalid for radix 35" },
+                error{  9, 14,     "invalid number: chars 'e' are invalid for radix 8" },
+                error{ 15, 22,    "invalid number: chars '-' are invalid for radix 19" },
                 error{ 23, 25, "unexpected end of radix number, expecting more digits" },
                 error{ 26, 29, "unexpected end of radix number, expecting more digits" }
         }));

@@ -134,7 +134,7 @@ namespace jank::evaluate
     auto &fn(boost::get<expr::function<expression>>(ret->data));
     expr::function_arity<expression> arity;
     fn.name = name;
-    fn.unique_name = context::unique_string(fn.name);
+    fn.unique_name = __rt_ctx->unique_string(fn.name);
     fn.meta = obj::persistent_hash_map::empty();
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr.frame));
@@ -558,8 +558,10 @@ namespace jank::evaluate
       __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
                                        std::move(cg_prc.ctx->llvm_ctx));
 
-      auto const fn(__rt_ctx->jit_prc.find_symbol<object *(*)()>(
-        fmt::format("{}_0", munge(cg_prc.root_fn.unique_name))));
+      auto const fn(
+        __rt_ctx->jit_prc
+          .find_symbol<object *(*)()>(fmt::format("{}_0", munge(cg_prc.root_fn.unique_name)))
+          .expect_ok());
       return fn();
     }
   }

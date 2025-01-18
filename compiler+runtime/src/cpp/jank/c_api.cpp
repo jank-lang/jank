@@ -75,9 +75,17 @@ extern "C"
     return __rt_ctx->read_string(s_obj->data);
   }
 
+  void jank_ns_set_symbol_counter(char const * const ns, uint64_t const count)
+  {
+    auto const ns_obj(__rt_ctx->intern_ns(ns));
+    ns_obj->symbol_counter.store(count);
+  }
+
   jank_object_ptr jank_var_intern(jank_object_ptr const ns, jank_object_ptr const name)
   {
     auto const ns_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(ns)));
+    __rt_ctx->intern_ns(ns_obj->data);
+
     auto const name_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(name)));
     return erase(__rt_ctx->intern_var(ns_obj->data, name_obj->data).expect_ok());
   }
@@ -394,7 +402,7 @@ extern "C"
   jank_object_ptr jank_list_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     native_vector<object_ptr> v;
@@ -414,7 +422,7 @@ extern "C"
   jank_object_ptr jank_vector_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     obj::transient_vector trans;
@@ -433,7 +441,7 @@ extern "C"
   jank_object_ptr jank_map_create(uint64_t const pairs, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, pairs);
 
     /* TODO: Could optimize to build an array map, if it's small enough. */
@@ -454,7 +462,7 @@ extern "C"
   jank_object_ptr jank_set_create(uint64_t const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    va_list args;
+    va_list args{};
     va_start(args, size);
 
     obj::transient_hash_set trans;

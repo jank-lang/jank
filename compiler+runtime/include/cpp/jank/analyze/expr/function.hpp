@@ -10,6 +10,11 @@ namespace jank::analyze
   struct expression;
 }
 
+namespace jank::runtime::obj
+{
+  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
+}
+
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;

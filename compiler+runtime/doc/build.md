@@ -1,21 +1,41 @@
 # Building jank
+jank requires LLVM 19+. Make sure your package manager has it. If not, we have
+scripts to compile your own. See the section on compiling Clang/LLVM below.
+
 ## Dependencies
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build python3-pip cmake debhelper devscripts gnupg zlib1g-dev entr libffi-dev clang libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc-14 g++-14
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs clang pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2
+sudo pacman -S git git-lfs clang llvm pkg-config cmake ninja make python3 libffi entr doctest boost libzip lbzip2 gc
 ```
 
-For macOS, try this:
+For Nix:
+
+Simply enter the provided development shell which provides all necessary dependencies before compiling jank itself.
+
+```
+# Run this in the jank repo after cloning.
+nix develop ".#"
+```
+
+For macOS:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2
+brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19 bdw-gc
+
+# Ensure you have this set up in your shell.
+export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+
+# The output of installing LLVM via homebrew will also guide you to set this up:
+export PATH="/opt/homebrew/opt/llvm/bin:${PATH}"
+export LDFLAGS="-L/opt/homebrew/opt/llvm/lib ${LDFLAGS}"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm/include ${CPPFLAGS}"
 ```
 
 Clone the repo as follows:
@@ -27,30 +47,7 @@ git clone --recurse-submodules https://github.com/jank-lang/jank.git
 git submodule update --recursive --init
 ```
 
-## Compiling Clang
-Note that you must compile Clang/LLVM. This can take an hour or two,
-depending on your machine. Building jank itself should take a minute or two.
-
-```
-cd compiler+runtime
-mkdir -p build
-cd build
-export CC=clang; export CXX=clang++;
-../bin/build-clang
-cd -
-export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
-```
-
-On macOS also do this:
-```
-export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-```
-
-At this point, you're ready to build jank.
-
-
 ## Compiling jank
-
 ### Release
 A typical release build just needs the following:
 
@@ -85,3 +82,20 @@ JIT compilation.
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 ./bin/install
 ```
+
+## Compiling Clang/LLVM
+If you're making local changes to Clang/LLVM, you can build it along with jank
+by using the following. This can take an hour or two,
+depending on your machine. Building jank itself should take a minute or two.
+
+```
+cd compiler+runtime
+mkdir -p build
+cd build
+export CC=clang; export CXX=clang++;
+../bin/build-clang
+cd -
+export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
+```
+
+Now configure and build jank as normal, but pass `-Djank_local_clang=on` when you configure.

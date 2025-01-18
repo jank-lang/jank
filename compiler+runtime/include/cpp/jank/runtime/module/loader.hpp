@@ -27,9 +27,19 @@ namespace jank::runtime::module
     latest,
   };
 
+  enum class module_type : uint8_t
+  {
+    o,
+    cpp,
+    jank,
+    cljc
+  };
+
   struct file_entry
   {
     object_ptr to_runtime_data() const;
+    native_bool exists() const;
+    std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
     option<native_persistent_string> archive_path;
@@ -68,6 +78,14 @@ namespace jank::runtime::module
       option<file_entry> cljc;
     };
 
+    struct find_result
+    {
+      /* All the sources for a module */
+      entry sources;
+      /* On the basis of origin, source that should be loaded. */
+      option<module_type> to_load;
+    };
+
     /* These separators match what the JVM does on each system. */
 #ifdef _WIN32
     static constexpr char module_separator{ ';' };
@@ -77,9 +95,7 @@ namespace jank::runtime::module
 
     loader(context &rt_ctx, native_persistent_string_view const &ps);
 
-    native_bool is_loaded(native_persistent_string_view const &) const;
-    void set_loaded(native_persistent_string_view const &);
-
+    string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
     string_result<void> load(native_persistent_string_view const &module, origin const ori);
 
     string_result<void>
@@ -96,6 +112,5 @@ namespace jank::runtime::module
     /* This maps module strings to entries. Module strings are like fully qualified Java
      * class names. */
     native_unordered_map<native_persistent_string, entry> entries;
-    native_set<native_persistent_string> loaded;
   };
 }

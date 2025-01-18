@@ -4,6 +4,7 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
+#include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IRReader/IRReader.h>
@@ -183,6 +184,20 @@ namespace jank::jit
       throw std::runtime_error{ fmt::format("unable to load module") };
     }
     load_ir_module(std::move(ir_module), std::move(ctx));
+  }
+
+  string_result<void> processor::remove_symbol(native_persistent_string const &name) const
+  {
+    auto &ee{ interpreter->getExecutionEngine().get() };
+    llvm::orc::SymbolNameSet to_remove{};
+    to_remove.insert(ee.mangleAndIntern(name.c_str()));
+    auto const error{ ee.getMainJITDylib().remove(to_remove) };
+
+    if(error.isA<llvm::orc::SymbolsCouldNotBeRemoved>())
+    {
+      return err(fmt::format("Failed to remove the symbol: '{}'", name));
+    }
+    return ok();
   }
 
   option<native_persistent_string>
