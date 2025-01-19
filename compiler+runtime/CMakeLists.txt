@@ -264,6 +264,8 @@ include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
 find_package(BDWgc REQUIRED)
 
