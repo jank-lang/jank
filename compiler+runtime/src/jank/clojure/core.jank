@@ -7412,5 +7412,3 @@ fails, attempts to require sym's namespace and retries."
   [#_double num]
   ;; (Double/isInfinite num)
   (throw "TODO: port"))
-
-(println "Bottom of clojure.core")

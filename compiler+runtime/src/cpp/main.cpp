@@ -119,6 +119,7 @@ namespace jank
       throw std::runtime_error{ "Not yet implemented: REPL server" };
     }
 
+    if(opts.target_module != "clojure.core")
     {
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
