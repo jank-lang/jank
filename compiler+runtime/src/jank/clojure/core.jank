@@ -1,11 +1,14 @@
+; Defined in runtime::context ctor.
 (def ^:dynamic *ns*)
+(def ^:dynamic *assert*)
+(def ^:dynamic *compile-files*)
+(def ^:dynamic *file*)
+
 (def ^:dynamic *in* nil)
 (def ^:dynamic *out* nil)
 (def ^:dynamic *command-line-args* nil)
 (def ^:dynamic *warn-on-reflection* nil)
-(def ^:dynamic *file* nil)
 (def ^:dynamic *compile-path* nil)
-(def ^:dynamic *compile-files* nil)
 (def ^:dynamic *unchecked-math* nil)
 (def ^:dynamic *compiler-options* nil)
 (def ^:dynamic *err* nil)
@@ -14,7 +17,6 @@
 (def ^:dynamic *print-dup* nil)
 (def ^:dynamic *print-readably* nil)
 (def ^:dynamic *read-eval* nil)
-(def ^:dynamic *assert* true)
 
 ; Syntax quoting.
 (def unquote
