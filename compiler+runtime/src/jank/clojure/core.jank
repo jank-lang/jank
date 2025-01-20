@@ -14,7 +14,7 @@
 (def ^:dynamic *print-dup* nil)
 (def ^:dynamic *print-readably* nil)
 (def ^:dynamic *read-eval* nil)
-(def ^:dynamic *assert* nil)
+(def ^:dynamic *assert* true)
 
 ; Syntax quoting.
 (def unquote

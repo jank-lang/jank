@@ -422,7 +422,7 @@ namespace jank::analyze
         auto arity_list_obj(it.first().unwrap());
 
         auto const err(runtime::visit_object(
-          [&](auto const typed_arity_list) -> option<error> {
+          [&](auto const typed_arity_list) -> result<void, error> {
             using T = typename decltype(typed_arity_list)::value_type;
 
             if constexpr(runtime::behavior::sequenceable<T>)
@@ -435,18 +435,18 @@ namespace jank::analyze
                 return result.expect_err_move();
               }
               arities.emplace_back(result.expect_ok_move());
-              return none;
+              return ok();
             }
             else
             {
-              return some(error{ "invalid fn: expected arity list" });
+              return error{ "invalid fn: expected arity list" };
             }
           },
           arity_list_obj));
 
-        if(err.is_some())
+        if(err.is_err())
         {
-          return err.unwrap();
+          return err.expect_err();
         }
       }
     }
