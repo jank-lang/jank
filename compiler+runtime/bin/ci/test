@@ -17,6 +17,7 @@ export CXX="${llvm_dir}/usr/local/bin/clang++"
                 -Djank_local_clang=on \
                 -Djank_tests=on \
                 -Djank_analysis="${ANALYSIS:-off}" \
+                -Djank_sanitize="${SANITIZE:-none}" \
                 "$@"
 ./bin/compile
 

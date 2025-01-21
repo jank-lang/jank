@@ -1576,6 +1576,16 @@ namespace jank::runtime
     return std::pow(l, r);
   }
 
+  native_integer numerator(object_ptr const o)
+  {
+    return try_object<obj::ratio>(o)->data.numerator;
+  }
+
+  native_integer denominator(object_ptr const o)
+  {
+    return try_object<obj::ratio>(o)->data.denominator;
+  }
+
   native_integer to_int(object_ptr const l)
   {
     return visit_number_like(
@@ -1618,6 +1628,11 @@ namespace jank::runtime
   native_bool is_real(object_ptr const o)
   {
     return o->type == object_type::real;
+  }
+
+  native_bool is_ratio(object_ptr const o)
+  {
+    return o->type == object_type::ratio;
   }
 
   native_bool is_boolean(object_ptr const o)

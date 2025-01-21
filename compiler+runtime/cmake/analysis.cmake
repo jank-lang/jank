@@ -1,4 +1,3 @@
-option(jank_analysis "Enable static analysis" OFF)
 if(jank_analysis)
   if(NOT DEFINED CMAKE_CXX_CLANG_TIDY)
     # In case clang-tidy exists wherever clang is, just try there.
