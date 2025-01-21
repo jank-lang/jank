@@ -9,12 +9,18 @@
 
 namespace jank::util
 {
+  using allocator_type = native_allocator<string_builder::value_type>;
+  using allocator_traits = std::allocator_traits<allocator_type>;
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  static allocator_type allocator;
+
   static void realloc(string_builder &sb, size_t const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
-    auto const new_data{ new(PointerFreeGC) string_builder::value_type[new_capacity] };
+    auto const new_data{ allocator_traits::allocate(allocator, new_capacity) };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
-    delete sb.buffer;
+    allocator_traits::deallocate(allocator, sb.buffer, sb.pos);
     sb.buffer = new_data;
     sb.capacity = new_capacity;
   }
@@ -47,7 +53,7 @@ namespace jank::util
 
   string_builder::~string_builder()
   {
-    delete buffer;
+    allocator_traits::deallocate(allocator, buffer, pos);
   }
 
   string_builder &string_builder::operator()(native_bool const d) &

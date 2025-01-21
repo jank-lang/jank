@@ -46,6 +46,11 @@
             doctest
           ];
 
+          shellHook =
+          ''
+          export ASAN_OPTIONS=detect_leaks=0
+          '';
+
           # Nix assumes fortification by default, but that fails with debug builds.
           # Since this shell is used for development, we disabled fortification. It's
           # still enabled for our release builds in build.nix.

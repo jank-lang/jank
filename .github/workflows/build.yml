@@ -9,25 +9,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # TODO: sanitize: [On, Off]
         os: [ubuntu-24.04]
-        # TODO: Enable release once we no longer have a Clang crash:
-        # https://github.com/jank-lang/jank/actions/runs/12269972895/job/34234432107
-        build_type: [Debug]
+        build_type: [Debug, Release]
+        sanitize: [none, address, undefined, thread]
+        exclude:
+          - build_type: Release
+            sanitize: address
+          - build_type: Release
+            sanitize: undefined
+          - build_type: Release
+            sanitize: thread
         include:
-          - os: ubuntu-24.04
-            cc: clang-14
-            cxx: clang++-14
           - os: ubuntu-24.04
             build_type: Debug
             codecov: on
             analysis: on
+            sanitize: none
     runs-on: ${{ matrix.os }}
     env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
       CODECOV: ${{ matrix.codecov }}
       ANALYSIS: ${{ matrix.analysis }}
+      SANITIZE: ${{ matrix.sanitize }}
+      ASAN_OPTIONS: detect_leaks=0
     timeout-minutes: 240 # 4h
     steps:
       - uses: actions/checkout@v4

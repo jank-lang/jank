@@ -768,7 +768,13 @@ namespace jank
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small(const_pointer_type const data, uint8_t const size) noexcept
     {
-      /* If `data` is word-aligned, we can do three quick word copies. */
+      /* If `data` is word-aligned, we can do three quick word copies.
+       *
+       * XXX: However, this is actuall undefined behavior, since we copy
+       * a word at a time, which may overshoot the null terminator. We never
+       * use that data, but we do indeed copy it. Clang's address sanitizer
+       * picks this up, so we only do it when that's not looking. */
+#ifndef JANK_SANITIZE
       if((std::bit_cast<size_type>(data) & (sizeof(size_type) - 1)) == 0)
       {
         auto const aligned_data(std::assume_aligned<sizeof(size_type)>(data));
@@ -790,6 +796,7 @@ namespace jank
         }
       }
       else
+#endif
       {
         traits_type::copy(store.small, data, size);
       }

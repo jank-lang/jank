@@ -28,6 +28,12 @@ project(
     LANGUAGES C CXX
 )
 
+# All options are available here.
+option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
+option(jank_coverage "Enable code coverage measurement" OFF)
+option(jank_analysis "Enable static analysis" OFF)
+set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
+
 find_package(Git REQUIRED)
 execute_process(
   COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
@@ -100,6 +106,7 @@ endif()
 
 include(cmake/coverage.cmake)
 include(cmake/analysis.cmake)
+include(cmake/sanitization.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
