@@ -20,16 +20,6 @@
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
 
-namespace jank
-{
-  static error_ptr make_error(error::kind const kind,
-                              native_persistent_string const &message,
-                              read::source const &source)
-  {
-    return runtime::make_box<error::base>(gc{}, kind, message, source);
-  }
-}
-
 namespace jank::analyze
 {
   static read::source meta_source(option<object_ptr> const &o)

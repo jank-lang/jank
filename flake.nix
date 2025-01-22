@@ -41,6 +41,7 @@
             llvmPackages.libclang
             # For clang-tidy.
             llvmPackages.clang-tools
+            gdb
 
             ## Dev libs.
             doctest

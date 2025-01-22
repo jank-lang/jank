@@ -43,6 +43,7 @@ namespace jank::read::parse
     {
       option<uint8_t> max_fixed_arity{};
       native_bool variadic{};
+      source source;
     };
 
     struct iterator

@@ -5,7 +5,7 @@
 
 namespace jank::error
 {
-  enum class kind
+  enum class kind : uint8_t
   {
     lex_unexpected_eof,
     lex_expecting_whitespace,
@@ -199,15 +199,41 @@ namespace jank::error
     return "unknown";
   }
 
+  struct note
+  {
+    native_persistent_string message;
+    read::source source;
+  };
+
   struct base : gc
   {
+    base() = delete;
+    base(base const &) = default;
+    base(base &&) noexcept = default;
+    base(kind k, read::source const &source);
+    base(kind k, native_persistent_string const &message, read::source const &source);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         native_persistent_string const &error_note_message);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         note const &error_note);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         note const &error_note,
+         native_vector<note> const &extra_notes);
+
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
 
-    kind kind;
+    kind kind{};
     native_persistent_string message;
     read::source source;
-    /* TODO: notes */
+    note error_note;
+    native_vector<note> extra_notes;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -220,6 +246,13 @@ namespace jank
   using error_ptr = runtime::native_box<error::base>;
 
   error_ptr make_error(error::kind const kind, native_persistent_string const &message);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source_position const &start);

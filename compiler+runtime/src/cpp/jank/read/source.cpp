@@ -1,10 +1,34 @@
 #include <jank/read/source.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::read
 {
   static constexpr auto pos_max{ std::numeric_limits<size_t>::max() };
   source_position const source_position::unknown{ pos_max, pos_max, pos_max };
   source const source::unknown{ "unknown", source_position::unknown, source_position::unknown };
+
+  source::source(source_position const &start)
+    : source{ start, start }
+  {
+  }
+
+  source::source(source_position const &start, source_position const &end)
+    : start{ start }
+    , end{ end }
+  {
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    file_path = runtime::to_string(file);
+  }
+
+  source::source(native_persistent_string const &file_path,
+                 source_position const &start,
+                 source_position const &end)
+    : file_path{ file_path }
+    , start{ start }
+    , end{ end }
+  {
+  }
 
   native_bool source_position::operator==(source_position const &rhs) const
   {

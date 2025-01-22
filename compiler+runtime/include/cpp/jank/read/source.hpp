@@ -18,6 +18,15 @@ namespace jank::read
   {
     static source const unknown;
 
+    source() = delete;
+    source(source const &) = default;
+    source(source &&) noexcept = default;
+    source(source_position const &start);
+    source(source_position const &start, source_position const &end);
+    source(native_persistent_string const &file_path,
+           source_position const &start,
+           source_position const &end);
+
     native_bool operator==(source const &rhs) const;
     native_bool operator!=(source const &rhs) const;
 

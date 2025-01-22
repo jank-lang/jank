@@ -7,6 +7,7 @@
 #include <jank/native_persistent_string/fmt.hpp>
 #pragma clang diagnostic pop
 #include <jank/read/parse.hpp>
+#include <jank/error/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
@@ -195,10 +196,7 @@ namespace jank::read::parse
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != latest_token.kind)
           {
-            return make_error(error::kind::parse_unexpected_closing_character,
-                              "Unexpected closing character",
-                              latest_token.start,
-                              latest_token.end);
+            return error::parse_unexpected_closing_character(latest_token);
           }
           ++token_current;
           expected_closer = none;
@@ -276,11 +274,9 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            return make_error(
-              error::kind::internal_parse_failure,
-              fmt::format("Unexpected token kind: {}", lex::token_kind_str(latest_token.kind)),
-              latest_token.start,
-              latest_token.end);
+            return error::internal_parse_failure(
+              fmt::format("Unexpected token kind '{}'", lex::token_kind_str(latest_token.kind)),
+              { latest_token.start, latest_token.end });
           }
       }
     }
@@ -310,9 +306,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return make_error(error::kind::parse_unterminated_list,
-                        "Unterminated list",
-                        start_token.start);
+      return error::parse_unterminated_list(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -348,9 +342,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return make_error(error::kind::parse_unterminated_vector,
-                        "Unterminated vector",
-                        start_token.start);
+      return error::parse_unterminated_vector(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -384,9 +376,8 @@ namespace jank::read::parse
 
       if(++it == end())
       {
-        return make_error(error::kind::parse_odd_entries_in_map,
-                          "Odd number of items in map",
-                          start_token.start);
+        return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
+                                               { key.unwrap().start.start, key.unwrap().end.end });
       }
 
       if(it.latest.unwrap().is_err())
@@ -399,7 +390,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return make_error(error::kind::parse_unterminated_map, "Unterminated map", start_token.start);
+      return error::parse_unterminated_map(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -422,10 +413,8 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return make_error(error::kind::parse_invalid_quote,
-                        "Invalid value after quote",
-                        start_token.start,
-                        latest_token.end);
+      return error::parse_invalid_quote("Quote form is missing its value",
+                                        { start_token.start, latest_token.end });
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
@@ -459,16 +448,12 @@ namespace jank::read::parse
         }
         else
         {
-          return make_error(
-            error::kind::parse_invalid_unicode,
-            fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error),
-            start_token.start);
+          return error::parse_invalid_unicode(start_token.start,
+                                              { char_bytes.expect_err().error, start_token.start });
         }
       }
 
-      return make_error(error::kind::parse_invalid_character,
-                        fmt::format("Invalid character literal `{}`", sv),
-                        start_token.start);
+      return error::parse_invalid_character(start_token.start);
     }
 
     return object_source_info{ make_box<obj::character>(character.unwrap()),
@@ -487,10 +472,7 @@ namespace jank::read::parse
     }
     else if(meta_val_result.expect_ok().is_none())
     {
-      return make_error(error::kind::parse_invalid_meta_hint_value,
-                        "Invalid meta value after meta hint",
-                        start_token.start,
-                        latest_token.end);
+      return error::parse_invalid_meta_hint_value({ start_token.start, latest_token.end });
     }
 
     auto meta_result(visit_object(
@@ -510,10 +492,7 @@ namespace jank::read::parse
         }
         else
         {
-          return make_error(error::kind::parse_invalid_meta_hint_value,
-                            "Value after meta hint ^ must be a keyword or map",
-                            start_token.start,
-                            latest_token.end);
+          return error::parse_invalid_meta_hint_value({ start_token.start, latest_token.end });
         }
       },
       meta_val_result.expect_ok().unwrap().ptr));
@@ -529,10 +508,8 @@ namespace jank::read::parse
     }
     else if(target_val_result.expect_ok().is_none())
     {
-      return make_error(error::kind::parse_invalid_meta_hint_target,
-                        "Invalid target value after meta hint",
-                        start_token.start,
-                        latest_token.end);
+      return error::parse_invalid_meta_hint_target("Invalid target value after meta hint",
+                                                   { start_token.start, latest_token.end });
     }
 
     return visit_object(
@@ -557,10 +534,9 @@ namespace jank::read::parse
         }
         else
         {
-          return make_error(error::kind::parse_invalid_meta_hint_target,
-                            "Target value for meta hint must accept metadata",
-                            start_token.start,
-                            latest_token.end);
+          return error::parse_invalid_meta_hint_target(
+            "Target value for meta hint must accept metadata",
+            { start_token.start, latest_token.end });
         }
       },
       target_val_result.expect_ok().unwrap().ptr);
@@ -589,9 +565,7 @@ namespace jank::read::parse
       case lex::token_kind::single_quote:
         return parse_reader_macro_var_quote();
       default:
-        return make_error(error::kind::parse_unsupported_reader_macro,
-                          "Unsupported reader macro",
-                          start_token.start);
+        return error::parse_unsupported_reader_macro(start_token.start);
     }
 #pragma clang diagnostic pop
   }
@@ -621,10 +595,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return make_error(error::kind::parse_unterminated_set,
-                        "Unterminated set",
-                        start_token.start,
-                        latest_token.end);
+      return error::parse_unterminated_set({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
@@ -639,12 +610,12 @@ namespace jank::read::parse
 
     if(shorthand.is_some())
     {
-      return make_error(error::kind::parse_nested_shorthand_function,
-                        "Nested #() forms are not allowed",
-                        start_token.start);
+      return error::parse_nested_shorthand_function(
+        start_token.start,
+        { "Outer #() form starts here", shorthand.unwrap().source });
     }
 
-    shorthand = shorthand_function_details{};
+    shorthand = shorthand_function_details{ {}, {}, start_token.start };
 
     auto list_result(next());
     if(list_result.is_err())

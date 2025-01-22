@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 namespace ftxui
 {
@@ -13,7 +14,7 @@ namespace jank
 
   namespace ui
   {
-    ftxui::Element
-    highlight(native_persistent_string const &code, size_t const line_start, size_t const line_end);
+    std::vector<ftxui::Element>
+    highlight(native_persistent_string const &code, size_t line_start, size_t line_end);
   }
 }

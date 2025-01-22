@@ -1,5 +1,5 @@
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 #include <fmt/format.h>
 
@@ -18,11 +18,102 @@ namespace jank::error
   using namespace jank::runtime;
   using namespace ftxui;
 
-  Element snippet(error_ptr const e)
+  struct line
+  {
+    enum class kind : uint8_t
+    {
+      file_data,
+      note,
+    };
+
+    kind kind{};
+    /* Zero means no number. */
+    size_t number{};
+    /* Only for notes. */
+    option<note> note;
+  };
+
+  struct snippet
   {
     static constexpr size_t max_body_lines{ 5 };
     static constexpr size_t min_body_lines{ 1 };
+    static constexpr size_t max_top_margin_lines{ 2 };
+    static constexpr size_t new_note_leniency_lines{ 2 };
 
+    native_bool can_fit(note const &n) const;
+    void add(note const &n);
+
+    native_persistent_string file_path;
+    /* Zero means we have no lines yet. */
+    size_t line_start{};
+    size_t line_end{};
+    /* TODO: Consider deque. */
+    native_vector<line> lines;
+  };
+
+  struct plan
+  {
+    plan(error_ptr const e);
+    void add(note const &n);
+
+    native_persistent_string kind;
+    native_persistent_string message;
+    native_vector<snippet> snippets;
+  };
+
+  plan::plan(error_ptr const e)
+    : kind{ kind_str(e->kind) }
+    , message{ e->message }
+  {
+    add(e->error_note);
+    for(auto const &n : e->extra_notes)
+    {
+      add(n);
+    }
+  }
+
+  static size_t absdiff(size_t const lhs, size_t const rhs)
+  {
+    if(lhs < rhs)
+    {
+      return rhs - lhs;
+    }
+    return lhs - rhs;
+  }
+
+  native_bool snippet::can_fit(note const &n) const
+  {
+    assert(n.source.file_path == file_path);
+
+    if(line_end == 0)
+    {
+      return true;
+    }
+
+    native_bool ret{ true };
+
+    if(n.source.start.line < line_start)
+    {
+      /* TODO: Don't need this fn, right? We know which is larger. */
+      ret &= absdiff(line_start, n.source.start.line) <= new_note_leniency_lines;
+    }
+    if(n.source.end.line > line_end)
+    {
+      ret &= absdiff(line_end, n.source.end.line) <= new_note_leniency_lines;
+    }
+
+    /* TODO: Also can't fit if it's on the same line as another note. (exception being to the left of it?) */
+
+    return ret;
+  }
+
+  void snippet::add(note const &n)
+  {
+    assert(n.source.file_path == file_path);
+    assert(can_fit(n));
+
+    static constexpr size_t max_body_lines{ 5 };
+    static constexpr size_t min_body_lines{ 1 };
     static constexpr size_t max_top_margin_lines{ 2 };
 
     /* Top margin:
@@ -41,47 +132,121 @@ namespace jank::error
      *   If the error spans more than the max, just show up to the max.
      */
 
-    auto const body_range{
-      std::min(std::max(e->source.end.line - e->source.start.line, min_body_lines), max_body_lines)
-    };
-    auto const top_margin{ std::min(e->source.start.line - 1, max_top_margin_lines) };
-    auto const line_start{ e->source.start.line - top_margin };
-    auto const line_end{ e->source.start.line + body_range };
-
-    std::vector<Element> line_numbers;
-    for(auto i{ static_cast<ssize_t>(line_start) }; i < static_cast<ssize_t>(line_end); ++i)
+    if(line_start == 0)
     {
-      if(i < 1)
+      auto const body_range{
+        std::clamp(n.source.end.line - n.source.start.line, min_body_lines, max_body_lines) - 1
+      };
+      auto const top_margin{ std::min(n.source.start.line - 1, max_top_margin_lines) };
+      line_start = n.source.start.line - top_margin;
+      line_end = n.source.start.line + body_range;
+
+      for(size_t i{ line_start }; i <= line_end; ++i)
       {
-        line_numbers.emplace_back(text(" "));
+        lines.emplace_back(line::kind::file_data, i);
       }
-      else
+    }
+    else
+    {
+      if(n.source.start.line < line_start)
       {
-        line_numbers.emplace_back(text(std::to_string(i)));
+        for(auto i{ line_start - 1 }; i != n.source.start.line; --i)
+        {
+          lines.emplace(lines.begin(), line::kind::file_data, i);
+        }
+        line_start = n.source.start.line;
+      }
+      if(n.source.end.line > line_end)
+      {
+        for(auto i{ line_end + 1 }; i != n.source.end.line; ++i)
+        {
+          lines.emplace_back(line::kind::file_data, i);
+        }
+        line_end = n.source.end.line;
       }
     }
 
-    auto const file(util::map_file(e->source.file_path));
+    auto const line_index{ n.source.start.line - line_start };
+    lines.emplace(lines.begin() + line_index + 1, line::kind::note, 0, n);
+  }
+
+  void plan::add(note const &n)
+  {
+    native_bool added{ false };
+    for(auto &snippet : snippets)
+    {
+      if(snippet.file_path == n.source.file_path && snippet.can_fit(n))
+      {
+        snippet.add(n);
+        added = true;
+        break;
+      }
+    }
+
+    if(!added)
+    {
+      snippets.emplace_back(n.source.file_path).add(n);
+    }
+  }
+
+  static Element underline_note(note const &n)
+  {
+    auto const width{ std::max(n.source.end.col - n.source.start.col, 1zu) };
+    std::string line(n.source.start.col - 1, ' ');
+    line.insert(line.end(), width, '^');
+    line += ' ';
+    line += n.message;
+
+    return text(line);
+  }
+
+  static Element code_snippet(snippet const &s)
+  {
+    auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
       /* TODO: Return result. */
-      throw std::runtime_error{ fmt::format("unable to map file {} due to error: {}",
-                                            e->source.file_path,
-                                            file.expect_err()) };
+      throw std::runtime_error{
+        fmt::format("unable to map file {} due to error: {}", s.file_path, file.expect_err())
+      };
     }
 
-    return window(
-      text(
-        fmt::format(" {}:{}:{} ", e->source.file_path, e->source.start.line, e->source.start.col)),
-      hbox(
-        { vbox(line_numbers) | color(Color::GrayLight),
-          separator(),
-          ui::highlight({ file.expect_ok().head, file.expect_ok().size }, line_start, line_end) }));
+    auto const highlighted_lines{
+      ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
+    };
+
+    std::vector<Element> line_numbers, lines;
+
+    size_t highlighted_line_idx{};
+    for(auto const &l : s.lines)
+    {
+      Element line_number{}, line_content{};
+      switch(l.kind)
+      {
+        case line::kind::file_data:
+          line_number = paragraphAlignRight(std::to_string(l.number));
+          line_content = highlighted_lines.at(highlighted_line_idx);
+          ++highlighted_line_idx;
+          break;
+        case line::kind::note:
+          line_number = text(" ");
+          line_content = underline_note(l.note.unwrap()) | color(Color::Red);
+          break;
+      }
+      line_numbers.emplace_back(line_number);
+      lines.emplace_back(line_content);
+    }
+
+    /* TODO: line + col */
+    return window(text(fmt::format(" {} ", s.file_path)),
+                  hbox({ vbox(std::move(line_numbers)), separator(), vbox(std::move(lines)) }));
   }
 
   void report(error_ptr const e)
   {
     static constexpr size_t max_width{ 80 };
+
+    plan p{ e };
 
     auto header{ [&](std::string const &title) {
       auto const padding_count(max_width - 2 - title.size());
@@ -121,18 +286,19 @@ namespace jank::error
     //      }),
     //    }) }) };
 
-    auto document{ vbox({
+    std::vector<Element> doc_body{
       error,
       text("\n"),
-      snippet(e),
-      text("\n"),
-      //context(),
-    }) };
+    };
 
-    document = document | size(WIDTH, LESS_THAN, max_width);
+    for(auto const &s : p.snippets)
+    {
+      doc_body.emplace_back(code_snippet(s));
+    }
 
+    auto document{ vbox(doc_body) | size(WIDTH, LESS_THAN, max_width) };
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
-    std::cout << screen.ToString() << '\0' << std::endl;
+    std::cout << screen.ToString() << '\0' << '\n';
   }
 }

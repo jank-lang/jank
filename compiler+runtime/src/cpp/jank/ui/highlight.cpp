@@ -3,6 +3,7 @@
 
 #include <ftxui/dom/elements.hpp>
 
+#include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
 
 namespace jank::ui
@@ -16,7 +17,7 @@ namespace jank::ui
 
   /* TODO: Also support core fns? */
 
-  Element symbol_color(Element const &e, native_persistent_string_view const &sym)
+  static Element symbol_color(Element const &e, native_persistent_string_view const &sym)
   {
     if(specials.find(sym) != specials.end())
     {
@@ -26,7 +27,7 @@ namespace jank::ui
     return e | color(Color::Default);
   }
 
-  Element token_color(Element const &e, read::lex::token const &token)
+  static Element token_color(Element const &e, read::lex::token const &token)
   {
     switch(token.kind)
     {
@@ -70,7 +71,7 @@ namespace jank::ui
   }
 
   /* TODO: Center horizontally if the line is too long. */
-  Element
+  std::vector<Element>
   highlight(native_persistent_string const &code, size_t const line_start, size_t const line_end)
   {
     read::lex::processor l_prc{ code };
@@ -118,9 +119,7 @@ namespace jank::ui
       {
         current_line.emplace_back(
           token_color(text(std::string{ code.data() + token.start.offset, token_size }), token));
-        //current_line.emplace_back(token_color(
-        //  text(fmt::format("'{}'", std::string{ code.data() + token.start.offset, token_size })),
-        //  token));
+        //fmt::println("'{}'", std::string{ code.data() + token.start.offset, token_size });
       }
       last_offset = token.start.offset + token_size;
       //fmt::println("last_offset {}", last_offset);
@@ -128,6 +127,6 @@ namespace jank::ui
 
     lines.emplace_back(hbox(std::move(current_line)));
 
-    return vbox(std::move(lines));
+    return lines;
   }
 }

@@ -287,8 +287,7 @@ namespace jank::read::lex
                               movable_position const &start)
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(gc{},
-                                          kind,
+    return runtime::make_box<error::base>(kind,
                                           message,
                                           /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
                                           source{ runtime::to_string(file), start, start });
@@ -304,8 +303,7 @@ namespace jank::read::lex
                  message.c_str(),
                  runtime::to_string(file).c_str());
     __builtin_debugtrap();
-    return runtime::make_box<error::base>(gc{},
-                                          kind,
+    return runtime::make_box<error::base>(kind,
                                           message,
                                           /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
                                           source{ runtime::to_string(file), start, end });
