@@ -14,48 +14,15 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Install brew packages
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      shell: bash
-      run: |
-        if [[ "$OSTYPE" == "linux"* ]]; then
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          sudo apt-get install -y libzip-dev libbz2-dev libgc-dev
-        fi
-        HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja libzip doctest boost llvm@19 double-conversion bdw-gc clang-format
-
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-        fi
-
-        if [[ "$OSTYPE" == "linux"* ]]; then
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        fi
-
-        export PATH="$(brew --prefix)/opt/llvm/bin:${PATH}"
-        export LDFLAGS="-Wl,-rpath,$(brew --prefix)/opt/llvm/lib ${LDFLAGS}"
-        export CPPFLAGS="-I$(brew --prefix)/opt/llvm/include ${CPPFLAGS}"
-
-        ${{ github.workspace }}/compiler+runtime/bin/configure -GNinja \
-                                                               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} #\
-                                                               #-Djank_tests=on \
-                                                               # -Djank_analysis="${ANALYSIS:-off}" \
-                                                               # -Djank_coverage="${COVERAGE:-off}"
-
-        ${{ github.workspace }}/compiler+runtime/bin/compile
-        # ${{ github.workspace }}/compiler+runtime/bin/test
-        # LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-        # llvm-profdata merge --sparse build/test.profraw -o build/test.profdata
-        # llvm-cov show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+      run: ./bin/ci/test
 
     - name: Validate formatting
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
+      run: ./bin/ci/validate-formatting
 
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
@@ -66,13 +33,4 @@ runs:
       id: release
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        export OS_NAME=$(uname | tr "[:upper:]" "[:lower:]")
-        export FOLDER=jank-${OS_NAME}-$(uname -m)
-        export DESTDIR=${{ github.workspace }}/${FOLDER}
-        ${{ github.workspace }}/compiler+runtime/bin/install
-
-        cp -R ${DESTDIR} .
-
-        tar czf ${DESTDIR}.tar.gz ${FOLDER}/
-        echo "archive=${DESTDIR}.tar.gz" >> $GITHUB_OUTPUT
+      run: ./bin/ci/install

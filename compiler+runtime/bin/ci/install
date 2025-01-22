@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export OS_NAME=$(uname | tr "[:upper:]" "[:lower:]")
+export FOLDER=jank-${OS_NAME}-$(uname -m)
+export DESTDIR=$(pwd)/${FOLDER}
+./bin/install
+
+cp -R ${DESTDIR} .
+
+tar czf ${DESTDIR}.tar.gz ${FOLDER}/
+echo "archive=${DESTDIR}.tar.gz" >> $GITHUB_OUTPUT

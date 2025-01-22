@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 
-set -eu
-
-llvm_dir="${PWD}/build/llvm-install"
-if [[ ! -d "${llvm_dir}" ]];
+set -e
+if [[ "$OSTYPE" == "darwin"* ]];
 then
-  mkdir -p build
-  pushd build
-    ../bin/build-clang
-  popd
+    export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+    export PATH="$(brew --prefix)/opt/llvm/bin:${PATH}"
+    export LDFLAGS="-Wl,-rpath,$(brew --prefix)/opt/llvm/lib ${LDFLAGS}"
+    export CPPFLAGS="-I$(brew --prefix)/opt/llvm/include ${CPPFLAGS}"
 fi
-export CC="${llvm_dir}/usr/local/bin/clang"
-export CXX="${llvm_dir}/usr/local/bin/clang++"
+
+if [[ "${BUILD_LLVM:-off}" == "on" ]];
+then
+    llvm_dir="${PWD}/build/llvm-install"
+    if [[ ! -d "${llvm_dir}" ]];
+    then
+        mkdir -p build
+        pushd build
+        ../bin/build-clang
+        popd
+    fi
+    export CC="${llvm_dir}/usr/local/bin/clang"
+    export CXX="${llvm_dir}/usr/local/bin/clang++"
+fi
 
 ./bin/configure -GNinja \
-                -Djank_local_clang=on \
+                -Djank_local_clang="${BUILD_LLVM:-off}" \
                 -Djank_tests=on \
                 -Djank_analysis="${ANALYSIS:-off}" \
                 -Djank_sanitize="${SANITIZE:-none}" \
@@ -30,8 +40,8 @@ then
                   -Djank_analysis=off \
                   "$@"
   LLVM_PROFILE_FILE=build/test.profraw ./bin/test
-  "${llvm_dir}/usr/local/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
-  "${llvm_dir}/usr/local/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
+  "${llvm_dir:-/}/usr/local/bin/llvm-profdata" merge --sparse build/test.profraw -o build/test.profdata
+  "${llvm_dir:-/}/usr/local/bin/llvm-cov" show ./build/jank-test --instr-profile build/test.profdata > coverage.txt
   # This file will be read by a subsequent CodeCov Github action.
 else
   ./bin/test

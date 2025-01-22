@@ -5,33 +5,51 @@ on:
   push:
 
 jobs:
-  test:
+  linux:
+    strategy:
+      matrix:
+        build_type: [ Debug, Release ]
+    runs-on: ubuntu-latest
+    container: ubuntu:24.10
+    env:
+      CC: clang-19
+      CXX: clang++-19
+    timeout-minutes: 240
+    steps:
+      - name: Install deps
+        run: apt update && apt install -y git git-lfs sudo build-essential libzip-dev libbz2-dev libgc-dev clang-19 libboost-all-dev ninja-build doctest-dev cmake libllvmlibc-19-dev libclang-19-dev libssl-dev
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build and test
+        uses: ./.github/actions/build
+        id: build
+        with:
+          update_release: ${{ github.ref == 'refs/heads/main' && matrix.build_type == 'Release' }}
+      - name: Update latest release
+        if: success() && github.ref == 'refs/heads/main' && ${{ matrix.build_type == 'Release' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.build.outputs.release_archive }}
+
+  macos:
     strategy:
       fail-fast: false
       matrix:
-        # TODO: sanitize: [On, Off]
-        os: [ macos-15]
+        os: [ macos-13, macos-15 ]
         # TODO: Enable release once we no longer have a Clang crash:
         # https://github.com/jank-lang/jank/actions/runs/12269972895/job/34234432107
-        build_type: [Debug]
-        include:
-          - os: ubuntu-24.04
-            cc: clang
-            cxx: clang++
-          - os: macos-13
-            cc: clang
-            cxx: clang++
-          - os: macos-15
-            cc: clang
-            cxx: clang++
+        build_type: [Debug, Release]
     runs-on: ${{ matrix.os }}
     env:
-      CODECOV: ${{ matrix.codecov }}
-      ANALYSIS: ${{ matrix.analysis }}
-      SANITIZE: ${{ matrix.sanitize }}
-      ASAN_OPTIONS: detect_leaks=0
+      CC: clang
+      CXX: clang++
     timeout-minutes: 240 # 4h
     steps:
+      - name: Install dependencies
+        run: HOMEBREW_NO_AUTO_UPDATE=1 brew install ninja libzip doctest boost llvm@19 double-conversion bdw-gc clang-format
       - uses: actions/checkout@v4
         with:
           submodules: recursive
