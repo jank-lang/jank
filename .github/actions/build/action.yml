@@ -29,6 +29,14 @@ runs:
         path: |
           ${{ github.workspace }}/compiler+runtime/build
         key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@13.1
+      with:
+        lein: 2.9.1
     - name: Compile and test
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
@@ -50,6 +58,12 @@ runs:
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
+    - name: Test Leiningen plugin
+      shell: bash
+      working-directory: ${{ github.workspace }}/lein-jank
+      run: |
+        ${{ github.workspace }}/compiler+runtime/bin/install
+        ./test.sh
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
