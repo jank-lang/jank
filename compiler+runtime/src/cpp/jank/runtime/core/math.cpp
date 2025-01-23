@@ -1666,4 +1666,26 @@ namespace jank::runtime
   {
     return o->type == object_type::boolean;
   }
+
+  native_bool is_nan(object_ptr const o)
+  {
+    if(!is_real(o))
+    {
+      return false;
+    }
+    return visit_number_like(
+      [](auto const typed_l) -> native_bool { return std::isnan(typed_l->to_real()); },
+      o);
+  }
+
+  native_bool is_infinite(object_ptr const o)
+  {
+    if(!is_real(o))
+    {
+      return false;
+    }
+    return visit_number_like(
+      [](auto const typed_l) -> native_bool { return std::isinf(typed_l->to_real()); },
+      o);
+  }
 }

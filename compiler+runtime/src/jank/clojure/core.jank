@@ -7347,16 +7347,12 @@ fails, attempts to require sym's namespace and retries."
       :else nil)
     (throw (parsing-err s))))
 
-(defn NaN?
+(def NaN?
   "Returns true if num is NaN, else false"
-  [#_double num]
-  ;; (Double/isNaN num)
-  (throw "TODO: port"))
+  clojure.core-native/NaN?)
 
-(defn infinite?
+(def infinite?
   "Returns true if num is negative or positive infinity, else false"
-  [#_double num]
-  ;; (Double/isInfinite num)
-  (throw "TODO: port"))
+  clojure.core-native/infinite?)
 
 (println "Bottom of clojure.core")
