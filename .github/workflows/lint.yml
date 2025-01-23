@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install apt packages
         # https://github.com/awalsh128/cache-apt-pkgs-action/issues/145
-        uses: awalsh128/cache-apt-pkgs-action@1.4.3
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
         with:
           packages: shellcheck
           # Update this whenever the package list changes.
