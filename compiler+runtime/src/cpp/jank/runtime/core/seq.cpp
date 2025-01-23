@@ -59,13 +59,9 @@ namespace jank::runtime
 
   native_bool is_seqable(object_ptr const o)
   {
-    return visit_object(
-      [=](auto const typed_o) -> native_bool {
-        using T = typename decltype(typed_o)::value_type;
-
-        return behavior::seqable<T>;
-      },
-      o);
+    return visit_seqable([=](auto const) -> native_bool { return true; },
+                         [=]() -> native_bool { return false; },
+                         o);
   }
 
   native_bool is_sequential(object_ptr const o)
