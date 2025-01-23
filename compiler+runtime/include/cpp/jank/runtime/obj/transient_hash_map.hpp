@@ -3,6 +3,11 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 
+namespace jank::runtime::detail
+{
+  struct native_persistent_array_map;
+}
+
 namespace jank::runtime::obj
 {
   using transient_hash_map_ptr = native_box<struct transient_hash_map>;
@@ -20,6 +25,7 @@ namespace jank::runtime::obj
     transient_hash_map(transient_hash_map const &) = default;
     transient_hash_map(runtime::detail::native_persistent_hash_map const &d);
     transient_hash_map(runtime::detail::native_persistent_hash_map &&d);
+    transient_hash_map(runtime::detail::native_persistent_array_map const &m);
     transient_hash_map(value_type &&d);
 
     static transient_hash_map_ptr empty();

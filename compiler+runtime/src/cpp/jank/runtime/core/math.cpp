@@ -546,6 +546,33 @@ namespace jank::runtime
       r);
   }
 
+  object_ptr quot(object_ptr const l, object_ptr const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const r) -> object_ptr {
+        return visit_number_like(
+          [](auto const typed_r, auto const typed_l) -> object_ptr {
+            auto const typed_l_data{ to_number(typed_l) };
+            auto const typed_r_data{ to_number(typed_r->data) };
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+            if(typed_r_data == 0LL)
+            {
+#pragma clang diagnostic pop
+              throw erase(make_box("Illegal divide by zero in 'quot'"));
+            }
+            else
+            {
+              return make_box(long(typed_l_data / typed_r_data));
+            }
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
   object_ptr inc(object_ptr const l)
   {
     return visit_number_like(

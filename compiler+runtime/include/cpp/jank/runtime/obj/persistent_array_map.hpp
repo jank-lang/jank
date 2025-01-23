@@ -8,6 +8,7 @@
 namespace jank::runtime::obj
 {
   using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+  using transient_hash_map_ptr = native_box<struct transient_hash_map>;
 
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
@@ -78,6 +79,9 @@ namespace jank::runtime::obj
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
+
+    /* behavior::transientable */
+    transient_hash_map_ptr to_transient() const;
 
     value_type data{};
   };
