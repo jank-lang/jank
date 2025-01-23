@@ -8,6 +8,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/detail/native_persistent_array_map.hpp>
 
 namespace jank::runtime::obj
 {
@@ -24,6 +25,14 @@ namespace jank::runtime::obj
   transient_hash_map::transient_hash_map(runtime::detail::native_transient_hash_map &&d)
     : data{ std::move(d) }
   {
+  }
+
+  transient_hash_map::transient_hash_map(runtime::detail::native_persistent_array_map const &m)
+  {
+    for(auto const &e : m)
+    {
+      data.set(e.first, e.second);
+    }
   }
 
   transient_hash_map_ptr transient_hash_map::empty()

@@ -4,6 +4,7 @@
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -141,9 +142,9 @@ namespace jank::runtime::obj
     return found;
   }
 
-  obj::transient_hash_map_ptr persistent_array_map::to_transient() const
+  transient_hash_map_ptr persistent_array_map::to_transient() const
   {
-    // TODO: implement transient_array_map or fill persistent_hash_map with data from transient_array_map
-    return make_box<persistent_hash_map>()->to_transient();
+    /* TODO: Use a transient_array_map. */
+    return make_box<transient_hash_map>(data);
   }
 }
