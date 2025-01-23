@@ -422,6 +422,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("number?", &is_number);
   intern_fn("even?", &is_even);
   intern_fn("odd?", &is_odd);
+  intern_fn("NaN?", &is_nan);
+  intern_fn("infinite?", &is_infinite);
   intern_fn("rand", &runtime::rand);
   intern_fn("sequential?", &is_sequential);
   intern_fn("first-index-of", &first_index_of);

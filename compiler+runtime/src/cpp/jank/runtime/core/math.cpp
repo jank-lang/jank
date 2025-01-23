@@ -1666,4 +1666,40 @@ namespace jank::runtime
   {
     return o->type == object_type::boolean;
   }
+
+  native_bool is_nan(object_ptr const o)
+  {
+    return visit_number_like(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::real>)
+        {
+          return std::isnan(typed_o->data);
+        }
+        else
+        {
+          return false;
+        }
+      },
+      o);
+  }
+
+  native_bool is_infinite(object_ptr const o)
+  {
+    return visit_number_like(
+      [=](auto const typed_o) -> native_bool {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::real>)
+        {
+          return std::isinf(typed_o->data);
+        }
+        else
+        {
+          return false;
+        }
+      },
+      o);
+  }
 }

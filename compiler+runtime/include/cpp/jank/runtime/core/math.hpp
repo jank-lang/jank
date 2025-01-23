@@ -263,4 +263,6 @@ namespace jank::runtime
   native_bool is_real(object_ptr o);
   native_bool is_ratio(object_ptr o);
   native_bool is_boolean(object_ptr o);
+  native_bool is_nan(object_ptr o);
+  native_bool is_infinite(object_ptr o);
 }
