@@ -41,6 +41,7 @@ namespace jank::error
     static constexpr size_t new_note_leniency_lines{ 2 };
 
     native_bool can_fit(note const &n) const;
+    void add(read::source const &body_source, note const &n);
     void add(note const &n);
 
     native_persistent_string file_path;
@@ -54,6 +55,8 @@ namespace jank::error
   struct plan
   {
     plan(error_ptr const e);
+
+    void add(read::source const &body_source, note const &n);
     void add(note const &n);
 
     native_persistent_string kind;
@@ -65,7 +68,7 @@ namespace jank::error
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
-    add(e->error_note);
+    add(e->source, e->error_note);
     for(auto const &n : e->extra_notes)
     {
       add(n);
@@ -109,10 +112,15 @@ namespace jank::error
 
   void snippet::add(note const &n)
   {
+    add(n.source, n);
+  }
+
+  void snippet::add(read::source const &body_source, note const &n)
+  {
     assert(n.source.file_path == file_path);
     assert(can_fit(n));
 
-    static constexpr size_t max_body_lines{ 5 };
+    static constexpr size_t max_body_lines{ 6 };
     static constexpr size_t min_body_lines{ 1 };
     static constexpr size_t max_top_margin_lines{ 2 };
 
@@ -122,24 +130,26 @@ namespace jank::error
      *
      *   If the count goes negative, use one blank line.
      *
-     * Bottom margin:
-     *   Always 0
-     *
      * Code body:
      *   Min: 1 line
      *   Max: 5 lines
      *
      *   If the error spans more than the max, just show up to the max.
+     *
+     * Bottom margin:
+     *   Always 0
      */
 
     if(line_start == 0)
     {
       auto const body_range{
-        std::clamp(n.source.end.line - n.source.start.line, min_body_lines, max_body_lines) - 1
+        std::clamp(n.source.end.line - body_source.start.line, min_body_lines, max_body_lines) - 1
       };
-      auto const top_margin{ std::min(n.source.start.line - 1, max_top_margin_lines) };
-      line_start = n.source.start.line - top_margin;
-      line_end = n.source.start.line + body_range;
+      auto const top_margin{ std::min(body_source.start.line - 1, max_top_margin_lines) };
+      line_end = n.source.end.line;
+      line_start = line_end - body_range - top_margin;
+      //fmt::println("source.start {} source.end {}", body_source.start.line, body_source.end.line);
+      //fmt::println("body_range {} line_start {} line_end {}", body_range, line_start, line_end);
 
       for(size_t i{ line_start }; i <= line_end; ++i)
       {
@@ -150,7 +160,7 @@ namespace jank::error
     {
       if(n.source.start.line < line_start)
       {
-        for(auto i{ line_start - 1 }; i != n.source.start.line; --i)
+        for(auto i{ line_start - 1 }; i >= n.source.start.line; --i)
         {
           lines.emplace(lines.begin(), line::kind::file_data, i);
         }
@@ -158,7 +168,7 @@ namespace jank::error
       }
       if(n.source.end.line > line_end)
       {
-        for(auto i{ line_end + 1 }; i != n.source.end.line; ++i)
+        for(auto i{ line_end + 1 }; i <= n.source.end.line; ++i)
         {
           lines.emplace_back(line::kind::file_data, i);
         }
@@ -166,18 +176,36 @@ namespace jank::error
       }
     }
 
-    auto const line_index{ n.source.start.line - line_start };
-    lines.emplace(lines.begin() + line_index + 1, line::kind::note, 0, n);
+    //auto const line_index{ n.source.start.line - line_start };
+    //lines.emplace(lines.begin() + line_index + 1, line::kind::note, 0, n);
+    for(size_t i{}; i < lines.size(); ++i)
+    {
+      if(lines[i].number != n.source.start.line)
+      {
+        continue;
+      }
+      while(lines[i].kind == line::kind::note && i < lines.size())
+      {
+        ++i;
+      }
+      lines.emplace(lines.begin() + i + 1, line::kind::note, 0, n);
+      break;
+    }
   }
 
   void plan::add(note const &n)
+  {
+    add(n.source, n);
+  }
+
+  void plan::add(read::source const &body_source, note const &n)
   {
     native_bool added{ false };
     for(auto &snippet : snippets)
     {
       if(snippet.file_path == n.source.file_path && snippet.can_fit(n))
       {
-        snippet.add(n);
+        snippet.add(body_source, n);
         added = true;
         break;
       }
@@ -185,7 +213,7 @@ namespace jank::error
 
     if(!added)
     {
-      snippets.emplace_back(n.source.file_path).add(n);
+      snippets.emplace_back(n.source.file_path).add(body_source, n);
     }
   }
 
@@ -197,11 +225,21 @@ namespace jank::error
     line += ' ';
     line += n.message;
 
-    return text(line);
+    auto const ret{ text(line) };
+    switch(n.kind)
+    {
+      case note::kind::info:
+        return ret | color(Color::BlueLight);
+      case note::kind::warning:
+        return ret | color(Color::Orange1);
+      case note::kind::error:
+        return ret | color(Color::Red);
+    }
   }
 
   static Element code_snippet(snippet const &s)
   {
+    /* TODO: Handle unknown source and failure to map. */
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
@@ -214,6 +252,7 @@ namespace jank::error
     auto const highlighted_lines{
       ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
     };
+    //fmt::println("highlighted_lines {}", highlighted_lines.size());
 
     std::vector<Element> line_numbers, lines;
 
@@ -221,6 +260,9 @@ namespace jank::error
     for(auto const &l : s.lines)
     {
       Element line_number{}, line_content{};
+      //fmt::println("snippet line {} : {}",
+      //             l.number,
+      //             l.kind == line::kind::file_data ? "file" : "note");
       switch(l.kind)
       {
         case line::kind::file_data:
@@ -230,7 +272,7 @@ namespace jank::error
           break;
         case line::kind::note:
           line_number = text(" ");
-          line_content = underline_note(l.note.unwrap()) | color(Color::Red);
+          line_content = underline_note(l.note.unwrap());
           break;
       }
       line_numbers.emplace_back(line_number);

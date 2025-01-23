@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/read/source.hpp>
+#include <jank/option.hpp>
 
 namespace jank::error
 {
@@ -45,7 +46,6 @@ namespace jank::error
     parse_invalid_reader_deref,
     parse_unresolved_namespace,
     parse_invalid_ratio,
-    parse_invalid_escaped_string,
     parse_invalid_keyword,
     internal_parse_failure,
 
@@ -151,8 +151,6 @@ namespace jank::error
         return "parse/unresolved-namespace";
       case kind::parse_invalid_ratio:
         return "parse/invalid-ratio";
-      case kind::parse_invalid_escaped_string:
-        return "parse/invalid-escaped-string";
       case kind::parse_invalid_keyword:
         return "parse/invalid-keyword";
       case kind::internal_parse_failure:
@@ -201,8 +199,16 @@ namespace jank::error
 
   struct note
   {
+    enum class kind : uint8_t
+    {
+      info,
+      warning,
+      error
+    };
+
     native_persistent_string message;
     read::source source;
+    kind kind{ kind::error };
   };
 
   struct base : gc
@@ -212,10 +218,16 @@ namespace jank::error
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, native_persistent_string const &message, read::source const &source);
+    base(kind k, read::source const &source, native_persistent_string const &error_note_message);
+    base(kind k,
+         read::source const &source,
+         native_persistent_string const &error_note_message,
+         native_vector<note> const &extra_notes);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          native_persistent_string const &error_note_message);
+    base(kind k, read::source const &source, note const &error_note);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
@@ -246,9 +258,19 @@ namespace jank
   using error_ptr = runtime::native_box<error::base>;
 
   error_ptr make_error(error::kind const kind, native_persistent_string const &message);
+  error_ptr make_error(error::kind const kind, read::source const &source);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source);
+  error_ptr
+  make_error(error::kind const kind, read::source const &source, error::note const &error_note);
+  error_ptr make_error(error::kind const kind,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message);
+  error_ptr make_error(error::kind const kind,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message,
+                       error::note const &additional);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source,
@@ -260,4 +282,6 @@ namespace jank
                        native_persistent_string const &message,
                        read::source_position const &start,
                        read::source_position const &end);
+
+  read::source meta_source(option<runtime::object_ptr> const &o);
 }

@@ -1,6 +1,7 @@
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 
 namespace jank::error
 {
@@ -52,7 +53,7 @@ namespace jank::error
       case kind::parse_invalid_quote:
         return "Invalid quote";
       case kind::parse_invalid_meta_hint_value:
-        return "Value after meta hint ^ must be a keyword or map";
+        return "Value after meta hint must be a keyword or map";
       case kind::parse_invalid_meta_hint_target:
         return "Invalid meta hint target";
       case kind::parse_unsupported_reader_macro:
@@ -83,8 +84,6 @@ namespace jank::error
         return "Unresolved namespace";
       case kind::parse_invalid_ratio:
         return "Invalid ratio";
-      case kind::parse_invalid_escaped_string:
-        return "Invalid string escape sequence";
       case kind::parse_invalid_keyword:
         return "Invalid keyword";
       case kind::internal_parse_failure:
@@ -150,6 +149,28 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
+             read::source const &source,
+             native_persistent_string const &error_note_message)
+    : kind{ k }
+    , message{ kind_to_message(k) }
+    , source{ source }
+    , error_note{ error_note_message, source }
+  {
+  }
+
+  base::base(enum kind const k,
+             read::source const &source,
+             native_persistent_string const &error_note_message,
+             native_vector<note> const &extra_notes)
+    : kind{ k }
+    , message{ kind_to_message(k) }
+    , source{ source }
+    , error_note{ error_note_message, source }
+    , extra_notes{ extra_notes }
+  {
+  }
+
+  base::base(enum kind const k,
              native_persistent_string const &message,
              read::source const &source,
              native_persistent_string const &error_note_message)
@@ -157,6 +178,14 @@ namespace jank::error
     , message{ message }
     , source{ source }
     , error_note{ error_note_message, source }
+  {
+  }
+
+  base::base(enum kind const k, read::source const &source, note const &error_note)
+    : kind{ k }
+    , message{ kind_to_message(k) }
+    , source{ source }
+    , error_note{ error_note }
   {
   }
 
@@ -210,11 +239,40 @@ namespace jank
                                           read::source{ runtime::to_string(file), {}, {} });
   }
 
+  error_ptr make_error(error::kind const kind, read::source const &source)
+  {
+    return runtime::make_box<error::base>(kind, source);
+  }
+
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source)
   {
     return runtime::make_box<error::base>(kind, message, source);
+  }
+
+  error_ptr
+  make_error(error::kind const kind, read::source const &source, error::note const &error_note)
+  {
+    return runtime::make_box<error::base>(kind, source, error_note);
+  }
+
+  error_ptr make_error(error::kind const kind,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message)
+  {
+    return runtime::make_box<error::base>(kind, source, error_note_message);
+  }
+
+  error_ptr make_error(error::kind const kind,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message,
+                       error::note const &additional)
+  {
+    return runtime::make_box<error::base>(kind,
+                                          source,
+                                          error_note_message,
+                                          native_vector<error::note>{ additional });
   }
 
   error_ptr make_error(error::kind const kind,
@@ -245,4 +303,39 @@ namespace jank
                                           message,
                                           read::source{ runtime::to_string(file), start, end });
   }
+
+  read::source meta_source(option<runtime::object_ptr> const &o)
+  {
+    using namespace jank::runtime;
+
+    auto const meta(runtime::meta(o.unwrap_or(obj::nil::nil_const())));
+    auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
+    if(source == obj::nil::nil_const())
+    {
+      return read::source::unknown;
+    }
+
+    auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
+    auto const start(get(source, __rt_ctx->intern_keyword("start").expect_ok()));
+    auto const end(get(source, __rt_ctx->intern_keyword("end").expect_ok()));
+
+    auto const start_offset(get(start, __rt_ctx->intern_keyword("offset").expect_ok()));
+    auto const start_line(get(start, __rt_ctx->intern_keyword("line").expect_ok()));
+    auto const start_col(get(start, __rt_ctx->intern_keyword("col").expect_ok()));
+
+    auto const end_offset(get(end, __rt_ctx->intern_keyword("offset").expect_ok()));
+    auto const end_line(get(end, __rt_ctx->intern_keyword("line").expect_ok()));
+    auto const end_col(get(end, __rt_ctx->intern_keyword("col").expect_ok()));
+
+    return {
+      to_string(file),
+      { static_cast<size_t>(to_int(start_offset)),
+              static_cast<size_t>(to_int(start_line)),
+              static_cast<size_t>(to_int(start_col)) },
+      {   static_cast<size_t>(to_int(end_offset)),
+              static_cast<size_t>(to_int(end_line)),
+              static_cast<size_t>(to_int(end_col))  }
+    };
+  }
+
 }

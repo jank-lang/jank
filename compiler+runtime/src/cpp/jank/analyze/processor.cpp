@@ -22,38 +22,6 @@
 
 namespace jank::analyze
 {
-  static read::source meta_source(option<object_ptr> const &o)
-  {
-    auto const meta(runtime::meta(o.unwrap_or(obj::nil::nil_const())));
-    auto const source(runtime::get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
-    if(source == obj::nil::nil_const())
-    {
-      return read::source::unknown;
-    }
-
-    auto const file(runtime::get(source, __rt_ctx->intern_keyword("file").expect_ok()));
-    auto const start(runtime::get(source, __rt_ctx->intern_keyword("start").expect_ok()));
-    auto const end(runtime::get(source, __rt_ctx->intern_keyword("end").expect_ok()));
-
-    auto const start_offset(runtime::get(start, __rt_ctx->intern_keyword("offset").expect_ok()));
-    auto const start_line(runtime::get(start, __rt_ctx->intern_keyword("line").expect_ok()));
-    auto const start_col(runtime::get(start, __rt_ctx->intern_keyword("col").expect_ok()));
-
-    auto const end_offset(runtime::get(end, __rt_ctx->intern_keyword("offset").expect_ok()));
-    auto const end_line(runtime::get(end, __rt_ctx->intern_keyword("line").expect_ok()));
-    auto const end_col(runtime::get(end, __rt_ctx->intern_keyword("col").expect_ok()));
-
-    return {
-      runtime::to_string(file),
-      { static_cast<size_t>(runtime::to_int(start_offset)),
-                         static_cast<size_t>(runtime::to_int(start_line)),
-                         static_cast<size_t>(runtime::to_int(start_col)) },
-      {   static_cast<size_t>(runtime::to_int(end_offset)),
-                         static_cast<size_t>(runtime::to_int(end_line)),
-                         static_cast<size_t>(runtime::to_int(end_col))  }
-    };
-  }
-
   processor::processor(runtime::context &rt_ctx)
     : rt_ctx{ rt_ctx }
     , root_frame{ make_box<local_frame>(local_frame::frame_type::root, rt_ctx, none) }

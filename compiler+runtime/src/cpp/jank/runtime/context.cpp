@@ -481,7 +481,7 @@ namespace jank::runtime
         auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve ns for keyword: '{}'", ns));
+          return err(fmt::format("Unable to resolve namespace '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }
