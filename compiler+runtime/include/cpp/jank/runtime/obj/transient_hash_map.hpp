@@ -2,7 +2,11 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+
+namespace jank::runtime::detail
+{
+  struct native_persistent_array_map;
+}
 
 namespace jank::runtime::obj
 {
