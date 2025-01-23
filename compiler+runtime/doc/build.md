@@ -52,6 +52,7 @@ git submodule update --recursive --init
 A typical release build just needs the following:
 
 ```bash
+cd compiler+runtime
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 ./bin/compile
 ```
@@ -60,6 +61,7 @@ A typical release build just needs the following:
 To make a debug build, specify the build type when configuring.
 
 ```bash
+cd compiler+runtime
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
 ./bin/compile
 
@@ -68,8 +70,9 @@ To make a debug build, specify the build type when configuring.
 ```
 
 # Run jank
-To run jank's repl, inside of /compiler+runtime, do
+To run jank's repl do
 ```bash
+cd compiler+runtime
 ./build/jank repl
 ```
 
@@ -79,6 +82,7 @@ Note that this includes a lot of header files, which are necessary for jank's
 JIT compilation.
 
 ```bash
+cd compiler+runtime
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
 ./bin/install
 ```
