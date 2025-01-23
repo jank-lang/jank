@@ -78,6 +78,11 @@ namespace jank::runtime
     return o->type == object_type::persistent_string;
   }
 
+  native_bool is_char(object_ptr const o)
+  {
+    return o->type == object_type::character;
+  }
+
   native_bool is_symbol(object_ptr const o)
   {
     return o->type == object_type::symbol;

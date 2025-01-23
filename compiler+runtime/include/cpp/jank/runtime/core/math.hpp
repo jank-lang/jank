@@ -220,6 +220,7 @@ namespace jank::runtime
   native_real pow(native_integer l, native_integer r);
 
   object_ptr rem(object_ptr l, object_ptr r);
+  object_ptr quot(object_ptr l, object_ptr r);
   object_ptr inc(object_ptr l);
   object_ptr dec(object_ptr l);
 

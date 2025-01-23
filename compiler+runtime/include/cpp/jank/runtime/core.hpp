@@ -20,6 +20,7 @@ namespace jank::runtime
   native_bool is_false(object_ptr o);
   native_bool is_some(object_ptr o);
   native_bool is_string(object_ptr o);
+  native_bool is_char(object_ptr o);
 
   native_bool is_symbol(object_ptr o);
   native_bool is_simple_symbol(object_ptr o);
