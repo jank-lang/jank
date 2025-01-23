@@ -27,10 +27,6 @@ namespace jank::error
     return '?';
   }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wreturn-type"
-
   error_ptr parse_invalid_unicode(read::source const &source, native_persistent_string const &note)
   {
     return make_error(kind::parse_invalid_unicode, source, note);
@@ -124,10 +120,10 @@ namespace jank::error
                       parent_fn_source);
   }
 
-  error_ptr parse_invalid_shorthand_function(native_persistent_string const &message,
-                                             read::source const &source)
+  error_ptr
+  parse_invalid_shorthand_function(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_shorthand_function, source, message);
+    return make_error(kind::parse_invalid_shorthand_function, source, note);
   }
 
   error_ptr parse_invalid_shorthand_function_parameter(read::source const &source)
@@ -138,42 +134,48 @@ namespace jank::error
   }
 
   error_ptr
-  parse_invalid_reader_var(native_persistent_string const &message, read::source const &source)
+  parse_invalid_reader_var(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_reader_var, "Invalid var reader macro", source, message);
+    return make_error(kind::parse_invalid_reader_var, "Invalid var reader macro", source, note);
   }
 
   error_ptr
-  parse_invalid_reader_comment(native_persistent_string const &message, read::source const &source)
+  parse_invalid_reader_comment(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_reader_comment, source, message);
-  }
-
-  error_ptr parse_invalid_reader_conditional(native_persistent_string const &message,
-                                             read::source const &source)
-  {
-    return make_error(kind::parse_invalid_reader_conditional, source, message);
+    return make_error(kind::parse_invalid_reader_comment, source, note);
   }
 
   error_ptr
-  parse_invalid_reader_splice(native_persistent_string const &message, read::source const &source)
+  parse_invalid_reader_conditional(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_reader_splice, source, message);
+    return make_error(kind::parse_invalid_reader_conditional, source, note);
+  }
+
+  error_ptr
+  parse_invalid_reader_splice(read::source const &source, native_persistent_string const &note)
+  {
+    return make_error(kind::parse_invalid_reader_splice, source, note);
   }
 
   error_ptr parse_invalid_reader_gensym(read::source const &source)
   {
+    return make_error(kind::parse_invalid_reader_gensym, source);
   }
 
   error_ptr
-  parse_invalid_syntax_quote(native_persistent_string const &message, read::source const &source)
+  parse_invalid_syntax_quote(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_syntax_quote, source, message);
+    return make_error(kind::parse_invalid_syntax_quote, source, note);
   }
 
   error_ptr parse_invalid_syntax_unquote(read::source const &source)
   {
     return make_error(kind::parse_invalid_syntax_unquote, source);
+  }
+
+  error_ptr parse_invalid_syntax_unquote_splice(read::source const &source)
+  {
+    return make_error(kind::parse_invalid_syntax_unquote_splice, source);
   }
 
   error_ptr parse_invalid_reader_deref(read::source const &source)
@@ -187,22 +189,24 @@ namespace jank::error
     return make_error(kind::parse_unresolved_namespace, message, source, "Referenced here");
   }
 
-  error_ptr parse_invalid_ratio(native_persistent_string const &message, read::source const &source)
+  error_ptr parse_invalid_ratio(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_ratio, source, message);
+    return make_error(kind::parse_invalid_ratio, source, note);
   }
 
-  error_ptr
-  parse_invalid_keyword(native_persistent_string const &message, read::source const &source)
+  error_ptr parse_invalid_keyword(read::source const &source, native_persistent_string const &note)
   {
-    return make_error(kind::parse_invalid_keyword, source, message);
+    return make_error(kind::parse_invalid_keyword, source, note);
   }
 
   error_ptr
   internal_parse_failure(native_persistent_string const &message, read::source const &source)
   {
-    return make_error(kind::internal_parse_failure, source, message);
+    return make_error(kind::internal_parse_failure, message, source);
   }
 
-#pragma clang diagnostic pop
+  error_ptr internal_parse_failure(native_persistent_string const &message)
+  {
+    return make_error(kind::internal_parse_failure, read::source::unknown, message);
+  }
 }

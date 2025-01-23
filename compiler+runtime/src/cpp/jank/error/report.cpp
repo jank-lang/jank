@@ -33,6 +33,7 @@ namespace jank::error
     option<note> note;
   };
 
+  /* TODO: Use an ... between distant notes. */
   struct snippet
   {
     static constexpr size_t max_body_lines{ 5 };

@@ -620,13 +620,13 @@ namespace jank::read::parse
     }
     else if(list_result.expect_ok().is_none())
     {
-      return error::parse_invalid_shorthand_function("Value after #( must be present",
-                                                     { start_token.start, latest_token.end });
+      return error::parse_invalid_shorthand_function({ start_token.start, latest_token.end },
+                                                     "Value after #( must be present");
     }
     else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return error::parse_invalid_shorthand_function("Value after #( must be a list",
-                                                     { start_token.start, latest_token.end });
+      return error::parse_invalid_shorthand_function({ start_token.start, latest_token.end },
+                                                     "Value after #( must be a list");
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -667,13 +667,13 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_var("Value after #' must be present",
-                                             { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
+                                             "Value after #' must be present");
     }
     else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
-      return error::parse_invalid_reader_var("Value after #' must be a symbol",
-                                             { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
+                                             "Value after #' must be a symbol");
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
@@ -697,8 +697,8 @@ namespace jank::read::parse
     }
     else if(ignored_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_comment("Value after #_ must be present",
-                                                 { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_comment({ start_token.start, latest_token.end },
+                                                 "Value after #_ must be present");
     }
 
     return ok(none);
@@ -716,13 +716,13 @@ namespace jank::read::parse
     }
     else if(list_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_conditional("Value after #? must be present",
-                                                     { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "Value after #? must be present");
     }
     else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return error::parse_invalid_reader_conditional("Value after #? must be a list",
-                                                     { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "Value after #? must be a list");
     }
 
     auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -730,8 +730,8 @@ namespace jank::read::parse
 
     if(list.data->count() % 2 == 1)
     {
-      return error::parse_invalid_reader_conditional("#? expects an even number of forms",
-                                                     { start_token.start, latest_token.end });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "#? expects an even number of forms");
     }
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
@@ -749,8 +749,8 @@ namespace jank::read::parse
         {
           if(!truthy(splicing_allowed_var->deref()))
           {
-            return error::parse_invalid_reader_splice("#?@ splice must not be top-level",
-                                                      { start_token.start, latest_token.end });
+            return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
+                                                      "#?@ splice must not be top-level");
           }
 
           auto const s(next_in_place(it)->first());
@@ -773,8 +773,8 @@ namespace jank::read::parse
             },
             [&]() -> processor::object_result {
               /* TODO: Get the source of just this form. */
-              return error::parse_invalid_reader_splice("#?@ splice must be a sequence",
-                                                        { start_token.start, latest_token.end });
+              return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
+                                                        "#?@ splice must be a sequence");
             },
             s);
         }
@@ -790,7 +790,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  string_result<object_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
+  result<object_ptr, error_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
   {
     if(!seq)
     {
@@ -798,7 +798,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> string_result<object_ptr> {
+      [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -829,14 +829,13 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<object_ptr> {
-        /* TODO: ICE */
-        return err("not seqable");
+      []() -> result<object_ptr, error_ptr> {
+        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable"));
       },
       seq);
   }
 
-  string_result<object_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
+  result<object_ptr, error_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
   {
     if(!seq)
     {
@@ -844,7 +843,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> string_result<object_ptr> {
+      [](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -855,9 +854,8 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<object_ptr> {
-        /* TODO: ICE */
-        return err("not seqable");
+      []() -> result<object_ptr, error_ptr> {
+        return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq"));
       },
       seq);
   }
@@ -885,7 +883,7 @@ namespace jank::read::parse
       form);
   }
 
-  string_result<object_ptr> processor::syntax_quote(object_ptr const form)
+  result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
   {
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
@@ -903,7 +901,7 @@ namespace jank::read::parse
         auto const env(__rt_ctx->gensym_env_var->deref());
         if(env->type == object_type::nil)
         {
-          return err("gensym literal is not within a syntax quote");
+          return err(error::internal_parse_failure("Missing gensym env"));
         }
 
         auto gensym(get(env, sym));
@@ -935,7 +933,7 @@ namespace jank::read::parse
     }
     else if(syntax_quote_is_unquote(form, true))
     {
-      return err("unquote splice not in seq");
+      return err(error::parse_invalid_syntax_unquote_splice(meta_source(form)));
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
@@ -951,7 +949,7 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       return visit_seqable(
-        [&](auto const typed_form) -> string_result<object_ptr> {
+        [&](auto const typed_form) -> result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -996,7 +994,7 @@ namespace jank::read::parse
           }
           if constexpr(behavior::set_like<T>)
           {
-            return err("nyi: set");
+            return err(error::internal_parse_failure("nyi: set"));
           }
           if constexpr(std::same_as<T, obj::persistent_list>)
           {
@@ -1022,12 +1020,13 @@ namespace jank::read::parse
           }
           else
           {
-            return err(fmt::format("unsupported collection type: {}",
-                                   object_type_str(typed_form->base.type)));
+            return err(
+              error::internal_parse_failure(fmt::format("unsupported collection type: {}",
+                                                        object_type_str(typed_form->base.type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> string_result<object_ptr> {
+        [=]() -> result<object_ptr, error_ptr> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);
@@ -1056,15 +1055,14 @@ namespace jank::read::parse
     }
     else if(quoted_form.expect_ok().is_none())
     {
-      return error::parse_invalid_syntax_quote("Value after ` must be present",
-                                               { start_token.start, latest_token.end });
+      return error::parse_invalid_syntax_quote({ start_token.start, latest_token.end },
+                                               "Value after ` must be present");
     }
 
     auto const res(syntax_quote(quoted_form.expect_ok().unwrap().ptr));
     if(res.is_err())
     {
-      return error::parse_invalid_syntax_quote(res.expect_err(),
-                                               { start_token.start, latest_token.end });
+      return res.expect_err();
     }
 
     return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
@@ -1251,8 +1249,8 @@ namespace jank::read::parse
     auto const intern_res(__rt_ctx->intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
-      return error::parse_invalid_keyword(intern_res.expect_err(),
-                                          { start_token.start, latest_token.end });
+      return error::parse_invalid_keyword({ start_token.start, latest_token.end },
+                                          intern_res.expect_err());
     }
     return object_source_info{ intern_res.expect_ok(), start_token, start_token };
   }
@@ -1273,8 +1271,8 @@ namespace jank::read::parse
     auto const &ratio_data(boost::get<lex::ratio>(token.data));
     if(ratio_data.denominator == 0)
     {
-      return error::parse_invalid_ratio("A ratio may not have a denominator of zero",
-                                        { token.start, latest_token.end });
+      return error::parse_invalid_ratio({ token.start, latest_token.end },
+                                        "A ratio may not have a denominator of zero");
     }
     auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)

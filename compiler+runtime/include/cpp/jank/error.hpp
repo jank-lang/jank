@@ -43,6 +43,7 @@ namespace jank::error
     parse_invalid_reader_gensym,
     parse_invalid_syntax_quote,
     parse_invalid_syntax_unquote,
+    parse_invalid_syntax_unquote_splice,
     parse_invalid_reader_deref,
     parse_unresolved_namespace,
     parse_invalid_ratio,
@@ -145,6 +146,8 @@ namespace jank::error
         return "parse/invalid-syntax-quote";
       case kind::parse_invalid_syntax_unquote:
         return "parse/invalid-syntax-unquote";
+      case kind::parse_invalid_syntax_unquote_splice:
+        return "parse/invalid-syntax-unquote-splice";
       case kind::parse_invalid_reader_deref:
         return "parse/invalid-reader-deref";
       case kind::parse_unresolved_namespace:

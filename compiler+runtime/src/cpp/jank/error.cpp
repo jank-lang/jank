@@ -73,11 +73,13 @@ namespace jank::error
       case kind::parse_invalid_reader_splice:
         return "Invalid reader splice";
       case kind::parse_invalid_reader_gensym:
-        return "Invalid reader gensym";
+        return "gensym literal is not within a syntax quote";
       case kind::parse_invalid_syntax_quote:
         return "Invalid syntax quote";
       case kind::parse_invalid_syntax_unquote:
         return "Invalid syntax unquote";
+      case kind::parse_invalid_syntax_unquote_splice:
+        return "Unquote splice is not within a sequence";
       case kind::parse_invalid_reader_deref:
         return "Invalid reader deref";
       case kind::parse_unresolved_namespace:
