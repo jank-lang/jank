@@ -63,7 +63,7 @@ runs:
       working-directory: ${{ github.workspace }}/lein-jank
       run: |
         ${{ github.workspace }}/compiler+runtime/bin/install
-        ./test.sh
+        ./test
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
