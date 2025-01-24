@@ -49,7 +49,7 @@ So far this does not seem to be the case, however, here's how it's done if neede
 
 Create a local project with the following `deps.edn`:
 
-```clojure
+```bash
 mkdir delete-clojure-subproject
 cd delete-clojure-subproject
 echo '{:paths []}' > deps.edn
