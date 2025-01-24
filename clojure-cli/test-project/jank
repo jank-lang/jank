@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [ -z ${ALIAS+x} ]; then
+  ALIAS=""
+else
+  echo "Aliases: $ALIAS"
+fi
+jank --module-path $(clojure "-A:$ALIAS" -Spath) "$@"
