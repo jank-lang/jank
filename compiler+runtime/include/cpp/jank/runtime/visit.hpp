@@ -52,6 +52,7 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/tagged_literal.hpp>
 
 namespace jank::runtime
 {
@@ -350,6 +351,11 @@ namespace jank::runtime
       case object_type::var_unbound_root:
         {
           return fn(expect_object<var_unbound_root>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::tagged_literal:
+        {
+          return fn(expect_object<obj::tagged_literal>(erased), std::forward<Args>(args)...);
         }
         break;
       default:

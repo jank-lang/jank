@@ -7092,18 +7092,14 @@ fails, attempts to require sym's namespace and retries."
   ;;              acc))))
   (throw "TODO: port"))
 
-(defn tagged-literal?
+(def tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  [value]
-  ;; (instance? clojure.lang.TaggedLiteral value)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal?)
 
-(defn tagged-literal
+(def tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  [#_clojure.lang.Symbol tag form]
-  ;; (clojure.lang.TaggedLiteral/create tag form)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal)
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"

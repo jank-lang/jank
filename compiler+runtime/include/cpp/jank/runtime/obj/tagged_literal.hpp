@@ -1,0 +1,31 @@
+#pragma once
+
+#include <jank/runtime/object.hpp>
+#include <jank/option.hpp>
+
+namespace jank::runtime::obj
+{
+  struct tagged_literal : gc
+  {
+    static constexpr object_type obj_type{ object_type::tagged_literal };
+    static constexpr native_bool pointer_free{ false };
+
+    tagged_literal(object_ptr tag, object_ptr form);
+
+    /* behavior::object_like */
+    native_bool equal(object const &) const;
+    native_persistent_string to_string() const;
+    void to_string(util::string_builder &buff) const;
+    native_persistent_string to_code_string() const;
+    native_hash to_hash() const;
+
+    object base{ obj_type };
+
+    object_ptr tag;
+    object_ptr form;
+
+    mutable native_hash hash{};
+  };
+
+  native_bool is_tagged_literal(object_ptr o);
+}
