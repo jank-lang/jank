@@ -19,6 +19,12 @@ namespace jank::runtime::obj
     native_persistent_string to_code_string() const;
     native_hash to_hash() const;
 
+    /* behavior::associatively_readable */
+    object_ptr get(object_ptr const key) const;
+    object_ptr get(object_ptr const key, object_ptr const fallback) const;
+    object_ptr get_entry(object_ptr key) const;
+    native_bool contains(object_ptr key) const;
+
     object base{ obj_type };
 
     object_ptr tag;
