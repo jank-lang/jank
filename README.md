@@ -28,6 +28,8 @@ use yet. Check back in a few months!**
 ## Docs
 * [Installing jank](./compiler+runtime/doc/install.md)
 * [Building jank](./compiler+runtime/doc/build.md)
+* [Using jank with Leiningen](./lein-jank/README.md)
+* [Using jank with Clojure CLI](./clojure-cli/README.md)
 
 ## Appetizer
 ```clojure
