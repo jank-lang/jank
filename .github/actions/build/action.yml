@@ -59,7 +59,7 @@ runs:
     - if: ${{ env.CODECOV }} == "on"
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
-    - name: Add Jank to PATH
+    - name: Add jank to PATH
       shell: bash
       run: ${{ github.workspace }}/compiler+runtime/bin/install
     - name: Test Clojure CLI workflow

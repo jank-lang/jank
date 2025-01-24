@@ -1,4 +1,4 @@
-# Clojure CLI with Jank
+# Clojure CLI with jank
 
 Clojure CLI can be used as a build tool for jank projects.
 
@@ -10,7 +10,7 @@ Put jank source files in the `src` directory like a normal Clojure project and
 add it to the `:path`. You can pull git, maven, and local dependencies like a
 normal Clojure project.
 
-Jank tests go in the `test` directory, and we will add that to the `:paths`
+Add jank tests to the `test` directory, and we will add that to the `:paths`
 using the `:test` alias activated with `-A:test`.
 
 We will use the linked [test project](test-project) as an example.
@@ -29,13 +29,13 @@ The following assumes we are in the `test-project` directory
 
 ## Starting a dev REPL
 
-```clojure
+```bash
 jank --module-path $(clojure -A:test -Spath) repl
 ```
 
 ## Run a file
 
-```clojure
+```bash
 jank --module-path $(clojure -Spath) run-main jank-cli-test.core 1
 ```
 
@@ -64,6 +64,6 @@ Add the following entry to your root deps.edn.
 
 Then add the `delete-clojure` alias when calculating `--module-path`.
 
-```shell
+```bash
 jank --module-path $(clojure -A:test:delete-clojure -Spath) repl
 ```
