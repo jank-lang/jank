@@ -14,7 +14,7 @@ namespace jank::runtime::obj
 
   native_bool tagged_literal::equal(object const &o) const
   {
-    if(o.type != object_type::symbol)
+    if(o.type != object_type::tagged_literal)
     {
       return false;
     }
