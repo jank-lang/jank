@@ -264,8 +264,7 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      //FIXME module_path?
-      register_entry(entries, "", { none, p.string() });
+      register_entry(entries, p.string(), { none, p.string() });
     }
   }
 
