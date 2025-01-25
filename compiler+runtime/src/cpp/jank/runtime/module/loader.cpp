@@ -189,11 +189,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      fmt::println("register_entry {} {} {} {}",
-                  entry.archive_path.unwrap_or("None"),
-                  entry.path,
-                  module_path.string(),
-                  path_to_resource(module_path));
+      //   fmt::println("register_entry {} {} {} {}",
+      //               entry.archive_path.unwrap_or("None"),
+      //               entry.path,
+      //               module_path.string(),
+      //               path_to_module(module_path));
     }
   }
 
