@@ -108,7 +108,9 @@ namespace jank::runtime::module
     context &rt_ctx;
     native_persistent_string paths;
     /* TODO: These will need synchonization. */
-    /* This maps resources like `foo_bar/spam/meow` to entries. */
+    /* This maps resources like `foo_bar/spam/meow` to entries
+     * tracking relevant files that correspond to that resource like
+     * `foo_bar/spam/meow.cljc`. */
     native_unordered_map<native_persistent_string, entry> entries;
   };
 }
