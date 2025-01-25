@@ -97,7 +97,7 @@ namespace jank::error
 
   error_ptr parse_invalid_meta_hint_value(read::source const &source)
   {
-    return make_error(kind::parse_invalid_meta_hint_value, source, "Excepting value here");
+    return make_error(kind::parse_invalid_meta_hint_value, source, "Meta hint is here");
   }
 
   error_ptr

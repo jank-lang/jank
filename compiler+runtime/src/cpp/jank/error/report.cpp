@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <deque>
 
 #include <fmt/format.h>
 
@@ -18,39 +19,40 @@ namespace jank::error
   using namespace jank::runtime;
   using namespace ftxui;
 
+  static constexpr size_t max_body_lines{ 6 };
+  static constexpr size_t min_body_lines{ 1 };
+  static constexpr size_t max_top_margin_lines{ 2 };
+  static constexpr size_t new_note_leniency_lines{ 2 };
+  static constexpr size_t min_ellipsis_range{ 4 };
+
   struct line
   {
     enum class kind : uint8_t
     {
       file_data,
       note,
+      ellipsis
     };
 
     kind kind{};
     /* Zero means no number. */
     size_t number{};
-    /* Only for notes. */
+    /* Only set when kind == note. */
     option<note> note;
   };
 
-  /* TODO: Use an ... between distant notes. */
   struct snippet
   {
-    static constexpr size_t max_body_lines{ 5 };
-    static constexpr size_t min_body_lines{ 1 };
-    static constexpr size_t max_top_margin_lines{ 2 };
-    static constexpr size_t new_note_leniency_lines{ 2 };
-
     native_bool can_fit(note const &n) const;
     void add(read::source const &body_source, note const &n);
+    void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
 
     native_persistent_string file_path;
     /* Zero means we have no lines yet. */
     size_t line_start{};
     size_t line_end{};
-    /* TODO: Consider deque. */
-    native_vector<line> lines;
+    std::deque<line> lines{};
   };
 
   struct plan
@@ -76,15 +78,6 @@ namespace jank::error
     }
   }
 
-  static size_t absdiff(size_t const lhs, size_t const rhs)
-  {
-    if(lhs < rhs)
-    {
-      return rhs - lhs;
-    }
-    return lhs - rhs;
-  }
-
   native_bool snippet::can_fit(note const &n) const
   {
     assert(n.source.file_path == file_path);
@@ -96,17 +89,30 @@ namespace jank::error
 
     native_bool ret{ true };
 
+    /* See if it can fit within our existing line coverage. */
     if(n.source.start.line < line_start)
     {
-      /* TODO: Don't need this fn, right? We know which is larger. */
-      ret &= absdiff(line_start, n.source.start.line) <= new_note_leniency_lines;
+      ret &= line_start - n.source.start.line <= new_note_leniency_lines;
     }
     if(n.source.end.line > line_end)
     {
-      ret &= absdiff(line_end, n.source.end.line) <= new_note_leniency_lines;
+      ret &= n.source.end.line - line_end <= new_note_leniency_lines;
     }
 
-    /* TODO: Also can't fit if it's on the same line as another note. (exception being to the left of it?) */
+    /* If it can, check each line to see if we have that line represented.
+     * It could be that we have an ellipsis which covers the relevant lines. */
+    if(ret)
+    {
+      ret = false;
+      for(auto const &l : lines)
+      {
+        if(l.number == n.source.start.line)
+        {
+          ret = true;
+          break;
+        }
+      }
+    }
 
     return ret;
   }
@@ -116,14 +122,16 @@ namespace jank::error
     add(n.source, n);
   }
 
+  /* TODO: Make sure notes are sorted left to right. Handle multiple notes on one line. */
   void snippet::add(read::source const &body_source, note const &n)
   {
     assert(n.source.file_path == file_path);
-    assert(can_fit(n));
 
-    static constexpr size_t max_body_lines{ 6 };
-    static constexpr size_t min_body_lines{ 1 };
-    static constexpr size_t max_top_margin_lines{ 2 };
+    if(!can_fit(n))
+    {
+      add_ellipsis(body_source, n);
+      return;
+    }
 
     /* Top margin:
      *   Min: 1 line
@@ -177,8 +185,6 @@ namespace jank::error
       }
     }
 
-    //auto const line_index{ n.source.start.line - line_start };
-    //lines.emplace(lines.begin() + line_index + 1, line::kind::note, 0, n);
     for(size_t i{}; i < lines.size(); ++i)
     {
       if(lines[i].number != n.source.start.line)
@@ -189,9 +195,128 @@ namespace jank::error
       {
         ++i;
       }
-      lines.emplace(lines.begin() + i + 1, line::kind::note, 0, n);
+      lines.emplace(lines.begin() + static_cast<ptrdiff_t>(i) + 1, line::kind::note, 0, n);
       break;
     }
+  }
+
+  void snippet::add_ellipsis(read::source const &body_source, note const &n)
+  {
+    /* First we add the note to an empty snippet. */
+    snippet s{ .file_path = n.source.file_path };
+    s.add(body_source, n);
+
+    /* Then we stitch that snippet into this one, with an ellipsis in between.
+     * There are three cases here, for where to put the new snippet:
+     *
+     * 1. At the start of our current snippet
+     * 2. At the end of our current snippet
+     * 3. In the middle of our current snippet
+     */
+    if(s.line_start < line_start)
+    {
+      lines.emplace(lines.begin(), line::kind::ellipsis);
+      for(auto it{ s.lines.rbegin() }; it != s.lines.rend(); ++it)
+      {
+        lines.emplace(lines.begin(), std::move(*it));
+      }
+    }
+    else if(line_end < s.line_start)
+    {
+      lines.emplace_back(line::kind::ellipsis);
+      for(auto &line : s.lines)
+      {
+        lines.emplace_back(std::move(line));
+      }
+    }
+    else
+    {
+      /* Inserting into the middle is messy. We only do this when the line where our note lives
+       * is collapsed by an ellipsis. Thus, we need to expand the ellipsis either partially
+       * or fully.
+       *
+       * We do this by finding the releveant ellipsis (there may be multiple) and inserting
+       * our lines before it. We also insert our own ellipsis at the start of our lines. By
+       * the end of this, we'll have our new lines with an ellipsis on either side. The
+       * pass we run at the end to remove unneeded ellipsis will clean those up. */
+      size_t last_ellipse{}, last_line_number{}, line_number_before_last_ellipse{};
+      for(size_t i{}; i < lines.size(); ++i)
+      {
+        /* First loop until we find a line number larger than our start. We keep track
+         * of the lines and ellipsis and we see them. */
+        if(lines[i].kind == line::kind::file_data)
+        {
+          last_line_number = lines[i].number;
+        }
+        if(lines[i].kind == line::kind::ellipsis)
+        {
+          last_ellipse = i;
+          line_number_before_last_ellipse = last_line_number;
+        }
+        else if(s.line_start < lines[i].number)
+        {
+          /* Once we've found a number which is beyond the start of our note, we
+           * want to look back and find the last ellipsis. We can start inserting *before*
+           * that ellipsis. */
+          size_t added_lines{};
+          for(size_t i{}; i < s.lines.size(); ++i)
+          {
+            /* Skip any duplicate lines which can mess with the ordering. */
+            if(s.lines[i].number != 0 && s.lines[i].number <= line_number_before_last_ellipse)
+            {
+              continue;
+            }
+            lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipse + added_lines),
+                          std::move(s.lines[i]));
+            ++added_lines;
+          }
+          /* We're inserting before the last ellipsis, so we end by putting an ellipsis at the
+           * start of everything we just added. That surrounds our added lines in two ellipsis. */
+          lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipse), line::kind::ellipsis);
+
+          break;
+        }
+      }
+    }
+
+    size_t last_number{};
+    for(size_t i{}; i < lines.size(); ++i)
+    {
+      /* Remove ellipsis if needed. */
+      if(lines[i].kind == line::kind::ellipsis)
+      {
+        /* We can be confident there's no note right after an ellipsis. */
+        auto const diff(lines[i + 1].number - last_number);
+        if(diff < min_ellipsis_range)
+        {
+          /* Fill in the extra lines. */
+          lines[i].kind = line::kind::file_data;
+          lines[i].number = last_number + 1;
+          for(size_t k{ i + 1 }; k < i + diff - 1; ++k)
+          {
+            lines.emplace(lines.begin() + static_cast<ptrdiff_t>(k),
+                          line::kind::file_data,
+                          last_number + (k - i) + 1);
+          }
+        }
+      }
+      /* Ensure no overlap. */
+      else if(last_number != 0 && lines[i].number == last_number)
+      {
+        lines.erase(lines.begin() + static_cast<ptrdiff_t>(i));
+        --i;
+      }
+
+      if(lines[i].number != 0)
+      {
+        last_number = lines[i].number;
+      }
+    }
+    static_cast<void>(last_number);
+    static_cast<void>(min_ellipsis_range);
+
+    line_start = std::min(line_start, s.line_start);
+    line_end = std::max(line_end, s.line_end);
   }
 
   void plan::add(note const &n)
@@ -204,7 +329,7 @@ namespace jank::error
     native_bool added{ false };
     for(auto &snippet : snippets)
     {
-      if(snippet.file_path == n.source.file_path && snippet.can_fit(n))
+      if(snippet.file_path == n.source.file_path)
       {
         snippet.add(body_source, n);
         added = true;
@@ -241,6 +366,7 @@ namespace jank::error
   static Element code_snippet(snippet const &s)
   {
     /* TODO: Handle unknown source and failure to map. */
+    /* TODO: Handle files in JARs. */
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
@@ -257,7 +383,6 @@ namespace jank::error
 
     std::vector<Element> line_numbers, lines;
 
-    size_t highlighted_line_idx{};
     for(auto const &l : s.lines)
     {
       Element line_number{}, line_content{};
@@ -268,12 +393,15 @@ namespace jank::error
       {
         case line::kind::file_data:
           line_number = paragraphAlignRight(std::to_string(l.number));
-          line_content = highlighted_lines.at(highlighted_line_idx);
-          ++highlighted_line_idx;
+          line_content = highlighted_lines.at(l.number);
           break;
         case line::kind::note:
           line_number = text(" ");
           line_content = underline_note(l.note.unwrap());
+          break;
+        case line::kind::ellipsis:
+          line_number = text(" ");
+          line_content = text("…");
           break;
       }
       line_numbers.emplace_back(line_number);
