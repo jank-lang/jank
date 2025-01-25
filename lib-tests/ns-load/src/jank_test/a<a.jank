@@ -1,0 +1,2 @@
+(ns jank-test.a<a)
+(defn -main [] (println "LOADED jank-test.a<a LOADED"))

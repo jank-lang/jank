@@ -70,6 +70,10 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/lein-jank
       run: ${{ github.workspace }}/bin/ci/test
+    - name: Test library workflows
+      shell: bash
+      working-directory: ${{ github.workspace }}/lib-test
+      run: ${{ github.workspace }}/bin/ci/test
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
