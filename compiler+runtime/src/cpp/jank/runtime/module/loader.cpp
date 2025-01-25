@@ -23,7 +23,7 @@ namespace jank::runtime::module
   native_persistent_string path_to_resource(boost::filesystem::path const &path)
   {
     auto const &s(path.string());
-    const std::string ret{ s, 0, s.size() - path.extension().size() };
+    std::string const ret{ s, 0, s.size() - path.extension().size() };
     // FIXME Why did `path_to_module` have a special case for the `/` function? How do I test this case?
     return ret;
   }
@@ -32,7 +32,7 @@ namespace jank::runtime::module
   native_persistent_string module_to_resource(native_persistent_string_view const &module)
   {
     static std::regex const dot{ "\\." };
-    const native_transient_string ret{ runtime::namespace_munge(module) };
+    native_transient_string const ret{ runtime::namespace_munge(module) };
     return std::regex_replace(ret, dot, "/");
   }
 
@@ -192,9 +192,10 @@ namespace jank::runtime::module
     }
   }
 
-  static void register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                                      boost::filesystem::path const &resource_path,
-                                      file_entry const &entry)
+  static void
+  register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                          boost::filesystem::path const &resource_path,
+                          file_entry const &entry)
   {
     boost::filesystem::path const p{ native_transient_string{ entry.path } };
     /* We need the file path relative to the module path, since the class
@@ -204,7 +205,6 @@ namespace jank::runtime::module
     auto const &module_path(p.lexically_relative(resource_path));
     register_entry(entries, module_path, entry);
   }
-
 
   static void
   register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
