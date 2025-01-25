@@ -130,16 +130,10 @@ namespace jank::runtime::module
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                             boost::filesystem::path const &resource_path,
+                             boost::filesystem::path const &module_path,
                              file_entry const &entry)
   {
     boost::filesystem::path const p{ native_transient_string{ entry.path } };
-    /* We need the file path relative to the module path, since the class
-     * path portion is not included in part of the module name. For example,
-     * the file may live in `src/jank/clojure/core.jank` but the module
-     * should be `clojure.core`, not `src.jank.clojure.core`. */
-    auto const &module_path(p.lexically_relative(resource_path));
-
     auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
@@ -189,13 +183,27 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //   fmt::println("register_entry {} {} {} {}",
-      //               entry.archive_path.unwrap_or("None"),
-      //               entry.path,
-      //               module_path.string(),
-      //               path_to_module(module_path));
+      fmt::println("register_entry {} {} {} {}",
+                  entry.archive_path.unwrap_or("None"),
+                  entry.path,
+                  module_path.string(),
+                  path_to_resource(module_path));
     }
   }
+
+  static void register_entry_resource(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                                      boost::filesystem::path const &resource_path,
+                                      file_entry const &entry)
+  {
+    boost::filesystem::path const p{ native_transient_string{ entry.path } };
+    /* We need the file path relative to the module path, since the class
+     * path portion is not included in part of the module name. For example,
+     * the file may live in `src/jank/clojure/core.jank` but the module
+     * should be `clojure.core`, not `src.jank.clojure.core`. */
+    auto const &module_path(p.lexically_relative(resource_path));
+    register_entry(entries, module_path, entry);
+  }
+
 
   static void
   register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
@@ -205,7 +213,7 @@ namespace jank::runtime::module
     {
       if(boost::filesystem::is_regular_file(f))
       {
-        register_entry(entries, path, file_entry{ none, f.path().string() });
+        register_entry_resource(entries, path, file_entry{ none, f.path().string() });
       }
     }
   }
@@ -227,7 +235,8 @@ namespace jank::runtime::module
       auto const &name(entry.getName());
       if(!entry.isDirectory())
       {
-        register_entry(entries, "", { path, name });
+        //FIXME pass pass module_path
+        register_entry(entries, path, { path, name });
       }
     }
   }
