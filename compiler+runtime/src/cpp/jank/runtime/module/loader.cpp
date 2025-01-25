@@ -24,6 +24,7 @@ namespace jank::runtime::module
   {
     auto const &s(path.string());
     const std::string ret{ s, 0, s.size() - path.extension().size() };
+    // FIXME Why did `path_to_module` have a special case for the `/` function? How do I test this case?
     return ret;
   }
 
