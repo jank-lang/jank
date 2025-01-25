@@ -499,6 +499,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("hash-unordered-coll", static_cast<native_hash (*)(object const *)>(&hash::unordered));
   intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
+  intern_fn("sorted?", &is_sorted);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));

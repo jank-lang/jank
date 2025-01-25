@@ -6379,11 +6379,9 @@ fails, attempts to require sym's namespace and retries."
   "Returns a sorted set of symbols naming the currently loaded libs"
   [] @*loaded-libs*)
 
-(defn sorted?
+(def sorted?
  "Returns true if coll implements Sorted"
-  [coll]
-  ;; (instance? clojure.lang.Sorted coll)
-  (throw "TODO: port"))
+  clojure.core-native/sorted?)
 
 (def counted?
  "Returns true if coll implements count in constant time"
