@@ -20,7 +20,7 @@
 namespace jank::runtime::module
 {
   /* This turns `foo_bar/spam/meow.cljc` into `foo_bar/spam/meow`. */
-  static native_persistent_string path_to_resource(boost::filesystem::path const &path)
+  native_persistent_string path_to_resource(boost::filesystem::path const &path)
   {
     auto const &s(path.string());
     const std::string ret{ s, 0, s.size() - path.extension().size() };
