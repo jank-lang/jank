@@ -39,7 +39,7 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
-  persistent_hash_map::persistent_hash_map(meta_option meta, value_type &&d)
+  persistent_hash_map::persistent_hash_map(option<object_ptr> const meta, value_type &&d)
     : data{ std::move(d) }
   {
     this->meta = meta;
