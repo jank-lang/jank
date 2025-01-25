@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 lein jar
 jank --module-path 'target/look-inside-jars-0.1.0-SNAPSHOT.jar' run-main look-inside-jars.core | grep 'LOADED look-inside-jars.core'

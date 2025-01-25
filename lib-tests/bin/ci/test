@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 cd ns-load
+./test
+cd ../look-inside-jars
 ./test
