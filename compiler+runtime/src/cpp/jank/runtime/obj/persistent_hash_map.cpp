@@ -39,6 +39,12 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
+  persistent_hash_map::persistent_hash_map(meta_option meta, value_type &&d)
+    : data{ std::move(d) }
+  {
+    this->meta = meta;
+  }
+
   persistent_hash_map_ptr persistent_hash_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_hash_map>(visit_seqable(
@@ -103,13 +109,13 @@ namespace jank::runtime::obj
   persistent_hash_map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.set(key, val));
-    return make_box<persistent_hash_map>(std::move(copy));
+    return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
   persistent_hash_map_ptr persistent_hash_map::dissoc(object_ptr const key) const
   {
     auto copy(data.erase(key));
-    return make_box<persistent_hash_map>(std::move(copy));
+    return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
   persistent_hash_map_ptr persistent_hash_map::conj(object_ptr const head) const
@@ -132,7 +138,7 @@ namespace jank::runtime::obj
     }
 
     auto copy(data.set(vec->data[0], vec->data[1]));
-    return make_box<persistent_hash_map>(std::move(copy));
+    return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
   object_ptr persistent_hash_map::call(object_ptr const o) const

@@ -10,6 +10,7 @@ namespace jank::runtime::obj
   using persistent_array_map_ptr = native_box<struct persistent_array_map>;
   using transient_hash_map_ptr = native_box<struct transient_hash_map>;
   using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
+  using meta_option = option<object_ptr>;
 
   struct persistent_hash_map
     : obj::detail::base_persistent_map<persistent_hash_map,
@@ -29,6 +30,7 @@ namespace jank::runtime::obj
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
     persistent_hash_map(object_ptr meta, value_type &&d);
+    persistent_hash_map(meta_option meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_map(runtime::detail::in_place_unique, Args &&...args)
