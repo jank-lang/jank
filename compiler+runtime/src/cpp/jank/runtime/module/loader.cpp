@@ -191,7 +191,7 @@ namespace jank::runtime::module
     }
   }
 
-  static void register_entry_resource(native_unordered_map<native_persistent_string, loader::entry> &entries,
+  static void register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
                                       boost::filesystem::path const &resource_path,
                                       file_entry const &entry)
   {
@@ -213,7 +213,7 @@ namespace jank::runtime::module
     {
       if(boost::filesystem::is_regular_file(f))
       {
-        register_entry_resource(entries, path, file_entry{ none, f.path().string() });
+        register_relative_entry(entries, path, file_entry{ none, f.path().string() });
       }
     }
   }
@@ -235,8 +235,7 @@ namespace jank::runtime::module
       auto const &name(entry.getName());
       if(!entry.isDirectory())
       {
-        //FIXME pass pass module_path
-        register_entry(entries, path, { path, name });
+        register_entry(entries, name, { path, name });
       }
     }
   }
@@ -264,6 +263,7 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
+      //FIXME module_path?
       register_entry(entries, "", { none, p.string() });
     }
   }

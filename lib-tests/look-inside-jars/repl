@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+lein jar
+jank --module-path 'target/look-inside-jars-0.1.0-SNAPSHOT.jar' repl
