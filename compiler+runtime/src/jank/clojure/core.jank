@@ -33,9 +33,29 @@
   "Create an instance of ExceptionInfo, a RuntimeException subclass
    that carries a map of additional data."
   ; TODO: Arity 3
-  (fn* ex-info [msg map]
-    {:error msg
-     :data map}))
+  (fn* ex-info
+    ([msg map]
+     {:error msg
+      :data map})
+    ([msg map cause]
+     {:error msg
+      :data map
+      :cause cause})))
+
+(def ex-message
+  "Returns the message attached to ex if ex is a Throwable.
+  Otherwise returns nil."
+  :error)
+
+(def ex-data
+  "Returns exception data (a map) if ex is an IExceptionInfo.
+   Otherwise returns nil."
+  :data)
+
+(def ex-cause
+  "Returns the cause of ex if ex is a Throwable.
+  Otherwise returns nil."
+  :cause)
 
 ; Relations.
 ;; Miscellaneous.
@@ -5696,30 +5716,6 @@
   ;;       (when tr
   ;;         (into-array StackTraceElement
   ;;           (drop-while #(= class-name (.getClassName ^StackTraceElement %1)) tr))))))
-  (throw "TODO: port"))
-
-(defn ex-data
-  "Returns exception data (a map) if ex is an IExceptionInfo.
-   Otherwise returns nil."
-  [ex]
-  ;; (when (instance? IExceptionInfo ex)
-  ;;   (.getData ^IExceptionInfo ex))
-  (throw "TODO: port"))
-
-(defn ex-message
-  "Returns the message attached to ex if ex is a Throwable.
-  Otherwise returns nil."
-  [ex]
-  ;; (when (instance? Throwable ex)
-  ;;   (.getMessage Throwable ex))
-  (throw "TODO: port"))
-
-(defn ex-cause
-  "Returns the cause of ex if ex is a Throwable.
-  Otherwise returns nil."
-  [ex]
-  ;; (when (instance? Throwable ex)
-  ;;   (.getCause ^Throwable ex))
   (throw "TODO: port"))
 
 (defn test
