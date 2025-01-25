@@ -720,7 +720,7 @@ namespace jank::read::parse
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
-    native_real n;
+    auto n = 0.0;
     if(sym->name == "Inf")
     {
       n = std::numeric_limits<native_real>::infinity();
