@@ -48,11 +48,11 @@
 #include <jank/runtime/obj/volatile.hpp>
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/obj/reduced.hpp>
+#include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/obj/tagged_literal.hpp>
 
 namespace jank::runtime
 {

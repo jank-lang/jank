@@ -287,11 +287,6 @@ namespace clojure::core_native
   {
     return make_box(JANK_VERSION);
   }
-
-  static object_ptr tagged_literal(object_ptr const tag, object_ptr const form)
-  {
-    return make_box<obj::tagged_literal>(tag, form);
-  }
 }
 
 jank_object_ptr jank_load_clojure_core_native()
@@ -504,8 +499,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("hash-unordered-coll", static_cast<native_hash (*)(object const *)>(&hash::unordered));
   intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
-  intern_fn("tagged-literal", &core_native::tagged_literal);
-  intern_fn("tagged-literal?", &obj::is_tagged_literal);
+  intern_fn("tagged-literal", &tagged_literal);
+  intern_fn("tagged-literal?", &is_tagged_literal);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));

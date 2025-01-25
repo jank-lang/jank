@@ -83,4 +83,7 @@ namespace jank::runtime
   object_ptr get_thread_bindings();
 
   object_ptr force(object_ptr o);
+
+  object_ptr tagged_literal(object_ptr tag, object_ptr form);
+  native_bool is_tagged_literal(object_ptr o);
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -27,11 +26,9 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
 
-    object_ptr tag;
-    object_ptr form;
+    object_ptr tag{};
+    object_ptr form{};
 
     mutable native_hash hash{};
   };
-
-  native_bool is_tagged_literal(object_ptr o);
 }

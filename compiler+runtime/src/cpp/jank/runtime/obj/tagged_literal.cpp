@@ -1,8 +1,7 @@
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/visit.hpp>
-#include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
+#include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/context.hpp>
 
 namespace jank::runtime::obj
 {
@@ -61,15 +60,15 @@ namespace jank::runtime::obj
 
   object_ptr tagged_literal::get(object_ptr const key, object_ptr const fallback) const
   {
-    object_ptr _tag = __rt_ctx->intern_keyword("tag").expect_ok();
-    object_ptr _form = __rt_ctx->intern_keyword("form").expect_ok();
+    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
+    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
 
-    if(_tag == key)
+    if(tag_kw == key)
     {
       return tag;
     }
 
-    if(_form == key)
+    if(form_kw == key)
     {
       return form;
     }
@@ -82,18 +81,29 @@ namespace jank::runtime::obj
     return get(key, obj::nil::nil_const());
   }
 
-  object_ptr tagged_literal::get_entry(object_ptr /*key*/) const
+  object_ptr tagged_literal::get_entry(object_ptr key) const
   {
+    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
+    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
+
+    if(tag_kw == key)
+    {
+      return make_box<persistent_vector>(std::in_place, tag_kw, tag);
+    }
+
+    if(form_kw == key)
+    {
+      return make_box<persistent_vector>(std::in_place, form_kw, form);
+    }
+
     return obj::nil::nil_const();
   }
 
-  native_bool tagged_literal::contains(object_ptr /*key*/) const
+  native_bool tagged_literal::contains(object_ptr key) const
   {
-    return false;
-  }
+    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
+    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
 
-  native_bool is_tagged_literal(object_ptr const o)
-  {
-    return o->type == object_type::tagged_literal;
+    return tag_kw == key || form_kw == key;
   }
 }
