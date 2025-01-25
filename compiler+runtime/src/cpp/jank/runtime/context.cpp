@@ -280,7 +280,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
-      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", output_dir, module::module_to_resource(codegen_ctx->module_name))
     };
     boost::filesystem::create_directories(module_path.parent_path());
 

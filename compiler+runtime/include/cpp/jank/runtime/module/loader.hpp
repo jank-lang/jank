@@ -48,8 +48,7 @@ namespace jank::runtime::module
     native_persistent_string path;
   };
 
-  native_persistent_string path_to_module(boost::filesystem::path const &path);
-  native_persistent_string module_to_path(native_persistent_string_view const &module);
+  native_persistent_string module_to_resource(native_persistent_string_view const &module);
   native_persistent_string module_to_load_function(native_persistent_string_view const &module);
   native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module);
   native_persistent_string
@@ -109,8 +108,7 @@ namespace jank::runtime::module
     context &rt_ctx;
     native_persistent_string paths;
     /* TODO: These will need synchonization. */
-    /* This maps module strings to entries. Module strings are like fully qualified Java
-     * class names. */
+    /* This maps resources like `foo_bar/spam/meow` to entries. */
     native_unordered_map<native_persistent_string, entry> entries;
   };
 }
