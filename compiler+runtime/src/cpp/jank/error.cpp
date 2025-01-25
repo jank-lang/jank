@@ -53,7 +53,7 @@ namespace jank::error
       case kind::parse_invalid_quote:
         return "Invalid quote";
       case kind::parse_invalid_meta_hint_value:
-        return "Value after meta hint must be a keyword or map";
+        return "Meta hint must be a keyword or map";
       case kind::parse_invalid_meta_hint_target:
         return "Invalid meta hint target";
       case kind::parse_unsupported_reader_macro:
@@ -331,10 +331,10 @@ namespace jank
 
     return {
       to_string(file),
-      { static_cast<size_t>(to_int(start_offset)),
+      {static_cast<size_t>(to_int(start_offset)),
               static_cast<size_t>(to_int(start_line)),
-              static_cast<size_t>(to_int(start_col)) },
-      {   static_cast<size_t>(to_int(end_offset)),
+              static_cast<size_t>(to_int(start_col))},
+      {  static_cast<size_t>(to_int(end_offset)),
               static_cast<size_t>(to_int(end_line)),
               static_cast<size_t>(to_int(end_col))  }
     };

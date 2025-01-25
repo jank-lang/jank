@@ -71,12 +71,12 @@ namespace jank::ui
   }
 
   /* TODO: Center horizontally if the line is too long. */
-  std::vector<Element>
+  std::map<size_t, Element>
   highlight(native_persistent_string const &code, size_t const line_start, size_t const line_end)
   {
     read::lex::processor l_prc{ code };
     size_t last_offset{}, last_line{ 1 };
-    std::vector<Element> lines;
+    std::map<size_t, Element> lines;
     std::vector<Element> current_line;
 
     for(auto it(l_prc.begin()); it != l_prc.end(); ++it)
@@ -101,7 +101,7 @@ namespace jank::ui
         {
           current_line.emplace_back(text(" "));
           //current_line.emplace_back(text("<empty>"));
-          lines.emplace_back(hbox(std::move(current_line)));
+          lines.emplace(last_line, hbox(std::move(current_line)));
           current_line.clear();
         }
         last_newline = it + 1;
@@ -125,7 +125,7 @@ namespace jank::ui
       //fmt::println("last_offset {}", last_offset);
     }
 
-    lines.emplace_back(hbox(std::move(current_line)));
+    lines.emplace(last_line, hbox(std::move(current_line)));
 
     return lines;
   }

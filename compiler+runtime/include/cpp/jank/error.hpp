@@ -247,6 +247,7 @@ namespace jank::error
     kind kind{};
     native_persistent_string message;
     read::source source;
+    /* TODO: Don't separate this out? Just notes. May not be an error. */
     note error_note;
     native_vector<note> extra_notes;
     /* TODO: context */

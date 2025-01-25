@@ -606,9 +606,13 @@ namespace jank::read::parse
 
     if(shorthand.is_some())
     {
-      return error::parse_nested_shorthand_function(
+      auto ret = error::parse_nested_shorthand_function(
         start_token.start,
-        { "Note: Outer #() form starts here", shorthand.unwrap().source, error::note::kind::info });
+        { "Outer #() form starts here", shorthand.unwrap().source, error::note::kind::info });
+      ret->extra_notes.emplace_back("Counting here",
+                                    read::source_position{ 0, 20, 15 },
+                                    error::note::kind::info);
+      return ret;
     }
 
     shorthand = shorthand_function_details{ {}, {}, start_token.start };

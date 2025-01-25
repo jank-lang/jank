@@ -42,7 +42,7 @@ execute_process(
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-set(jank_version "${CMAKE_PROJECT_VERSION}-${jank_git_hash}")
+set(jank_version "jank-${CMAKE_PROJECT_VERSION}-${jank_git_hash}")
 
 set(jank_cxx_standard cxx_std_20)
 
