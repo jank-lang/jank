@@ -568,6 +568,8 @@ namespace jank::read::parse
         return parse_reader_macro_fn();
       case lex::token_kind::single_quote:
         return parse_reader_macro_var_quote();
+      case lex::token_kind::reader_macro:
+        return parse_reader_macro_symbolic_values();
       default:
         return err(
           error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
@@ -690,6 +692,53 @@ namespace jank::read::parse
     auto const wrapped(
       make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("var"), sym));
 
+    return object_source_info{ wrapped, start_token, sym_end };
+  }
+
+  processor::object_result processor::parse_reader_macro_symbolic_values()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
+    auto sym_result(next());
+
+    if(sym_result.is_err())
+    {
+      return sym_result;
+    }
+    else if(sym_result.expect_ok().is_none())
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after ## must be present" } });
+    }
+    else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
+    {
+      return err(
+        error{ start_token.pos, native_persistent_string{ "value after ## must be a symbol" } });
+    }
+
+    auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
+    auto const sym_end(sym_result.expect_ok().unwrap().end);
+
+    native_real n;
+    if(sym->name == "Inf")
+    {
+      n = std::numeric_limits<native_real>::infinity();
+    }
+    else if(sym->name == "-Inf")
+    {
+      n = -std::numeric_limits<native_real>::infinity();
+    }
+    else if(sym->name == "NaN")
+    {
+      n = std::numeric_limits<native_real>::quiet_NaN();
+    }
+    else
+    {
+      return err(error{ start_token.pos, native_persistent_string{ "Unknown symbolic value" } });
+    }
+
+    auto const wrapped(make_box<obj::real>(n));
     return object_source_info{ wrapped, start_token, sym_end };
   }
 
