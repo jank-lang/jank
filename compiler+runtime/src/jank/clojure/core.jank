@@ -7297,29 +7297,17 @@ fails, attempts to require sym's namespace and retries."
   [val]
   (str "Expected string, got " (if (nil? val) "nil" (type val))))
 
-(defn parse-long
+(def parse-long
   "Parse string of decimal digits with optional leading -/+ and return a
   Long value, or nil if parse fails"
-  #_Long [#_String s]
-  ;; (if (string? s)
-  ;;   (try
-  ;;     (Long/valueOf s)
-  ;;     (catch NumberFormatException _ nil))
-  ;;   (throw (IllegalArgumentException. (parsing-err s))))
-  (throw "TODO: port"))
+  clojure.core-native/parse-long)
 
-(defn parse-double
+(def parse-double
   "Parse string with floating point components and return a Double value,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
-  #_Double [#_String s]
-  ;; (if (string? s)
-  ;;   (try
-  ;;     (Double/valueOf s)
-  ;;     (catch NumberFormatException _ nil))
-  ;;   (throw (IllegalArgumentException. (parsing-err s))))
-  (throw "TODO: port"))
+  clojure.core-native/parse-double)
 
 (defn parse-uuid
   "Parse a string representing a UUID and return a java.util.UUID instance,

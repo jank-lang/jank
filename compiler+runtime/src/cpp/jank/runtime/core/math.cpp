@@ -1702,4 +1702,40 @@ namespace jank::runtime
       },
       o);
   }
+
+  native_integer parse_long(object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_o) -> native_integer {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return std::stol(typed_o->data);
+        }
+        else
+        {
+          throw erase(make_box("Expected string, got nil"));
+        }
+      },
+      o);
+  }
+
+  native_real parse_double(object_ptr const o)
+  {
+    return visit_object(
+      [](auto const typed_o) -> native_real {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return std::stod(typed_o->data);
+        }
+        else
+        {
+          throw erase(make_box("Expected string, got nil"));
+        }
+      },
+      o);
+  }
 }
