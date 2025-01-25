@@ -17,6 +17,10 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_hash_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_map };
+    using parent_type
+      = obj::detail::base_persistent_map<persistent_hash_map,
+                                         persistent_hash_map_sequence,
+                                         runtime::detail::native_persistent_hash_map>;
 
     using transient_type = transient_hash_map;
 

@@ -40,9 +40,9 @@ namespace jank::runtime::obj
   }
 
   persistent_hash_map::persistent_hash_map(option<object_ptr> const meta, value_type &&d)
-    : data{ std::move(d) }
+    : parent_type{ meta }
+    , data{ std::move(d) }
   {
-    this->meta = meta;
   }
 
   persistent_hash_map_ptr persistent_hash_map::create_from_seq(object_ptr const seq)
