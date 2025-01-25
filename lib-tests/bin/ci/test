@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-cd ns-load
-./test
-cd ../look-inside-jars
-./test
+for d in */; do
+  cd $d
+  if test -f "test"; then
+    ./test
+  fi
+  cd -
+done
