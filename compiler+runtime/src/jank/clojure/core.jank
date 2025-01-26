@@ -4404,7 +4404,9 @@
   values as thread-local bindings. Then calls f with the supplied arguments.
   Pops the installed bindings after f returned. Returns whatever f returns."
   [binding-map f & args]
-  (push-thread-bindings binding-map)
+  (push-thread-bindings (if (= "persistent_array_map" (type binding-map))
+                          (into {} binding-map)
+                          binding-map))
   (try
     (apply f args)
     (catch e (throw e))
