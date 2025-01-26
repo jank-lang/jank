@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
-  persistent_array_map::persistent_array_map(option<object_ptr> const meta, value_type &&d)
+  persistent_array_map::persistent_array_map(option<object_ptr> const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {

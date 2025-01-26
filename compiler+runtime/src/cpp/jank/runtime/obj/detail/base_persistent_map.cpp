@@ -6,7 +6,7 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(option<object_ptr> const meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(option<object_ptr> const &meta)
     : meta{ meta }
   {
   }

@@ -29,7 +29,7 @@ namespace jank::runtime::obj::detail
     using value_type = V;
 
     base_persistent_map() = default;
-    base_persistent_map(option<object_ptr> meta);
+    base_persistent_map(option<object_ptr> const &meta);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
