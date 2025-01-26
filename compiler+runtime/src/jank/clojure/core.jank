@@ -32,7 +32,6 @@
 (def ex-info
   "Create an instance of ExceptionInfo, a RuntimeException subclass
    that carries a map of additional data."
-  ; TODO: Arity 3
   (fn* ex-info
     ([msg map]
      {:error msg
