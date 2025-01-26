@@ -589,4 +589,15 @@ namespace jank::runtime
     }
     return o;
   }
+
+  object_ptr tagged_literal(object_ptr const tag, object_ptr const form)
+  {
+    return make_box<obj::tagged_literal>(tag, form);
+  }
+
+  native_bool is_tagged_literal(object_ptr const o)
+  {
+    return o->type == object_type::tagged_literal;
+  }
+
 }
