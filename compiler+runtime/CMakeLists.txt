@@ -182,6 +182,7 @@ add_library(
   src/cpp/jank/runtime/obj/native_pointer_wrapper.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
+  src/cpp/jank/runtime/obj/tagged_literal.cpp
   src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
