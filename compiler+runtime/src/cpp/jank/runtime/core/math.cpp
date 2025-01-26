@@ -1,5 +1,7 @@
 #include <random>
 
+#include <fmt/format.h>
+
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/visit.hpp>
@@ -1701,5 +1703,29 @@ namespace jank::runtime
         }
       },
       o);
+  }
+
+  native_integer parse_long(object_ptr const o)
+  {
+    if(auto const typed_o = dyn_cast<obj::persistent_string>(o))
+    {
+      return std::stoll(typed_o->data);
+    }
+    else
+    {
+      throw erase(make_box(fmt::format("Expected string, got {}", object_type_str(o->type))));
+    }
+  }
+
+  native_real parse_double(object_ptr const o)
+  {
+    if(auto const typed_o = dyn_cast<obj::persistent_string>(o))
+    {
+      return std::stod(typed_o->data);
+    }
+    else
+    {
+      throw erase(make_box(fmt::format("Expected string, got {}", object_type_str(o->type))));
+    }
   }
 }
