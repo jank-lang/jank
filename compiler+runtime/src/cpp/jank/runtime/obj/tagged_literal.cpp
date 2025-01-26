@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     return get(key, obj::nil::nil_const());
   }
 
-  object_ptr tagged_literal::get_entry(object_ptr key) const
+  object_ptr tagged_literal::get_entry(object_ptr const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
@@ -99,7 +99,7 @@ namespace jank::runtime::obj
     return obj::nil::nil_const();
   }
 
-  native_bool tagged_literal::contains(object_ptr key) const
+  native_bool tagged_literal::contains(object_ptr const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
