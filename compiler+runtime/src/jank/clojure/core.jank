@@ -2455,24 +2455,25 @@
   "Returns a map from distinct items in coll to the number of times
    they appear."
   [coll]
-  ;; OPTIMIZE: transient
-  (reduce (fn [counts x]
-            (assoc counts x (inc (get counts x 0))))
-          {}
-          coll))
+  (persistent!
+   (reduce
+    (fn [counts x]
+      (assoc! counts x (inc (get counts x 0))))
+    (transient {})
+    coll)))
 
 (defn group-by
   "Returns a map of the elements of coll keyed by the result of
    f on each element. The value at each key will be a vector of the
    corresponding elements, in the order they appeared in coll."
   [f coll]
-  ;; OPTIMIZE: transient
-  (reduce
+  (persistent!
+   (reduce
     (fn [ret x]
       (let [k (f x)]
-        (assoc ret k (conj (get ret k []) x))))
-    {}
-    coll))
+        (assoc! ret k (conj (get ret k []) x))))
+    (transient {})
+    coll)))
 
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
