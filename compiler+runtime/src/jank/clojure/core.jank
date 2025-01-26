@@ -2455,24 +2455,25 @@
   "Returns a map from distinct items in coll to the number of times
    they appear."
   [coll]
-  ;; OPTIMIZE: transient
-  (reduce (fn [counts x]
-            (assoc counts x (inc (get counts x 0))))
-          {}
-          coll))
+  (persistent!
+   (reduce
+    (fn [counts x]
+      (assoc! counts x (inc (get counts x 0))))
+    (transient {})
+    coll)))
 
 (defn group-by
   "Returns a map of the elements of coll keyed by the result of
    f on each element. The value at each key will be a vector of the
    corresponding elements, in the order they appeared in coll."
   [f coll]
-  ;; OPTIMIZE: transient
-  (reduce
+  (persistent!
+   (reduce
     (fn [ret x]
       (let [k (f x)]
-        (assoc ret k (conj (get ret k []) x))))
-    {}
-    coll))
+        (assoc! ret k (conj (get ret k []) x))))
+    (transient {})
+    coll)))
 
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
@@ -4404,7 +4405,9 @@
   values as thread-local bindings. Then calls f with the supplied arguments.
   Pops the installed bindings after f returned. Returns whatever f returns."
   [binding-map f & args]
-  (push-thread-bindings binding-map)
+  (push-thread-bindings (if (= "persistent_array_map" (type binding-map))
+                          (into (hash-map) binding-map)
+                          binding-map))
   (try
     (apply f args)
     (catch e (throw e))
@@ -7092,18 +7095,14 @@ fails, attempts to require sym's namespace and retries."
   ;;              acc))))
   (throw "TODO: port"))
 
-(defn tagged-literal?
+(def tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  [value]
-  ;; (instance? clojure.lang.TaggedLiteral value)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal?)
 
-(defn tagged-literal
+(def tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  [#_clojure.lang.Symbol tag form]
-  ;; (clojure.lang.TaggedLiteral/create tag form)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal)
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"

@@ -22,9 +22,9 @@ jobs:
         include:
           - os: ubuntu-24.04
             build_type: Debug
+            sanitize: none
             codecov: on
             analysis: on
-            sanitize: none
     runs-on: ${{ matrix.os }}
     env:
       CODECOV: ${{ matrix.codecov }}

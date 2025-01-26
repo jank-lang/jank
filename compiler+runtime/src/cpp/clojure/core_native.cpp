@@ -501,6 +501,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("jank-version", &core_native::jank_version);
   intern_fn("parse-long", &parse_long);
   intern_fn("parse-double", &parse_double);
+  intern_fn("tagged-literal", &tagged_literal);
+  intern_fn("tagged-literal?", &is_tagged_literal);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));
