@@ -4405,7 +4405,7 @@
   Pops the installed bindings after f returned. Returns whatever f returns."
   [binding-map f & args]
   (push-thread-bindings (if (= "persistent_array_map" (type binding-map))
-                          (into {} binding-map)
+                          (into (hash-map) binding-map)
                           binding-map))
   (try
     (apply f args)
