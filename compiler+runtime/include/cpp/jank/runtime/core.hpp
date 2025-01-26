@@ -83,6 +83,4 @@ namespace jank::runtime
   object_ptr get_thread_bindings();
 
   object_ptr force(object_ptr o);
-
-  native_bool is_sorted(object_ptr o);
 }
