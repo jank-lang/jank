@@ -17,6 +17,11 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
     static constexpr size_t max_size{ value_type::max_size };
+    using parent_type
+      = obj::detail::base_persistent_map<persistent_array_map,
+                                         persistent_array_map_sequence,
+                                         runtime::detail::native_persistent_array_map>;
+
 
     persistent_array_map() = default;
     persistent_array_map(persistent_array_map &&) noexcept = default;
@@ -24,6 +29,7 @@ namespace jank::runtime::obj
     persistent_array_map(value_type &&d);
     persistent_array_map(value_type const &d);
     persistent_array_map(object_ptr meta, value_type &&d);
+    persistent_array_map(option<object_ptr> meta, value_type &&d);
 
     template <typename... Args>
     persistent_array_map(runtime::detail::in_place_unique, Args &&...args)

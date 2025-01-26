@@ -28,6 +28,12 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
+  persistent_array_map::persistent_array_map(option<object_ptr> const meta, value_type &&d)
+    : parent_type{ meta }
+    , data{ std::move(d) }
+  {
+  }
+
   object_ptr persistent_array_map::get(object_ptr const key) const
   {
     auto const res(data.find(key));
@@ -74,13 +80,13 @@ namespace jank::runtime::obj
      * TODO: Benchmark if it's faster to have this behavior or to check first. */
     if(data.size() == runtime::detail::native_persistent_array_map::max_size)
     {
-      return make_box<persistent_hash_map>(data, key, val);
+      return make_box<persistent_hash_map>(meta, data, key, val);
     }
     else
     {
       auto copy(data.clone());
       copy.insert_or_assign(key, val);
-      return make_box<persistent_array_map>(std::move(copy));
+      return make_box<persistent_array_map>(meta, std::move(copy));
     }
   }
 
@@ -88,7 +94,7 @@ namespace jank::runtime::obj
   {
     auto copy(data.clone());
     copy.erase(key);
-    return make_box<persistent_array_map>(std::move(copy));
+    return make_box<persistent_array_map>(meta, std::move(copy));
   }
 
   object_ptr persistent_array_map::conj(object_ptr const head) const
@@ -112,13 +118,13 @@ namespace jank::runtime::obj
 
     if(data.size() == runtime::detail::native_persistent_array_map::max_size)
     {
-      return make_box<persistent_hash_map>(data, vec->data[0], vec->data[1]);
+      return make_box<persistent_hash_map>(meta, data, vec->data[0], vec->data[1]);
     }
     else
     {
       auto copy(data.clone());
       copy.insert_or_assign(vec->data[0], vec->data[1]);
-      return make_box<persistent_array_map>(std::move(copy));
+      return make_box<persistent_array_map>(meta, std::move(copy));
     }
   }
 

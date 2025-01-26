@@ -10,9 +10,11 @@
 
 namespace jank::runtime::obj
 {
-  persistent_hash_map::persistent_hash_map(runtime::detail::native_persistent_array_map const &m,
+  persistent_hash_map::persistent_hash_map(option<object_ptr> meta,
+                                           runtime::detail::native_persistent_array_map const &m,
                                            object_ptr const key,
                                            object_ptr const val)
+    : parent_type{ meta }
   {
     runtime::detail::native_transient_hash_map transient;
     for(auto const &e : m)

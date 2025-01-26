@@ -27,7 +27,8 @@ namespace jank::runtime::obj
     persistent_hash_map() = default;
     persistent_hash_map(persistent_hash_map &&) noexcept = default;
     persistent_hash_map(persistent_hash_map const &) = default;
-    persistent_hash_map(runtime::detail::native_persistent_array_map const &m,
+    persistent_hash_map(option<object_ptr> meta,
+                        runtime::detail::native_persistent_array_map const &m,
                         object_ptr key,
                         object_ptr val);
     persistent_hash_map(value_type &&d);
