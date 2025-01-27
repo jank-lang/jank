@@ -63,6 +63,7 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: |
+        set -x
         export DESTDIR=${{ github.workspace }}/jank-install
         ${{ github.workspace }}/compiler+runtime/bin/install
         export PATH="${DESTDIR}/usr/local/bin:${PATH}"
