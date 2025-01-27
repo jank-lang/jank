@@ -30,7 +30,7 @@ jobs:
           ## Release
           - os: ubuntu-24.04
             build_type: Release
-            build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_ubuntu_tarball == 'true' }}
+            build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     runs-on: ${{ matrix.os }}
     env:
       CODECOV: ${{ matrix.codecov }}
