@@ -3695,12 +3695,6 @@
 
 (defn- case-map-1
   [expr-sym default case-f test-f tests thens]
-  (println "case-map expr-sym" expr-sym)
-  (println "case-map default" default)
-  (println "case-map case-f" case-f)
-  (println "case-map test-f" test-f)
-  (println "case-map tests" tests)
-  (println "case-map thens" thens)
   (into (sorted-map)
         (zipmap (map case-f tests)
                 (map
@@ -3767,10 +3761,6 @@
    The skip-check is a set of case ints for which post-switch equivalence
    checking must not be done (the cases holding the above condp thens)."
   [expr-sym default tests thens]
-  (println "merge-hash-collisions expr-sym" expr-sym)
-  (println "merge-hash-collisions default" default)
-  (println "merge-hash-collisions tests" tests)
-  (println "merge-hash-collisions thens" thens)
   (let [buckets
         (loop [m {} ks tests vs thens]
           (if (and ks vs)
@@ -3807,10 +3797,6 @@
    post-switch equivalence checking must not be done (occurs with hash
    collisions)."
   [expr-sym default tests thens skip-check]
-  (println "prep-hashes expr-sym" expr-sym)
-  (println "prep-hashes default" default)
-  (println "prep-hashes tests" tests)
-  (println "prep-hashes thens" thens)
   (let [hashes (into #{} (map hash tests))]
     (if (== (count tests) (count hashes))
       (if (fits-table? hashes)
@@ -3899,12 +3885,6 @@
 
              :else
              :hashes)]
-        (println "case clauses" clauses)
-        (println "case mode" mode)
-        (println "case tests" tests)
-        (println "case thens" thens)
-        (println "case pairs" pairs)
-        (println "case init pairs" (partition 2 clauses))
         (condp = mode
                :ints
                (let [[shift mask imap switch-type] (prep-ints ge default tests thens)]
@@ -7738,15 +7718,10 @@ fails, attempts to require sym's namespace and retries."
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
   [s]
   (if (string? s)
-    ;; TODO: switch `parse-boolean` to case implementation when avaiable
-    #_(case s
-            "true"  true
-            "false" false
-            nil)
-    (cond
-     (= "true" s)  true
-     (= "false" s) false
-     :else         nil)
+    (case s
+        "true" true
+        "false" false
+        nil)
     (throw (parsing-err s))))
 
 (def NaN?
