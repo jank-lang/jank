@@ -144,6 +144,12 @@ namespace jank::runtime
       o);
   }
 
+  native_bool is_sorted(object_ptr const o)
+  {
+    return o->type == object_type::persistent_sorted_map
+      || o->type == object_type::persistent_sorted_set;
+  }
+
   object_ptr transient(object_ptr const o)
   {
     return visit_object(
