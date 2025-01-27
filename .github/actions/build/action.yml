@@ -59,30 +59,30 @@ runs:
     - if: success() && ${{ env.CODECOV == 'on' }}
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
-    - name: Add jank to PATH
-      shell: bash
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        export DESTDIR=${{ github.workspace }}/jank-install
-        ${{ github.workspace }}/compiler+runtime/bin/install
-        export PATH="${DESTDIR}/usr/local/bin:${PATH}"
-        echo "PATH=${PATH}" >> "${GITHUB_ENV}"
-        #- name: Test Clojure CLI workflow
-        #  shell: bash
-        #  working-directory: ${{ github.workspace }}/clojure-cli
-        #  run: ${{ github.workspace }}/clojure-cli/bin/ci/test
-        #- name: Test Leiningen plugin
-        #  shell: bash
-        #  working-directory: ${{ github.workspace }}/lein-jank
-        #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
-    - if: success() && ${{ inputs.build_ubuntu_tarball }}
-      name: Release
-      id: release
-      shell: bash
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
-        bin/install
-        tar czf $DESTDIR.tar.gz ${DESTDIR}/
-        absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
-        echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}
+    #- name: Add jank to PATH
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/compiler+runtime
+    #  run: |
+    #    export DESTDIR=${{ github.workspace }}/jank-install
+    #    ${{ github.workspace }}/compiler+runtime/bin/install
+    #    export PATH="${DESTDIR}/usr/local/bin:${PATH}"
+    #    echo "PATH=${PATH}" >> "${GITHUB_ENV}"
+    #- name: Test Clojure CLI workflow
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/clojure-cli
+    #  run: ${{ github.workspace }}/clojure-cli/bin/ci/test
+    #- name: Test Leiningen plugin
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/lein-jank
+    #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
+    #- if: success() && ${{ inputs.build_ubuntu_tarball }}
+    #  name: Release
+    #  id: release
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/compiler+runtime
+    #  run: |
+    #    export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
+    #    bin/install
+    #    tar czf $DESTDIR.tar.gz ${DESTDIR}/
+    #    absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
+    #    echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}

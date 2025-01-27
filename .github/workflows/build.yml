@@ -47,11 +47,11 @@ jobs:
         id: build
         with:
           build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
-      - name: Update Ubuntu tarball
-        if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: latest
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ steps.build.outputs.release_archive }}
+      #- name: Update Ubuntu tarball
+      #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
+      #  uses: pyTooling/Actions/releaser@main
+      #  with:
+      #    tag: latest
+      #    rm: true
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    files: ${{ steps.build.outputs.release_archive }}
