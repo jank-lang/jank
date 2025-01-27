@@ -85,5 +85,5 @@ runs:
         export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
         bin/install
         tar czf $DESTDIR.tar.gz ${DESTDIR}/
-        absolute_archive=${{ github.workspace }}/${DESTDIR}.tar.gz
+        absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
         echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}
