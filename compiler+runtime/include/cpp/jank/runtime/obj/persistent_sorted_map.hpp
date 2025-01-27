@@ -18,6 +18,10 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::persistent_sorted_map };
 
     using transient_type = transient_sorted_map;
+    using parent_type
+      = obj::detail::base_persistent_map<persistent_sorted_map,
+                                         persistent_sorted_map_sequence,
+                                         runtime::detail::native_persistent_sorted_map>;
 
     persistent_sorted_map() = default;
     persistent_sorted_map(persistent_sorted_map &&) noexcept = default;
@@ -25,6 +29,7 @@ namespace jank::runtime::obj
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
     persistent_sorted_map(object_ptr meta, value_type &&d);
+    persistent_sorted_map(option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_map(runtime::detail::in_place_unique, Args &&...args)

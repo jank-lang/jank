@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  persistent_sorted_set::persistent_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
+  persistent_sorted_set::persistent_sorted_set(value_type &&d)
     : data{ std::move(d) }
   {
   }
@@ -15,8 +15,13 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set::persistent_sorted_set(object_ptr const meta,
-                                               runtime::detail::native_persistent_sorted_set &&d)
+  persistent_sorted_set::persistent_sorted_set(object_ptr const meta, value_type &&d)
+    : data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
+  persistent_sorted_set::persistent_sorted_set(option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -119,7 +124,7 @@ namespace jank::runtime::obj
   persistent_sorted_set_ptr persistent_sorted_set::conj(object_ptr const head) const
   {
     auto set(data.insert_v(head));
-    auto ret(make_box<persistent_sorted_set>(std::move(set)));
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
     return ret;
   }
 
@@ -146,7 +151,7 @@ namespace jank::runtime::obj
   persistent_sorted_set_ptr persistent_sorted_set::disj(object_ptr const o) const
   {
     auto set(data.erase_key(o));
-    auto ret(make_box<persistent_sorted_set>(std::move(set)));
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
     return ret;
   }
 }
