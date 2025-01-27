@@ -24,7 +24,6 @@ namespace jank::runtime::module
   {
     auto const &s(path.string());
     std::string const ret{ s, 0, s.size() - path.extension().size() };
-    // FIXME Why did `path_to_module` have a special case for the `/` function? How do I test this case?
     return ret;
   }
 
@@ -32,7 +31,7 @@ namespace jank::runtime::module
   native_persistent_string module_to_resource(native_persistent_string_view const &module)
   {
     static std::regex const dot{ "\\." };
-    native_transient_string const ret{ runtime::namespace_munge(module) };
+    native_transient_string const ret{ runtime::munge_namespace(module) };
     return std::regex_replace(ret, dot, "/");
   }
 
