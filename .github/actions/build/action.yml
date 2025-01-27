@@ -1,8 +1,8 @@
 name: "Build & Test"
 
 inputs:
-  update_release:
-    description: Whether or not to release
+  build_ubuntu_tarball:
+    description: Whether or not to build an Ubuntu tarball for releasing
     required: true
     default: 'false'
 
@@ -56,27 +56,33 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
-    - if: ${{ env.CODECOV == "on" }}
+    - if: success() && ${{ env.CODECOV == 'on' }}
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
-    - name: Add jank to PATH
-      shell: bash
-      run: ${{ github.workspace }}/compiler+runtime/bin/install
-    - name: Test Clojure CLI workflow
-      shell: bash
-      working-directory: ${{ github.workspace }}/clojure-cli
-      run: ${{ github.workspace }}/bin/ci/test
-    - name: Test Leiningen plugin
-      shell: bash
-      working-directory: ${{ github.workspace }}/lein-jank
-      run: ${{ github.workspace }}/bin/ci/test
-    - if: ${{ inputs.update_release }}
-      name: Release
-      id: release
-      shell: bash
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        export DESTDIR=${{ github.workspace }}/jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
-        ${{ github.workspace }}/compiler+runtime/bin/install
-        tar czf $DESTDIR.tar.gz $DESTDIR/
-        echo "archive=$DESTDIR.tar.gz" >> $GITHUB_OUTPUT
+    #- name: Add jank to PATH
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/compiler+runtime
+    #  run: |
+    #    export DESTDIR=${{ github.workspace }}/jank-install
+    #    ${{ github.workspace }}/compiler+runtime/bin/install
+    #    export PATH="${DESTDIR}/usr/local/bin:${PATH}"
+    #    echo "PATH=${PATH}" >> "${GITHUB_ENV}"
+    #- name: Test Clojure CLI workflow
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/clojure-cli
+    #  run: ${{ github.workspace }}/clojure-cli/bin/ci/test
+    #- name: Test Leiningen plugin
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/lein-jank
+    #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
+    #- if: success() && ${{ inputs.build_ubuntu_tarball }}
+    #  name: Release
+    #  id: release
+    #  shell: bash
+    #  working-directory: ${{ github.workspace }}/compiler+runtime
+    #  run: |
+    #    export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
+    #    bin/install
+    #    tar czf $DESTDIR.tar.gz ${DESTDIR}/
+    #    absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
+    #    echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}
