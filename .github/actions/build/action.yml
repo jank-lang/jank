@@ -1,8 +1,8 @@
 name: "Build & Test"
 
 inputs:
-  update_release:
-    description: Whether or not to release
+  build_ubuntu_tarball:
+    description: Whether or not to build an Ubuntu tarball for releasing
     required: true
     default: 'false'
 
@@ -56,14 +56,13 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
-    - if: ${{ env.CODECOV == 'on' }}
+    - if: success() && ${{ env.CODECOV == 'on' }}
       name: Upload report to Codecov
       uses: codecov/codecov-action@v3
     - name: Add jank to PATH
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
       run: |
-        set -x
         export DESTDIR=${{ github.workspace }}/jank-install
         ${{ github.workspace }}/compiler+runtime/bin/install
         export PATH="${DESTDIR}/usr/local/bin:${PATH}"
@@ -76,7 +75,7 @@ runs:
         #  shell: bash
         #  working-directory: ${{ github.workspace }}/lein-jank
         #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
-    - if: ${{ inputs.update_release }}
+    - if: success() && ${{ inputs.build_ubuntu_tarball }}
       name: Release
       id: release
       shell: bash

@@ -45,9 +45,9 @@ jobs:
         uses: ./.github/actions/build
         id: build
         with:
-          update_release: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
+          build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
       - name: Update Ubuntu tarball
-        if: success() && ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
+        if: success() && ${{ steps.build.inputs.build_ubuntu_tarball }}
         uses: pyTooling/Actions/releaser@main
         with:
           tag: latest
