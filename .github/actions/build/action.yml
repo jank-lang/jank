@@ -62,7 +62,11 @@ runs:
     - name: Add jank to PATH
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: ${{ github.workspace }}/compiler+runtime/bin/install
+      run: |
+        export DESTDIR=${{ github.workspace }}/jank-install
+        ${{ github.workspace }}/compiler+runtime/bin/install
+        export PATH="${DESTDIR}/usr/local/bin:${PATH}"
+        echo "PATH=${PATH}" >> "${GITHUB_ENV}"
     - name: Test Clojure CLI workflow
       shell: bash
       working-directory: ${{ github.workspace }}/clojure-cli
