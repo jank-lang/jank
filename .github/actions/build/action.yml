@@ -65,15 +65,15 @@ runs:
     - name: Test Clojure CLI workflow
       shell: bash
       working-directory: ${{ github.workspace }}/clojure-cli
-      run: ${{ github.workspace }}/bin/ci/test
+      run: ${{ github.workspace }}/clojure-cli/bin/ci/test
     - name: Test Leiningen plugin
       shell: bash
       working-directory: ${{ github.workspace }}/lein-jank
-      run: ${{ github.workspace }}/bin/ci/test
+      run: ${{ github.workspace }}/lein-jank/bin/ci/test
     - name: Test library workflows
       shell: bash
       working-directory: ${{ github.workspace }}/lib-test
-      run: ${{ github.workspace }}/bin/ci/test
+      run: ${{ github.workspace }}/lib-test/bin/ci/test
     - if: ${{ inputs.update_release }}
       name: Release
       id: release
