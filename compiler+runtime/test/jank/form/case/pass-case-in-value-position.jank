@@ -93,8 +93,8 @@
   (assert (= x "tuple-match")))
 
 (let [x (case 'symbol
-          'symbol  :symbol-match
-          'other   :symbol-no-match
+          symbol  :symbol-match
+          other   :symbol-no-match
           :symbol-fallback)]
   (assert (= x :symbol-match)))
 

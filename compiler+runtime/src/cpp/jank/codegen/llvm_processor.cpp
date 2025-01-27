@@ -830,10 +830,6 @@ namespace jank::codegen
     /* If we're in return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
-    std::cout << "llvm_processor::gen: if position is " << expression_position_str(expr.position)
-              << "\n";
-    std::cout << "llvm_processor::gen: if.then position is "
-              << expression_position_str(expr.then->get_base()->position) << "\n";
     auto const is_return(expr.position == expression_position::tail);
     auto const condition(gen(expr.condition, arity));
     auto const truthy_fn_type(
@@ -906,7 +902,6 @@ namespace jank::codegen
                                    expr::function_arity<expression> const &arity)
   {
     /* TODO: Generate direct call to __cxa_throw. */
-    std::cout << "gen throw: position is " << expression_position_str(expr.position) << "\n";
     auto const value(gen(expr.value, arity));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));

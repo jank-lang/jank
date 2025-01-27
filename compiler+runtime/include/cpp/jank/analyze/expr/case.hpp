@@ -32,7 +32,6 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos)
     {
-      std::cout << "set case expr position to " << expression_position_str(pos) << "\n";
       default_expr->propagate_position(pos);
       for(auto &expr : exprs)
       {

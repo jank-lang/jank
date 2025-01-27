@@ -19,7 +19,6 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos)
     {
-      std::cout << "set if expr position to" << expression_position_str(pos) << "\n";
       position = pos;
       if(then)
       {

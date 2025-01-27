@@ -1,161 +1,191 @@
-;; case-star-collections-tests.clj
+; Test 1: (case [:key1 :key2])
+; test case in value position
+(let [xfn
+      (let* [clojure_core-G__-1 [:key1 :key2]]
+        (case* clojure_core-G__-1 0 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-1 [:key1 :key2] :matched
+                        :default),
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-1 :key :not-matched
+                        :default)}
+          :compact :hash-equiv nil))]
+  (assert (= xfn :matched)))
 
-;; ==================================================
-;; Test 1: (case [:key1 :key2])
-;; ==================================================
+; test case in statement position
+(let [xfn (fn []
+            (let* [clojure_core-G__-2 [:key1 :key2]]
+              (case* clojure_core-G__-2 0 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-2 [:key1 :key2] :matched
+                              :default),
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-2 :key :not-matched
+                              :default)}
+                :compact :hash-equiv nil))
+            0)]
+  (assert (= (xfn) 0)))
 
-;; Value position
-(let [xfn (let* [G__ [:key1 :key2]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [:key1 :key2] :matched :default)
-                        1 (condp = G__ :key :not-matched :default)}
-              :compact :hash-equiv nil))]
-  (assert (= xfn :matched) "Test 1 Value Position"))
+; test case in return position
+(assert
+ (=
+  (let* [clojure_core-G__-3 [:key1 :key2]]
+    (case* clojure_core-G__-3 0 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-3 [:key1 :key2] :matched
+                    :default),
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-3 :key :not-matched
+                    :default)}
+      :compact :hash-equiv nil))
+  :matched))
 
-;; Tail position
-(let [f (fn []
-          (let* [G__ [:key1 :key2]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [:key1 :key2] :matched :default)
-                        1 (condp = G__ :key :not-matched :default)}
-              :compact :hash-equiv nil)))]
-  (assert (= (f) :matched) "Test 1 Tail Position"))
 
-;; Statement position
-(let [f (fn []
-          (let* [G__ [:key1 :key2]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [:key1 :key2] :matched :default)
-                        1 (condp = G__ :key :not-matched :default)}
-              :compact :hash-equiv nil))
-          0)]
-  (assert (= (f) 0) "Test 1 Statement Position"))
+; Test 2: (case {:a 1 :b 2})
+; test case in value position
+(let [xfn
+      (let* [clojure_core-G__-4 {:a 1 :b 2}]
+        (case* clojure_core-G__-4 2 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-4 {:a 1 :b 2} :map-match
+                        :default),
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-4 {:a 3 :b 4} :not-matched
+                        :default)}
+          :compact :hash-equiv nil))]
+  (assert (= xfn :map-match)))
 
-;; ==================================================
-;; Test 2: (case {:a 1 :b 2})
-;; ==================================================
+; test case in statement position
+(let [xfn (fn []
+            (let* [clojure_core-G__-5 {:a 1 :b 2}]
+              (case* clojure_core-G__-5 2 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-5 {:a 1 :b 2} :map-match
+                              :default),
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-5 {:a 3 :b 4} :not-matched
+                              :default)}
+                :compact :hash-equiv nil))
+            0)]
+  (assert (= (xfn) 0)))
 
-;; Value position
-(let [xfn (let* [G__ {:a 1 :b 2}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
-                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
-              :compact :hash-equiv nil))]
-  (assert (= xfn :map-match) "Test 2 Value Position"))
+; test case in return position
+(assert
+ (=
+  (let* [clojure_core-G__-6 {:a 1 :b 2}]
+    (case* clojure_core-G__-6 2 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-6 {:a 1 :b 2} :map-match
+                    :default),
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-6 {:a 3 :b 4} :not-matched
+                    :default)}
+      :compact :hash-equiv nil))
+  :map-match))
 
-;; Tail position
-(let [f (fn []
-          (let* [G__ {:a 1 :b 2}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
-                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
-              :compact :hash-equiv nil)))]
-  (assert (= (f) :map-match) "Test 2 Tail Position"))
 
-;; Statement position
-(let [f (fn []
-          (let* [G__ {:a 1 :b 2}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1 :b 2} :map-match :default)
-                        1 (condp = G__ {:a 3 :b 4} :not-matched :default)}
-              :compact :hash-equiv nil))
-          0)]
-  (assert (= (f) 0) "Test 2 Statement Position"))
+; Test 3: (case [1 2 3])
+; test case in value position
+(let [xfn
+      (let* [clojure_core-G__-7 [1 2 3]]
+        (case* clojure_core-G__-7 5 3 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-7 1 :one
+                        :default),
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-7 [1 2 3] :vector-match
+                        :default),
+                    2 (clojure.core/condp clojure.core/= clojure_core-G__-7 [4 5 6] :not-matched
+                        :default)}
+          :compact :hash-equiv nil))]
+  (assert (= xfn :vector-match)))
 
-;; ==================================================
-;; Test 3: (case [1 2 3])
-;; ==================================================
+; test case in statement position
+(let [xfn (fn []
+            (let* [clojure_core-G__-8 [1 2 3]]
+              (case* clojure_core-G__-8 5 3 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-8 1 :one
+                              :default),
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-8 [1 2 3] :vector-match
+                              :default),
+                          2 (clojure.core/condp clojure.core/= clojure_core-G__-8 [4 5 6] :not-matched
+                              :default)}
+                :compact :hash-equiv nil))
+            0)]
+  (assert (= (xfn) 0)))
 
-;; Value position
-(let [xfn (let* [G__ [1 2 3]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [1 2 3] :vector-match :default)
-                        1 (condp = G__ [4 5 6] :not-matched :default)
-                        2 (condp = G__ 1 :one :default)}
-              :compact :hash-equiv nil))]
-  (assert (= xfn :vector-match) "Test 3 Value Position"))
+; test case in return position
+(assert
+ (=
+  (let* [clojure_core-G__-9 [1 2 3]]
+    (case* clojure_core-G__-9 5 3 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-9 1 :one
+                    :default),
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-9 [1 2 3] :vector-match
+                    :default),
+                2 (clojure.core/condp clojure.core/= clojure_core-G__-9 [4 5 6] :not-matched
+                    :default)}
+      :compact :hash-equiv nil))
+  :vector-match))
 
-;; Tail position
-(let [f (fn []
-          (let* [G__ [1 2 3]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [1 2 3] :vector-match :default)
-                        1 (condp = G__ [4 5 6] :not-matched :default)
-                        2 (condp = G__ 1 :one :default)}
-              :compact :hash-equiv nil)))]
-  (assert (= (f) :vector-match) "Test 3 Tail Position"))
 
-;; Statement position
-(let [f (fn []
-          (let* [G__ [1 2 3]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [1 2 3] :vector-match :default)
-                        1 (condp = G__ [4 5 6] :not-matched :default)
-                        2 (condp = G__ 1 :one :default)}
-              :compact :hash-equiv nil))
-          0)]
-  (assert (= (f) 0) "Test 3 Statement Position"))
+; Test 4: (case [[1 2]])
+; test case in value position
+(let [xfn
+      (let* [clojure_core-G__-10 [[1 2]]]
+        (case* clojure_core-G__-10 10 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-10 [[1 2]] :vector-match
+                        :default),
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-10 [{:a 1}] :map-list-match
+                        :default)}
+          :compact :hash-equiv nil))]
+  (assert (= xfn :vector-match)))
 
-;; ==================================================
-;; Test 4: (case [[1 2]])
-;; ==================================================
+; test case in statement position
+(let [xfn (fn []
+            (let* [clojure_core-G__-11 [[1 2]]]
+              (case* clojure_core-G__-11 10 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-11 [[1 2]] :vector-match
+                              :default),
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-11 [{:a 1}] :map-list-match
+                              :default)}
+                :compact :hash-equiv nil))
+            0)]
+  (assert (= (xfn) 0)))
 
-;; Value position
-(let [xfn (let* [G__ [[1 2]]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [[1 2]] :vector-match :default)
-                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
-              :compact :hash-equiv nil))]
-  (assert (= xfn :vector-match) "Test 4 Value Position"))
+; test case in return position
+(assert
+ (=
+  (let* [clojure_core-G__-12 [[1 2]]]
+    (case* clojure_core-G__-12 10 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-12 [[1 2]] :vector-match
+                    :default),
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-12 [{:a 1}] :map-list-match
+                    :default)}
+      :compact :hash-equiv nil))
+  :vector-match))
 
-;; Tail position
-(let [f (fn []
-          (let* [G__ [[1 2]]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [[1 2]] :vector-match :default)
-                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
-              :compact :hash-equiv nil)))]
-  (assert (= (f) :vector-match) "Test 4 Tail Position"))
 
-;; Statement position
-(let [f (fn []
-          (let* [G__ [[1 2]]]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ [[1 2]] :vector-match :default)
-                        1 (condp = G__ [{:a 1}] :map-list-match :default)}
-              :compact :hash-equiv nil))
-          0)]
-  (assert (= (f) 0) "Test 4 Statement Position"))
+; Test 5: (case {:a 1})
+; test case in value position
+(let [xfn
+      (let* [clojure_core-G__-13 {:a 1}]
+        (case* clojure_core-G__-13 2 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-13 {:a 1} :map-match
+                        :default),
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-13 {:b 2} :different-map
+                        :default)}
+          :compact :hash-equiv nil))]
+  (assert (= xfn :map-match)))
 
-;; ==================================================
-;; Test 5: (case {:a 1})
-;; ==================================================
+; test case in statement position
+(let [xfn (fn []
+            (let* [clojure_core-G__-14 {:a 1}]
+              (case* clojure_core-G__-14 2 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-14 {:a 1} :map-match
+                              :default),
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-14 {:b 2} :different-map
+                              :default)}
+                :compact :hash-equiv nil))
+            0)]
+  (assert (= (xfn) 0)))
 
-;; Value position
-(let [xfn (let* [G__ {:a 1}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1} :map-match :default)
-                        1 (condp = G__ {:b 2} :different-map :default)}
-              :compact :hash-equiv nil))]
-  (assert (= xfn :map-match) "Test 5 Value Position"))
-
-;; Tail position
-(let [f (fn []
-          (let* [G__ {:a 1}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1} :map-match :default)
-                        1 (condp = G__ {:b 2} :different-map :default)}
-              :compact :hash-equiv nil)))]
-  (assert (= (f) :map-match) "Test 5 Tail Position"))
-
-;; Statement position
-(let [f (fn []
-          (let* [G__ {:a 1}]
-            (case* G__ 0 0 :default
-                       {0 (condp = G__ {:a 1} :map-match :default)
-                        1 (condp = G__ {:b 2} :different-map :default)}
-              :compact :hash-equiv nil))
-          0)]
-  (assert (= (f) 0) "Test 5 Statement Position"))
+; test case in return position
+(assert
+ (=
+  (let* [clojure_core-G__-15 {:a 1}]
+    (case* clojure_core-G__-15 2 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-15 {:a 1} :map-match
+                    :default),
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-15 {:b 2} :different-map
+                    :default)}
+      :compact :hash-equiv nil))
+  :map-match))
 
 :success
