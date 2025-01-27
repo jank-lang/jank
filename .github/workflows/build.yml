@@ -48,7 +48,7 @@ jobs:
         with:
           build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
       - name: Update Ubuntu tarball
-        if: success() && ${{ matrix.inputs.build_ubuntu_tarball }}
+        if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
         uses: pyTooling/Actions/releaser@main
         with:
           tag: latest
