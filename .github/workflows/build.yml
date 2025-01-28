@@ -37,6 +37,7 @@ jobs:
       ANALYSIS: ${{ matrix.analysis }}
       SANITIZE: ${{ matrix.sanitize }}
       ASAN_OPTIONS: detect_leaks=0
+      TERM: xterm
     timeout-minutes: 240 # 4h
     steps:
       - uses: actions/checkout@v4
