@@ -76,10 +76,6 @@ runs:
     #  working-directory: ${{ github.workspace }}/lein-jank
     #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
     #- if: success() && ${{ inputs.build_ubuntu_tarball }}
-    #- name: Test library workflows
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/lib-test
-    #  run: ${{ github.workspace }}/lib-test/bin/ci/test
     #  name: Release
     #  id: release
     #  shell: bash
