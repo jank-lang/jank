@@ -48,6 +48,7 @@ jobs:
         with:
           build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
       - name: Archive test log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-log
