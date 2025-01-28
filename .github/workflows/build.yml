@@ -9,22 +9,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
-        build_type: [Debug, Release]
-        sanitize: [none, address, undefined, thread]
-        exclude:
-          - build_type: Release
-            sanitize: address
-          - build_type: Release
-            sanitize: undefined
-          - build_type: Release
-            sanitize: thread
         include:
+          # Ubuntu
+          ## Debug + clang-tidy + codecov
           - os: ubuntu-24.04
             build_type: Debug
+            sanitize: none
             codecov: on
             analysis: on
-            sanitize: none
+          ## Debug + sanitization
+          - os: ubuntu-24.04
+            build_type: Debug
+            sanitize: address
+          - os: ubuntu-24.04
+            build_type: Debug
+            sanitize: undefined
+          - os: ubuntu-24.04
+            build_type: Debug
+            sanitize: thread
+          ## Release
+          - os: ubuntu-24.04
+            build_type: Release
+            build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     runs-on: ${{ matrix.os }}
     env:
       CODECOV: ${{ matrix.codecov }}
@@ -40,12 +46,12 @@ jobs:
         uses: ./.github/actions/build
         id: build
         with:
-          update_release: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
-      - name: Update latest release
-        if: success() && ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: latest
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ steps.build.outputs.release_archive }}
+          build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
+      #- name: Update Ubuntu tarball
+      #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
+      #  uses: pyTooling/Actions/releaser@main
+      #  with:
+      #    tag: latest
+      #    rm: true
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    files: ${{ steps.build.outputs.release_archive }}
