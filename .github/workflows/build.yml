@@ -47,6 +47,11 @@ jobs:
         id: build
         with:
           build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
+      - name: Archive test log
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: compiler+runtime/test.log
       #- name: Update Ubuntu tarball
       #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
       #  uses: pyTooling/Actions/releaser@main
