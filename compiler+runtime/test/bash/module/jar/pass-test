@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
+
 lein jar
 # make sure we don't cheat by using src
 mkdir -p outside-of-classpath
