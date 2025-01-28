@@ -1,8 +1,0 @@
-; Failure due to hash collision in the nested `case`
-(fn []
-  (case 1
-    1 (case "FB" "Ea" :hash-collision "FB" :hash-collision :default)
-    2 :outer
-    :default))
-
-(fn)
