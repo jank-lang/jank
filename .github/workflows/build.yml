@@ -30,9 +30,11 @@ jobs:
           ## Release
           - os: ubuntu-24.04
             build_type: Release
+            sanitize: none
             build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     runs-on: ${{ matrix.os }}
     env:
+      JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
       CODECOV: ${{ matrix.codecov }}
       ANALYSIS: ${{ matrix.analysis }}
       SANITIZE: ${{ matrix.sanitize }}
@@ -52,7 +54,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-log
+          name: test-log-${{ env.JANK_MATRIX_ID }}
           path: compiler+runtime/test.log
       #- name: Update Ubuntu tarball
       #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
