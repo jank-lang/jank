@@ -80,4 +80,8 @@ namespace jank::runtime
 
   object_ptr tagged_literal(object_ptr tag, object_ptr form);
   native_bool is_tagged_literal(object_ptr o);
+
+  object_ptr parse_uuid(object_ptr value);
+  native_bool is_uuid(object_ptr o);
+  object_ptr random_uuid();
 }

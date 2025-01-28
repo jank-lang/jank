@@ -6675,19 +6675,15 @@ fails, attempts to require sym's namespace and retries."
 ;;   java.time.Instant
 ;;   (inst-ms* [inst] (.toEpochMilli ^java.time.Instant inst)))
 
-(defn uuid?
+(def uuid?
   "Return true if x is a java.util.UUID"
-  [x]
-  ;; (instance? java.util.UUID x)
-  (throw "TODO: port uuid?"))
+  clojure.core-native/uuid?)
 
-(defn random-uuid
+(def random-uuid
   "Returns a pseudo-randomly generated java.util.UUID instance (i.e. type 4).
 
   See: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#randomUUID--"
-  #_java.util.UUID []
-  ;; (java.util.UUID/randomUUID)
-  (throw "TODO: port random-uuid"))
+  clojure.core-native/random-uuid)
 
 ;; (extend-protocol clojure.core.protocols/IKVReduce
 ;;  nil
@@ -7297,16 +7293,12 @@ fails, attempts to require sym's namespace and retries."
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
   clojure.core-native/parse-double)
 
-(defn parse-uuid
+(def parse-uuid
   "Parse a string representing a UUID and return a java.util.UUID instance,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#toString--"
-  #_java.util.UUID [#_String s]
-  ;; (try
-  ;;   (java.util.UUID/fromString s)
-  ;;   (catch IllegalArgumentException _ nil))
-  (throw "TODO: port parse-uuid"))
+  clojure.core-native/parse-uuid)
 
 (defn parse-boolean
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
