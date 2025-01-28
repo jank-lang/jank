@@ -160,12 +160,31 @@ namespace jank::runtime::obj
   native_persistent_string real::to_string() const
   {
     util::string_builder sb;
-    return sb(data).release();
+    to_string(sb);
+    return sb.release();
   }
 
   void real::to_string(util::string_builder &buff) const
   {
-    buff(data);
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        buff("##-Inf");
+      }
+      else
+      {
+        buff("##Inf");
+      }
+    }
+    else if(std::isnan(data))
+    {
+      buff("##NaN");
+    }
+    else
+    {
+      buff(data);
+    }
   }
 
   native_persistent_string real::to_code_string() const
