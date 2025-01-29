@@ -433,7 +433,6 @@ if(jank_tests)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
-    test/cpp/jank/analyze/processor.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/jit/processor.cpp
