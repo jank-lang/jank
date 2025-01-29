@@ -14,6 +14,16 @@
 ;; Thanks to Chas Emerick, Allen Rohner, and Stuart Halloway for
 ;; contributions and suggestions.
 
+;; jank notes:
+;; - workaround https://github.com/jank-lang/jank/issues/199
+;;   - wrote -workaround-var->ns to translate var to qualified symbol
+;; - workaround https://github.com/jank-lang/jank/issues/197
+;;   - made global atom from var -> test
+;;   - -workaround-set-test
+;;   - -workaround-get-test
+;;   - -workaround-test-mappings
+;; - no stacktrace support
+
 (ns 
   ^{:author "Stuart Sierra, with contributions and suggestions by 
   Chas Emerick, Allen Rohner, and Stuart Halloway",
