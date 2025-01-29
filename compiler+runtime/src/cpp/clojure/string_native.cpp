@@ -33,7 +33,6 @@ jank_object_ptr jank_load_clojure_string_native()
   using namespace jank::runtime;
   using namespace clojure;
 
-  fmt::println("jank_load_clojure_string_native");
   auto const ns(__rt_ctx->intern_ns("clojure.string-native"));
 
   auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
