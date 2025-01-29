@@ -1,8 +1,9 @@
 ;; value position tests
-(let [x (case 1 1 :one
-          2       :two
-          "3"     :three
-          :default)]
+(let [x
+      (case 1 1 :one
+        2       :two
+        "3"     :three
+        :default)]
   (assert (= x :one) "Integer match - value position"))
 
 (let [x (case "3" 1 :one
@@ -27,16 +28,14 @@
           :default)]
   (assert (= x :zero) "Zero match - value position"))
 
-(let [x (case "hello" "world" :world
-          "hello"             :greeting
-          "Clojure"           :language
-          :default)]
+(let [x
+      (case "hello" "world" :world "hello"             :greeting "Clojure"           :language :default)
+      ]
   (assert (= x :greeting) "String hello match - value position"))
 
-(let [x (case 3.14 3.14 :pi
-          2.71          :e
-          1.61          :phi
-          :default)]
+(let [x
+      (case 3.14 3.14 :pi 2.71          :e 1.61          :phi :default)
+      ]
   (assert (= x :pi) "Float match - value position"))
 
 (let [x (case 'symbol symbol :symbol-match
@@ -45,8 +44,9 @@
   (assert (= x :symbol-match) "Symbol match - value position"))
 
 (let [x
-      (case "AaAaAaAa" "AaAaAaAa" :hasha "BBBBBBBB"                :hashb :default)
-      ]
+      (case "AaAaAaAa" "AaAaAaAa" :hasha
+        "BBBBBBBB"                :hashb
+        :default)]
   (assert (= x :hasha) "Hash collision check - value position"))
 
 ;; tail position tests

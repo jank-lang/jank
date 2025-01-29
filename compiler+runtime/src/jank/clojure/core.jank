@@ -3458,7 +3458,7 @@
 (defn- case-hash
   "Returns the input if it is within the range of a 32-bit signed integer, otherwise returns the hash of the input."
   [input]
-    (if (and (number? input)
+    (if (and (integer? input)
              (>= input int32-min-value)
              (<= input int32-max-value))
       input
