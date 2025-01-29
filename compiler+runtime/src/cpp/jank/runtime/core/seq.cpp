@@ -1178,4 +1178,29 @@ namespace jank::runtime
   {
     return make_box<obj::repeat>(n, val);
   }
+
+  object_ptr sort(object_ptr const coll)
+  {
+    return visit_seqable(
+      [](auto const typed_coll) -> object_ptr {
+        native_vector<object_ptr> vec;
+        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          vec.push_back(it->first());
+        }
+
+        std::stable_sort(vec.begin(), vec.end(), [](object_ptr const a, object_ptr const b) {
+          return runtime::compare(a, b) < 0;
+        });
+
+        auto sorted_seq = make_box<obj::native_vector_sequence>(std::move(vec));
+	// TODO: fix this; preserve metadata
+        // if(auto meta = typed_coll->meta())
+        // {
+        //   sorted_seq->meta(meta);
+        // }
+        return sorted_seq;
+      },
+      coll);
+  }
 }
