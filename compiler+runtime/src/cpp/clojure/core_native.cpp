@@ -43,7 +43,7 @@ namespace clojure::core_native
         }
         else if constexpr(std::same_as<T, var>)
         {
-          return typed_o->name;
+          return make_box<obj::symbol>(typed_o->n->name->name, typed_o->name->name);
         }
         else if constexpr(std::same_as<T, obj::keyword>)
         {
