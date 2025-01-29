@@ -25,6 +25,12 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
+  persistent_sorted_map::persistent_sorted_map(option<object_ptr> const &meta, value_type &&d)
+    : parent_type{ meta }
+    , data{ std::move(d) }
+  {
+  }
+
   persistent_sorted_map_ptr persistent_sorted_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_map>(visit_object(
@@ -95,13 +101,13 @@ namespace jank::runtime::obj
   persistent_sorted_map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.insert_or_assign(key, val));
-    return make_box<persistent_sorted_map>(std::move(copy));
+    return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   persistent_sorted_map_ptr persistent_sorted_map::dissoc(object_ptr const key) const
   {
     auto copy(data.erase_key(key));
-    return make_box<persistent_sorted_map>(std::move(copy));
+    return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   persistent_sorted_map_ptr persistent_sorted_map::conj(object_ptr const head) const
@@ -124,7 +130,7 @@ namespace jank::runtime::obj
     }
 
     auto copy(data.insert_or_assign(vec->data[0], vec->data[1]));
-    return make_box<persistent_sorted_map>(std::move(copy));
+    return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   object_ptr persistent_sorted_map::call(object_ptr const o) const
