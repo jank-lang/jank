@@ -433,6 +433,12 @@ extern "C"
     return make_box<obj::uuid>(s).erase();
   }
 
+ jank_object_ref jank_inst_create(char const *s)
+  {
+    jank_debug_assert(s);
+    return make_box<obj::inst>(s).erase();
+  }
+
   jank_object_ref jank_list_create(jank_u64 const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
