@@ -4390,7 +4390,8 @@ namespace jank::analyze
                           || std::same_as<T, runtime::obj::persistent_string>
                           || std::same_as<T, runtime::obj::character>
                           || std::same_as<T, runtime::obj::uuid>
-                          || std::same_as<T, runtime::obj::inst>)
+                          || std::same_as<T, runtime::obj::inst>
+                          || std::same_as<T, runtime::obj::re_pattern>)
         {
           return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }

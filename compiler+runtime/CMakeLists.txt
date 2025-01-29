@@ -372,6 +372,7 @@ add_library(
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/tagged_literal.cpp
+  src/cpp/jank/runtime/obj/regex.cpp
   src/cpp/jank/runtime/obj/uuid.cpp
   src/cpp/jank/runtime/obj/inst.cpp
   src/cpp/jank/runtime/obj/opaque_box.cpp

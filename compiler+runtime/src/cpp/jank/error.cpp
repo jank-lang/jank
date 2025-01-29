@@ -87,6 +87,8 @@ namespace jank::error
         return "Invalid reader symbolic value.";
       case kind::parse_invalid_reader_tag_value:
         return "Invalid reader tag value.";
+      case kind::parse_invalid_regex:
+        return "Invalid regex.";
       case kind::parse_invalid_uuid:
         return "Invalid UUID.";
       case kind::parse_invalid_inst:

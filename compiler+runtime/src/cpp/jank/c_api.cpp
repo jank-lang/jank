@@ -427,6 +427,12 @@ extern "C"
     return make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap()).erase();
   }
 
+  jank_object_ref jank_regex_create(char const *s)
+  {
+    jank_debug_assert(s);
+    return make_box<obj::re_pattern>(s).erase();
+  }
+
   jank_object_ref jank_uuid_create(char const *s)
   {
     jank_debug_assert(s);

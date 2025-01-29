@@ -5739,21 +5739,15 @@
         (do (f) :ok)
         :no-test)))
 
-(defn re-pattern
+(def re-pattern
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
   re-matcher."
-  [s]
-  ;; (if (instance? java.util.regex.Pattern s)
-  ;;   s
-  ;;   (. java.util.regex.Pattern (compile s)))
-  (throw "TODO: port re-pattern"))
+  clojure.core-native/re-pattern)
 
-(defn re-matcher
+(def re-matcher
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
-  [#_java.util.regex.Pattern re s]
-    ;; (. re (matcher s))
-  (throw "TODO: port re-matcher"))
+  clojure.core-native/re-matcher)
 
 (defn re-groups
   "Returns the groups from the most recent match/find. If there are no
@@ -5795,14 +5789,13 @@
   "Returns the next regex match, if any, of string to pattern, using
   java.util.regex.Matcher.find().  Uses re-groups to return the
   groups."
-  ([#_java.util.regex.Matcher m]
-  ;;  (when (. m (find))
-  ;;    (re-groups m))
-   (throw "TODO: port re-find"))
-  ([#_java.util.regex.Pattern re s]
-  ;;  (let [m (re-matcher re s)]
-  ;;    (re-find m))
-   (throw "TODO: port re-find")))
+  ([m]
+   ;;  (when (. m (find))
+   ;;    (re-groups m))
+   (clojure.core-native/re-find m))
+  ([re s]
+   (let [m (re-matcher re s)]
+     (re-find m))))
 
 (defn rand-int
   "Returns a random integer between 0 (inclusive) and n (exclusive)."

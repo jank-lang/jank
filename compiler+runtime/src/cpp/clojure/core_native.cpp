@@ -526,6 +526,11 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
   intern_fn("inst?", &is_inst);
   intern_fn("inst-ms", &inst_ms);
 
+  intern_fn("re-pattern", &re_pattern);
+  intern_fn("re-matcher", &re_matcher);
+  // intern_fn("re-groups", &re_groups);
+  intern_fn("re-find", &re_find);
+
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<f64 (*)(object_ref)>(&runtime::sqrt));
   intern_fn("tan", static_cast<f64 (*)(object_ref)>(&runtime::tan));
