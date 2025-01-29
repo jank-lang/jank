@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
 
-lein jar
+jar cf test.jar look_inside_jars/core.jank
 # make sure we don't cheat by using src
 mkdir -p outside-of-classpath
 cd outside-of-classpath
