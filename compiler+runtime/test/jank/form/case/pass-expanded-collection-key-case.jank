@@ -38,22 +38,22 @@
 ; Test 2: (case {:a 1 :b 2})
 ; test case in value position
 (let [xfn
-      (let* [clojure_core-G__-4 {:a 1 :b 2}]
-        (case* clojure_core-G__-4 2 1 :default
-                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-4 {:a 1 :b 2} :map-match
+      (let* [clojure_core-G__-4396 {:a 1, :b 2}]
+        (case* clojure_core-G__-4396 3 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1, :b 2} :map-match
                         :default),
-                    1 (clojure.core/condp clojure.core/= clojure_core-G__-4 {:a 3 :b 4} :not-matched
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 3, :b 4} :not-matched
                         :default)}
           :compact :hash-equiv nil))]
   (assert (= xfn :map-match)))
 
 ; test case in statement position
 (let [xfn (fn []
-            (let* [clojure_core-G__-5 {:a 1 :b 2}]
-              (case* clojure_core-G__-5 2 1 :default
-                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-5 {:a 1 :b 2} :map-match
+            (let* [clojure_core-G__-4396 {:a 1, :b 2}]
+              (case* clojure_core-G__-4396 3 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1, :b 2} :map-match
                               :default),
-                          1 (clojure.core/condp clojure.core/= clojure_core-G__-5 {:a 3 :b 4} :not-matched
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 3, :b 4} :not-matched
                               :default)}
                 :compact :hash-equiv nil))
             0)]
@@ -62,11 +62,11 @@
 ; test case in return position
 (assert
  (=
-  (let* [clojure_core-G__-6 {:a 1 :b 2}]
-    (case* clojure_core-G__-6 2 1 :default
-               {0 (clojure.core/condp clojure.core/= clojure_core-G__-6 {:a 1 :b 2} :map-match
+  (let* [clojure_core-G__-4396 {:a 1, :b 2}]
+    (case* clojure_core-G__-4396 3 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1, :b 2} :map-match
                     :default),
-                1 (clojure.core/condp clojure.core/= clojure_core-G__-6 {:a 3 :b 4} :not-matched
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 3, :b 4} :not-matched
                     :default)}
       :compact :hash-equiv nil))
   :map-match))
@@ -118,22 +118,22 @@
 ; Test 4: (case [[1 2]])
 ; test case in value position
 (let [xfn
-      (let* [clojure_core-G__-10 [[1 2]]]
-        (case* clojure_core-G__-10 10 1 :default
-                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-10 [[1 2]] :vector-match
+      (let* [clojure_core-G__-4396 [[1 2]]]
+        (case* clojure_core-G__-4396 0 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [{:a 1}] :map-list-match
                         :default),
-                    1 (clojure.core/condp clojure.core/= clojure_core-G__-10 [{:a 1}] :map-list-match
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [[1 2]] :vector-match
                         :default)}
           :compact :hash-equiv nil))]
   (assert (= xfn :vector-match)))
 
 ; test case in statement position
 (let [xfn (fn []
-            (let* [clojure_core-G__-11 [[1 2]]]
-              (case* clojure_core-G__-11 10 1 :default
-                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-11 [[1 2]] :vector-match
+            (let* [clojure_core-G__-4396 [[1 2]]]
+              (case* clojure_core-G__-4396 0 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [{:a 1}] :map-list-match
                               :default),
-                          1 (clojure.core/condp clojure.core/= clojure_core-G__-11 [{:a 1}] :map-list-match
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [[1 2]] :vector-match
                               :default)}
                 :compact :hash-equiv nil))
             0)]
@@ -142,11 +142,11 @@
 ; test case in return position
 (assert
  (=
-  (let* [clojure_core-G__-12 [[1 2]]]
-    (case* clojure_core-G__-12 10 1 :default
-               {0 (clojure.core/condp clojure.core/= clojure_core-G__-12 [[1 2]] :vector-match
+  (let* [clojure_core-G__-4396 [[1 2]]]
+    (case* clojure_core-G__-4396 0 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [{:a 1}] :map-list-match
                     :default),
-                1 (clojure.core/condp clojure.core/= clojure_core-G__-12 [{:a 1}] :map-list-match
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 [[1 2]] :vector-match
                     :default)}
       :compact :hash-equiv nil))
   :vector-match))
@@ -155,22 +155,22 @@
 ; Test 5: (case {:a 1})
 ; test case in value position
 (let [xfn
-      (let* [clojure_core-G__-13 {:a 1}]
-        (case* clojure_core-G__-13 2 1 :default
-                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-13 {:a 1} :map-match
+      (let* [clojure_core-G__-4396 {:a 1}]
+        (case* clojure_core-G__-4396 9 1 :default
+                   {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:b 2} :different-map
                         :default),
-                    1 (clojure.core/condp clojure.core/= clojure_core-G__-13 {:b 2} :different-map
+                    1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1} :map-match
                         :default)}
           :compact :hash-equiv nil))]
   (assert (= xfn :map-match)))
 
 ; test case in statement position
 (let [xfn (fn []
-            (let* [clojure_core-G__-14 {:a 1}]
-              (case* clojure_core-G__-14 2 1 :default
-                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-14 {:a 1} :map-match
+            (let* [clojure_core-G__-4396 {:a 1}]
+              (case* clojure_core-G__-4396 9 1 :default
+                         {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:b 2} :different-map
                               :default),
-                          1 (clojure.core/condp clojure.core/= clojure_core-G__-14 {:b 2} :different-map
+                          1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1} :map-match
                               :default)}
                 :compact :hash-equiv nil))
             0)]
@@ -179,11 +179,11 @@
 ; test case in return position
 (assert
  (=
-  (let* [clojure_core-G__-15 {:a 1}]
-    (case* clojure_core-G__-15 2 1 :default
-               {0 (clojure.core/condp clojure.core/= clojure_core-G__-15 {:a 1} :map-match
+  (let* [clojure_core-G__-4396 {:a 1}]
+    (case* clojure_core-G__-4396 9 1 :default
+               {0 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:b 2} :different-map
                     :default),
-                1 (clojure.core/condp clojure.core/= clojure_core-G__-15 {:b 2} :different-map
+                1 (clojure.core/condp clojure.core/= clojure_core-G__-4396 {:a 1} :map-match
                     :default)}
       :compact :hash-equiv nil))
   :map-match))
