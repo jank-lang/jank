@@ -44,9 +44,9 @@
           :symbol-fallback)]
   (assert (= x :symbol-match) "Symbol match - value position"))
 
-(let [x (case "AaAaAaAa" "AaAaAaAa" :hasha
-          "BBBBBBBB"                :hashb
-          :default)]
+(let [x
+      (case "AaAaAaAa" "AaAaAaAa" :hasha "BBBBBBBB"                :hashb :default)
+      ]
   (assert (= x :hasha) "Hash collision check - value position"))
 
 ;; tail position tests
