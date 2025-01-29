@@ -601,22 +601,20 @@ namespace jank::evaluate
 
   object_ptr eval(expr::if_<expression> const &expr)
   {
-    // auto const condition(eval(expr.condition));
-    // if(truthy(condition))
-    // {
-    //   return eval(expr.then);
-    // }
-    // else if(expr.else_.is_some())
-    // {
-    //   return eval(expr.else_.unwrap());
-    // }
-    // return obj::nil::nil_const();
-    return dynamic_call(eval(wrap_expression(expr, "if_eval", {})));
+    auto const condition(eval(expr.condition));
+    if(truthy(condition))
+    {
+      return eval(expr.then);
+    }
+    else if(expr.else_.is_some())
+    {
+      return eval(expr.else_.unwrap());
+    }
+    return obj::nil::nil_const();
   }
 
   object_ptr eval(expr::throw_<expression> const &expr)
   {
-    std::cout << "throw in eval" << "\n";
     throw eval(expr.value);
   }
 

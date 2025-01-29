@@ -102,12 +102,14 @@ namespace jank::hash
 
   uint32_t integer(native_integer const input)
   {
-    if(input >= std::numeric_limits<uint32_t>::min()
-       && input <= std::numeric_limits<uint32_t>::max())
+    if constexpr(sizeof(uint64_t) == sizeof(native_integer))
     {
-      return static_cast<uint32_t>(input);
+      return integer(static_cast<uint64_t>(input));
     }
-    return integer(static_cast<uint64_t>(input));
+    else
+    {
+      return integer(static_cast<uint32_t>(input));
+    }
   }
 
   uint32_t real(native_real const input)

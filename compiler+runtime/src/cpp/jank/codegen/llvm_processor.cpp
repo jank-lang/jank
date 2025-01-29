@@ -217,7 +217,7 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    // ctx->fpm->run(*fn, *ctx->fam);
+    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -243,7 +243,6 @@ namespace jank::codegen
         return err(fmt::format("invalid IR module {}", ctx->module_name));
       }
     }
-    // llvm::verifyModule(*ctx->module, &llvm::errs());
     return ok();
   }
 
@@ -1494,7 +1493,7 @@ namespace jank::codegen
                                     == variadic_arity->fn_ctx->param_count - 1);
 
     /* If there's a variadic arity, the highest fixed args is however many precede the "rest"
-         * args. Otherwise, the highest fixed args is just the highest fixed arity. */
+     * args. Otherwise, the highest fixed args is just the highest fixed arity. */
     auto const highest_fixed_args(variadic_arity ? variadic_arity->fn_ctx->param_count - 1
                                                  : highest_fixed_arity->fn_ctx->param_count);
 
@@ -1601,8 +1600,8 @@ namespace jank::codegen
     ctx->global_ctor_block->insertInto(init);
 
     /* XXX: Modules are written to object files, which can't use global ctors until
-         * we're on the ORC runtime. Instead, we just generate our load function to call
-         * our global ctor first. */
+     * we're on the ORC runtime. Instead, we just generate our load function to call
+     * our global ctor first. */
     if(target != compilation_target::module)
     {
       llvm::appendToGlobalCtors(*ctx->module, init, 65535);
