@@ -20,7 +20,7 @@
 int main(int const argc, char const **argv)
 try
 {
-  std::locale::global(std::locale(""));
+  std::locale::global(std::locale("en_US.UTF-8"));
 
   GC_set_all_interior_pointers(1);
   GC_enable();
