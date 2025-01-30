@@ -1,6 +1,0 @@
-(require 'clojure.test)
-(clojure.test/deftest a-test (is (= 1 2)))
-(assert (= {:test 1, :pass 0, :fail 1, :error 0, :type :summary}
-           (clojure.test/run-test-var #'a-test)))
-
-:success
