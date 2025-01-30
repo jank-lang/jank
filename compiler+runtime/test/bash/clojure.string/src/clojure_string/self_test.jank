@@ -1,0 +1,10 @@
+(ns clojure-test.self-test
+  (:require [clojure.string :as str]))
+
+(defn -main []
+  (assert (= "" (str/reverse "")))
+  (assert (= "tset-a" (str/reverse "a-test" "a")))
+  (assert (str/starts-with? "" ""))
+  (assert (str/starts-with? "a-test" "a"))
+  (assert (not (str/starts-with? "a-test" "b")))
+  :success)
