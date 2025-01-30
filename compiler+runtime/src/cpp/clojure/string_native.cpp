@@ -13,6 +13,16 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
+  static object_ptr blank(object_ptr const s)
+  {
+    if(runtime::is_nil(s))
+    {
+      return obj::boolean::true_const();
+    }
+    auto const s_str(runtime::to_string(s));
+    return make_box(s_str.is_blank());
+  }
+
   static object_ptr reverse(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
@@ -32,6 +42,13 @@ namespace clojure::string_native
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.ends_with(substr_str));
   }
+
+  static object_ptr includes(object_ptr const s, object_ptr const substr)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const substr_str(runtime::to_string(substr));
+    return make_box(s_str.contains(substr_str));
+  }
 }
 
 jank_object_ptr jank_load_clojure_string_native()
@@ -50,9 +67,11 @@ jank_object_ptr jank_load_clojure_string_native()
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
 
+  intern_fn("blank?", &string_native::blank);
+  intern_fn("ends-with?", &string_native::ends_with);
+  intern_fn("includes?", &string_native::includes);
   intern_fn("reverse", &string_native::reverse);
   intern_fn("starts-with?", &string_native::starts_with);
-  intern_fn("ends-with?", &string_native::ends_with);
 
   return erase(obj::nil::nil_const());
 }

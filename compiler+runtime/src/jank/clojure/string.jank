@@ -236,13 +236,11 @@
 ;  ;        (if (or (= ch \newline) (= ch \return))
 ;  ;          (recur (dec index))
 ;  ;          (.. s (subSequence 0 index) toString))))))
-;  
-;  (defn blank?
-;    "True if s is nil, empty, or contains only whitespace."
-;    [s]
-;    (native/raw "auto const s_str(runtime::to_string(~{ s }));
-;                __value = make_box(s_str.is_blank());"))
-;  
+
+(def ^{:doc "True if s is nil, empty, or contains only whitespace."
+       :arglists '([s])}
+  blank? clojure.string-native/blank?)
+
 ;  ;(defn escape
 ;  ;  "Return a new string, using cmap to escape each character ch
 ;  ;  from s as follows:
@@ -307,9 +305,6 @@
        :arglists '([s substr])}
   ends-with? clojure.string-native/ends-with?)
 
-;  (defn includes?
-;    "True if s includes substr."
-;    [s substr]
-;    (native/raw "auto const s_str(runtime::to_string(~{ s }));
-;                auto const substr_str(runtime::to_string(~{ substr }));
-;                __value = make_box(s_str.contains(substr_str));"))
+(def ^{:doc "True if s includes substr."
+        :arglists '([s substr])}
+  includes? clojure.string-native/includes?)

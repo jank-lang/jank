@@ -2,15 +2,24 @@
   (:require [clojure.string :as str]))
 
 (defn -main []
-  ;; clojure.string/reverse
-  (assert (= "" (str/reverse "")) '(= "" (str/reverse "")))
-  (assert (= "tset-a" (str/reverse "a-test")) '(= "tset-a" (str/reverse "a-test")))
-  ;; clojure.string/starts-with?
-  (assert (str/starts-with? "" "") '(str/starts-with? "" ""))
-  (assert (str/starts-with? "a-test" "a") '(str/starts-with? "a-test" "a"))
-  (assert (not (str/starts-with? "a-test" "b")) '(not (str/starts-with? "a-test" "b")))
-  ;; clojure.string/ends-with?
-  (assert (str/ends-with? "" "") '(str/ends-with? "" ""))
-  (assert (str/ends-with? "a-test" "t") '(str/ends-with? "a-test" "t"))
-  (assert (not (str/ends-with? "a-test" "s")) '(not (str/ends-with? "a-test" "s")))
-  :success)
+  (try
+    ;; clojure.string/blank?
+    (assert (str/blank? ""))
+    (assert (str/blank? nil))
+    (assert (str/blank? "  "))
+    (assert (str/blank? " \t "))
+    (assert (not (str/blank? "nil")))
+    (assert (not (str/blank? " as df ")))
+    ;; clojure.string/reverse
+    (assert (= "" (str/reverse "")))
+    (assert (= "tset-a" (str/reverse "a-test")))
+    ;; clojure.string/starts-with?
+    (assert (str/starts-with? "" ""))
+    (assert (str/starts-with? "a-test" "a"))
+    (assert (not (str/starts-with? "a-test" "b")))
+    ;; clojure.string/ends-with?
+    (assert (str/ends-with? "" ""))
+    (assert (str/ends-with? "a-test" "t"))
+    (assert (not (str/ends-with? "a-test" "s")))
+    (println :success)
+    (catch _ (println :fail))))
