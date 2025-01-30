@@ -46,10 +46,10 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     native_vector_sequence_ptr with_meta(object_ptr const m) const;
-    option<object_ptr> meta;
 
     object base{ obj_type };
     native_vector<object_ptr> data{};
     size_t index{};
+    option<object_ptr> meta;
   };
 }

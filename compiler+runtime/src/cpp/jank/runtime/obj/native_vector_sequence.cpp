@@ -26,8 +26,8 @@ namespace jank::runtime::obj
   }
 
   native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta, native_vector<object_ptr> &&data)
-    : meta{ meta }
-    , data{ std::move(data) }
+    : data{ std::move(data) }
+    , meta{ meta }
   {
   }
 

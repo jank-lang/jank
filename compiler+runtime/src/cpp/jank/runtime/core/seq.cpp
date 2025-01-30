@@ -15,7 +15,7 @@
 #include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
-#include "jank/runtime/behavior/metadatable.hpp"
+#include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
 
 namespace jank::runtime
