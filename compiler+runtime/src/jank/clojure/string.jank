@@ -1,11 +1,9 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse]))
 
-(defn reverse
-  "Returns s with its characters reversed."
-  [s]
-  (println "in clojure.string/reverse: " #_s)
-  (clojure.string-native/reverse s))
+(def ^{:doc "returns s with its characters reversed."
+       :arglists '([s])}
+  reverse clojure.string-native/reverse)
   
 ;  ;(defn re-quote-replacement
 ;  ;  "Given a replacement string that you wish to be a literal
@@ -301,10 +299,9 @@
 ;  ;       nil
 ;  ;       result))))
 ;  
-(defn starts-with?
-  "True if s starts with substr."
-  [s substr]
-  (clojure.string-native/starts-with? s substr))
+(def ^{:doc "True if s starts with substr."
+       :arglists '([s substr])}
+  starts-with? clojure.string-native/starts-with?)
 
 ;  (defn ends-with?
 ;    "True if s ends with substr."
