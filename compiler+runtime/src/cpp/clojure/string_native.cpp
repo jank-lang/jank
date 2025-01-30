@@ -25,6 +25,13 @@ namespace clojure::string_native
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.starts_with(substr_str));
   }
+
+  static object_ptr ends_with(object_ptr const s, object_ptr const substr)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const substr_str(runtime::to_string(substr));
+    return make_box(s_str.ends_with(substr_str));
+  }
 }
 
 jank_object_ptr jank_load_clojure_string_native()
@@ -45,6 +52,7 @@ jank_object_ptr jank_load_clojure_string_native()
 
   intern_fn("reverse", &string_native::reverse);
   intern_fn("starts-with?", &string_native::starts_with);
+  intern_fn("ends-with?", &string_native::ends_with);
 
   return erase(obj::nil::nil_const());
 }

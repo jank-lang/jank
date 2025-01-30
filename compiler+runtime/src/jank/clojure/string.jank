@@ -303,13 +303,10 @@
        :arglists '([s substr])}
   starts-with? clojure.string-native/starts-with?)
 
-;  (defn ends-with?
-;    "True if s ends with substr."
-;    [s substr]
-;    (native/raw "auto const s_str(runtime::to_string(~{ s }));
-;                auto const substr_str(runtime::to_string(~{ substr }));
-;                __value = make_box(s_str.ends_with(substr_str));"))
-;  
+(def ^{:doc "True if s ends with substr."
+       :arglists '([s substr])}
+  ends-with? clojure.string-native/ends-with?)
+
 ;  (defn includes?
 ;    "True if s includes substr."
 ;    [s substr]
