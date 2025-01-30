@@ -25,6 +25,12 @@ namespace jank::runtime::obj
     assert(!this->data.empty());
   }
 
+  native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta, native_vector<object_ptr> &&data)
+    : meta{ meta }
+    , data{ std::move(data) }
+  {
+  }
+
   /* behavior::objectable */
   native_bool native_vector_sequence::equal(object const &o) const
   {
@@ -61,7 +67,7 @@ namespace jank::runtime::obj
     return data.empty() ? nullptr : this;
   }
 
-  native_vector_sequence_ptr native_vector_sequence::fresh_seq()
+  native_vector_sequence_ptr native_vector_sequence::fresh_seq() const
   {
     return data.empty() ? nullptr : make_box<native_vector_sequence>(data, index);
   }
@@ -108,4 +114,13 @@ namespace jank::runtime::obj
   {
     return make_box<cons>(head, data.empty() ? nullptr : this);
   }
+
+  native_vector_sequence_ptr native_vector_sequence::with_meta(object_ptr const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(fresh_seq());
+    ret->meta = meta;
+    return ret;
+  }
+
 }

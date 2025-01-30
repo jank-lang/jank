@@ -15,6 +15,7 @@
 #include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
+#include "jank/runtime/behavior/metadatable.hpp"
 #include <jank/runtime/core.hpp>
 
 namespace jank::runtime
@@ -1193,13 +1194,13 @@ namespace jank::runtime
           return runtime::compare(a, b) < 0;
         });
 
-        auto sorted_seq = make_box<obj::native_vector_sequence>(std::move(vec));
-	// TODO: fix this; preserve metadata
-        // if(auto meta = typed_coll->meta())
-        // {
-        //   sorted_seq->meta(meta);
-        // }
-        return sorted_seq;
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(behavior::metadatable<T>) {
+          return make_box<obj::native_vector_sequence>(typed_coll->meta, std::move(vec));
+        } else {
+          return make_box<obj::native_vector_sequence>(std::move(vec));
+        }
       },
       coll);
   }
