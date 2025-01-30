@@ -82,6 +82,7 @@ namespace jank::runtime
     var_unbound_root,
 
     tagged_literal,
+    uuid,
   };
 
   constexpr char const *object_type_str(object_type const type)
@@ -213,6 +214,8 @@ namespace jank::runtime
 
       case object_type::tagged_literal:
         return "tagged_literal";
+      case object_type::uuid:
+        return "uuid";
     }
     return "unknown";
   }
