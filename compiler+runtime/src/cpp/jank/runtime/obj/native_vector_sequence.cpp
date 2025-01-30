@@ -25,7 +25,8 @@ namespace jank::runtime::obj
     assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta, native_vector<object_ptr> &&data)
+  native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta,
+                                                 native_vector<object_ptr> &&data)
     : data{ std::move(data) }
     , meta{ meta }
   {

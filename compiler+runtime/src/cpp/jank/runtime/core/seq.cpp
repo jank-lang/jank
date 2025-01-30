@@ -1196,9 +1196,12 @@ namespace jank::runtime
 
         using T = typename decltype(typed_coll)::value_type;
 
-        if constexpr(behavior::metadatable<T>) {
+        if constexpr(behavior::metadatable<T>)
+        {
           return make_box<obj::native_vector_sequence>(typed_coll->meta, std::move(vec));
-        } else {
+        }
+        else
+        {
           return make_box<obj::native_vector_sequence>(std::move(vec));
         }
       },
