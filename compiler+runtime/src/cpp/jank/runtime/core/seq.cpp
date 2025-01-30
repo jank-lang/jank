@@ -15,6 +15,7 @@
 #include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
 
 namespace jank::runtime
@@ -1177,5 +1178,33 @@ namespace jank::runtime
   object_ptr repeat(object_ptr const n, object_ptr const val)
   {
     return make_box<obj::repeat>(n, val);
+  }
+
+  object_ptr sort(object_ptr const coll)
+  {
+    return visit_seqable(
+      [](auto const typed_coll) -> object_ptr {
+        native_vector<object_ptr> vec;
+        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          vec.push_back(it->first());
+        }
+
+        std::stable_sort(vec.begin(), vec.end(), [](object_ptr const a, object_ptr const b) {
+          return runtime::compare(a, b) < 0;
+        });
+
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return make_box<obj::native_vector_sequence>(typed_coll->meta, std::move(vec));
+        }
+        else
+        {
+          return make_box<obj::native_vector_sequence>(std::move(vec));
+        }
+      },
+      coll);
   }
 }
