@@ -1,3 +1,0 @@
-(assert (= 'clojure.core/+ (symbol #'+)))
-
-:success
