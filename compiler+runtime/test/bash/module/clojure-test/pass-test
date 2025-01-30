@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
 jank --module-path src run-main clojure-test.self-test | grep ':success'
+exit 1

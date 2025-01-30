@@ -31,7 +31,6 @@ inst
 deb-cache
 build
 compiler+runtime/build-*
-compiler+runtime/test.log
 coverage.txt
 vcpkg_installed
 .idea/
