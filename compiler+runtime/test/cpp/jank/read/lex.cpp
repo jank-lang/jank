@@ -795,8 +795,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, 2, "arbitrary radix number can only be an integer" },
-                error{ 2, 2, "unexpected character: ." },
-                token{ 3, 1, token_kind::integer, 0ll }
+                token{ 2, 2, token_kind::symbol, ".0"sv }
         }));
       }
 
@@ -929,7 +928,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv }
           }));
         }
         {
@@ -1245,6 +1244,16 @@ namespace jank::read::lex
               == make_tokens({
                 { 0, token_kind::single_quote },
                 { 1, 3, token_kind::symbol, "foo"sv }
+        }));
+      }
+
+      SUBCASE("Starting with .")
+      {
+        processor p{ ".foo" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::symbol, ".foo"sv }
         }));
       }
     }
@@ -1774,7 +1783,10 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 7, token_kind::keyword, "  "sv }
+                error{ 0, 0, "invalid keyword: expected non-whitespace character after :" },
+                token{ 1, 3, token_kind::symbol, "  "sv },
+                error{ 4, 4, "expected whitespace before next token" },
+                token{ 4, 3, token_kind::symbol, "  "sv }
         }));
       }
 
