@@ -14,79 +14,26 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - if: runner.os == 'Linux'
-      name: Install apt packages
+    - name: Test Clojure CLI workflow
       shell: bash
-      run: sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
-    - if: runner.os == 'macOS'
-      name: Install brew packages
+      working-directory: ${{ github.workspace }}/clojure-cli
+      run: ${{ github.workspace }}/clojure-cli/bin/ci/test
+    - name: Test Leiningen plugin
       shell: bash
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19
-    - name: Restore cached Clang/LLVM
-      id: restore-clang-cache
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          ${{ github.workspace }}/compiler+runtime/build
-        key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
-    - uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '21'
-    - name: Install clojure tools
-      uses: DeLaGuardo/setup-clojure@13.1
-      with:
-        cli: latest
-        lein: 2.9.1
-    - name: Compile and test
+      working-directory: ${{ github.workspace }}/lein-jank
+      run: ${{ github.workspace }}/lein-jank/bin/ci/test
+    - name: Test library workflows
+      shell: bash
+      working-directory: ${{ github.workspace }}/lib-test
+      run: ${{ github.workspace }}/lib-test/bin/ci/test
+    - if: success() && ${{ inputs.build_ubuntu_tarball }}
+      name: Release
+      id: release
       shell: bash
       working-directory: ${{ github.workspace }}/compiler+runtime
-      run: ${{ github.workspace }}/compiler+runtime/bin/ci/test -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-    - name: Store cached Clang/LLVM
-      id: save-clang-cache
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          ${{ github.workspace }}/compiler+runtime/build
-        key: ${{ steps.restore-clang-cache.outputs.cache-primary-key }}
-    # We need to validate formatting after building, since we build Clang/LLVM as part of our
-    # build process and we need clang-format from that local Clang build in order to have
-    # consistent formatting results.
-    - name: Validate formatting
-      shell: bash
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      run: ${{ github.workspace }}/compiler+runtime/bin/ci/validate-formatting
-    - if: success() && ${{ env.CODECOV == 'on' }}
-      name: Upload report to Codecov
-      uses: codecov/codecov-action@v3
-    #- name: Add jank to PATH
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/compiler+runtime
-    #  run: |
-    #    export DESTDIR=${{ github.workspace }}/jank-install
-    #    ${{ github.workspace }}/compiler+runtime/bin/install
-    #    export PATH="${DESTDIR}/usr/local/bin:${PATH}"
-    #    echo "PATH=${PATH}" >> "${GITHUB_ENV}"
-    #- name: Test Clojure CLI workflow
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/clojure-cli
-    #  run: ${{ github.workspace }}/clojure-cli/bin/ci/test
-    #- name: Test Leiningen plugin
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/lein-jank
-    #  run: ${{ github.workspace }}/lein-jank/bin/ci/test
-    #- if: success() && ${{ inputs.build_ubuntu_tarball }}
-    #- name: Test library workflows
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/lib-test
-    #  run: ${{ github.workspace }}/lib-test/bin/ci/test
-    #  name: Release
-    #  id: release
-    #  shell: bash
-    #  working-directory: ${{ github.workspace }}/compiler+runtime
-    #  run: |
-    #    export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
-    #    bin/install
-    #    tar czf $DESTDIR.tar.gz ${DESTDIR}/
-    #    absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
-    #    echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}
+      run: |
+        export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
+        bin/install
+        tar czf $DESTDIR.tar.gz ${DESTDIR}/
+        absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
+        echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}

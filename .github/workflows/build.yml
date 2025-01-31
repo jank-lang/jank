@@ -11,12 +11,15 @@ jobs:
       matrix:
         include:
           # Ubuntu
+          ## Lint all sources
+          - os: ubuntu-24.04
+            lint: true
           ## Debug + clang-tidy + codecov
           - os: ubuntu-24.04
             build_type: Debug
             sanitize: none
-            codecov: on
-            analysis: on
+            codecov: true
+            analyze: true
           ## Debug + sanitization
           - os: ubuntu-24.04
             build_type: Debug
@@ -35,27 +38,26 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
-      CODECOV: ${{ matrix.codecov }}
-      ANALYSIS: ${{ matrix.analysis }}
-      SANITIZE: ${{ matrix.sanitize }}
+      JANK_BUILD_TYPE: ${{ matrix.build_type }}
+      JANK_LINT: ${{ matrix.lint }}
+      JANK_CODECOV: ${{ matrix.codecov }}
+      JANK_ANALYZE: ${{ matrix.analyze }}
+      JANK_SANITIZE: ${{ matrix.sanitize }}
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
-    timeout-minutes: 240 # 4h
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Build and test
-        uses: ./.github/actions/build
-        id: build
-        with:
-          build_ubuntu_tarball: ${{ matrix.build_ubuntu_tarball }}
-      - name: Archive test log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-log-${{ env.JANK_MATRIX_ID }}
-          path: compiler+runtime/test.log
+        run: ./bin/jank/test_everything.clj
+      #- name: Archive test log
+      #  if: always()
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: test-log-${{ env.JANK_MATRIX_ID }}
+      #    path: compiler+runtime/test.log
       #- name: Update Ubuntu tarball
       #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
       #  uses: pyTooling/Actions/releaser@main

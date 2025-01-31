@@ -1,0 +1,2 @@
+{:paths ["../"
+         "../../compiler+runtime/bin"]}
