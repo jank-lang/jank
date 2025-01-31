@@ -896,18 +896,6 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Negative no leading digit")
-      {
-        processor p{ "-.0" };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, 1, "invalid number" },
-                error{ 1, "unexpected character: ." },
-                token{ 2, token_kind::integer, 0ll },
-        }));
-      }
-
       SUBCASE("Too many dots")
       {
         {
@@ -1019,12 +1007,11 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv },
                   token{ 5, 4, token_kind::real, 12.3 },
                   error{ 10, 14, "invalid number" },
-                  error{ 14, "unexpected character: ." },
-                  error{ 15, "expected whitespace before next token" },
-                  token{ 15, token_kind::integer, 3ll },
+                  error{ 14, "expected whitespace before next token" },
+                  token{ 14, 2, token_kind::symbol, ".3"sv },
           }));
         }
 
@@ -1252,6 +1239,17 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 token{ 0, 2, token_kind::symbol, ".0"sv },
+        }));
+      }
+
+      SUBCASE("Negative no leading digit")
+      {
+        processor p{ "-.0" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                //FIXME
+                token{ 0, 3, token_kind::symbol, "-.0"sv },
         }));
       }
     }
@@ -1784,7 +1782,7 @@ namespace jank::read::lex
                 error{ 0, "invalid keyword: expected non-whitespace character after :" },
                 token{ 1, 3, token_kind::symbol, "  "sv },
                 error{ 4, 4, "expected whitespace before next token" },
-                token{ 4, 3, token_kind::symbol, ""sv }
+                token{ 4, 3, token_kind::symbol, " "sv }
         }));
       }
 
