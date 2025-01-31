@@ -7,7 +7,8 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns clojure.template
-  (:require [clojure.walk :as walk]))
+  (:require
+   [clojure.walk :as walk]))
 
 (defn apply-template
   "For use in macros.  argv is an argument list, as in defn.  expr is

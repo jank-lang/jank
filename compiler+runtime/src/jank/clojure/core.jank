@@ -217,7 +217,7 @@
   "Return true if x implements IPersistentMap"
   clojure.core-native/map?)
 (def associative?
- "Returns true if coll implements Associative"
+  "Returns true if coll implements Associative"
   clojure.core-native/associative?)
 (def assoc
   "assoc[iate]. When applied to a map, returns a new map of the
@@ -342,7 +342,7 @@
   (fn* [fdecl]
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
-                         ;elide implicit macro args
+                         ; elide implicit macro args
                          arglist (if (= '&form (first arglist))
                                    (subvec arglist 2 (count arglist))
                                    arglist)
@@ -701,11 +701,10 @@
   ([ref]
    (clojure.core-native/deref ref))
   ; TODO: Blocking.
-  ([ref timeout-ms timeout-val]
-   ;(if (instance? clojure.lang.IBlockingDeref ref)
+  ([ref timeout-ms timeout-val]))
+   ; (if (instance? clojure.lang.IBlockingDeref ref)
    ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
    ;  (deref-future ref timeout-ms timeout-val))
-   ))
 
 (def reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
@@ -1453,7 +1452,6 @@
     (when s
       (or (pred (first s)) (recur pred (next s))))))
 
-
 (defn every-pred
   "Takes a set of predicates and returns a function f that returns true if all of its
    composing predicates return a logical true value against all of its arguments, else it returns
@@ -1531,7 +1529,6 @@
        ([x y z] (some #(or (% x) (% y) (% z)) ps))
        ([x y z & args] (or (spn x y z)
                            (some #(some % args) ps)))))))
-
 
 (defn not-any? [pred coll]
   (not (some pred coll)))
@@ -2475,11 +2472,11 @@
    they appear."
   [coll]
   (persistent!
-   (reduce
-    (fn [counts x]
-      (assoc! counts x (inc (get counts x 0))))
-    (transient {})
-    coll)))
+    (reduce
+      (fn [counts x]
+        (assoc! counts x (inc (get counts x 0))))
+      (transient {})
+      coll)))
 
 (defn group-by
   "Returns a map of the elements of coll keyed by the result of
@@ -2487,12 +2484,12 @@
    corresponding elements, in the order they appeared in coll."
   [f coll]
   (persistent!
-   (reduce
-    (fn [ret x]
-      (let [k (f x)]
-        (assoc! ret k (conj (get ret k []) x))))
-    (transient {})
-    coll)))
+    (reduce
+      (fn [ret x]
+        (let [k (f x)]
+          (assoc! ret k (conj (get ret k []) x))))
+      (transient {})
+      coll)))
 
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
@@ -4026,32 +4023,11 @@
   [& args]
   (apply load-libs :require :use args))
 
-(defmacro ns
+(defmacro(ns name
   "Sets *ns* to the namespace named by name (unevaluated), creating it
    if needed. References can be zero or more of: (:refer-clojure ...)
    (:require ...) (:use ...) (:import ...) (:load ...)
-   with the syntax of refer-clojure/require/use/import/load respectively."
-  [name & references]
-  (let [process-reference (fn [reference]
-                            (let [kname (first reference)
-                                  args (rest reference)]
-                              (cons (symbol "clojure.core" (clojure.core/name kname))
-                                    (map (fn [a]
-                                           (list 'quote a))
-                                         args))))
-        refer-full-clojure? (not-any? (fn [ref]
-                                        (= :refer-clojure (first ref)))
-                                      references)]
-    `(do
-       (clojure.core/in-ns '~name)
-       ; TODO: with-loading-context
-       (do ; with-loading-context
-         ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
-             `((clojure.core/refer '~'clojure.core)))
-         ~@(map process-reference references))
-       (if (= '~name '~'clojure.core)
-          nil
-          (do (swap! @#'*loaded-libs* conj '~name) nil)))))
+   with the syntax of refer-clojure/require/use/import/load respectively.")
 
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
@@ -4064,18 +4040,18 @@
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
   ([ns name]
-     (let [v (clojure.core-native/intern-var
-               (clojure.core-native/->qualified-symbol
-                 (the-ns ns) name))]
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
-       v))
+   (let [v (clojure.core-native/intern-var
+             (clojure.core-native/->qualified-symbol
+               (the-ns ns) name))]
+     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     v))
   ([ns name val]
-     (let [v (clojure.core-native/intern-var
-               (clojure.core-native/->qualified-symbol
-                 (the-ns ns) name))]
-       (clojure.core-native/var-bind-root v val)
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
-       v)))
+   (let [v (clojure.core-native/intern-var
+             (clojure.core-native/->qualified-symbol
+               (the-ns ns) name))]
+     (clojure.core-native/var-bind-root v val)
+     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     v)))
 
 (defn nfirst
   "Same as (next (first x))"
@@ -4106,7 +4082,7 @@
 
 (defn cast
   "Throws a ClassCastException if x is not a c, else returns x."
-  [c x] 
+  [c x]
   ;; (. c (cast x))
   (throw "TODO: port"))
 
@@ -4206,7 +4182,7 @@
    (throw "TODO: port"))
   ([x y]
   ;;  (. clojure.lang.Numbers (multiplyP x y))
-  (throw "TODO: port"))
+   (throw "TODO: port"))
   ([x y & more]
    (reduce *' (*' x y) more)))
 
@@ -4367,7 +4343,7 @@
   [x]
   (float? x))
 
-;;map stuff
+;; map stuff
 
 (defn map-entry?
   "Return true if x is a map entry"
@@ -4379,7 +4355,7 @@
   "Returns, in constant time, a seq of the items in rev (which
   can be a vector or sorted-map), in reverse order. If rev is empty returns nil"
   [#_clojure.lang.Reversible rev]
-    ;; (. rev (rseq))
+  ;; (. rev (rseq))
   (throw "TODO: port"))
 
 (defmacro locking
@@ -4393,7 +4369,7 @@
          (try
            ~@body
            (finally
-            (monitor-exit locklocal#)))))))
+             (monitor-exit locklocal#)))))))
 
 ;; (defmacro ..
 ;;   "form => fieldName-symbol or (instanceMethodName-symbol args*)
@@ -4415,7 +4391,6 @@
 ;;   ([x form & more]
 ;;   ;;  `(.. (. ~x ~form) ~@more))
 ;;   (throw "TODO: port"))
-
 
 ;;;;;;;;; var stuff
 
@@ -4513,14 +4488,14 @@
   default if no error-handler is given) -- see set-error-mode! for
   details."
   ([state & options]
-    ;;  (let [a (new clojure.lang.Agent state)
-    ;;        opts (apply hash-map options)]
-    ;;    (setup-reference a options)
-    ;;    (when (:error-handler opts)
-    ;;      (.setErrorHandler a (:error-handler opts)))
-    ;;    (.setErrorMode a (or (:error-mode opts)
-    ;;                         (if (:error-handler opts) :continue :fail)))
-    ;;    a)
+   ;;  (let [a (new clojure.lang.Agent state)
+   ;;        opts (apply hash-map options)]
+   ;;    (setup-reference a options)
+   ;;    (when (:error-handler opts)
+   ;;      (.setErrorHandler a (:error-handler opts)))
+   ;;    (.setErrorMode a (or (:error-mode opts)
+   ;;                         (if (:error-handler opts) :continue :fail)))
+   ;;    a)
    (throw "TODO: port")))
 
 (defn set-agent-send-executor!
@@ -4711,7 +4686,7 @@
   ([x]
   ;;  (new clojure.lang.Ref x)
    (throw "TODO: port"))
-  ([x & options] 
+  ([x & options]
   ;;  (let [r  ^clojure.lang.Ref (setup-reference (ref x) options)
   ;;        opts (apply hash-map options)]
   ;;   (when (:max-history opts)
@@ -4723,12 +4698,12 @@
 
 (defn- deref-future
   ([#_java.util.concurrent.Future fut]
-    ;;  (.get fut)
+   ;;  (.get fut)
    (throw "TODO: port"))
   ([#_java.util.concurrent.Future fut timeout-ms timeout-val]
-    ;;  (try (.get fut timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
-    ;;       (catch java.util.concurrent.TimeoutException e
-    ;;         timeout-val))
+   ;;  (try (.get fut timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
+   ;;       (catch java.util.concurrent.TimeoutException e
+   ;;         timeout-val))
    (throw "TODO: port")))
 
 (defn set-validator!
@@ -4744,7 +4719,7 @@
 
 (defn get-validator
   "Gets the validator-fn for a var/ref/agent/atom."
- [#_clojure.lang.IRef iref]
+  [#_clojure.lang.IRef iref]
   ;; (. iref (getValidator))
   (throw "TODO: port"))
 
@@ -4764,7 +4739,7 @@
   last-one-in-wins behavior.  commute allows for more concurrency than
   ref-set."
   [#_clojure.lang.Ref ref fun & args]
-    ;; (. ref (commute fun args))
+  ;; (. ref (commute fun args))
   (throw "TODO: port"))
 
 (defn alter
@@ -4775,38 +4750,38 @@
 
   and returns the in-transaction-value of ref."
   [#_clojure.lang.Ref ref fun & args]
-    ;; (. ref (alter fun args))
+  ;; (. ref (alter fun args))
   (throw "TODO: port"))
 
 (defn ref-set
   "Must be called in a transaction. Sets the value of ref.
   Returns val."
   [#_clojure.lang.Ref ref val]
-    ;; (. ref (set val))
+  ;; (. ref (set val))
   (throw "TODO: port"))
 
 (defn ref-history-count
   "Returns the history count of a ref"
   [#_clojure.lang.Ref ref]
-    ;; (.getHistoryCount ref)
+  ;; (.getHistoryCount ref)
   (throw "TODO: port"))
 
 (defn ref-min-history
   "Gets the min-history of a ref, or sets it and returns the ref"
   ([#_clojure.lang.Ref ref]
-    ;; (.getMinHistory ref)
+   ;; (.getMinHistory ref)
    (throw "TODO: port"))
   ([#_clojure.lang.Ref ref n]
-    ;; (.setMinHistory ref n)
+   ;; (.setMinHistory ref n)
    (throw "TODO: port")))
 
 (defn ref-max-history
   "Gets the max-history of a ref, or sets it and returns the ref"
   ([#_clojure.lang.Ref ref]
-    ;; (.getMaxHistory ref)
+   ;; (.getMaxHistory ref)
    (throw "TODO: port"))
   ([#_clojure.lang.Ref ref n]
-    ;; (.setMaxHistory ref n)
+   ;; (.setMaxHistory ref n)
    (throw "TODO: port")))
 
 (defn ensure
@@ -4814,8 +4789,8 @@
   by other transactions.  Returns the in-transaction-value of
   ref. Allows for more concurrency than (ref-set ref @ref)"
   [#_clojure.lang.Ref ref]
-    ;; (. ref (touch))
-    ;; (. ref (deref))
+  ;; (. ref (touch))
+  ;; (. ref (deref))
   (throw "TODO: port"))
 
 (defmacro sync
@@ -4856,19 +4831,19 @@
   remaining items in other colls are ignored. The transform should accept
   number-of-colls arguments"
   ([coll]
-     (if (seq? coll) coll
-         (or (seq coll) ())))
+   (if (seq? coll) coll
+       (or (seq coll) ())))
   ([xform coll]
-    ;;  (or (clojure.lang.RT/chunkIteratorSeq
-    ;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
-    ;;    ())
+   ;;  (or (clojure.lang.RT/chunkIteratorSeq
+   ;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
+   ;;    ())
    (throw "TODO: port"))
   ([xform coll & colls]
-    ;;  (or (clojure.lang.RT/chunkIteratorSeq
-    ;;      (clojure.lang.TransformerIterator/createMulti
-    ;;        xform
-    ;;        (map #(clojure.lang.RT/iter %) (cons coll colls))))
-    ;;    ())
+   ;;  (or (clojure.lang.RT/chunkIteratorSeq
+   ;;      (clojure.lang.TransformerIterator/createMulti
+   ;;        xform
+   ;;        (map #(clojure.lang.RT/iter %) (cons coll colls))))
+   ;;    ())
    (throw "TODO: port")))
 
 (defn not-every?
@@ -4902,12 +4877,12 @@
   [f & maps]
   (when (some identity maps)
     (let [merge-entry (fn [m e]
-			(let [k (key e) v (val e)]
-			  (if (contains? m k)
-			    (assoc m k (f (get m k) v))
-			    (assoc m k v))))
+                        (let [k (key e) v (val e)]
+                          (if (contains? m k)
+                            (assoc m k (f (get m k) v))
+                            (assoc m k v))))
           merge2 (fn [m1 m2]
-		   (reduce merge-entry (or m1 {}) (seq m2)))]
+                   (reduce merge-entry (or m1 {}) (seq m2)))]
       (reduce merge2 maps))))
 
 (defn line-seq
@@ -4921,8 +4896,8 @@
 (defn comparator
   "Returns an implementation of java.util.Comparator based upon pred."
   [pred]
-    (fn [x y]
-      (cond (pred x y) -1 (pred y x) 1 :else 0)))
+  (fn [x y]
+    (cond (pred x y) -1 (pred y x) 1 :else 0)))
 
 (defn sort
   "Returns a sorted sequence of the items in coll. If no comparator is
@@ -4987,27 +4962,27 @@
   timeout (in milliseconds) has elapsed. Returns logical false if
   returning due to timeout, logical true otherwise."
   [timeout-ms & agents]
-    ;; (io! "await-for in transaction"
-    ;;  (when *agent*
-    ;;    (throw (new Exception "Can't await in agent action")))
-    ;;  (let [latch (new java.util.concurrent.CountDownLatch (count agents))
-    ;;        count-down (fn [agent] (. latch (countDown)) agent)]
-    ;;    (doseq [agent agents]
-    ;;        (send agent count-down))
-    ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
+  ;; (io! "await-for in transaction"
+  ;;  (when *agent*
+  ;;    (throw (new Exception "Can't await in agent action")))
+  ;;  (let [latch (new java.util.concurrent.CountDownLatch (count agents))
+  ;;        count-down (fn [agent] (. latch (countDown)) agent)]
+  ;;    (doseq [agent agents]
+  ;;        (send agent count-down))
+  ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
   (throw "TODO: port"))
 
-(defmacro import 
+(defmacro import
   "import-list => (package-symbol class-name-symbols*)
 
   For each name in class-name-symbols, adds a mapping from name to the
   class named by package.name to the current namespace. Use :import in the ns
   macro in preference to calling this directly."
   [& import-symbols-or-lists]
-  (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %) 
+  (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %)
                    import-symbols-or-lists)]
     `(do ~@(map #(list 'clojure.core/import* %)
-                (reduce (fn [v spec] 
+                (reduce (fn [v spec]
                           (if (symbol? spec)
                             (conj v (name spec))
                             (let [p (first spec) cs (rest spec)]
@@ -5021,10 +4996,10 @@
   the component type. Class objects for the primitive types can be obtained
   using, e.g., Integer/TYPE."
   ([aseq]
-    ;;  (clojure.lang.RT/seqToTypedArray (seq aseq))
+   ;;  (clojure.lang.RT/seqToTypedArray (seq aseq))
    (throw "TODO: port"))
   ([type aseq]
-    ;;  (clojure.lang.RT/seqToTypedArray type (seq aseq))
+   ;;  (clojure.lang.RT/seqToTypedArray type (seq aseq))
    (throw "TODO: port")))
 
 (defn-
@@ -5133,7 +5108,7 @@
   ;; (instance? BigDecimal n)
   (throw "TODO: port"))
 
-(defn rational? 
+(defn rational?
   "Returns true if n is a rational number"
   [n]
   (or (integer? n) (ratio? n) (decimal? n)))
@@ -5175,7 +5150,7 @@
   ;;   (instance? BigInteger x) (BigDecimal. ^BigInteger x)
   ;;   (number? x) (BigDecimal/valueOf (long x))
   ;;   :else (BigDecimal. x))
-   (throw "TODO: port"))
+  (throw "TODO: port"))
 
 (def ^:dynamic ^:private print-initialized false)
 
@@ -5186,22 +5161,22 @@
 (defmulti print-dup (fn [x writer] (class x)))
 
 (def ^:private #_String system-newline
-    ;;  (System/getProperty "line.separator")
+  ;;  (System/getProperty "line.separator")
   "\n")
 
 (defn newline
   "Writes a platform-specific newline to *out*"
   []
-    ;; (. *out* (append system-newline))
-    ;; nil
+  ;; (. *out* (append system-newline))
+  ;; nil
   (throw "TODO: port"))
 
 (defn flush
   "Flushes the output stream that is the current value of
   *out*"
   []
-    ;; (. *out* (flush))
-    ;; nil
+  ;; (. *out* (flush))
+  ;; nil
   (throw "TODO: port"))
 
 (defn read
@@ -5289,8 +5264,8 @@
   name in reverse order."
   [bindings & body]
   (assert-macro-args
-   (vector? bindings) "a vector for its binding"
-   (even? (count bindings)) "an even number of forms in binding vector")
+    (vector? bindings) "a vector for its binding"
+    (even? (count bindings)) "an even number of forms in binding vector")
   ;; (cond
   ;;   (= (count bindings) 0) `(do ~@body)
   ;;   (symbol? (bindings 0)) `(let ~(subvec bindings 0 2)
@@ -5353,14 +5328,14 @@
 (defmacro
   ^{:private true}
   def-aset [name method coerce]
-    `(defn ~name
-       {:arglists '([~'array ~'idx ~'val] [~'array ~'idx ~'idx2 & ~'idxv])}
-       ([array# idx# val#]
-        ;; (. Array (~method array# idx# (~coerce val#)))
-        ;; val#
-        (throw "TODO: port"))
-       ([array# idx# idx2# & idxv#]
-        (apply ~name (aget array# idx#) idx2# idxv#))))
+  `(defn ~name
+     {:arglists '([~'array ~'idx ~'val] [~'array ~'idx ~'idx2 & ~'idxv])}
+     ([array# idx# val#]
+      ;; (. Array (~method array# idx# (~coerce val#)))
+      ;; val#
+      (throw "TODO: port"))
+     ([array# idx# idx2# & idxv#]
+      (apply ~name (aget array# idx#) idx2# idxv#))))
 
 (def-aset
   ^{:doc "Sets the value at the index/indices. Works on arrays of int. Returns val."}
@@ -5416,18 +5391,18 @@
   containing the contents of coll, which can be any Collection of any
   Collection."
   [#_java.util.Collection coll]
-    ;; (let [ret (make-array (. Class (forName "[Ljava.lang.Object;")) (. coll (size)))]
-    ;;   (loop [i 0 xs (seq coll)]
-    ;;     (when xs
-    ;;       (aset ret i (to-array (first xs)))
-    ;;       (recur (inc i) (next xs))))
-    ;;   ret)
+  ;; (let [ret (make-array (. Class (forName "[Ljava.lang.Object;")) (. coll (size)))]
+  ;;   (loop [i 0 xs (seq coll)]
+  ;;     (when xs
+  ;;       (aset ret i (to-array (first xs)))
+  ;;       (recur (inc i) (next xs))))
+  ;;   ret)
   (throw "TODO: port"))
 
 (defn create-struct
   "Returns a structure basis object."
   [& keys]
-    ;; (. clojure.lang.PersistentStructMap (createSlotMap keys))
+  ;; (. clojure.lang.PersistentStructMap (createSlotMap keys))
   (throw "TODO: port"))
 
 (defmacro defstruct
@@ -5441,7 +5416,7 @@
   keys - where values are not supplied they will default to nil.
   keyvals can also contain keys not in the basis."
   [s & inits]
-    ;; (. clojure.lang.PersistentStructMap (create s inits))
+  ;; (. clojure.lang.PersistentStructMap (create s inits))
   (throw "TODO: port"))
 
 (defn struct
@@ -5449,7 +5424,7 @@
   structure-basis. vals must be supplied for basis keys in order -
   where values are not supplied they will default to nil."
   [s & vals]
-    ;; (. clojure.lang.PersistentStructMap (construct s vals))
+  ;; (. clojure.lang.PersistentStructMap (construct s vals))
   (throw "TODO: port"))
 
 (defn accessor
@@ -5459,7 +5434,7 @@
   get, but such use of accessors should be limited to known
   performance-critical areas."
   [s key]
-    ;; (. clojure.lang.PersistentStructMap (getAccessor s key))
+  ;; (. clojure.lang.PersistentStructMap (getAccessor s key))
   (throw "TODO: port"))
 
 (defn load-reader
@@ -5480,12 +5455,12 @@
 
 (defn-
   filter-key [keyfn pred amap]
-    (loop [ret {} es (seq amap)]
-      (if es
-        (if (pred (keyfn (first es)))
-          (recur (assoc ret (key (first es)) (val (first es))) (next es))
-          (recur ret (next es)))
-        ret)))
+  (loop [ret {} es (seq amap)]
+    (if es
+      (if (pred (keyfn (first es)))
+        (recur (assoc ret (key (first es)) (val (first es))) (next es))
+        (recur ret (next es)))
+      ret)))
 
 (defn all-ns
   "Returns a sequence of all namespaces."
@@ -5551,8 +5526,8 @@
   var-set"
   [name-vals-vec & body]
   (assert-macro-args
-   (vector? name-vals-vec) "a vector for its binding"
-   (even? (count name-vals-vec)) "an even number of forms in binding vector")
+    (vector? name-vals-vec) "a vector for its binding"
+    (even? (count name-vals-vec)) "an even number of forms in binding vector")
   ;; `(let [~@(interleave (take-nth 2 name-vals-vec)
   ;;                      (repeat '(.. clojure.lang.Var create setDynamic)))]
   ;;    (. clojure.lang.Var (pushThreadBindings (hash-map ~@name-vals-vec)))
@@ -5568,10 +5543,10 @@
   ;;  (. clojure.lang.PersistentArrayMap EMPTY)
    (throw "TODO: port"))
   ([& keyvals]
-    ;;  (let [ary (to-array keyvals)]
-    ;;    (if (odd? (alength ary))
-    ;;      (throw (IllegalArgumentException. (str "No value supplied for key: " (last keyvals))))
-    ;;      (clojure.lang.PersistentArrayMap/createAsIfByAssoc ary)))
+   ;;  (let [ary (to-array keyvals)]
+   ;;    (if (odd? (alength ary))
+   ;;      (throw (IllegalArgumentException. (str "No value supplied for key: " (last keyvals))))
+   ;;      (clojure.lang.PersistentArrayMap/createAsIfByAssoc ary)))
    (throw "TODO: port")))
 
 (defn seq-to-map-for-destructuring
@@ -5583,7 +5558,7 @@
   ;;   (if (seq s) (first s) clojure.lang.PersistentArrayMap/EMPTY))
   (throw "TODO: port"))
 
-;redefine fn with destructuring and pre/post conditions
+; redefine fn with destructuring and pre/post conditions
 (defmacro fn
   "params => positional-params*, or positional-params* & rest-param
   positional-param => binding-form
@@ -5593,72 +5568,72 @@
   Defines a function.
 
   See https://clojure.org/reference/special_forms#fn for more information"
-  {:special-form true,
-   :forms '[(fn name? [params* ] exprs*) (fn name? ([params* ] exprs*)+)]}
+  {:special-form true
+   :forms '[(fn name? [params*] exprs*) (fn name? ([params*] exprs*) +)]}
   [& sigs]
-    (let [name (if (symbol? (first sigs)) (first sigs) nil)
-          sigs (if name (next sigs) sigs)
-          sigs (if (vector? (first sigs)) 
-                 (list sigs) 
-                 (if (seq? (first sigs))
-                   sigs
-                   ;; Assume single arity syntax
-                  ;;  (throw (IllegalArgumentException. 
-                  ;;           (if (seq sigs)
-                  ;;             (str "Parameter declaration " 
-                  ;;                  (first sigs)
-                  ;;                  " should be a vector")
-                  ;;             (str "Parameter declaration missing"))))
-                   (throw (if (seq sigs)
-                            (str "Parameter declaration " 
-                                 (first sigs)
-                                 " should be a vector")
-                            (str "Parameter declaration missing")))))
-          psig (fn* [sig]
-                 ;; Ensure correct type before destructuring sig
-                 (when (not (seq? sig))
-                  ;;  (throw (IllegalArgumentException.
-                  ;;           (str "Invalid signature " sig
-                  ;;                " should be a list")))
-                   (throw (str "Invalid signature " sig
-                               " should be a list")))
-                 (let [[params & body] sig
-                       _ (when (not (vector? params))
-                          ;;  (throw (IllegalArgumentException. 
-                          ;;           (if (seq? (first sigs))
-                          ;;             (str "Parameter declaration " params
-                          ;;                  " should be a vector")
-                          ;;             (str "Invalid signature " sig
-                          ;;                  " should be a list"))))
-                           (throw (if (seq? (first sigs))
-                                    (str "Parameter declaration " params
-                                         " should be a vector")
-                                    (str "Invalid signature " sig
-                                         " should be a list"))))
-                       conds (when (and (next body) (map? (first body))) 
-                                           (first body))
-                       body (if conds (next body) body)
-                       conds (or conds (meta params))
-                       pre (:pre conds)
-                       post (:post conds)                       
-                       body (if post
-                              `((let [~'% ~(if (< 1 (count body)) 
-                                            `(do ~@body) 
-                                            (first body))]
-                                 ~@(map (fn* [c] `(assert ~c)) post)
-                                 ~'%))
-                              body)
-                       body (if pre
-                              (concat (map (fn* [c] `(assert ~c)) pre) 
-                                      body)
-                              body)]
-                   (maybe-destructured params body)))
-          new-sigs (map psig sigs)]
-      (with-meta
-        (if name
-          (list* 'fn* name new-sigs)
-          (cons 'fn* new-sigs))
-        (meta &form))))
+  (let [name (if (symbol? (first sigs)) (first sigs) nil)
+        sigs (if name (next sigs) sigs)
+        sigs (if (vector? (first sigs))
+               (list sigs)
+               (if (seq? (first sigs))
+                 sigs
+                 ;; Assume single arity syntax
+                 ;;  (throw (IllegalArgumentException. 
+                 ;;           (if (seq sigs)
+                 ;;             (str "Parameter declaration " 
+                 ;;                  (first sigs)
+                 ;;                  " should be a vector")
+                 ;;             (str "Parameter declaration missing"))))
+                 (throw (if (seq sigs)
+                          (str "Parameter declaration "
+                               (first sigs)
+                               " should be a vector")
+                          (str "Parameter declaration missing")))))
+        psig (fn* [sig]
+               ;; Ensure correct type before destructuring sig
+               (when (not (seq? sig))
+                 ;;  (throw (IllegalArgumentException.
+                 ;;           (str "Invalid signature " sig
+                 ;;                " should be a list")))
+                 (throw (str "Invalid signature " sig
+                             " should be a list")))
+               (let [[params & body] sig
+                     _ (when (not (vector? params))
+                         ;;  (throw (IllegalArgumentException. 
+                         ;;           (if (seq? (first sigs))
+                         ;;             (str "Parameter declaration " params
+                         ;;                  " should be a vector")
+                         ;;             (str "Invalid signature " sig
+                         ;;                  " should be a list"))))
+                         (throw (if (seq? (first sigs))
+                                  (str "Parameter declaration " params
+                                       " should be a vector")
+                                  (str "Invalid signature " sig
+                                       " should be a list"))))
+                     conds (when (and (next body) (map? (first body)))
+                             (first body))
+                     body (if conds (next body) body)
+                     conds (or conds (meta params))
+                     pre (:pre conds)
+                     post (:post conds)
+                     body (if post
+                            `((let [~'% ~(if (< 1 (count body))
+                                           `(do ~@body)
+                                           (first body))]
+                                ~@(map (fn* [c] `(assert ~c)) post)
+                                ~'%))
+                            body)
+                     body (if pre
+                            (concat (map (fn* [c] `(assert ~c)) pre)
+                                    body)
+                            body)]
+                 (maybe-destructured params body)))
+        new-sigs (map psig sigs)]
+    (with-meta
+      (if name
+        (list* 'fn* name new-sigs)
+        (cons 'fn* new-sigs))
+      (meta &form))))
 
 (defmacro lazy-cat
   "Expands to code which yields a lazy sequence of the concatenation
@@ -5695,19 +5670,18 @@
   ;;  (apply prn xs))
   (throw "TODO: port"))
 
-
 (defn print-str
   "print to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply print xs))
+  ;; (with-out-str
+  ;;  (apply print xs))
   (throw "TODO: port"))
 
 (defn println-str
   "println to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply println xs))
+  ;; (with-out-str
+  ;;  (apply println xs))
   (throw "TODO: port"))
 
 (defn ^:private elide-top-frames
@@ -5724,10 +5698,10 @@
   "test [v] finds fn at key :test in var metadata and calls it,
   presuming failure will throw exception"
   [v]
-    (let [f (:test (meta v))]
-      (if f
-        (do (f) :ok)
-        :no-test)))
+  (let [f (:test (meta v))]
+    (if f
+      (do (f) :ok)
+      :no-test)))
 
 (defn re-pattern
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
@@ -5742,7 +5716,7 @@
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
   [#_java.util.regex.Pattern re s]
-    ;; (. re (matcher s))
+  ;; (. re (matcher s))
   (throw "TODO: port"))
 
 (defn re-groups
@@ -5751,13 +5725,13 @@
   nested groups, returns a vector of the groups, the first element
   being the entire match."
   [#_java.util.regex.Matcher m]
-    ;; (let [gc  (. m (groupCount))]
-    ;;   (if (zero? gc)
-    ;;     (. m (group))
-    ;;     (loop [ret [] c 0]
-    ;;       (if (<= c gc)
-    ;;         (recur (conj ret (. m (group c))) (inc c))
-    ;;         ret))))
+  ;; (let [gc  (. m (groupCount))]
+  ;;   (if (zero? gc)
+  ;;     (. m (group))
+  ;;     (loop [ret [] c 0]
+  ;;       (if (<= c gc)
+  ;;         (recur (conj ret (. m (group c))) (inc c))
+  ;;         ret))))
   (throw "TODO: port"))
 
 (defn re-seq
@@ -5776,9 +5750,9 @@
   java.util.regex.Matcher.matches().  Uses re-groups to return the
   groups."
   [#_java.util.regex.Pattern re s]
-    ;; (let [m (re-matcher re s)]
-    ;;   (when (. m (matches))
-    ;;     (re-groups m)))
+  ;; (let [m (re-matcher re s)]
+  ;;   (when (. m (matches))
+  ;;     (re-groups m)))
   (throw "TODO: port"))
 
 (defn re-find
@@ -5801,19 +5775,19 @@
 (defn file-seq
   "A tree seq on java.io.Files"
   [dir]
-    ;; (tree-seq
-    ;;  (fn [^java.io.File f] (. f (isDirectory)))
-    ;;  (fn [^java.io.File d] (seq (. d (listFiles))))
-    ;;  dir)
+  ;; (tree-seq
+  ;;  (fn [^java.io.File f] (. f (isDirectory)))
+  ;;  (fn [^java.io.File d] (seq (. d (listFiles))))
+  ;;  dir)
   (throw "TODO: port"))
 
 (defn xml-seq
   "A tree seq on the xml elements as per xml/parse"
   [root]
-    (tree-seq
-     (complement string?)
-     (comp seq :content)
-     root))
+  (tree-seq
+    (complement string?)
+    (comp seq :content)
+    root))
 
 (defn special-symbol?
   "Returns true if s names a special form"
@@ -5863,15 +5837,15 @@
   corresponding val in smap.  Returns a transducer when no collection
   is provided."
   ([smap]
-     (map #(if-let [e (find smap %)] (val e) %)))
+   (map #(if-let [e (find smap %)] (val e) %)))
   ([smap coll]
-     (if (vector? coll)
-       (reduce (fn [v i]
-                  (if-let [e (find smap (nth v i))]
-                    (assoc v i (val e))
-                    v))
-                coll (range (count coll)))
-       (map #(if-let [e (find smap %)] (val e) %) coll))))
+   (if (vector? coll)
+     (reduce (fn [v i]
+               (if-let [e (find smap (nth v i))]
+                 (assoc v i (val e))
+                 v))
+       coll (range (count coll)))
+     (map #(if-let [e (find smap %)] (val e) %) coll))))
 
 (defmacro dosync
   "Runs the exprs (in an implicit do) in a transaction that encompasses
@@ -5891,12 +5865,12 @@
   The rounding mode is one of CEILING, FLOOR, HALF_UP, HALF_DOWN,
   HALF_EVEN, UP, DOWN and UNNECESSARY; it defaults to HALF_UP."
   [precision & exprs]
-    ;; (let [[body rm] (if (= (first exprs) :rounding)
-    ;;                   [(next (next exprs))
-    ;;                    `((. java.math.RoundingMode ~(second exprs)))]
-    ;;                   [exprs nil])]
-    ;;   `(binding [*math-context* (java.math.MathContext. ~precision ~@rm)]
-    ;;      ~@body))
+  ;; (let [[body rm] (if (= (first exprs) :rounding)
+  ;;                   [(next (next exprs))
+  ;;                    `((. java.math.RoundingMode ~(second exprs)))]
+  ;;                   [exprs nil])]
+  ;;   `(binding [*math-context* (java.math.MathContext. ~precision ~@rm)]
+  ;;      ~@body))
   (throw "TODO: port"))
 
 (defn- mk-bound-fn
@@ -6021,7 +5995,7 @@
    (throw "TODO: port"))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
-   (throw "TODO: port") ))
+   (throw "TODO: port")))
 
 (defn boolean-array
   "Creates an array of booleans"
@@ -6061,7 +6035,7 @@
 
 (defn double-array
   "Creates an array of doubles"
-  ([size-or-seq] 
+  ([size-or-seq]
   ;;  (. clojure.lang.Numbers double_array size-or-seq)
    (throw "TODO: port"))
   ([size init-val-or-seq]
@@ -6193,7 +6167,7 @@
   ;;                       (cons (if (identical? x NIL) nil x) (drain)))))))]
   ;;    (send-off agt fill)
   ;;    (drain))
-     (throw "TODO: port")))
+   (throw "TODO: port")))
 
 (defn class?
   "Returns true if x is an instance of Class"
@@ -6242,7 +6216,7 @@
   (throw "TODO: port"))
 
 (defn- process-annotation [av v]
-  (if (map? v) 
+  (if (map? v)
     (doseq [[k v] v]
       (add-annotation av (name k) v))
     (add-annotation av "value" v)))
@@ -6250,18 +6224,18 @@
 (defn- add-annotations
   ([visitor m] (add-annotations visitor m nil))
   ([visitor m i]
-    ;;  (doseq [[k v] m]
-    ;;    (when (symbol? k)
-    ;;      (when-let [c (resolve k)]
-    ;;        (when (is-annotation? c)
-    ;;                                     ;this is known duck/reflective as no common base of ASM Visitors
-    ;;          (let [av (if i
-    ;;                     (.visitParameterAnnotation visitor i (descriptor c) 
-    ;;                                                (is-runtime-annotation? c))
-    ;;                     (.visitAnnotation visitor (descriptor c) 
-    ;;                                       (is-runtime-annotation? c)))]
-    ;;            (process-annotation av v)
-    ;;            (.visitEnd av))))))
+   ;;  (doseq [[k v] m]
+   ;;    (when (symbol? k)
+   ;;      (when-let [c (resolve k)]
+   ;;        (when (is-annotation? c)
+   ;;                                     ;this is known duck/reflective as no common base of ASM Visitors
+   ;;          (let [av (if i
+   ;;                     (.visitParameterAnnotation visitor i (descriptor c) 
+   ;;                                                (is-runtime-annotation? c))
+   ;;                     (.visitAnnotation visitor (descriptor c) 
+   ;;                                       (is-runtime-annotation? c)))]
+   ;;            (process-annotation av v)
+   ;;            (.visitEnd av))))))
    (throw "TODO: port")))
 
 (defn bases
@@ -6282,24 +6256,23 @@
         (recur (into ret bs) (into (disj cs c) bs)))
       (not-empty ret))))
 
-  
 (defn resultset-seq
   "Creates and returns a lazy sequence of structmaps corresponding to
   the rows in the java.sql.ResultSet rs"
   [#_java.sql.ResultSet rs]
-    ;; (let [rsmeta (. rs (getMetaData))
-    ;;       idxs (range 1 (inc (. rsmeta (getColumnCount))))
-    ;;       keys (map (comp keyword #(.toLowerCase ^String %))
-    ;;                 (map (fn [i] (. rsmeta (getColumnLabel i))) idxs))
-    ;;       check-keys
-    ;;             (or (apply distinct? keys)
-    ;;                 (throw (Exception. "ResultSet must have unique column labels")))
-    ;;       row-struct (apply create-struct keys)
-    ;;       row-values (fn [] (map (fn [^Integer i] (. rs (getObject i))) idxs))
-    ;;       rows (fn thisfn []
-    ;;              (when (. rs (next))
-    ;;                (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
-    ;;   (rows))
+  ;; (let [rsmeta (. rs (getMetaData))
+  ;;       idxs (range 1 (inc (. rsmeta (getColumnCount))))
+  ;;       keys (map (comp keyword #(.toLowerCase ^String %))
+  ;;                 (map (fn [i] (. rsmeta (getColumnLabel i))) idxs))
+  ;;       check-keys
+  ;;             (or (apply distinct? keys)
+  ;;                 (throw (Exception. "ResultSet must have unique column labels")))
+  ;;       row-struct (apply create-struct keys)
+  ;;       row-values (fn [] (map (fn [^Integer i] (. rs (getObject i))) idxs))
+  ;;       rows (fn thisfn []
+  ;;              (when (. rs (next))
+  ;;                (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
+  ;;   (rows))
   (throw "TODO: port"))
 
 (defn iterator-seq
@@ -6343,7 +6316,7 @@
 
 (defonce ^:dynamic
   ^{:private true :doc
-     "True while a verbose load is pending"}
+    "True while a verbose load is pending"}
   *loading-verbosely* false)
 
 (defn- root-directory
@@ -6378,15 +6351,15 @@ fails, attempts to require sym's namespace and retries."
   [] @*loaded-libs*)
 
 (def sorted?
- "Returns true if coll implements Sorted"
+  "Returns true if coll implements Sorted"
   clojure.core-native/sorted?)
 
 (def counted?
- "Returns true if coll implements count in constant time"
+  "Returns true if coll implements count in constant time"
   clojure.core-native/counted?)
 
 (defn reversible?
- "Returns true if coll implements Reversible"
+  "Returns true if coll implements Reversible"
   [coll]
   ;; (instance? clojure.lang.Reversible coll)
   (throw "TODO: port"))
@@ -6398,20 +6371,20 @@ fails, attempts to require sym's namespace and retries."
   (throw "TODO: port"))
 
 (def ^:dynamic
- ^{:doc "bound in a repl thread to the most recent value printed"}
- *1)
+  ^{:doc "bound in a repl thread to the most recent value printed"}
+  *1)
 
 (def ^:dynamic
- ^{:doc "bound in a repl thread to the second most recent value printed"}
- *2)
+  ^{:doc "bound in a repl thread to the second most recent value printed"}
+  *2)
 
 (def ^:dynamic
- ^{:doc "bound in a repl thread to the third most recent value printed"}
- *3)
+  ^{:doc "bound in a repl thread to the third most recent value printed"}
+  *3)
 
 (def ^:dynamic
- ^{:doc "bound in a repl thread to the most recent exception caught by the repl"}
- *e)
+  ^{:doc "bound in a repl thread to the most recent exception caught by the repl"}
+  *e)
 
 (def ^:dynamic
   ^{:doc "Bound to true in a repl thread"}
@@ -6426,12 +6399,12 @@ fails, attempts to require sym's namespace and retries."
   final value, you must wrap it in some data structure and unpack it
   after trampoline returns."
   ([f]
-     (let [ret (f)]
-       (if (fn? ret)
-         (recur ret)
-         ret)))
+   (let [ret (f)]
+     (if (fn? ret)
+       (recur ret)
+       ret)))
   ([f & args]
-     (trampoline #(apply f args))))
+   (trampoline #(apply f args))))
 
 (defmacro while
   "Repeatedly executes body while test expression is true. Presumes
@@ -6592,16 +6565,16 @@ fails, attempts to require sym's namespace and retries."
   ;; (.isDone f)
   (throw "TODO: port"))
 
-(defmacro letfn 
+(defmacro letfn
   "fnspec ==> (fname [params*] exprs) or (fname ([params*] exprs)+)
 
   Takes a vector of function specs and a body, and generates a set of
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
-  {:forms '[(letfn [fnspecs*] exprs*)],
+  {:forms '[(letfn [fnspecs*] exprs*)]
    :special-form true, :url nil}
-  [fnspecs & body] 
-  `(letfn* ~(vec (interleave (map first fnspecs) 
+  [fnspecs & body]
+  `(letfn* ~(vec (interleave (map first fnspecs)
                              (map #(cons `fn %) fnspecs)))
            ~@body))
 
@@ -6645,7 +6618,6 @@ fails, attempts to require sym's namespace and retries."
   ;;    (with-meta (persistent! (stream-transduce! xform conj! (transient to) stream)) (meta to))
   ;;    (stream-transduce! xform conj to stream))
    (throw "TODO: port")))
-
 
 (defmacro ^:private when-class [class-name & body]
   ;; `(try
@@ -6717,9 +6689,9 @@ fails, attempts to require sym's namespace and retries."
   and the first value in coll, then applying f to that result and the
   2nd key and value, etc. If coll contains no entries, returns init
   and f is not called. Note that reduce-kv is supported on vectors,
-  where the keys will be the ordinals."  
+  where the keys will be the ordinals."
   ([f init coll]
-    ;;  (clojure.core.protocols/kv-reduce coll f init)
+   ;;  (clojure.core.protocols/kv-reduce coll f init)
    (reduce (fn [s [k v]] (f s k v)) init coll)))
 
 (defn- normalize-slurp-opts
@@ -6734,11 +6706,11 @@ fails, attempts to require sym's namespace and retries."
   "Opens a reader on f and reads all its contents, returning a string.
   See clojure.java.io/reader for a complete list of supported arguments."
   ([f & opts]
-    ;;  (let [opts (normalize-slurp-opts opts)
-    ;;        sw (java.io.StringWriter.)]
-    ;;    (with-open [^java.io.Reader r (apply jio/reader f opts)]
-    ;;      (jio/copy r sw)
-    ;;      (.toString sw)))
+   ;;  (let [opts (normalize-slurp-opts opts)
+   ;;        sw (java.io.StringWriter.)]
+   ;;    (with-open [^java.io.Reader r (apply jio/reader f opts)]
+   ;;      (jio/copy r sw)
+   ;;      (.toString sw)))
    (throw "TODO: port")))
 
 (defn spit
@@ -6750,7 +6722,7 @@ fails, attempts to require sym's namespace and retries."
   (throw "TODO: port"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
-(defn future-call 
+(defn future-call
   "Takes a function of no args and yields a future object that will
   invoke the function in another thread, and will cache the result and
   return it on all subsequent calls to deref/@. If the computation has
@@ -6823,7 +6795,6 @@ fails, attempts to require sym's namespace and retries."
   ;;    (pmap #(apply f %) (step (cons coll colls))))
    (throw "TODO: port")))
 
-  
 (defn pcalls
   "Executes the no-arg fns in parallel, returning a lazy sequence of
   their values"
@@ -6985,7 +6956,7 @@ fails, attempts to require sym's namespace and retries."
   "A good fdecl looks like (([a] ...) ([a b] ...)) near the end of defn."
   [fdecl]
   (when (empty? fdecl) (throw "Parameter declaration missing"))
-  (let [argdecls (map 
+  (let [argdecls (map
                    #(if (seq? %)
                       (first %)
                       (throw (if (seq? (first fdecl))
@@ -6998,7 +6969,7 @@ fails, attempts to require sym's namespace and retries."
                    fdecl)
         bad-args (seq (remove #(vector? %) argdecls))]
     (when bad-args
-      (throw (str "Parameter declaration \"" (first bad-args) 
+      (throw (str "Parameter declaration \"" (first bad-args)
                   "\" should be a vector")))))
 
 (defn realized?
@@ -7011,9 +6982,9 @@ fails, attempts to require sym's namespace and retries."
   "Returns items from coll with random probability of prob (0.0 -
   1.0).  Returns a transducer when no collection is provided."
   ([prob]
-     (filter (fn [_] (< (rand) prob))))
+   (filter (fn [_] (< (rand) prob))))
   ([prob coll]
-     (filter (fn [_] (< (rand) prob)) coll)))
+   (filter (fn [_] (< (rand) prob)) coll)))
 
 ;; (deftype Eduction [xform coll]
 ;;    Iterable
@@ -7061,10 +7032,10 @@ fails, attempts to require sym's namespace and retries."
   It is presumed that step with non-initk is unreproducible/non-idempotent.
   If step with initk is unreproducible it is on the consumer to not consume twice."
   [step & {:keys [somef vf kf initk]
-            :or {vf identity
-                 kf identity
-                 somef some?
-                 initk nil}}]
+           :or {vf identity
+                kf identity
+                somef some?
+                initk nil}}]
   ;; (reify
   ;;  clojure.lang.Seqable
   ;;  (seq [_]
@@ -7115,11 +7086,10 @@ fails, attempts to require sym's namespace and retries."
 (def default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
-  (merge
+  (merge))
     ;; {'uuid #'clojure.uuid/default-uuid-reader}
     ;; (when-class "java.sql.Timestamp"
     ;;   {'inst #'clojure.instant/read-instant-date})
-   ))
 
 (def ^:dynamic *data-readers*
   "Map from reader tag symbols to data reader Vars.
@@ -7150,7 +7120,7 @@ fails, attempts to require sym's namespace and retries."
   data_readers.clj, data_readers.cljc, or by rebinding this Var."
   {})
 
-(def ^:dynamic *default-data-reader-fn* 
+(def ^:dynamic *default-data-reader-fn*
   "When no data reader is found for a tag and *default-data-reader-fn*
   is non-nil, it will be called with two arguments,
   the tag and the value.  If *default-data-reader-fn* is nil (the
@@ -7263,11 +7233,11 @@ fails, attempts to require sym's namespace and retries."
   [m f]
   (with-meta
     (persistent!
-     (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
-                (if (transientable? m)
-                  (transient m)
-                  (transient {}))
-                m))
+      (reduce-kv (fn [acc k v] (assoc! acc k (f v)))
+                 (if (transientable? m)
+                   (transient m)
+                   (transient {}))
+                 m))
     (meta m)))
 
 (defn update-keys
@@ -7279,9 +7249,9 @@ fails, attempts to require sym's namespace and retries."
   f must return a unique key for each key of m, else the behavior is undefined."
   [m f]
   (let [ret (persistent!
-             (reduce-kv (fn [acc k v] (assoc! acc (f k) v))
-                        (transient {})
-                        m))]
+              (reduce-kv (fn [acc k v] (assoc! acc (f k) v))
+                         (transient {})
+                         m))]
     (with-meta ret (meta m))))
 
 (defn- parsing-err

@@ -1,10 +1,11 @@
 #!/usr/bin/env bb
 
 (ns jank.compiler+runtime.validate-formatting
-  (:require [clojure.string]
-            [babashka.process :as b.p]
-            [babashka.fs :as b.f]
-            [jank.util :as util]))
+  (:require
+   [babashka.fs :as b.f]
+   [babashka.process :as b.p]
+   [clojure.string]
+   [jank.util :as util]))
 
 (def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
 

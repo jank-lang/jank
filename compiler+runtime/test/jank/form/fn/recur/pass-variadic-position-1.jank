@@ -5,7 +5,7 @@
       (if (empty? args)
         nil
         (do
-          ;(println o)
+          ; (println o)
           (recur (first args) (rest args)))))))
 
 (assert (= nil (print-things 1 2 3 :four)))

@@ -1,8 +1,8 @@
 (ns jank.util
   (:require
-    [clojure.string]
-    [babashka.fs :as b.f]
-   [babashka.process :as b.p]))
+   [babashka.fs :as b.f]
+   [babashka.process :as b.p]
+   [clojure.string]))
 
 (def llvm-version 19)
 
@@ -34,10 +34,10 @@
 
 (defn quiet-shell [props cmd]
   (let [proc @(b.p/process
-               (merge {:out :string
-                       :err :out}
-                      props)
-               cmd)]
+                (merge {:out :string
+                        :err :out}
+                       props)
+                cmd)]
     (if-not (zero? (:exit proc))
       (do
         (log-error "Failed to run command " cmd)

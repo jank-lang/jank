@@ -2,8 +2,8 @@
 
 (ns jank.test-everything
   (:require
-   [jank.util :as util]
-   [jank.compiler+runtime.core]))
+   [jank.compiler+runtime.core]
+   [jank.util :as util]))
 
 (defn show-env []
   (util/log-info "JANK_BUILD_TYPE: " (System/getenv "JANK_BUILD_TYPE"))

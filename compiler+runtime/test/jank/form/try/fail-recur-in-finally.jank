@@ -1,7 +1,6 @@
 (fn* []
   (try
     :success
-    (catch _
-      )
+    (catch _)
     (finally
       (recur))))

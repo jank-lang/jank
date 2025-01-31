@@ -1,10 +1,9 @@
 ((fn* [fun]
-  (try
-    (fun true)
-    (catch _
-      (fun false))
-    (finally
-      )))
+   (try
+     (fun true)
+     (catch _
+       (fun false))
+     (finally)))
 
  (fn* [throw?]
    (if throw?

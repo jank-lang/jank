@@ -5,7 +5,7 @@
 (assert (= nil (meta 'foo)))
 
 ; TODO: Set literals
-;(assert (= nil (meta #{})))
+; (assert (= nil (meta #{})))
 
 ; Non-metadatable
 (assert (= nil (meta "")))

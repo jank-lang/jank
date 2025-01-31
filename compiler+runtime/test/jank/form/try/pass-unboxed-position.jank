@@ -3,8 +3,7 @@
          (let* [a 5
                 b (try
                     7
-                    (catch _
-                      ))]
+                    (catch _))]
            [])))
 
 :success

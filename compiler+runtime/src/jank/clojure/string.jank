@@ -7,14 +7,14 @@
   (native/raw "auto const s_str(runtime::to_string(~{ s }));
               __value = make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });"))
 
-;(defn re-quote-replacement
+; (defn re-quote-replacement
 ;  "Given a replacement string that you wish to be a literal
 ;  replacement for a pattern match in replace or replace-first, do the
 ;  necessary escaping of special characters in the replacement."
 ;  [replacement]
 ;  (Matcher/quoteReplacement (.toString replacement)))
 ;
-;(defn- replace-by
+; (defn- replace-by
 ;  [s re f]
 ;  (let [m (re-matcher re s)]
 ;    (if (.find m)
@@ -27,7 +27,7 @@
 ;                (.toString buffer)))))
 ;      s)))
 ;
-;(defn replace
+; (defn replace
 ;  "Replaces all instance of match with replacement in s.
 ;
 ;  match/replacement can be:
@@ -62,7 +62,7 @@
 ;                                  (replace-by s match replacement))
 ;      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
 ;
-;(defn- replace-first-by
+; (defn- replace-first-by
 ;  [s re f]
 ;  (let [m (re-matcher re s)]
 ;    (if (.find m)
@@ -73,7 +73,7 @@
 ;        (str buffer))
 ;      s)))
 ;
-;(defn- replace-first-char
+; (defn- replace-first-char
 ;  [s match replace]
 ;  (let [s (.toString s)
 ;        i (.indexOf s (int match))]
@@ -81,7 +81,7 @@
 ;      s
 ;      (str (subs s 0 i) replace (subs s (inc i))))))
 ;
-;(defn- replace-first-str
+; (defn- replace-first-str
 ;  [s match replace]
 ;  (let [s (.toString s)
 ;        i (.indexOf s match)]
@@ -89,7 +89,7 @@
 ;      s
 ;      (str (subs s 0 i) replace (subs s (+ i (.length match)))))))
 ;
-;(defn replace-first
+; (defn replace-first
 ;  "Replaces the first instance of match with replacement in s.
 ;
 ;  match/replacement can be:
@@ -131,7 +131,7 @@
 ;      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
 ;
 ;
-;(defn join
+; (defn join
 ;  "Returns a string of all elements in coll, as returned by (seq coll),
 ;  separated by an optional separator."
 ;  {:added "1.2"}
@@ -147,7 +147,7 @@
 ;              sep)
 ;       (str sb)))))
 ;
-;(defn capitalize
+; (defn capitalize
 ;  "Converts first character of the string to upper-case, all other
 ;  characters to lower-case."
 ;  {:added "1.2"}
@@ -158,19 +158,19 @@
 ;      (str (.toUpperCase (subs s 0 1))
 ;           (.toLowerCase (subs s 1))))))
 ;
-;(defn upper-case
+; (defn upper-case
 ;  "Converts string to all upper-case."
 ;  {:added "1.2"}
 ;  [s]
 ;  (.. s toString toUpperCase))
 ;
-;(defn lower-case
+; (defn lower-case
 ;  "Converts string to all lower-case."
 ;  {:added "1.2"}
 ;  [s]
 ;  (.. s toString toLowerCase))
 ;
-;(defn split
+; (defn split
 ;  "Splits string on a regular expression.  Optional argument limit is
 ;  the maximum number of parts. Not lazy. Returns vector of the parts.
 ;  Trailing empty strings are not returned - pass limit of -1 to return all."
@@ -180,13 +180,13 @@
 ;  ([ s re limit]
 ;   (LazilyPersistentVector/createOwning (.split re s limit))))
 ;
-;(defn split-lines
+; (defn split-lines
 ;  "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
 ;  {:added "1.2"}
 ;  [s]
 ;  (split s #"\r?\n"))
 ;
-;(defn trim
+; (defn trim
 ;  "Removes whitespace from both ends of string."
 ;  {:added "1.2"}
 ;  [s]
@@ -203,7 +203,7 @@
 ;              (recur (inc lindex))
 ;              (.. s (subSequence lindex rindex) toString))))))))
 ;
-;(defn triml
+; (defn triml
 ;  "Removes whitespace from the left side of string."
 ;  {:added "1.2"}
 ;  [s]
@@ -215,7 +215,7 @@
 ;          (recur (unchecked-inc index))
 ;          (.. s (subSequence index len) toString))))))
 ;
-;(defn trimr
+; (defn trimr
 ;  "Removes whitespace from the right side of string."
 ;  {:added "1.2"}
 ;  [s]
@@ -226,7 +226,7 @@
 ;        (recur (unchecked-dec index))
 ;        (.. s (subSequence 0 index) toString)))))
 ;
-;(defn trim-newline
+; (defn trim-newline
 ;  "Removes all trailing newline \\n or return \\r characters from
 ;  string.  Similar to Perl's chomp."
 ;  {:added "1.2"}
@@ -245,7 +245,7 @@
   (native/raw "auto const s_str(runtime::to_string(~{ s }));
               __value = make_box(s_str.is_blank());"))
 
-;(defn escape
+; (defn escape
 ;  "Return a new string, using cmap to escape each character ch
 ;  from s as follows:
 ;
@@ -263,7 +263,7 @@
 ;          (.append buffer ch))
 ;        (recur (inc index) buffer)))))
 ;
-;(defn index-of
+; (defn index-of
 ;  "Return index of value (string or char) in s, optionally searching
 ;  forward from from-index. Return nil if value not found."
 ;  {:added "1.8"}
@@ -282,7 +282,7 @@
 ;       nil
 ;       result))))
 ;
-;(defn last-index-of
+; (defn last-index-of
 ;  "Return last index of value (string or char) in s, optionally
 ;  searching backward from from-index. Return nil if value not found."
 ;  {:added "1.8"}

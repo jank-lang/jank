@@ -1,11 +1,12 @@
 #!/usr/bin/env bb
 
 (ns jank.compiler+runtime.core
-  (:require [jank.util :as util]
-            [jank.compiler+runtime.validate-formatting]
-            [jank.compiler+runtime.build+test]
-            [jank.compiler+runtime.bash-test]
-            [jank.compiler+runtime.coverage]))
+  (:require
+   [jank.compiler+runtime.bash-test]
+   [jank.compiler+runtime.build+test]
+   [jank.compiler+runtime.coverage]
+   [jank.compiler+runtime.validate-formatting]
+   [jank.util :as util]))
 
 (defn -main [{:keys [validate-formatting? build?]}]
   (util/log-boundary "Test compiler+runtime")
