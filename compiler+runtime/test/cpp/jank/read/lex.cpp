@@ -544,9 +544,8 @@ namespace jank::read::lex
                 error{ 7, 12, "invalid number: chars 'g' are invalid for radix 16" },
                 error{ 13, 16, "invalid number: chars '8' are invalid for radix 8" },
                 error{ 17, 21, "arbitrary radix number can only be an integer" },
-                error{ 21, 21, "unexpected character: ." },
-                error{ 22, 22, "expected whitespace before next token" },
-                token{ 22, 1, token_kind::integer, 2ll },
+                error{ 21, 21, "expected whitespace before next token" },
+                token{ 21, 2, token_kind::symbol, ".2"sv },
         }));
       }
 
@@ -1782,11 +1781,11 @@ namespace jank::read::lex
         processor p{ ":  " };
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
-              == make_tokens({
-                error{ 0, 0, "invalid keyword: expected non-whitespace character after :" },
+              == make_results({
+                error{ 0, "invalid keyword: expected non-whitespace character after :" },
                 token{ 1, 3, token_kind::symbol, "  "sv },
                 error{ 4, 4, "expected whitespace before next token" },
-                token{ 4, 3, token_kind::symbol, "  "sv }
+                token{ 4, 3, token_kind::symbol, ""sv }
         }));
       }
 
