@@ -51,7 +51,11 @@ jobs:
         with:
           submodules: recursive
       - name: Build and test
-        run: ./bin/jank/test_everything.clj
+        run: |
+          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install-bb
+          sudo ./install-bb
+          ./bin/jank/test_everything.clj
       #- name: Archive test log
       #  if: always()
       #  uses: actions/upload-artifact@v4
