@@ -409,7 +409,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 4, token_kind::boolean,  true },
+                { 0, 4, token_kind::boolean, true },
                 { 4, 1, token_kind::comment, ""sv }
         }));
       }
@@ -1824,7 +1824,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 0, "invalid keyword: must be non-empty" },
-                  token{ 1, 1, token_kind::close_paren }
+                  token{ 1, 1,              token_kind::close_paren }
           }));
         }
         SUBCASE("Comma is whitespace")
@@ -1843,7 +1843,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 4, token_kind::keyword, "abc"sv },
-                  { 4, 1, token_kind::comment, ""sv }
+                  { 4, 1, token_kind::comment,    ""sv }
           }));
         }
       }

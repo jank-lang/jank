@@ -893,8 +893,7 @@ namespace jank::read
             if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
             {
               ++pos;
-              return err(
-                error{ token_start, "invalid keyword: must be non-empty" });
+              return err(error{ token_start, "invalid keyword: must be non-empty" });
             }
 
             /* Support auto-resolved qualified keywords. */
