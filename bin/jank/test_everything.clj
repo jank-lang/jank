@@ -8,7 +8,7 @@
 (defn show-env []
   (util/log-info "JANK_BUILD_TYPE: " (System/getenv "JANK_BUILD_TYPE"))
   (util/log-info "JANK_LINT: " (System/getenv "JANK_LINT"))
-  (util/log-info "JANK_CODECOV: " (System/getenv "JANK_CODECOV"))
+  (util/log-info "JANK_COVERAGE: " (System/getenv "JANK_COVERAGE"))
   (util/log-info "JANK_ANALYZE: " (System/getenv "JANK_ANALYZE"))
   (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE")))
 

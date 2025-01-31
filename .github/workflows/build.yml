@@ -14,11 +14,11 @@ jobs:
           ## Lint all sources
           - os: ubuntu-24.04
             lint: true
-          ## Debug + clang-tidy + codecov
+          ## Debug + clang-tidy + coverage
           - os: ubuntu-24.04
             build_type: Debug
             sanitize: none
-            codecov: true
+            coverage: true
             analyze: true
           ## Debug + sanitization
           - os: ubuntu-24.04
@@ -40,7 +40,7 @@ jobs:
       JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
       JANK_BUILD_TYPE: ${{ matrix.build_type }}
       JANK_LINT: ${{ matrix.lint }}
-      JANK_CODECOV: ${{ matrix.codecov }}
+      JANK_COVERAGE: ${{ matrix.coverage }}
       JANK_ANALYZE: ${{ matrix.analyze }}
       JANK_SANITIZE: ${{ matrix.sanitize }}
       ASAN_OPTIONS: detect_leaks=0
