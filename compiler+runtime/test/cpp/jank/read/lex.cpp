@@ -922,8 +922,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
-                  token{ 4, token_kind::integer, 0ll },
+                  token{ 3, 2, token_kind::symbol, ".0"sv },
           }));
         }
       }
@@ -1774,14 +1773,15 @@ namespace jank::read::lex
       }
       SUBCASE("Whitespace Characters")
       {
+        // NOTE: spaces are U+2007
         processor p{ ":  " };
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
                 error{ 0, "invalid keyword: expected non-whitespace character after :" },
-                token{ 1, 3, token_kind::symbol, "  "sv },
+                token{ 1, 3, token_kind::symbol, " "sv },
                 error{ 4, 4, "expected whitespace before next token" },
-                token{ 4, 3, token_kind::symbol, " "sv }
+                token{ 4, 3, token_kind::symbol, " "sv }
         }));
       }
 
