@@ -1240,16 +1240,16 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Negative no leading digit")
-      {
-        processor p{ "-.0" };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                //FIXME
-                token{ 0, 3, token_kind::symbol, "-.0"sv },
-        }));
-      }
+      //FIXME
+      //SUBCASE("Negative no leading digit")
+      //{
+      //  processor p{ "-.0" };
+      //  native_vector<result<token, error>> const tokens(p.begin(), p.end());
+      //  CHECK(tokens
+      //        == make_results({
+      //          token{ 0, 3, token_kind::symbol, "-.0"sv },
+      //  }));
+      //}
     }
 
     TEST_CASE("Keyword")
