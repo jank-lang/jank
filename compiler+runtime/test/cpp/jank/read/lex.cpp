@@ -913,8 +913,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "invalid number" },
-                  error{ 2, "unexpected character: ." },
-                  token{ 3, token_kind::integer, 0ll },
+                  token{ 2, 2, token_kind::symbol, ".0"sv },
           }));
         }
         {
