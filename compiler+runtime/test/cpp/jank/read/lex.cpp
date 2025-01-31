@@ -896,17 +896,6 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Positive no leading digit")
-      {
-        processor p{ ".0" };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, "unexpected character: ." },
-                token{ 1, token_kind::integer, 0ll },
-        }));
-      }
-
       SUBCASE("Negative no leading digit")
       {
         processor p{ "-.0" };
@@ -1253,6 +1242,16 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 { 0, 4, token_kind::symbol, ".foo"sv }
+        }));
+      }
+
+      SUBCASE("Positive no leading digit")
+      {
+        processor p{ ".0" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 2, token_kind::symbol, ".0"sv },
         }));
       }
     }
