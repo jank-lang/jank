@@ -89,7 +89,8 @@ namespace jank::runtime::obj
       auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
       return 0 <= i && i < data.size();
     }
-    throw std::runtime_error{ fmt::format("contains? not supported on string: {}", runtime::to_string(key)) };
+    throw std::runtime_error{ fmt::format("contains? not supported on string: {}",
+                                          runtime::to_string(key)) };
   }
 
   object_ptr persistent_string::get_entry(object_ptr const) const
