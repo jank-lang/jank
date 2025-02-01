@@ -133,7 +133,6 @@
 (defn join
   "Returns a string of all elements in coll, as returned by (seq coll),
   separated by an optional separator."
-  {:added "1.2"}
   ([coll]
    (apply str coll))
   ([separator coll]
@@ -147,18 +146,6 @@
               sep)
        s))))
 
-;  ;(defn capitalize
-;  ;  "Converts first character of the string to upper-case, all other
-;  ;  characters to lower-case."
-;  ;  {:added "1.2"}
-;  ;  [s]
-;  ;  (let [s (.toString s)]
-;  ;    (if (< (count s) 2)
-;  ;      (.toUpperCase s)
-;  ;      (str (.toUpperCase (subs s 0 1))
-;  ;           (.toLowerCase (subs s 1))))))
-;  ;
-
 (def ^{:doc "Converts string to all upper-case."
        :arglists '([s])}
   upper-case clojure.string-native/upper-case)
@@ -167,6 +154,16 @@
        :arglists '([s])}
   lower-case clojure.string-native/lower-case)
 
+(defn capitalize
+  "Converts first character of the string to upper-case, all other
+  characters to lower-case."
+  [s]
+  (let [s (str s)]
+    (if (< (count s) 2)
+      (upper-case s)
+      (str (upper-case (subs s 0 1))
+           (lower-case (subs s 1))))))
+
 ;  ;(defn split
 ;  ;  "Splits string on a regular expression.  Optional argument limit is
 ;  ;  the maximum number of parts. Not lazy. Returns vector of the parts.
@@ -174,7 +171,7 @@
 ;  ;  {:added "1.2"}
 ;  ;  ([s re]
 ;  ;   (LazilyPersistentVector/createOwning (.split re s)))
-;  ;  ([ s re limit]
+;  ;  ([s re limit]
 ;  ;   (LazilyPersistentVector/createOwning (.split re s limit))))
 ;  ;
 ;  ;(defn split-lines

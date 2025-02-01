@@ -10,6 +10,10 @@
     (assert (str/blank? " \t "))
     (assert (not (str/blank? "nil")))
     (assert (not (str/blank? " as df ")))
+    ;; clojure.string/capitalize
+    (assert (= "" (str/capitalize "")))
+    (assert (= "A" (str/capitalize "a")))
+    (assert (= "A thing" (str/capitalize "a Thing")))
     ;; clojure.string/lower-case
     (assert (= "" (str/lower-case "")))
     (assert (= "asdf" (str/lower-case "ASDF")))
