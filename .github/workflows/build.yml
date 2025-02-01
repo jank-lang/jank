@@ -18,8 +18,8 @@ jobs:
           - os: ubuntu-24.04
             build_type: Debug
             sanitize: none
-            coverage: true
-            analyze: true
+            coverage: on
+            analyze: on
           ## Debug + sanitization
           - os: ubuntu-24.04
             build_type: Debug
