@@ -44,7 +44,13 @@
     @results))
 
 (defn validate-jank-files []
-  (let [standard-clj (find-standard-clj)
+  ; TODO: standard-clj has a bug which chokes on clojure.core.
+  ; cljfmt and zprint both fail to parse clojure.core-native// which is totes valid.
+  ; clojure.tools.reader is the problem.
+  (util/log-warning "Skipping Clojure/jank linting for now")
+  {:count 0
+   :errors []}
+  #_(let [standard-clj (find-standard-clj)
         results (volatile! {:count 0
                             :errors []})]
     (util/log-info "Using " standard-clj)

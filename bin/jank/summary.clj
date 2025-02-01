@@ -1,4 +1,5 @@
-(ns jank.summary)
+(ns jank.summary
+  (:require [clojure.string]))
 
 (defonce contents (atom ""))
 
@@ -26,10 +27,14 @@
 (defn log [s]
   (append-line (str "* " s)))
 
+(defn strip-ansi-codes
+  [s]
+  (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" ""))
+
 (defn shell [success? cmd out]
   (append-line "\n<details>")
   (append-line (str "<summary>" (if success? "✓" "❌") " " cmd "</summary>\n"))
   (append-line "```bash")
-  (append-line out)
+  (append-line (strip-ansi-codes out))
   (append-line "```")
   (append-line "</details>\n"))
