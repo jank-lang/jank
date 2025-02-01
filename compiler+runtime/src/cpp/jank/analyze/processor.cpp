@@ -287,7 +287,7 @@ namespace jank::analyze
       {
         if(is_variadic)
         {
-          return err(error{ "invalid function; parameters contain mutliple &" });
+          return err(error{ "invalid function; parameters contain multiple &" });
         }
         else if(it + 1 == params->data.end())
         {

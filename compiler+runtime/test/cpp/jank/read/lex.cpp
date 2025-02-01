@@ -338,6 +338,25 @@ namespace jank::read::lex
                 { 0, 4, token_kind::symbol, "onil"sv }
         }));
       }
+      SUBCASE("Comma is whitespace")
+      {
+        processor p{ "nil," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::nil }
+        }));
+      }
+      SUBCASE("Semicolon is whitespace")
+      {
+        processor p{ "nil;" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::nil },
+                { 3, 1, token_kind::comment, ""sv }
+        }));
+      }
     }
 
     TEST_CASE("Boolean")
@@ -372,6 +391,26 @@ namespace jank::read::lex
               == make_tokens({
                 { 0, 6, token_kind::symbol, "sotrue"sv },
                 { 7, 6, token_kind::symbol, "ffalse"sv }
+        }));
+      }
+      SUBCASE("Comma is whitespace")
+      {
+        processor p{ "true,false," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::boolean,  true },
+                { 5, 5, token_kind::boolean, false }
+        }));
+      }
+      SUBCASE("Semicolon is whitespace")
+      {
+        processor p{ "true;" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::boolean, true },
+                { 4, 1, token_kind::comment, ""sv }
         }));
       }
     }
@@ -1280,7 +1319,17 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, "invalid keyword: expected non-whitespace character after :" }
+                error{ 0, "invalid keyword: must be non-empty" }
+        }));
+      }
+
+      SUBCASE("Comma after :")
+      {
+        processor p{ ":," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{ 0, "invalid keyword: must be non-empty" }
         }));
       }
 
@@ -1704,6 +1753,15 @@ namespace jank::read::lex
                   { 0, 9, token_kind::symbol, "🐝/🥀"sv }
           }));
         }
+        SUBCASE("Comma is whitespace")
+        {
+          processor p{ "abc," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 3, token_kind::symbol, "abc"sv }
+          }));
+        }
       }
       SUBCASE("Keywords")
       {
@@ -1741,6 +1799,54 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 10, token_kind::keyword, "🐝/🥀"sv }
+          }));
+        }
+        SUBCASE("Single comma is an empty keyword")
+        {
+          processor p{ ":," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" }
+          }));
+        }
+        SUBCASE("Single semicolon is an empty keyword")
+        {
+          processor p{ ":;" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" },
+                  token{ 1, 1, token_kind::comment, ""sv }
+          }));
+        }
+        SUBCASE("Single paren makes an empty keyword")
+        {
+          processor p{ ":)" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" },
+                  token{ 1, 1,              token_kind::close_paren }
+          }));
+        }
+        SUBCASE("Comma is whitespace")
+        {
+          processor p{ ":abc," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::keyword, "abc"sv }
+          }));
+        }
+        SUBCASE("Semicolon is whitespace")
+        {
+          processor p{ ":abc;" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::keyword, "abc"sv },
+                  { 4, 1, token_kind::comment,    ""sv }
           }));
         }
       }
