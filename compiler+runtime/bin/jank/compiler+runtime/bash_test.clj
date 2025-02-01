@@ -1,11 +1,10 @@
 #!/usr/bin/env bb
 
 (ns jank.compiler+runtime.bash-test
-  (:require
-   [babashka.fs :as b.f]
-   [babashka.process :as b.p]
-   [clojure.string]
-   [jank.util :as util]))
+  (:require [clojure.string]
+            [jank.util :as util]
+            [babashka.process :as b.p]
+            [babashka.fs :as b.f]))
 
 (def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
 

@@ -5,7 +5,7 @@
       (if (empty? args)
         n
         (do
-          ; (println (first args))
+          ;(println (first args))
           (recur (rest args) (+ n 1)))))))
 
 (assert (= 0 (count*)))

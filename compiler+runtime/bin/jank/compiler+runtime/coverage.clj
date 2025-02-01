@@ -1,10 +1,9 @@
 #!/usr/bin/env bb
 
 (ns jank.compiler+runtime.coverage
-  (:require
-   [babashka.fs :as b.f]
-   [clojure.string]
-   [jank.util :as util]))
+  (:require [clojure.string]
+            [jank.util :as util]
+            [babashka.fs :as b.f]))
 
 (def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../.."))))
 

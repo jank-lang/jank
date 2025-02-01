@@ -1,5 +1,7 @@
 (try
   (+ 1 2)
-  (catch e)
-  (finally)
+  (catch e
+    )
+  (finally
+    )
   :success)

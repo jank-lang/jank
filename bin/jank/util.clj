@@ -39,10 +39,10 @@
 
 (defn quiet-shell [props cmd]
   (let [proc @(b.p/process
-                (merge {:out :string
-                        :err :out}
-                       props)
-                cmd)]
+               (merge {:out :string
+                       :err :out}
+                      props)
+               cmd)]
     (if-not (zero? (:exit proc))
       (do
         (log-error "Failed to run command " cmd)
