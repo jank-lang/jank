@@ -34,7 +34,6 @@ jobs:
           - os: ubuntu-24.04
             build_type: Release
             sanitize: none
-            build_ubuntu_tarball: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     runs-on: ${{ matrix.os }}
     env:
       JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}

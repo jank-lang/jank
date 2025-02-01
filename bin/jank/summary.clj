@@ -34,7 +34,7 @@
 (defn shell [success? cmd out]
   (append-line "\n<details>")
   (append-line (str "<summary>" (if success? "✓" "❌") " " cmd "</summary>\n"))
-  (append-line "```bash")
+  (append-line "```text")
   (append-line (strip-ansi-codes out))
   (append-line "```")
   (append-line "</details>\n"))

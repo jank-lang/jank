@@ -22,18 +22,3 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/lein-jank
       run: ${{ github.workspace }}/lein-jank/bin/ci/test
-    - name: Test library workflows
-      shell: bash
-      working-directory: ${{ github.workspace }}/lib-test
-      run: ${{ github.workspace }}/lib-test/bin/ci/test
-    - if: success() && ${{ inputs.build_ubuntu_tarball }}
-      name: Release
-      id: release
-      shell: bash
-      working-directory: ${{ github.workspace }}/compiler+runtime
-      run: |
-        export DESTDIR=jank-${{ matrix.os }}-$(date +'%Y-%m-%d').$(git rev-parse --short $GITHUB_SHA)
-        bin/install
-        tar czf $DESTDIR.tar.gz ${DESTDIR}/
-        absolute_archive=${{ github.workspace }}/compiler+runtime/${DESTDIR}.tar.gz
-        echo "archive=${absolute_archive}" >> ${GITHUB_OUTPUT}
