@@ -1,0 +1,2 @@
+(ns jank-test.a<a)
+(defn -main [] "a<a.jank")

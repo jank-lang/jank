@@ -19,34 +19,26 @@
 
 namespace jank::runtime::module
 {
-  /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
-  native_persistent_string path_to_module(boost::filesystem::path const &path)
+  /* This turns `foo_bar/spam/meow.cljc` into `foo_bar/spam/meow`. */
+  native_persistent_string path_to_resource(boost::filesystem::path const &path)
   {
-    static std::regex const slash{ "/" };
-
-    auto const &s(runtime::demunge(path.string()));
-    std::string ret{ s, 0, s.size() - path.extension().size() };
-
-    /* There's a special case of the / function which shouldn't be treated as a path. */
-    if(ret.find("$/") == std::string::npos)
-    {
-      ret = std::regex_replace(ret, slash, ".");
-    }
-
+    auto const &s(path.string());
+    std::string const ret{ s, 0, s.size() - path.extension().size() };
     return ret;
   }
 
-  native_persistent_string module_to_path(native_persistent_string_view const &module)
+  /* This turns `foo-bar.spam.meow` into `foo_bar/spam/meow` */
+  native_persistent_string module_to_resource(native_persistent_string_view const &module)
   {
-    static native_persistent_string const dot{ "\\." };
-    return runtime::munge_extra(module, dot, "/");
+    static std::regex const dot{ "\\." };
+    native_transient_string const ret{ runtime::munge_namespace(module) };
+    return std::regex_replace(ret, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
     static native_persistent_string const dot{ "\\." };
     std::string ret{ runtime::munge_extra(module, dot, "_") };
-
     return fmt::format("jank_load_{}", ret);
   }
 
@@ -138,16 +130,10 @@ namespace jank::runtime::module
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                             boost::filesystem::path const &resource_path,
+                             boost::filesystem::path const &module_path,
                              file_entry const &entry)
   {
     boost::filesystem::path const p{ native_transient_string{ entry.path } };
-    /* We need the file path relative to the module path, since the class
-     * path portion is not included in part of the module name. For example,
-     * the file may live in `src/jank/clojure/core.jank` but the module
-     * should be `clojure.core`, not `src.jank.clojure.core`. */
-    auto const &module_path(p.lexically_relative(resource_path));
-
     auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
@@ -155,7 +141,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.jank = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.jank = entry;
@@ -166,7 +152,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cljc = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cljc = entry;
@@ -177,7 +163,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cpp = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cpp = entry;
@@ -188,7 +174,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.o = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.o = entry;
@@ -201,8 +187,22 @@ namespace jank::runtime::module
       //               entry.archive_path.unwrap_or("None"),
       //               entry.path,
       //               module_path.string(),
-      //               path_to_module(module_path));
+      //               path_to_resource(module_path));
     }
+  }
+
+  static void
+  register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                          boost::filesystem::path const &resource_path,
+                          file_entry const &entry)
+  {
+    boost::filesystem::path const p{ native_transient_string{ entry.path } };
+    /* We need the file path relative to the module path, since the class
+     * path portion is not included in part of the module name. For example,
+     * the file may live in `src/jank/clojure/core.jank` but the module
+     * should be `clojure.core`, not `src.jank.clojure.core`. */
+    auto const &module_path(p.lexically_relative(resource_path));
+    register_entry(entries, module_path, entry);
   }
 
   static void
@@ -213,7 +213,7 @@ namespace jank::runtime::module
     {
       if(boost::filesystem::is_regular_file(f))
       {
-        register_entry(entries, path, file_entry{ none, f.path().string() });
+        register_relative_entry(entries, path, file_entry{ none, f.path().string() });
       }
     }
   }
@@ -235,7 +235,7 @@ namespace jank::runtime::module
       auto const &name(entry.getName());
       if(!entry.isDirectory())
       {
-        register_entry(entries, "", { path, name });
+        register_entry(entries, name, { path, name });
       }
     }
   }
@@ -263,7 +263,7 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      register_entry(entries, "", { none, p.string() });
+      register_entry(entries, p.string(), { none, p.string() });
     }
   }
 
@@ -340,10 +340,9 @@ namespace jank::runtime::module
   string_result<loader::find_result>
   loader::find(native_persistent_string_view const &module, origin const ori)
   {
-    static std::regex const underscore{ "_" };
-    native_transient_string patched_module{ module };
-    patched_module = std::regex_replace(patched_module, underscore, "-");
-    auto const &entry(entries.find(patched_module));
+    native_transient_string resource{ module };
+    resource = module_to_resource(resource);
+    auto const &entry(entries.find(resource));
     if(entry == entries.end())
     {
       return err(fmt::format("unable to find module: {}", module));
@@ -534,9 +533,9 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_cljc(file_entry const &) const
+  string_result<void> loader::load_cljc(file_entry const &entry) const
   {
-    return err("Not yet implemented: CLJC loading");
+    return loader::load_jank(entry);
   }
 
   object_ptr loader::to_runtime_data() const
