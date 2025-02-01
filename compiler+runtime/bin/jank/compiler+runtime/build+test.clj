@@ -2,8 +2,8 @@
 
 (ns jank.compiler+runtime.build+test
   (:require [clojure.string]
-            [jank.util :as util]
-            [babashka.fs :as b.f]))
+            [babashka.fs :as b.f]
+            [jank.util :as util]))
 
 (def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../.."))))
 

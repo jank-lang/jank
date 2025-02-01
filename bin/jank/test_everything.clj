@@ -1,10 +1,11 @@
 #!/usr/bin/env bb
 
 (ns jank.test-everything
-  (:require
-   [jank.compiler+runtime.core]
-   [jank.summary :as summary]
-   [jank.util :as util]))
+  (:require [jank.compiler+runtime.core]
+            [jank.clojure-cli.core]
+            [jank.lein-jank.core]
+            [jank.summary :as summary]
+            [jank.util :as util]))
 
 (defn show-env []
   (util/log-info "JANK_MATRIX_ID: " (System/getenv "JANK_MATRIX_ID"))
@@ -56,7 +57,8 @@
   (util/quiet-shell {:extra-env {"HOMEBREW_NO_AUTO_UPDATE" "1"}}
                     (os->deps-cmd "Mac OS X")))
 
-(defn -main [{:keys [install-deps? validate-formatting? compiler+runtime]}]
+(defn -main [{:keys [install-deps? validate-formatting? compiler+runtime
+                     clojure-cli lein-jank]}]
   (summary/initialize)
 
   (util/log-boundary "Show environment")
@@ -70,9 +72,18 @@
       (util/log-info-with-time duration "Dependencies installed")))
 
   (jank.compiler+runtime.core/-main {:validate-formatting? validate-formatting?
-                                     :build? (:build? compiler+runtime)}))
+                                     :build? (:build? compiler+runtime)})
+
+  (jank.clojure-cli.core/-main {:validate-formatting? validate-formatting?
+                                :build? (:build? clojure-cli)})
+
+  (jank.lein-jank.core/-main {:validate-formatting? validate-formatting?
+                              :build? (:build? lein-jank)}))
 
 (when (= *file* (System/getProperty "babashka.file"))
-  (-main {:install-deps? (parse-boolean (util/get-env "JANK_INSTALL_DEPS" "true"))
-          :validate-formatting? (parse-boolean (util/get-env "JANK_LINT" "true"))
-          :compiler+runtime {:build? (some? (util/get-env "JANK_BUILD_TYPE"))}}))
+  (let [build? (some? (util/get-env "JANK_BUILD_TYPE"))]
+    (-main {:install-deps? (parse-boolean (util/get-env "JANK_INSTALL_DEPS" "true"))
+            :validate-formatting? (parse-boolean (util/get-env "JANK_LINT" "true"))
+            :compiler+runtime {:build? build?}
+            :clojure-cli {:build? build?}
+            :lein-jank {:build? build?}})))

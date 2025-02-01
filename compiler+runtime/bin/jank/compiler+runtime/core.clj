@@ -8,9 +8,10 @@
             [jank.compiler+runtime.coverage]))
 
 (defn -main [{:keys [validate-formatting? build?]}]
-  (util/log-boundary "Test compiler+runtime")
+  (util/log-boundary "compiler+runtime")
 
   ; Formatting
+  ; TODO: Have a reusable fn here for other projects.
   (jank.compiler+runtime.validate-formatting/-main {:enabled? validate-formatting?})
 
   ; Compile and test

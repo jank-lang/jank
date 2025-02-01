@@ -1,2 +1,4 @@
 {:paths ["../"
-         "../../compiler+runtime/bin"]}
+         "../../compiler+runtime/bin"
+         "../../clojure-cli/bin"
+         "../../lein-jank/bin"]}
