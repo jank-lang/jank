@@ -1,3 +1,5 @@
+#include <boost/algorithm/string.hpp>
+
 #include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -49,6 +51,14 @@ namespace clojure::string_native
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.contains(substr_str));
   }
+
+  static object_ptr upper_case(object_ptr const s)
+  {
+    auto const s_str(runtime::to_string(s));
+    // TODO redundant copy?
+    // TODO native_persistent_string?
+    return make_box(boost::to_upper_copy(s_str));
+  }
 }
 
 jank_object_ptr jank_load_clojure_string_native()
@@ -72,6 +82,7 @@ jank_object_ptr jank_load_clojure_string_native()
   intern_fn("includes?", &string_native::includes);
   intern_fn("reverse", &string_native::reverse);
   intern_fn("starts-with?", &string_native::starts_with);
+  intern_fn("upper-case", &string_native::upper_case);
 
   return erase(obj::nil::nil_const());
 }

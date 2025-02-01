@@ -21,5 +21,9 @@
     (assert (str/ends-with? "" ""))
     (assert (str/ends-with? "a-test" "t"))
     (assert (not (str/ends-with? "a-test" "s")))
+    ;; clojure.string/upper-case
+    (assert (= "" (str/upper-case "")))
+    (assert (= "ASDF" (str/upper-case "asdf")))
+    (assert (= "ASDF" (str/upper-case "ASDF")))
     (println :success)
     (catch _ (println :fail))))
