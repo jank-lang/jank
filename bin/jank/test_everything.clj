@@ -33,7 +33,8 @@
       (do
         ; Install deps required for running our tests.
         (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen")
-        (util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
+        ; TODO: Enable once we're linting Clojure/jank again.
+        ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
 
         ; Install jank's build deps.
         (util/quiet-shell {} (os->deps-cmd "Linux"))
@@ -58,7 +59,7 @@
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime]}]
   (summary/initialize)
 
-  (util/log-boundary "Environment")
+  (util/log-boundary "Show environment")
   (show-env)
 
   (util/log-boundary "Install dependencies")
@@ -72,6 +73,6 @@
                                      :build? (:build? compiler+runtime)}))
 
 (when (= *file* (System/getProperty "babashka.file"))
-  (-main {:install-deps? (parse-boolean (or (System/getenv "JANK_INSTALL_DEPS") "true"))
-          :validate-formatting? (parse-boolean (or (System/getenv "JANK_LINT") "true"))
-          :compiler+runtime {:build? (some? (System/getenv "JANK_BUILD_TYPE"))}}))
+  (-main {:install-deps? (parse-boolean (util/get-env "JANK_INSTALL_DEPS" "true"))
+          :validate-formatting? (parse-boolean (util/get-env "JANK_LINT" "true"))
+          :compiler+runtime {:build? (some? (util/get-env "JANK_BUILD_TYPE"))}}))

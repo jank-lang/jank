@@ -7,6 +7,15 @@
 
 (def llvm-version 19)
 
+(defn get-env
+  ([s]
+   (get-env s nil))
+  ([s fallback]
+   (let [raw (System/getenv s)]
+     (if-not (empty? raw)
+       raw
+       fallback))))
+
 (defn log-boundary [title]
   (println "\n────────────────" title "────────────────")
   (summary/boundary title))

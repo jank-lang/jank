@@ -14,7 +14,7 @@
     (util/log-info "Not enabled")
     (let [bash-test-dir (str compiler+runtime-dir "/test/bash")
           test-files (b.f/glob bash-test-dir "**/{pass,fail}-test")
-          extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (System/getenv "PATH"))}]
+          extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}]
       (doseq [test-file test-files]
         (let [expect-pass? (clojure.string/ends-with? (str test-file) "pass-test")
               dirname (b.f/parent test-file)
