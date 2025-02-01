@@ -15,16 +15,16 @@
 
   ; Compile and test
   (jank.compiler+runtime.build+test/-main {:enabled? build?
-                                           :build-type (or (System/getenv "JANK_BUILD_TYPE") "Debug")
-                                           :analyze (or (System/getenv "JANK_ANALYZE") "off")
-                                           :sanitize (or (System/getenv "JANK_SANITIZE") "none")
-                                           :coverage (or (System/getenv "JANK_COVERAGE") "off")})
+                                           :build-type (util/get-env "JANK_BUILD_TYPE" "Debug")
+                                           :analyze (util/get-env "JANK_ANALYZE" "off")
+                                           :sanitize (util/get-env "JANK_SANITIZE" "none")
+                                           :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
   (jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)
-  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (or (System/getenv "JANK_COVERAGE") "off"))}))
+  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))}))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (-main {:validate-formatting? true

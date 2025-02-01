@@ -55,17 +55,3 @@ jobs:
           chmod +x install-bb
           sudo ./install-bb
           ./bin/jank/test_everything.clj
-      #- name: Archive test log
-      #  if: always()
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: test-log-${{ env.JANK_MATRIX_ID }}
-      #    path: compiler+runtime/test.log
-      #- name: Update Ubuntu tarball
-      #  if: success() && ${{ matrix.build_ubuntu_tarball == 'true' }}
-      #  uses: pyTooling/Actions/releaser@main
-      #  with:
-      #    tag: latest
-      #    rm: true
-      #    token: ${{ secrets.GITHUB_TOKEN }}
-      #    files: ${{ steps.build.outputs.release_archive }}
