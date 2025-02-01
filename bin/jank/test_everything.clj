@@ -9,6 +9,7 @@
 
 (defn show-env []
   (util/log-info "JANK_MATRIX_ID: " (System/getenv "JANK_MATRIX_ID"))
+  (util/log-info "JANK_INSTALL_DEPS: " (System/getenv "JANK_INSTALL_DEPS"))
   (util/log-info "JANK_BUILD_TYPE: " (System/getenv "JANK_BUILD_TYPE"))
   (util/log-info "JANK_LINT: " (System/getenv "JANK_LINT"))
   (util/log-info "JANK_COVERAGE: " (System/getenv "JANK_COVERAGE"))

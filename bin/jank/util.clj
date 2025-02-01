@@ -1,9 +1,8 @@
 (ns jank.util
-  (:require
-   [babashka.fs :as b.f]
-   [babashka.process :as b.p]
-   [clojure.string]
-   [jank.summary :as summary]))
+  (:require [babashka.fs :as b.f]
+            [babashka.process :as b.p]
+            [clojure.string]
+            [jank.summary :as summary]))
 
 (def llvm-version 19)
 
@@ -15,6 +14,19 @@
      (if-not (empty? raw)
        raw
        fallback))))
+
+(defn format-ms [ms]
+  (let [units [[3600000 "h"] [60000 "m"] [1000 "s"] [1 "ms"]]
+        extract (fn [ms [unit label]]
+                  (let [amt (quot ms unit)]
+                    (if (pos? amt)
+                      [(mod ms unit) [amt label]]
+                      [ms nil])))]
+    (loop [ms ms, units units, result []]
+      (if (or (empty? units) (>= (count result) 2))
+        (clojure.string/join " " (map (fn [[v l]] (str v l)) result))
+        (let [[rem-ms val] (extract ms (first units))]
+          (recur rem-ms (rest units) (if val (conj result val) result)))))))
 
 (defn log-boundary [title]
   (println "\n────────────────" title "────────────────")
@@ -33,18 +45,19 @@
   (log "🛈 " (apply str args)))
 
 (defn log-info-with-time [time-ms & args]
-  ; TODO: Time formatting.
-  (log "🛈 " (apply str args) (str "(" time-ms " ms)")))
+  (log "🛈 " (apply str args) (str "(" (format-ms time-ms) ")")))
 
 (defn log-warning [& args]
   (log "⚠ " (apply str args)))
+
+(defn log-warning-with-time [time-ms & args]
+  (log "⚠ " (apply str args) (str "(" (format-ms time-ms) ")")))
 
 (defn log-error [& args]
   (log "❌ " (apply str args)))
 
 (defn log-error-with-time [time-ms & args]
-  ; TODO: Time formatting.
-  (log "❌ " (apply str args) (str "(" time-ms " ms)")))
+  (log "❌ " (apply str args) (str "(" (format-ms time-ms) ")")))
 
 (defn quiet-shell [props cmd]
   (let [proc @(b.p/process
