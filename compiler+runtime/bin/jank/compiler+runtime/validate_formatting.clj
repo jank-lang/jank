@@ -7,7 +7,7 @@
    [clojure.string]
    [jank.util :as util]))
 
-(def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
+(def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../.."))))
 
 (defn find-standard-clj []
   (loop [names ["standard-clj"]]

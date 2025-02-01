@@ -6,7 +6,7 @@
    [clojure.string]
    [jank.util :as util]))
 
-(def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
+(def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../.."))))
 
 (defn -main [{:keys [enabled?
                      build-type
@@ -26,8 +26,7 @@
                            (str "-Djank_analysis=" analyze)
                            (str "-Djank_sanitize=" sanitize)
                            (str "-Djank_coverage=" coverage)]
-          configure-cmd (str compiler+runtime-dir "/bin/configure "
-                             (clojure.string/join " " configure-flags))]
+          configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))]
       (util/quiet-shell {:dir compiler+runtime-dir
                          :extra-env exports}
                         configure-cmd)

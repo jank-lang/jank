@@ -2,35 +2,40 @@
   (:require
    [babashka.fs :as b.f]
    [babashka.process :as b.p]
-   [clojure.string]))
+   [clojure.string]
+   [jank.summary :as summary]))
 
 (def llvm-version 19)
 
-(defn log [& args]
-  (println (apply str args)))
-
 (defn log-boundary [title]
-  (log "\n──────────────── " title " ────────────────"))
+  (println "\n────────────────" title "────────────────")
+  (summary/boundary title))
 
 (defn log-step [title]
-  (log "\n──── " title " ────"))
+  (println "\n────" title "────")
+  (summary/step title))
+
+(defn log [& args]
+  (let [s (clojure.string/join " " args)]
+    (println s)
+    (summary/log s)))
 
 (defn log-info [& args]
-  (println "🛈 " (apply str args)))
+  (log "🛈 " (apply str args)))
 
 (defn log-info-with-time [time-ms & args]
   ; TODO: Time formatting.
-  (println "🛈 " (apply str args) (str "(" time-ms " ms)")))
+  (log "🛈 " (apply str args) (str "(" time-ms " ms)")))
 
 (defn log-warning [& args]
-  (println "⚠ " (apply str args)))
+  (log "⚠ " (apply str args)))
 
 (defn log-error [& args]
-  (println "❌ " (apply str args)))
+  (log "❌ " (apply str args)))
 
 (defn log-error-with-time [time-ms & args]
   ; TODO: Time formatting.
-  (println "❌ " (apply str args) (str "(" time-ms " ms)")))
+  (log "❌ " (apply str args) (str "(" time-ms " ms)")))
 
 (defn quiet-shell [props cmd]
   (let [proc @(b.p/process
@@ -41,9 +46,12 @@
     (if-not (zero? (:exit proc))
       (do
         (log-error "Failed to run command " cmd)
-        (log (:out proc))
+        (println (:out proc))
+        (summary/shell false cmd (:out proc))
         (System/exit 1))
-      proc)))
+      (do
+        (summary/shell true cmd (:out proc))
+        proc))))
 
 (defmacro with-elapsed-time
   [time-sym expr-to-time expr-with-time-sym]

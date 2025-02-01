@@ -3,6 +3,7 @@
 (ns jank.test-everything
   (:require
    [jank.compiler+runtime.core]
+   [jank.summary :as summary]
    [jank.util :as util]))
 
 (defn show-env []
@@ -54,6 +55,8 @@
                     (os->deps-cmd "Mac OS X")))
 
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime]}]
+  (summary/initialize)
+
   (util/log-boundary "Environment")
   (show-env)
 
