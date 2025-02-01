@@ -37,8 +37,34 @@ namespace jank
         runtime::obj::persistent_string const s{ "foo bar" };
         CHECK(runtime::equal(s.get(runtime::make_box<runtime::obj::integer>(0), runtime::make_box<runtime::obj::character>("o")), runtime::make_box<runtime::obj::character>("f")));
       }
-      //TODO contains
-      //TODO get_entry
+
+      SUBCASE("Contains true")
+      {
+        runtime::obj::persistent_string const s{ "foo bar" };
+        CHECK(s.contains(runtime::make_box<runtime::obj::integer>(0)));
+      }
+
+      SUBCASE("Contains false")
+      {
+        runtime::obj::persistent_string const s{ "foo bar" };
+        CHECK(!s.contains(runtime::make_box<runtime::obj::integer>(7)));
+      }
+
+      SUBCASE("get_entry not supported")
+      {
+        runtime::obj::persistent_string const s{ "foo bar" };
+        try
+        {
+          s.get_entry(runtime::make_box<runtime::obj::integer>(0));
+          CHECK(false);
+        }
+        catch(std::exception const &e)
+        {
+          std::string actual = e.what();
+          std::string expected = "get_entry not supported on string";
+          CHECK_EQ(actual, expected);
+        }
+      }
     }
   };
 }
