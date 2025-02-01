@@ -10,6 +10,14 @@
     (assert (str/blank? " \t "))
     (assert (not (str/blank? "nil")))
     (assert (not (str/blank? " as df ")))
+    ;; clojure.string/lower-case
+    (assert (= "" (str/lower-case "")))
+    (assert (= "asdf" (str/lower-case "ASDF")))
+    (assert (= "asdf" (str/lower-case "asdf")))
+    (assert (string? (str/lower-case "asdf")))
+    (let [s "ASDF"]
+      (assert (= "asdf" (str/lower-case "ASDF")))
+      (assert (= "ASDF" s) "original string mutated"))
     ;; clojure.string/reverse
     (assert (= "" (str/reverse "")))
     (assert (= "tset-a" (str/reverse "a-test")))
@@ -25,5 +33,9 @@
     (assert (= "" (str/upper-case "")))
     (assert (= "ASDF" (str/upper-case "asdf")))
     (assert (= "ASDF" (str/upper-case "ASDF")))
+    (assert (string? (str/upper-case "ASDF")))
+    (let [s "asdf"]
+      (assert (= "ASDF" (str/upper-case "asdf")))
+      (assert (= "asdf" s) "original string mutated"))
     (println :success)
     (catch _ (println :fail))))

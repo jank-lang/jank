@@ -163,12 +163,10 @@
        :arglists '([s])}
   upper-case clojure.string-native/upper-case)
 
-;  ;(defn lower-case
-;  ;  "Converts string to all lower-case."
-;  ;  {:added "1.2"}
-;  ;  [s]
-;  ;  (.. s toString toLowerCase))
-;  ;
+(def ^{:doc "Converts string to all lower-case."
+       :arglists '([s])}
+  lower-case clojure.string-native/lower-case)
+
 ;  ;(defn split
 ;  ;  "Splits string on a regular expression.  Optional argument limit is
 ;  ;  the maximum number of parts. Not lazy. Returns vector of the parts.

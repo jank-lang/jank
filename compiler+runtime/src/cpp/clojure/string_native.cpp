@@ -31,6 +31,14 @@ namespace clojure::string_native
     return make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });
   }
 
+  static object_ptr lower_case(object_ptr const s)
+  {
+    auto const s_str(runtime::to_string(s));
+    // TODO redundant copy?
+    // TODO native_persistent_string?
+    return make_box(boost::to_lower_copy(s_str));
+  }
+
   static object_ptr starts_with(object_ptr const s, object_ptr const substr)
   {
     auto const s_str(runtime::to_string(s));
@@ -80,6 +88,7 @@ jank_object_ptr jank_load_clojure_string_native()
   intern_fn("blank?", &string_native::blank);
   intern_fn("ends-with?", &string_native::ends_with);
   intern_fn("includes?", &string_native::includes);
+  intern_fn("lower-case", &string_native::lower_case);
   intern_fn("reverse", &string_native::reverse);
   intern_fn("starts-with?", &string_native::starts_with);
   intern_fn("upper-case", &string_native::upper_case);
