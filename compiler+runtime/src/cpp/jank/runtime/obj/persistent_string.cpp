@@ -1,6 +1,7 @@
 #include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
+#include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -60,6 +61,40 @@ namespace jank::runtime::obj
   native_integer persistent_string::compare(persistent_string const &s) const
   {
     return data.compare(s.data);
+  }
+
+  object_ptr persistent_string::get(object_ptr const key) const
+  {
+    return get(key, nil::nil_const());
+  }
+
+  object_ptr persistent_string::get(object_ptr const key, object_ptr const fallback) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
+      if(data.size() <= i)
+      {
+        return nil::nil_const();
+      }
+      return make_box<runtime::obj::character>(data[i]);
+    }
+    return fallback;
+  }
+
+  native_bool persistent_string::contains(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
+      return data.size() <= i;
+    }
+    throw std::runtime_error{ fmt::format("contains? not supported on string: {}", runtime::to_string(key)) };
+  }
+
+  object_ptr persistent_string::get_entry(object_ptr const) const
+  {
+    throw std::runtime_error{ fmt::format("get_entry not supported on string") };
   }
 
   string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
