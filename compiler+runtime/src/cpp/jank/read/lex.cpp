@@ -740,8 +740,8 @@ namespace jank::read
                 pos,
                 fmt::format("unexpected end of radix {} number, expecting more digits", radix) });
             }
-            /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-             * to follow.
+            /* Tokens beginning with - are ambiguous; it's a negative number only if followed by a number, otherwise
+             * it's a symbol.
              * TODO: handle numbers starting with `+` */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
@@ -837,6 +837,7 @@ namespace jank::read
         case '<':
         case '>':
         case '%':
+        case '.':
           {
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
