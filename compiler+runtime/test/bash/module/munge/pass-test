@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-jank --module-path $(clojure -Spath) run-main jank-test.a | grep 'LOADED a.jank LOADED'
-jank --module-path $(clojure -Spath) run-main 'jank-test.a<a' | grep 'LOADED jank-test.a<a LOADED'
-jank --module-path $(clojure -Spath) run-main jank-test.a-LT-a | grep 'LOADED jank-test.a-LT-a LOADED'
-jank --module-path $(clojure -Spath) run-main jank-test.a_under_a | grep 'LOADED jank-test.a_under_a (cljc) LOADED'
+jank --module-path src run-main jank-test.test-runner
+#jank --module-path $(clojure -Spath) run-main jank-test.a | grep 'LOADED a.jank LOADED'
+#jank --module-path $(clojure -Spath) run-main 'jank-test.a<a' | grep 'LOADED jank-test.a<a LOADED'
+#jank --module-path $(clojure -Spath) run-main jank-test.a-LT-a | grep 'LOADED jank-test.a-LT-a LOADED'
+#jank --module-path $(clojure -Spath) run-main jank-test.a_under_a | grep 'LOADED jank-test.a_under_a (cljc) LOADED'
