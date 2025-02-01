@@ -87,7 +87,7 @@ namespace jank::runtime::obj
     if(key->type == object_type::integer)
     {
       auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-      return data.size() <= i;
+      return 0 <= i && i < data.size();
     }
     throw std::runtime_error{ fmt::format("contains? not supported on string: {}", runtime::to_string(key)) };
   }
