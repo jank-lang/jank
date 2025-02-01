@@ -60,8 +60,8 @@ namespace jank
         }
         catch(std::exception const &e)
         {
-          std::string actual = e.what();
-          std::string expected = "get_entry not supported on string";
+          std::string const actual = e.what();
+          std::string const expected = "get_entry not supported on string";
           CHECK_EQ(actual, expected);
         }
       }
