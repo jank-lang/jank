@@ -250,10 +250,10 @@
       (if (= c index)
         out
         (let [ch (nth s index)]
-          (if-let [replacement (cmap ch)]
-            (str out replacement)
-            (str out ch))
-          (recur (inc index) out))))))
+          (recur (inc index)
+                 (if-let [replacement (cmap ch)]
+                   (str out replacement)
+                   (str out ch))))))))
 
 ;  ;(defn index-of
 ;  ;  "Return index of value (string or char) in s, optionally searching

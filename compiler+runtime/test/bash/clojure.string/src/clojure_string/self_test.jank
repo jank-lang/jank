@@ -1,6 +1,10 @@
 (ns clojure-string.self-test
   (:require [clojure.string :as str]))
 
+;;https://github.com/jank-lang/jank/issues/226
+(def char-a \a)
+(def char-c \c)
+
 (defn -main []
   (try
     ;; clojure.string/blank?
@@ -16,12 +20,10 @@
     (assert (= "A thing" (str/capitalize "a Thing")))
     ;; clojure.string/escape
     (assert (= "" (str/escape "" {})))
-    (assert (= "" (str/escape "" {(read-string "\\a") "A_A"})))
-    (assert (= "" (str/escape "" {(read-string "\\c") "C_C"})))
-    (assert (= "" (str/escape "" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"})))
-    ;;FIXME
-    (assert (= "A_AbC_C" (str/escape "abc" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"}))
-            (str/escape "abc" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"}))
+    (assert (= "" (str/escape "" {char-a "A_A"})))
+    (assert (= "" (str/escape "" {char-c "C_C"})))
+    (assert (= "" (str/escape "" {char-a "A_A" char-c "C_C"})))
+    (assert (= "A_AbC_C" (str/escape "abc" {char-a "A_A" char-c "C_C"})))
     ;; clojure.string/lower-case
     (assert (= "" (str/lower-case "")))
     (assert (= "asdf" (str/lower-case "ASDF")))
