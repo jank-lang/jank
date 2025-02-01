@@ -1,9 +1,38 @@
 #pragma once
 
+#include <iostream>
 #include <jank/runtime/object.hpp>
+#include <libunwind.h>
 
 namespace jank::runtime
 {
+
+  inline void print_stack_trace()
+  {
+    unw_cursor_t cursor;
+    unw_context_t context;
+
+    unw_getcontext(&context);
+    unw_init_local(&cursor, &context);
+
+    std::cerr << "Stack trace:\n";
+    while(unw_step(&cursor) > 0)
+    {
+      unw_word_t offset = 0, pc = 0;
+      char sym[256];
+
+      unw_get_reg(&cursor, UNW_REG_IP, &pc);
+      if(unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0)
+      {
+        std::cerr << "  " << sym << " + 0x" << std::hex << offset << "\n";
+      }
+      else
+      {
+        std::cerr << "  [unknown]\n";
+      }
+    }
+  }
+
   /* Most of the system is polymorphic using type-erased objects. Given any object, an erase call
    * will get you what you need. If you don't need to type-erase, though, don't! */
   template <typename T>
@@ -67,6 +96,7 @@ namespace jank::runtime
     assert(o);
     if(o->type != T::obj_type)
     {
+      print_stack_trace();
       util::string_builder sb;
       sb("invalid object type (expected ");
       sb(object_type_str(T::obj_type));
