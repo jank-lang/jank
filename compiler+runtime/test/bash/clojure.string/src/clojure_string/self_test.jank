@@ -14,6 +14,14 @@
     (assert (= "" (str/capitalize "")))
     (assert (= "A" (str/capitalize "a")))
     (assert (= "A thing" (str/capitalize "a Thing")))
+    ;; clojure.string/escape
+    (assert (= "" (str/escape "" {})))
+    (assert (= "" (str/escape "" {(read-string "\\a") "A_A"})))
+    (assert (= "" (str/escape "" {(read-string "\\c") "C_C"})))
+    (assert (= "" (str/escape "" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"})))
+    ;;FIXME
+    (assert (= "A_AbC_C" (str/escape "abc" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"}))
+            (str/escape "abc" {(read-string "\\a") "A_A" (read-string "\\c") "C_C"}))
     ;; clojure.string/lower-case
     (assert (= "" (str/lower-case "")))
     (assert (= "asdf" (str/lower-case "ASDF")))
@@ -42,4 +50,4 @@
       (assert (= "ASDF" (str/upper-case "asdf")))
       (assert (= "asdf" s) "original string mutated"))
     (println :success)
-    (catch _ (println :fail))))
+    (catch e (prn e) (println :fail))))

@@ -237,24 +237,24 @@
        :arglists '([s])}
   blank? clojure.string-native/blank?)
 
-;  ;(defn escape
-;  ;  "Return a new string, using cmap to escape each character ch
-;  ;  from s as follows:
-;  ;
-;  ;  If (cmap ch) is nil, append ch to the new string.
-;  ;  If (cmap ch) is non-nil, append (str (cmap ch)) instead."
-;  ;  {:added "1.2"}
-;  ;  [s cmap]
-;  ;  (loop [index (int 0)
-;  ;         buffer (StringBuilder. (.length s))]
-;  ;    (if (= (.length s) index)
-;  ;      (.toString buffer)
-;  ;      (let [ch (.charAt s index)]
-;  ;        (if-let [replacement (cmap ch)]
-;  ;          (.append buffer replacement)
-;  ;          (.append buffer ch))
-;  ;        (recur (inc index) buffer)))))
-;  ;
+(defn escape
+  "Return a new string, using cmap to escape each character ch
+  from s as follows:
+
+  If (cmap ch) is nil, append ch to the new string.
+  If (cmap ch) is non-nil, append (str (cmap ch)) instead."
+  [s cmap]
+  (let [c (count s)]
+    (loop [index (int 0)
+           out ""]
+      (if (= c index)
+        out
+        (let [ch (nth s index)]
+          (if-let [replacement (cmap ch)]
+            (str out replacement)
+            (str out ch))
+          (recur (inc index) out))))))
+
 ;  ;(defn index-of
 ;  ;  "Return index of value (string or char) in s, optionally searching
 ;  ;  forward from from-index. Return nil if value not found."
