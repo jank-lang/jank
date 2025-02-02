@@ -16,6 +16,8 @@ namespace jank::runtime::obj
     persistent_string const s{ "foo bar" };
     auto const min{ make_box<integer>(0) };
     auto const min_char{ make_box<character>("f") };
+    auto const mid{ make_box<integer>(3) };
+    auto const mid_char{ make_box<character>(" ") };
     auto const max{ make_box<integer>(6) };
     auto const max_char{ make_box<character>("r") };
     auto const over{ make_box<integer>(7) };
@@ -25,6 +27,7 @@ namespace jank::runtime::obj
     TEST_CASE("get")
     {
       CHECK(equal(s.get(min), min_char));
+      CHECK(equal(s.get(mid), mid_char));
       CHECK(equal(s.get(max), max_char));
       CHECK(equal(s.get(over), nil));
       CHECK(equal(s.get(under), nil));
@@ -33,6 +36,7 @@ namespace jank::runtime::obj
     TEST_CASE("get with fallback")
     {
       CHECK(equal(s.get(min, non_int), min_char));
+      CHECK(equal(s.get(mid, non_int), mid_char));
       CHECK(equal(s.get(max, non_int), max_char));
       CHECK(equal(s.get(over, non_int), non_int));
       CHECK(equal(s.get(under, non_int), non_int));
@@ -41,6 +45,7 @@ namespace jank::runtime::obj
     TEST_CASE("contains")
     {
       CHECK(s.contains(min));
+      CHECK(s.contains(mid));
       CHECK(s.contains(max));
       CHECK(!s.contains(over));
       CHECK(!s.contains(under));
