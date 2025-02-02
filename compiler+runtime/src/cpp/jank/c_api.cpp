@@ -844,7 +844,7 @@ extern "C"
       if(o_obj->type == object_type::integer)
       {
         integer = integer >= std::numeric_limits<int32_t>::min()
-                   && integer <= std::numeric_limits<int32_t>::max()
+            && integer <= std::numeric_limits<int32_t>::max()
           ? integer
           : to_hash(make_box(integer));
       }
