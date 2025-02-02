@@ -1,4 +1,5 @@
-/* clang-format off */
+#include <fmt/format.h>
+
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -8,62 +9,55 @@
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
 
-namespace jank
+namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_string")
   {
-    TEST_CASE("Index")
+    persistent_string const s{ "foo bar" };
+    auto const min{ make_box<integer>(0) };
+    auto const min_char{ make_box<character>("f") };
+    auto const max{ make_box<integer>(6) };
+    auto const max_char{ make_box<character>("r") };
+    auto const over{ make_box<integer>(7) };
+    auto const under{ make_box<integer>(-1) };
+    auto const nil{ nil::nil_const() };
+    auto const non_int{ make_box<character>("z") };
+    TEST_CASE("get")
     {
-      SUBCASE("Present no default")
+      CHECK(equal(s.get(min), min_char));
+      CHECK(equal(s.get(max), max_char));
+      CHECK(equal(s.get(over), nil));
+      CHECK(equal(s.get(under), nil));
+      CHECK(equal(s.get(non_int), nil));
+    }
+    TEST_CASE("get with fallback")
+    {
+      CHECK(equal(s.get(min, non_int), min_char));
+      CHECK(equal(s.get(max, non_int), max_char));
+      CHECK(equal(s.get(over, non_int), non_int));
+      CHECK(equal(s.get(under, non_int), non_int));
+      CHECK(equal(s.get(non_int, non_int), non_int));
+    }
+    TEST_CASE("contains")
+    {
+      CHECK(s.contains(min));
+      CHECK(s.contains(max));
+      CHECK(!s.contains(over));
+      CHECK(!s.contains(under));
+      CHECK(!s.contains(non_int));
+    }
+    TEST_CASE("get_entry not implemented")
+    {
+      try
       {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(runtime::equal(s.get(runtime::make_box<runtime::obj::integer>(0)), (runtime::make_box<runtime::obj::character>("f"))));
+        s.get_entry(min);
+        CHECK(false);
       }
-
-      SUBCASE("Absent no default")
+      catch(std::exception const &e)
       {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(runtime::equal(s.get(runtime::make_box<runtime::obj::integer>(7)), runtime::obj::nil::nil_const()));
-      }
-
-      SUBCASE("Present with default")
-      {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(runtime::equal(s.get(runtime::make_box<runtime::obj::integer>(0), runtime::make_box<runtime::obj::character>("o")), runtime::make_box<runtime::obj::character>("f")));
-      }
-
-      SUBCASE("Absent with default")
-      {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(runtime::equal(s.get(runtime::make_box<runtime::obj::integer>(0), runtime::make_box<runtime::obj::character>("o")), runtime::make_box<runtime::obj::character>("f")));
-      }
-
-      SUBCASE("Contains true")
-      {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(s.contains(runtime::make_box<runtime::obj::integer>(0)));
-      }
-
-      SUBCASE("Contains false")
-      {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        CHECK(!s.contains(runtime::make_box<runtime::obj::integer>(7)));
-      }
-
-      SUBCASE("get_entry not supported")
-      {
-        runtime::obj::persistent_string const s{ "foo bar" };
-        try
-        {
-          s.get_entry(runtime::make_box<runtime::obj::integer>(0));
-          CHECK(false);
-        }
-        catch(std::exception const &e)
-        {
-          std::string const actual = e.what();
-          std::string const expected = "get_entry not supported on string";
-          CHECK_EQ(actual, expected);
-        }
+        auto const actual{ fmt::format("{}", e.what()) };
+        auto const expected{ "get_entry not supported on string" };
+        CHECK_EQ(actual, expected);
       }
     }
   };

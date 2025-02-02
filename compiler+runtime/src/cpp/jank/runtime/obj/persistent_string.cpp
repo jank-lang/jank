@@ -72,25 +72,27 @@ namespace jank::runtime::obj
   {
     if(key->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-      if(data.size() <= i)
+      auto const i(expect_object<integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return nil::nil_const();
+        return fallback;
       }
-      return make_box<runtime::obj::character>(data[i]);
+      return make_box<character>(data[i]);
     }
-    return fallback;
+    else
+    {
+      return fallback;
+    }
   }
 
   native_bool persistent_string::contains(object_ptr const key) const
   {
     if(key->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-      return 0 <= i && i < data.size();
+      auto const i(expect_object<integer>(key)->data);
+      return 0 <= i && static_cast<size_t>(i) < data.size();
     }
-    throw std::runtime_error{ fmt::format("contains? not supported on string: {}",
-                                          runtime::to_string(key)) };
+    return false;
   }
 
   object_ptr persistent_string::get_entry(object_ptr const) const
