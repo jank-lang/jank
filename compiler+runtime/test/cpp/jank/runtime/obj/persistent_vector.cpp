@@ -11,7 +11,7 @@ namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_vector")
   {
-    static persistent_vector_ptr const v(persistent_vector::create(nullptr)
+    static persistent_vector_ptr const v(persistent_vector::empty()
                                            ->conj(make_box('f'))
                                            ->conj(make_box('o'))
                                            ->conj(make_box('o'))
