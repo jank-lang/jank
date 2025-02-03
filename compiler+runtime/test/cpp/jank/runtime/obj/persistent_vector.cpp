@@ -11,24 +11,24 @@ namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_vector")
   {
-    persistent_vector_ptr const v(persistent_vector::create(nullptr)
-                                    ->conj(make_box('f'))
-                                    ->conj(make_box('o'))
-                                    ->conj(make_box('o'))
-                                    ->conj(make_box(' '))
-                                    ->conj(make_box('b'))
-                                    ->conj(make_box('a'))
-                                    ->conj(make_box('r')));
-    auto const min{ make_box(0) };
-    auto const min_char{ make_box('f') };
-    auto const mid{ make_box(3) };
-    auto const mid_char{ make_box(' ') };
-    auto const max{ make_box(6) };
-    auto const max_char{ make_box('r') };
-    auto const over{ make_box(7) };
-    auto const under{ make_box(-1) };
-    auto const nil{ nil::nil_const() };
-    auto const non_int{ make_box('z') };
+    static persistent_vector_ptr const v(persistent_vector::create(nullptr)
+                                           ->conj(make_box('f'))
+                                           ->conj(make_box('o'))
+                                           ->conj(make_box('o'))
+                                           ->conj(make_box(' '))
+                                           ->conj(make_box('b'))
+                                           ->conj(make_box('a'))
+                                           ->conj(make_box('r')));
+    static auto const min{ make_box(0) };
+    static auto const min_char{ make_box('f') };
+    static auto const mid{ make_box(3) };
+    static auto const mid_char{ make_box(' ') };
+    static auto const max{ make_box(6) };
+    static auto const max_char{ make_box('r') };
+    static auto const over{ make_box(7) };
+    static auto const under{ make_box(-1) };
+    static auto const nil{ nil::nil_const() };
+    static auto const non_int{ make_box('z') };
 
     TEST_CASE("get")
     {
