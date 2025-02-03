@@ -12,14 +12,13 @@ namespace jank::runtime::obj
   TEST_SUITE("persistent_vector")
   {
     persistent_vector_ptr const v(persistent_vector::create(nullptr)
-        ->conj(make_box('f'))
-        ->conj(make_box('o'))
-        ->conj(make_box('o'))
-        ->conj(make_box(' '))
-        ->conj(make_box('b'))
-        ->conj(make_box('a'))
-        ->conj(make_box('r'))
-        );
+                                    ->conj(make_box('f'))
+                                    ->conj(make_box('o'))
+                                    ->conj(make_box('o'))
+                                    ->conj(make_box(' '))
+                                    ->conj(make_box('b'))
+                                    ->conj(make_box('a'))
+                                    ->conj(make_box('r')));
     auto const min{ make_box(0) };
     auto const min_char{ make_box('f') };
     auto const mid{ make_box(3) };
@@ -51,9 +50,9 @@ namespace jank::runtime::obj
     }
     TEST_CASE("contains")
     {
-      CHECK( contains(v, min));
-      CHECK( contains(v, mid));
-      CHECK( contains(v, max));
+      CHECK(contains(v, min));
+      CHECK(contains(v, mid));
+      CHECK(contains(v, max));
       CHECK(!contains(v, over));
       CHECK(!contains(v, under));
       CHECK(!contains(v, non_int));
@@ -63,5 +62,5 @@ namespace jank::runtime::obj
       //FIXME
       //CHECK(equal(find(v, min)), nil);
     }
-  };
+  }
 }

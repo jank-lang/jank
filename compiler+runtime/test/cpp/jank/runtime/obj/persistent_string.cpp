@@ -65,5 +65,5 @@ namespace jank::runtime::obj
         CHECK_EQ(actual, expected);
       }
     }
-  };
+  }
 }
