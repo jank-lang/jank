@@ -14,16 +14,16 @@ namespace jank::runtime::obj
   TEST_SUITE("persistent_string")
   {
     persistent_string const s{ "foo bar" };
-    auto const min{ make_box<integer>(0) };
-    auto const min_char{ make_box<character>("f") };
-    auto const mid{ make_box<integer>(3) };
-    auto const mid_char{ make_box<character>(" ") };
-    auto const max{ make_box<integer>(6) };
-    auto const max_char{ make_box<character>("r") };
-    auto const over{ make_box<integer>(7) };
-    auto const under{ make_box<integer>(-1) };
+    auto const min{ make_box(0) };
+    auto const min_char{ make_box('f') };
+    auto const mid{ make_box(3) };
+    auto const mid_char{ make_box(' ') };
+    auto const max{ make_box(6) };
+    auto const max_char{ make_box('r') };
+    auto const over{ make_box(7) };
+    auto const under{ make_box(-1) };
     auto const nil{ nil::nil_const() };
-    auto const non_int{ make_box<character>("z") };
+    auto const non_int{ make_box('z') };
     TEST_CASE("get")
     {
       CHECK(equal(s.get(min), min_char));

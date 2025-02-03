@@ -1,0 +1,67 @@
+#include <jank/runtime/obj/character.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/context.hpp>
+
+/* This must go last; doctest and glog both define CHECK and family. */
+#include <doctest/doctest.h>
+
+namespace jank::runtime::obj
+{
+  TEST_SUITE("persistent_vector")
+  {
+    persistent_vector_ptr const v(persistent_vector::create(nullptr)
+        ->conj(make_box('f'))
+        ->conj(make_box('o'))
+        ->conj(make_box('o'))
+        ->conj(make_box(' '))
+        ->conj(make_box('b'))
+        ->conj(make_box('a'))
+        ->conj(make_box('r'))
+        );
+    auto const min{ make_box(0) };
+    auto const min_char{ make_box('f') };
+    auto const mid{ make_box(3) };
+    auto const mid_char{ make_box(' ') };
+    auto const max{ make_box(6) };
+    auto const max_char{ make_box('r') };
+    auto const over{ make_box(7) };
+    auto const under{ make_box(-1) };
+    auto const nil{ nil::nil_const() };
+    auto const non_int{ make_box('z') };
+
+    TEST_CASE("get")
+    {
+      CHECK(equal(get(v, min), min_char));
+      CHECK(equal(get(v, mid), mid_char));
+      CHECK(equal(get(v, max), max_char));
+      CHECK(equal(get(v, over), nil));
+      CHECK(equal(get(v, under), nil));
+      CHECK(equal(get(v, non_int), nil));
+    }
+    TEST_CASE("get with fallback")
+    {
+      CHECK(equal(get(v, min, non_int), min_char));
+      CHECK(equal(get(v, mid, non_int), mid_char));
+      CHECK(equal(get(v, max, non_int), max_char));
+      CHECK(equal(get(v, over, non_int), non_int));
+      CHECK(equal(get(v, under, non_int), non_int));
+      CHECK(equal(get(v, non_int, non_int), non_int));
+    }
+    TEST_CASE("contains")
+    {
+      CHECK( contains(v, min));
+      CHECK( contains(v, mid));
+      CHECK( contains(v, max));
+      CHECK(!contains(v, over));
+      CHECK(!contains(v, under));
+      CHECK(!contains(v, non_int));
+    }
+    TEST_CASE("get_entry")
+    {
+      //FIXME
+      //CHECK(equal(find(v, min)), nil);
+    }
+  };
+}
