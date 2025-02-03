@@ -2001,7 +2001,7 @@
   [coll n]
   (if (and (seq coll) (pos? n))
     (recur (next coll) (dec n))
-    coll))
+    (seq coll)))
 
 (defn nthrest
   "Returns the nth rest of coll, coll when n is 0."
