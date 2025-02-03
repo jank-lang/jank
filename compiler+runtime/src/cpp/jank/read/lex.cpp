@@ -309,7 +309,7 @@ namespace jank::read
     static native_bool is_special_char(char32_t const c)
     {
       return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
-        || c == '^' || c == '\\' || c == '`' || c == '~';
+        || c == '^' || c == '\\' || c == '`' || c == '~' || c == ',' || c == ';';
     }
 
     static native_bool is_symbol_char(char32_t const c)
@@ -740,8 +740,8 @@ namespace jank::read
                 pos,
                 fmt::format("unexpected end of radix {} number, expecting more digits", radix) });
             }
-            /* Tokens beginning with - are ambiguous; it's only a negative number if it has numbers
-             * to follow.
+            /* Tokens beginning with - are ambiguous; it's a negative number only if followed by a number, otherwise
+             * it's a symbol.
              * TODO: handle numbers starting with `+` */
             if(file[token_start] != '-' || (pos - token_start) >= 1)
             {
@@ -837,6 +837,7 @@ namespace jank::read
         case '<':
         case '>':
         case '%':
+        case '.':
           {
             auto &&e(check_whitespace(found_space));
             if(e.is_some())
@@ -890,11 +891,10 @@ namespace jank::read
 
             auto const oc(peek());
             auto const c(oc.expect_ok().character);
-            if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)))
+            if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
             {
               ++pos;
-              return err(
-                error{ token_start, "invalid keyword: expected non-whitespace character after :" });
+              return err(error{ token_start, "invalid keyword: must be non-empty" });
             }
 
             /* Support auto-resolved qualified keywords. */

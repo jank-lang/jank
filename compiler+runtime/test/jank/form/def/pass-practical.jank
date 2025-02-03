@@ -16,8 +16,8 @@
 (assert (= one-again 1))
 
 ; Nested definition, where the outer var holds the inner var.
-(def nested (def odd? true))
-(assert odd?)
+(def nested (def is-odd? true))
+(assert is-odd?)
 (assert (deref nested))
 
 (def a :default)

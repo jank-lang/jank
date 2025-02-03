@@ -4924,21 +4924,13 @@
     (fn [x y]
       (cond (pred x y) -1 (pred y x) 1 :else 0)))
 
-(defn sort
+(def sort
   "Returns a sorted sequence of the items in coll. If no comparator is
   supplied, uses compare.  comparator must implement
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  ([coll]
-   (sort compare coll))
-  ([#_java.util.Comparator comp coll]
-  ;;  (if (seq coll)
-  ;;    (let [a (to-array coll)]
-  ;;      (. java.util.Arrays (sort a comp))
-  ;;      (with-meta (seq a) (meta coll)))
-  ;;    ())
-   (throw "TODO: port")))
+  clojure.core-native/sort)
 
 (defn sort-by
   "Returns a sorted sequence of the items in coll, where the sort
