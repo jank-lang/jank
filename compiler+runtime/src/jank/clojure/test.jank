@@ -621,7 +621,7 @@
 (defn -workaround-get-test [v]
   (@-workaround-test-mappings v))
 (defn -workaround-var->ns [v]
-  (-> v str (subs 2) symbol namespace symbol the-ns))
+  (-> v symbol namespace symbol the-ns))
 
 (defmacro with-test
   "Takes any definition form (that returns a Var) as the first argument.
