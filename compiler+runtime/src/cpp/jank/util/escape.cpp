@@ -69,7 +69,7 @@ namespace jank::util
 
   native_persistent_string escape(native_persistent_string const &input)
   {
-    /* We can expect on relocation, since escaping anything bar \? will result in a larger string.
+    /* We can expect on relocation, since escaping results in an equal or larger length string.
      * I'm not going to guess at the stats, to predict a better allocation, until this shows
      * up in the profiler, though. */
     util::string_builder sb{ input.size() };
