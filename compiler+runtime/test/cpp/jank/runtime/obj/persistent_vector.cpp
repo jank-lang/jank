@@ -1,6 +1,5 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/core/seq.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -31,42 +30,42 @@ namespace jank::runtime::obj
 
     TEST_CASE("get")
     {
-      CHECK(equal(get(v, min), min_char));
-      CHECK(equal(get(v, mid), mid_char));
-      CHECK(equal(get(v, max), max_char));
-      CHECK(equal(get(v, over), nil));
-      CHECK(equal(get(v, under), nil));
-      CHECK(equal(get(v, non_int), nil));
+      CHECK(equal(v->get(min), min_char));
+      CHECK(equal(v->get(mid), mid_char));
+      CHECK(equal(v->get(max), max_char));
+      CHECK(equal(v->get(over), nil));
+      CHECK(equal(v->get(under), nil));
+      CHECK(equal(v->get(non_int), nil));
     }
     TEST_CASE("get with fallback")
     {
-      CHECK(equal(get(v, min, non_int), min_char));
-      CHECK(equal(get(v, mid, non_int), mid_char));
-      CHECK(equal(get(v, max, non_int), max_char));
-      CHECK(equal(get(v, over, non_int), non_int));
-      CHECK(equal(get(v, under, non_int), non_int));
-      CHECK(equal(get(v, non_int, non_int), non_int));
+      CHECK(equal(v->get(min, non_int), min_char));
+      CHECK(equal(v->get(mid, non_int), mid_char));
+      CHECK(equal(v->get(max, non_int), max_char));
+      CHECK(equal(v->get(over, non_int), non_int));
+      CHECK(equal(v->get(under, non_int), non_int));
+      CHECK(equal(v->get(non_int, non_int), non_int));
     }
     TEST_CASE("contains")
     {
-      CHECK(contains(v, min));
-      CHECK(contains(v, mid));
-      CHECK(contains(v, max));
-      CHECK(!contains(v, over));
-      CHECK(!contains(v, under));
-      CHECK(!contains(v, non_int));
+      CHECK(v->contains(min));
+      CHECK(v->contains(mid));
+      CHECK(v->contains(max));
+      CHECK(!v->contains(over));
+      CHECK(!v->contains(under));
+      CHECK(!v->contains(non_int));
     }
-    TEST_CASE("find")
+    TEST_CASE("get_entry")
     {
-      CHECK(equal(find(v, min),
+      CHECK(equal(v->get_entry(min),
                   make_box<persistent_vector>(std::in_place, min, min_char)));
-      CHECK(equal(find(v, mid),
+      CHECK(equal(v->get_entry(mid),
                   make_box<persistent_vector>(std::in_place, mid, mid_char)));
-      CHECK(equal(find(v, max),
+      CHECK(equal(v->get_entry(max),
                   make_box<persistent_vector>(std::in_place, max, max_char)));
-      CHECK(equal(find(v, over), nil));
-      CHECK(equal(find(v, under), nil));
-      CHECK(equal(find(v, non_int), nil));
+      CHECK(equal(v->get_entry(over), nil));
+      CHECK(equal(v->get_entry(under), nil));
+      CHECK(equal(v->get_entry(non_int), nil));
     }
   }
 }
