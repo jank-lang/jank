@@ -67,6 +67,7 @@ set(
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
   -Wold-style-cast -Wno-gnu-case-range
+  -Wno-cast-function-type-mismatch
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
