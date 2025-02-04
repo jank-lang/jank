@@ -1,7 +1,3 @@
-#include <jank/runtime/obj/character.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/nil.hpp>
-#include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
