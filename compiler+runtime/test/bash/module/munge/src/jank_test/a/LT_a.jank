@@ -1,2 +1,0 @@
-(ns jank-test.a.LT-a)
-(defn -main [] "jank-test.a.LT-a")
