@@ -169,7 +169,7 @@ namespace jank::evaluate
     arity.body.values.push_back(make_box<expression>(expr));
     arity.body.frame = arity.frame;
 
-    walk(arity, [&](auto const form) {
+    walk(arity, [&](auto const &form) {
       using T = std::decay_t<decltype(form)>;
 
       if constexpr(std::same_as<T, expr::local_reference>)
