@@ -8,17 +8,17 @@ namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_string")
   {
-    static persistent_string const s{ "foo bar" };
-    static auto const min{ make_box(0) };
-    static auto const min_char{ make_box('f') };
-    static auto const mid{ make_box(3) };
-    static auto const mid_char{ make_box(' ') };
-    static auto const max{ make_box(6) };
-    static auto const max_char{ make_box('r') };
-    static auto const over{ make_box(7) };
-    static auto const under{ make_box(-1) };
-    static auto const nil{ nil::nil_const() };
-    static auto const non_int{ make_box('z') };
+    persistent_string const s{ "foo bar" };
+    auto const min{ make_box(0) };
+    auto const min_char{ make_box('f') };
+    auto const mid{ make_box(3) };
+    auto const mid_char{ make_box(' ') };
+    auto const max{ make_box(6) };
+    auto const max_char{ make_box('r') };
+    auto const over{ make_box(7) };
+    auto const under{ make_box(-1) };
+    auto const nil{ nil::nil_const() };
+    auto const non_int{ make_box('z') };
     TEST_CASE("get")
     {
       CHECK(equal(s.get(min), min_char));
