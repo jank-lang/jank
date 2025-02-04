@@ -60,7 +60,7 @@ namespace jank::runtime::obj
       }
       catch(std::exception const &e)
       {
-        auto const actual{ fmt::format("{}", e.what()) };
+        std::string const actual{ e.what() };
         auto const expected{ "get_entry not supported on string" };
         CHECK_EQ(actual, expected);
       }
