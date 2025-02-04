@@ -34,8 +34,6 @@ option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
-set(CMAKE_REQUIRED_LIBRARIES unwind)
-
 find_package(Git REQUIRED)
 execute_process(
   COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
@@ -270,39 +268,18 @@ find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
 find_package(BDWgc REQUIRED)
 
-# target_link_libraries(
-#   jank_lib PRIVATE
-#   fmt::fmt
-#   ${BDWGC_LIBRARIES}
-#   libzippp::libzippp
-#   # TODO: How can we force clang/llvm to be shared?
-#   clang
-#   clang-cpp
-#   LLVM
-#   Boost::filesystem
-#   OpenSSL::Crypto
-#   unwind
-# )
-
-
-find_library(UNWIND_LIB NAMES unwind HINTS /usr/lib/x86_64-linux-gnu REQUIRED)
-
-
-  target_link_libraries(
-   jank_lib PRIVATE
-   fmt::fmt
-   ${BDWGC_LIBRARIES}
-   libzippp::libzippp
-   # TODO: How can we force clang/llvm to be shared?
-   clang
-   clang-cpp
-   LLVM
-   Boost::filesystem
-   OpenSSL::Crypto
-   ${UNWIND_LIB}
-  )  
-
-
+target_link_libraries(
+  jank_lib PRIVATE
+  fmt::fmt
+  ${BDWGC_LIBRARIES}
+  libzippp::libzippp
+  # TODO: How can we force clang/llvm to be shared?
+  clang
+  clang-cpp
+  LLVM
+  Boost::filesystem
+  OpenSSL::Crypto
+)
 
 jank_hook_llvm(jank_lib)
 
@@ -432,8 +409,6 @@ target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
-link_directories(/usr/lib/x86_64-linux-gnu)
-
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
@@ -441,7 +416,6 @@ target_link_libraries(
   folly_lib
   fmt::fmt
   Boost::filesystem
-  ${UNWIND_LIB}
 )
 
 jank_hook_llvm(jank_exe)
