@@ -8,3 +8,6 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 rm -f "${here}/../build"/jank-*.profraw "${here}/../build"/jank.profdata
 
 "${here}/compile" && "${here}/../build/jank-test" "$@"
+
+export PATH="${here}/../build:${PATH}"
+"${here}/../test/bash/test-all"
