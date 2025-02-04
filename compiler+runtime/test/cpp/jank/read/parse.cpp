@@ -361,9 +361,8 @@ namespace jank::read::parse
         auto const &s{ "?" };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, make_box(s)));
-        auto const escaped(util::escape(s));
         CHECK(r.expect_ok().unwrap().start
-              == lex::token{ 1, 3, lex::token_kind::string, "?" });
+              == lex::token{ 0, 4, lex::token_kind::escaped_string, "\\?" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
     }
