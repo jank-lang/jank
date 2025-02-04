@@ -17,8 +17,8 @@
           extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
           passed? (volatile! true)]
       (doseq [test-file test-files]
-        (let [expect-pass? (clojure.string/ends-with? (str test-file) "pass-test")
-              skip? (clojure.string/ends-with? (str test-file) "skip-test")
+        (let [skip? (clojure.string/ends-with? (str test-file) "skip-test")
+              expect-failure? (clojure.string/ends-with? (str test-file) "fail-test")
               dirname (b.f/parent test-file)
               relative-dirname (b.f/relativize bash-test-dir dirname)
               unexpected-result (volatile! nil)]
@@ -30,13 +30,14 @@
                                        :dir dirname
                                        :extra-env extra-env}
                                       test-file)]
-                (when (and (zero? (:exit res)) expect-pass?)
+                (when (or (and (zero? (:exit res)) expect-failure?)
+                          (and (not (zero? (:exit res))) (not expect-failure?)))
                   (vreset! unexpected-result res)))
               (if-some [res @unexpected-result]
                 (do
                   (vreset! passed? false)
                   (println (:out res))
-                  (util/log-error-with-time duration "Failed " relative-dirname))
+                  (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))
                 (util/log-info-with-time duration "Tested " relative-dirname))))))
 
       (when-not @passed?
