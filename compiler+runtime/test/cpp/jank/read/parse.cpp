@@ -358,9 +358,8 @@ namespace jank::read::parse
       {
         lex::processor lp{ R"("\?")" };
         processor p{ lp.begin(), lp.end() };
-        auto const &s{ "?" };
         auto const r(p.next());
-        CHECK(equal(r.expect_ok().unwrap().ptr, make_box(s)));
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box("?")));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 4, lex::token_kind::escaped_string, "\\?" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
