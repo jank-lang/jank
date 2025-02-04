@@ -1,9 +1,4 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/obj/persistent_string.hpp>
-#include <jank/runtime/obj/character.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/core.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
