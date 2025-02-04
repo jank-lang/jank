@@ -1,8 +1,5 @@
-#include "jank/runtime/obj/persistent_vector.hpp"
 #include <algorithm>
 #include <fmt/core.h>
-#include <iostream>
-#include <ostream>
 #include <random>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -22,7 +19,7 @@
 #include <jank/runtime/behavior/chunkable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
-
+#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime
 {
@@ -1224,16 +1221,14 @@ namespace jank::runtime
           vec.push_back(it->first());
         }
 
-	std::random_device rd;  // Seed for the random number generator
-	std::mt19937 g(rd());   // Mersenne Twister PRNG
+        std::random_device rd; // Seed for the random number generator
+        std::mt19937 g(rd()); // Mersenne Twister PRNG
+        std::shuffle(vec.begin(), vec.end(), g);
 
-	std::shuffle(vec.begin(), vec.end(), g);
-
-	return make_box<obj::persistent_vector>(runtime::detail::native_persistent_vector{
-	    vec.begin(), vec.end()
-	  });
+        return make_box<obj::persistent_vector>(
+          runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
       },
       coll);
   }
-  
+
 }

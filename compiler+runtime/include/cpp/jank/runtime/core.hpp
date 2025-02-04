@@ -63,7 +63,8 @@ namespace jank::runtime
   object_ptr swap_atom(object_ptr atom, object_ptr fn);
   object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1);
   object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
-  object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
+  object_ptr
+  swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
   object_ptr swap_vals(object_ptr atom, object_ptr fn);
   object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1);
   object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);

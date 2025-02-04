@@ -478,10 +478,10 @@ namespace jank::runtime
   }
 
   object_ptr swap_atom(object_ptr const atom,
-                  object_ptr const fn,
-                  object_ptr const a1,
-                  object_ptr const a2,
-                  object_ptr const rest)
+                       object_ptr const fn,
+                       object_ptr const a1,
+                       object_ptr const a2,
+                       object_ptr const rest)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
   }

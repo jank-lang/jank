@@ -6944,14 +6944,6 @@ fails, attempts to require sym's namespace and retries."
        (let [seg (into [] (take n) coll)]
          (cons seg (partitionv-all n step (drop step s))))))))
 
-#_(defn shuffle
-  "Return a random permutation of coll"
-  [#_java.util.Collection coll]
-  ;; (let [al (java.util.ArrayList. coll)]
-  ;;   (java.util.Collections/shuffle al)
-  ;;   (clojure.lang.RT/vector (.toArray al)))
-  (throw "TODO: port shuffle"))
-
 (def shuffle
   "Return a random permutation of coll"
   clojure.core-native/shuffle)
