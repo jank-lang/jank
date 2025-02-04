@@ -1444,6 +1444,15 @@ namespace jank::read::lex
                 { 0, 3, token_kind::string, "a"sv }
         }));
       }
+      SUBCASE("Question mark")
+      {
+        processor p{ "\"?\"" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::string, "?"sv }
+        }));
+      }
 
       SUBCASE("Multi-char")
       {
