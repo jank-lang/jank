@@ -5,6 +5,18 @@
 
 namespace jank::util
 {
+  /* Converts escape sequences (2 characters) to their mapped (single) character:
+   *  \n => '\n'
+   *  \t => '\t'
+   *  \r => '\r'
+   *  \\ => '\\'
+   *  \" => '"'
+   *  \a => '\a'
+   *  \v => '\v'
+   *  \? => '?'
+   *  \f => '\f'
+   *  \b => '\b'
+   * */
   result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
   {
     util::string_builder sb{ input.size() };
@@ -67,9 +79,20 @@ namespace jank::util
     return ok(sb.release());
   }
 
+  /* Converts the following (single) characters to their escape sequences (2 characters):
+   *  '\n' => \n
+   *  '\t' => \t
+   *  '\r' => \r
+   *  '\\' => \\
+   *  '"'  => \"
+   *  '\a' => \a
+   *  '\v' => \v
+   *  '\f' => \f
+   *  '\b' => \b
+   * */
   native_persistent_string escape(native_persistent_string const &input)
   {
-    /* We can expect on relocation, since escaping results in an equal or larger length string.
+    /* We can expect on relocation, since escaping anything will result in a larger string.
      * I'm not going to guess at the stats, to predict a better allocation, until this shows
      * up in the profiler, though. */
     util::string_builder sb{ input.size() };
