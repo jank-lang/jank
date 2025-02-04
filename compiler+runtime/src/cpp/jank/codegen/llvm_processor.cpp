@@ -128,7 +128,7 @@ namespace jank::codegen
 
     /* JIT loaded object files don't support global ctors, so we need to call our manually.
      * Fortunately, we have our load function which we can hook into. So, if we're compiling
-     * a module and we've just created the load function for that module, the first thing
+     * a module and we've just created the load function fo that module, the first thing
      * we want to do is call our global ctor. */
     if(target == compilation_target::module
        && root_fn.unique_name == module::module_to_load_function(ctx->module_name))
