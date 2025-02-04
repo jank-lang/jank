@@ -505,7 +505,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("tagged-literal?", &is_tagged_literal);
   intern_fn("sorted?", &is_sorted);
   intern_fn("sort", &sort);
-  intern_fn("shuffle", &shuffle);  
+  intern_fn("shuffle", &shuffle);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));
