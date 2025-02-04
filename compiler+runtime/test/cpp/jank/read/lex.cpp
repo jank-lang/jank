@@ -1455,7 +1455,7 @@ namespace jank::read::lex
       }
       SUBCASE("Escaped Question mark")
       {
-        processor p{ "\"\\?\"" };
+        processor p{ R"("\?")" };
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
