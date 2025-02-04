@@ -285,13 +285,6 @@ namespace jank::runtime
     return munged;
   }
 
-  native_persistent_string munge_namespace(native_persistent_string const &o)
-  {
-    static std::regex const dash{ "-" };
-    native_transient_string const ret{ o };
-    return std::regex_replace(ret, dash, "_");
-  }
-
   native_persistent_string munge_extra(native_persistent_string const &o,
                                        native_persistent_string const &search,
                                        char const * const replace)

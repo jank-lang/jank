@@ -19,26 +19,34 @@
 
 namespace jank::runtime::module
 {
-  /* This turns `foo_bar/spam/meow.cljc` into `foo_bar/spam/meow`. */
-  native_persistent_string path_to_resource(boost::filesystem::path const &path)
+  /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
+  native_persistent_string path_to_module(boost::filesystem::path const &path)
   {
-    auto const &s(path.string());
-    std::string const ret{ s, 0, s.size() - path.extension().size() };
+    static std::regex const slash{ "/" };
+
+    auto const &s(runtime::demunge(path.string()));
+    std::string ret{ s, 0, s.size() - path.extension().size() };
+
+    /* There's a special case of the / function which shouldn't be treated as a path. */
+    if(ret.find("$/") == std::string::npos)
+    {
+      ret = std::regex_replace(ret, slash, ".");
+    }
+
     return ret;
   }
 
-  /* This turns `foo-bar.spam.meow` into `foo_bar/spam/meow` */
-  native_persistent_string module_to_resource(native_persistent_string_view const &module)
+  native_persistent_string module_to_path(native_persistent_string_view const &module)
   {
-    static std::regex const dot{ "\\." };
-    native_transient_string const ret{ runtime::munge_namespace(module) };
-    return std::regex_replace(ret, dot, "/");
+    static native_persistent_string const dot{ "\\." };
+    return runtime::munge_extra(module, dot, "/");
   }
 
   native_persistent_string module_to_load_function(native_persistent_string_view const &module)
   {
     static native_persistent_string const dot{ "\\." };
     std::string ret{ runtime::munge_extra(module, dot, "_") };
+
     return fmt::format("jank_load_{}", ret);
   }
 
@@ -141,7 +149,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.jank = entry;
-      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.jank = entry;
@@ -152,7 +160,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cljc = entry;
-      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cljc = entry;
@@ -163,7 +171,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cpp = entry;
-      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cpp = entry;
@@ -174,7 +182,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.o = entry;
-      auto res(entries.insert({ path_to_resource(module_path), std::move(e) }));
+      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.o = entry;
@@ -187,7 +195,7 @@ namespace jank::runtime::module
       //               entry.archive_path.unwrap_or("None"),
       //               entry.path,
       //               module_path.string(),
-      //               path_to_resource(module_path));
+      //               path_to_module(module_path));
     }
   }
 
@@ -340,9 +348,10 @@ namespace jank::runtime::module
   string_result<loader::find_result>
   loader::find(native_persistent_string_view const &module, origin const ori)
   {
-    native_transient_string resource{ module };
-    resource = module_to_resource(resource);
-    auto const &entry(entries.find(resource));
+    static std::regex const underscore{ "_" };
+    native_transient_string patched_module{ module };
+    patched_module = std::regex_replace(patched_module, underscore, "-");
+    auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
       return err(fmt::format("unable to find module: {}", module));
