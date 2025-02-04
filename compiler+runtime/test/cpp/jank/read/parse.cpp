@@ -315,11 +315,11 @@ namespace jank::read::parse
     {
       SUBCASE("Unescaped")
       {
-        lex::processor lp{ R"("foo" "bar")" };
+        lex::processor lp{ R"("foo" "bar" "?")" };
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(auto const &s : { "foo", "bar" })
+        for(auto const &s : { "foo", "bar", "?" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box(s)));
@@ -336,10 +336,10 @@ namespace jank::read::parse
 
       SUBCASE("Escaped")
       {
-        lex::processor lp{ R"("foo\n" "\t\"bar\"" "\r" "\a" "\?" "\f" "\b")" };
+        lex::processor lp{ R"("foo\n" "\t\"bar\"" "\r" "\a" "\f" "\b")" };
         processor p{ lp.begin(), lp.end() };
         size_t offset{};
-        for(auto const &s : { "foo\n", "\t\"bar\"", "\r", "\a", "\?", "\f", "\b" })
+        for(auto const &s : { "foo\n", "\t\"bar\"", "\r", "\a", "\f", "\b" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box(s)));

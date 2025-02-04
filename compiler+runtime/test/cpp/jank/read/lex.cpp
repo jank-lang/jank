@@ -1507,7 +1507,7 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens2(q.begin(), q.end());
         CHECK(tokens2
               == make_tokens({
-                { 0, 26, token_kind::escaped_string, "\\\?\?\\' \\\\ a\\a b\\b f\\f v\\v"sv }
+                { 0, 26, token_kind::escaped_string, "\\??\\' \\\\ a\\a b\\b f\\f v\\v"sv }
         }));
       }
 

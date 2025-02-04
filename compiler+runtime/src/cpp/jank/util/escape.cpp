@@ -48,9 +48,6 @@ namespace jank::util
           case 'v':
             sb('\v');
             break;
-          case '?':
-            sb('\?');
-            break;
           case 'f':
             sb('\f');
             break;
@@ -107,7 +104,6 @@ namespace jank::util
           sb('v');
           break;
         case '\?':
-          sb('\\');
           sb('?');
           break;
         case '\f':
