@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+pushd "${here}/../"
+  lein install
+popd
+
+pushd "${here}"
+  lein jank run 1 | grep 'lein jank works!'
+popd
