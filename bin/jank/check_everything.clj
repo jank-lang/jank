@@ -1,6 +1,6 @@
 #!/usr/bin/env bb
 
-(ns jank.test-everything
+(ns jank.check-everything
   (:require [jank.compiler+runtime.core]
             [jank.clojure-cli.core]
             [jank.lein-jank.core]

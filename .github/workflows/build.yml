@@ -54,4 +54,4 @@ jobs:
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           chmod +x install-bb
           sudo ./install-bb
-          ./bin/jank/test_everything.clj
+          ./bin/jank/check_everything.clj
