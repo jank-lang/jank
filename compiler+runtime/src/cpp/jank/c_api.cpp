@@ -493,22 +493,31 @@ extern "C"
 
   void jank_function_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_0 = reinterpret_cast<function_arity<0>>(f);
+#pragma clang diagnostic pop
   }
 
   void
   jank_function_set_arity1(jank_object_ptr const fn, jank_object_ptr (* const f)(jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_1 = reinterpret_cast<function_arity<1>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity2(jank_object_ptr const fn,
                                 jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_2 = reinterpret_cast<function_arity<2>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity3(jank_object_ptr const fn,
@@ -516,16 +525,22 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_3 = reinterpret_cast<function_arity<3>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity4(
     jank_object_ptr fn,
     jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr, jank_object_ptr, jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_4 = reinterpret_cast<function_arity<4>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity5(jank_object_ptr fn,
@@ -535,8 +550,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_5 = reinterpret_cast<function_arity<5>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity6(jank_object_ptr fn,
@@ -547,8 +565,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_6 = reinterpret_cast<function_arity<6>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity7(jank_object_ptr fn,
@@ -560,8 +581,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_7 = reinterpret_cast<function_arity<7>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity8(jank_object_ptr fn,
@@ -574,8 +598,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_8 = reinterpret_cast<function_arity<8>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity9(jank_object_ptr fn,
@@ -589,8 +616,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_9 = reinterpret_cast<function_arity<9>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_function_set_arity10(jank_object_ptr fn,
@@ -605,8 +635,11 @@ extern "C"
                                                              jank_object_ptr,
                                                              jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_10 = reinterpret_cast<function_arity<10>>(f);
+#pragma clang diagnostic pop
   }
 
   jank_object_ptr jank_closure_create(jank_arity_flags const arity_flags, void * const context)
@@ -616,22 +649,31 @@ extern "C"
 
   void jank_closure_set_arity0(jank_object_ptr const fn, jank_object_ptr (* const f)())
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_0 = reinterpret_cast<closure_arity<0>>(f);
+#pragma clang diagnostic pop
   }
 
   void
   jank_closure_set_arity1(jank_object_ptr const fn, jank_object_ptr (* const f)(jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_1 = reinterpret_cast<closure_arity<1>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity2(jank_object_ptr const fn,
                                jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_2 = reinterpret_cast<closure_arity<2>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity3(jank_object_ptr const fn,
@@ -639,16 +681,22 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_3 = reinterpret_cast<closure_arity<3>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity4(
     jank_object_ptr fn,
     jank_object_ptr (* const f)(jank_object_ptr, jank_object_ptr, jank_object_ptr, jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_4 = reinterpret_cast<closure_arity<4>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity5(jank_object_ptr fn,
@@ -658,8 +706,11 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_5 = reinterpret_cast<closure_arity<5>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity6(jank_object_ptr fn,
@@ -670,8 +721,11 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_6 = reinterpret_cast<closure_arity<6>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity7(jank_object_ptr fn,
@@ -683,8 +737,11 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_7 = reinterpret_cast<closure_arity<7>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity8(jank_object_ptr fn,
@@ -697,8 +754,11 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_8 = reinterpret_cast<closure_arity<8>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity9(jank_object_ptr fn,
@@ -712,8 +772,11 @@ extern "C"
                                                            jank_object_ptr,
                                                            jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_9 = reinterpret_cast<closure_arity<9>>(f);
+#pragma clang diagnostic pop
   }
 
   void jank_closure_set_arity10(jank_object_ptr fn,
@@ -728,8 +791,11 @@ extern "C"
                                                             jank_object_ptr,
                                                             jank_object_ptr))
   {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
     auto const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_10 = reinterpret_cast<closure_arity<10>>(f);
+#pragma clang diagnostic pop
   }
 
   jank_native_bool jank_truthy(jank_object_ptr const o)

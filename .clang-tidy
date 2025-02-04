@@ -11,7 +11,6 @@ misc-static-assert,\
 misc-redundant-expression,\
 misc-misleading-identifier,\
 misc-definitions-in-headers,\
--clang-diagnostic-cast-function-type-mismatch,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
 -clang-analyzer-cplusplus.NewDelete,\
 -modernize-use-trailing-return-type,\
