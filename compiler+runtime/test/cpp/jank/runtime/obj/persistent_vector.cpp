@@ -8,15 +8,14 @@ namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_vector")
   {
-    static auto const v{
-      make_box<persistent_vector>(std::in_place,
-          make_box('f'),
-          make_box('o'),
-          make_box('o'),
-          make_box(' '),
-          make_box('b'),
-          make_box('a'),
-          make_box('r')) };
+    static auto const v{ make_box<persistent_vector>(std::in_place,
+                                                     make_box('f'),
+                                                     make_box('o'),
+                                                     make_box('o'),
+                                                     make_box(' '),
+                                                     make_box('b'),
+                                                     make_box('a'),
+                                                     make_box('r')) };
     static auto const min{ make_box(0) };
     static auto const min_char{ make_box('f') };
     static auto const mid{ make_box(3) };
@@ -57,12 +56,9 @@ namespace jank::runtime::obj
     }
     TEST_CASE("get_entry")
     {
-      CHECK(equal(v->get_entry(min),
-                  make_box<persistent_vector>(std::in_place, min, min_char)));
-      CHECK(equal(v->get_entry(mid),
-                  make_box<persistent_vector>(std::in_place, mid, mid_char)));
-      CHECK(equal(v->get_entry(max),
-                  make_box<persistent_vector>(std::in_place, max, max_char)));
+      CHECK(equal(v->get_entry(min), make_box<persistent_vector>(std::in_place, min, min_char)));
+      CHECK(equal(v->get_entry(mid), make_box<persistent_vector>(std::in_place, mid, mid_char)));
+      CHECK(equal(v->get_entry(max), make_box<persistent_vector>(std::in_place, max, max_char)));
       CHECK(equal(v->get_entry(over), nil));
       CHECK(equal(v->get_entry(under), nil));
       CHECK(equal(v->get_entry(non_int), nil));
