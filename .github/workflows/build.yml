@@ -12,29 +12,36 @@ jobs:
         include:
           # Ubuntu
           ## Lint all sources
-          - os: ubuntu-24.04
+          - name: Ubuntu - lint
+            os: ubuntu-24.04
             lint: true
           ## Debug + clang-tidy + coverage
-          - os: ubuntu-24.04
+          - name: Ubuntu - debug, analysis, coverage
+            os: ubuntu-24.04
             build_type: Debug
             sanitize: none
             coverage: on
             analyze: on
           ## Debug + sanitization
-          - os: ubuntu-24.04
+          - name: Ubuntu - address sanitizer
+            os: ubuntu-24.04
             build_type: Debug
             sanitize: address
-          - os: ubuntu-24.04
+          - name: Ubuntu - undefined behavior sanitizer
+            os: ubuntu-24.04
             build_type: Debug
             sanitize: undefined
-          - os: ubuntu-24.04
+          - name: Ubuntu - thread sanitizer
+            os: ubuntu-24.04
             build_type: Debug
             sanitize: thread
           ## Release
-          - os: ubuntu-24.04
+          - name: Ubuntu - release
+            os: ubuntu-24.04
             build_type: Release
             sanitize: none
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     env:
       JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
       JANK_BUILD_TYPE: ${{ matrix.build_type }}
