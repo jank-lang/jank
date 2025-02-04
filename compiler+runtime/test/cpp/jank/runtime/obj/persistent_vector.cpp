@@ -61,11 +61,11 @@ namespace jank::runtime::obj
     TEST_CASE("find")
     {
       CHECK(equal(find(v, min),
-                  persistent_vector::empty()->conj(make_box(min))->conj(make_box(min_char))));
+                  make_box<persistent_vector>(std::in_place, min, min_char)));
       CHECK(equal(find(v, mid),
-                  persistent_vector::empty()->conj(make_box(mid))->conj(make_box(mid_char))));
+                  make_box<persistent_vector>(std::in_place, mid, mid_char)));
       CHECK(equal(find(v, max),
-                  persistent_vector::empty()->conj(make_box(max))->conj(make_box(max_char))));
+                  make_box<persistent_vector>(std::in_place, max, max_char)));
       CHECK(equal(find(v, over), nil));
       CHECK(equal(find(v, under), nil));
       CHECK(equal(find(v, non_int), nil));
