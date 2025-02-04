@@ -1,7 +1,6 @@
 #include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
-#include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/rtti.hpp>

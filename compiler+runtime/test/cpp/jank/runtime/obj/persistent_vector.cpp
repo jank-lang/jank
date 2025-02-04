@@ -11,14 +11,15 @@ namespace jank::runtime::obj
 {
   TEST_SUITE("persistent_vector")
   {
-    static persistent_vector_ptr const v(persistent_vector::empty()
-                                           ->conj(make_box('f'))
-                                           ->conj(make_box('o'))
-                                           ->conj(make_box('o'))
-                                           ->conj(make_box(' '))
-                                           ->conj(make_box('b'))
-                                           ->conj(make_box('a'))
-                                           ->conj(make_box('r')));
+    static auto const v{
+      make_box<persistent_vector>(std::in_place,
+          make_box('f'),
+          make_box('o'),
+          make_box('o'),
+          make_box(' '),
+          make_box('b'),
+          make_box('a'),
+          make_box('r')) };
     static auto const min{ make_box(0) };
     static auto const min_char{ make_box('f') };
     static auto const mid{ make_box(3) };
