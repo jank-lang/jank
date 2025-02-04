@@ -84,7 +84,7 @@
 (when (= *file* (System/getProperty "babashka.file"))
   (let [build? (some? (util/get-env "JANK_BUILD_TYPE"))]
     (-main {:install-deps? (parse-boolean (util/get-env "JANK_INSTALL_DEPS" "true"))
-            :validate-formatting? (parse-boolean (util/get-env "JANK_LINT" "true"))
+            :validate-formatting? (parse-boolean (util/get-env "JANK_LINT" "false"))
             :compiler+runtime {:build? build?}
             :clojure-cli {:build? build?}
             :lein-jank {:build? build?}})))

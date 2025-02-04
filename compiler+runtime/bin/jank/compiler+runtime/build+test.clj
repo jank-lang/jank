@@ -22,7 +22,7 @@
           configure-flags ["-GNinja"
                            "-Djank_tests=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
-                           (str "-Djank_analysis=" analyze)
+                           (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
                            (str "-Djank_coverage=" coverage)]
           configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))]
