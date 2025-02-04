@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <fmt/core.h>
 #include <random>
+#include <fmt/core.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
@@ -19,7 +19,6 @@
 #include <jank/runtime/behavior/chunkable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime
 {
@@ -1221,8 +1220,8 @@ namespace jank::runtime
           vec.push_back(it->first());
         }
 
-        std::random_device rd; // Seed for the random number generator
-        std::mt19937 g(rd()); // Mersenne Twister PRNG
+        static std::random_device rd;
+        std::mt19937 g(rd());
         std::shuffle(vec.begin(), vec.end(), g);
 
         return make_box<obj::persistent_vector>(
