@@ -1999,9 +1999,11 @@
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
   [coll n]
-  (if (and (seq coll) (pos? n))
-    (recur (next coll) (dec n))
-    (seq coll)))
+  ;; TODO add support for IDrop
+  (loop [n n xs (seq coll)]
+    (if (and xs (pos? n))
+      (recur (dec n) (next xs))
+      xs)))
 
 (defn nthrest
   "Returns the nth rest of coll, coll when n is 0."
