@@ -940,7 +940,7 @@ namespace jank::read
             {
               return err(std::move(e.unwrap()));
             }
-            auto const token_start(pos);
+            auto token_start(pos);
             native_bool escaped{}, contains_escape{};
             while(true)
             {
@@ -960,8 +960,10 @@ namespace jank::read
               {
                 switch(oc.expect_ok().character)
                 {
-                  case '"':
                   case '?':
+                    contains_escape = false;
+                    ++token_start;
+                  case '"':
                   case '\'':
                   case '\\':
                   case 'a':
