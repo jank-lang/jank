@@ -271,7 +271,8 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      register_entry(entries, p.string(), { none, p.string() });
+      auto const module_path(p.string());
+      register_entry(entries, module_path, { none, module_path });
     }
   }
 
