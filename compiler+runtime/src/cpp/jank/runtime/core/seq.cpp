@@ -1082,7 +1082,7 @@ namespace jank::runtime
 
   object_ptr chunk_buffer(object_ptr const capacity)
   {
-    return make_box<obj::chunk_buffer>(static_cast<size_t>(to_int(capacity)));
+    return make_box<obj::chunk_buffer>(capacity);
   }
 
   object_ptr chunk_append(object_ptr const buff, object_ptr const val)

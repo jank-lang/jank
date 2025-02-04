@@ -227,19 +227,7 @@ namespace jank::runtime::obj
 
   object_ptr persistent_vector::get(object_ptr const key) const
   {
-    if(key->type == object_type::integer)
-    {
-      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-      if(data.size() <= i)
-      {
-        return nil::nil_const();
-      }
-      return data[i];
-    }
-    else
-    {
-      return nil::nil_const();
-    }
+    return get(key, nil::nil_const());
   }
 
   object_ptr persistent_vector::get(object_ptr const key, object_ptr const fallback) const
@@ -314,8 +302,8 @@ namespace jank::runtime::obj
   {
     if(index->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(index)->data));
-      if(data.size() <= i)
+      auto const i(expect_object<integer>(index)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
           fmt::format("out of bounds index {}; vector has a size of {}", i, data.size())
