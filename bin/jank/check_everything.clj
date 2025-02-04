@@ -20,6 +20,8 @@
 
                    "Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
 
+; TODO: Cache these deps using https://github.com/actions/cache/
+; Maybe follow this sort of thing: https://github.com/gerlero/apt-install/blob/main/action.yml
 (defmulti install-deps
   (fn []
     (System/getProperty "os.name")))
