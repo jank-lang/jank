@@ -1224,69 +1224,16 @@ namespace jank::runtime
           vec.push_back(it->first());
         }
 
-	std::cout << "1111" << std::endl;
-
 	std::random_device rd;  // Seed for the random number generator
 	std::mt19937 g(rd());   // Mersenne Twister PRNG
 
-	std::cout << "2222" << std::endl;
-	auto x(vec.begin());
-	std::cout << "3333" << std::endl;
-	auto y(vec.end());
-	std::cout << "4444" << std::endl;
-	std::shuffle(x, y, g);
-	std::cout << "5555" << std::endl;
-        
-        using T = typename decltype(typed_coll)::value_type;
+	std::shuffle(vec.begin(), vec.end(), g);
 
-        if constexpr(behavior::metadatable<T>)
-        {
-          return make_box<obj::native_vector_sequence>(typed_coll->meta, std::move(vec));
-        }
-        else
-        {
-          return make_box<obj::native_vector_sequence>(std::move(vec));
-        }
+	return make_box<obj::persistent_vector>(runtime::detail::native_persistent_vector{
+	    vec.begin(), vec.end()
+	  });
       },
       coll);
   }
-
-  
-  // object_ptr shuffle(object_ptr const coll)
-  // {
-  //   return visit_seqable(
-  //     [](auto const typed_coll) -> object_ptr {
-  //       native_vector<object_ptr> vec;
-  //       for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
-  //       {
-  //         vec.push_back(it->first());
-  //       }
-
-  // 	std::random_device rd;  // Seed for the random number generator
-  // 	std::mt19937 g(rd());   // Mersenne Twister PRNG
-
-  //       std::shuffle(vec.begin(), vec.end(), g);
-
-  //       // using T = typename decltype(typed_coll)::value_type;
-
-  //       // if constexpr(behavior::metadatable<T>)
-  //       // {
-  // 	//   return make_box<obj::persistent_vector>(typed_coll->meta, std::move(vec));
-  //       // }
-  //       // else
-  //       // {
-  // 	//auto x(vec.data());
-  // 	//return make_box<obj::persistent_vector>(std::move(vec));
-  // 	return make_box<obj::persistent_vector>(runtime::detail::native_persistent_vector{
-  //                       make_box<obj::integer>(1),
-  //                       make_box<obj::integer>(2),
-  //                       make_box<obj::integer>(3),
-  // 			make_box<obj::integer>(4),});
-  // 	//return make_box<obj::persistent_vector>(
-  // 	// detail::native_persistent_vector{ vec.begin(), vec.end()});
-  // 	  //        }
-  //     },
-  //     coll);
-  // }
   
 }
