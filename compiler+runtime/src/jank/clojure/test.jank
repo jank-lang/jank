@@ -400,7 +400,6 @@
    (println (:fail m) "failures," (:error m) "errors.")))
 
 (defmethod report :begin-test-ns [m]
-  (println "in defmethod :begin-test-ns")
   (with-test-out
    (println "\nTesting" (ns-name (:ns m)))))
 
