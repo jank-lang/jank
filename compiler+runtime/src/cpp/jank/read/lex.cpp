@@ -1047,6 +1047,37 @@ namespace jank::read
                                      token_kind::reader_macro_conditional });
                   }
                 }
+              case '!':
+                {
+                  while(true)
+                  {
+                    auto const oc(peek());
+                    if(oc.is_err())
+                    {
+                      break;
+                    }
+                    auto const c(oc.expect_ok().character);
+                    if(c == '\n')
+                    {
+                      break;
+                    }
+
+                    ++pos;
+                  }
+
+                  ++pos;
+                  if(pos == token_start + 2)
+                  {
+                    return ok(token{ token_start, 1, token_kind::comment, ""sv });
+                  }
+                  else
+                  {
+                    size_t length = pos - token_start - 2;
+                    native_persistent_string_view const comment{ file.data() + token_start + 2,
+                                                                 length };
+                    return ok(token{ token_start, length, token_kind::comment, comment });
+                  }
+                }
               default:
                 break;
             }
