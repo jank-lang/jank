@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -xeuo pipefail
 if [ -z ${ALIAS+x} ]; then
   ALIAS=""
 else

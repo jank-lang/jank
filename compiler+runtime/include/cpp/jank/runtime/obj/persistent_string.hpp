@@ -38,6 +38,12 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     native_integer compare(persistent_string const &) const;
 
+    /* behavior::associatively_readable */
+    object_ptr get(object_ptr const key) const;
+    object_ptr get(object_ptr const key, object_ptr const fallback) const;
+    object_ptr get_entry(object_ptr key) const;
+    native_bool contains(object_ptr key) const;
+
     string_result<persistent_string_ptr> substring(native_integer start) const;
     string_result<persistent_string_ptr> substring(native_integer start, native_integer end) const;
 

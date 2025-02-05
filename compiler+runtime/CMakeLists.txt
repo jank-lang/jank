@@ -31,7 +31,7 @@ project(
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
-option(jank_analysis "Enable static analysis" OFF)
+option(jank_analyze "Enable static analysis" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
@@ -105,7 +105,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
 endif()
 
 include(cmake/coverage.cmake)
-include(cmake/analysis.cmake)
+include(cmake/analyze.cmake)
 include(cmake/sanitization.cmake)
 
 # Enable easier tooling during development.
@@ -435,7 +435,10 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
+    test/cpp/jank/runtime/obj/persistent_string.cpp
+    test/cpp/jank/runtime/obj/persistent_vector.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
