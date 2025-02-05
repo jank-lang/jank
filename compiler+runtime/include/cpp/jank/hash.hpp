@@ -39,7 +39,7 @@ namespace jank::hash
   uint32_t unordered(runtime::object const * const sequence);
 
   template <typename It>
-  uint32_t ordered(It const begin, It const end)
+  uint32_t ordered(It const &begin, It const &end)
   {
     uint32_t n{};
     uint32_t hash{ 1 };
@@ -54,7 +54,7 @@ namespace jank::hash
   }
 
   template <typename It>
-  uint32_t unordered(It const begin, It const end)
+  uint32_t unordered(It const &begin, It const &end)
   {
     using T = typename std::iterator_traits<It>::value_type;
 

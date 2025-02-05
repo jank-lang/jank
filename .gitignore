@@ -46,3 +46,7 @@ rust/jank
 
 # secrets
 .github_access_token
+
+# CI thingies
+/llvm.sh
+/linux-install.sh
