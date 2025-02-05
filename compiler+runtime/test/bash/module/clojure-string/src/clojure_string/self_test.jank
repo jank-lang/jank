@@ -51,5 +51,5 @@
     (let [s "asdf"]
       (assert (= "ASDF" (str/upper-case "asdf")))
       (assert (= "asdf" s) "original string mutated"))
-    (println :success)
+    (println :successfully-tested-clojure-string-self-test)
     (catch e (prn e) (println :fail))))
