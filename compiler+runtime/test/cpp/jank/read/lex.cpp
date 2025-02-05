@@ -1592,6 +1592,85 @@ namespace jank::read::lex
         }
       }
 
+      SUBCASE("Shebang Comments")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "#!" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::comment, ""sv }
+          }));
+        }
+
+        SUBCASE("Empty multi-line")
+        {
+          processor p{ "#!\n#!" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::comment, ""sv },
+                  { 3, 1, token_kind::comment, ""sv }
+          }));
+        }
+
+        SUBCASE("Non-empty")
+        {
+          processor p{ "#! Hello hello" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 12, token_kind::comment, " Hello hello"sv },
+          }));
+        }
+
+        SUBCASE("Multiple on same line")
+        {
+          processor p{ "#! Hello hello #! \"hi hi\"" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 23, token_kind::comment, " Hello hello #! \"hi hi\""sv }
+          }));
+        }
+
+        SUBCASE("Multiple #! in a row")
+        {
+          processor p{ "#!#!#! Hello hello 12" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 19, token_kind::comment, "#!#! Hello hello 12"sv }
+          }));
+        }
+
+
+        SUBCASE("Expressions before")
+        {
+          processor p{ "1 2 #! meow" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::integer,       1ll },
+                  { 2, 1, token_kind::integer,       2ll },
+                  { 4, 5, token_kind::comment, " meow"sv }
+          }));
+        }
+
+        SUBCASE("Expressions before and after")
+        {
+          processor p{ "1 #! meow\n2" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {  0, 1, token_kind::integer,       1ll },
+                  {  2, 5, token_kind::comment, " meow"sv },
+                  { 10, 1, token_kind::integer,       2ll }
+          }));
+        }
+      }
+
       SUBCASE("Conditional")
       {
         SUBCASE("Empty")
