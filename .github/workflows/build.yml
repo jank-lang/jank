@@ -9,43 +9,56 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
-        build_type: [Debug, Release]
-        sanitize: [none, address, undefined, thread]
-        exclude:
-          - build_type: Release
-            sanitize: address
-          - build_type: Release
-            sanitize: undefined
-          - build_type: Release
-            sanitize: thread
         include:
-          - os: ubuntu-24.04
+          # Ubuntu
+          ## Lint all sources
+          - name: Ubuntu - lint
+            os: ubuntu-24.04
+            lint: true
+          ## Debug + clang-tidy + coverage
+          - name: Ubuntu - debug, analysis, coverage
+            os: ubuntu-24.04
             build_type: Debug
-            codecov: on
-            analysis: on
+            sanitize: none
+            coverage: on
+            analyze: on
+          ## Debug + sanitization
+          - name: Ubuntu - address sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: address
+          - name: Ubuntu - undefined behavior sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: undefined
+          - name: Ubuntu - thread sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: thread
+          ## Release
+          - name: Ubuntu - release
+            os: ubuntu-24.04
+            build_type: Release
             sanitize: none
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     env:
-      CODECOV: ${{ matrix.codecov }}
-      ANALYSIS: ${{ matrix.analysis }}
-      SANITIZE: ${{ matrix.sanitize }}
+      JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
+      JANK_BUILD_TYPE: ${{ matrix.build_type }}
+      JANK_LINT: ${{ matrix.lint }}
+      JANK_COVERAGE: ${{ matrix.coverage }}
+      JANK_ANALYZE: ${{ matrix.analyze }}
+      JANK_SANITIZE: ${{ matrix.sanitize }}
       ASAN_OPTIONS: detect_leaks=0
-    timeout-minutes: 240 # 4h
+      TERM: xterm
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Build and test
-        uses: ./.github/actions/build
-        id: build
-        with:
-          update_release: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
-      - name: Update latest release
-        if: success() && ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && matrix.build_type == 'Release' }}
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: latest
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ steps.build.outputs.release_archive }}
+        run: |
+          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install-bb
+          sudo ./install-bb
+          ./bin/jank/check_everything.clj

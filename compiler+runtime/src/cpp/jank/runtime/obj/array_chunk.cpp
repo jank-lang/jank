@@ -81,8 +81,8 @@ namespace jank::runtime::obj
   {
     if(index->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(index)->data));
-      if(buffer.size() - offset <= i)
+      auto const i(expect_object<integer>(index)->data);
+      if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
         throw std::runtime_error{ fmt::format(
           "out of bounds index {}; array_chunk has a size of {} and offset of {}",
@@ -103,14 +103,10 @@ namespace jank::runtime::obj
   {
     if(index->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(index)->data));
-      if(buffer.size() - offset <= i)
+      auto const i(expect_object<integer>(index)->data);
+      if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{ fmt::format(
-          "out of bounds index {}; array_chunk has a size of {} and offset of {}",
-          i,
-          buffer.size(),
-          offset) };
+        return fallback;
       }
       return buffer[offset + i];
     }

@@ -88,6 +88,7 @@ namespace jank::runtime
   native_bool is_set(object_ptr o);
   native_bool is_counter(object_ptr o);
   native_bool is_transientable(object_ptr o);
+  native_bool is_sorted(object_ptr o);
 
   object_ptr transient(object_ptr o);
   object_ptr persistent(object_ptr o);
@@ -143,4 +144,6 @@ namespace jank::runtime
 
   object_ptr repeat(object_ptr val);
   object_ptr repeat(object_ptr n, object_ptr val);
+
+  object_ptr sort(object_ptr coll);
 }

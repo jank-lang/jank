@@ -32,10 +32,29 @@
 (def ex-info
   "Create an instance of ExceptionInfo, a RuntimeException subclass
    that carries a map of additional data."
-  ; TODO: Arity 3
-  (fn* ex-info [msg map]
-    {:error msg
-     :data map}))
+  (fn* ex-info
+    ([msg map]
+     {:error msg
+      :data map})
+    ([msg map cause]
+     {:error msg
+      :data map
+      :cause cause})))
+
+(def ex-message
+  "Returns the message attached to ex if ex is a Throwable.
+  Otherwise returns nil."
+  :error)
+
+(def ex-data
+  "Returns exception data (a map) if ex is an IExceptionInfo.
+   Otherwise returns nil."
+  :data)
+
+(def ex-cause
+  "Returns the cause of ex if ex is a Throwable.
+  Otherwise returns nil."
+  :cause)
 
 ; Relations.
 ;; Miscellaneous.
@@ -1980,9 +1999,11 @@
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
   [coll n]
-  (if (and (seq coll) (pos? n))
-    (recur (next coll) (dec n))
-    coll))
+  ;; TODO add support for IDrop
+  (loop [n n xs (seq coll)]
+    (if (and xs (pos? n))
+      (recur (dec n) (next xs))
+      xs)))
 
 (defn nthrest
   "Returns the nth rest of coll, coll when n is 0."
@@ -2455,24 +2476,25 @@
   "Returns a map from distinct items in coll to the number of times
    they appear."
   [coll]
-  ;; OPTIMIZE: transient
-  (reduce (fn [counts x]
-            (assoc counts x (inc (get counts x 0))))
-          {}
-          coll))
+  (persistent!
+   (reduce
+    (fn [counts x]
+      (assoc! counts x (inc (get counts x 0))))
+    (transient {})
+    coll)))
 
 (defn group-by
   "Returns a map of the elements of coll keyed by the result of
    f on each element. The value at each key will be a vector of the
    corresponding elements, in the order they appeared in coll."
   [f coll]
-  ;; OPTIMIZE: transient
-  (reduce
+  (persistent!
+   (reduce
     (fn [ret x]
       (let [k (f x)]
-        (assoc ret k (conj (get ret k []) x))))
-    {}
-    coll))
+        (assoc! ret k (conj (get ret k []) x))))
+    (transient {})
+    coll)))
 
 (defn reductions
   "Returns a lazy seq of the intermediate values of the reduction (as
@@ -4404,7 +4426,9 @@
   values as thread-local bindings. Then calls f with the supplied arguments.
   Pops the installed bindings after f returned. Returns whatever f returns."
   [binding-map f & args]
-  (push-thread-bindings binding-map)
+  (push-thread-bindings (if (= "persistent_array_map" (type binding-map))
+                          (into (hash-map) binding-map)
+                          binding-map))
   (try
     (apply f args)
     (catch e (throw e))
@@ -4902,21 +4926,13 @@
     (fn [x y]
       (cond (pred x y) -1 (pred y x) 1 :else 0)))
 
-(defn sort
+(def sort
   "Returns a sorted sequence of the items in coll. If no comparator is
   supplied, uses compare.  comparator must implement
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  ([coll]
-   (sort compare coll))
-  ([#_java.util.Comparator comp coll]
-  ;;  (if (seq coll)
-  ;;    (let [a (to-array coll)]
-  ;;      (. java.util.Arrays (sort a comp))
-  ;;      (with-meta (seq a) (meta coll)))
-  ;;    ())
-   (throw "TODO: port")))
+  clojure.core-native/sort)
 
 (defn sort-by
   "Returns a sorted sequence of the items in coll, where the sort
@@ -5698,30 +5714,6 @@
   ;;           (drop-while #(= class-name (.getClassName ^StackTraceElement %1)) tr))))))
   (throw "TODO: port"))
 
-(defn ex-data
-  "Returns exception data (a map) if ex is an IExceptionInfo.
-   Otherwise returns nil."
-  [ex]
-  ;; (when (instance? IExceptionInfo ex)
-  ;;   (.getData ^IExceptionInfo ex))
-  (throw "TODO: port"))
-
-(defn ex-message
-  "Returns the message attached to ex if ex is a Throwable.
-  Otherwise returns nil."
-  [ex]
-  ;; (when (instance? Throwable ex)
-  ;;   (.getMessage Throwable ex))
-  (throw "TODO: port"))
-
-(defn ex-cause
-  "Returns the cause of ex if ex is a Throwable.
-  Otherwise returns nil."
-  [ex]
-  ;; (when (instance? Throwable ex)
-  ;;   (.getCause ^Throwable ex))
-  (throw "TODO: port"))
-
 (defn test
   "test [v] finds fn at key :test in var metadata and calls it,
   presuming failure will throw exception"
@@ -6379,11 +6371,9 @@ fails, attempts to require sym's namespace and retries."
   "Returns a sorted set of symbols naming the currently loaded libs"
   [] @*loaded-libs*)
 
-(defn sorted?
+(def sorted?
  "Returns true if coll implements Sorted"
-  [coll]
-  ;; (instance? clojure.lang.Sorted coll)
-  (throw "TODO: port"))
+  clojure.core-native/sorted?)
 
 (def counted?
  "Returns true if coll implements count in constant time"
@@ -7092,18 +7082,14 @@ fails, attempts to require sym's namespace and retries."
   ;;              acc))))
   (throw "TODO: port"))
 
-(defn tagged-literal?
+(def tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  [value]
-  ;; (instance? clojure.lang.TaggedLiteral value)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal?)
 
-(defn tagged-literal
+(def tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  [#_clojure.lang.Symbol tag form]
-  ;; (clojure.lang.TaggedLiteral/create tag form)
-  (throw "TODO: port"))
+  clojure.core-native/tagged-literal)
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"
@@ -7297,29 +7283,17 @@ fails, attempts to require sym's namespace and retries."
   [val]
   (str "Expected string, got " (if (nil? val) "nil" (type val))))
 
-(defn parse-long
+(def parse-long
   "Parse string of decimal digits with optional leading -/+ and return a
   Long value, or nil if parse fails"
-  #_Long [#_String s]
-  ;; (if (string? s)
-  ;;   (try
-  ;;     (Long/valueOf s)
-  ;;     (catch NumberFormatException _ nil))
-  ;;   (throw (IllegalArgumentException. (parsing-err s))))
-  (throw "TODO: port"))
+  clojure.core-native/parse-long)
 
-(defn parse-double
+(def parse-double
   "Parse string with floating point components and return a Double value,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
-  #_Double [#_String s]
-  ;; (if (string? s)
-  ;;   (try
-  ;;     (Double/valueOf s)
-  ;;     (catch NumberFormatException _ nil))
-  ;;   (throw (IllegalArgumentException. (parsing-err s))))
-  (throw "TODO: port"))
+  clojure.core-native/parse-double)
 
 (defn parse-uuid
   "Parse a string representing a UUID and return a java.util.UUID instance,

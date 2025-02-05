@@ -1,0 +1,4 @@
+(ns jank-cli-test.core
+  (:require [jank-subproject.core :as sub]))
+
+(defn -main [x] (sub/-main x))

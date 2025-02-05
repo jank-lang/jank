@@ -338,6 +338,25 @@ namespace jank::read::lex
                 { 0, 1, 1, 4, token_kind::symbol, "onil"sv }
         }));
       }
+      SUBCASE("Comma is whitespace")
+      {
+        processor p{ "nil," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::nil }
+        }));
+      }
+      SUBCASE("Semicolon is whitespace")
+      {
+        processor p{ "nil;" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::nil },
+                { 3, 1, token_kind::comment, ""sv }
+        }));
+      }
     }
 
     TEST_CASE("Boolean")
@@ -372,6 +391,26 @@ namespace jank::read::lex
               == make_tokens({
                 { 0, 1, 1, 6, token_kind::symbol, "sotrue"sv },
                 { 7, 1, 1, 6, token_kind::symbol, "ffalse"sv }
+        }));
+      }
+      SUBCASE("Comma is whitespace")
+      {
+        processor p{ "true,false," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::boolean,  true },
+                { 5, 5, token_kind::boolean, false }
+        }));
+      }
+      SUBCASE("Semicolon is whitespace")
+      {
+        processor p{ "true;" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::boolean, true },
+                { 4, 1, token_kind::comment, ""sv }
         }));
       }
     }
@@ -544,9 +583,8 @@ namespace jank::read::lex
                 error{ 7, 12, "invalid number: chars 'g' are invalid for radix 16" },
                 error{ 13, 16, "invalid number: chars '8' are invalid for radix 8" },
                 error{ 17, 21, "arbitrary radix number can only be an integer" },
-                error{ 21, 21, "unexpected character: ." },
-                error{ 22, 22, "expected whitespace before next token" },
-                token{ 22, 1, 1, 1, token_kind::integer, 2ll },
+                error{ 21, 21, "expected whitespace before next token" },
+                token{ 21, 2, token_kind::symbol, ".2"sv },
         }));
       }
 
@@ -795,8 +833,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 error{ 0, 2, "arbitrary radix number can only be an integer" },
-                error{ 2, 2, "unexpected character: ." },
-                token{ 3, 1, 1, 1, token_kind::integer, 0ll }
+                token{ 2, 2, token_kind::symbol, ".0"sv }
         }));
       }
 
@@ -898,29 +935,6 @@ namespace jank::read::lex
         }));
       }
 
-      SUBCASE("Positive no leading digit")
-      {
-        processor p{ ".0" };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, "unexpected character: ." },
-                token{ 1, 1, 1, token_kind::integer, 0ll },
-        }));
-      }
-
-      SUBCASE("Negative no leading digit")
-      {
-        processor p{ "-.0" };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_results({
-                error{ 0, 1, "invalid number" },
-                error{ 1, "unexpected character: ." },
-                token{ 2, 1, 1, token_kind::integer, 0ll },
-        }));
-      }
-
       SUBCASE("Too many dots")
       {
         {
@@ -929,7 +943,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv }
           }));
         }
         {
@@ -938,8 +952,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 2, "invalid number" },
-                  error{ 2, "unexpected character: ." },
-                  token{ 3, 1, 1, token_kind::integer, 0ll },
+                  token{ 2, 2, token_kind::symbol, ".0"sv },
           }));
         }
         {
@@ -948,8 +961,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
-                  token{ 4, 1, 1, token_kind::integer, 0ll },
+                  token{ 3, 2, token_kind::symbol, ".0"sv },
           }));
         }
       }
@@ -1032,12 +1044,11 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_results({
                   error{ 0, 3, "invalid number" },
-                  error{ 3, "unexpected character: ." },
+                  token{ 3, 1, token_kind::symbol, "."sv },
                   token{ 5, 1, 1, 4, token_kind::real, 12.3 },
                   error{ 10, 14, "invalid number" },
-                  error{ 14, "unexpected character: ." },
-                  error{ 15, "expected whitespace before next token" },
-                  token{ 15, 1, 1, token_kind::integer, 3ll },
+                  error{ 14, "expected whitespace before next token" },
+                  token{ 14, 2, token_kind::symbol, ".3"sv },
           }));
         }
 
@@ -1247,6 +1258,37 @@ namespace jank::read::lex
                 { 1, 1, 1, 3, token_kind::symbol, "foo"sv }
         }));
       }
+
+      SUBCASE("Starting with .")
+      {
+        processor p{ ".foo" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::symbol, ".foo"sv }
+        }));
+      }
+
+      SUBCASE("Positive no leading digit")
+      {
+        processor p{ ".0" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 2, token_kind::symbol, ".0"sv },
+        }));
+      }
+
+      //FIXME https://github.com/jank-lang/jank/issues/223
+      //SUBCASE("Negative no leading digit")
+      //{
+      //  processor p{ "-.0" };
+      //  native_vector<result<token, error>> const tokens(p.begin(), p.end());
+      //  CHECK(tokens
+      //        == make_results({
+      //          token{ 0, 3, token_kind::symbol, "-.0"sv },
+      //  }));
+      //}
     }
 
     TEST_CASE("Keyword")
@@ -1277,7 +1319,17 @@ namespace jank::read::lex
         native_vector<result<token, error>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({
-                error{ 0, "invalid keyword: expected non-whitespace character after :" }
+                error{ 0, "invalid keyword: must be non-empty" }
+        }));
+      }
+
+      SUBCASE("Comma after :")
+      {
+        processor p{ ":," };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                error{ 0, "invalid keyword: must be non-empty" }
         }));
       }
 
@@ -1390,6 +1442,24 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 { 0, 1, 1, 3, token_kind::string, "a"sv }
+        }));
+      }
+      SUBCASE("Question mark")
+      {
+        processor p{ "\"?\"" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::string, "?"sv }
+        }));
+      }
+      SUBCASE("Escaped Question mark")
+      {
+        processor p{ R"("\?")" };
+        native_vector<result<token, error>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4, token_kind::escaped_string, "\\?"sv }
         }));
       }
 
@@ -1702,6 +1772,15 @@ namespace jank::read::lex
                   { 0, 1, 1, 9, token_kind::symbol, "🐝/🥀"sv }
           }));
         }
+        SUBCASE("Comma is whitespace")
+        {
+          processor p{ "abc," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 3, token_kind::symbol, "abc"sv }
+          }));
+        }
       }
       SUBCASE("Keywords")
       {
@@ -1739,6 +1818,54 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 1, 1, 10, token_kind::keyword, "🐝/🥀"sv }
+          }));
+        }
+        SUBCASE("Single comma is an empty keyword")
+        {
+          processor p{ ":," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" }
+          }));
+        }
+        SUBCASE("Single semicolon is an empty keyword")
+        {
+          processor p{ ":;" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" },
+                  token{ 1, 1, token_kind::comment, ""sv }
+          }));
+        }
+        SUBCASE("Single paren makes an empty keyword")
+        {
+          processor p{ ":)" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_results({
+                  error{ 0, 0, "invalid keyword: must be non-empty" },
+                  token{ 1, 1,              token_kind::close_paren }
+          }));
+        }
+        SUBCASE("Comma is whitespace")
+        {
+          processor p{ ":abc," };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::keyword, "abc"sv }
+          }));
+        }
+        SUBCASE("Semicolon is whitespace")
+        {
+          processor p{ ":abc;" };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::keyword, "abc"sv },
+                  { 4, 1, token_kind::comment,    ""sv }
           }));
         }
       }

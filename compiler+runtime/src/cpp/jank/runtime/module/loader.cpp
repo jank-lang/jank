@@ -138,16 +138,10 @@ namespace jank::runtime::module
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                             boost::filesystem::path const &resource_path,
+                             boost::filesystem::path const &module_path,
                              file_entry const &entry)
   {
     boost::filesystem::path const p{ native_transient_string{ entry.path } };
-    /* We need the file path relative to the module path, since the class
-     * path portion is not included in part of the module name. For example,
-     * the file may live in `src/jank/clojure/core.jank` but the module
-     * should be `clojure.core`, not `src.jank.clojure.core`. */
-    auto const &module_path(p.lexically_relative(resource_path));
-
     auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
@@ -206,6 +200,20 @@ namespace jank::runtime::module
   }
 
   static void
+  register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+                          boost::filesystem::path const &resource_path,
+                          file_entry const &entry)
+  {
+    boost::filesystem::path const p{ native_transient_string{ entry.path } };
+    /* We need the file path relative to the module path, since the class
+     * path portion is not included in part of the module name. For example,
+     * the file may live in `src/jank/clojure/core.jank` but the module
+     * should be `clojure.core`, not `src.jank.clojure.core`. */
+    auto const &module_path(p.lexically_relative(resource_path));
+    register_entry(entries, module_path, entry);
+  }
+
+  static void
   register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
                      boost::filesystem::path const &path)
   {
@@ -213,7 +221,7 @@ namespace jank::runtime::module
     {
       if(boost::filesystem::is_regular_file(f))
       {
-        register_entry(entries, path, file_entry{ none, f.path().string() });
+        register_relative_entry(entries, path, file_entry{ none, f.path().string() });
       }
     }
   }
@@ -235,7 +243,7 @@ namespace jank::runtime::module
       auto const &name(entry.getName());
       if(!entry.isDirectory())
       {
-        register_entry(entries, "", { path, name });
+        register_entry(entries, name, { path, name });
       }
     }
   }
@@ -263,7 +271,8 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      register_entry(entries, "", { none, p.string() });
+      auto const &module_path(p.string());
+      register_entry(entries, module_path, { none, module_path });
     }
   }
 
@@ -534,9 +543,9 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_cljc(file_entry const &) const
+  string_result<void> loader::load_cljc(file_entry const &entry) const
   {
-    return err("Not yet implemented: CLJC loading");
+    return loader::load_jank(entry);
   }
 
   object_ptr loader::to_runtime_data() const

@@ -79,6 +79,8 @@ namespace jank::runtime
     var,
     var_thread_binding,
     var_unbound_root,
+
+    tagged_literal,
   };
 
   constexpr char const *object_type_str(object_type const type)
@@ -207,6 +209,9 @@ namespace jank::runtime
         return "var_thread_binding";
       case object_type::var_unbound_root:
         return "var_unbound_root";
+
+      case object_type::tagged_literal:
+        return "tagged_literal";
     }
     return "unknown";
   }

@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-lein install
-cd test-project
-lein jank run 1 | grep 'lein jank works!'

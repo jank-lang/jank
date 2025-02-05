@@ -30,6 +30,7 @@
             openssl
 
             ## Dev tools.
+            babashka
             entr
             gcovr
             lcov

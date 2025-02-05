@@ -285,7 +285,7 @@ try
   GC_set_all_interior_pointers(1);
   GC_enable();
 
-  llvm::llvm_shutdown_obj Y{};
+  llvm::llvm_shutdown_obj const Y{};
 
   llvm::InitializeNativeTarget();
   llvm::InitializeNativeTargetAsmParser();

@@ -62,6 +62,43 @@ namespace jank::runtime::obj
     return data.compare(s.data);
   }
 
+  object_ptr persistent_string::get(object_ptr const key) const
+  {
+    return get(key, nil::nil_const());
+  }
+
+  object_ptr persistent_string::get(object_ptr const key, object_ptr const fallback) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<integer>(key)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      {
+        return fallback;
+      }
+      return make_box<character>(data[i]);
+    }
+    else
+    {
+      return fallback;
+    }
+  }
+
+  native_bool persistent_string::contains(object_ptr const key) const
+  {
+    if(key->type == object_type::integer)
+    {
+      auto const i(expect_object<integer>(key)->data);
+      return 0 <= i && static_cast<size_t>(i) < data.size();
+    }
+    return false;
+  }
+
+  object_ptr persistent_string::get_entry(object_ptr const) const
+  {
+    throw std::runtime_error{ fmt::format("get_entry not supported on string") };
+  }
+
   string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));

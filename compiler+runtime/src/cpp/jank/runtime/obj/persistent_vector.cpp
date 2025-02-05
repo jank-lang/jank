@@ -10,18 +10,23 @@
 
 namespace jank::runtime::obj
 {
-  persistent_vector::persistent_vector(runtime::detail::native_persistent_vector &&d)
+  persistent_vector::persistent_vector(value_type &&d)
     : data{ std::move(d) }
   {
   }
 
-  persistent_vector::persistent_vector(runtime::detail::native_persistent_vector const &d)
+  persistent_vector::persistent_vector(value_type const &d)
     : data{ d }
   {
   }
 
-  persistent_vector::persistent_vector(object_ptr const meta,
-                                       runtime::detail::native_persistent_vector &&d)
+  persistent_vector::persistent_vector(object_ptr const meta, value_type &&d)
+    : data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
+  persistent_vector::persistent_vector(option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -203,7 +208,7 @@ namespace jank::runtime::obj
   persistent_vector_ptr persistent_vector::conj(object_ptr head) const
   {
     auto vec(data.push_back(head));
-    auto ret(make_box<persistent_vector>(std::move(vec)));
+    auto ret(make_box<persistent_vector>(meta, std::move(vec)));
     return ret;
   }
 
@@ -222,19 +227,7 @@ namespace jank::runtime::obj
 
   object_ptr persistent_vector::get(object_ptr const key) const
   {
-    if(key->type == object_type::integer)
-    {
-      auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-      if(data.size() <= i)
-      {
-        return nil::nil_const();
-      }
-      return data[i];
-    }
-    else
-    {
-      return nil::nil_const();
-    }
+    return get(key, nil::nil_const());
   }
 
   object_ptr persistent_vector::get(object_ptr const key, object_ptr const fallback) const
@@ -302,15 +295,15 @@ namespace jank::runtime::obj
       throw std::runtime_error{ "cannot pop an empty vector" };
     }
 
-    return make_box<persistent_vector>(data.take(data.size() - 1));
+    return make_box<persistent_vector>(meta, data.take(data.size() - 1));
   }
 
   object_ptr persistent_vector::nth(object_ptr const index) const
   {
     if(index->type == object_type::integer)
     {
-      auto const i(static_cast<size_t>(expect_object<integer>(index)->data));
-      if(data.size() <= i)
+      auto const i(expect_object<integer>(index)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
           fmt::format("out of bounds index {}; vector has a size of {}", i, data.size())

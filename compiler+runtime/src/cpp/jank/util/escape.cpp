@@ -5,6 +5,7 @@
 
 namespace jank::util
 {
+  /* Converts escape sequences starting with backslash to their mapped character. e.g., \" => " */
   result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
   {
     util::string_builder sb{ input.size() };
@@ -49,7 +50,7 @@ namespace jank::util
             sb('\v');
             break;
           case '?':
-            sb('\?');
+            sb('?');
             break;
           case 'f':
             sb('\f');
@@ -67,6 +68,7 @@ namespace jank::util
     return ok(sb.release());
   }
 
+  /* Converts special characters to their escape sequences. e.g., " => \" */
   native_persistent_string escape(native_persistent_string const &input)
   {
     /* We can expect on relocation, since escaping anything will result in a larger string.
@@ -105,10 +107,6 @@ namespace jank::util
         case '\v':
           sb('\\');
           sb('v');
-          break;
-        case '\?':
-          sb('\\');
-          sb('?');
           break;
         case '\f':
           sb('\\');

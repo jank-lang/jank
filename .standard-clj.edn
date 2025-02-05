@@ -1,0 +1,7 @@
+{:include ["bin/jank/**/**.clj"
+           "bin/jank/bb.edn"
+
+           "compiler+runtime/bin/jank/**/*.clj"
+           "compiler+runtime/bin/jank/bb.edn"
+           "compiler+runtime/src/jank/**/*.jank"
+           "compiler+runtime/test/jank/**/*.jank"]}

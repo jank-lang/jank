@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+jank --module-path $(clojure -Spath) run-main jank-cli-test.core "$@"
