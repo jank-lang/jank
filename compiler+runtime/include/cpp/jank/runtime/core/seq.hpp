@@ -146,4 +146,6 @@ namespace jank::runtime
   object_ptr repeat(object_ptr n, object_ptr val);
 
   object_ptr sort(object_ptr coll);
+
+  object_ptr shuffle(object_ptr coll);
 }
