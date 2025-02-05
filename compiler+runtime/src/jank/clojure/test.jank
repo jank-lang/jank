@@ -15,6 +15,7 @@
 ;; contributions and suggestions.
 
 ;; jank notes:
+;; - use atom instead of ref in *report-counters*
 ;; - workaround https://github.com/jank-lang/jank/issues/199
 ;;   - wrote -workaround-var->ns to translate var to qualified symbol
 ;; - workaround https://github.com/jank-lang/jank/issues/197
@@ -243,8 +244,8 @@
 "}
   clojure.test
   (:require [clojure.template :as temp]
-            ;[clojure.stacktrace :as stack]
-            [clojure.string :as str]))
+            #_[clojure.stacktrace :as stack]
+            #_[clojure.string :as str]))
 
 ;; Nothing is marked "private" here, so you can rebind things to plug
 ;; in your own testing or reporting frameworks.

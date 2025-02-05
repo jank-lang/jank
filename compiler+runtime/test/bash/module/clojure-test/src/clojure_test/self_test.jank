@@ -1,9 +1,21 @@
 (ns clojure-test.self-test
-  (:require [clojure.test :as t]))
+  (:require [clojure.test :refer [deftest is] :as t]))
 
-(t/deftest a-test (is (= 1 2)))
+(deftest pass-test (is (= 1 1)))
+(deftest fail-test (is (= 1 2)))
+(deftest error-test (is (throw (ex-info "" {}))))
 
 (defn -main []
+  (println '(t/run-test pass-test))
+  (assert (= {:test 1, :pass 1, :fail 0, :error 0, :type :summary}
+             (t/run-test pass-test)))
+  (println '(t/run-test fail-test))
   (assert (= {:test 1, :pass 0, :fail 1, :error 0, :type :summary}
-             (clojure.test/run-test-var #'a-test)))
-  :success)
+             (t/run-test fail-test)))
+  (println '(t/run-test error-test))
+  (assert (= {:test 1, :pass 0, :fail 0, :error 1, :type :summary}
+             (t/run-test error-test)))
+  (println '(t/run-tests 'clojure-test.self-test))
+  (assert (= {:test 3, :pass 1, :fail 1, :error 1, :type :summary}
+             (t/run-tests 'clojure-test.self-test)))
+  (println :successfully-finished-clojure-test-self-test))
