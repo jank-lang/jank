@@ -33,6 +33,8 @@ namespace jank::error
   error_ptr
   parse_invalid_reader_splice(read::source const &source, native_persistent_string const &note);
   error_ptr parse_invalid_reader_gensym(read::source const &source);
+  error_ptr parse_invalid_reader_symbolic_value(native_persistent_string const &message,
+                                                read::source const &source);
   error_ptr
   parse_invalid_syntax_quote(read::source const &source, native_persistent_string const &note);
   error_ptr parse_invalid_syntax_unquote(read::source const &source);

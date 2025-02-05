@@ -608,14 +608,9 @@ namespace jank::read::parse
 
     if(shorthand.is_some())
     {
-      /* TODO: Remove debug code. */
-      auto ret = error::parse_nested_shorthand_function(
+      return error::parse_nested_shorthand_function(
         start_token.start,
         { "Outer #() form starts here", shorthand.unwrap().source, error::note::kind::info });
-      ret->extra_notes.emplace_back("Counting here",
-                                    read::source_position{ 0, 20, 15 },
-                                    error::note::kind::info);
-      return ret;
     }
 
     shorthand = shorthand_function_details{ {}, {}, start_token.start };
@@ -705,13 +700,13 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ## must be present" } });
+      return error::parse_invalid_reader_symbolic_value("Value after ## must be present",
+                                                        { start_token.start, latest_token.end });
     }
     else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ## must be a symbol" } });
+      return error::parse_invalid_reader_symbolic_value("Value after ## must be a symbol",
+                                                        { start_token.start, latest_token.end });
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
@@ -732,7 +727,8 @@ namespace jank::read::parse
     }
     else
     {
-      return err(error{ start_token.pos, native_persistent_string{ "Unknown symbolic value" } });
+      return error::parse_invalid_reader_symbolic_value("Unsupported symbolic value",
+                                                        { start_token.start, latest_token.end });
     }
 
     auto const wrapped(make_box<obj::real>(n));

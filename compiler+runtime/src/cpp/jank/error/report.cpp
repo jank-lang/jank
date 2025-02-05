@@ -370,10 +370,8 @@ namespace jank::error
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
-      /* TODO: Return result. */
-      throw std::runtime_error{
-        fmt::format("unable to map file {} due to error: {}", s.file_path, file.expect_err())
-      };
+      return window(text(fmt::format(" {} ", s.file_path)),
+                    hbox({ text(fmt::format("Unable to map file: {}", file.expect_err())) }));
     }
 
     auto const highlighted_lines{

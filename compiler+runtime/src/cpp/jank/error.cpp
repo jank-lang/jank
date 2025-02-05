@@ -74,6 +74,8 @@ namespace jank::error
         return "Invalid reader splice";
       case kind::parse_invalid_reader_gensym:
         return "gensym literal is not within a syntax quote";
+      case kind::parse_invalid_reader_symbolic_value:
+        return "Invalid reader symbolic value";
       case kind::parse_invalid_syntax_quote:
         return "Invalid syntax quote";
       case kind::parse_invalid_syntax_unquote:
@@ -331,10 +333,10 @@ namespace jank
 
     return {
       to_string(file),
-      {static_cast<size_t>(to_int(start_offset)),
+      { static_cast<size_t>(to_int(start_offset)),
               static_cast<size_t>(to_int(start_line)),
-              static_cast<size_t>(to_int(start_col))},
-      {  static_cast<size_t>(to_int(end_offset)),
+              static_cast<size_t>(to_int(start_col)) },
+      {   static_cast<size_t>(to_int(end_offset)),
               static_cast<size_t>(to_int(end_line)),
               static_cast<size_t>(to_int(end_col))  }
     };

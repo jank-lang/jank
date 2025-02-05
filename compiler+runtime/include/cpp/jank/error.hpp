@@ -41,6 +41,7 @@ namespace jank::error
     parse_invalid_reader_conditional,
     parse_invalid_reader_splice,
     parse_invalid_reader_gensym,
+    parse_invalid_reader_symbolic_value,
     parse_invalid_syntax_quote,
     parse_invalid_syntax_unquote,
     parse_invalid_syntax_unquote_splice,
@@ -142,6 +143,8 @@ namespace jank::error
         return "parse/invalid-reader-splice";
       case kind::parse_invalid_reader_gensym:
         return "parse/invalid-reader-gensym";
+      case kind::parse_invalid_reader_symbolic_value:
+        return "parse_invalid_reader_symbolic-value";
       case kind::parse_invalid_syntax_quote:
         return "parse/invalid-syntax-quote";
       case kind::parse_invalid_syntax_unquote:

@@ -299,10 +299,6 @@ namespace jank::read::lex
                               movable_position const &end)
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    fmt::println("make_error message '{}' file '{}'",
-                 message.c_str(),
-                 runtime::to_string(file).c_str());
-    __builtin_debugtrap();
     return runtime::make_box<error::base>(kind,
                                           message,
                                           /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
@@ -364,8 +360,8 @@ namespace jank::read::lex
 
   static native_bool is_special_char(char32_t const c)
   {
-      return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
-        || c == '^' || c == '\\' || c == '`' || c == '~' || c == ',' || c == ';';
+    return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
+      || c == '^' || c == '\\' || c == '`' || c == '~' || c == ',' || c == ';';
   }
 
   static native_bool is_symbol_char(char32_t const c)
@@ -825,10 +821,10 @@ namespace jank::read::lex
                               token_start,
                               pos);
           }
-            /* Tokens beginning with - are ambiguous; it's a negative number only if followed by a number, otherwise
+          /* Tokens beginning with - are ambiguous; it's a negative number only if followed by a number, otherwise
              * it's a symbol.
              * TODO: handle numbers starting with `+` */
-            if(file[token_start] != '-' || (pos - token_start) >= 1)
+          if(file[token_start] != '-' || (pos - token_start) >= 1)
           {
             require_space = true;
             ++pos;
@@ -944,10 +940,9 @@ namespace jank::read::lex
             }
             auto const c(oc.expect_ok().character);
             auto const size(oc.expect_ok().len);
-            if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
+            if(!is_symbol_char(c))
             {
-              ++pos;
-              return err(error{ token_start, "invalid keyword: must be non-empty" });
+              break;
             }
             pos += size;
           }
@@ -986,7 +981,7 @@ namespace jank::read::lex
 
           auto const oc(peek());
           auto const c(oc.expect_ok().character);
-          if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)))
+          if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
           {
             ++pos;
             return make_error(error::kind::lex_invalid_keyword,
