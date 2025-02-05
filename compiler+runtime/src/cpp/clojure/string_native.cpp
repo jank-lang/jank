@@ -35,8 +35,6 @@ namespace clojure::string_native
   static object_ptr lower_case(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    // TODO redundant copy?
-    // TODO native_persistent_string?
     return make_box(boost::to_lower_copy(s_str));
   }
 
@@ -64,8 +62,6 @@ namespace clojure::string_native
   static object_ptr upper_case(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    // TODO redundant copy?
-    // TODO native_persistent_string?
     return make_box(boost::to_upper_copy(s_str));
   }
 }
