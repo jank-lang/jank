@@ -28,7 +28,8 @@ namespace clojure::string_native
   static object_ptr reverse(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    return make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });
+    return make_box<obj::persistent_string>(
+      native_persistent_string{ s_str.rbegin(), s_str.rend() });
   }
 
   static object_ptr lower_case(object_ptr const s)
