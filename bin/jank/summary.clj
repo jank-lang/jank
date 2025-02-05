@@ -25,7 +25,7 @@
   (append-line (str "### " title)))
 
 (defn log [s]
-  (append-line (str "* " s)))
+  (append-line (str s "\n")))
 
 (defn strip-ansi-codes
   [s]
