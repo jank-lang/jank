@@ -57,16 +57,16 @@
    inner expression.
 
    There are two special assertions for testing exceptions.  The
-   \"(is (thrown? c ...))\" form tests if an exception of class c is
+   \"(is (thrown? ...))\" form tests if something is
    thrown:
 
-   (is (thrown? ArithmeticException (/ 1 0))) 
+   (is (thrown? (/ 1 0))) 
 
-   \"(is (thrown-with-msg? c re ...))\" does the same thing and also
+   \"(is (thrown-with-msg? re ...))\" does the same thing and also
    tests that the message on the exception matches the regular
    expression re:
 
-   (is (thrown-with-msg? ArithmeticException #\"Divide by zero\"
+   (is (thrown-with-msg? #\"Divide by zero\"
                          (/ 1 0)))
 
    DOCUMENTING TESTS
@@ -496,11 +496,10 @@
        result#)))
 
 (defmethod assert-expr 'thrown? [msg form]
-  ;; (is (thrown? c expr))
-  ;; Asserts that evaluating expr throws an exception of class c.
-  ;; Returns the exception thrown.
-  (let [;klass (second form)
-        body (nthnext form 2)]
+  ;; (is (thrown? expr))
+  ;; Asserts that evaluating expr throws something.
+  ;; Returns the thing thrown or nil.
+  (let [body (nthnext form 1)]
     `(try (do ~@body)
           (do-report {:type :fail :message ~msg
                       :expected '~form :actual nil})
@@ -510,18 +509,17 @@
             e#))))
 
 (defmethod assert-expr 'thrown-with-msg? [msg form]
-  ;; (is (thrown-with-msg? c re expr))
-  ;; Asserts that evaluating expr throws an exception of class c.
+  ;; (is (thrown-with-msg? re expr))
+  ;; Asserts that evaluating expr throws something.
   ;; Also asserts that the message string of the exception matches
   ;; (with re-find) the regular expression re.
-  (let [;klass (nth form 1)
-        re (nth form 2)
-        body (nthnext form 3)]
+  (let [re (nth form 1)
+        body (nthnext form 2)]
     `(try (do ~@body)
           (do-report {:type :fail :message ~msg :expected '~form :actual nil})
           (catch e#
             (let [m# (ex-message e#)]
-              (if (re-find ~re m#)
+              (if (and (string? m#) (re-find ~re m#))
                 (do-report {:type :pass :message ~msg
                             :expected '~form :actual e#})
                 (do-report {:type :fail :message ~msg
