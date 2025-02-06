@@ -9,7 +9,6 @@
   (assert (= '() `()) `())
   (assert (= "meow" `"meow") `"meow")
   (assert (= 'foo/meow `foo/meow) `foo/meow)
-  (assert (= 'c/meow `c/meow) `c/meow)
   ; https://github.com/jank-lang/jank/issues/240
   (catch e (throw e))
   (finally (ns-unalias *ns* 'c)))

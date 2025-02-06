@@ -404,7 +404,7 @@ namespace jank::read::parse
     auto const start_token((*token_current).expect_ok());
     ++token_current;
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = !syntax_quoted;
     auto val_result(next());
     quoted = old_quoted;
     if(val_result.is_err())
@@ -1105,8 +1105,12 @@ namespace jank::read::parse
 
     auto const old_quoted(quoted);
     quoted = false;
+    auto const old_syntax_quoted(syntax_quoted);
+    syntax_quoted = true;
+    quoted = false;
     auto quoted_form(next());
     quoted = old_quoted;
+    syntax_quoted = old_syntax_quoted;
     if(quoted_form.is_err())
     {
       return quoted_form;
