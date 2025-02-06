@@ -18,7 +18,7 @@
 ;; - use atom instead of ref in *report-counters*
 ;; - workaround https://github.com/jank-lang/jank/issues/197
 ;;   - wrote -workaround-var->ns to translate var to qualified symbol because
-;;     we don't yet support `(-> test-var meta :test)`
+;;     we don't yet support `(-> v meta :ns)`
 ;;   - made global atom from var -> test
 ;;   - -workaround-set-test
 ;;   - -workaround-get-test
@@ -596,14 +596,14 @@
 
 ;;; DEFINING TESTS
 
-(def -workaround-test-mappings (atom {}))
-(defn -workaround-set-test [v f]
+(def ^:private -workaround-test-mappings (atom {}))
+(defn- -workaround-set-test [v f]
   {:pre [(var? v)]}
   (swap! -workaround-test-mappings assoc v f)
   v)
-(defn -workaround-get-test [v]
+(defn- -workaround-get-test [v]
   (@-workaround-test-mappings v))
-(defn -workaround-var->ns [v]
+(defn- -workaround-var->ns [v]
   (-> v symbol namespace symbol the-ns))
 
 (defmacro with-test
@@ -637,7 +637,7 @@
     ;#_`(def ~(vary-meta name assoc :test `(fn [] ~@body))
     ;     (fn [] (test-var (var ~name))))
     `(do (def ~name (fn [] (test-var (var ~name))))
-         (-workaround-set-test (var ~name) (fn [] ~@body)))))
+         (#'-workaround-set-test (var ~name) (fn [] ~@body)))))
 
 (defmacro deftest-
   "Like deftest but creates a private var."
@@ -647,7 +647,7 @@
     ;#_`(def ~(vary-meta name assoc :test `(fn [] ~@body) :private true)
     ;     (fn [] (test-var (var ~name))))
     `(do (def ~name (fn [] (test-var (var ~name))))
-         (-workaround-set-test (var ~name) (fn [] ~@body)))))
+         (#'-workaround-set-test (var ~name) (fn [] ~@body)))))
 
 
 (defmacro set-test
@@ -660,7 +660,7 @@
   (when *load-tests*
     ;;FIXME https://github.com/jank-lang/jank/issues/197
     ;#_`(alter-meta! (var ~name) assoc :test (fn [] ~@body))
-    `(-workaround-set-test (var ~name) (fn [] ~@body))))
+    `(#'-workaround-set-test (var ~name) (fn [] ~@body))))
 
 
 
