@@ -73,6 +73,12 @@ namespace jank::runtime
     return ok();
   }
 
+  void ns::remove_alias(obj::symbol_ptr const &sym)
+  {
+    auto locked_aliases(aliases.wlock());
+    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
+  }
+
   option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
   {
     auto locked_aliases(aliases.rlock());

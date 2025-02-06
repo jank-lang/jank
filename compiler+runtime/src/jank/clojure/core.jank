@@ -5526,8 +5526,7 @@
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
   [ns sym]
-  ;; (.removeAlias (the-ns ns) sym)
-  (throw "TODO: port"))
+  (clojure.core-native/ns-unalias (the-ns ns) sym))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be

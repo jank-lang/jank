@@ -1,6 +1,9 @@
-(alias 'c 'clojure.core)
-(assert (= 'clojure.core/+ `c/+) `c/+)
-(assert (= '(clojure.core/inc 1) `(c/inc 1)) `(c/inc 1))
-(assert (= 'clojure.core/foo `c/foo) `c/foo)
+(ns-unalias *ns* 'c)
+(try 
+  (alias 'c 'clojure.core)
+  (assert (= 'clojure.core/+ `c/+) `c/+)
+  (assert (= '(clojure.core/inc 1) `(c/inc 1)) `(c/inc 1))
+  (assert (= 'clojure.core/foo `c/foo) `c/foo)
+  (finally (ns-unalias *ns* 'c)))
 
 :success
