@@ -1209,15 +1209,18 @@ namespace jank::read::parse
         {
           ns = ns_portion;
         }
-        /* Normal symbols will have the ns resolved immediately. */
+        /* Normal symbols will have the ns resolved immediately if resolvable. */
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
-            return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
+            ns = ns_portion;
           }
-          ns = resolved_ns.unwrap()->name->name;
+          else
+          {
+            ns = resolved_ns.unwrap()->name->name;
+          }
         }
         name = sv.substr(slash + 1);
       }
