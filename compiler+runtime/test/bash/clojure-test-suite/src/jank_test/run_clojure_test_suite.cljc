@@ -98,18 +98,20 @@
     ;clojure.core-test.rand-int ;unloadable
     ;clojure.core-test.ratio-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.rational-qmark ; https://github.com/jank-lang/jank/issues/195
-    clojure.core-test.rationalize ;Read error (590 - 592): invalid number: chars 'N' are invalid for radix 10
-;    clojure.core-test.rem
-;    clojure.core-test.remove-watch
-;    clojure.core-test.rest
-;    clojure.core-test.second
-;    clojure.core-test.seq
-;    clojure.core-test.sequential-qmark
-;    clojure.core-test.short
-;    clojure.core-test.simple-ident-qmark
-;    clojure.core-test.simple-keyword-qmark
-;    clojure.core-test.simple-symbol-qmark
-;    clojure.core-test.slash
+    ;clojure.core-test.rationalize ;Read error (590 - 592): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.rem ;Read error (514 - 516): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.remove-watch ;Exception: TODO: port sync
+    clojure.core-test.rest
+    clojure.core-test.second
+    ;clojure.core-test.seq ;Read error (738 - 742): invalid number: chars 'M' are invalid for radix 10
+    ;clojure.core-test.sequential-qmark ;unloadable
+    ;clojure.core-test.short ;Read error (808 - 810): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.simple-ident-qmark ;Read error (480 - 482): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.simple-keyword-qmark ;Read error (488 - 490): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.simple-symbol-qmark ;Read error (484 - 486): invalid number: chars 'N' are invalid for radix 8
+
+;;;TODO FROM HERE
+    clojure.core-test.slash
 ;    clojure.core-test.some-qmark
 ;    ;clojure.core-test.star ; https://github.com/jank-lang/jank/issues/195
 ;    ;clojure.core-test.star-squote ; https://github.com/jank-lang/jank/issues/195
