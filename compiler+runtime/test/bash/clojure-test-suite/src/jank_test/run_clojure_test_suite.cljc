@@ -2,7 +2,10 @@
   (:require [clojure.test :as t]))
 
 (def namespaces
-  '[clojure.core-test.first])
+  '[
+    clojure.core-test.any-qmark
+    clojure.core-test.first
+    ])
 
 (defn -main []
   (when (seq namespaces)
