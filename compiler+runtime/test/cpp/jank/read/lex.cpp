@@ -1679,7 +1679,7 @@ namespace jank::read::lex
           }));
         }
 
-	SUBCASE("Multiple lines starting with #!")
+        SUBCASE("Multiple lines starting with #!")
         {
           processor p{ "#!foo\n#!bar" };
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
@@ -1690,7 +1690,7 @@ namespace jank::read::lex
           }));
         }
 
-	SUBCASE("Double #")
+        SUBCASE("Double #")
         {
           processor p{ "##!foo" };
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
@@ -1701,7 +1701,7 @@ namespace jank::read::lex
           }));
         }
 
-	SUBCASE("Double !")
+        SUBCASE("Double !")
         {
           processor p{ "#!!foo" };
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
@@ -1747,8 +1747,8 @@ namespace jank::read::lex
           native_vector<result<token, error>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-		    { 0, 1, token_kind::open_paren},
-		    { 1, 1, token_kind::comment, ")"sv },
+                  { 0, 1, token_kind::open_paren },
+                  { 1, 1, token_kind::comment, ")"sv },
           }));
         }
       }
