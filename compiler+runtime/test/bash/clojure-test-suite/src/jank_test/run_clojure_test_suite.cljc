@@ -33,15 +33,15 @@
     ;clojure.core-test.char ; unloadable
     ;clojure.core-test.char-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.compare ; Read error (413 - 418): invalid number: chars 'N' are invalid for radix 10
-    clojure.core-test.count
-;    clojure.core-test.dec
-;    clojure.core-test.decimal-qmark
-;    clojure.core-test.denominator
-;    ;clojure.core-test.double ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.double-qmark
-;    clojure.core-test.drop
-;    clojure.core-test.drop-last
-;    clojure.core-test.drop-while
+    ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.dec ;Read error (351 - 353): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.decimal-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.denominator ; Read error (579 - 581): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.double ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.double-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.drop ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
+    ;clojure.core-test.drop-last ;https://github.com/jank-lang/jank/issues/244
+    clojure.core-test.drop-while
 ;    clojure.core-test.even-qmark
 ;    ;clojure.core-test.false-qmark ; https://github.com/jank-lang/jank/issues/195
 ;    clojure.core-test.first
