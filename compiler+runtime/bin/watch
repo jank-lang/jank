@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -xeuo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JANK_WATCH_SLEEP="${JANK_WATCH_SLEEP:-1}"
+
+if [ $# -eq 0 ]
+then
+  COMMAND="${here}/test"
+else
+  COMMAND="$*"
+fi
 
 # We sleep for a bit before running to account for saving multiple files at a time.
 # Without the sleep, we may start compiling before all of them have saved, which will
 # then result in potentially false results for the compilation and hard to debug issues.
-git ls-files -cdmo --exclude-standard | entr bash -c "sleep 1; time $* || true";
+git ls-files -cdmo --exclude-standard | entr bash -c "sleep $JANK_WATCH_SLEEP; time $COMMAND || true";
