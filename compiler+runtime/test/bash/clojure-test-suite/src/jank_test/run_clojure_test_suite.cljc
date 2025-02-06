@@ -41,65 +41,64 @@
     ;clojure.core-test.double-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.drop ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     ;clojure.core-test.drop-last ;https://github.com/jank-lang/jank/issues/244
-    clojure.core-test.drop-while
-;    clojure.core-test.even-qmark
-;    ;clojure.core-test.false-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.first
-;    ;clojure.core-test.float ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.float-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.fnil
-;    clojure.core-test.format
-;    clojure.core-test.get
-;    clojure.core-test.ident-qmark
-;    clojure.core-test.identical-qmark
-;    clojure.core-test.inc
-;    clojure.core-test.int
-;    ;clojure.core-test.int-qmark ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.integer-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.intern
-;    clojure.core-test.keyword
-;    clojure.core-test.keyword-qmark
-;    clojure.core-test.long
-;    clojure.core-test.max
-;    clojure.core-test.min
-;    ;clojure.core-test.minus ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.mod
-;    clojure.core-test.name
-;    clojure.core-test.namespace
-;    clojure.core-test.nan-qmark
-;    ;clojure.core-test.neg-int-qmark ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.neg-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.next
-;    clojure.core-test.nil-qmark
-;    clojure.core-test.not
-;    clojure.core-test.nth
-;    clojure.core-test.nthnext
-;    clojure.core-test.nthrest
-;    clojure.core-test.num
-;    ;clojure.core-test.number-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.number-range
-;    clojure.core-test.numerator
-;    clojure.core-test.odd-qmark
-;    clojure.core-test.or
-;    clojure.core-test.partial
-;    ;clojure.core-test.plus ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.plus-squote ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.portability
-;    ;clojure.core-test.pos-int-qmark ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.pos-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.pr-str
-;    clojure.core-test.print-str
-;    clojure.core-test.println-str
-;    clojure.core-test.prn-str
-;    clojure.core-test.qualified-ident-qmark
-;    clojure.core-test.qualified-keyword-qmark
-;    clojure.core-test.qualified-symbol-qmark
-;    clojure.core-test.quot
-;    clojure.core-test.rand
-;    clojure.core-test.rand-int
-;    ;clojure.core-test.ratio-qmark ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.rational-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.rationalize
+    ;clojure.core-test.drop-while ; https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
+    ;clojure.core-test.even-qmark ;Read error (445 - 449): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.false-qmark ; https://github.com/jank-lang/jank/issues/195
+    clojure.core-test.first
+    ;clojure.core-test.float ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.float-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.fnil  ;unloadable
+    ;clojure.core-test.format ;TODO: port format
+    ;clojure.core-test.get ;unloadable
+    ;clojure.core-test.ident-qmark ;Read error (452 - 454): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.identical-qmark  ;unloadable
+    ;clojure.core-test.inc ;Read error (367 - 369): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.int ;Read error (902 - 904): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.int-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.integer-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.intern ;unloadable
+    ;clojure.core-test.keyword ;https://github.com/jank-lang/jank/issues/246
+    ;clojure.core-test.keyword-qmark ;Read error (460 - 462): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.long  ;Read error (705 - 725): number out of range
+    ;clojure.core-test.max ;Read error (331 - 333): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.min ;Read error (329 - 331): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.minus ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.mod ;Read error (752 - 754): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.name ;Read error (22 - 22): unknown namespace: abc  =>  perhaps https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.namespace ;Read error (27 - 27): unknown namespace: abc =>  perhaps https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.nan-qmark ;https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.neg-int-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.neg-qmark ; https://github.com/jank-lang/jank/issues/195
+    clojure.core-test.next
+    clojure.core-test.nil-qmark
+    ;clojure.core-test.not ;Read error (478 - 478): unsupported reader macro
+    ;clojure.core-test.nth ; https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
+    ;clojure.core-test.nthnext ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.nthrest ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
+    ;clojure.core-test.num ;Read error (623 - 625): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.number-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.number-range ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.numerator ;Read error (603 - 605): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.odd-qmark ;Read error (443 - 447): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.or ;unloadable
+    ;clojure.core-test.partial ;unloadable
+    ;clojure.core-test.plus ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.plus-squote ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.pos-int-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.pos-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.pr-str ;unloadable
+    ;clojure.core-test.print-str ;unloadable
+    ;clojure.core-test.println-str ;unloadable
+    ;clojure.core-test.prn-str ;unloadable
+    ;clojure.core-test.qualified-ident-qmark ;Read error (492 - 494): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.qualified-keyword-qmark ;Read error (500 - 502): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.qualified-symbol-qmark ;Read error (496 - 498): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.quot ;Read error (527 - 529): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.rand ;unloadable
+    ;clojure.core-test.rand-int ;unloadable
+    ;clojure.core-test.ratio-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.rational-qmark ; https://github.com/jank-lang/jank/issues/195
+    clojure.core-test.rationalize ;Read error (590 - 592): invalid number: chars 'N' are invalid for radix 10
 ;    clojure.core-test.rem
 ;    clojure.core-test.remove-watch
 ;    clojure.core-test.rest
