@@ -16,9 +16,9 @@
 
 ;; jank notes:
 ;; - use atom instead of ref in *report-counters*
-;; - workaround https://github.com/jank-lang/jank/issues/199
-;;   - wrote -workaround-var->ns to translate var to qualified symbol
 ;; - workaround https://github.com/jank-lang/jank/issues/197
+;;   - wrote -workaround-var->ns to translate var to qualified symbol because
+;;     we don't yet support `(-> test-var meta :test)`
 ;;   - made global atom from var -> test
 ;;   - -workaround-set-test
 ;;   - -workaround-get-test
