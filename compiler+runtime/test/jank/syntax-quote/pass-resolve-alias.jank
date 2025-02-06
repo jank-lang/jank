@@ -1,3 +1,4 @@
+(ns-unalias *ns* 'c)
 (alias 'c 'clojure.core)
 (try 
   (assert (= 'clojure.core/+ `c/+) `c/+)

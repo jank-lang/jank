@@ -1,4 +1,5 @@
 (ns syntax-quote.pass-unaffected)
+(ns-unalias *ns* 'c)
 (alias 'c 'clojure.core)
 (def a-var 1)
 (try
@@ -9,7 +10,7 @@
   (assert (= :syntax-quote.pass-unaffected/bar `::bar) `::bar)
   (assert (= :syntax-quote.pass-unaffected/a-var `::a-var) `::a-var)
   (assert (= :syntax-quote.pass-unaffected/+ `::+) `::+)
-  (assert (= :syntax-quote.pass-unaffected/bar `::c/bar) `::c/bar)
+  (assert (= :clojure.core/bar `::c/bar) `::c/bar])
   (assert (= [] `[]) `[])
   (assert (= {} `{}) `{})
   (assert (= '() `()) `())
@@ -18,6 +19,6 @@
   (assert (= '(quote foo/meow) ``foo/meow) ``foo/meow)
   (catch e (throw e))
   (finally
-    (
+    (in-ns 'clojure.core)))
 
 :success
