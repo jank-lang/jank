@@ -16,24 +16,24 @@
     ;clojure.core-test.binding ; TODO: port future
     ;clojure.core-test.bit-and ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.bit-and-not ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.bit-clear
-;    clojure.core-test.bit-flip
-;    clojure.core-test.bit-not
-;    ;clojure.core-test.bit-or ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.bit-set
-;    clojure.core-test.bit-shift-left
-;    clojure.core-test.bit-shift-right
-;    clojure.core-test.bit-test
-;    ;clojure.core-test.bit-xor ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.boolean
-;    clojure.core-test.bound-fn
-;    clojure.core-test.bound-fn-star
-;    clojure.core-test.butlast
-;    clojure.core-test.byte
-;    clojure.core-test.char
-;    ;clojure.core-test.char-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.compare
-;    clojure.core-test.count
+    ;clojure.core-test.bit-clear ;invalid object type: 0
+    ;clojure.core-test.bit-flip ;invalid object type: 0
+    ;clojure.core-test.bit-not ;invalid object type: 0
+    ;clojure.core-test.bit-or ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.bit-set ; Read error (570 - 590): number out of range
+    ;clojure.core-test.bit-shift-left ; invalid object type: 0
+    ;clojure.core-test.bit-shift-right  ; invalid object type: 0
+    ;clojure.core-test.bit-test   ; invalid object type: 0
+    ;clojure.core-test.bit-xor ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.boolean ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.bound-fn ; TODO: port future
+    ;clojure.core-test.bound-fn-star ; TODO: port future
+    ;clojure.core-test.butlast ;https://github.com/jank-lang/jank/issues/243
+    ;clojure.core-test.byte ;Read error (759 - 761): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.char ; unloadable
+    ;clojure.core-test.char-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.compare ; Read error (413 - 418): invalid number: chars 'N' are invalid for radix 10
+    clojure.core-test.count
 ;    clojure.core-test.dec
 ;    clojure.core-test.decimal-qmark
 ;    clojure.core-test.denominator
