@@ -252,8 +252,6 @@ namespace jank::analyze
     {
       return err(error{ "expected keyword for compact" });
     }
-    auto const compact{ runtime::expect_object<obj::keyword>(is_compact_obj) };
-    auto const is_compact{ compact->sym->get_name() == "compact" };
 
     it = it.rest();
     auto const switch_type_obj = it.first().unwrap();
@@ -261,7 +259,6 @@ namespace jank::analyze
     {
       return err(error{ "expected keyword for switch_type" });
     }
-    auto const switch_type = runtime::expect_object<obj::keyword>(switch_type_obj);
 
     it = it.rest();
     obj::persistent_hash_set_ptr collided_keys;
@@ -288,22 +285,6 @@ namespace jank::analyze
       }
     }
 
-    auto const switch_type_name = switch_type->sym->get_name();
-    auto switch_type_enum = expr::case_<expression>::switch_type::integers;
-
-    if(switch_type_name == "hashes")
-    {
-      switch_type_enum = expr::case_<expression>::switch_type::hashes;
-    }
-    else if(switch_type_name == "hash-equiv")
-    {
-      switch_type_enum = expr::case_<expression>::switch_type::hash_equiv;
-    }
-    else if(switch_type_name == "hash-identity")
-    {
-      switch_type_enum = expr::case_<expression>::switch_type::hash_identity;
-    }
-
     auto case_expr{
       make_box<expression>(expr::case_<expression>{ expression_base{ {}, position, f, needs_box },
                                                    value_expr.expect_ok(),
@@ -312,7 +293,6 @@ namespace jank::analyze
                                                    default_expr.expect_ok(),
                                                    keys_exprs.expect_ok().keys,
                                                    keys_exprs.expect_ok().exprs,
-                                                   is_compact, switch_type_enum,
                                                    collided_keys }
       )
     };
