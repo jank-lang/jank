@@ -1,3 +1,4 @@
 {:paths ["src"]
- :deps {io.github.jank-lang/clojure-test {:git/url "https://github.com/frenchy64/clojure-test.git"
-                                          :git/sha "c8548a3c9f31d5ae24c7a5b0632a0bd892d59510"}}}
+ :deps {io.github.jank-lang/clojure-test {;; TODO update to official repo
+                                          :git/url "https://github.com/frenchy64/clojure-test.git"
+                                          :git/sha "5f21083880bf24a7f0db6709be4a8a675e57c4b1"}}}
