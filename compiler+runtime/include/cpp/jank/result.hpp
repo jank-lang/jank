@@ -159,7 +159,7 @@ namespace jank
       return &boost::get<E>(data);
     }
 
-    constexpr E expect_err_move() const
+    constexpr E expect_err_move()
     {
       return std::move(boost::get<E>(data));
     }

@@ -12,22 +12,12 @@ namespace jank::analyze::expr
   template <typename E>
   struct case_ : expression_base
   {
-    enum switch_type : std::uint8_t
-    {
-      integers,
-      hashes,
-      hash_equiv,
-      hash_identity,
-    };
-
     native_box<E> value_expr{};
     native_integer shift{};
     native_integer mask{};
     native_box<E> default_expr{};
     std::vector<native_integer> transformed_keys{};
     std::vector<native_box<E>> exprs{};
-    native_bool is_compact{};
-    switch_type switch_type{};
     obj::persistent_hash_set_ptr collided_keys{};
 
     void propagate_position(expression_position const pos)
@@ -53,14 +43,6 @@ namespace jank::analyze::expr
                                                             make_box(mask),
                                                             make_box("default_expr"),
                                                             default_expr->to_runtime_data(),
-                                                            // make_box("keys"),
-                                                            // keys,
-                                                            // make_box("body_exprs"),
-                                                            // exprs,
-                                                            make_box("is_compact"),
-                                                            make_box(is_compact),
-                                                            make_box("switch_type"),
-                                                            make_box(switch_type),
                                                             make_box("collided_keys"),
                                                             collided_keys));
     }
