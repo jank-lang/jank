@@ -1,4 +1,3 @@
-(ns-unalias *ns* 'c) ;;TODO remove me
 (alias 'c 'clojure.core)
 (try
   (assert (= 1 `1) `1)
