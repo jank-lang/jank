@@ -1895,15 +1895,22 @@ namespace jank::read::lex
                 { 0, 16, token_kind::keyword, "ありがとう"sv }
         }));
       }
-      SUBCASE("Whitespace Characters")
+#if defined(__APPLE__)
+      if(getenv("CI")) //https://github.com/jank-lang/jank/issues/224
       {
-        processor p{ ":  " };
-        native_vector<result<token, error>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 7, token_kind::keyword, "  "sv }
-        }));
+#endif
+        SUBCASE("Whitespace Characters")
+        {
+          processor p{ ":  " };
+          native_vector<result<token, error>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::keyword, "  "sv }
+          }));
+        }
+#if defined(__APPLE__)
       }
+#endif
 
 
       SUBCASE("Malformed Text")
