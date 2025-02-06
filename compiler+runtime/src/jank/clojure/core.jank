@@ -5490,8 +5490,7 @@
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
   [ns sym]
-  ;; (.unmap (the-ns ns) sym)
-  (throw "TODO: port"))
+  (clojure.core-native/ns-unmap (the-ns ns) sym))
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."

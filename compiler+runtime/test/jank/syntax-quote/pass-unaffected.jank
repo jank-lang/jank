@@ -1,16 +1,23 @@
+(ns syntax-quote.pass-unaffected)
 (alias 'c 'clojure.core)
+(def a-var 1)
 (try
   (assert (= 1 `1) `1)
   (assert (= :foo `:foo) `:foo)
   (assert (= :foo/bar `:foo/bar) `:foo/bar)
   (assert (= :c/bar `:c/bar) `:c/bar)
+  (assert (= :syntax-quote.pass-unaffected/bar `::bar) `::bar)
+  (assert (= :syntax-quote.pass-unaffected/a-var `::a-var) `::a-var)
+  (assert (= :syntax-quote.pass-unaffected/+ `::+) `::+)
+  (assert (= :syntax-quote.pass-unaffected/bar `::c/bar) `::c/bar)
   (assert (= [] `[]) `[])
   (assert (= {} `{}) `{})
   (assert (= '() `()) `())
   (assert (= "meow" `"meow") `"meow")
   (assert (= 'foo/meow `foo/meow) `foo/meow)
-  ; https://github.com/jank-lang/jank/issues/240
+  (assert (= '(quote foo/meow) ``foo/meow) ``foo/meow)
   (catch e (throw e))
-  (finally (ns-unalias *ns* 'c)))
+  (finally
+    (
 
 :success

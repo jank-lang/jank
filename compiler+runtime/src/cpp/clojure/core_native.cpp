@@ -260,6 +260,15 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
+  static object_ptr
+  ns_unmap(object_ptr const current_ns, object_ptr const sym)
+  {
+    try_object<ns>(current_ns)
+      ->unmap(try_object<obj::symbol>(sym))
+      .expect_ok();
+    return obj::nil::nil_const();
+  }
+
   static object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
   {
     expect_object<runtime::ns>(current_ns)
@@ -501,6 +510,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("ns-resolve", &core_native::ns_resolve);
   intern_fn("alias", &core_native::alias);
   intern_fn("ns-unalias", &core_native::ns_unalias);
+  intern_fn("ns-unmap", &core_native::ns_unmap);
   intern_fn("refer", &core_native::refer);
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);

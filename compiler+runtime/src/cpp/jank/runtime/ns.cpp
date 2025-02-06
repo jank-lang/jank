@@ -43,6 +43,20 @@ namespace jank::runtime
     return new_var;
   }
 
+  result<void, native_persistent_string> ns::unmap(obj::symbol_ptr const &sym)
+  {
+    obj::symbol_ptr unqualified_sym{ sym };
+    if(!unqualified_sym->ns.empty())
+    {
+      return err("Can't unintern namespace-qualified symbol");
+    }
+
+    auto locked_vars(vars.wlock());
+    *locked_vars
+      = make_box<obj::persistent_hash_map>((*locked_vars)->data.erase(unqualified_sym));
+    return ok();
+  }
+
   option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
