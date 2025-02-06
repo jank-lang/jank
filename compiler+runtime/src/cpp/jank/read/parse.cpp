@@ -1104,7 +1104,7 @@ namespace jank::read::parse
                                                          obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = false;
     auto quoted_form(next());
     quoted = old_quoted;
     if(quoted_form.is_err())
