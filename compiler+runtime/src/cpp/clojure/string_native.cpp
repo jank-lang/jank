@@ -1,13 +1,10 @@
 #include <boost/algorithm/string.hpp>
 
-#include <fmt/format.h>
-
 #include <jank/native_persistent_string/fmt.hpp>
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
 
 namespace clojure::string_native
