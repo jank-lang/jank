@@ -18,6 +18,7 @@ namespace jank::runtime::obj
     return lte(val, end);
   }
 
+  //TODO ban these constructors
   range::range(object_ptr const end)
     : start{ make_box(0) }
     , end{ end }

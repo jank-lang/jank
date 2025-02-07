@@ -17,8 +17,7 @@ namespace jank::runtime::obj
       CHECK(!equal(make_box<range>(make_box(5)), make_box<range>(make_box(6))));
       CHECK(equal(make_box<range>(make_box(0)), make_box<range>(make_box(0))));
       CHECK(!equal(make_box<range>(make_box(0)), make_box<range>(make_box(5))));
-      //TODO empty range uses persistent_list
-      //CHECK(!equal(make_box<range>(make_box(1)), make_box<range>(make_box(0))));
+      CHECK(!equal(make_box<range>(make_box(1)), make_box<range>(make_box(0))));
     }
   }
 }
