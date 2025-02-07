@@ -44,6 +44,11 @@ try
     .expect_ok();
 
   auto const res(context.run());
+  if(context.shouldExit())
+  {
+    return res;
+  }
+
   return res;
 }
 /* TODO: Unify error handling. JEEZE! */
