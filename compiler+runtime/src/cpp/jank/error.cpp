@@ -15,8 +15,8 @@ namespace jank::error
         return "Expecting whitespace after the last token";
       case kind::lex_invalid_unicode:
         return "Invalid Unicode character";
-      case kind::lex_invalid_character:
-        return "Invalid character";
+      case kind::lex_incomplete_character:
+        return "Incomplete character";
       case kind::lex_invalid_number:
         return "Invalid number";
       case kind::lex_invalid_ratio:
@@ -259,6 +259,14 @@ namespace jank
   make_error(error::kind const kind, read::source const &source, error::note const &error_note)
   {
     return runtime::make_box<error::base>(kind, source, error_note);
+  }
+
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       error::note const &error_note)
+  {
+    return runtime::make_box<error::base>(kind, message, source, error_note);
   }
 
   error_ptr make_error(error::kind const kind,

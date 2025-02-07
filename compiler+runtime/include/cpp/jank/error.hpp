@@ -11,7 +11,7 @@ namespace jank::error
     lex_unexpected_eof,
     lex_expecting_whitespace,
     lex_invalid_unicode,
-    lex_invalid_character,
+    lex_incomplete_character,
     lex_invalid_number,
     lex_invalid_ratio,
     lex_invalid_symbol,
@@ -85,8 +85,8 @@ namespace jank::error
         return "lex/expecting-whitespace";
       case kind::lex_invalid_unicode:
         return "lex/invalid-unicode";
-      case kind::lex_invalid_character:
-        return "lex/invalid-character";
+      case kind::lex_incomplete_character:
+        return "lex/incomplete-character";
       case kind::lex_invalid_number:
         return "lex/invalid-number";
       case kind::lex_invalid_ratio:
@@ -271,6 +271,10 @@ namespace jank
                        read::source const &source);
   error_ptr
   make_error(error::kind const kind, read::source const &source, error::note const &error_note);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       error::note const &error_note);
   error_ptr make_error(error::kind const kind,
                        read::source const &source,
                        native_persistent_string const &error_note_message);

@@ -343,15 +343,29 @@ namespace jank::error
     }
   }
 
+  /* In order to flex properly, we need line number columns to all be the same width.
+   * This requires some work, since the numbers themselves can vary. For example, a
+   * snippet spanning lines 8 through 12 will have two lines (8 - 9) which have a
+   * single character width, while (10 - 12) are twice as wide. So, we measure the
+   * width of the widest number (the last one) and then pad the others. */
+  static Element line_number(size_t const max_line_number_width, std::string num)
+  {
+    if(num.size() < max_line_number_width)
+    {
+      /* We add space to the beginning so we can keep numbers right aligned. */
+      num.insert(num.begin(), max_line_number_width - num.size(), ' ');
+    }
+    return text(std::move(num));
+  }
+
   static Element underline_note(note const &n)
   {
     auto const width{ std::max(n.source.end.col - n.source.start.col, 1zu) };
-    std::string line(n.source.start.col - 1, ' ');
-    line.insert(line.end(), width, '^');
-    line += ' ';
-    line += n.message;
+    std::string underline(n.source.start.col - 1, ' ');
+    underline.insert(underline.end(), width, '^');
+    underline += ' ';
 
-    auto const ret{ text(line) };
+    auto const ret{ hbox({ text(underline), paragraph(n.message) }) };
     switch(n.kind)
     {
       case note::kind::info:
@@ -365,7 +379,7 @@ namespace jank::error
 
   static Element code_snippet(snippet const &s)
   {
-    /* TODO: Handle unknown source and failure to map. */
+    /* TODO: Handle unknown source. */
     /* TODO: Handle files in JARs. */
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
@@ -380,35 +394,45 @@ namespace jank::error
     //fmt::println("highlighted_lines {}", highlighted_lines.size());
 
     std::vector<Element> line_numbers, lines;
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const max_line_number_width{ snprintf(nullptr, 0, "%zu", s.line_end) };
 
     for(auto const &l : s.lines)
     {
-      Element line_number{}, line_content{};
+      Element line_num{}, line_content{};
       //fmt::println("snippet line {} : {}",
       //             l.number,
       //             l.kind == line::kind::file_data ? "file" : "note");
       switch(l.kind)
       {
         case line::kind::file_data:
-          line_number = paragraphAlignRight(std::to_string(l.number));
-          line_content = highlighted_lines.at(l.number);
+          line_num = line_number(max_line_number_width, std::to_string(l.number));
+          line_content = highlighted_lines.at(l.number) | flex;
           break;
         case line::kind::note:
-          line_number = text(" ");
-          line_content = underline_note(l.note.unwrap());
+          line_num = line_number(max_line_number_width, "");
+          line_content = underline_note(l.note.unwrap()) | flex;
           break;
         case line::kind::ellipsis:
-          line_number = text(" ");
-          line_content = text("…");
+          line_num = line_number(max_line_number_width, "");
+          line_content = text("…") | flex;
           break;
       }
-      line_numbers.emplace_back(line_number);
+      line_numbers.emplace_back(line_num);
       lines.emplace_back(line_content);
     }
 
+    std::vector<Element> vlines;
+    for(size_t i{}; i < lines.size(); ++i)
+    {
+      vlines.emplace_back(hbox({ line_numbers[i], separator(), lines[i] }));
+    }
+
+    return window(text(fmt::format(" {} ", s.file_path)), vbox(std::move(vlines)));
+
     /* TODO: line + col */
-    return window(text(fmt::format(" {} ", s.file_path)),
-                  hbox({ vbox(std::move(line_numbers)), separator(), vbox(std::move(lines)) }));
+    //return window(text(fmt::format(" {} ", s.file_path)),
+    //              hbox({ vbox(std::move(line_numbers)), separator(), vbox(std::move(lines)) }));
   }
 
   void report(error_ptr const e)
@@ -435,7 +459,7 @@ namespace jank::error
     auto error{ vbox({ header(kind_str(e->kind)),
                        hbox({
                          text("error: ") | bold | color(Color::Red),
-                         text(e->message) | bold,
+                         paragraph(e->message) | bold,
                        }) }) };
 
     /* TODO: Context. */

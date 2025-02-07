@@ -4,8 +4,7 @@
 
 namespace jank::read
 {
-  static constexpr auto pos_max{ std::numeric_limits<size_t>::max() };
-  source_position const source_position::unknown{ pos_max, pos_max, pos_max };
+  source_position const source_position::unknown{ 0, 0, 0 };
   source const source::unknown{ "unknown", source_position::unknown, source_position::unknown };
 
   source::source(source_position const &start)

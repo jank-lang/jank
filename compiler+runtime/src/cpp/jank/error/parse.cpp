@@ -1,5 +1,4 @@
 #include <jank/error/parse.hpp>
-#include <jank/read/lex.hpp>
 #include <jank/util/string_builder.hpp>
 
 namespace jank::error
@@ -45,7 +44,7 @@ namespace jank::error
 
   error_ptr parse_unexpected_closing_character(read::lex::token const &token)
   {
-    /* TODO: Point to last open char? */
+    /* TODO: Point to last open char. */
     util::string_builder sb;
     return make_error(
       kind::parse_unexpected_closing_character,
