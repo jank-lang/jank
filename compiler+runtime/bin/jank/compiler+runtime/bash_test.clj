@@ -38,18 +38,19 @@
                                 (recur (dec i))
                                 res))
                             :timeout))]
-                (when (or (keyword? res)
+                (when (or (= :timeout res)
                           (and (zero? (:exit res)) expect-failure?)
                           (and (not (zero? (:exit res))) (not expect-failure?)))
-                  (vreset! unexpected-result res)))
+                  (case res
+                    :timeout (do (b.p/destroy-tree p)
+                                 (vreset! unexpected-result (assoc @p :timeout true)))
+                    (vreset! unexpected-result res))))
               (if-some [res @unexpected-result]
                 (do (vreset! passed? false)
-                    (case res
-                      ;;TODO print output so far
-                      :timeout (util/log-error-with-time duration "Failed " relative-dirname " due to timeout")
-                      (do
-                        (println (:out res))
-                        (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))))
+                    (println (:out res))
+                    (util/log-error-with-time duration "Failed " relative-dirname
+                                              (when (:timeout res) " due to timeout")
+                                              " with exit code " (:exit res)))
                 (util/log-info-with-time duration "Tested " relative-dirname))))))
 
       (when-not @passed?
