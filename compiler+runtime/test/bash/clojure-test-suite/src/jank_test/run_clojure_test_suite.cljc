@@ -116,17 +116,17 @@
     ;clojure.core-test.str  ;Read error (1201 - 1203): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.string-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.subs ;https://github.com/jank-lang/jank/issues/248
-    clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
-;    clojure.core-test.symbol-qmark
-;    clojure.core-test.take
-;    clojure.core-test.take-last
-;    clojure.core-test.take-while
-;    clojure.core-test.taps
-;    ;clojure.core-test.true-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.unsigned-bit-shift-right
-;    clojure.core-test.with-out-str
-;    clojure.core-test.with-precision
-;    ;clojure.core-test.zero-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
+    ;clojure.core-test.symbol-qmark ;Read error (456 - 458): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.take ;https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
+    ;clojure.core-test.take-last ; https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.take-while ; https://github.com/jank-lang/jank/issues/243
+    ;clojure.core-test.taps ; Read error (521 - 521): unknown namespace: js => https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.true-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.unsigned-bit-shift-right ; Exception: invalid object type: 0
+    ;clojure.core-test.with-out-str ; Exception: TODO: port with-out-str
+    ;clojure.core-test.with-precision ;Read error (372 - 374): invalid number: chars 'M' are invalid for radix 10
+    ;clojure.core-test.zero-qmark ; https://github.com/jank-lang/jank/issues/195
 ])
 
 (defn -main []
