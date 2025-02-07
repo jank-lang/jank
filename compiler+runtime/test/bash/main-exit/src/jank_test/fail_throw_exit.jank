@@ -1,4 +1,4 @@
 (ns jank-test.fail-throw-exit)
 (defn -main []
   (println "jank-test.fail-throw-exit some expected output")
-  (throw (ex-info "expected" {})))
+  (throw "expected throw"))

@@ -316,7 +316,6 @@ try
       run_main(opts);
       break;
   }
-  std::exit(0);
 }
 /* TODO: Unify error handling. JEEZE! */
 catch(std::exception const &e)

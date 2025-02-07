@@ -1,0 +1,2 @@
+(println "jank_test/throwing_script.jank some expected output")
+(throw "expected throwing script")
