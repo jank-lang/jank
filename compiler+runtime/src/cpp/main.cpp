@@ -316,30 +316,31 @@ try
       run_main(opts);
       break;
   }
+  return 0;
 }
 /* TODO: Unify error handling. JEEZE! */
 catch(std::exception const &e)
 {
   fmt::println("Exception: {}", e.what());
-  std::exit(1);
+  return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
   fmt::println("Exception: {}", jank::runtime::to_code_string(o));
-  std::exit(1);
+  return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
   fmt::println("Exception: {}", s);
-  std::exit(1);
+  return 1;
 }
 catch(jank::read::error const &e)
 {
   fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
-  std::exit(1);
+  return 1;
 }
 catch(...)
 {
   fmt::println("Unknown exception thrown");
-  std::exit(1);
+  return 1;
 }
