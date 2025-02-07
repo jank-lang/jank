@@ -1,0 +1,3 @@
+(ns jank-test.successful-exit-code)
+(defn -main []
+  (println "jank-test.successful-exit-code: some expected output"))

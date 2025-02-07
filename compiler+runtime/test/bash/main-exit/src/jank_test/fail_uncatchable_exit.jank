@@ -1,0 +1,5 @@
+(ns jank-test.fail-uncatchable-exit)
+(defn -main []
+  (println "jank-test.fail-uncatchable-exit some expected output")
+  ;; related: https://github.com/jank-lang/jank/issues/244
+  (count 1))

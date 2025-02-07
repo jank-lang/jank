@@ -1,0 +1,44 @@
+#!/usr/bin/env bb    # vi: ft=clojure
+
+(ns pass-successful-exit
+  (:require [babashka.process :as proc]
+            [clojure.test :as t :refer [deftest run-test is]]))
+
+(deftest successful-exit
+  (let [{:keys [err out exit]}
+        (proc/shell {:out :string :err :string}
+                    "jank --module-path src run-main jank-test.successful-exit-code")]
+    (is (empty? err))
+    (is (= "Bottom of clojure.core\njank-test.successful-exit-code: some expected output\n"
+           out))
+    (is (zero? exit))))
+
+(deftest throw-exit
+  (let [{:keys [err out exit]}
+        (proc/shell {:out :string :err :string}
+                    "jank --module-path src run-main jank-test.fail-throw-exit")]
+    (is (empty? err))
+    (is (contains?
+          #{"Bottom of clojure.core\njank-test.fail-throw-exit some expected output\nException: {:error \"expected\", :data {}}\n"
+            "Bottom of clojure.core\njank-test.fail-throw-exit some expected output\nException: {:data {}, :error \"expected\"}\n"}
+          out))
+    (is (= 1 exit))))
+
+(deftest uncatchable-exit
+  (let [{:keys [err out exit]}
+        (proc/shell {:out :string :err :string}
+                    "jank --module-path src run-main jank-test.fail-uncatchable-exit")]
+    (is (empty? err))
+    (is (= "Bottom of clojure.core\njank-test.fail-uncatchable-exit some expected output\nException: not seqable: 1\n"
+           out))
+    (is (= 1 exit))))
+
+(defn -main []
+  (System/exit
+    (if (= {:test 3, :pass 9, :fail 0, :error 0, :type :summary}
+           (t/run-tests (the-ns 'pass-successful-exit)))
+      0
+      1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
