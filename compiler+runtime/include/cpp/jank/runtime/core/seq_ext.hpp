@@ -30,7 +30,7 @@ namespace jank::runtime
               return false;
             }
           }
-          return seq == nullptr && it == end;
+          return seq == nullptr;
         }
       },
       []() { return false; },
