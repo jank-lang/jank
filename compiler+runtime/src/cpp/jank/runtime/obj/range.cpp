@@ -90,7 +90,7 @@ namespace jank::runtime::obj
     }
     /* TODO: Repeat object. */
     //else if(is_zero(step))
-    //{ return make_box<repeat>(start); }
+    //{ return repeat::create(start); }
     return make_box<range>(start,
                            end,
                            step,

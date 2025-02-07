@@ -80,7 +80,7 @@ namespace jank::runtime::obj
     }
     else if(is_zero(step))
     {
-      return make_box<repeat>(make_box<integer>(start));
+      return repeat::create(make_box<integer>(start));
     }
     return make_box<integer_range>(start,
                                    end,

@@ -16,6 +16,9 @@ namespace jank::runtime::obj
     : value{ value }
     , count{ count }
   {
+    if(lte(count, make_box(0))) {
+      throw std::runtime_error{ "use repeat::create" };
+    }
   }
 
   object_ptr repeat::create(object_ptr const value)
@@ -53,7 +56,7 @@ namespace jank::runtime::obj
     {
       return this;
     }
-    if(lt(count, make_box(1)))
+    if(lte(count, make_box(1)))
     {
       return nullptr;
     }

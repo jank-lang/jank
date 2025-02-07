@@ -1159,12 +1159,12 @@ namespace jank::runtime
 
   object_ptr repeat(object_ptr const val)
   {
-    return make_box<obj::repeat>(val);
+    return obj::repeat::create(val);
   }
 
   object_ptr repeat(object_ptr const n, object_ptr const val)
   {
-    return make_box<obj::repeat>(n, val);
+    return obj::repeat::create(n, val);
   }
 
   object_ptr sort(object_ptr const coll)
