@@ -1018,29 +1018,16 @@ namespace jank::runtime
       [](auto const typed_l, object_ptr const r) -> native_bool {
         return visit_seqable(
           [](auto const typed_r, auto const typed_l) -> native_bool {
-            auto r_it(typed_r->fresh_seq());
-            auto l_it(typed_l->fresh_seq());
-            if(!r_it)
+            auto seq(typed_r->fresh_seq());
+            for(auto it(typed_l->fresh_seq()); it != nullptr;
+                it = it->next_in_place(), seq = seq->next_in_place())
             {
-              return l_it == nullptr;
-            }
-            if(!l_it)
-            {
-              return r_it == nullptr;
-            }
-
-            for(; l_it != nullptr; l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
-            {
-              if(!r_it)
-              {
-                return false;
-              }
-              if(!runtime::equal(l_it->first(), r_it->first()))
+              if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
               {
                 return false;
               }
             }
-            return r_it == nullptr;
+            return seq == nullptr;
           },
           r,
           typed_l);

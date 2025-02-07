@@ -434,12 +434,14 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/core.cpp
+    test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/persistent_vector.cpp
+    test/cpp/jank/runtime/obj/lazy_sequence.cpp
     test/cpp/jank/runtime/obj/range.cpp
     test/cpp/jank/runtime/obj/integer_range.cpp
     test/cpp/jank/runtime/obj/repeat.cpp
