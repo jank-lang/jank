@@ -46,6 +46,7 @@
               (if-some [res @unexpected-result]
                 (do (vreset! passed? false)
                     (case res
+                      ;;TODO print output so far
                       :timeout (util/log-error-with-time duration "Failed " relative-dirname " due to timeout")
                       (do
                         (println (:out res))
