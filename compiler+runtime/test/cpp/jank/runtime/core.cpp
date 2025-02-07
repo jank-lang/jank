@@ -6,7 +6,7 @@
 
 namespace jank::runtime
 {
-  TEST_SUITE("repeat")
+  TEST_SUITE("core runtime")
   {
     TEST_CASE("equal")
     {
