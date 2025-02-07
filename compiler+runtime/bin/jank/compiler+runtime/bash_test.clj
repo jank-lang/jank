@@ -26,19 +26,30 @@
             (util/log-warning "Skipped " relative-dirname)
             (util/with-elapsed-time duration
               (let [_ (println "STARTING" dirname)
-                    res @(b.p/process {:out :string
-                                       :err :out
-                                       :dir dirname
-                                       :extra-env extra-env}
-                                      test-file)]
-                (when (or (and (zero? (:exit res)) expect-failure?)
+                    p (b.p/process {:out :string
+                                    :err :out
+                                    :dir dirname
+                                    :extra-env extra-env}
+                                   test-file)
+                    still-running (Object.)
+                    res (loop [i 60]
+                          (if (pos? i)
+                            (let [res (deref p 1000 still-running)]
+                              (if (identical? res still-running)
+                                (recur (dec i))
+                                res))
+                            :timeout))]
+                (when (or (keyword? res)
+                          (and (zero? (:exit res)) expect-failure?)
                           (and (not (zero? (:exit res))) (not expect-failure?)))
                   (vreset! unexpected-result res)))
               (if-some [res @unexpected-result]
-                (do
-                  (vreset! passed? false)
-                  (println (:out res))
-                  (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))
+                (do (vreset! passed? false)
+                    (case res
+                      :timeout (util/log-error-with-time duration "Failed " relative-dirname " due to timeout")
+                      (do
+                        (println (:out res))
+                        (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))))
                 (util/log-info-with-time duration "Tested " relative-dirname))))))
 
       (when-not @passed?
