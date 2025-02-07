@@ -1,7 +1,3 @@
-//debugging
-#include <fmt/format.h>
-#include <jank/runtime/core.hpp>
-
 #include <jank/runtime/obj/range.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/math.hpp>
