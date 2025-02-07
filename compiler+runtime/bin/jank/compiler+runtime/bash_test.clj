@@ -25,8 +25,7 @@
           (if skip?
             (util/log-warning "Skipped " relative-dirname)
             (util/with-elapsed-time duration
-              (let [_ (println "STARTING" dirname)
-                    p (b.p/process {:out :string
+              (let [p (b.p/process {:out :string
                                     :err :out
                                     :dir dirname
                                     :extra-env extra-env}
