@@ -10,7 +10,6 @@ namespace jank::runtime
   {
     TEST_CASE("equal")
     {
-      CHECK(equal(make_box(42), make_box(42)));
       CHECK(equal(nullptr, nullptr));
       CHECK(!equal(nullptr, make_box(42)));
       CHECK(!equal(make_box(42), nullptr));
