@@ -109,16 +109,14 @@
     ;clojure.core-test.simple-ident-qmark ;Read error (480 - 482): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.simple-keyword-qmark ;Read error (488 - 490): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.simple-symbol-qmark ;Read error (484 - 486): invalid number: chars 'N' are invalid for radix 8
-
-;;;TODO FROM HERE
-    clojure.core-test.slash
-;    clojure.core-test.some-qmark
-;    ;clojure.core-test.star ; https://github.com/jank-lang/jank/issues/195
-;    ;clojure.core-test.star-squote ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.str
-;    ;clojure.core-test.string-qmark ; https://github.com/jank-lang/jank/issues/195
-;    clojure.core-test.subs
-;    clojure.core-test.symbol
+    ;clojure.core-test.slash ;Read error (393 - 395): invalid number: chars 'N' are invalid for radix 10
+    ;clojure.core-test.some-qmark ;Read error (437 - 437): unsupported reader macro
+    ;clojure.core-test.star ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.star-squote ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.str  ;Read error (1201 - 1203): invalid number: chars 'N' are invalid for radix 8
+    ;clojure.core-test.string-qmark ; https://github.com/jank-lang/jank/issues/195
+    ;clojure.core-test.subs ;https://github.com/jank-lang/jank/issues/248
+    clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
 ;    clojure.core-test.symbol-qmark
 ;    clojure.core-test.take
 ;    clojure.core-test.take-last
