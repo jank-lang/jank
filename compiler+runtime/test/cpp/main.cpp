@@ -55,25 +55,20 @@ try
 catch(std::exception const &e)
 {
   fmt::println("Exception: {}", e.what());
-  return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
   fmt::println("Exception: {}", jank::runtime::to_string(o));
-  return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
   fmt::println("Exception: {}", s);
-  return 1;
 }
 catch(jank::read::error const &e)
 {
   fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
-  return 1;
 }
 catch(...)
 {
   fmt::println("Unknown exception thrown");
-  return 1;
 }
