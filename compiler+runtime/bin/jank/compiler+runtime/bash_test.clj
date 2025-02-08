@@ -7,6 +7,7 @@
             [babashka.fs :as b.f]))
 
 (def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
+(def timeout-seconds-per-script 60)
 
 (defn -main [{:keys [enabled?]}]
   (util/log-step "Run bash test suite")
@@ -30,14 +31,7 @@
                                     :dir dirname
                                     :extra-env extra-env}
                                    test-file)
-                    still-running (Object.)
-                    res (loop [i 60]
-                          (if (pos? i)
-                            (let [res (deref p 1000 still-running)]
-                              (if (identical? res still-running)
-                                (recur (dec i))
-                                res))
-                            :timeout))]
+                    res (deref p (* timeout-seconds-per-script 1000) :timeout)]
                 (when (or (= :timeout res)
                           (and (zero? (:exit res)) expect-failure?)
                           (and (not (zero? (:exit res))) (not expect-failure?)))
