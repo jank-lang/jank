@@ -1,2 +1,1 @@
-(println "jank_test/successful_script.jank some expected output")
-{:foo "42"}
+1
