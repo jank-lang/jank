@@ -16,6 +16,7 @@
           test-files (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
           extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
           passed? (volatile! true)]
+      (util/log (pr-str @(b.p/shell {:out :string :err :out :extra-env extra-env} "which bb")))
       (doseq [test-file test-files]
         (let [skip? (clojure.string/ends-with? (str test-file) "skip-test")
               expect-failure? (clojure.string/ends-with? (str test-file) "fail-test")
