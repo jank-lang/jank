@@ -86,4 +86,6 @@ namespace jank::runtime
 
   object_ptr tagged_literal(object_ptr tag, object_ptr form);
   native_bool is_tagged_literal(object_ptr o);
+
+  object_ptr catch_all(object_ptr f, object_ptr normal, object_ptr caught, object_ptr unknown);
 }
