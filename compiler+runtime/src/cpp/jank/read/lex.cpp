@@ -283,29 +283,6 @@ namespace jank::read::lex
     return { some(token_kind::eof), *this };
   }
 
-  static error_ptr make_error(error::kind const kind,
-                              native_persistent_string const &message,
-                              movable_position const &start)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(kind,
-                                          message,
-                                          /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-                                          source{ runtime::to_string(file), start, start });
-  }
-
-  static error_ptr make_error(error::kind const kind,
-                              native_persistent_string const &message,
-                              movable_position const &start,
-                              movable_position const &end)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(kind,
-                                          message,
-                                          /* NOLINTNEXTLINE(cppcoreguidelines-slicing) */
-                                          source{ runtime::to_string(file), start, end });
-  }
-
   option<error_ptr> processor::check_whitespace(native_bool const found_space)
   {
     if(require_space && !found_space)
@@ -773,6 +750,7 @@ namespace jank::read::lex
             ++pos;
           }
 
+          /* TODO: This looks unreachable. */
           if(expecting_exponent)
           {
             ++pos;
@@ -790,9 +768,9 @@ namespace jank::read::lex
             return error::lex_invalid_number(fmt::format("Unexpected end of base {} number", radix),
                                              { token_start, pos });
           }
-          /* Tokens beginning with - are ambiguous; it's a negative number only if followed by a number, otherwise
-             * it's a symbol.
-             * TODO: handle numbers starting with `+` */
+          /* Tokens beginning with - are ambiguous; it's a negative number only if
+           * followed by a number. Otherwise, it's a symbol. */
+          /* TODO: Handle numbers starting with `+` */
           if(file[token_start] != '-' || (pos - token_start) >= 1)
           {
             require_space = true;
@@ -826,7 +804,7 @@ namespace jank::read::lex
               number_start += 2;
             }
 
-            /* check for invalid digits */
+            /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
             for(auto i{ number_start }; i < pos; i++)
             {
@@ -843,31 +821,32 @@ namespace jank::read::lex
                             radix),
                 { token_start, pos });
             }
-            /* real numbers */
+            /* Real numbers. */
             if(contains_dot || is_scientific || found_exponent_sign)
             {
-              if(radix != 10 || found_r)
-              {
-                return error::lex_invalid_number(
-                  fmt::format("A base {} number cannot use scientific "
-                              "notation or contain any of these characters '.+-'",
-                              radix),
-                  { token_start, pos });
-              }
               return ok(token{ token_start,
                                pos,
                                token_kind::real,
                                std::strtod(file.data() + token_start, nullptr) });
             }
 
-            /* integers */
+            /* Integers */
             errno = 0;
             auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
                                    * (found_beginning_negative ? -1 : 1) };
             if(errno == ERANGE)
             {
-              return error::lex_invalid_number("This number is too large to be stored",
-                                               { token_start, pos });
+              static constexpr auto const max(std::numeric_limits<native_integer>::max());
+              /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+              auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
+              return error::lex_invalid_number(
+                "Number is too large to be stored",
+                {
+                  token_start,
+                  pos
+              },
+                error::note{ "I can fit about this much",
+                             { token_start, token_start + max_width } });
             }
             return ok(token{ token_start, pos, token_kind::integer, parsed_int });
           }
@@ -913,10 +892,8 @@ namespace jank::read::lex
                                                     ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           {
-            return make_error(error::kind::lex_invalid_symbol,
-                              "Symbols may not start with a '/'",
-                              token_start,
-                              pos);
+            return error::lex_invalid_symbol("A symbol may not start with a '/'",
+                                             { token_start, pos });
           }
           else if(name == "nil")
           {
@@ -946,10 +923,8 @@ namespace jank::read::lex
           if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
           {
             ++pos;
-            return make_error(error::kind::lex_invalid_keyword,
-                              "Expected non-whitespace character after ':' when building a keyword",
-                              token_start,
-                              pos);
+            return error::lex_invalid_keyword("A keyword must contain a valid symbol after the ':'",
+                                              { token_start, pos });
           }
 
           /* Support auto-resolved qualified keywords. */
@@ -979,17 +954,14 @@ namespace jank::read::lex
 
           if(name[0] == '/' && name.size() > 1)
           {
-            return make_error(error::kind::lex_invalid_keyword,
-                              "Keywords may not start with '/'",
-                              token_start,
-                              pos);
+            return error::lex_invalid_keyword("A keyword may not start with ':/'",
+                                              { token_start, pos });
           }
           else if(name[0] == ':' && name[1] == ':')
           {
-            return make_error(error::kind::lex_invalid_keyword,
-                              "Too many ':' for a valid keyword",
-                              token_start,
-                              pos);
+            return error::lex_invalid_keyword("Too many ':' for a valid keyword",
+                                              { token_start, pos },
+                                              "Only one or two ':' is valid");
           }
 
           return ok(token{ token_start, pos, token_kind::keyword, name });
@@ -1009,10 +981,7 @@ namespace jank::read::lex
             if(oc.is_err())
             {
               ++pos;
-              return make_error(error::kind::lex_unterminated_string,
-                                "Unterminated string",
-                                token_start,
-                                pos);
+              return error::lex_unterminated_string({ token_start, pos });
             }
             else if(!escaped && oc.expect_ok().character == '"')
             {
@@ -1038,10 +1007,10 @@ namespace jank::read::lex
                   break;
                 default:
                   util::string_builder sb;
-                  return make_error(error::kind::lex_invalid_string_escape,
-                                    fmt::format("Unsupported string escape character '{}'",
-                                                sb(oc.expect_ok().character).view()),
-                                    pos);
+                  return error::lex_invalid_string_escape(
+                    fmt::format("Unsupported string escape character '{}'",
+                                sb(oc.expect_ok().character).view()),
+                    { pos, pos + 2zu });
               }
               escaped = false;
             }
@@ -1194,10 +1163,9 @@ namespace jank::read::lex
           return ok(token{ token_start, pos, token_kind::symbol, name });
         }
         ++pos;
-        return make_error(error::kind::lex_unexpected_character,
-                          fmt::format("unexpected character '{}'", file[token_start]),
-                          token_start,
-                          pos);
+        return error::lex_unexpected_character(
+          fmt::format("Unexpected character '{}'", file[token_start]),
+          { token_start, pos });
     }
   }
 
@@ -1206,7 +1174,7 @@ namespace jank::read::lex
     auto const peek_pos(pos + ahead);
     if(peek_pos >= file.size())
     {
-      return make_error(error::kind::lex_unexpected_eof, "Unexpected end of file", pos);
+      return error::lex_unexpected_eof(pos);
     }
     auto const oc{ convert_to_codepoint(file.substr(peek_pos), peek_pos) };
     return oc;

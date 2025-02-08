@@ -355,7 +355,7 @@ namespace jank::error
       /* We add space to the beginning so we can keep numbers right aligned. */
       num.insert(num.begin(), max_line_number_width - num.size(), ' ');
     }
-    return text(std::move(num));
+    return text(std::move(num)) | color(Color::GrayDark);
   }
 
   static Element underline_note(note const &n)

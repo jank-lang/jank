@@ -24,10 +24,16 @@ namespace jank::error
   error_ptr lex_invalid_ratio(native_persistent_string const &message,
                               read::source const &source,
                               note const &note);
-  error_ptr lex_invalid_symbol(read::source const &source);
-  error_ptr lex_invalid_keyword(read::source const &source);
+  error_ptr lex_invalid_symbol(native_persistent_string const &message, read::source const &source);
+  error_ptr
+  lex_invalid_keyword(native_persistent_string const &message, read::source const &source);
+  error_ptr lex_invalid_keyword(native_persistent_string const &message,
+                                read::source const &source,
+                                native_persistent_string const &note);
   error_ptr lex_unterminated_string(read::source const &source);
-  error_ptr lex_invalid_string_escape(read::source const &source);
-  error_ptr lex_unexpected_character(read::source const &source);
+  error_ptr
+  lex_invalid_string_escape(native_persistent_string const &message, read::source const &source);
+  error_ptr
+  lex_unexpected_character(native_persistent_string const &message, read::source const &source);
   error_ptr internal_lex_failure(read::source const &source);
 }
