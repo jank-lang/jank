@@ -388,6 +388,7 @@ namespace jank::error
                     hbox({ text(fmt::format("Unable to map file: {}", file.expect_err())) }));
     }
 
+    /* TODO: Horizontal centering. */
     auto const highlighted_lines{
       ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
     };
@@ -429,10 +430,6 @@ namespace jank::error
     }
 
     return window(text(fmt::format(" {} ", s.file_path)), vbox(std::move(vlines)));
-
-    /* TODO: line + col */
-    //return window(text(fmt::format(" {} ", s.file_path)),
-    //              hbox({ vbox(std::move(line_numbers)), separator(), vbox(std::move(lines)) }));
   }
 
   void report(error_ptr const e)
