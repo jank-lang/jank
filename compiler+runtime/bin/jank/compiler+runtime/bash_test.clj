@@ -7,7 +7,6 @@
             [babashka.fs :as b.f]))
 
 (def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
-(def timeout-seconds-per-script 60)
 
 (defn -main [{:keys [enabled?]}]
   (util/log-step "Run bash test suite")
@@ -26,25 +25,19 @@
           (if skip?
             (util/log-warning "Skipped " relative-dirname)
             (util/with-elapsed-time duration
-              (let [p (b.p/process {:out :string
-                                    :err :out
-                                    :dir dirname
-                                    :extra-env extra-env}
-                                   test-file)
-                    res (deref p (* timeout-seconds-per-script 1000) :timeout)]
-                (when (or (= :timeout res)
-                          (and (zero? (:exit res)) expect-failure?)
+              (let [res @(b.p/process {:out :string
+                                       :err :out
+                                       :dir dirname
+                                       :extra-env extra-env}
+                                      test-file)]
+                (when (or (and (zero? (:exit res)) expect-failure?)
                           (and (not (zero? (:exit res))) (not expect-failure?)))
-                  (case res
-                    :timeout (do (b.p/destroy-tree p)
-                                 (vreset! unexpected-result (assoc @p :timeout true)))
-                    (vreset! unexpected-result res))))
+                  (vreset! unexpected-result res)))
               (if-some [res @unexpected-result]
-                (do (vreset! passed? false)
-                    (util/log (:out res))
-                    (util/log-error-with-time duration "Failed " relative-dirname
-                                              (when (:timeout res) " due to timeout")
-                                              " with exit code " (:exit res)))
+                (do
+                  (vreset! passed? false)
+                  (println (:out res))
+                  (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))
                 (util/log-info-with-time duration "Tested " relative-dirname))))))
 
       (when-not @passed?
