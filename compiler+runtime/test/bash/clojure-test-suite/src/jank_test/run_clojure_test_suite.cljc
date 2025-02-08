@@ -1,8 +1,6 @@
 (ns jank-test.run-clojure-test-suite
   (:require [clojure.test :as t]))
 
-;; most of these are blocked by parsing of #?(:clj Long/MAX_VALUE)
-;; https://github.com/jank-lang/jank/issues/195
 (def namespaces
   '[
     ;clojure.core-test.abs    ; Read error (405 - 423): number out of range
