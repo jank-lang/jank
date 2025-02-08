@@ -1,4 +1,4 @@
-#!/usr/bin/env bb    # vi: ft=clojure
+#!/usr/bin/env bb
 
 (ns jank-test-main-exit
   (:require [babashka.process :as proc]
