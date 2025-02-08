@@ -1221,10 +1221,7 @@ namespace jank::read::parse
           {
             ns = ns_portion;
           }
-          else
-          {
-            ns = resolved_ns.unwrap()->name->name;
-          }
+          ns = resolved_ns.unwrap()->name->name;
         }
         name = sv.substr(slash + 1);
       }
