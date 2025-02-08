@@ -1,0 +1,4 @@
+(ns clojure-test.example-tests-b
+  (:require [clojure.test :as t]))
+
+(t/deftest b (t/is (= 2 2)))
