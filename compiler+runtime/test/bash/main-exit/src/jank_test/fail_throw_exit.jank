@@ -1,0 +1,3 @@
+(ns jank-test.fail-throw-exit)
+(defn -main []
+  (throw "expected throw"))

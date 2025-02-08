@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -xeuo pipefail
-
-mkdir -p outside-of-classpath
-jar cf outside-of-classpath/test.jar look_inside_jars/core.jank
-# make sure we don't cheat by using src
-cd outside-of-classpath
-jank --module-path 'test.jar' run-main look-inside-jars.core | grep 'LOADED look-inside-jars.core'
