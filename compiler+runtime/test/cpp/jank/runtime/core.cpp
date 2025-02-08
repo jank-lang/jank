@@ -17,6 +17,8 @@ namespace jank::runtime
       CHECK(equal(subs(s, make_box(0), make_box(7)), make_box<obj::persistent_string>("foo bar")));
       CHECK(equal(subs(s, make_box(0), make_box(0)), make_box<obj::persistent_string>("")));
       CHECK(equal(subs(s, make_box(1), make_box(1)), make_box<obj::persistent_string>("")));
+      CHECK(equal(subs(s, make_box(1), make_box(6)), make_box<obj::persistent_string>("oo ba")));
+      CHECK(equal(subs(s, make_box(1), make_box(7)), make_box<obj::persistent_string>("oo bar")));
       CHECK(equal(subs(s, make_box(3), make_box(4)), make_box<obj::persistent_string>(" ")));
     }
   }
