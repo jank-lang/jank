@@ -52,8 +52,7 @@ namespace jank::runtime
     }
 
     auto locked_vars(vars.wlock());
-    *locked_vars
-      = make_box<obj::persistent_hash_map>((*locked_vars)->data.erase(unqualified_sym));
+    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.erase(unqualified_sym));
     return ok();
   }
 
@@ -74,7 +73,8 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
+  result<void, native_persistent_string>
+  ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));

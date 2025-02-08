@@ -252,20 +252,15 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
-  static object_ptr
-  ns_unalias(object_ptr const current_ns, object_ptr const alias)
+  static object_ptr ns_unalias(object_ptr const current_ns, object_ptr const alias)
   {
-    try_object<ns>(current_ns)
-      ->remove_alias(try_object<obj::symbol>(alias));
+    try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
     return obj::nil::nil_const();
   }
 
-  static object_ptr
-  ns_unmap(object_ptr const current_ns, object_ptr const sym)
+  static object_ptr ns_unmap(object_ptr const current_ns, object_ptr const sym)
   {
-    try_object<ns>(current_ns)
-      ->unmap(try_object<obj::symbol>(sym))
-      .expect_ok();
+    try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
     return obj::nil::nil_const();
   }
 
