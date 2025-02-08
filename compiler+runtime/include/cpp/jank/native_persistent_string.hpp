@@ -181,7 +181,7 @@ namespace jank
       }
       /* If the size difference between our substring and its original string is too great, it's
        * not worth keeping the original string alive just to share the substring. In that case,
-       * we deep copy. This prevents relatively small (yet still categoricall large) substrings
+       * we deep copy. This prevents relatively small (yet still categorically large) substrings
        * from a large file keeping that whole file in memory as long as the substrings live. */
       else if((s_length - count) > max_shared_difference)
       {
