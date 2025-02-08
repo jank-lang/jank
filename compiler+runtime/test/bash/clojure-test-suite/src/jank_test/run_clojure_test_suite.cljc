@@ -33,14 +33,14 @@
     ;clojure.core-test.char ; unloadable
     ;clojure.core-test.char-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.compare ; Read error (413 - 418): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.count ;Assertion failed: (set), function unwrap, file option.hpp, line 163.
     ;clojure.core-test.dec ;Read error (351 - 353): invalid number: chars 'N' are invalid for radix 10
     ;clojure.core-test.decimal-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.denominator ; Read error (579 - 581): invalid number: chars 'N' are invalid for radix 10
     ;clojure.core-test.double ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.double-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.drop ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
-    ;clojure.core-test.drop-last ;https://github.com/jank-lang/jank/issues/244
+    clojure.core-test.drop-last
     ;clojure.core-test.drop-while ; https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
     ;clojure.core-test.even-qmark ;Read error (445 - 449): invalid number: chars 'N' are invalid for radix 10
     ;clojure.core-test.false-qmark ; https://github.com/jank-lang/jank/issues/195
@@ -66,15 +66,15 @@
     ;clojure.core-test.mod ;Read error (752 - 754): invalid number: chars 'N' are invalid for radix 10
     ;clojure.core-test.name ;Read error (22 - 22): unknown namespace: abc  =>  perhaps https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.namespace ;Read error (27 - 27): unknown namespace: abc =>  perhaps https://github.com/jank-lang/jank/issues/195
-    ;clojure.core-test.nan-qmark ;https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.nan-qmark ;TODO: port double , (not (= ##NaN ##NaN))
     ;clojure.core-test.neg-int-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.neg-qmark ; https://github.com/jank-lang/jank/issues/195
     clojure.core-test.next
     clojure.core-test.nil-qmark
     ;clojure.core-test.not ;Read error (478 - 478): unsupported reader macro
-    ;clojure.core-test.nth ; https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
-    ;clojure.core-test.nthnext ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.nthrest ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
+    clojure.core-test.nth
+    ;clojure.core-test.nthnext ;https://github.com/jank-lang/jank/issues/243
+    ;clojure.core-test.nthrest ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/247
     ;clojure.core-test.num ;Read error (623 - 625): invalid number: chars 'N' are invalid for radix 10
     ;clojure.core-test.number-qmark ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.number-range ; https://github.com/jank-lang/jank/issues/195
@@ -115,11 +115,11 @@
     ;clojure.core-test.star-squote ; https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.str  ;Read error (1201 - 1203): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.string-qmark ; https://github.com/jank-lang/jank/issues/195
-    ;clojure.core-test.subs ;https://github.com/jank-lang/jank/issues/244
+    clojure.core-test.subs
     ;clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
     ;clojure.core-test.symbol-qmark ;Read error (456 - 458): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.take ;https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
-    ;clojure.core-test.take-last ; https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.take-last ; https://github.com/jank-lang/jank/issues/243
     ;clojure.core-test.take-while ; https://github.com/jank-lang/jank/issues/243
     ;clojure.core-test.taps ; Read error (521 - 521): unknown namespace: js => https://github.com/jank-lang/jank/issues/195
     ;clojure.core-test.true-qmark ; https://github.com/jank-lang/jank/issues/195
