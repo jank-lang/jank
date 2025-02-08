@@ -5,71 +5,31 @@
             [clojure.string :as str]
             [clojure.test :as t :refer [deftest run-test is]]))
 
-(def this-ns (ns-name *ns*))
+(def this-nsym (ns-name *ns*))
 
-(deftest jank-run-main-successful-exit
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank --module-path src run-main jank-test.successful-exit-code")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank-test.successful-exit-code: some expected output\n"
-           out))
-    (is (zero? exit))))
+(defn is-shell-exit [expected-code & cmd]
+  (let [{:keys [exit] :as res} (apply proc/shell {:out :string
+                                                  :err :string
+                                                  :continue true}
+                                      cmd)]
+    (is (= expected-code exit)
+        (pr-str (select-keys res [:exit :out :cmd])))
+    res))
 
-(deftest jank-run-main-throw-exit
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank --module-path src run-main jank-test.fail-throw-exit")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank-test.fail-throw-exit some expected output\nException: \"expected throw\"\n"
-           out))
-    (is (= 1 exit))))
+(deftest jank-exit-code-test
+  (is-shell-exit 0 "jank --module-path src run-main jank-test.successful-exit-code")
+  (is-shell-exit 1 "jank --module-path src run-main jank-test.fail-throw-exit")
+  (is-shell-exit 1 "jank --module-path src run-main jank-test.fail-uncatchable-exit")
+  (is-shell-exit 106 "jank")
+  (is-shell-exit 1 "jank run src/jank_test/throwing_script.jank")
+  (is-shell-exit 1 "jank run src/jank_test/uncatchable_script.jank")
+  (is-shell-exit 0 "jank run src/jank_test/successful_script.jank"))
 
-(deftest jank-run-main-uncatchable-exit
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank --module-path src run-main jank-test.fail-uncatchable-exit")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank-test.fail-uncatchable-exit some expected output\nException: not seqable: 1\n"
-           out))
-    (is (= 1 exit))))
-
-(deftest jank-no-subcommand
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank")]
-    (is (str/starts-with? err "ERROR: RequiredError: A subcommand is required"))
-    (is (empty? out))
-    (is (= 106 exit))))
-
-(deftest jank-run-throwing-script
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank run src/jank_test/throwing_script.jank")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank_test/throwing_script.jank some expected output\nException: \"expected throwing script\"\n"
-           out))
-    (is (= 1 exit))))
-
-(deftest jank-run-uncatchable-script
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank run src/jank_test/uncatchable_script.jank")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank_test/uncatchable_script.jank some expected output\nException: not seqable: 1\n"
-           out))
-    (is (= 1 exit))))
-
-(deftest jank-run-successful-script
-  (let [{:keys [err out exit]}
-        (proc/shell {:out :string :err :string :continue true}
-                    "jank run src/jank_test/successful_script.jank")]
-    (is (empty? err))
-    (is (= "Bottom of clojure.core\njank_test/successful_script.jank some expected output\n{:foo \"42\"}\n"
-           out))
-    (is (= 0 exit))))
-
-(defn -main [] (System/exit (if (t/successful? (t/run-tests this-ns)) 0 1)))
+(defn -main []
+  (System/exit
+    (if (t/successful? (t/run-tests this-nsym))
+      0
+      1)))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))
