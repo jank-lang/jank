@@ -118,5 +118,7 @@ namespace jank::read::parse
     option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
+    /* Whether or not the next form is considered syntax-quoted. */
+    native_bool syntax_quoted{};
   };
 }

@@ -26,8 +26,10 @@ namespace jank::runtime
     var_ptr intern_var(native_persistent_string_view const &);
     var_ptr intern_var(obj::symbol_ptr const &);
     option<var_ptr> find_var(obj::symbol_ptr const &);
+    result<void, native_persistent_string> unmap(obj::symbol_ptr const &sym);
 
     result<void, native_persistent_string> add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns);
+    void remove_alias(obj::symbol_ptr const &sym);
     option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 
     result<void, native_persistent_string> refer(obj::symbol_ptr const sym, var_ptr const var);
