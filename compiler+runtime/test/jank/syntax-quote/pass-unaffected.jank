@@ -1,16 +1,16 @@
-(ns syntax-quote.pass-unaffected)
+(create-ns 'syntax-quote.pass-unaffected/bar)
 (ns-unalias *ns* 'c)
-(alias 'c 'clojure.core)
+(alias 'c 'syntax-quote.pass-unaffected/bar)
 (def a-var 1)
 (try
   (assert (= 1 `1) `1)
   (assert (= :foo `:foo) `:foo)
   (assert (= :foo/bar `:foo/bar) `:foo/bar)
   (assert (= :c/bar `:c/bar) `:c/bar)
-  (assert (= :syntax-quote.pass-unaffected/bar `::bar) `::bar)
-  (assert (= :syntax-quote.pass-unaffected/a-var `::a-var) `::a-var)
-  (assert (= :syntax-quote.pass-unaffected/+ `::+) `::+)
-  (assert (= :clojure.core/bar `::c/bar) `::c/bar])
+  (assert (= :clojure.core/bar `::bar) `::bar)
+  (assert (= :clojure.core/a-var `::a-var) `::a-var)
+  (assert (= :clojure.core/+ `::+) `::+)
+  (assert (= :syntax-quote.pass-unaffected/bar `::c/bar) `::c/bar])
   (assert (= [] `[]) `[])
   (assert (= {} `{}) `{})
   (assert (= '() `()) `())
@@ -19,6 +19,7 @@
   (assert (= '(quote foo/meow) ``foo/meow) ``foo/meow)
   (catch e (throw e))
   (finally
-    (in-ns 'clojure.core)))
+    (ns-unalias *ns* 'c)
+    (ns-unmap *ns* 'a-var)))
 
 :success

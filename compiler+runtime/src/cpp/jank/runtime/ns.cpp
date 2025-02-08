@@ -74,16 +74,19 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns)
+  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
-    if(found && expect_object<var>(*found) != ns)
+    if(found)
     {
-      return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string()));
+      if(expect_object<ns>(*found) != nsp)
+      {
+        return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string()));
+      }
+      return ok();
     }
-
-    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, ns));
+    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, nsp));
     return ok();
   }
 
