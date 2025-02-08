@@ -239,13 +239,13 @@ namespace jank::runtime
 
   native_bool equal(object_ptr const lhs, object_ptr const rhs)
   {
-    if(!lhs)
+    if(!lhs) // lhs == rhs ??
     {
       return !rhs;
     }
     else if(!rhs)
     {
-      return !lhs;
+      return false;
     }
 
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);

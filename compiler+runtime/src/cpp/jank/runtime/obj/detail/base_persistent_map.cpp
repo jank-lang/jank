@@ -28,9 +28,9 @@ namespace jank::runtime::obj::detail
 
         for(auto const &entry : static_cast<PT const *>(this)->data)
         {
-          auto const found(typed_o->contains(entry.first));
+          auto const found(typed_o->get_entry(entry.first)); // alternatively use get(key,fallback)
 
-          if(!found || !runtime::equal(entry.second, typed_o->get(entry.first)))
+          if(found == obj::nil::nil_const() || !runtime::equal(entry.second, expect_object<obj::persistent_vector>(found)->data[1]))
           {
             return false;
           }

@@ -16,6 +16,9 @@ namespace jank::runtime::obj
     : value{ value }
     , count{ count }
   {
+    if(lte(count, make_box(0))) {
+      throw std::runtime_error{ "use repeat::create" };
+    }
   }
 
   object_ptr repeat::create(object_ptr const value)
@@ -53,7 +56,7 @@ namespace jank::runtime::obj
     {
       return this;
     }
-    if(lt(count, make_box(1)))
+    if(lte(count, make_box(1)))
     {
       return nullptr;
     }
@@ -88,12 +91,12 @@ namespace jank::runtime::obj
         for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return true;
+        return seq == nullptr;
       },
       []() { return false; },
       &o);
