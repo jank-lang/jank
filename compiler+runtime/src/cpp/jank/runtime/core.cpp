@@ -600,7 +600,10 @@ namespace jank::runtime
     return o->type == object_type::tagged_literal;
   }
 
-  object_ptr catch_all(object_ptr const f, object_ptr const normal, object_ptr const caught, object_ptr const unknown)
+  object_ptr catch_all(object_ptr const f,
+                       object_ptr const normal,
+                       object_ptr const caught,
+                       object_ptr const unknown)
   {
     try
     {
@@ -621,7 +624,9 @@ namespace jank::runtime
     }
     catch(jank::read::error const &e)
     {
-      return dynamic_call(caught, make_box<obj::persistent_string>(fmt::format("Read error ({} - {}): {}", e.start, e.end, e.message)));
+      return dynamic_call(caught,
+                          make_box<obj::persistent_string>(
+                            fmt::format("Read error ({} - {}): {}", e.start, e.end, e.message)));
     }
     catch(...)
     {

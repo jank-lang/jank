@@ -120,7 +120,7 @@ namespace jank::runtime::obj
       return err(fmt::format("end index {} out of bounds for length {}", end, data.size()));
     }
 
-    return ok(make_box(data.substr(start, end-start)));
+    return ok(make_box(data.substr(start, end - start)));
   }
 
   native_integer persistent_string::first_index_of(object_ptr const m) const
