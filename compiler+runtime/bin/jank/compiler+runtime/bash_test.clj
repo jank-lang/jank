@@ -47,7 +47,7 @@
                     (vreset! unexpected-result res))))
               (if-some [res @unexpected-result]
                 (do (vreset! passed? false)
-                    (println (:out res))
+                    (util/log (:out res))
                     (util/log-error-with-time duration "Failed " relative-dirname
                                               (when (:timeout res) " due to timeout")
                                               " with exit code " (:exit res)))
