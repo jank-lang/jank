@@ -17,4 +17,3 @@ namespace jank::runtime::obj
     }
   }
 }
-

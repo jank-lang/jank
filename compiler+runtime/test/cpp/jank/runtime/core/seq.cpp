@@ -16,4 +16,3 @@ namespace jank::runtime::core
     }
   }
 }
-

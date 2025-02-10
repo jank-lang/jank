@@ -30,7 +30,9 @@ namespace jank::runtime::obj::detail
         {
           auto const found(typed_o->get_entry(entry.first)); // alternatively use get(key,fallback)
 
-          if(found == obj::nil::nil_const() || !runtime::equal(entry.second, expect_object<obj::persistent_vector>(found)->data[1]))
+          if(found == obj::nil::nil_const()
+             || !runtime::equal(entry.second,
+                                expect_object<obj::persistent_vector>(found)->data[1]))
           {
             return false;
           }

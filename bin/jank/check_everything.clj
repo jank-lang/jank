@@ -35,6 +35,7 @@
     (if-not apt?
       (util/log-warning "Skipping dependency install, since we don't have apt-get")
       (do
+        (util/quiet-shell {} "sudo apt-get update -y")
         ; Install deps required for running our tests.
         (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen")
         ; TODO: Enable once we're linting Clojure/jank again.

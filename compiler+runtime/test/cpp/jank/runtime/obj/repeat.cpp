@@ -11,20 +11,26 @@ namespace jank::runtime::obj
   {
     TEST_CASE("equal")
     {
-      CHECK(equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(5))));
-      CHECK(equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(1), make_box(1))));
-      CHECK(!equal(repeat::create(make_box(6), make_box(5)), repeat::create(make_box(5), make_box(5))));
-      CHECK(!equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(6))));
-      CHECK(equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(0), make_box(0))));
-      CHECK(!equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(5), make_box(0))));
-      CHECK(!equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(0), make_box(1))));
+      CHECK(
+        equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(5))));
+      CHECK(
+        equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(1), make_box(1))));
+      CHECK(
+        !equal(repeat::create(make_box(6), make_box(5)), repeat::create(make_box(5), make_box(5))));
+      CHECK(
+        !equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(6))));
+      CHECK(
+        equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(0), make_box(0))));
+      CHECK(
+        !equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(5), make_box(0))));
+      CHECK(
+        !equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(0), make_box(1))));
 
       //TODO test https://github.com/jank-lang/jank/issues/251 , https://github.com/jank-lang/jank/issues/250
       //clojure.core=> (repeat 0 0)
       //()
       //clojure.core=> (seq (repeat 0 0))
       //nil
-
     }
   }
 }
