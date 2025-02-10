@@ -6,6 +6,8 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
+#include <fmt/ranges.h> //temp
+
 namespace jank::runtime::obj
 {
   static native_bool positive_step_bounds_check(object_ptr const val, object_ptr const end)
