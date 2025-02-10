@@ -32,5 +32,10 @@ namespace jank::runtime::obj
       //clojure.core=> (seq (repeat 0 0))
       //nil
     }
+    TEST_CASE("seq")
+    {
+      CHECK(
+        equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
+    }
   }
 }
