@@ -34,8 +34,7 @@ namespace jank::runtime::obj
     }
     TEST_CASE("seq")
     {
-      CHECK(
-        equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
+      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
     }
   }
 }
