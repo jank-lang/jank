@@ -147,6 +147,7 @@ namespace jank::runtime
     var_ptr current_ns_var{};
     var_ptr in_ns_var{};
     var_ptr compile_files_var{};
+    var_ptr loaded_libs_var{};
     var_ptr current_module_var{};
     var_ptr assert_var{};
     var_ptr no_recur_var{};

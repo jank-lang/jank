@@ -55,6 +55,11 @@ namespace jank::runtime
     compile_files_var->bind_root(obj::boolean::false_const());
     compile_files_var->dynamic.store(true);
 
+    auto const loaded_libs_sym(make_box<obj::symbol>("clojure.core/*loaded-libs*"));
+    loaded_libs_var = core->intern_var(loaded_libs_sym);
+    loaded_libs_var->bind_root(make_box<obj::atom>(obj::persistent_sorted_set::empty()));
+    loaded_libs_var->dynamic.store(true);
+
     auto const assert_sym(make_box<obj::symbol>("clojure.core/*assert*"));
     assert_var = core->intern_var(assert_sym);
     assert_var->bind_root(obj::boolean::true_const());

@@ -1,0 +1,31 @@
+(ns clojure-test.self-test
+  (:require [clojure.test :refer [deftest is] :as t]))
+
+(deftest pass-test (is (= 1 1)))
+(deftest fail-test (is (= 1 2)))
+(deftest thrown-test (is (thrown? (throw (ex-info "a" {})))))
+(deftest thrown-without-throw-test (is (thrown? 1)))
+;;TODO waiting on regex support
+;(deftest thrown-with-msg-test (is (thrown-with-msg? #"a" (throw (ex-info "a" {})))))
+(deftest error-test (is (throw (ex-info "" {}))))
+
+(defn -main []
+  (println '(t/run-test pass-test))
+  (assert (= {:test 1, :pass 1, :fail 0, :error 0, :type :summary}
+             (t/run-test pass-test)))
+  (println '(t/run-test fail-test))
+  (assert (= {:test 1, :pass 0, :fail 1, :error 0, :type :summary}
+             (t/run-test fail-test)))
+  (println '(t/run-test thrown-test))
+  (assert (= {:test 1, :pass 1, :fail 0, :error 0, :type :summary}
+             (t/run-test thrown-test)))
+  (println '(t/run-test thrown-without-throw-test))
+  (assert (= {:test 1, :pass 0, :fail 1, :error 0, :type :summary}
+             (t/run-test thrown-without-throw-test)))
+  (println '(t/run-test error-test))
+  (assert (= {:test 1, :pass 0, :fail 0, :error 1, :type :summary}
+             (t/run-test error-test)))
+  (println '(t/run-tests 'clojure-test.self-test))
+  (assert (= {:test 5, :pass 2, :fail 2, :error 1, :type :summary}
+             (t/run-tests 'clojure-test.self-test)))
+  (println :successfully-finished-clojure-test-self-test))

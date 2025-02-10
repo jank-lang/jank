@@ -10,10 +10,16 @@
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
-#include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/atom.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/persistent_sorted_set.hpp>
+#include <jank/runtime/module/loader.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/native_persistent_string/fmt.hpp>
 
@@ -432,8 +438,38 @@ namespace jank::runtime::module
     return err(fmt::format("no sources for registered module: {}", module));
   }
 
+  native_bool loader::is_loaded(native_persistent_string_view const &module)
+  {
+    auto const atom{
+      runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
+    };
+
+    auto const loaded_libs{ runtime::try_object<runtime::obj::persistent_sorted_set>(atom) };
+    return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
+  }
+
+  void loader::set_is_loaded(native_persistent_string_view const &module)
+  {
+    auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
+      __rt_ctx->loaded_libs_var->deref()) };
+
+    auto const swap_fn{ [&](object_ptr const curr_val) {
+      return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
+        make_box<obj::symbol>(module));
+    } };
+
+    auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
+      std::function<object_ptr(object_ptr)>{ swap_fn }) };
+    loaded_libs_atom->swap(swap_fn_wrapper);
+  }
+
   string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
   {
+    if(ori != origin::source && loader::is_loaded(module))
+    {
+      return ok();
+    }
+
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -466,6 +502,7 @@ namespace jank::runtime::module
       return res;
     }
 
+    loader::set_is_loaded(module);
     return ok();
   }
 

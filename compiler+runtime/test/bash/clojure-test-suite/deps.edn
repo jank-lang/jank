@@ -1,0 +1,2 @@
+{:paths ["src"]
+ :deps {io.github.jank-lang/clojure-test-suite {:local/root "clojure-test-suite"}}}
