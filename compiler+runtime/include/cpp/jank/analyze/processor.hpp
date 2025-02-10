@@ -6,6 +6,7 @@
 #include <jank/runtime/var.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
+#include <jank/runtime/obj/persistent_sorted_map.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime

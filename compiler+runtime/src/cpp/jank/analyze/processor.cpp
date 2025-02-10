@@ -173,7 +173,7 @@ namespace jank::analyze
                                                        option<expr::function_context_ptr> const &fc,
                                                        native_bool const needs_box)
   {
-    if(auto const length(o->count()); length != 8 && length != 9)
+    if(auto const length(o->count()); length != 6)
     {
       return err(error{ "invalid case: incorrect number of elements in form" });
     }
@@ -246,54 +246,16 @@ namespace jank::analyze
       return err(error{ keys_exprs.expect_err() });
     }
 
-    it = it.rest();
-    auto const is_compact_obj{ it.first().unwrap() };
-    if(is_compact_obj.data->type != object_type::keyword)
-    {
-      return err(error{ "expected keyword for compact" });
-    }
-
-    it = it.rest();
-    auto const switch_type_obj = it.first().unwrap();
-    if(switch_type_obj.data->type != object_type::keyword)
-    {
-      return err(error{ "expected keyword for switch_type" });
-    }
-
-    it = it.rest();
-    obj::persistent_hash_set_ptr collided_keys;
-    // check if the iterator is at the end
-    if(it.empty())
-    {
-      collided_keys = obj::persistent_hash_set::empty();
-    }
-    else
-    {
-      auto const collided_keys_obj{ it.first().unwrap() };
-      if(collided_keys_obj.data->type != object_type::persistent_hash_set
-         && collided_keys_obj.data->type != object_type::nil)
-      {
-        return err(error{ "expected hash set for collided_keys" });
-      }
-      if(collided_keys_obj.data->type == object_type::nil)
-      {
-        collided_keys = obj::persistent_hash_set::empty();
-      }
-      else
-      {
-        collided_keys = runtime::expect_object<obj::persistent_hash_set>(collided_keys_obj);
-      }
-    }
-
     auto case_expr{
-      make_box<expression>(expr::case_<expression>{ expression_base{ {}, position, f, needs_box },
+      make_box<expression>(expr::case_<expression>{
+                                                   expression_base{ {}, position, f, needs_box },
                                                    value_expr.expect_ok(),
                                                    shift->data,
                                                    mask->data,
                                                    default_expr.expect_ok(),
                                                    keys_exprs.expect_ok().keys,
                                                    keys_exprs.expect_ok().exprs,
-                                                   collided_keys }
+                                                   }
       )
     };
     return case_expr;

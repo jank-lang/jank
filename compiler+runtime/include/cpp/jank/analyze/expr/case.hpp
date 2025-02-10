@@ -2,8 +2,6 @@
 
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/analyze/expression_base.hpp>
-#include <jank/runtime/obj/persistent_sorted_map.hpp>
-#include <jank/runtime/obj/persistent_hash_set.hpp>
 
 namespace jank::analyze::expr
 {
@@ -18,7 +16,6 @@ namespace jank::analyze::expr
     native_box<E> default_expr{};
     std::vector<native_integer> transformed_keys{};
     std::vector<native_box<E>> exprs{};
-    obj::persistent_hash_set_ptr collided_keys{};
 
     void propagate_position(expression_position const pos)
     {
@@ -42,9 +39,7 @@ namespace jank::analyze::expr
                                                             make_box("mask"),
                                                             make_box(mask),
                                                             make_box("default_expr"),
-                                                            default_expr->to_runtime_data(),
-                                                            make_box("collided_keys"),
-                                                            collided_keys));
+                                                            default_expr->to_runtime_data()));
     }
   };
 }
