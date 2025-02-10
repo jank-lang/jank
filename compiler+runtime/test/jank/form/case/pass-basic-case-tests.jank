@@ -29,13 +29,17 @@
   (assert (= x :zero) "Zero match - value position"))
 
 (let [x
-      (case "hello" "world" :world "hello"             :greeting "Clojure"           :language :default)
-      ]
+      (case "hello" "world" :world
+        "hello"             :greeting
+        "Clojure"           :language
+        :default)]
   (assert (= x :greeting) "String hello match - value position"))
 
 (let [x
-      (case 3.14 3.14 :pi 2.71          :e 1.61          :phi :default)
-      ]
+      (case 3.14 3.14 :pi
+        2.71          :e
+        1.61          :phi
+        :default)]
   (assert (= x :pi) "Float match - value position"))
 
 (let [x (case 'symbol symbol :symbol-match

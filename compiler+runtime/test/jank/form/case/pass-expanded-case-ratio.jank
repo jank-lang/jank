@@ -7,11 +7,10 @@
 ;; Value position
 (let [xfn (let* [clojure_core-G__-4400 3/4]
             (case* clojure_core-G__-4400 0 1 :default
-                       {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
-                            :default),
-                        1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
-                            :default)}
-              :compact :hash-equiv nil))]
+              {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
+                   :default),
+               1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
+                   :default)}))]
   (assert (= xfn :three-fourths) "Ratio value position test"))
 
 ;; Statement position
@@ -19,11 +18,10 @@
             (let* [test-val 3/4]
               (let* [clojure_core-G__-4400 3/4]
                 (case* clojure_core-G__-4400 0 1 :default
-                           {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
-                                :default),
-                            1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
-                                :default)}
-                  :compact :hash-equiv nil)))
+                  {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
+                       :default),
+                   1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
+                       :default)})))
             :arbitrary-value)]
   (assert (= (xfn) :arbitrary-value) "Ratio statement position test"))
 
@@ -33,11 +31,10 @@
   (let* [test-val 3/4]
     (let* [clojure_core-G__-4400 3/4]
       (case* clojure_core-G__-4400 0 1 :default
-                 {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
-                      :default),
-                  1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
-                      :default)}
-        :compact :hash-equiv nil)))
+        {0 (clojure.core/condp clojure.core/= clojure_core-G__-4400 3/4 :three-fourths
+             :default),
+         1 (clojure.core/condp clojure.core/= clojure_core-G__-4400 4/3 :four-thirds
+             :default)})))
   :three-fourths)
  "Ratio return position test")
 
