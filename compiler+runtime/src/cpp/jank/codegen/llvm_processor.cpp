@@ -217,7 +217,7 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    // ctx->fpm->run(*fn, *ctx->fam);
+    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
