@@ -96,6 +96,8 @@ namespace jank::runtime::module
     loader(context &rt_ctx, native_persistent_string_view const &ps);
 
     string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
+    native_bool is_loaded(native_persistent_string_view const &module);
+    void set_is_loaded(native_persistent_string_view const &module);
     string_result<void> load(native_persistent_string_view const &module, origin const ori);
 
     string_result<void>
