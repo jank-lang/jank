@@ -1884,9 +1884,9 @@
 
    (push-thread-bindings bindings)
    (try
-   ...
-   (finally
-   (pop-thread-bindings)))"
+     ...
+     (finally
+     (pop-thread-bindings)))"
   clojure.core-native/push-thread-bindings)
 
 (def pop-thread-bindings
@@ -1921,9 +1921,7 @@
     `(do
        (push-thread-bindings (hash-map ~@(->var-pairs bindings)))
        (try
-         ~@body
-         (catch e#
-           (throw e#))
+         (do ~@body)
          (finally
            (pop-thread-bindings))))))
 
@@ -3656,8 +3654,6 @@
     (try
       (root-bind binding-map)
       (fun)
-      (catch e
-        (throw e))
       (finally
         (root-bind old-vals)))))
 
@@ -4393,7 +4389,7 @@
        (let [locklocal# lockee#]
          (monitor-enter locklocal#)
          (try
-           ~@body
+           (do ~@body)
            (finally
             (monitor-exit locklocal#)))))))
 
@@ -4431,7 +4427,6 @@
                           binding-map))
   (try
     (apply f args)
-    (catch e (throw e))
     (finally
       (pop-thread-bindings))))
 
@@ -5550,7 +5545,7 @@
   ;;                      (repeat '(.. clojure.lang.Var create setDynamic)))]
   ;;    (. clojure.lang.Var (pushThreadBindings (hash-map ~@name-vals-vec)))
   ;;    (try
-  ;;     ~@body
+  ;;     (do ~@body)
   ;;     (finally (. clojure.lang.Var (popThreadBindings)))))
   (throw "TODO: port with-local-vars"))
 
@@ -6329,7 +6324,7 @@
   ;;       (. clojure.lang.Var (pushThreadBindings {clojure.lang.Compiler/LOADER  
   ;;                                                (.getClassLoader (.getClass ^Object loading#))}))
   ;;       (try
-  ;;        ~@body
+  ;;        (do ~@body)
   ;;        (finally
   ;;         (. clojure.lang.Var (popThreadBindings))))))
   (throw "TODO: port with-loading-context"))
