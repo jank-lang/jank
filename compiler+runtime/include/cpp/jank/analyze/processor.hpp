@@ -157,18 +157,6 @@ namespace jank::analyze
       std::vector<expression_ptr> exprs{};
     };
 
-    result<keys_and_exprs, error>
-    get_keys_and_exprs_from_array_map(native_box<obj::persistent_array_map> imap,
-                                      local_frame_ptr &f,
-                                      expression_position,
-                                      option<expr::function_context_ptr> const &fc,
-                                      native_bool needs_box);
-    result<keys_and_exprs, error>
-    get_keys_and_exprs_from_sorted_map(native_box<obj::persistent_sorted_map> imap,
-                                       local_frame_ptr &f,
-                                       expression_position,
-                                       option<expr::function_context_ptr> const &fc,
-                                       native_bool needs_box);
     using special_function_type
       = std::function<expression_result(runtime::obj::persistent_list_ptr const &,
                                         local_frame_ptr &,

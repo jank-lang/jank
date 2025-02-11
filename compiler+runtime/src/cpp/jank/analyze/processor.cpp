@@ -989,15 +989,13 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-    auto const if_expr{
-      make_box<expression>(
-        expr::if_<expression>{ expression_base{ {}, position, current_frame, needs_box },
-                              condition_expr.expect_ok(),
-                              then_expr.expect_ok(),
-                              else_expr_opt }
-        )
-    };
-    return if_expr;
+
+    return make_box<expression>(expr::if_<expression>{
+      expression_base{ {}, position, current_frame, needs_box },
+      condition_expr.expect_ok(),
+      then_expr.expect_ok(),
+      else_expr_opt
+    });
   }
 
   processor::expression_result
