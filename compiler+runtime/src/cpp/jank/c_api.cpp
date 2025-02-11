@@ -871,7 +871,7 @@ extern "C"
 
   void jank_throw(jank_object_ptr const o)
   {
-    throw object_ptr{ reinterpret_cast<object *>(o) };
+    throw runtime::object_ptr{ reinterpret_cast<object *>(o) };
   }
 
   jank_object_ptr jank_try(jank_object_ptr const try_fn,
