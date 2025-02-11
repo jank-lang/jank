@@ -462,27 +462,27 @@ namespace jank::runtime
     return make_box<obj::atom>(o);
   }
 
-  object_ptr swap(object_ptr const atom, object_ptr const fn)
+  object_ptr swap_atom(object_ptr const atom, object_ptr const fn)
   {
     return try_object<obj::atom>(atom)->swap(fn);
   }
 
-  object_ptr swap(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  object_ptr swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1);
   }
 
   object_ptr
-  swap(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2);
   }
 
-  object_ptr swap(object_ptr const atom,
-                  object_ptr const fn,
-                  object_ptr const a1,
-                  object_ptr const a2,
-                  object_ptr const rest)
+  object_ptr swap_atom(object_ptr const atom,
+                       object_ptr const fn,
+                       object_ptr const a1,
+                       object_ptr const a2,
+                       object_ptr const rest)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
   }
