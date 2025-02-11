@@ -989,7 +989,6 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-
     return make_box<expression>(expr::if_<expression>{
       expression_base{ {}, position, current_frame, needs_box },
       condition_expr.expect_ok(),

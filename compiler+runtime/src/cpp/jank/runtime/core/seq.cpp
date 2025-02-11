@@ -54,6 +54,7 @@ namespace jank::runtime
     return visit_object(
       [=](auto const typed_o) -> native_bool {
         using T = typename decltype(typed_o)::value_type;
+
         return behavior::sequenceable<T>;
       },
       o);

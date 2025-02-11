@@ -243,6 +243,7 @@ namespace jank::codegen
         return err(fmt::format("invalid IR module {}", ctx->module_name));
       }
     }
+
     return ok();
   }
 
