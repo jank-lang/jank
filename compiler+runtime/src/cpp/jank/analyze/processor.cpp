@@ -314,7 +314,7 @@ namespace jank::analyze
     }
 
     /* If it's not a local and it matches a fn's name, we're dealing with a
-     * to a fn. We don't want to go to var lookup now. */
+     * reference to a fn. We don't want to go to var lookup now. */
     auto const found_named_recursion(current_frame->find_named_recursion(sym));
     if(found_named_recursion.is_some())
     {
@@ -1375,7 +1375,7 @@ namespace jank::analyze
         for(auto const &kv : typed_o->data)
         {
           /* The two maps (hash and sorted) have slightly different iterators, so we need to
-           * out the entries differently. */
+           * pull out the entries differently. */
           object_ptr first{}, second{};
           if constexpr(std::same_as<T, obj::persistent_sorted_map>)
           {
