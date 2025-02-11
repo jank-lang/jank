@@ -387,15 +387,16 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string namespace_(object_ptr const o)
+  object_ptr namespace_(object_ptr const o)
   {
     return visit_object(
-      [](auto const typed_o) -> native_persistent_string {
+      [](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::nameable<T>)
         {
-          return typed_o->get_namespace();
+          auto const ns(typed_o->get_namespace());
+          return (ns.empty() ? obj::nil::nil_const() : make_box<obj::persistent_string>(ns));
         }
         else
         {
