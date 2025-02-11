@@ -157,7 +157,7 @@ namespace jank::runtime
         else
         {
           /* TODO: Better error. */
-          std::cout << "(invoke) object is not callable: " << **f << "\n";
+          std::cout << "(invoke) object is not callable: " << **f << std::endl;
           throw std::runtime_error{ "object is not callable" };
         }
       }
