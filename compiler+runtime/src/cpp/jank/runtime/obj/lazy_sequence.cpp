@@ -162,8 +162,7 @@ namespace jank::runtime::obj
   lazy_sequence_ptr lazy_sequence::with_meta(object_ptr const m) const
   {
     resolve_seq();
-    auto const s(sequence ? runtime::fresh_seq(sequence) : nil::nil_const());
-    auto const ret(make_box<lazy_sequence>(nullptr, s == nil::nil_const() ? nullptr : s));
+    auto const ret(make_box<lazy_sequence>(nullptr, sequence));
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;
