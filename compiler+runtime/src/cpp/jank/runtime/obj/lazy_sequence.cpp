@@ -33,7 +33,7 @@ namespace jank::runtime::obj
     resolve_seq();
     if(sequence)
     {
-      auto ret(make_box<lazy_sequence>(fn, sequence));
+      auto const ret(make_box<lazy_sequence>(fn, sequence));
       ret->fn_result = fn_result;
       return ret;
     }
@@ -161,7 +161,8 @@ namespace jank::runtime::obj
   lazy_sequence_ptr lazy_sequence::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto const ret(make_box<lazy_sequence>(fn, sequence));
+    ret->fn_result = fn_result;
     ret->meta = meta;
     return ret;
   }
