@@ -30,9 +30,14 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::fresh_seq() const
   {
-    auto ret(make_box<lazy_sequence>(fn, sequence));
-    ret->fn_result = fn_result;
-    return ret;
+    resolve_seq();
+    if(sequence)
+    {
+      auto ret(make_box<lazy_sequence>(fn, sequence));
+      ret->fn_result = fn_result;
+      return ret;
+    }
+    return nullptr;
   }
 
   object_ptr lazy_sequence::first() const
