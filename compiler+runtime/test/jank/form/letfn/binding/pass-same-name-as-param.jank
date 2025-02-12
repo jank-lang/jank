@@ -1,0 +1,5 @@
+(assert (= 1 ((fn* [a]
+                (letfn* [a (clojure.core/fn a [] 1)]
+                  (a)))
+              2)))
+:success

@@ -17,6 +17,7 @@
 #include <jank/analyze/expr/named_recursion.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/letfn.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/throw.hpp>
@@ -43,6 +44,7 @@ namespace jank::analyze
                                       expr::named_recursion<E>,
                                       expr::local_reference,
                                       expr::let<E>,
+                                      expr::letfn<E>,
                                       expr::do_<E>,
                                       expr::if_<E>,
                                       expr::throw_<E>,

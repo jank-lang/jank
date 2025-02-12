@@ -55,7 +55,8 @@ namespace jank::evaluate
         walk(form, f);
       }
     }
-    else if constexpr(std::same_as<T, expr::let<expression>>)
+    else if constexpr(std::same_as<T, expr::let<expression>>
+                      || std::same_as<T, expr::letfn<expression>>)
     {
       walk(expr.body, f);
     }
@@ -600,6 +601,11 @@ namespace jank::evaluate
   object_ptr eval(expr::let<expression> const &expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "let", {})));
+  }
+
+  object_ptr eval(expr::letfn<expression> const &expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "letfn", {})));
   }
 
   object_ptr eval(expr::if_<expression> const &expr)
