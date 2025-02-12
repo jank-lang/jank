@@ -934,14 +934,19 @@ namespace jank::runtime
       [=](auto const typed_args) -> native_persistent_string {
         util::string_builder buff;
         buff.reserve(16);
-        runtime::to_string(o, buff);
+        if(!is_nil(o))
+        {
+          runtime::to_string(o, buff);
+        }
         if(0 < sequence_length(typed_args))
         {
           auto const fresh(typed_args->fresh_seq());
-          runtime::to_string(fresh->first(), buff);
-          for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(fresh); it != nullptr; it = it->next_in_place())
           {
-            runtime::to_string(it->first(), buff);
+            if(!is_nil(it->first()))
+            {
+              runtime::to_string(it->first(), buff);
+            }
           }
         }
         return buff.release();
