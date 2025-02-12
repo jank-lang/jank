@@ -834,8 +834,8 @@ extern "C"
   }
 
   jank_native_integer jank_shift_mask_case_integer(jank_object_ptr const o,
-                                              jank_native_integer const shift,
-                                              jank_native_integer const mask)
+                                                   jank_native_integer const shift,
+                                                   jank_native_integer const mask)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
     auto integer{ to_integer_or_hash(o_obj) };
@@ -846,7 +846,7 @@ extern "C"
         /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
          * case macro. */
         integer = (integer >= std::numeric_limits<int32_t>::min()
-            && integer <= std::numeric_limits<int32_t>::max())
+                   && integer <= std::numeric_limits<int32_t>::max())
           ? integer
           : hash::integer(integer);
       }

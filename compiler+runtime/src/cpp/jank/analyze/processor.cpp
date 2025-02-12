@@ -179,18 +179,21 @@ namespace jank::analyze
     }
 
     auto it{ o->data.rest() };
-    if (it.first().is_none()) {
-      return err(error{"missing value expression."});
+    if(it.first().is_none())
+    {
+      return err(error{ "missing value expression." });
     }
     auto const value_expr_obj{ it.first().unwrap() };
     auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
-    if (value_expr.is_err()) {
-      return err(error{value_expr.expect_err()});
+    if(value_expr.is_err())
+    {
+      return err(error{ value_expr.expect_err() });
     }
 
     it = it.rest();
-    if (it.first().is_none()) {
-      return err(error{"missing shift value."});
+    if(it.first().is_none())
+    {
+      return err(error{ "missing shift value." });
     }
     auto const shift_obj{ it.first().unwrap() };
     if(shift_obj.data->type != object_type::integer)
@@ -200,8 +203,9 @@ namespace jank::analyze
     auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
 
     it = it.rest();
-    if(it.first().is_none()) {
-      return err(error{"missing mask value."});
+    if(it.first().is_none())
+    {
+      return err(error{ "missing mask value." });
     }
     auto const mask_obj{ it.first().unwrap() };
     if(mask_obj.data->type != object_type::integer)
@@ -211,22 +215,26 @@ namespace jank::analyze
     auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
 
     it = it.rest();
-    if(it.first().is_none()) {
-      return err(error{"missing default expression."});
+    if(it.first().is_none())
+    {
+      return err(error{ "missing default expression." });
     }
     auto const default_expr_obj{ it.first().unwrap() };
     auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
 
     it = it.rest();
-    if(it.first().is_none()) {
-      return err(error{"missing keys and expressions for 'case'."});
+    if(it.first().is_none())
+    {
+      return err(error{ "missing keys and expressions for 'case'." });
     }
     auto const imap_obj{ it.first().unwrap() };
+
     struct keys_and_exprs
     {
       native_vector<native_integer> keys{};
       native_vector<expression_ptr> exprs{};
     };
+
     auto const keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> string_result<keys_and_exprs> {
         keys_and_exprs ret{};
