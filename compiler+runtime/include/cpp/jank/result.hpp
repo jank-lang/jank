@@ -3,6 +3,7 @@
 #include <boost/variant.hpp>
 
 #include <jank/option.hpp>
+#include <jank/util/type_name.hpp>
 
 namespace jank
 {
@@ -346,9 +347,24 @@ namespace jank
   {
     if(r.is_ok())
     {
-      return os << "ok(" << boost::get<R>(r.data) << ")";
+      if constexpr(requires(R t) { os << t; })
+      {
+        return os << "ok(" << boost::get<R>(r.data) << ")";
+      }
+      else
+      {
+        return os << "ok(" << util::type_name<R>() << ")";
+      }
     }
-    return os << "err(" << boost::get<E>(r.data) << ")";
+
+    if constexpr(requires(E t) { os << t; })
+    {
+      return os << "err(" << boost::get<E>(r.data) << ")";
+    }
+    else
+    {
+      return os << "err(" << util::type_name<E>() << ")";
+    }
   }
 
   template <typename R>

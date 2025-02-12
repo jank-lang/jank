@@ -165,6 +165,17 @@ namespace jank::read::lex
           native_bool const);
     token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
 
+#ifdef JANK_TEST
+    /* These assume everything is on one line; very useful for tests, but not elsewhere. */
+    token(size_t offset, size_t width, token_kind const k);
+    token(size_t offset, size_t width, token_kind const k, native_integer const);
+    token(size_t offset, size_t width, token_kind const k, native_real const);
+    token(size_t offset, size_t width, token_kind const k, native_persistent_string_view const);
+    token(size_t offset, size_t width, token_kind const k, char const * const);
+    token(size_t offset, size_t width, token_kind const k, native_bool const);
+    token(size_t offset, size_t width, token_kind const k, ratio const);
+#endif
+
     native_bool operator==(token const &rhs) const;
     native_bool operator!=(token const &rhs) const;
 

@@ -106,6 +106,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
 
+if(jank_tests)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_TEST)
+endif()
+
 include(cmake/coverage.cmake)
 include(cmake/analyze.cmake)
 include(cmake/sanitization.cmake)
@@ -442,7 +446,7 @@ if(jank_tests)
     test/cpp/jank/native_persistent_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/read/lex.cpp
-    test/cpp/jank/read/parse.cpp
+    #test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp

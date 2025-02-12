@@ -107,6 +107,7 @@ namespace jank::read::lex
   {
   }
 
+#ifdef JANK_TEST
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
@@ -117,6 +118,65 @@ namespace jank::read::lex
     , data{ d }
   {
   }
+
+  token::token(size_t const offset, size_t const width, token_kind const k)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+  {
+  }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, native_integer const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, native_real const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(size_t const offset,
+               size_t const width,
+               token_kind const k,
+               native_persistent_string_view const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, char const * const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, native_bool const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, ratio const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+#endif
 
   struct codepoint
   {
@@ -421,25 +481,25 @@ namespace jank::read::lex
     {
       case '(':
         require_space = false;
-        return ok(token{ pos++, token_kind::open_paren });
+        return ok(token{ token_start, ++pos, token_kind::open_paren });
       case ')':
         require_space = false;
-        return ok(token{ pos++, token_kind::close_paren });
+        return ok(token{ token_start, ++pos, token_kind::close_paren });
       case '[':
         require_space = false;
-        return ok(token{ pos++, token_kind::open_square_bracket });
+        return ok(token{ token_start, ++pos, token_kind::open_square_bracket });
       case ']':
         require_space = false;
-        return ok(token{ pos++, token_kind::close_square_bracket });
+        return ok(token{ token_start, ++pos, token_kind::close_square_bracket });
       case '{':
         require_space = false;
-        return ok(token{ pos++, token_kind::open_curly_bracket });
+        return ok(token{ token_start, ++pos, token_kind::open_curly_bracket });
       case '}':
         require_space = false;
-        return ok(token{ pos++, token_kind::close_curly_bracket });
+        return ok(token{ token_start, ++pos, token_kind::close_curly_bracket });
       case '\'':
         require_space = false;
-        return ok(token{ pos++, token_kind::single_quote });
+        return ok(token{ token_start, ++pos, token_kind::single_quote });
       case '\\':
         {
           require_space = false;
@@ -866,6 +926,7 @@ namespace jank::read::lex
       case '<':
       case '>':
       case '%':
+      case '.':
         {
           auto &&e(check_whitespace(found_space));
           if(e.is_some())

@@ -317,10 +317,4 @@ namespace jank::runtime
     }
     return ret;
   }
-
-  template <typename T>
-  std::ostream &operator<<(std::ostream &os, native_box<T> const &o)
-  {
-    return os << "box(" << o.data << ")";
-  }
 }
