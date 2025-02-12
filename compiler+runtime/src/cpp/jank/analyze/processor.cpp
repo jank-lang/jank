@@ -47,6 +47,7 @@ namespace jank::analyze
       {   make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
       { make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
       {   make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
+      { make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
     };
   }
 
@@ -160,6 +161,122 @@ namespace jank::analyze
       qualified_sym,
       value_expr
     });
+  }
+
+  processor::expression_result processor::analyze_case(obj::persistent_list_ptr const &o,
+                                                       local_frame_ptr &f,
+                                                       expression_position const position,
+                                                       option<expr::function_context_ptr> const &fc,
+                                                       native_bool const needs_box)
+  {
+    if(auto const length(o->count()); length != 6)
+    {
+      return err(error{ "invalid case: incorrect number of elements in form" });
+    }
+
+    auto it{ o->data.rest() };
+    if(it.first().is_none())
+    {
+      return err(error{ "missing value expression." });
+    }
+    auto const value_expr_obj{ it.first().unwrap() };
+    auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
+    if(value_expr.is_err())
+    {
+      return err(error{ value_expr.expect_err() });
+    }
+
+    it = it.rest();
+    if(it.first().is_none())
+    {
+      return err(error{ "missing shift value." });
+    }
+    auto const shift_obj{ it.first().unwrap() };
+    if(shift_obj.data->type != object_type::integer)
+    {
+      return err(error{ "expected integer for shift." });
+    }
+    auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
+
+    it = it.rest();
+    if(it.first().is_none())
+    {
+      return err(error{ "missing mask value." });
+    }
+    auto const mask_obj{ it.first().unwrap() };
+    if(mask_obj.data->type != object_type::integer)
+    {
+      return err(error{ "expected integer for mask." });
+    }
+    auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
+
+    it = it.rest();
+    if(it.first().is_none())
+    {
+      return err(error{ "missing default expression." });
+    }
+    auto const default_expr_obj{ it.first().unwrap() };
+    auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
+
+    it = it.rest();
+    if(it.first().is_none())
+    {
+      return err(error{ "missing keys and expressions for 'case'." });
+    }
+    auto const imap_obj{ it.first().unwrap() };
+
+    struct keys_and_exprs
+    {
+      native_vector<native_integer> keys{};
+      native_vector<expression_ptr> exprs{};
+    };
+
+    auto const keys_exprs{ visit_map_like(
+      [&](auto const typed_imap_obj) -> string_result<keys_and_exprs> {
+        keys_and_exprs ret{};
+        for(auto seq{ typed_imap_obj->seq() }; seq != nullptr; seq = seq->next())
+        {
+          auto const e{ seq->first() };
+          auto const k_obj{ runtime::nth(e, make_box(0)) };
+          auto const v_obj{ runtime::nth(e, make_box(1)) };
+          if(k_obj.data->type != object_type::integer)
+          {
+            return err("Map key for case* is expected to be an integer");
+          }
+          auto const key{ runtime::expect_object<obj::integer>(k_obj) };
+          auto const expr{ analyze(v_obj, f, position, fc, needs_box) };
+          if(expr.is_err())
+          {
+            return err(expr.expect_err().message);
+          }
+          ret.keys.push_back(key->data);
+          ret.exprs.push_back(expr.expect_ok());
+        }
+        return ret;
+      },
+      [&]() -> string_result<keys_and_exprs> {
+        return err("Expect map-like for case keys and exprs");
+      },
+      imap_obj) };
+
+    if(keys_exprs.is_err())
+    {
+      return err(error{ keys_exprs.expect_err() });
+    }
+
+    auto case_expr{
+      make_box<expression>(expr::case_<expression>{
+                                                   expression_base{ {}, position, f, needs_box },
+                                                   value_expr.expect_ok(),
+                                                   shift->data,
+                                                   mask->data,
+                                                   default_expr.expect_ok(),
+                                                   keys_exprs.expect_ok().keys,
+                                                   keys_exprs.expect_ok().exprs,
+                                                   }
+      )
+    };
+    return case_expr;
   }
 
   processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
