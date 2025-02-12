@@ -70,7 +70,7 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::next_in_place()
   {
-    auto n(runtime::next_in_place(sequence));
+    auto const n(runtime::next_in_place(sequence));
     if(n == nil::nil_const())
     {
       sequence = nullptr;
@@ -161,7 +161,7 @@ namespace jank::runtime::obj
   {
     resolve_seq();
     auto const s(sequence ? runtime::fresh_seq(sequence) : nil::nil_const());
-    auto const ret(make_box<lazy_sequence>(nullptr, s==nil::nil_const() ? nullptr : s));
+    auto const ret(make_box<lazy_sequence>(nullptr, s == nil::nil_const() ? nullptr : s));
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;
