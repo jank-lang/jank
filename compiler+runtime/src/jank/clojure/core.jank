@@ -3456,7 +3456,9 @@
   (-> x (bit-shift-right shift) (bit-and mask)))
 
 (defn- case-hash
-  "Returns the input if it is within the range of a 32-bit signed integer, otherwise returns the hash of the input."
+  "Returns the input if it is within the range of a 32-bit signed integer, otherwise returns the hash of the
+  input. The native hash returns a int32 int so this is to make sure that (case-hash (case-hash x)) == (case-hash x).
+  A key may be hashed more than once and we need to make sure its value does not change in later hashing."
   [input]
   (if (and (integer? input)
            (>= input int32-min-value)
@@ -3582,18 +3584,15 @@
     (if (== (count tests) (count hashes))
       (if (fits-table? hashes)
         ; compact case ints, no shift-mask
-        [0
-         0
+        [0 0
          (case-map expr-sym default case-hash identity tests thens skip-check)]
         (let [[shift mask] (or (maybe-min-hash hashes) [0 0])]
           (if (zero? mask)
             ; sparse case ints, no shift-mask
-            [0
-             0
+            [0 0
              (case-map expr-sym default case-hash identity tests thens skip-check)]
             ; compact case ints, with shift-mask
-            [shift
-             mask
+            [shift mask
              (case-map expr-sym default #(shift-mask shift mask (case-hash %)) identity tests thens skip-check)])))
       ; resolve hash collisions and try again
       (let [[tests thens skip-check]

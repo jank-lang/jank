@@ -817,11 +817,11 @@ extern "C"
     return to_hash(o_obj);
   }
 
-  native_integer to_integer(object const *o)
+  static native_integer to_integer_or_hash(object const *o)
   {
     if(o->type == object_type::integer)
     {
-      return dyn_cast<obj::integer>(o)->data;
+      return expect_object<obj::integer>(o)->data;
     }
 
     return to_hash(o);
@@ -830,23 +830,25 @@ extern "C"
   jank_native_integer jank_to_integer(jank_object_ptr const o)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
-    return to_integer(o_obj);
+    return to_integer_or_hash(o_obj);
   }
 
-  jank_native_integer shift_mask_case_integer(jank_object_ptr const o,
+  jank_native_integer jank_shift_mask_case_integer(jank_object_ptr const o,
                                               jank_native_integer const shift,
                                               jank_native_integer const mask)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
-    auto integer{ to_integer(o_obj) };
+    auto integer{ to_integer_or_hash(o_obj) };
     if(mask != 0)
     {
       if(o_obj->type == object_type::integer)
       {
-        integer = integer >= std::numeric_limits<int32_t>::min()
-            && integer <= std::numeric_limits<int32_t>::max()
+        /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
+         * case macro. */
+        integer = (integer >= std::numeric_limits<int32_t>::min()
+            && integer <= std::numeric_limits<int32_t>::max())
           ? integer
-          : to_hash(make_box(integer));
+          : hash::integer(integer);
       }
       integer = (integer >> shift) & mask;
     }

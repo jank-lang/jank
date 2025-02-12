@@ -6,7 +6,6 @@
 #include <jank/runtime/var.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
-#include <jank/runtime/obj/persistent_sorted_map.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime
@@ -150,12 +149,6 @@ namespace jank::analyze
 
     /* Returns whether the form is a special symbol. */
     native_bool is_special(runtime::object_ptr form);
-
-    struct keys_and_exprs
-    {
-      std::vector<native_integer> keys{};
-      std::vector<expression_ptr> exprs{};
-    };
 
     using special_function_type
       = std::function<expression_result(runtime::obj::persistent_list_ptr const &,

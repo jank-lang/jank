@@ -14,8 +14,8 @@ namespace jank::analyze::expr
     native_integer shift{};
     native_integer mask{};
     native_box<E> default_expr{};
-    std::vector<native_integer> transformed_keys{};
-    std::vector<native_box<E>> exprs{};
+    native_vector<native_integer> keys{};
+    native_vector<native_box<E>> exprs{};
 
     void propagate_position(expression_position const pos)
     {
