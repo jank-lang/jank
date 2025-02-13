@@ -3,10 +3,8 @@
 
 namespace jank::error
 {
-  static constexpr char char_for_token_kind(read::lex::token_kind const kind)
+  static constexpr char delim_char_for_token_kind(read::lex::token_kind const kind)
   {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch"
     switch(kind)
     {
       case read::lex::token_kind::open_paren:
@@ -21,9 +19,30 @@ namespace jank::error
         return '{';
       case read::lex::token_kind::close_curly_bracket:
         return '}';
+      case read::lex::token_kind::single_quote:
+      case read::lex::token_kind::meta_hint:
+      case read::lex::token_kind::reader_macro:
+      case read::lex::token_kind::reader_macro_comment:
+      case read::lex::token_kind::reader_macro_conditional:
+      case read::lex::token_kind::reader_macro_conditional_splice:
+      case read::lex::token_kind::syntax_quote:
+      case read::lex::token_kind::unquote:
+      case read::lex::token_kind::unquote_splice:
+      case read::lex::token_kind::deref:
+      case read::lex::token_kind::comment:
+      case read::lex::token_kind::nil:
+      case read::lex::token_kind::boolean:
+      case read::lex::token_kind::character:
+      case read::lex::token_kind::symbol:
+      case read::lex::token_kind::keyword:
+      case read::lex::token_kind::integer:
+      case read::lex::token_kind::real:
+      case read::lex::token_kind::ratio:
+      case read::lex::token_kind::string:
+      case read::lex::token_kind::escaped_string:
+      case read::lex::token_kind::eof:
+        return '?';
     }
-#pragma clang diagnostic pop
-    return '?';
   }
 
   error_ptr parse_invalid_unicode(read::source const &source, native_persistent_string const &note)
@@ -44,11 +63,11 @@ namespace jank::error
 
   error_ptr parse_unexpected_closing_character(read::lex::token const &token)
   {
-    /* TODO: Point to last open char. */
+    /* TODO: Add a note to show last open token. */
     util::string_builder sb;
     return make_error(
       kind::parse_unexpected_closing_character,
-      sb("Unexpected closing character '")(char_for_token_kind(token.kind))("'").release(),
+      sb("Unexpected closing character '")(delim_char_for_token_kind(token.kind))("'").release(),
       token.start,
       "This is unexpected, since it has no matching open character");
   }

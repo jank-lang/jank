@@ -127,27 +127,33 @@ namespace jank::error
   {
     assert(n.source.file_path == file_path);
 
+    /* Adding a note follows some rules to determine how it will fit.
+     *
+     * If it's the first note, we'll just make sure it has some top
+     * margin. We'll also limit the body of the note, in case it spans too many lines.
+     * We favor the bottom portion of the lines, rather than the top. We never add
+     * bottom margin.
+     *
+     * If it's the second note, we need to determine if it's close enough
+     * to the first note. We have some leniency for adding new lines if the
+     * two are close, but the second note is just outside the visible lines.
+     * However, if it's well beyond that, we create an ellipsis which fills
+     * the gaps between those lines.
+     *
+     * If it's the third note or beyond, we do the same steps as the second, but
+     * we also need to check if the note we're placing falls within an ellipsis
+     * gap. If so, we have the intricate logic of needing to determine if
+     * we're at the top of the ellipsis, at the bottom, or in the middle. The
+     * outcome here may result in our note with an ellipsis on top/bottom or
+     * perhaps the ellipsis going away altogether.
+     */
+
+
     if(!can_fit(n))
     {
       add_ellipsis(body_source, n);
       return;
     }
-
-    /* Top margin:
-     *   Min: 1 line
-     *   Max: 2 lines
-     *
-     *   If the count goes negative, use one blank line.
-     *
-     * Code body:
-     *   Min: 1 line
-     *   Max: 5 lines
-     *
-     *   If the error spans more than the max, just show up to the max.
-     *
-     * Bottom margin:
-     *   Always 0
-     */
 
     if(line_start == 0)
     {
@@ -157,8 +163,6 @@ namespace jank::error
       auto const top_margin{ std::min(body_source.start.line - 1, max_top_margin_lines) };
       line_end = n.source.end.line;
       line_start = line_end - body_range - top_margin;
-      //fmt::println("source.start {} source.end {}", body_source.start.line, body_source.end.line);
-      //fmt::println("body_range {} line_start {} line_end {}", body_range, line_start, line_end);
 
       for(size_t i{ line_start }; i <= line_end; ++i)
       {
@@ -380,7 +384,8 @@ namespace jank::error
   static Element code_snippet(snippet const &s)
   {
     /* TODO: Handle unknown source. */
-    /* TODO: Handle files in JARs. */
+    /* TODO: Handle files in JARs.
+     *   Map current ns back to its module source */
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
@@ -392,7 +397,6 @@ namespace jank::error
     auto const highlighted_lines{
       ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
     };
-    //fmt::println("highlighted_lines {}", highlighted_lines.size());
 
     std::vector<Element> line_numbers, lines;
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -401,9 +405,6 @@ namespace jank::error
     for(auto const &l : s.lines)
     {
       Element line_num{}, line_content{};
-      //fmt::println("snippet line {} : {}",
-      //             l.number,
-      //             l.kind == line::kind::file_data ? "file" : "note");
       switch(l.kind)
       {
         case line::kind::file_data:

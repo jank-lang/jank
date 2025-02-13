@@ -345,6 +345,9 @@ namespace jank
   template <typename R, typename E>
   constexpr std::ostream &operator<<(std::ostream &os, result<R, E> const &r)
   {
+    /* It's possible that we don't have an op<< overload for R or E, so we
+     * fall back to just rendering the type name instead. */
+    /* TODO: Datafy concept, a la Rust's Debug trait. */
     if(r.is_ok())
     {
       if constexpr(requires(R t) { os << t; })

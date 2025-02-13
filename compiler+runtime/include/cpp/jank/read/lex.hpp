@@ -123,6 +123,9 @@ namespace jank::read::lex
     native_integer denominator{};
   };
 
+  /* Tokens have movable_positions, rather than just source_positions, which allows us to
+   * increment them and add offsets. Doing this requires more than just math, since we need
+   * to step one byte at a time to find newline characters and update the line/col accordingly. */
   struct movable_position : source_position
   {
     movable_position &operator++();

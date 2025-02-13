@@ -144,6 +144,9 @@ namespace jank
     le.setPrompt(get_prompt("=> "));
     native_transient_string input{};
 
+    /* We write every REPL expression to a temporary file, which then allows us
+     * to later review that for error reporting. We automatically clean it up
+     * and we reuse the same file over and over. */
     auto const tmp{ boost::filesystem::temp_directory_path() };
     auto const path{ tmp / boost::filesystem::unique_path("jank-repl-%%%%.jank") };
 

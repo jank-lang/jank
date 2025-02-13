@@ -12,7 +12,7 @@
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/core/truthy.hpp>
-#include <jank/runtime/core.hpp> /* meta */
+#include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
