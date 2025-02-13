@@ -48,7 +48,7 @@ namespace jank::runtime::behavior
      *   (let [s (fresh-seq ...)
      *         s'  (-> s next-in-place)
      *         s'' (-> s next-in-place next-in-place)]
-     *                 ^---- UB!! s' owns s
+     *                 ^---- UB!! s' owns seq
      *     ...)
      *
      * Do this instead:
@@ -56,7 +56,7 @@ namespace jank::runtime::behavior
      *   (let [s (fresh-seq ...)
      *         s'  (-> s next-in-place)
      *         s'' (-> s' next-in-place)]
-     *                 ^---- OK: ownership transferred from s' to s''
+     *                 ^---- OK: seq ownership transferred from s' to s''
      *     ...)
      *
      * This ownership transfer enables next_in_place() optimizations where the input
