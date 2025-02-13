@@ -940,12 +940,12 @@ namespace jank::runtime
         }
         if(0 < sequence_length(typed_args))
         {
-          auto const fresh(typed_args->fresh_seq());
-          for(auto it(fresh); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
-            if(!is_nil(it->first()))
+            auto const fst(it->first());
+            if(!is_nil(fst))
             {
-              runtime::to_string(it->first(), buff);
+              runtime::to_string(fst, buff);
             }
           }
         }
