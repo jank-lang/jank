@@ -157,7 +157,7 @@ namespace jank::read::lex
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
-    , data{ d }
+    , data{ native_persistent_string_view{ d } }
   {
   }
 

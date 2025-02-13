@@ -34,7 +34,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(equal(r.expect_ok().unwrap().ptr, obj::nil::nil_const()));
-      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 1, 1, 3, lex::token_kind::nil });
+      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::nil });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
@@ -44,14 +44,12 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto const t(p.next());
       CHECK(equal(t.expect_ok().unwrap().ptr, make_box(true)));
-      CHECK(t.expect_ok().unwrap().start
-            == lex::token{ 0, 1, 1, 4, lex::token_kind::boolean, true });
+      CHECK(t.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::boolean, true });
       CHECK(t.expect_ok().unwrap().end == t.expect_ok().unwrap().start);
 
       auto const f(p.next());
       CHECK(equal(f.expect_ok().unwrap().ptr, make_box(false)));
-      CHECK(f.expect_ok().unwrap().start
-            == lex::token{ 5, 1, 1, 5, lex::token_kind::boolean, false });
+      CHECK(f.expect_ok().unwrap().start == lex::token{ 5, 5, lex::token_kind::boolean, false });
       CHECK(f.expect_ok().unwrap().end == f.expect_ok().unwrap().start);
     }
 
@@ -61,8 +59,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(equal(r.expect_ok().unwrap().ptr, make_box(1234)));
-      CHECK(r.expect_ok().unwrap().start
-            == lex::token{ 0, 1, 1, 4, lex::token_kind::integer, 1234ll });
+      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 4, lex::token_kind::integer, 1234ll });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
@@ -78,8 +75,6 @@ namespace jank::read::parse
         CHECK(r.expect_ok().unwrap().start
               == lex::token{
                 0,
-                1,
-                1,
                 3,
                 lex::token_kind::ratio,
                 { .numerator = 4, .denominator = 5 }
@@ -101,8 +96,6 @@ namespace jank::read::parse
         CHECK(r.expect_ok().unwrap().start
               == lex::token{
                 0,
-                1,
-                1,
                 3,
                 lex::token_kind::ratio,
                 { .numerator = 4, .denominator = 2 }
@@ -128,7 +121,7 @@ namespace jank::read::parse
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
       CHECK(equal(r.expect_ok().unwrap().ptr, make_box(12.34)));
-      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 1, 1, 5, lex::token_kind::real, 12.34 });
+      CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 5, lex::token_kind::real, 12.34 });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
 
@@ -147,7 +140,7 @@ namespace jank::read::parse
                       make_box<obj::character>(get_char_from_literal(ch).unwrap())));
 
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 2, lex::token_kind::character, ch });
+                == lex::token{ offset, 2, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
           /* Current character and then a backslash */
@@ -170,7 +163,7 @@ namespace jank::read::parse
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::character, ch });
+                == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
           /* +1 for space */
@@ -192,7 +185,7 @@ namespace jank::read::parse
 
           auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::character, ch });
+                == lex::token{ offset, len, lex::token_kind::character, ch });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
           offset += len;
@@ -213,7 +206,7 @@ namespace jank::read::parse
 
         auto const r(p.next());
         CHECK(r.expect_ok().unwrap().start
-              == lex::token{ 9, 1, 1, 10, lex::token_kind::character, "\\backspace" });
+              == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
       }
 
       SUBCASE("Hex unicode")
@@ -234,7 +227,7 @@ namespace jank::read::parse
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
-                  == lex::token{ offset, 1, 1, len, lex::token_kind::character, ch });
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
             CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
             /* +1 for space */
@@ -284,7 +277,7 @@ namespace jank::read::parse
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
-                  == lex::token{ offset, 1, 1, len, lex::token_kind::character, ch });
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
             CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
 
             /* +1 for space */
@@ -334,7 +327,7 @@ namespace jank::read::parse
           /* We add 2 for the surrounding quotes. */
           auto const len(strlen(s) + 2);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::string, s });
+                == lex::token{ offset, len, lex::token_kind::string, s });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each string is 1 space apart. */
           offset += len + 1;
@@ -354,7 +347,7 @@ namespace jank::read::parse
           auto const escaped(util::escape(s));
           auto const len(escaped.size() + 2);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::escaped_string, escaped });
+                == lex::token{ offset, len, lex::token_kind::escaped_string, escaped });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each string is 1 space apart. */
           offset += len + 1;
@@ -388,7 +381,7 @@ namespace jank::read::parse
 
           auto const len(strlen(s));
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::symbol, s });
+                == lex::token{ offset, len, lex::token_kind::symbol, s });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each symbol is 1 space apart. */
           offset += len + 1;
@@ -401,8 +394,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::symbol>("", "/")));
-        CHECK(r.expect_ok().unwrap().start
-              == lex::token{ 0, 1, 1, 1, lex::token_kind::symbol, "/" });
+        CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 1, lex::token_kind::symbol, "/" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
 
@@ -426,8 +418,6 @@ namespace jank::read::parse
           auto const len(strlen(s.first) + strlen(s.second) + 1);
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset,
-                               1,
-                               1,
                                len,
                                lex::token_kind::symbol,
                                fmt::format("{}/{}", s.first, s.second) });
@@ -478,12 +468,10 @@ namespace jank::read::parse
           /* We add one for the slash. */
           auto const len(strlen(s.first) + strlen(s.second) + (ns_len == 0 ? 0 : 1));
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::single_quote });
+                == lex::token{ offset, 1, lex::token_kind::single_quote });
           offset += 1;
           CHECK(r.expect_ok().unwrap().end
                 == lex::token{ offset,
-                               1,
-                               1,
                                len,
                                lex::token_kind::symbol,
                                (ns_len == 0 ? fmt::format("{}", s.second)
@@ -510,7 +498,7 @@ namespace jank::read::parse
           /* We add one for the colon. */
           auto const len(strlen(s) + 1);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, len, lex::token_kind::keyword, s });
+                == lex::token{ offset, len, lex::token_kind::keyword, s });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each symbol is 1 space apart. */
           offset += len + 1;
@@ -535,8 +523,6 @@ namespace jank::read::parse
           auto const len(strlen(s.first) + strlen(s.second) + 2);
           CHECK(r.expect_ok().unwrap().start
                 == lex::token{ offset,
-                               1,
-                               1,
                                len,
                                lex::token_kind::keyword,
                                fmt::format("{}/{}", s.first, s.second) });
@@ -560,9 +546,8 @@ namespace jank::read::parse
 
           /* We add one for each colon. */
           auto const len(strlen(s) + 2);
-          CHECK(
-            r.expect_ok().unwrap().start
-            == lex::token{ offset, 1, 1, len, lex::token_kind::keyword, fmt::format(":{}", s) });
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ offset, len, lex::token_kind::keyword, fmt::format(":{}", s) });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each keyword is 1 space apart. */
           offset += len + 1;
@@ -588,7 +573,7 @@ namespace jank::read::parse
         CHECK(equal(r.expect_ok().unwrap().ptr,
                     __rt_ctx->intern_keyword("foo.bar.spam", "foo").expect_ok()));
         CHECK(r.expect_ok().unwrap().start
-              == lex::token{ 0, 1, 1, 9, lex::token_kind::keyword, ":foo/foo" });
+              == lex::token{ 0, 9, lex::token_kind::keyword, ":foo/foo" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
     }
@@ -609,9 +594,9 @@ namespace jank::read::parse
           /* We add one for each paren. */
           auto const len(2 + i);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_paren });
+                == lex::token{ offset, 1, lex::token_kind::open_paren });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + i + 1, 1, 1, 1, lex::token_kind::close_paren });
+                == lex::token{ offset + i + 1, 1, lex::token_kind::close_paren });
           /* Each list is 1 space apart. */
           offset += len + 1;
         }
@@ -636,9 +621,9 @@ namespace jank::read::parse
           /* Parens, nums, spaces, commas, and optionally more spaces. */
           auto const len(2 + 4 + 3 + 3 + (i == 2 ? 2 : 0));
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_paren });
+                == lex::token{ offset, 1, lex::token_kind::open_paren });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + len - 1, 1, 1, 1, lex::token_kind::close_paren });
+                == lex::token{ offset + len - 1, 1, lex::token_kind::close_paren });
           /* Each list is 1 space apart. */
           offset += len + 1;
         }
@@ -693,9 +678,9 @@ namespace jank::read::parse
           /* We add one for each bracket. */
           auto const len(2 + i);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_square_bracket });
+                == lex::token{ offset, 1, lex::token_kind::open_square_bracket });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + i + 1, 1, 1, 1, lex::token_kind::close_square_bracket });
+                == lex::token{ offset + i + 1, 1, lex::token_kind::close_square_bracket });
           /* Each vector is 1 space apart. */
           offset += len + 1;
         }
@@ -721,9 +706,9 @@ namespace jank::read::parse
           /* Brackets, nums, spaces, commas, and optionally more spaces. */
           auto const len(2 + 4 + 3 + 3 + (i == 2 ? 2 : 0));
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_square_bracket });
+                == lex::token{ offset, 1, lex::token_kind::open_square_bracket });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + len - 1, 1, 1, 1, lex::token_kind::close_square_bracket });
+                == lex::token{ offset + len - 1, 1, lex::token_kind::close_square_bracket });
           /* Each vector is 1 space apart. */
           offset += len + 1;
         }
@@ -764,9 +749,9 @@ namespace jank::read::parse
           /* We add one for each bracket. */
           auto const len(2 + i);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_curly_bracket });
+                == lex::token{ offset, 1, lex::token_kind::open_curly_bracket });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + i + 1, 1, 1, 1, lex::token_kind::close_curly_bracket });
+                == lex::token{ offset + i + 1, 1, lex::token_kind::close_curly_bracket });
           /* Each map is 1 space apart. */
           offset += len + 1;
         }
@@ -793,9 +778,9 @@ namespace jank::read::parse
           /* Brackets, nums, spaces, commas, and optionally more spaces. */
           auto const len(2 + 4 + 3 + 1 + (i == 2 ? 2 : 0));
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, 1, 1, 1, lex::token_kind::open_curly_bracket });
+                == lex::token{ offset, 1, lex::token_kind::open_curly_bracket });
           CHECK(r.expect_ok().unwrap().end
-                == lex::token{ offset + len - 1, 1, 1, 1, lex::token_kind::close_curly_bracket });
+                == lex::token{ offset + len - 1, 1, lex::token_kind::close_curly_bracket });
           /* Each map is 1 space apart. */
           offset += len + 1;
         }
@@ -817,9 +802,9 @@ namespace jank::read::parse
                                                  make_box<obj::persistent_string>("meow")),
                       6)));
         CHECK(r.expect_ok().unwrap().start
-              == lex::token{ 0, 1, 1, 1, lex::token_kind::open_curly_bracket });
+              == lex::token{ 0, 1, lex::token_kind::open_curly_bracket });
         CHECK(r.expect_ok().unwrap().end
-              == lex::token{ 31, 1, 1, 1, lex::token_kind::close_curly_bracket });
+              == lex::token{ 31, 1, lex::token_kind::close_curly_bracket });
       }
 
       SUBCASE("Odd elements")
