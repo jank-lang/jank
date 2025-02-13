@@ -104,7 +104,7 @@ namespace jank::error
       case kind::analysis_invalid_recur_from_try:
         return "recur may not be used within a 'try'";
       case kind::analysis_invalid_recur_args:
-        return "The argument arity passed to 'recur' don't match the function's arity";
+        return "The argument arity passed to 'recur' doesn't match the function's arity";
       case kind::analysis_invalid_let:
         return "Invalid let";
       case kind::analysis_invalid_loop:

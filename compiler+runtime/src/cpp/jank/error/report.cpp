@@ -238,11 +238,11 @@ namespace jank::error
        * is collapsed by an ellipsis. Thus, we need to expand the ellipsis either partially
        * or fully.
        *
-       * We do this by finding the releveant ellipsis (there may be multiple) and inserting
+       * We do this by finding the releveant ellipses (there may be multiple) and inserting
        * our lines before it. We also insert our own ellipsis at the start of our lines. By
        * the end of this, we'll have our new lines with an ellipsis on either side. The
        * pass we run at the end to remove unneeded ellipsis will clean those up. */
-      size_t last_ellipse{}, last_line_number{}, line_number_before_last_ellipse{};
+      size_t last_ellipsis{}, last_line_number{}, line_number_before_last_ellipsis{};
       for(size_t i{}; i < lines.size(); ++i)
       {
         /* First loop until we find a line number larger than our start. We keep track
@@ -253,8 +253,8 @@ namespace jank::error
         }
         if(lines[i].kind == line::kind::ellipsis)
         {
-          last_ellipse = i;
-          line_number_before_last_ellipse = last_line_number;
+          last_ellipsis = i;
+          line_number_before_last_ellipsis = last_line_number;
         }
         else if(s.line_start < lines[i].number)
         {
@@ -265,17 +265,18 @@ namespace jank::error
           for(size_t i{}; i < s.lines.size(); ++i)
           {
             /* Skip any duplicate lines which can mess with the ordering. */
-            if(s.lines[i].number != 0 && s.lines[i].number <= line_number_before_last_ellipse)
+            if(s.lines[i].number != 0 && s.lines[i].number <= line_number_before_last_ellipsis)
             {
               continue;
             }
-            lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipse + added_lines),
+            lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipsis + added_lines),
                           std::move(s.lines[i]));
             ++added_lines;
           }
           /* We're inserting before the last ellipsis, so we end by putting an ellipsis at the
            * start of everything we just added. That surrounds our added lines in two ellipsis. */
-          lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipse), line::kind::ellipsis);
+          lines.emplace(lines.begin() + static_cast<ptrdiff_t>(last_ellipsis),
+                        line::kind::ellipsis);
 
           break;
         }

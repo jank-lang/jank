@@ -727,7 +727,7 @@ namespace jank::read::parse
     }
     else
     {
-      return error::parse_invalid_reader_symbolic_value("Unsupported symbolic value",
+      return error::parse_invalid_reader_symbolic_value("Invalid symbolic value",
                                                         { start_token.start, latest_token.end });
     }
 
@@ -800,7 +800,7 @@ namespace jank::read::parse
           if(!truthy(splicing_allowed_var->deref()))
           {
             return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
-                                                      "#?@ splice must not be top-level");
+                                                      "Top-level #?@ usage is not allowed");
           }
 
           auto const s(next_in_place(it)->first());
@@ -824,7 +824,7 @@ namespace jank::read::parse
             [&]() -> processor::object_result {
               /* TODO: Get the source of just this form. */
               return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
-                                                        "#?@ splice must be a sequence");
+                                                        "#?@ must be used on a sequence");
             },
             s);
         }
