@@ -70,12 +70,10 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::next_in_place()
   {
-    // sequence is non-nullptr
+    assert(sequence);
     auto const n(runtime::next_in_place(sequence));
     if(n == nil::nil_const())
     {
-      // seq is consumed, no need to update
-      //sequence = nullptr;
       return nullptr;
     }
     sequence = n;
