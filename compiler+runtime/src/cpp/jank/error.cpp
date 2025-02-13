@@ -140,7 +140,15 @@ namespace jank::error
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
-    , error_note{ message, source }
+    , notes{{ message, source }}
+  {
+  }
+
+  base::base(enum kind const k, read::source const &source, native_vector<note> const &notes)
+    : kind{ k }
+    , message{ kind_to_message(k) }
+    , source{ source }
+    , notes{ notes }
   {
   }
 
@@ -148,72 +156,58 @@ namespace jank::error
     : kind{ k }
     , message{ message }
     , source{ source }
-    , error_note{ message, source }
+    , notes{{ message, source }}
   {
   }
 
   base::base(enum kind const k,
              read::source const &source,
-             native_persistent_string const &error_note_message)
+             native_persistent_string const &note_message)
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
-    , error_note{ error_note_message, source }
-  {
-  }
-
-  base::base(enum kind const k,
-             read::source const &source,
-             native_persistent_string const &error_note_message,
-             native_vector<note> const &extra_notes)
-    : kind{ k }
-    , message{ kind_to_message(k) }
-    , source{ source }
-    , error_note{ error_note_message, source }
-    , extra_notes{ extra_notes }
+    , notes{{ note_message, source }}
   {
   }
 
   base::base(enum kind const k,
              native_persistent_string const &message,
              read::source const &source,
-             native_persistent_string const &error_note_message)
+             native_persistent_string const &note_message)
     : kind{ k }
     , message{ message }
     , source{ source }
-    , error_note{ error_note_message, source }
+    , notes{{ note_message, source }}
   {
   }
 
-  base::base(enum kind const k, read::source const &source, note const &error_note)
+  base::base(enum kind const k, read::source const &source, note const &note)
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
-    , error_note{ error_note }
+    , notes{ note }
   {
   }
 
   base::base(enum kind const k,
              native_persistent_string const &message,
              read::source const &source,
-             note const &error_note)
+             note const &note)
     : kind{ k }
     , message{ message }
     , source{ source }
-    , error_note{ error_note }
+    , notes{ note }
   {
   }
 
   base::base(enum kind const k,
              native_persistent_string const &message,
              read::source const &source,
-             note const &error_note,
-             native_vector<note> const &extra_notes)
+             native_vector<note> const &notes)
     : kind{ k }
     , message{ message }
     , source{ source }
-    , error_note{ error_note }
-    , extra_notes{ extra_notes }
+    , notes{ notes }
   {
   }
 
@@ -278,13 +272,9 @@ namespace jank
 
   error_ptr make_error(error::kind const kind,
                        read::source const &source,
-                       native_persistent_string const &error_note_message,
-                       error::note const &additional)
+                       native_vector<error::note> const &notes)
   {
-    return runtime::make_box<error::base>(kind,
-                                          source,
-                                          error_note_message,
-                                          native_vector<error::note>{ additional });
+    return runtime::make_box<error::base>(kind, source, notes);
   }
 
   error_ptr make_error(error::kind const kind,

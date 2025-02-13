@@ -223,26 +223,22 @@ namespace jank::error
     base(base const &) = default;
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
+    base(kind k, read::source const &source, native_vector<note> const &notes);
     base(kind k, native_persistent_string const &message, read::source const &source);
-    base(kind k, read::source const &source, native_persistent_string const &error_note_message);
-    base(kind k,
-         read::source const &source,
-         native_persistent_string const &error_note_message,
-         native_vector<note> const &extra_notes);
+    base(kind k, read::source const &source, native_persistent_string const &note_message);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
-         native_persistent_string const &error_note_message);
-    base(kind k, read::source const &source, note const &error_note);
+         native_persistent_string const &note_message);
+    base(kind k, read::source const &source, note const &note);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
-         note const &error_note);
+         note const &note);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
-         note const &error_note,
-         native_vector<note> const &extra_notes);
+         native_vector<note> const &notes);
 
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
@@ -250,9 +246,7 @@ namespace jank::error
     kind kind{};
     native_persistent_string message;
     read::source source;
-    /* TODO: Don't separate this out? Just notes. May not be an error. */
-    note error_note;
-    native_vector<note> extra_notes;
+    native_vector<note> notes;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -280,8 +274,7 @@ namespace jank
                        native_persistent_string const &error_note_message);
   error_ptr make_error(error::kind const kind,
                        read::source const &source,
-                       native_persistent_string const &error_note_message,
-                       error::note const &additional);
+                       native_vector<error::note> const &notes);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source,

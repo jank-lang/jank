@@ -134,8 +134,10 @@ namespace jank::error
   {
     return make_error(kind::parse_nested_shorthand_function,
                       source,
-                      "Inner #() starts here",
-                      parent_fn_source);
+                      native_vector<note>{
+                        { "Inner #() starts here", source },
+                        parent_fn_source
+    });
   }
 
   error_ptr

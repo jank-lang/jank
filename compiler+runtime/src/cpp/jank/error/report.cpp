@@ -71,8 +71,7 @@ namespace jank::error
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
-    add(e->source, e->error_note);
-    for(auto const &n : e->extra_notes)
+    for(auto const &n : e->notes)
     {
       add(n);
     }
