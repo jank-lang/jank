@@ -67,7 +67,7 @@ namespace jank::runtime::behavior
      * is made to return a new sequenceable_in_place, making the input sequenceable_in_place unreachable.
      *
      * next_in_place() can also assume the sequenceable_in_place is non-empty,
-     * having retained any and all invariants from being returned from a fresh_seq() or next_in_place() call.
+     * having retained any and all invariants from being returned from {fresh_}seq() or next{_in_place}().
      * This enables some checks at the beginning of the member function to be elided when
      * compared to next(), such as bounds or emptiness checks.  **/
     { t->next_in_place() }; // -> sequenceable;
