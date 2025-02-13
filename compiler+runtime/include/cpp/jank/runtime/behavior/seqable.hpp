@@ -14,8 +14,7 @@ namespace jank::runtime::behavior
     { t->seq() } -> std::convertible_to<object_ptr>;
 
     /* Returns a unique seq which can be updated in place. This is an optimization which allows
-     * one allocation for a fresh seq which can then be used to traverse the data at most once.
-     * Using next_in_place, mutated any number of times to traverse
+     * one allocation for a fresh seq which can then be mutated any number of times to traverse
      * the data. Also must return nullptr when the sequence is empty. */
     { t->fresh_seq() } -> std::convertible_to<object_ptr>;
   };
