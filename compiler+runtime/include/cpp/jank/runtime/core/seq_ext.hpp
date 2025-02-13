@@ -22,15 +22,14 @@ namespace jank::runtime
         else
         {
           auto seq(typed_o->fresh_seq());
-          auto it(begin);
-          for(; it != end; ++it, seq = seq->next_in_place())
+          for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
           {
             if(seq == nullptr || !runtime::equal(*it, seq->first()))
             {
               return false;
             }
           }
-          return seq == nullptr && it == end;
+          return seq == nullptr;
         }
       },
       []() { return false; },

@@ -64,12 +64,12 @@ namespace jank::runtime::obj
         for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return true;
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

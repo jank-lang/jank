@@ -96,8 +96,7 @@ namespace jank::runtime::obj
           if constexpr(behavior::sequential<T>)
           {
             size_t i{};
-            auto e(typed_o->fresh_seq());
-            for(; e != nullptr; e = e->next_in_place())
+            for(auto e(typed_o->fresh_seq()); e != nullptr; e = e->next_in_place())
             {
               if(!runtime::equal(data[i], e->first()))
               {
@@ -106,11 +105,10 @@ namespace jank::runtime::obj
 
               if(++i == data.size())
               {
-                e = e->next_in_place();
-                break;
+                return e->next_in_place() == nullptr;
               }
             }
-            return e == nullptr && i == data.size();
+            return false;
           }
           else
           {

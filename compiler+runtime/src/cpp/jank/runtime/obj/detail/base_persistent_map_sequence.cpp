@@ -14,6 +14,7 @@ namespace jank::runtime::obj::detail
     assert(begin != end);
   }
 
+  // FIXME this looks wrong
   template <typename PT, typename IT>
   native_bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
   {
