@@ -169,6 +169,7 @@ add_library(
   src/cpp/jank/error/report.cpp
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
+  src/cpp/jank/error/analyze.cpp
   src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp

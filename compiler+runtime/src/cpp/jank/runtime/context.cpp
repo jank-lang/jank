@@ -459,14 +459,14 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       return err(
-        fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string()));
+        fmt::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
     }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     {
-      return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns));
+      return err(fmt::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
     }
 
     return ok(found_ns->second->intern_var(qualified_sym));
