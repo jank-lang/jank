@@ -1,0 +1,21 @@
+(let [a (atom [])]
+  (assert (= [:try]
+             (try
+               (swap! a conj :try)
+               (finally
+                 (swap! a conj :finally)))))
+  (assert (= [:try :finally] @a) (pr-str @a)))
+
+(let [a (atom [])]
+  (try (try
+         (swap! a conj :inner-try)
+         (throw "skip finally")
+         (swap! a conj :inner-try-after-throw)
+         (finally
+           (swap! a conj :inner-finally)))
+       (catch e
+         (swap! a conj [:outer-catch e])))
+  (assert (= [:inner-try :inner-finally [:outer-catch "skip finally"]] @a)
+          (pr-str @a)))
+
+:success
