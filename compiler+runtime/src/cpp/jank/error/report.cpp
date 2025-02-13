@@ -437,7 +437,7 @@ namespace jank::error
   {
     static constexpr size_t max_width{ 80 };
 
-    plan p{ e };
+    plan const p{ e };
 
     auto header{ [&](std::string const &title) {
       auto const padding_count(max_width - 2 - title.size());

@@ -86,7 +86,7 @@ namespace jank::ui
     native_bool ended_on_error{};
 
     auto const fill_space([&](native_bool const skip, size_t const offset) {
-      std::string_view space{ code.data() + last_offset, offset - last_offset };
+      std::string_view const space{ code.data() + last_offset, offset - last_offset };
       size_t last_newline{};
       for(auto it(space.find('\n')); it != decltype(space)::npos; it = space.find('\n', it + 1))
       {
