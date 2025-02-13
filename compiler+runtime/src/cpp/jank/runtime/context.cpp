@@ -45,6 +45,12 @@ namespace jank::runtime
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
+
+    auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
+    current_file_var = core->intern_var(file_sym);
+    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->dynamic.store(true);
+
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
     current_ns_var = core->intern_var(ns_sym);
     current_ns_var->bind_root(core);
@@ -146,6 +152,11 @@ namespace jank::runtime
         fmt::format("unable to map file {} due to error: {}", path, file.expect_err())
       };
     }
+
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_file_var, make_box(path))) };
+
     return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
@@ -475,7 +486,7 @@ namespace jank::runtime
         auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
+          return err(fmt::format("Unable to resolve namespace '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }

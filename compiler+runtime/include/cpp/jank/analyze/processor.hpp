@@ -29,11 +29,9 @@ namespace jank::analyze
     file
   };
 
-  using error = read::error;
-
   struct processor
   {
-    using expression_result = result<expression_ptr, error>;
+    using expression_result = result<expression_ptr, error_ptr>;
 
     processor() = delete;
     processor(runtime::context &rt_ctx);
@@ -78,7 +76,7 @@ namespace jank::analyze
                                  expression_position,
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
-    jank::result<expr::function_arity<expression>, error>
+    result<expr::function_arity<expression>, error_ptr>
     analyze_fn_arity(runtime::obj::persistent_list_ptr const &,
                      native_persistent_string const &name,
                      local_frame_ptr &);

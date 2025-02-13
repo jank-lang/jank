@@ -22,6 +22,9 @@
 [submodule "compiler+runtime/third-party/boost-preprocessor"]
 	path = compiler+runtime/third-party/boost-preprocessor
 	url = https://github.com/jank-lang/boost-preprocessor.git
+[submodule "compiler+runtime/third-party/ftxui"]
+	path = compiler+runtime/third-party/ftxui
+	url = https://github.com/jank-lang/FTXUI.git
 [submodule "compiler+runtime/test/bash/clojure-test-suite/clojure-test-suite"]
 	path = compiler+runtime/test/bash/clojure-test-suite/clojure-test-suite
 	url = https://github.com/jank-lang/clojure-test-suite
