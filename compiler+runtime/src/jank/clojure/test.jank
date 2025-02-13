@@ -580,8 +580,7 @@
        (and (pos? (count argv))
             (pos? (count args))
             (zero? (mod (count args) (count argv)))))
-    ;; fully qualified https://github.com/jank-lang/jank/issues/237
-    `(clojure.template/do-template ~argv (is ~expr) ~@args)
+    `(temp/do-template ~argv (is ~expr) ~@args)
     (throw (ex-info "The number of args doesn't match are's argv." {}))))
 
 (defmacro testing

@@ -2,4 +2,7 @@
 
 set -euo pipefail
 
-cmake --build build "$@"
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${here}/../build"
+
+cmake --build "${build_dir}" "$@"

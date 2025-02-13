@@ -404,7 +404,7 @@ namespace jank::read::parse
     auto const start_token((*token_current).expect_ok());
     ++token_current;
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = !syntax_quoted;
     auto val_result(next());
     quoted = old_quoted;
     if(val_result.is_err())
@@ -1104,9 +1104,13 @@ namespace jank::read::parse
                                                          obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = false;
+    auto const old_syntax_quoted(syntax_quoted);
+    syntax_quoted = true;
+    quoted = false;
     auto quoted_form(next());
     quoted = old_quoted;
+    syntax_quoted = old_syntax_quoted;
     if(quoted_form.is_err())
     {
       return quoted_form;
@@ -1209,13 +1213,13 @@ namespace jank::read::parse
         {
           ns = ns_portion;
         }
-        /* Normal symbols will have the ns resolved immediately. */
+        /* Normal symbols will have the ns resolved immediately if resolvable. */
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
-            return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
+            ns = ns_portion;
           }
           ns = resolved_ns.unwrap()->name->name;
         }
