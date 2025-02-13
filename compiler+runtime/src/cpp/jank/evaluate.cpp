@@ -66,7 +66,10 @@ namespace jank::evaluate
     else if constexpr(std::same_as<T, expr::try_<expression>>)
     {
       walk(expr.body, f);
-      walk(expr.catch_body.body, f);
+      if(expr.catch_body.is_some())
+      {
+        walk(expr.catch_body.unwrap().body, f);
+      }
       if(expr.finally_body.is_some())
       {
         walk(expr.finally_body.unwrap(), f);
@@ -627,15 +630,19 @@ namespace jank::evaluate
       }
     } };
 
+    if(!expr.catch_body)
+    {
+      return eval(expr.body);
+    }
     try
     {
       return eval(expr.body);
     }
     catch(object_ptr const e)
     {
-      return dynamic_call(eval(wrap_expression(make_box<expression>(expr.catch_body.body),
+      return dynamic_call(eval(wrap_expression(make_box<expression>(expr.catch_body.unwrap().body),
                                                "catch",
-                                               { expr.catch_body.sym })),
+                                               { expr.catch_body.unwrap().sym })),
                           e);
     }
   }

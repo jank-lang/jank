@@ -1212,16 +1212,12 @@ namespace jank::analyze
       }
     }
 
-    if(!has_catch)
-    {
-      return make_error(error::kind::analysis_invalid_try,
-                        "Each 'try' must have a 'catch' clause",
-                        meta_source(list));
-    }
-
     ret.body.frame = try_frame;
     ret.body.propagate_position(position);
-    ret.catch_body.body.frame = catch_frame;
+    if(ret.catch_body.is_some())
+    {
+      ret.catch_body.unwrap().body.frame = catch_frame;
+    }
     if(ret.finally_body.is_some())
     {
       ret.finally_body.unwrap().frame = finally_frame;

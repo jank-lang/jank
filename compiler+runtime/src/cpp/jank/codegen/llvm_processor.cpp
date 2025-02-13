@@ -923,15 +923,18 @@ namespace jank::codegen
   {
     auto const wrapped_body(
       evaluate::wrap_expression(make_box<expression>(expr.body), "try_body", {}));
-    auto const wrapped_catch(evaluate::wrap_expression(make_box<expression>(expr.catch_body.body),
-                                                       "catch",
-                                                       { expr.catch_body.sym }));
+    auto const wrapped_catch(expr.catch_body.map([](auto const &catch_body) {
+      return evaluate::wrap_expression(make_box<expression>(catch_body.body),
+                                       "catch",
+                                       { catch_body.sym });
+    }));
     auto const wrapped_finally(expr.finally_body.map([](auto const &finally) {
       return evaluate::wrap_expression(make_box<expression>(finally), "finally", {});
     }));
 
     auto const body(gen(wrapped_body, arity));
-    auto const catch_(gen(wrapped_catch, arity));
+    auto const catch_(
+      wrapped_catch.map([&](auto const &catch_body) { return gen(catch_body, arity); }));
     auto const finally(
       wrapped_finally.map([&](auto const &finally) { return gen(finally, arity); }));
 
@@ -941,10 +944,11 @@ namespace jank::codegen
       false));
     auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 3> const args{ body,
-                                                    catch_,
-                                                    finally.unwrap_or(
-                                                      gen_global(obj::nil::nil_const())) };
+    llvm::SmallVector<llvm::Value *, 3> const args{
+      body,
+      catch_.unwrap_or(gen_global(obj::nil::nil_const())),
+      finally.unwrap_or(gen_global(obj::nil::nil_const()))
+    };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr.position == expression_position::tail)

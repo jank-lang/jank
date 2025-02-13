@@ -1624,6 +1624,167 @@ namespace jank::read::lex
         }
       }
 
+      SUBCASE("Shebang Comments")
+      {
+        SUBCASE("Empty")
+        {
+          processor p{ "#!" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::comment, ""sv }
+          }));
+        }
+
+        SUBCASE("Empty multi-line")
+        {
+          processor p{ "#!\n#!" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::comment, ""sv },
+                  { 3, 1, token_kind::comment, ""sv }
+          }));
+        }
+
+        SUBCASE("Non-empty")
+        {
+          processor p{ "#!foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 3, token_kind::comment, "foo"sv },
+          }));
+        }
+
+        SUBCASE("Multiple on same line")
+        {
+          processor p{ "#!foo #!bar" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 9, token_kind::comment, "foo #!bar"sv }
+          }));
+        }
+
+        SUBCASE("Multiple on same line; last is empty")
+        {
+          processor p{ "#!foo #!" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 6, token_kind::comment, "foo #!"sv }
+          }));
+        }
+
+        SUBCASE("Multiple #! in a row")
+        {
+          processor p{ "#!#!#!foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::comment, "#!#!foo"sv }
+          }));
+        }
+
+        SUBCASE("Expressions before")
+        {
+          processor p{ "1 2 #!foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::integer,     1ll },
+                  { 2, 1, token_kind::integer,     2ll },
+                  { 4, 3, token_kind::comment, "foo"sv }
+          }));
+        }
+
+        SUBCASE("Expressions before and after")
+        {
+          processor p{ "1 #!foo\n2" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {           0,           1, token_kind::integer,     1ll },
+                  {           2,           3, token_kind::comment, "foo"sv },
+                  { { 8, 2, 1 }, { 9, 2, 2 }, token_kind::integer,     2ll }
+          }));
+        }
+
+        SUBCASE("Multiple lines starting with #!")
+        {
+          processor p{ "#!foo\n#!bar" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 3, token_kind::comment, "foo"sv },
+                  { 6, 3, token_kind::comment, "bar"sv },
+          }));
+        }
+
+        SUBCASE("Double #")
+        {
+          processor p{ "##!foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::reader_macro },
+                  { 1, 3, token_kind::comment, "foo"sv },
+          }));
+        }
+
+        SUBCASE("Double !")
+        {
+          processor p{ "#!!foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::comment, "!foo"sv },
+          }));
+        }
+
+        SUBCASE("Hash Bang Hash")
+        {
+          processor p{ "#!#foo" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 4, token_kind::comment, "#foo"sv },
+          }));
+        }
+
+        SUBCASE("Don't parse list")
+        {
+          processor p{ "#!(+ 1 1)" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::comment, "(+ 1 1)"sv },
+          }));
+        }
+
+        SUBCASE("Don't parse string")
+        {
+          processor p{ "#!\"foo\"" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 5, token_kind::comment, "\"foo\""sv },
+          }));
+        }
+
+        SUBCASE("Shebang in list")
+        {
+          processor p{ "(#!)" };
+          native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 1, token_kind::open_paren },
+                  { 1, 1, token_kind::comment, ")"sv },
+          }));
+        }
+      }
+
       SUBCASE("Conditional")
       {
         SUBCASE("Empty")
