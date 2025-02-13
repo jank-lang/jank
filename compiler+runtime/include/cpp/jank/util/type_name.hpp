@@ -62,6 +62,9 @@ namespace jank::util
    *
    * With that done, we just do some template work to turn the string literal into a
    * constexpr static variable to which we can have a string_view. Entirely at compile-time.
+   * However, we only want to keep the portion we care about in the resulting binary, not
+   * the whole pretty function string, so we copy it into an array which contains only
+   * the type name.
    *
    * Just do type_name<T>() and there's your string_view. */
   template <typename T>
