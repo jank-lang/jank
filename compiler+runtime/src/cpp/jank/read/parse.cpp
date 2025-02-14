@@ -1208,7 +1208,10 @@ namespace jank::read::parse
           {
             ns = ns_portion;
           }
-          ns = resolved_ns.unwrap()->name->name;
+          else
+          {
+            ns = resolved_ns.unwrap()->name->name;
+          }
         }
         name = sv.substr(slash + 1);
       }
