@@ -33,15 +33,18 @@
                            :out lcov-file}
                           (str llvm-cov " export --format=lcov --instr-profile " merged-file
                                " build/jank-test --object build/jank"))
-        (let [codecov-script (str compiler+runtime-dir "/build/codecov")]
+        (let [codecov-script (str compiler+runtime-dir "/build/codecov")
+              sha (or (util/get-env "GITHUB_SHA")
+                      (util/quiet-shell {} "git rev-parse HEAD"))]
           (util/quiet-shell {:out codecov-script} "curl -s https://cli.codecov.io/latest/linux/codecov")
           (util/quiet-shell {} (str "chmod +x " codecov-script))
           (util/quiet-shell {}
                             (str codecov-script
-                                 " upload-process --disable-search --fail-on-error "
+                                 " upload-process --disable-search --fail-on-error"
+                                 " -C " sha
                                  " -t " (util/get-env "CODECOV_TOKEN")
-                                 " -n 'service'-" (util/get-env "GITHUB_RUN_ID" "local")
-                                 " -F service -f " lcov-file))))
+                                 " -n " (util/get-env "JANK_MATRIX_ID" "matrix") "-" (util/get-env "GITHUB_RUN_ID" "local")
+                                 " -f " lcov-file))))
       (util/log-info-with-time duration "Merged and published coverage report"))))
 
 (when (= *file* (System/getProperty "babashka.file"))
