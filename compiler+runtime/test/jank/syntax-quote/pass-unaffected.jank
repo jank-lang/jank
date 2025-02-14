@@ -1,6 +1,6 @@
-(create-ns 'syntax-quote.pass-unaffected/bar)
+(create-ns 'syntax-quote.pass-unaffected)
 (ns-unalias *ns* 'c)
-(alias 'c 'syntax-quote.pass-unaffected/bar)
+(alias 'c 'syntax-quote.pass-unaffected)
 (def a-var 1)
 (try
   (assert (= 1 `1) `1)

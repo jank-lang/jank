@@ -393,6 +393,12 @@ namespace jank::runtime
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
   {
+    if(!sym->ns.empty())
+    {
+      throw std::runtime_error{
+        fmt::format("Can't intern ns. Sym is qualified: {}", sym->to_string())
+      };
+    }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
@@ -495,9 +501,8 @@ namespace jank::runtime
         auto const current_ns(expect_object<jank::runtime::ns>(current_ns_var->deref()));
         resolved_ns = current_ns->name->name;
       }
-      return intern_keyword(fmt::format("{}/{}", resolved_ns, name));
     }
-    return intern_keyword(name);
+    return intern_keyword(resolved_ns.empty() ? name : fmt::format("{}/{}", resolved_ns, name));
   }
 
   result<obj::keyword_ptr, native_persistent_string>
