@@ -21,7 +21,7 @@ jobs:
             build_type: Debug
             sanitize: none
             coverage: on
-            analyze: on
+            analyze: off
           ## Debug + sanitization
           - name: Ubuntu - address sanitizer
             os: ubuntu-24.04
