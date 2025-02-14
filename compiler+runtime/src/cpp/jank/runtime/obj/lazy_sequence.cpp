@@ -36,11 +36,8 @@ namespace jank::runtime::obj
       return nullptr;
     }
     auto const s(runtime::fresh_seq(sequence));
-    if(s != nil::nil_const())
-    {
-      return make_box<lazy_sequence>(nullptr, s);
-    }
-    return nullptr;
+    assert(s != nil::nil_const());
+    return make_box<lazy_sequence>(nullptr, s);
   }
 
   object_ptr lazy_sequence::first() const
