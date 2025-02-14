@@ -30,9 +30,14 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::fresh_seq() const
   {
-    auto ret(make_box<lazy_sequence>(fn, sequence));
-    ret->fn_result = fn_result;
-    return ret;
+    resolve_seq();
+    if(!sequence)
+    {
+      return nullptr;
+    }
+    auto const s(runtime::fresh_seq(sequence));
+    assert(s != nil::nil_const());
+    return make_box<lazy_sequence>(nullptr, s);
   }
 
   object_ptr lazy_sequence::first() const
@@ -62,18 +67,14 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::next_in_place()
   {
-    resolve_seq();
-    if(sequence)
+    assert(sequence);
+    auto const n(runtime::next_in_place(sequence));
+    if(n == nil::nil_const())
     {
-      /* We don't know we own this sequence, so we can't use next_in_place. */
-      sequence = runtime::next(sequence);
-      if(sequence == nil::nil_const())
-      {
-        sequence = nullptr;
-      }
-      return sequence ? this : nullptr;
+      return nullptr;
     }
-    return nullptr;
+    sequence = n;
+    return this;
   }
 
   native_bool lazy_sequence::equal(object const &o) const
@@ -155,8 +156,9 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::with_meta(object_ptr const m) const
   {
+    resolve_seq();
+    auto const ret(make_box<lazy_sequence>(nullptr, sequence));
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
   }
