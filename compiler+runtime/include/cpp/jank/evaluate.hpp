@@ -32,6 +32,7 @@ namespace jank::evaluate
   runtime::object_ptr eval(analyze::expr::recursion_reference<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::named_recursion<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::let<analyze::expression> const &);
+  runtime::object_ptr eval(analyze::expr::letfn<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::do_<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::if_<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::throw_<analyze::expression> const &);
