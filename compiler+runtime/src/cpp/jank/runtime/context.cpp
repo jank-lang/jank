@@ -45,6 +45,12 @@ namespace jank::runtime
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
+
+    auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
+    current_file_var = core->intern_var(file_sym);
+    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->dynamic.store(true);
+
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
     current_ns_var = core->intern_var(ns_sym);
     current_ns_var->bind_root(core);
@@ -146,6 +152,11 @@ namespace jank::runtime
         fmt::format("unable to map file {} due to error: {}", path, file.expect_err())
       };
     }
+
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_file_var, make_box(path))) };
+
     return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
@@ -448,14 +459,14 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       return err(
-        fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string()));
+        fmt::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
     }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     {
-      return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns));
+      return err(fmt::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
     }
 
     return ok(found_ns->second->intern_var(qualified_sym));
@@ -475,7 +486,7 @@ namespace jank::runtime
         auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
+          return err(fmt::format("Unable to resolve namespace '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }
