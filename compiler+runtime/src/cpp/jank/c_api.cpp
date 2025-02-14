@@ -850,14 +850,18 @@ extern "C"
       }
     } };
 
+    auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
+    auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
+    if(catch_fn_obj == obj::nil::nil_const())
+    {
+      return dynamic_call(try_fn_obj);
+    }
     try
     {
-      auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
       return dynamic_call(try_fn_obj);
     }
     catch(object_ptr const e)
     {
-      auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
       return dynamic_call(catch_fn_obj, e);
     }
   }

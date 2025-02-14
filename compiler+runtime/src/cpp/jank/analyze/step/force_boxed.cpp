@@ -40,9 +40,9 @@ namespace jank::analyze::step
           {
             boost::apply_visitor(f, typed_expr.body.values.back()->data);
           }
-          if(!typed_expr.catch_body.body.values.empty())
+          if(typed_expr.catch_body && !typed_expr.catch_body.unwrap().body.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.catch_body.body.values.back()->data);
+            boost::apply_visitor(f, typed_expr.catch_body.unwrap().body.values.back()->data);
           }
         }
         else

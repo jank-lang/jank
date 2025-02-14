@@ -1,7 +1,5 @@
 #include <set>
 
-#include <boost/core/demangle.hpp>
-
 #include <fmt/core.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -12,12 +10,14 @@
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/core/truthy.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/error/analyze.hpp>
 
 namespace jank::analyze
 {
@@ -55,7 +55,7 @@ namespace jank::analyze
   {
     if(parse_current == parse_end)
     {
-      return err(error{ "already retrieved result" });
+      return error::internal_analysis_failure("Invalid iterator; parse_current == parse_end");
     }
 
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
@@ -84,27 +84,31 @@ namespace jank::analyze
                          native_bool const)
   {
     auto const length(l->count());
-    if(length < 2 || length > 4)
+    if(length < 2)
     {
-      /* TODO: Error handling. */
-      return err(
-        error{ fmt::format("invalid def: incorrect number of elements in form: {}", length) });
+      return error::analysis_invalid_def("Too few arguments provided to 'def'",
+                                         meta_source(l->meta));
+    }
+    else if(length > 4)
+    {
+      return error::analysis_invalid_def("Too many argument provided to 'def'",
+                                         meta_source(l->meta));
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj->type != runtime::object_type::symbol)
     {
-      /* TODO: Error handling. */
-      return err(error{ fmt::format("invalid def: name must be a symbol, not {}",
-                                    object_type_str(sym_obj->type)) });
+      return error::analysis_invalid_def(
+        fmt::format("The var name in a 'def' must be a symbol, but you provided a '{}'",
+                    object_type_str(sym_obj->type)),
+        meta_source(sym_obj));
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
     if(!sym->ns.empty())
     {
-      /* TODO: Error handling. */
-      return err(
-        error{ fmt::format("invalid def: name must not be qualified: {}", sym->to_string()) });
+      return error::analysis_invalid_def("The provided var name for a 'def' must not be qualified",
+                                         meta_source(sym_obj));
     }
 
     auto qualified_sym(current_frame->lift_var(sym));
@@ -112,7 +116,7 @@ namespace jank::analyze
     auto const var(rt_ctx.intern_var(qualified_sym));
     if(var.is_err())
     {
-      return var.expect_err();
+      return error::internal_analysis_failure(var.expect_err(), meta_source(sym));
     }
 
     option<native_box<expression>> value_expr;
@@ -139,8 +143,8 @@ namespace jank::analyze
       auto const docstring_obj(l->data.rest().rest().first().unwrap());
       if(docstring_obj->type != runtime::object_type::persistent_string)
       {
-        return err(error{ fmt::format("invalid def: docstring must be a string: {}",
-                                      runtime::to_string(docstring_obj)) });
+        return error::analysis_invalid_def("The doc string for a 'def' must be a string",
+                                           meta_source(docstring_obj));
       }
       auto const meta_with_doc(
         runtime::assoc(qualified_sym->meta.unwrap_or(runtime::obj::nil::nil_const()),
@@ -229,7 +233,9 @@ namespace jank::analyze
     auto const var(rt_ctx.find_var(qualified_sym));
     if(var.is_none())
     {
-      return err(error{ "unbound symbol: " + sym->to_string() });
+      return error::analysis_unresolved_symbol(
+        fmt::format("Unable to resolve symbol '{}'", sym->to_string()),
+        meta_source(sym));
     }
 
     /* Macros aren't lifted, since they're not used during runtime. */
@@ -247,7 +253,7 @@ namespace jank::analyze
     });
   }
 
-  result<expr::function_arity<expression>, error>
+  result<expr::function_arity<expression>, error_ptr>
   processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list,
                               native_persistent_string const &name,
                               local_frame_ptr &current_frame)
@@ -255,7 +261,8 @@ namespace jank::analyze
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
     {
-      return err(error{ "invalid fn parameter vector" });
+      return error::analysis_invalid_fn_parameters("A function parameter vector must be a vector",
+                                                   meta_source(params_obj));
     }
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
@@ -274,28 +281,37 @@ namespace jank::analyze
       auto const p(*it);
       if(p->type != runtime::object_type::symbol)
       {
-        return err(error{
-          fmt::format("invalid parameter; must be a symbol, not {}", runtime::to_string(p)) });
+        return error::analysis_invalid_fn_parameters(
+          fmt::format("A function parameter must be a symbol, not a '{}'",
+                      object_type_str(p->type)),
+          meta_source(p));
       }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
       if(!sym->ns.empty())
       {
-        return err(error{ "invalid parameter; must be unqualified" });
+        return error::analysis_invalid_fn_parameters("A function parameter must be unqualified",
+                                                     meta_source(p));
       }
       else if(sym->name == "&")
       {
         if(is_variadic)
         {
-          return err(error{ "invalid function; parameters contain multiple &" });
+          return error::analysis_invalid_fn_parameters(
+            "Multiple '&' paramters found, but only one may be present",
+            meta_source(sym));
         }
         else if(it + 1 == params->data.end())
         {
-          return err(error{ "invalid function; missing symbol after &" });
+          return error::analysis_invalid_fn_parameters(
+            "A symbol must be present after '&' to name the variadic parameter",
+            meta_source(*(it + 1)));
         }
         else if(it + 2 != params->data.end())
         {
-          return err(error{ "invalid function; param after rest args" });
+          return error::analysis_invalid_fn_parameters(
+            "There may be no additional parameters after the variadic parameter",
+            meta_source(*(it + 1)));
         }
 
         is_variadic = true;
@@ -326,9 +342,10 @@ namespace jank::analyze
      * and would cause an off-by-one error. */
     if(param_symbols.size() > runtime::max_params)
     {
-      return err(
-        error{ fmt::format("invalid parameter count; must be <= {}; use & args to capture the rest",
-                           runtime::max_params) });
+      /* TODO: Suggestion: use & args to capture the rest */
+      return error::analysis_invalid_fn_parameters(
+        fmt::format("This function has too many parameters. The max is {}", runtime::max_params),
+        meta_source(params_obj));
     }
 
     auto fn_ctx(make_box<expr::function_context>());
@@ -377,7 +394,8 @@ namespace jank::analyze
     auto const length(full_list->count());
     if(length < 2)
     {
-      return err(error{ fmt::format("fn missing forms: {}", full_list->to_string()) });
+      return error::analysis_invalid_fn("This function is missing its parameter vector",
+                                        meta_source(full_list));
     }
     auto list(full_list);
 
@@ -390,7 +408,8 @@ namespace jank::analyze
       unique_name = __rt_ctx->unique_string(name);
       if(length < 3)
       {
-        return err(error{ fmt::format("fn missing forms: {}", full_list->to_string()) });
+        return error::analysis_invalid_fn("This function is missing its parameter vector",
+                                          meta_source(first_elem));
       }
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
@@ -422,7 +441,7 @@ namespace jank::analyze
         auto arity_list_obj(it.first().unwrap());
 
         auto const err(runtime::visit_object(
-          [&](auto const typed_arity_list) -> result<void, error> {
+          [&](auto const typed_arity_list) -> result<void, error_ptr> {
             using T = typename decltype(typed_arity_list)::value_type;
 
             if constexpr(runtime::behavior::sequenceable<T>)
@@ -439,7 +458,10 @@ namespace jank::analyze
             }
             else
             {
-              return error{ "invalid fn: expected arity list" };
+              return error::analysis_invalid_fn(
+                "Invalid 'fn' syntax. Please provide either a list of arities or a "
+                "parameter vector",
+                meta_source(list));
             }
           },
           arity_list_obj));
@@ -461,7 +483,8 @@ namespace jank::analyze
     }
     if(found_variadic > 1)
     {
-      return err(error{ "invalid fn: has more than one variadic arity" });
+      return error::analysis_invalid_fn("A function may only have one variadic arity",
+                                        meta_source(full_list));
     }
 
     /* The variadic arity, if present, must have at least as many fixed params as the
@@ -472,7 +495,10 @@ namespace jank::analyze
       {
         if(!arity.fn_ctx->is_variadic && arity.params.size() >= variadic_arity)
         {
-          return err(error{ "invalid fn: fixed arity has >= params than variadic arity" });
+          return error::analysis_invalid_fn(
+            "The variadic arity of this function has fewer parameters than one of "
+            "its fixed arities, which would lead to ambiguities when it's called",
+            meta_source(full_list));
         }
       }
     }
@@ -510,7 +536,10 @@ namespace jank::analyze
         if(base->params.size() == other->params.size()
            && base->fn_ctx->is_variadic == other->fn_ctx->is_variadic)
         {
-          return err(error{ "invalid fn: duplicate arity definition" });
+          return error::analysis_invalid_fn(
+            "There are multiple overloads with the same number of parameters. Each "
+            "one must be unique",
+            meta_source(full_list));
         }
       }
     }
@@ -529,24 +558,31 @@ namespace jank::analyze
   {
     if(fn_ctx.is_none())
     {
-      return err(error{ "unable to use recur outside of a function or loop" });
+      return error::analysis_invalid_recur_position(
+        "Unable to use recur outside of a function or loop",
+        meta_source(list));
     }
     else if(rt_ctx.no_recur_var->is_bound() && runtime::truthy(rt_ctx.no_recur_var->deref()))
     {
-      return err(error{ "recur is not permitted through a try/catch" });
+      return error::analysis_invalid_recur_from_try(
+        "It's not permitted to use recur through a try/catch",
+        meta_source(list));
     }
     else if(position != expression_position::tail)
     {
-      return err(error{ "recur used outside of tail position" });
+      return error::analysis_invalid_recur_position("'recur' must be used in tail position",
+                                                    meta_source(list));
     }
 
     /* Minus one to remove recur symbol. */
     auto const arg_count(list->count() - 1);
     if(fn_ctx.unwrap()->param_count != arg_count)
     {
-      return err(error{ fmt::format("invalid number of args passed to recur; expected {}, found {}",
-                                    fn_ctx.unwrap()->param_count,
-                                    arg_count) });
+      return error::analysis_invalid_recur_args(
+        fmt::format("Invalid number of args passed to recur; expected {}, found {}",
+                    fn_ctx.unwrap()->param_count,
+                    arg_count),
+        meta_source(list));
     }
 
 
@@ -618,14 +654,15 @@ namespace jank::analyze
   {
     if(o->count() < 2)
     {
-      return err(error{ "invalid let*: expects bindings" });
+      return error::analysis_invalid_let("A bindings vector must be provided to 'let'",
+                                         meta_source(o));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return err(error{
-        fmt::format("invalid let* bindings: must be a vector, not {}", to_string(bindings_obj)) });
+      return error::analysis_invalid_let("The bindings of a 'let' must be in a vector",
+                                         meta_source(bindings_obj));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -633,7 +670,8 @@ namespace jank::analyze
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
-      return err(error{ "invalid let* bindings: must be an even number" });
+      return error::analysis_invalid_let("There must be an even number of bindings for a 'let'",
+                                         meta_source(bindings_obj));
     }
 
     expr::let<expression> ret{
@@ -649,15 +687,14 @@ namespace jank::analyze
 
       if(sym_obj->type != runtime::object_type::symbol)
       {
-        return err(error{ fmt::format("invalid let* binding: left hand must be a symbol, not {}",
-                                      runtime::to_string(sym_obj)) });
+        return error::analysis_invalid_let("The left hand side of a 'let' binding must be a symbol",
+                                           meta_source(sym_obj));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return err(error{
-          fmt::format("invalid let* binding: left hand must be an unqualified symbol, not {}",
-                      sym->to_string()) });
+        return error::analysis_invalid_let("'let' binding symbols must be unqualified",
+                                           meta_source(sym_obj));
       }
 
       auto res(analyze(val, ret.frame, expression_position::value, fn_ctx, false));
@@ -704,13 +741,15 @@ namespace jank::analyze
   {
     if(o->count() < 2)
     {
-      return err(error{ "invalid loop*: expects bindings" });
+      return error::analysis_invalid_loop("A 'loop' form requires a binding vector",
+                                          meta_source(o));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return err(error{ "invalid loop* bindings: must be a vector" });
+      return error::analysis_invalid_loop("The bindings for a 'loop' must be a vector",
+                                          meta_source(bindings_obj));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -718,7 +757,8 @@ namespace jank::analyze
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
-      return err(error{ "invalid loop* bindings: must be an even number" });
+      return error::analysis_invalid_loop("There must be an even number of bindings for a 'loop'",
+                                          meta_source(bindings_obj));
     }
 
     runtime::detail::native_transient_vector binding_syms, binding_vals;
@@ -729,15 +769,15 @@ namespace jank::analyze
 
       if(sym_obj->type != runtime::object_type::symbol)
       {
-        return err(error{ fmt::format("invalid loop* binding: left hand must be a symbol, not {}",
-                                      runtime::to_string(sym_obj)) });
+        return error::analysis_invalid_loop(
+          "The left hand side of a 'loop' binding must be a symbol",
+          meta_source(sym_obj));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return err(error{
-          fmt::format("invalid loop* binding: left hand must be an unqualified symbol, not {}",
-                      sym->to_string()) });
+        return error::analysis_invalid_loop("'loop' binding symbols must be unqualified",
+                                            meta_source(sym_obj));
       }
 
       binding_syms.push_back(sym_obj);
@@ -816,11 +856,14 @@ namespace jank::analyze
     auto const form_count(o->count());
     if(form_count < 3)
     {
-      return err(error{ "invalid if: expects at least two forms" });
+      return error::analysis_invalid_if("'if' needs at least a condition and a 'then' form",
+                                        meta_source(o));
     }
     else if(form_count > 4)
     {
-      return err(error{ "invalid if: expects at most three forms" });
+      return error::analysis_invalid_if(
+        "Extra form specified in 'if'",
+        meta_source(o->data.rest().rest().rest().rest().first().unwrap()));
     }
 
     auto const condition(o->data.rest().first().unwrap());
@@ -868,7 +911,8 @@ namespace jank::analyze
   {
     if(o->count() != 2)
     {
-      return err(error{ "invalid quote: expects one argument" });
+      return error::analysis_invalid_quote("'quote' requires exactly one form to quote",
+                                           meta_source(o));
     }
 
     return analyze_primitive_literal(o->data.rest().first().unwrap(),
@@ -887,13 +931,15 @@ namespace jank::analyze
   {
     if(o->count() != 2)
     {
-      return err(error{ "invalid var reference: expects one argument" });
+      return error::analysis_invalid_var_reference("'var' expects exactly one form to resolve",
+                                                   meta_source(o));
     }
 
     auto const arg(o->data.rest().first().unwrap());
     if(arg->type != runtime::object_type::symbol)
     {
-      return err(error{ "invalid var reference: expects a symbol" });
+      return error::analysis_invalid_var_reference("The argument to 'var' must be a symbol",
+                                                   meta_source(arg));
     }
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
@@ -902,7 +948,9 @@ namespace jank::analyze
     auto const found_var(rt_ctx.find_var(qualified_sym));
     if(found_var.is_none())
     {
-      return err(error{ fmt::format("unable to resolve var: {}", qualified_sym->to_string()) });
+      return error::analysis_unresolved_var(
+        fmt::format("Unable to resolve var '{}'", qualified_sym->to_string()),
+        meta_source(o));
     }
 
     return make_box<expression>(expr::var_ref<expression>{
@@ -937,7 +985,7 @@ namespace jank::analyze
   {
     if(o->count() != 2)
     {
-      return err(error{ "invalid throw: expects one argument" });
+      return error::analysis_invalid_throw("'throw' requires exactly one argument", meta_source(o));
     }
 
     auto const arg(o->data.rest().first().unwrap());
@@ -1027,7 +1075,9 @@ namespace jank::analyze
           {
             if(has_catch || has_finally)
             {
-              return err(error{ "extra forms after catch/finally" });
+              return error::analysis_invalid_try(
+                "No extra forms may appear after 'catch' or 'finally",
+                meta_source(item));
             }
 
             auto const is_last(it->next() == nullptr);
@@ -1045,11 +1095,16 @@ namespace jank::analyze
           {
             if(has_finally)
             {
-              return err(error{ "finally must be the last form of a try" });
+              /* TODO: Note where the finally is. */
+              return error::analysis_invalid_try(
+                "No 'catch' forms are permitted after a 'finally' form has been been provided",
+                meta_source(item));
             }
             if(has_catch)
             {
-              return err(error{ "only one catch may be supplied" });
+              /* TODO: Note where the other catch is. */
+              return error::analysis_invalid_try("Only one 'catch' form may be supplied",
+                                                 meta_source(item));
             }
             has_catch = true;
 
@@ -1058,19 +1113,26 @@ namespace jank::analyze
             auto const catch_body_size(catch_list->count());
             if(catch_body_size == 1)
             {
-              return err(error{ "symbol required after catch" });
+              return error::analysis_invalid_try(
+                "Symbol required after 'catch', which is used as the binding to "
+                "hold the exception value",
+                meta_source(item));
             }
 
             auto const sym_obj(catch_list->data.rest().first().unwrap());
             if(sym_obj->type != runtime::object_type::symbol)
             {
-              return err(error{ "symbol required after catch" });
+              return error::analysis_invalid_try(
+                "Symbol required after 'catch', which is used as the binding to "
+                "hold the exception value",
+                meta_source(sym_obj));
             }
 
             auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
             if(!sym->get_namespace().empty())
             {
-              return err(error{ "symbol for catch must be unqualified" });
+              return error::analysis_invalid_try("The symbol after 'catch' must be unqualified",
+                                                 meta_source(sym_obj));
             }
 
             catch_frame->locals.emplace(sym, local_binding{ sym, none, catch_frame });
@@ -1093,7 +1155,9 @@ namespace jank::analyze
           {
             if(has_finally)
             {
-              return err(error{ "only one finally may be supplied" });
+              /* TODO: Note the other finally */
+              return error::analysis_invalid_try("Only one finally may be supplied",
+                                                 meta_source(item));
             }
             has_finally = true;
 
@@ -1116,14 +1180,12 @@ namespace jank::analyze
       }
     }
 
-    if(!has_catch)
-    {
-      return err(error{ "each try must have a catch clause" });
-    }
-
     ret.body.frame = try_frame;
     ret.body.propagate_position(position);
-    ret.catch_body.body.frame = catch_frame;
+    if(ret.catch_body.is_some())
+    {
+      ret.catch_body.unwrap().body.frame = catch_frame;
+    }
     if(ret.finally_body.is_some())
     {
       ret.finally_body.unwrap().frame = finally_frame;
@@ -1384,7 +1446,8 @@ namespace jank::analyze
             auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
             if(!fn)
             {
-              return err(error{ "unsupported arity meta on non-function var" });
+              return error::internal_analysis_failure("unsupported arity meta on non-function var",
+                                                      meta_source(first));
             }
           }
 
@@ -1474,12 +1537,12 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze(runtime::object_ptr const o, expression_position const position)
+  processor::analyze(object_ptr const o, expression_position const position)
   {
     return analyze(o, root_frame, position, none, true);
   }
 
-  processor::expression_result processor::analyze(runtime::object_ptr const o,
+  processor::expression_result processor::analyze(object_ptr const o,
                                                   local_frame_ptr &current_frame,
                                                   expression_position const position,
                                                   option<expr::function_context_ptr> const &fn_ctx,
@@ -1487,7 +1550,8 @@ namespace jank::analyze
   {
     if(o == nullptr)
     {
-      return err(error{ "unexpected nullptr" });
+      return error::internal_analysis_failure("Unexpected nullptr in processor::analyze",
+                                              read::source::unknown);
     }
 
     return runtime::visit_object(
@@ -1539,10 +1603,10 @@ namespace jank::analyze
         }
         else
         {
-          std::cerr << fmt::format("unsupported analysis of type {} with value {}\n",
-                                   object_type_str(typed_o->base.type),
-                                   typed_o->to_string());
-          return err(error{ "unimplemented analysis" });
+          return error::internal_analysis_failure(
+            fmt::format("Unimplemented analysis for object type '{}'",
+                        object_type_str(typed_o->base.type)),
+            meta_source(o));
         }
       },
       o);
