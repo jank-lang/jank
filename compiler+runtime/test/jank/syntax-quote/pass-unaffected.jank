@@ -17,7 +17,6 @@
   (assert (= "meow" `"meow") `"meow")
   (assert (= 'foo/meow `foo/meow) `foo/meow)
   (assert (= '(quote foo/meow) ``foo/meow) ``foo/meow)
-  (catch e (println e) (throw e))
   (finally
     (ns-unalias *ns* 'c)
     (ns-unmap *ns* 'a-var)))

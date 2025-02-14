@@ -5,8 +5,6 @@
   (assert (= '(clojure.core/inc 1) `(c/inc 1)) `(c/inc 1))
   (assert (= 'clojure.core/foo `c/foo) `c/foo)
   (assert (= '(quote clojure.core/foo) `'c/foo) `'c/foo)
-  ; https://github.com/jank-lang/jank/issues/240
-  (catch e (throw e))
   (finally (ns-unalias *ns* 'c)))
 
 :success
