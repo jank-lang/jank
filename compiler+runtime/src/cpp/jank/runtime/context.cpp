@@ -395,9 +395,8 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      throw std::runtime_error{
-        fmt::format("Can't intern ns. Sym is qualified: {}", sym->to_string())
-      };
+      throw std::runtime_error{ fmt::format("Can't intern ns. Sym is qualified: {}",
+                                            sym->to_string()) };
     }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
