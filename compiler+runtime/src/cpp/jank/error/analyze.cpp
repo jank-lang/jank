@@ -100,5 +100,4 @@ namespace jank::error
   {
     return make_error(kind::internal_analysis_failure, message, source);
   }
-
 }

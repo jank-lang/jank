@@ -150,7 +150,7 @@ namespace jank::error
   {
     return make_error(kind::parse_invalid_shorthand_function,
                       source,
-                      "Arg literal must be %, %&, or %n where n is an integer");
+                      "Arg literal must be %, %&, or %n where n >= 1");
   }
 
   error_ptr
@@ -233,6 +233,6 @@ namespace jank::error
 
   error_ptr internal_parse_failure(native_persistent_string const &message)
   {
-    return make_error(kind::internal_parse_failure, read::source::unknown, message);
+    return make_error(kind::internal_parse_failure, message, read::source::unknown);
   }
 }

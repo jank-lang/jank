@@ -620,15 +620,11 @@ namespace jank::read::parse
     {
       return list_result;
     }
-    else if(list_result.expect_ok().is_none())
+    else if(list_result.expect_ok().is_none()
+            || list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return error::parse_invalid_shorthand_function({ start_token.start, latest_token.end },
-                                                     "Value after #( must be present");
-    }
-    else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
-    {
-      return error::parse_invalid_shorthand_function({ start_token.start, latest_token.end },
-                                                     "Value after #( must be a list");
+      return error::internal_parse_failure("Value after #( must be present",
+                                           { start_token.start, latest_token.end });
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -1071,7 +1067,7 @@ namespace jank::read::parse
           else
           {
             return err(
-              error::internal_parse_failure(fmt::format("unsupported collection type: {}",
+              error::internal_parse_failure(fmt::format("Unsupported collection type: {}",
                                                         object_type_str(typed_form->base.type))));
           }
         },
@@ -1228,7 +1224,7 @@ namespace jank::read::parse
         native_bool all_digits{ true };
         for(auto const c : after_percent)
         {
-          all_digits &= std::isdigit(c) != 0;
+          all_digits &= (std::isdigit(c) != 0) && (c != '0');
         }
         if(all_digits)
         {
