@@ -47,7 +47,6 @@ namespace jank::runtime::obj
     /* behavior::sequenceable */
     nil_ptr first() const;
     nil_ptr next() const;
-    obj::cons_ptr conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
     nil_ptr next_in_place();

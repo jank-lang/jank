@@ -646,4 +646,9 @@ namespace jank::evaluate
                           e);
     }
   }
+
+  object_ptr eval(expr::case_<expression> const &expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "case", {})));
+  }
 }
