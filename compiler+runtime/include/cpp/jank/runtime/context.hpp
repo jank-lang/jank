@@ -144,6 +144,7 @@ namespace jank::runtime
     native_persistent_string output_dir;
     module::loader module_loader;
 
+    var_ptr current_file_var{};
     var_ptr current_ns_var{};
     var_ptr in_ns_var{};
     var_ptr compile_files_var{};
