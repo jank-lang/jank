@@ -38,7 +38,7 @@
           (util/quiet-shell {} (str "chmod +x " codecov-script))
           (util/quiet-shell {}
                             (str codecov-script
-                                 "upload-process --disable-search --fail-on-error "
+                                 " upload-process --disable-search --fail-on-error "
                                  " -t " (util/get-env "CODECOV_TOKEN")
                                  " -n 'service'-" (util/get-env "GITHUB_RUN_ID" "local")
                                  " -F service -f " lcov-file))))
