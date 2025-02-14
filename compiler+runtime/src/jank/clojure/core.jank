@@ -5485,8 +5485,7 @@
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
   [ns sym]
-  ;; (.unmap (the-ns ns) sym)
-  (throw "TODO: port ns-unmap"))
+  (clojure.core-native/ns-unmap (the-ns ns) sym))
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."
@@ -5520,8 +5519,7 @@
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
   [ns sym]
-  ;; (.removeAlias (the-ns ns) sym)
-  (throw "TODO: port ns-unalias"))
+  (clojure.core-native/ns-unalias (the-ns ns) sym))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be
