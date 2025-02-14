@@ -480,7 +480,7 @@ namespace jank::runtime
     native_persistent_string resolved_ns{ ns };
     if(!resolved)
     {
-      /* The ns will be an ns alias. */
+      /* The ns will be an ns or alias. */
       if(!ns.empty())
       {
         auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
@@ -495,8 +495,9 @@ namespace jank::runtime
         auto const current_ns(expect_object<jank::runtime::ns>(current_ns_var->deref()));
         resolved_ns = current_ns->name->name;
       }
+      return intern_keyword(fmt::format("{}/{}", resolved_ns, name));
     }
-    return intern_keyword(resolved_ns.empty() ? name : fmt::format("{}/{}", resolved_ns, name));
+    return intern_keyword(name);
   }
 
   result<obj::keyword_ptr, native_persistent_string>

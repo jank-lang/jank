@@ -572,7 +572,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr,
-                    __rt_ctx->intern_keyword("foo.bar.spam", "foo").expect_ok()));
+                    __rt_ctx->intern_keyword("foo.bar.spam/foo").expect_ok()));
         CHECK(r.expect_ok().unwrap().start
               == lex::token{ 0, 9, lex::token_kind::keyword, ":foo/foo" });
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
