@@ -292,7 +292,7 @@ namespace jank::runtime::module
     paths += fmt::format(":{}", rt_ctx.output_dir);
     this->paths = paths;
 
-    //fmt::println("module paths: {}", paths);
+    // fmt::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };

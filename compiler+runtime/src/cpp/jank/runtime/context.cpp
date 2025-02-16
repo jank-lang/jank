@@ -8,7 +8,6 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
-#include <regex>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
@@ -23,6 +22,7 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -41,7 +41,13 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , output_dir{ opts.compilation_path }
+    , output_dir{ !opts.compilation_path.empty()
+                    ? opts.compilation_path
+                    : fmt::format("{}/{}",
+                                  util::binary_cache_dir(opts.optimization_level,
+                                                         opts.include_dirs,
+                                                         opts.define_macros),
+                                  "classes") }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
