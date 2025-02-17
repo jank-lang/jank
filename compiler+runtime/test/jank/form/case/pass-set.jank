@@ -1,0 +1,7 @@
+(assert
+  (=
+    (case #{1 2}
+      #{1 2}  :set-match
+      #{3 2}  :vector-match
+      :default)
+    :set-match))

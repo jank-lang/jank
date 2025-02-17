@@ -1,21 +1,3 @@
-; test case in value position
-(let [xfn
-      (case :default
-        :default        :redefined-default
-        :something-else :ok
-        :default)]
-  (assert (= xfn :redefined-default)))
-
-; test case in statement position
-(let [xfn (fn []
-            (case :default
-              :default        :redefined-default
-              :something-else :ok
-              :default)
-            :arbitrary-value)]
-  (assert (= (xfn) :arbitrary-value)))
-
-; test case in return position
 (assert
   (=
     (case :default

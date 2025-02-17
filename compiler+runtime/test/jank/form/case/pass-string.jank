@@ -1,0 +1,6 @@
+(assert
+  (=
+    (case "AaAaAaAa" "AaAaAaAa" :hasha
+      "BBBBBBBB"                :hashb
+      :default)
+    :hasha))

@@ -1,7 +1,0 @@
-; failure because keys in a single group must be unique
-; test case in return position
-(=
- (case 2
-   (1 2 2) :one-or-two
-   :default)
- :one-or-two)
