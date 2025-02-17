@@ -3,6 +3,12 @@
 namespace jank::error
 {
   error_ptr
+  analysis_invalid_case(native_persistent_string const &message, read::source const &source)
+  {
+    return make_error(kind::analysis_invalid_def, message, source);
+  }
+
+  error_ptr
   analysis_invalid_def(native_persistent_string const &message, read::source const &source)
   {
     return make_error(kind::analysis_invalid_def, message, source);

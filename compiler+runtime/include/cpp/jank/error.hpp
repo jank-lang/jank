@@ -50,6 +50,7 @@ namespace jank::error
     parse_invalid_keyword,
     internal_parse_failure,
 
+    analysis_invalid_case,
     analysis_invalid_def,
     analysis_invalid_fn,
     analysis_invalid_fn_parameters,
@@ -158,6 +159,8 @@ namespace jank::error
         return "parse/invalid-keyword";
       case kind::internal_parse_failure:
         return "internal/parse-failure";
+      case kind::analysis_invalid_case:
+        return "analysis/invalid-case";
       case kind::analysis_invalid_def:
         return "analysis/invalid-def";
       case kind::analysis_invalid_fn:
