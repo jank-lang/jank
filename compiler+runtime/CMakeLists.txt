@@ -242,6 +242,7 @@ add_library(
 
   # Native module sources.
   src/cpp/clojure/core_native.cpp
+  src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
   src/cpp/jank/perf_native.cpp
 )
