@@ -1,6 +1,8 @@
 (assert
-  (=
-    (case 'symbol symbol :symbol-match
-      other              :symbol-no-match
-      :symbol-fallback)
-    :symbol-match))
+ (=
+  (case 'symbol symbol :symbol-match
+    other              :symbol-no-match
+    :symbol-fallback)
+  :symbol-match))
+
+:success

@@ -3,3 +3,5 @@
           2       2
           :default)]
   (assert (= (+ x 1) 2)))
+
+:success

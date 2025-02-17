@@ -1,8 +1,8 @@
 (assert
-  (=
-    (case 1
-      1 :one
-      2 :two)
-    :one))
+ (=
+  (case 1
+    1 :one
+    2 :two)
+  :one))
 
 :success
