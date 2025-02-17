@@ -41,13 +41,10 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , output_dir{ !opts.compilation_path.empty()
-                    ? opts.compilation_path
-                    : fmt::format("{}/{}",
-                                  util::binary_cache_dir(opts.optimization_level,
-                                                         opts.include_dirs,
-                                                         opts.define_macros),
-                                  "classes") }
+    , binary_cache_dir{ fmt::format(
+        "{}/{}",
+        util::binary_cache_dir(opts.optimization_level, opts.include_dirs, opts.define_macros),
+        "classes") }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -302,7 +299,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
-      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
     };
     boost::filesystem::create_directories(module_path.parent_path());
 

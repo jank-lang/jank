@@ -19,9 +19,6 @@ namespace jank::util::cli
       fmt::format(
         "A {} separated list of directories, JAR files, and ZIP files to search for modules",
         runtime::module::loader::module_separator));
-    cli.add_option("--output-dir",
-                   opts.compilation_path,
-                   "The base directory where compiled modules are written");
     cli.add_flag("--profile", opts.profiler_enabled, "Enable compiler and runtime profiling");
     cli.add_option("--profile-output",
                    opts.profiler_file,
