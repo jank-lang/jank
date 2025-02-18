@@ -6,6 +6,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/keyword.hpp>

@@ -43,7 +43,8 @@ namespace jank::error
   error_ptr
   parse_unresolved_namespace(native_persistent_string const &message, read::source const &source);
   error_ptr parse_invalid_ratio(read::source const &source, native_persistent_string const &note);
-  error_ptr parse_invalid_keyword(read::source const &source, native_persistent_string const &note);
+  error_ptr
+  parse_invalid_keyword(native_persistent_string const &message, read::source const &source);
   error_ptr
   internal_parse_failure(native_persistent_string const &message, read::source const &source);
   error_ptr internal_parse_failure(native_persistent_string const &message);

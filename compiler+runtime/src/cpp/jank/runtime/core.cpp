@@ -251,69 +251,6 @@ namespace jank::runtime
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  object_ptr meta(object_ptr const m)
-  {
-    if(m == nullptr || m == obj::nil::nil_const())
-    {
-      return obj::nil::nil_const();
-    }
-
-    return visit_object(
-      [](auto const typed_m) -> object_ptr {
-        using T = typename decltype(typed_m)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          return typed_m->meta.unwrap_or(obj::nil::nil_const());
-        }
-        else
-        {
-          return obj::nil::nil_const();
-        }
-      },
-      m);
-  }
-
-  object_ptr with_meta(object_ptr const o, object_ptr const m)
-  {
-    return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          return typed_o->with_meta(m);
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
-        }
-      },
-      o,
-      m);
-  }
-
-  object_ptr reset_meta(object_ptr const o, object_ptr const m)
-  {
-    return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          auto const meta(behavior::detail::validate_meta(m));
-          typed_o->meta = meta;
-          return m;
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
-        }
-      },
-      o,
-      m);
-  }
-
   obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start)
   {
     return visit_type<obj::persistent_string>(

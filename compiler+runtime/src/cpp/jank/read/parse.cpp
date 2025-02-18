@@ -9,6 +9,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
@@ -96,6 +97,31 @@ namespace jank::read::parse
     }
 
     return none;
+  }
+
+  static obj::persistent_hash_map_ptr
+  source_to_meta(source_position const &start, source_position const &end)
+  {
+    auto source{ obj::persistent_array_map::empty()->to_transient() };
+    auto const start_map{ obj::persistent_array_map::create_unique(
+      __rt_ctx->intern_keyword("offset").expect_ok(),
+      make_box(start.offset),
+      __rt_ctx->intern_keyword("line").expect_ok(),
+      make_box(start.line),
+      __rt_ctx->intern_keyword("col").expect_ok(),
+      make_box(start.col)) };
+    auto const end_map{ obj::persistent_array_map::create_unique(
+      __rt_ctx->intern_keyword("offset").expect_ok(),
+      make_box(end.offset),
+      __rt_ctx->intern_keyword("line").expect_ok(),
+      make_box(end.line),
+      __rt_ctx->intern_keyword("col").expect_ok(),
+      make_box(end.col)) };
+    source = source->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
+    source = source->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
+
+    return obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->intern_keyword("jank/source").expect_ok(), source->to_persistent()));
   }
 
   native_bool object_source_info::operator==(object_source_info const &rhs) const
@@ -309,11 +335,13 @@ namespace jank::read::parse
 
     expected_closer = prev_expected_closer;
 
-    return object_source_info{
-      make_box<obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
-      start_token,
-      latest_token
-    };
+    return object_source_info{ make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 std::in_place,
+                                 ret.rbegin(),
+                                 ret.rend()),
+                               start_token,
+                               latest_token };
   }
 
   processor::object_result processor::parse_vector()
@@ -1295,8 +1323,8 @@ namespace jank::read::parse
     auto const intern_res(__rt_ctx->intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
-      return error::parse_invalid_keyword({ start_token.start, latest_token.end },
-                                          intern_res.expect_err());
+      return error::parse_invalid_keyword(intern_res.expect_err(),
+                                          { start_token.start, latest_token.end });
     }
     return object_source_info{ intern_res.expect_ok(), start_token, start_token };
   }

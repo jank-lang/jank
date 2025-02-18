@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
+#include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
@@ -11,6 +12,7 @@
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
@@ -21,6 +23,17 @@
 
 namespace jank::analyze
 {
+  static read::source
+  fallback_source(read::source const &source, std::function<read::source()> const &f)
+  {
+    if(source != read::source::unknown)
+    {
+      return source;
+    }
+
+    return f();
+  }
+
   processor::processor(runtime::context &rt_ctx)
     : rt_ctx{ rt_ctx }
     , root_frame{ make_box<local_frame>(local_frame::frame_type::root, rt_ctx, none) }
@@ -86,12 +99,11 @@ namespace jank::analyze
     auto const length(l->count());
     if(length < 2)
     {
-      return error::analysis_invalid_def("Too few arguments provided to 'def'",
-                                         meta_source(l->meta));
+      return error::analysis_invalid_def("Missing var name in 'def'", meta_source(l->meta));
     }
     else if(length > 4)
     {
-      return error::analysis_invalid_def("Too many argument provided to 'def'",
+      return error::analysis_invalid_def("Too many arguments provided to 'def'",
                                          meta_source(l->meta));
     }
 
@@ -99,16 +111,16 @@ namespace jank::analyze
     if(sym_obj->type != runtime::object_type::symbol)
     {
       return error::analysis_invalid_def(
-        fmt::format("The var name in a 'def' must be a symbol, but you provided a '{}'",
-                    object_type_str(sym_obj->type)),
-        meta_source(sym_obj));
+        "The var name in a 'def' must be a symbol",
+        fallback_source(object_source(sym_obj), [=]() { return read::parse::reparse_nth(l, 1); }),
+        "A symbol is needed for the name here");
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
     if(!sym->ns.empty())
     {
       return error::analysis_invalid_def("The provided var name for a 'def' must not be qualified",
-                                         meta_source(sym_obj));
+                                         meta_source(sym->meta));
     }
 
     auto qualified_sym(current_frame->lift_var(sym));

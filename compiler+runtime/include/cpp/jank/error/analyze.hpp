@@ -7,6 +7,9 @@ namespace jank::error
 {
   error_ptr
   analysis_invalid_def(native_persistent_string const &message, read::source const &source);
+  error_ptr analysis_invalid_def(native_persistent_string const &message,
+                                 read::source const &source,
+                                 native_persistent_string const &note);
   error_ptr
   analysis_invalid_fn(native_persistent_string const &message, read::source const &source);
   error_ptr analysis_invalid_fn_parameters(native_persistent_string const &message,

@@ -286,6 +286,4 @@ namespace jank
                        native_persistent_string const &message,
                        read::source_position const &start,
                        read::source_position const &end);
-
-  read::source meta_source(option<runtime::object_ptr> const &o);
 }

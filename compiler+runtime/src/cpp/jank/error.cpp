@@ -1,3 +1,5 @@
+#include <fmt/format.h>
+
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
@@ -304,40 +306,6 @@ namespace jank
     return runtime::make_box<error::base>(kind,
                                           message,
                                           read::source{ runtime::to_string(file), start, end });
-  }
-
-  read::source meta_source(option<runtime::object_ptr> const &o)
-  {
-    using namespace jank::runtime;
-
-    auto const meta(runtime::meta(o.unwrap_or(obj::nil::nil_const())));
-    auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
-    if(source == obj::nil::nil_const())
-    {
-      return read::source::unknown;
-    }
-
-    auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
-    auto const start(get(source, __rt_ctx->intern_keyword("start").expect_ok()));
-    auto const end(get(source, __rt_ctx->intern_keyword("end").expect_ok()));
-
-    auto const start_offset(get(start, __rt_ctx->intern_keyword("offset").expect_ok()));
-    auto const start_line(get(start, __rt_ctx->intern_keyword("line").expect_ok()));
-    auto const start_col(get(start, __rt_ctx->intern_keyword("col").expect_ok()));
-
-    auto const end_offset(get(end, __rt_ctx->intern_keyword("offset").expect_ok()));
-    auto const end_line(get(end, __rt_ctx->intern_keyword("line").expect_ok()));
-    auto const end_col(get(end, __rt_ctx->intern_keyword("col").expect_ok()));
-
-    return {
-      to_string(file),
-      { static_cast<size_t>(to_int(start_offset)),
-              static_cast<size_t>(to_int(start_line)),
-              static_cast<size_t>(to_int(start_col)) },
-      {   static_cast<size_t>(to_int(end_offset)),
-              static_cast<size_t>(to_int(end_line)),
-              static_cast<size_t>(to_int(end_col))  }
-    };
   }
 
 }

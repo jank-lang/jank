@@ -1,5 +1,6 @@
 #pragma once
 
+/* TODO: Remove these so that people include only what they need. */
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -30,10 +31,6 @@ namespace jank::runtime
   object_ptr println(object_ptr args);
   object_ptr pr(object_ptr args);
   object_ptr prn(object_ptr args);
-
-  object_ptr meta(object_ptr m);
-  object_ptr with_meta(object_ptr o, object_ptr m);
-  object_ptr reset_meta(object_ptr o, object_ptr m);
 
   obj::persistent_string_ptr subs(object_ptr s, object_ptr start);
   obj::persistent_string_ptr subs(object_ptr s, object_ptr start, object_ptr end);

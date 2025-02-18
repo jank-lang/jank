@@ -220,9 +220,10 @@ namespace jank::error
     return make_error(kind::parse_invalid_ratio, source, note);
   }
 
-  error_ptr parse_invalid_keyword(read::source const &source, native_persistent_string const &note)
+  error_ptr
+  parse_invalid_keyword(native_persistent_string const &message, read::source const &source)
   {
-    return make_error(kind::parse_invalid_keyword, source, note);
+    return make_error(kind::parse_invalid_keyword, message, source, "Found here");
   }
 
   error_ptr

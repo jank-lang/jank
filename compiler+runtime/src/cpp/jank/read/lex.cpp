@@ -248,6 +248,13 @@ namespace jank::read::lex
   {
   }
 
+  processor::processor(native_persistent_string_view const &f, size_t const offset)
+    : pos{ .proc = this }
+    , file{ f }
+  {
+    pos += offset;
+  }
+
   movable_position &movable_position::operator++()
   {
     assert(offset < proc->file.size());

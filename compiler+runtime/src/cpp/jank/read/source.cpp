@@ -5,7 +5,7 @@
 namespace jank::read
 {
   source_position const source_position::unknown{ 0, 0, 0 };
-  source const source::unknown{ "NO_SOURCE_PATH",
+  source const source::unknown{ no_source_path,
                                 source_position::unknown,
                                 source_position::unknown };
 

@@ -48,7 +48,7 @@ namespace jank::runtime
 
     auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
     current_file_var = core->intern_var(file_sym);
-    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->bind_root(make_box(read::no_source_path));
     current_file_var->dynamic.store(true);
 
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));

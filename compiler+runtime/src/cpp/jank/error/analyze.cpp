@@ -5,7 +5,14 @@ namespace jank::error
   error_ptr
   analysis_invalid_def(native_persistent_string const &message, read::source const &source)
   {
-    return make_error(kind::analysis_invalid_def, message, source);
+    return make_error(kind::analysis_invalid_def, message, source, "Found here");
+  }
+
+  error_ptr analysis_invalid_def(native_persistent_string const &message,
+                                 read::source const &source,
+                                 native_persistent_string const &note)
+  {
+    return make_error(kind::analysis_invalid_def, message, source, note);
   }
 
   error_ptr analysis_invalid_fn(native_persistent_string const &message, read::source const &source)

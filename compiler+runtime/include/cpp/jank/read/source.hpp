@@ -4,6 +4,8 @@
 
 namespace jank::read
 {
+  constexpr auto no_source_path{ "NO_SOURCE_PATH" };
+
   struct source_position
   {
     static source_position const unknown;
