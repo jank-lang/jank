@@ -3480,6 +3480,12 @@
       [shift mask]))))
 
 (defn- case-map-with-check
+  "Transforms a sequence of test constants and their corresponding branch expressions
+   into a sorted map for consumption by `case*`. This version is used when no hash collisions
+   are detected (i.e. the skip-check set is empty).
+
+   Returns a sorted map where each key is the transformed test constant and each value is a `condp` form
+   that checks the original expression against the test constant before selecting the branch."
   [expr-sym default case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests)
@@ -3495,9 +3501,15 @@
                  thens))))
 
 (defn- case-map-collison-merged
-  "Transforms a sequence of test constants and a corresponding sequence of then
-   expressions into a sorted map to be consumed by case*. The form of the map
-   entries are {(case-f test) [(test-f test) then]}."
+  "Transforms a sequence of test constants and their corresponding branch expressions
+   into a sorted map for consumption by `case*`.
+
+   This version is selected when hash collisions have been detected (i.e. the skip-check set is nonempty)
+   and resolved (typically via merging in `merge-hash-collisions`). In these cases, the branch expressions
+   have already been pre-wrapped in `condp` forms to handle multiple colliding constants. Therefore, no additional
+   wrapping is needed here-the transformed test constants are mapped directly to their corresponding branch expressions.
+
+   Returns a sorted map mapping each transformed test constant directly to its branch expression."
   [case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests) thens)))
