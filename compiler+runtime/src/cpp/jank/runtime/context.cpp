@@ -485,13 +485,13 @@ namespace jank::runtime
     native_persistent_string resolved_ns{ ns };
     if(!resolved)
     {
-      /* The ns will be an ns or alias. */
+      /* The ns will be an ns alias. */
       if(!ns.empty())
       {
-        auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
+        auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve namespace '{}'", ns));
+          return err(fmt::format("Unable to resolve namespace alias '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }
