@@ -1079,7 +1079,7 @@ namespace jank::read::lex
             {
               escaped = contains_escape = true;
             }
-            ++pos;
+            pos += oc.expect_ok().len;
           }
           require_space = true;
           ++pos;
@@ -1263,7 +1263,7 @@ namespace jank::read::lex
 
   result<codepoint, error_ptr> processor::peek(size_t const ahead) const
   {
-    auto const peek_pos(pos + ahead);
+    auto const peek_pos{ pos + ahead };
     if(peek_pos >= file.size())
     {
       return error::lex_unexpected_eof(pos);
