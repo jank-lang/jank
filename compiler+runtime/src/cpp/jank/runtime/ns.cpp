@@ -79,9 +79,14 @@ namespace jank::runtime
     auto const found((*locked_aliases)->data.find(sym));
     if(found)
     {
-      if(expect_object<ns>(*found) != nsp)
+      auto const existing(expect_object<ns>(*found));
+      if(existing != nsp)
       {
-        return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string()));
+        return err(fmt::format("{} already aliases {} in ns {}, cannot change to {}",
+                               sym->to_string(),
+                               existing->to_string(),
+                               to_string(),
+                               nsp->to_string()));
       }
       return ok();
     }
