@@ -47,7 +47,7 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      return err("Can't unintern namespace-qualified symbol");
+      return err(fmt::format("Can't unintern namespace-qualified symbol: {}", sym->to_string()));
     }
 
     auto locked_vars(vars.wlock());
