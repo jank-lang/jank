@@ -1552,6 +1552,16 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Unicode characters")
+      {
+        processor p{ R"("ሴ 你好")" };
+        native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 12, token_kind::string, "ሴ 你好"sv }
+        }));
+      }
+
       SUBCASE("Unterminated")
       {
         processor p{ "\"meow" };
