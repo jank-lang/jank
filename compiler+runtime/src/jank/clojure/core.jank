@@ -3479,7 +3479,7 @@
           (range 0 31)]
       [shift mask]))))
 
-(defn- case-map-1
+(defn- case-map-with-check
   [expr-sym default case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests)
@@ -3494,7 +3494,7 @@
                  (map test-f tests)
                  thens))))
 
-(defn- case-map-2
+(defn- case-map-collison-merged
   "Transforms a sequence of test constants and a corresponding sequence of then
    expressions into a sorted map to be consumed by case*. The form of the map
    entries are {(case-f test) [(test-f test) then]}."
@@ -3505,8 +3505,8 @@
 (defn- case-map
   [expr-sym default case-f test-f tests thens skip-check]
   (if (empty? skip-check)
-    (case-map-1 expr-sym default case-f test-f tests thens)
-    (case-map-2 case-f test-f tests thens)))
+    (case-map-with-check expr-sym default case-f test-f tests thens)
+    (case-map-collison-merged case-f test-f tests thens)))
 
 (defn- fits-table?
   "Returns true if the collection of ints can fit within the
