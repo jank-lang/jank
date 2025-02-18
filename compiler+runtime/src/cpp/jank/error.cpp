@@ -84,8 +84,6 @@ namespace jank::error
         return "Unquote splice is not within a sequence";
       case kind::parse_invalid_reader_deref:
         return "Invalid reader deref";
-      case kind::parse_unresolved_namespace:
-        return "Unresolved namespace";
       case kind::parse_invalid_ratio:
         return "Invalid ratio";
       case kind::parse_invalid_keyword:

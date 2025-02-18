@@ -2,5 +2,6 @@
               a)
            `(let [~'a 2]
               ~'a)))
+(assert (= '(quote a) `'~'a))
 
 :success

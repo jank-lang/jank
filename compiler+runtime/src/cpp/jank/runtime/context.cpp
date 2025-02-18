@@ -393,6 +393,11 @@ namespace jank::runtime
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
   {
+    if(!sym->ns.empty())
+    {
+      throw std::runtime_error{ fmt::format("Can't intern ns. Sym is qualified: {}",
+                                            sym->to_string()) };
+    }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
@@ -483,10 +488,10 @@ namespace jank::runtime
       /* The ns will be an ns alias. */
       if(!ns.empty())
       {
-        auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
+        auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve namespace '{}'", ns));
+          return err(fmt::format("Unable to resolve namespace alias '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }

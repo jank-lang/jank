@@ -1,0 +1,10 @@
+(ns-unalias *ns* 'c)
+(alias 'c 'clojure.core)
+(try 
+  (assert (= 'clojure.core/+ `c/+) `c/+)
+  (assert (= '(clojure.core/inc 1) `(c/inc 1)) `(c/inc 1))
+  (assert (= 'clojure.core/foo `c/foo) `c/foo)
+  (assert (= '(quote clojure.core/foo) `'c/foo) `'c/foo)
+  (finally (ns-unalias *ns* 'c)))
+
+:success
