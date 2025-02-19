@@ -1257,7 +1257,7 @@ namespace jank::codegen
         auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
         auto const meta(gen_global_from_read_string(s->meta.unwrap()));
-        ctx->builder->CreateCall(set_meta_fn, { global, meta });
+        ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
       if(prev_block == ctx->global_ctor_block)
