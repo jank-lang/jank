@@ -938,18 +938,16 @@ namespace jank::runtime
         {
           runtime::to_string(o, buff);
         }
-        if(0 < sequence_length(typed_args))
-        {
           for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             auto const fst(it->first());
-            if(!is_nil(fst))
+            if(is_nil(fst))
             {
-              runtime::to_string(fst, buff);
+	      continue;
             }
+	    runtime::to_string(fst, buff);
           }
-        }
-        return buff.release();
+          return buff.release();
       },
       args);
   }
