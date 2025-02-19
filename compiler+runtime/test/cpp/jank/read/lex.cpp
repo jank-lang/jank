@@ -1642,7 +1642,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1, token_kind::comment, ""sv }
+                  { 0, 2, token_kind::comment, ""sv }
           }));
         }
 
@@ -1652,8 +1652,8 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 1, token_kind::comment, ""sv },
-                  { 3, 1, token_kind::comment, ""sv }
+                  {           0,           2, token_kind::comment, ""sv },
+                  { { 3, 2, 1 }, { 5, 2, 3 }, token_kind::comment, ""sv }
           }));
         }
 
@@ -1663,7 +1663,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 3, token_kind::comment, "foo"sv },
+                  { 0, 5, token_kind::comment, "foo"sv },
           }));
         }
 
@@ -1673,7 +1673,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 9, token_kind::comment, "foo #!bar"sv }
+                  { 0, 11, token_kind::comment, "foo #!bar"sv }
           }));
         }
 
@@ -1683,7 +1683,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 6, token_kind::comment, "foo #!"sv }
+                  { 0, 8, token_kind::comment, "foo #!"sv }
           }));
         }
 
@@ -1693,7 +1693,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 7, token_kind::comment, "#!#!foo"sv }
+                  { 0, 9, token_kind::comment, "#!#!foo"sv }
           }));
         }
 
@@ -1705,7 +1705,7 @@ namespace jank::read::lex
                 == make_tokens({
                   { 0, 1, token_kind::integer,     1ll },
                   { 2, 1, token_kind::integer,     2ll },
-                  { 4, 3, token_kind::comment, "foo"sv }
+                  { 4, 5, token_kind::comment, "foo"sv }
           }));
         }
 
@@ -1716,7 +1716,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   {           0,           1, token_kind::integer,     1ll },
-                  {           2,           3, token_kind::comment, "foo"sv },
+                  {           2,           5, token_kind::comment, "foo"sv },
                   { { 8, 2, 1 }, { 9, 2, 2 }, token_kind::integer,     2ll }
           }));
         }
@@ -1727,8 +1727,8 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 3, token_kind::comment, "foo"sv },
-                  { 6, 3, token_kind::comment, "bar"sv },
+                  {           0,            5, token_kind::comment, "foo"sv },
+                  { { 6, 2, 1 }, { 11, 2, 6 }, token_kind::comment, "bar"sv },
           }));
         }
 
@@ -1739,7 +1739,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 1, token_kind::reader_macro },
-                  { 1, 3, token_kind::comment, "foo"sv },
+                  { 1, 5, token_kind::comment, "foo"sv },
           }));
         }
 
@@ -1749,7 +1749,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 4, token_kind::comment, "!foo"sv },
+                  { 0, 6, token_kind::comment, "!foo"sv },
           }));
         }
 
@@ -1759,7 +1759,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 4, token_kind::comment, "#foo"sv },
+                  { 0, 6, token_kind::comment, "#foo"sv },
           }));
         }
 
@@ -1769,7 +1769,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 7, token_kind::comment, "(+ 1 1)"sv },
+                  { 0, 9, token_kind::comment, "(+ 1 1)"sv },
           }));
         }
 
@@ -1779,7 +1779,7 @@ namespace jank::read::lex
           native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  { 0, 5, token_kind::comment, "\"foo\""sv },
+                  { 0, 7, token_kind::comment, "\"foo\""sv },
           }));
         }
 
@@ -1790,7 +1790,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 1, token_kind::open_paren },
-                  { 1, 1, token_kind::comment, ")"sv },
+                  { 1, 3, token_kind::comment, ")"sv },
           }));
         }
       }
