@@ -199,7 +199,8 @@ namespace jank::analyze
     auto const shift_obj{ it.first().unwrap() };
     if(shift_obj.data->type != object_type::integer)
     {
-      return error::analysis_invalid_case("Shift value should be an integer.", meta_source(o->meta));
+      return error::analysis_invalid_case("Shift value should be an integer.",
+                                          meta_source(o->meta));
     }
     auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
 
