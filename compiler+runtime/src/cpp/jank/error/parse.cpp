@@ -209,12 +209,6 @@ namespace jank::error
     return make_error(kind::parse_invalid_reader_deref, source);
   }
 
-  error_ptr
-  parse_unresolved_namespace(native_persistent_string const &message, read::source const &source)
-  {
-    return make_error(kind::parse_unresolved_namespace, message, source, "Referenced here");
-  }
-
   error_ptr parse_invalid_ratio(read::source const &source, native_persistent_string const &note)
   {
     return make_error(kind::parse_invalid_ratio, source, note);

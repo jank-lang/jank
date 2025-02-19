@@ -107,7 +107,6 @@ namespace jank::read::lex
   {
   }
 
-#ifdef JANK_TEST
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
@@ -119,6 +118,7 @@ namespace jank::read::lex
   {
   }
 
+#ifdef JANK_TEST
   token::token(size_t const offset, size_t const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
@@ -1086,7 +1086,7 @@ namespace jank::read::lex
             {
               escaped = contains_escape = true;
             }
-            ++pos;
+            pos += oc.expect_ok().len;
           }
           require_space = true;
           ++pos;
@@ -1168,14 +1168,14 @@ namespace jank::read::lex
                 ++pos;
                 if(pos == token_start + 2zu)
                 {
-                  return ok(token{ token_start, 1, token_kind::comment, ""sv });
+                  return ok(token{ token_start, pos, token_kind::comment, ""sv });
                 }
                 else
                 {
                   auto const length{ pos - token_start - 2 };
                   native_persistent_string_view const comment{ file.data() + token_start + 2,
                                                                length };
-                  return ok(token{ token_start, length, token_kind::comment, comment });
+                  return ok(token{ token_start, pos, token_kind::comment, comment });
                 }
               }
             default:
@@ -1270,7 +1270,7 @@ namespace jank::read::lex
 
   result<codepoint, error_ptr> processor::peek(size_t const ahead) const
   {
-    auto const peek_pos(pos + ahead);
+    auto const peek_pos{ pos + ahead };
     if(peek_pos >= file.size())
     {
       return error::lex_unexpected_eof(pos);
