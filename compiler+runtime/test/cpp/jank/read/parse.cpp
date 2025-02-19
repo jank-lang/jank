@@ -900,12 +900,12 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_list::empty()));
-        CHECK(equal(
-          meta(r.expect_ok().unwrap().ptr),
-          obj::persistent_array_map::create_unique(__rt_ctx->intern_keyword("foo").expect_ok(),
-                                                   __rt_ctx->intern_keyword("bar").expect_ok(),
-                                                   __rt_ctx->intern_keyword("meow").expect_ok(),
-                                                   obj::boolean::true_const())));
+
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()),
+                    __rt_ctx->intern_keyword("bar").expect_ok()));
+        CHECK(
+          equal(get(m, __rt_ctx->intern_keyword("meow").expect_ok()), obj::boolean::true_const()));
       }
 
       SUBCASE("Nested hints")

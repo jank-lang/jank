@@ -234,14 +234,6 @@ namespace jank::codegen
       }
 
       ctx->builder->CreateRetVoid();
-
-      if(llvm::verifyModule(*ctx->module, &llvm::errs()))
-      {
-        std::cerr << "----------\n";
-        to_string();
-        std::cerr << "----------\n";
-        return err(fmt::format("invalid IR module {}", ctx->module_name));
-      }
     }
 
     return ok();

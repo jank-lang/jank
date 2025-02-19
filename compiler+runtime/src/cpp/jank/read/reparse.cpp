@@ -12,6 +12,7 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
+  /* TODO: How does macro expansion fall into this? Will we not be able to reparse some things? */
   static result<source, error_ptr>
   reparse_nth(native_persistent_string const &file_path, size_t const offset, size_t const n)
   {

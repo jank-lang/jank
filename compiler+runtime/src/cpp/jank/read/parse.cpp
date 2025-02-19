@@ -1294,7 +1294,11 @@ namespace jank::read::parse
         name = name + "#";
       }
     }
-    return object_source_info{ make_box<obj::symbol>(ns, name), start_token, start_token };
+    return object_source_info{
+      make_box<obj::symbol>(source_to_meta(start_token.start, latest_token.end), ns, name),
+      start_token,
+      start_token
+    };
   }
 
   processor::object_result processor::parse_keyword()

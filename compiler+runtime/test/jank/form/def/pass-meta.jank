@@ -6,6 +6,6 @@
 ; Wipe out.
 (def one 'one)
 (assert (= one 'one))
-(assert (= (meta #'one) nil))
+(assert (= (:doc (meta #'one)) nil))
 
 :success

@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     symbol(native_persistent_string &&d);
     symbol(native_persistent_string const &ns, native_persistent_string const &n);
     symbol(native_persistent_string &&ns, native_persistent_string &&n);
-    symbol(native_persistent_string const &ns, native_persistent_string const &n, object_ptr meta);
+    symbol(object_ptr meta, native_persistent_string const &ns, native_persistent_string const &n);
     symbol(object_ptr ns, object_ptr n);
 
     symbol &operator=(symbol const &) = default;

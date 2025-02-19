@@ -112,7 +112,7 @@ namespace jank::analyze
     {
       return error::analysis_invalid_def(
         "The var name in a 'def' must be a symbol",
-        fallback_source(object_source(sym_obj), [=]() { return read::parse::reparse_nth(l, 1); }),
+        fallback_source(object_source(sym_obj), [=] { return read::parse::reparse_nth(l, 1); }),
         "A symbol is needed for the name here");
     }
 
@@ -317,7 +317,7 @@ namespace jank::analyze
         {
           return error::analysis_invalid_fn_parameters(
             "A symbol must be present after '&' to name the variadic parameter",
-            meta_source(*(it + 1)));
+            meta_source(*it));
         }
         else if(it + 2 != params->data.end())
         {
