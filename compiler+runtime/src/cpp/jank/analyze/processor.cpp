@@ -175,14 +175,14 @@ namespace jank::analyze
   {
     if(auto const length(o->count()); length != 6)
     {
-      return error::analysis_invalid_case("invalid case: incorrect number of elements in form",
+      return error::analysis_invalid_case("Invalid case*: exactly 6 parameters are needed.",
                                           meta_source(o->meta));
     }
 
     auto it{ o->data.rest() };
     if(it.first().is_none())
     {
-      return error::analysis_invalid_case("missing value expression", meta_source(o->meta));
+      return error::analysis_invalid_case("Value expression is missing.", meta_source(o->meta));
     }
     auto const value_expr_obj{ it.first().unwrap() };
     auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
@@ -194,31 +194,31 @@ namespace jank::analyze
     it = it.rest();
     if(it.first().is_none())
     {
-      return error::analysis_invalid_case("missing shift value", meta_source(o->meta));
+      return error::analysis_invalid_case("Shift value is missing.", meta_source(o->meta));
     }
     auto const shift_obj{ it.first().unwrap() };
     if(shift_obj.data->type != object_type::integer)
     {
-      return error::analysis_invalid_case("expected integer for shift", meta_source(o->meta));
+      return error::analysis_invalid_case("Shift value should be an integer.", meta_source(o->meta));
     }
     auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
 
     it = it.rest();
     if(it.first().is_none())
     {
-      return error::analysis_invalid_case("missing mask value", meta_source(o->meta));
+      return error::analysis_invalid_case("Mask value is missing.", meta_source(o->meta));
     }
     auto const mask_obj{ it.first().unwrap() };
     if(mask_obj.data->type != object_type::integer)
     {
-      return error::analysis_invalid_case("expected integer for mask", meta_source(o->meta));
+      return error::analysis_invalid_case("Mask value should be an integer.", meta_source(o->meta));
     }
     auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
 
     it = it.rest();
     if(it.first().is_none())
     {
-      return error::analysis_invalid_case("missing default expression", meta_source(o->meta));
+      return error::analysis_invalid_case("Default expression is missing.", meta_source(o->meta));
     }
     auto const default_expr_obj{ it.first().unwrap() };
     auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
@@ -226,7 +226,7 @@ namespace jank::analyze
     it = it.rest();
     if(it.first().is_none())
     {
-      return error::analysis_invalid_case("missing keys and expressions for 'case'",
+      return error::analysis_invalid_case("Keys and expressions are missing.",
                                           meta_source(o->meta));
     }
     auto const imap_obj{ it.first().unwrap() };
@@ -247,7 +247,7 @@ namespace jank::analyze
           auto const v_obj{ runtime::nth(e, make_box(1)) };
           if(k_obj.data->type != object_type::integer)
           {
-            return err("Map key for case* is expected to be an integer");
+            return err("Map key for case* is expected to be an integer.");
           }
           auto const key{ runtime::expect_object<obj::integer>(k_obj) };
           auto const expr{ analyze(v_obj, f, position, fc, needs_box) };
@@ -261,13 +261,13 @@ namespace jank::analyze
         return ret;
       },
       [&]() -> string_result<keys_and_exprs> {
-        return err("Expect map-like for case keys and exprs");
+        return err("Case keys and expressions should be a map-like.");
       },
       imap_obj) };
 
     if(keys_exprs.is_err())
     {
-      return error::analysis_invalid_case(keys_exprs.expect_err().c_str(), meta_source(o->meta));
+      return error::analysis_invalid_case(keys_exprs.expect_err(), meta_source(o->meta));
     }
 
     auto case_expr{

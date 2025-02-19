@@ -1,4 +1,5 @@
-; this should work, but not yet with jank
+; This should work, but not yet with jank.
+; TODO(investigate and support using escaped char in case)
 #_(assert
    (=
     (case \a \a \b

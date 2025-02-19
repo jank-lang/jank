@@ -4,7 +4,6 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
-#include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
@@ -994,7 +993,7 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::BasicBlock *> case_blocks;
     llvm::SmallVector<llvm::Value *> case_values;
-    for(size_t block_counter = 0; block_counter < expr.keys.size(); ++block_counter)
+    for(size_t block_counter{}; block_counter < expr.keys.size(); ++block_counter)
     {
       auto const block_name{ fmt::format("case_{}", block_counter) };
       auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn) };
@@ -1019,7 +1018,7 @@ namespace jank::codegen
         ctx->builder->CreatePHI(ctx->builder->getPtrTy(), expr.keys.size() + 1, "switch_tmp")
       };
       phi->addIncoming(default_val, default_block_exit);
-      for(size_t i = 0; i < case_blocks.size(); ++i)
+      for(size_t i{}; i < case_blocks.size(); ++i)
       {
         phi->addIncoming(case_values[i], case_blocks[i]);
       }
