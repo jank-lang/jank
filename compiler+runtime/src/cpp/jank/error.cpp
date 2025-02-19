@@ -91,6 +91,8 @@ namespace jank::error
       case kind::internal_parse_failure:
         return "Internal parse failure";
 
+      case kind::analysis_invalid_case:
+        return "Invalid case";
       case kind::analysis_invalid_def:
         return "Invalid def";
       case kind::analysis_invalid_fn:
