@@ -1,0 +1,9 @@
+(assert
+ (=
+  (case :default
+    :default        :redefined-default
+    :something-else :ok
+    :default)
+  :redefined-default))
+
+:success

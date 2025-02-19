@@ -1,0 +1,8 @@
+(assert
+ (=
+  (case true true :yes
+    false         :no
+    :default)
+  :yes))
+
+:success

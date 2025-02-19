@@ -3445,34 +3445,80 @@
        (def ~name ~expr))))
 
 ;; Case.
-(defn- shift-mask [shift mask x]
-  (-> x (bit-shift-right shift) (bit-and mask)))
-
 (def ^:private max-mask-bits 13)
 (def ^:private max-switch-table-size (bit-shift-left 1 max-mask-bits))
 (def ^:private int-min-value clojure.core-native/int-min)
 (def ^:private int-max-value clojure.core-native/int-max)
+(def ^:private int32-min-value clojure.core-native/int32-min)
+(def ^:private int32-max-value clojure.core-native/int32-max)
+
+(defn- shift-mask [shift mask x]
+  (-> x (bit-shift-right shift) (bit-and mask)))
+
+(defn- case-hash
+  "Returns the input if it is within the range of a 32-bit signed integer, otherwise returns the hash of the
+  input. The native hash returns a int32 int so this is to make sure that (case-hash (case-hash x)) == (case-hash x).
+  A key may be hashed more than once and we need to make sure its value does not change in later hashing."
+  [input]
+  (if (and (integer? input)
+           (>= input int32-min-value)
+           (<= input int32-max-value))
+    input
+    (hash input)))
 
 (defn- maybe-min-hash
   "Takes a collection of hashes and returns [shift mask] or nil if none found"
   [hashes]
   (first
-    (filter (fn [[s m]]
-              (apply distinct? (map #(shift-mask s m %) hashes)))
-            (for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
-                  shift (range 0 31)]
-              [shift mask]))))
+   (filter
+    (fn [[s m]]
+      (apply distinct? (map #(shift-mask s m %) hashes)))
+    (for [mask
+          (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
+          shift
+          (range 0 31)]
+      [shift mask]))))
 
-(defn- case-map
-  "Transforms a sequence of test constants and a corresponding sequence of then
-   expressions into a sorted map to be consumed by case*. The form of the map
-   entries are {(case-f test) [(test-f test) then]}."
-  [case-f test-f tests thens]
+(defn- case-map-with-check
+  "Transforms a sequence of test constants and their corresponding branch expressions
+   into a sorted map for consumption by `case*`. This version is used when no hash collisions
+   are detected (i.e. the skip-check set is empty).
+
+   Returns a sorted map where each key is the transformed test constant and each value is a `condp` form
+   that checks the original expression against the test constant before selecting the branch."
+  [expr-sym default case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests)
-                (map vector
-                     (map test-f tests)
-                     thens))))
+                (map
+                 (fn [key then]
+                   (let [key
+                         (if (symbol? key)
+                           (list 'quote key)
+                           key)]
+                     `(condp = ~expr-sym ~key ~then
+                       ~default)))
+                 (map test-f tests)
+                 thens))))
+
+(defn- case-map-collison-merged
+  "Transforms a sequence of test constants and their corresponding branch expressions
+   into a sorted map for consumption by `case*`.
+
+   This version is selected when hash collisions have been detected (i.e. the skip-check set is nonempty)
+   and resolved (typically via merging in `merge-hash-collisions`). In these cases, the branch expressions
+   have already been pre-wrapped in `condp` forms to handle multiple colliding constants. Therefore, no additional
+   wrapping is needed here-the transformed test constants are mapped directly to their corresponding branch expressions.
+
+   Returns a sorted map mapping each transformed test constant directly to its branch expression."
+  [case-f test-f tests thens]
+  (into (sorted-map)
+        (zipmap (map case-f tests) thens)))
+
+(defn- case-map
+  [expr-sym default case-f test-f tests thens skip-check]
+  (if (empty? skip-check)
+    (case-map-with-check expr-sym default case-f test-f tests thens)
+    (case-map-collison-merged case-f test-f tests thens)))
 
 (defn- fits-table?
   "Returns true if the collection of ints can fit within the
@@ -3482,19 +3528,20 @@
 
 (defn- prep-ints
   "Takes a sequence of int-sized test constants and a corresponding sequence of
-   then expressions. Returns a tuple of [shift mask case-map switch-type] where
-   case-map is a map of int case values to [test then] tuples, and switch-type
-   is either :sparse or :compact."
-  [tests thens]
+   then expressions. Returns a tuple of [shift mask case-map] where
+   case-map is a map of int case values to [test then] tuples"
+  [expr-sym default tests thens]
   (if (fits-table? tests)
     ; compact case ints, no shift-mask
-    [0 0 (case-map int int tests thens) :compact]
+    [0 0 (case-map expr-sym default int int tests thens #{})]
     (let [[shift mask] (or (maybe-min-hash (map int tests)) [0 0])]
       (if (zero? mask)
         ; sparse case ints, no shift-mask
-        [0 0 (case-map int int tests thens) :sparse]
+        [0 0 (case-map expr-sym default int int tests thens #{})]
         ; compact case ints, with shift-mask
-        [shift mask (case-map #(shift-mask shift mask (int %)) int tests thens) :compact]))))
+        [shift
+         mask
+         (case-map expr-sym default #(shift-mask shift mask (int %)) int tests thens #{})]))))
 
 (defn- merge-hash-collisions
   "Takes a case expression, default expression, and a sequence of test constants
@@ -3510,53 +3557,65 @@
    The skip-check is a set of case ints for which post-switch equivalence
    checking must not be done (the cases holding the above condp thens)."
   [expr-sym default tests thens]
-  (let [buckets (loop [m {} ks tests vs thens]
-                  (if (and ks vs)
-                    (recur
-                      (update m (hash (first ks)) (fnil conj []) [(first ks) (first vs)])
-                      (next ks) (next vs))
-                    m))
-        assoc-multi (fn [m h bucket]
-                      (let [testexprs (mapcat (fn [kv] [(list 'quote (first kv)) (second kv)]) bucket)
-                            expr `(condp = ~expr-sym ~@testexprs ~default)]
-                        (assoc m h expr)))
-        hmap (reduce (fn [m [h bucket]]
-                       (if (== 1 (count bucket))
-                         (assoc m (ffirst bucket) (second (first bucket)))
-                         (assoc-multi m h bucket)))
-                     {} buckets)
-        skip-check (->> buckets
-                        (filter #(< 1 (count (second %))))
-                        (map first)
-                        (into #{}))]
+  (let [buckets
+        (loop [m  {}
+               ks tests
+               vs thens]
+          (if (and ks vs)
+            (recur
+              (update m (case-hash (first ks)) (fnil conj []) [(first ks) (first vs)])
+              (next ks) (next vs))
+            m))
+        assoc-multi
+        (fn [m h bucket]
+          (let [testexprs
+                (mapcat (fn [kv] [(list 'quote (first kv)) (second kv)]) bucket)
+                expr
+                `(condp = ~expr-sym ~@testexprs ~default)]
+            (assoc m h expr)))
+        hmap
+        (reduce
+         (fn [m [h bucket]]
+           (if (== 1 (count bucket))
+             (assoc m (ffirst bucket) (second (first bucket)))
+             (assoc-multi m h bucket)))
+         {} buckets)
+        skip-check
+        (->> buckets
+             (filter #(< 1 (count (second %))))
+             (map first)
+             (into #{}))]
     [(keys hmap) (vals hmap) skip-check]))
 
 (defn- prep-hashes
   "Takes a sequence of test constants and a corresponding sequence of then
-   expressions. Returns a tuple of [shift mask case-map switch-type skip-check]
-   where case-map is a map of int case values to [test then] tuples, switch-type
-   is either :sparse or :compact, and skip-check is a set of case ints for which
-   post-switch equivalence checking must not be done (occurs with hash
-   collisions)."
-  [expr-sym default tests thens]
-  (let [hashes (into #{} (map hash tests))]
+   expressions. Returns a tuple of [shift mask case-map]
+   where case-map is a map of int case values to [test then] tuples."
+  [expr-sym default tests thens skip-check]
+  (let [hashes (into #{} (map case-hash tests))]
     (if (== (count tests) (count hashes))
       (if (fits-table? hashes)
         ; compact case ints, no shift-mask
-        [0 0 (case-map hash identity tests thens) :compact]
+        [0 0
+         (case-map expr-sym default case-hash identity tests thens skip-check)]
         (let [[shift mask] (or (maybe-min-hash hashes) [0 0])]
           (if (zero? mask)
             ; sparse case ints, no shift-mask
-            [0 0 (case-map hash identity tests thens) :sparse]
+            [0 0
+             (case-map expr-sym default case-hash identity tests thens skip-check)]
             ; compact case ints, with shift-mask
-            [shift mask (case-map #(shift-mask shift mask (hash %)) identity tests thens) :compact])))
+            [shift mask
+             (case-map expr-sym default #(shift-mask shift mask (case-hash %)) identity tests thens skip-check)])))
       ; resolve hash collisions and try again
-      (let [[tests thens skip-check] (merge-hash-collisions expr-sym default tests thens)
-            [shift mask case-map switch-type] (prep-hashes expr-sym default tests thens)
-            skip-check (if (zero? mask)
-                         skip-check
-                         (into #{} (map #(shift-mask shift mask %) skip-check)))]
-        [shift mask case-map switch-type skip-check]))))
+      (let [[tests thens skip-check]
+            (merge-hash-collisions expr-sym default tests thens)
+            [shift mask case-map]
+            (prep-hashes expr-sym default tests thens skip-check)
+            skip-check
+            (if (zero? mask)
+              skip-check
+              (into #{} (map #(shift-mask shift mask %) skip-check)))]
+        [shift mask case-map]))))
 
 (defmacro case
   "Takes an expression, and a set of clauses.
@@ -3584,45 +3643,57 @@
   {:added "1.2"}
 
   [e & clauses]
-  (let [ge (gensym)
-        default (if (odd? (count clauses))
-                  (last clauses)
-                  `(throw (str "No matching clause: " ~ge)))]
+  (let [ge
+        (gensym)
+        default
+        (if (odd? (count clauses))
+          (last clauses)
+          `(throw (str "No matching clause: " ~ge)))]
     (if (> 2 (count clauses))
       `(let [~ge ~e] ~default)
-      (let [pairs (partition 2 clauses)
-            assoc-test (fn assoc-test [m test expr]
-                         (if (contains? m test)
-                           (throw (str "Duplicate case test constant: " test))
-                           (assoc m test expr)))
-            pairs (reduce
-                    (fn [m [test expr]]
-                      (if (seq? test)
-                        (reduce #(assoc-test %1 %2 expr) m test)
-                        (assoc-test m test expr)))
-                    {} pairs)
-            tests (keys pairs)
-            thens (vals pairs)
-            mode (cond
-                   (every? #(and (integer? %) (<= int-min-value % int-max-value))
-                           tests)
-                   :ints
+      (let [pairs
+            (partition 2 clauses)
+            assoc-test
+            (fn assoc-test [m test expr]
+              (if (contains? m test)
+                (throw (str "Duplicate case test constant: " test))
+                (assoc m test expr)))
+            pairs
+            (reduce
+             (fn [m [test expr]]
+               (if (seq? test)
+                 (reduce #(assoc-test %1 %2 expr) m test)
+                 (assoc-test m test expr)))
+             {} pairs)
+            tests
+            (keys pairs)
+            thens
+            (vals pairs)
+            mode
+            (cond
+             (every? #(and (integer? %) (<= int-min-value % int-max-value))
+                     tests)
+             :ints
 
-                   (every? keyword? tests)
-                   :identity
+             (every? keyword? tests)
+             :identity
 
-                   :else
-                   :hashes)]
+             :else
+             :hashes)]
         (condp = mode
-          :ints
-          (let [[shift mask imap switch-type] (prep-ints tests thens)]
-            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :int)))
-          :hashes
-          (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
-            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-equiv ~skip-check)))
-          :identity
-          (let [[shift mask imap switch-type skip-check] (prep-hashes ge default tests thens)]
-            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap ~switch-type :hash-identity ~skip-check))))))))
+               :ints
+               (let [[shift mask imap] (prep-ints ge default tests thens)]
+                 `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap)))
+               :hashes
+               (let [[shift mask imap]
+                     (prep-hashes ge default tests thens #{})]
+                 `(let [~ge ~e]
+                   (case* ~ge ~shift ~mask ~default ~imap)))
+               :identity
+               (let [[shift mask imap]
+                     (prep-hashes ge default tests thens #{})]
+                 `(let [~ge ~e]
+                   (case* ~ge ~shift ~mask ~default ~imap))))))))
 
 ;; Miscellaneous.
 ; TODO: jank.core
@@ -7298,15 +7369,10 @@ fails, attempts to require sym's namespace and retries."
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
   [s]
   (if (string? s)
-    ;; TODO: switch `parse-boolean` to case implementation when avaiable
-    #_(case s
+    (case s
         "true" true
         "false" false
         nil)
-    (cond
-      (= "true" s) true
-      (= "false" s) false
-      :else nil)
     (throw (parsing-err s))))
 
 (def NaN?

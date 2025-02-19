@@ -21,6 +21,7 @@
 #include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
+#include <jank/analyze/expr/case.hpp>
 
 namespace jank::analyze
 {
@@ -46,7 +47,8 @@ namespace jank::analyze
                                       expr::do_<E>,
                                       expr::if_<E>,
                                       expr::throw_<E>,
-                                      expr::try_<E>>;
+                                      expr::try_<E>,
+                                      expr::case_<E>>;
 
     static constexpr native_bool pointer_free{ false };
 

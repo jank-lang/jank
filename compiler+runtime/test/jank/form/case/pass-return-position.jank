@@ -1,0 +1,11 @@
+; The `case` is the return value of a function
+(assert
+ (=
+  ((fn []
+     (case 2
+       1 :one
+       2 :two
+       :default)))
+  :two))
+
+:success
