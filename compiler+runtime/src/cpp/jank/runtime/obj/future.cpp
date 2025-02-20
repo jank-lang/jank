@@ -8,8 +8,10 @@
 namespace jank::runtime::obj
 {
   future::future(object_ptr const fn)
+    : fut { std::async(std::launch::async, [&]() -> object_ptr {
+        return dynamic_call(fn);
+        })}
   {
-    this->fut = std::async(std::launch::async, [&]() { return dynamic_call(fn); });
   }
 
   native_bool future::equal(object const &o) const

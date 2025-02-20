@@ -8,8 +8,10 @@
           ; - zsh: segmentation fault 
           ; - zsh: bus error
           a (future (swap! atm conj (gensym "a")))
+          _ (swap! atm conj "between")
           ;; b fires twice! a not at all.
           b (future (swap! atm conj (gensym "b")))]
+      ;(swap! atm conj "after")
       @a
       @b
       (prn @atm "DONE"))))
