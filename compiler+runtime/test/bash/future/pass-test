@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-jank --module-path src run-main jank-test.future | grep 'DONE'
+jank --module-path src run-main jank-test.future | grep '\["a" "b"\] "DONE"'

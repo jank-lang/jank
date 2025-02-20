@@ -1,8 +1,9 @@
 (ns jank-test.future)
 
 (defn -main []
-  (let [a (future (prn "a"))
-        b (future (prn "b"))]
+  (let [atm (atom [])
+        a (future (swap! atm conj "a"))
+        b (future (swap! atm conj "b"))]
     @a
     @b
-    (prn "DONE")))
+    (prn @atm "DONE")))
