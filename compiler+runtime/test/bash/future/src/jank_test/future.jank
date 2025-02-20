@@ -1,0 +1,8 @@
+(ns jank-test.future)
+
+(defn -main []
+  (let [a (future (prn "a"))
+        b (future (prn "b"))]
+    @a
+    @b
+    (prn "DONE")))
