@@ -2,7 +2,11 @@ name: "Build"
 
 on:
   pull_request:
+    types:
+      - review_requested
   push:
+    branches:
+      - main
 
 jobs:
   test:

@@ -938,16 +938,8 @@ namespace jank::read::parse
   {
     return visit_seqable(
       [splice](auto const typed_form) {
-        object_ptr item{};
         auto const s(typed_form->seq());
-        if(!s)
-        {
-          item = obj::nil::nil_const();
-        }
-        else
-        {
-          item = s->first();
-        }
+        object_ptr const item{ s ? s->first() : obj::nil::nil_const() };
 
         return make_box<obj::symbol>(
                  (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))

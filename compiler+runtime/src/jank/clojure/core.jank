@@ -252,7 +252,9 @@
     ([]
      "")
     ([o]
-     (clojure.core-native/to-string o))
+     (if (nil? o)
+       ""
+       (clojure.core-native/to-string o)))
     ([o & args]
      (clojure.core-native/str o args))))
 
