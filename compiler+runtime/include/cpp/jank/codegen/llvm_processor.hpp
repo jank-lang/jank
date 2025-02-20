@@ -104,6 +104,8 @@ namespace jank::codegen
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::let<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
+    llvm::Value *gen(analyze::expr::letfn<analyze::expression> const &,
+                     analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::do_<analyze::expression> const &,
                      analyze::expr::function_arity<analyze::expression> const &);
     llvm::Value *gen(analyze::expr::if_<analyze::expression> const &,
