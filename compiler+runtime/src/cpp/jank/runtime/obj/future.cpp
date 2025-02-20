@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 {
   future::future(object_ptr const fn)
   {
-    this->fut = std::async(std::launch::async, [&](){ return dynamic_call(fn); });
+    this->fut = std::async(std::launch::async, [&]() { return dynamic_call(fn); });
   }
 
   native_bool future::equal(object const &o) const
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
 
   object_ptr future::blocking_deref(object_ptr const millis, object_ptr const timeout_value)
   {
-    switch (fut.wait_for(std::chrono::milliseconds(to_int(millis))))
+    switch(fut.wait_for(std::chrono::milliseconds(to_int(millis))))
     {
       case std::future_status::deferred:
       case std::future_status::timeout:

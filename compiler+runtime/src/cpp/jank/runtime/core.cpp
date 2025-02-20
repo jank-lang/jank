@@ -546,9 +546,8 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr blocking_deref(object_ptr const f,
-      object_ptr const millis,
-      object_ptr const timeout_value)
+  object_ptr
+  blocking_deref(object_ptr const f, object_ptr const millis, object_ptr const timeout_value)
   {
     return visit_object(
       [=](auto const typed_f) -> object_ptr {

@@ -694,7 +694,8 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
     fn->arity_1 = [](object * const o) -> object * { return deref(o); };
-    fn->arity_3 = [](object * const f, object * const millis, object * const timeout_value) -> object * {
+    fn->arity_3
+      = [](object * const f, object * const millis, object * const timeout_value) -> object * {
       return blocking_deref(f, millis, timeout_value);
     };
     intern_fn_obj("deref", fn);

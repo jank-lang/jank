@@ -33,7 +33,8 @@ extern "C"
   jank_object_ptr jank_keyword_intern(jank_object_ptr ns, jank_object_ptr name);
 
   jank_object_ptr jank_deref(jank_object_ptr o);
-  jank_object_ptr jank_blocking_deref(jank_object_ptr f, jank_object_ptr millis, jank_object_ptr timeout_value);
+  jank_object_ptr
+  jank_blocking_deref(jank_object_ptr f, jank_object_ptr millis, jank_object_ptr timeout_value);
 
   jank_object_ptr jank_call0(jank_object_ptr f);
   jank_object_ptr jank_call1(jank_object_ptr f, jank_object_ptr a1);

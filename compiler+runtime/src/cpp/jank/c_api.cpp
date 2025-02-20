@@ -118,8 +118,8 @@ extern "C"
   }
 
   jank_object_ptr jank_blocking_deref(jank_object_ptr const f,
-      jank_object_ptr const millis,
-      jank_object_ptr const timeout_value)
+                                      jank_object_ptr const millis,
+                                      jank_object_ptr const timeout_value)
   {
     auto const f_obj(reinterpret_cast<object *>(f));
     auto const millis_obj(reinterpret_cast<object *>(millis));
