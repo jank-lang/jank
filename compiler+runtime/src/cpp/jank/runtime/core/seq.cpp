@@ -937,7 +937,7 @@ namespace jank::runtime
       runtime::to_string(o, buff);
     }
     return visit_seqable(
-      [&](auto const typed_args) -> native_persistent_string {
+      [](auto const typed_args, auto &buff) -> native_persistent_string {
         for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto const fst(it->first());
@@ -949,7 +949,8 @@ namespace jank::runtime
         }
         return buff.release();
       },
-      args);
+      args,
+      buff);
   }
 
   obj::persistent_list_ptr list(object_ptr const s)
