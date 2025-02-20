@@ -3,8 +3,8 @@
 (defn -main []
   (dotimes [_ 100000]
     (let [atm (atom [])
-          a (future (swap! atm conj "a"))
-          b (future (swap! atm conj "b"))]
+          a (future (swap! atm conj (gensym "a")))
+          b (future (swap! atm conj (gensym "b")))]
       @a
       @b
       (prn @atm "DONE"))))
