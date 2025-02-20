@@ -6735,7 +6735,7 @@ fails, attempts to require sym's namespace and retries."
   ;;   (.write w (str content)))
   (throw "TODO: port spit"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures ;;;;;;;;;;;;;;;;;;
 (defn future-call 
   "Takes a function of no args and yields a future object that will
   invoke the function in another thread, and will cache the result and
@@ -6743,24 +6743,8 @@ fails, attempts to require sym's namespace and retries."
   not yet finished, calls to deref/@ will block, unless the variant
   of deref with timeout is used. See also - realized?."
   [f]
-  ;; (let [f (binding-conveyor-fn f)
-  ;;       fut (.submit clojure.lang.Agent/soloExecutor ^Callable f)]
-  ;;   (reify 
-  ;;    clojure.lang.IDeref 
-  ;;    (deref [_] (deref-future fut))
-  ;;    clojure.lang.IBlockingDeref
-  ;;    (deref
-  ;;     [_ timeout-ms timeout-val]
-  ;;     (deref-future fut timeout-ms timeout-val))
-  ;;    clojure.lang.IPending
-  ;;    (isRealized [_] (.isDone fut))
-  ;;    java.util.concurrent.Future
-  ;;     (get [_] (.get fut))
-  ;;     (get [_ timeout unit] (.get fut timeout unit))
-  ;;     (isCancelled [_] (.isCancelled fut))
-  ;;     (isDone [_] (.isDone fut))
-  ;;     (cancel [_ interrupt?] (.cancel fut interrupt?))))
-  (throw "TODO: port future-call"))
+  (let [#_#_f (binding-conveyor-fn f)] ;;TODO
+    (clojure.core-native/future-call f)))
 
 (defmacro future
   "Takes a body of expressions and yields a future object that will
@@ -6769,8 +6753,7 @@ fails, attempts to require sym's namespace and retries."
   not yet finished, calls to deref/@ will block, unless the variant of
   deref with timeout is used. See also - realized?."
   [& body]
-  ;; `(future-call (^{:once true} fn* [] ~@body))
-  (throw "TODO: port future"))
+  `(future-call (fn* [] ~@body)))
 
 (defn future-cancel
   "Cancels the future, if possible."
@@ -6791,23 +6774,21 @@ fails, attempts to require sym's namespace and retries."
   computationally intensive functions where the time of f dominates
   the coordination overhead."
   ([f coll]
-  ;;  (let [n (+ 2 (.. Runtime getRuntime availableProcessors))
-  ;;        rets (map #(future (f %)) coll)
-  ;;        step (fn step [[x & xs :as vs] fs]
-  ;;               (lazy-seq
-  ;;                (if-let [s (seq fs)]
-  ;;                  (cons (deref x) (step xs (rest s)))
-  ;;                  (map deref vs))))]
-  ;;    (step rets (drop n rets)))
-   (throw "TODO: port pmap"))
+   (let [n (+ 2 clojure.core-native/hardware-concurrency)
+         rets (map #(future (f %)) coll)
+         step (fn step [[x & xs :as vs] fs]
+                (lazy-seq
+                 (if-let [s (seq fs)]
+                   (cons (deref x) (step xs (rest s)))
+                   (map deref vs))))]
+     (step rets (drop n rets))))
   ([f coll & colls]
-  ;;  (let [step (fn step [cs]
-  ;;               (lazy-seq
-  ;;                (let [ss (map seq cs)]
-  ;;                  (when (every? identity ss)
-  ;;                    (cons (map first ss) (step (map rest ss)))))))]
-  ;;    (pmap #(apply f %) (step (cons coll colls))))
-   (throw "TODO: port pmap")))
+   (let [step (fn step [cs]
+                (lazy-seq
+                 (let [ss (map seq cs)]
+                   (when (every? identity ss)
+                     (cons (map first ss) (step (map rest ss)))))))]
+     (pmap #(apply f %) (step (cons coll colls))))))
 
   
 (defn pcalls

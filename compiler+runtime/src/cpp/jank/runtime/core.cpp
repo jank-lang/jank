@@ -546,6 +546,26 @@ namespace jank::runtime
       o);
   }
 
+  object_ptr blocking_deref(object_ptr const f,
+      object_ptr const millis,
+      object_ptr const timeout_value)
+  {
+    return visit_object(
+      [=](auto const typed_f) -> object_ptr {
+        using T = typename decltype(typed_f)::value_type;
+
+        if constexpr(behavior::blocking_derefable<T>)
+        {
+          return typed_f->blocking_deref(millis, timeout_value);
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("not derefable: {}", typed_f->to_string()) };
+        }
+      },
+      f);
+  }
+
   object_ptr volatile_(object_ptr const o)
   {
     return make_box<obj::volatile_>(o);

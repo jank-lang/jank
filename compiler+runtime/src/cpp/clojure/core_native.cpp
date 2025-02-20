@@ -7,6 +7,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
+#include <thread>
 
 namespace clojure::core_native
 {
@@ -111,6 +112,11 @@ namespace clojure::core_native
   static object_ptr delay(object_ptr const fn)
   {
     return make_box<obj::delay>(fn);
+  }
+
+  static object_ptr future_call(object_ptr const fn)
+  {
+    return make_box<obj::future>(fn);
   }
 
   static object_ptr is_fn(object_ptr const o)
@@ -383,7 +389,6 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("pop-in-place!", &pop_in_place);
   intern_fn("disj-in-place!", &disj_in_place);
   intern_fn("apply-to", &apply_to);
-  intern_fn("deref", &deref);
   intern_fn("reduced", &reduced);
   intern_fn("reduced?", &is_reduced);
   intern_fn("reduce", &reduce);
@@ -477,6 +482,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("qualified-symbol?", &is_qualified_symbol);
   intern_fn("iterate", &iterate);
   intern_fn("delay*", &core_native::delay);
+  intern_fn("future-call", &core_native::future_call);
   intern_fn("force", &force);
   intern_fn("ifn?", &is_callable);
   intern_fn("fn?", &core_native::is_fn);
@@ -491,6 +497,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("prefers", &core_native::prefers);
   intern_val("int-min", std::numeric_limits<native_integer>::min());
   intern_val("int-max", std::numeric_limits<native_integer>::max());
+  intern_val("hardware-concurrency", std::thread::hardware_concurrency());
   intern_fn("sleep", &core_native::sleep);
   intern_fn("current-time", &core_native::current_time);
   intern_fn("create-ns", &core_native::intern_ns);
@@ -679,6 +686,16 @@ jank_object_ptr jank_load_clojure_core_native()
       return subs(s, start, end);
     };
     intern_fn_obj("subs", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
+    fn->arity_1 = [](object * const o) -> object * { return deref(o); };
+    fn->arity_3 = [](object * const f, object * const millis, object * const timeout_value) -> object * {
+      return blocking_deref(f, millis, timeout_value);
+    };
+    intern_fn_obj("deref", fn);
   }
 
   {

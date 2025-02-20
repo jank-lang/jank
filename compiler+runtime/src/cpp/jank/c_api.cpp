@@ -117,6 +117,16 @@ extern "C"
     return deref(o_obj);
   }
 
+  jank_object_ptr jank_blocking_deref(jank_object_ptr const f,
+      jank_object_ptr const millis,
+      jank_object_ptr const timeout_value)
+  {
+    auto const f_obj(reinterpret_cast<object *>(f));
+    auto const millis_obj(reinterpret_cast<object *>(millis));
+    auto const timeout_value_obj(reinterpret_cast<object *>(timeout_value));
+    return blocking_deref(f_obj, millis_obj, timeout_value_obj);
+  }
+
   jank_object_ptr jank_call0(jank_object_ptr const f)
   {
     auto const f_obj(reinterpret_cast<object *>(f));
