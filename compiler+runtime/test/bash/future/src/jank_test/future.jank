@@ -3,7 +3,12 @@
 (defn -main []
   (dotimes [_ 100000]
     (let [atm (atom [])
+          ; conjing strings gives Exception: invalid object type: unknown raw value 72
+          ; conjing symbols gives
+          ; - zsh: segmentation fault 
+          ; - zsh: bus error
           a (future (swap! atm conj (gensym "a")))
+          ;; b fires twice! a not at all.
           b (future (swap! atm conj (gensym "b")))]
       @a
       @b
