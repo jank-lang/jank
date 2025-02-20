@@ -1,10 +1,11 @@
 #pragma once
 
 #include <jank/error.hpp>
-#include <jank/read/lex.hpp>
 
 namespace jank::error
 {
+  error_ptr
+  analysis_invalid_case(native_persistent_string const &message, read::source const &source);
   error_ptr
   analysis_invalid_def(native_persistent_string const &message, read::source const &source);
   error_ptr
