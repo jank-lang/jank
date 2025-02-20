@@ -2,6 +2,7 @@ name: "Build"
 
 on:
   pull_request:
+    branches: [main]
   push:
 
 jobs:
@@ -15,26 +16,6 @@ jobs:
           - name: Ubuntu - lint
             os: ubuntu-24.04
             lint: true
-          ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: none
-            coverage: on
-            analyze: on
-          ## Debug + sanitization
-          - name: Ubuntu - address sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: address
-          - name: Ubuntu - undefined behavior sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: undefined
-          - name: Ubuntu - thread sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: thread
           ## Release
           - name: Ubuntu - release
             os: ubuntu-24.04

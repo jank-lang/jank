@@ -47,6 +47,7 @@
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/volatile.hpp>
 #include <jank/runtime/obj/delay.hpp>
+#include <jank/runtime/obj/future.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/ns.hpp>
@@ -331,6 +332,11 @@ namespace jank::runtime
       case object_type::delay:
         {
           return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::future:
+        {
+          return fn(expect_object<obj::future>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::ns:

@@ -60,6 +60,7 @@ namespace jank::runtime
 
   object_ptr atom(object_ptr o);
   object_ptr deref(object_ptr o);
+  object_ptr blocking_deref(object_ptr f, object_ptr millis, object_ptr timeout_value);
   object_ptr swap_atom(object_ptr atom, object_ptr fn);
   object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1);
   object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
