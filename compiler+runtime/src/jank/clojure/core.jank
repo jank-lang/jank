@@ -78,7 +78,7 @@
    value (type-independent), otherwise false"
   clojure.core-native/==)
 
-;; Collections.
+; Collections.
 (def empty?
   "Returns true if coll has no items - same as (not (seq coll))."
   clojure.core-native/empty?)
@@ -90,6 +90,7 @@
    0.  Also works on strings, arrays, and Java Collections and Maps"
   clojure.core-native/count)
 
+; Numbers.
 (def boolean
   "Coerce to boolean"
   clojure.core-native/boolean)
@@ -100,7 +101,7 @@
   "Coerce to float"
   clojure.core-native/real)
 
-; Lists.
+;; Sequences.
 (def seq
   "Returns a seq on the collection. If the collection is
    empty, returns nil.  (seq nil) returns nil. seq also works on
@@ -149,6 +150,37 @@
 (def seqable?
   "Return true if the seq function is supported for x"
   clojure.core-native/seqable?)
+
+(def ^:private reverse*
+  (fn* reverse* [coll]
+    (loop* [acc '()
+            coll coll]
+      (if (empty? coll)
+        acc
+        (recur (cons (first coll) acc)
+               (rest coll))))))
+
+; XXX: The real concat will be defined later on, to be lazy.
+(def ^:private concat*
+  (fn* concat*
+    ([]
+     '())
+    ([x]
+     (seq x))
+    ([x y]
+     (loop* [acc y
+             x (reverse* x)]
+       (if (empty? x)
+         acc
+         (recur (cons (first x) acc)
+                (rest x)))))
+    ([x y & zs]
+     (let* [r (concat* x y)]
+       (if (empty? zs)
+         r
+         (recur r (first zs) (rest zs)))))))
+
+; Lists.
 (def list?
   "Returns true if x implements IPersistentList"
   clojure.core-native/list?)
@@ -213,12 +245,27 @@
              (seq ret)))))
 
 ;; Maps.
+; XXX: Clojure returns an array map for the nullary arity, but that sucks.
+(def hash-map
+  "keyval => key val
+   Returns a new hash map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/hash-map)
+
+(def sorted-map
+  "keyval => key val
+   Returns a new sorted map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/sorted-map)
+
 (def map?
   "Return true if x implements IPersistentMap"
   clojure.core-native/map?)
+
 (def associative?
  "Returns true if coll implements Associative"
   clojure.core-native/associative?)
+
 (def assoc
   "assoc[iate]. When applied to a map, returns a new map of the
    same (hashed/sorted) type, that contains the mapping of key(s) to
@@ -295,7 +342,7 @@
   "Returns true if x is not nil, false otherwise."
   clojure.core-native/some?)
 
-;; Metadata
+;; Metadata.
 (def meta
   "Returns the metadata of obj, returns nil if there is no metadata."
   clojure.core-native/meta)
@@ -327,6 +374,11 @@
 (def pr-str
   "pr to a string, returning it"
   clojure.core-native/pr-str)
+
+;; Utils.
+; The full `apply` will be defined below, but it requires more helpers to support
+; all of its arities.
+(def ^:private apply* clojure.core-native/apply*)
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -510,10 +562,6 @@
               (list 'throw (list 'clojure.core/ex-info "invalid cond" {:err err}))))
           (cons 'clojure.core/cond (next (next clauses))))))
 
-; The full `apply` will be defined below, but it requires more helpers to support
-; all of its arities.
-(def apply* clojure.core-native/apply*)
-
 (defmacro or
   "Evaluates exprs one at a time, from left to right. If a form
    returns a logical true value, or returns that value and doesn't
@@ -657,15 +705,15 @@
 (defn apply
   "Applies fn f to the argument list formed by prepending intervening arguments to args."
   ([f args]
-   (clojure.core-native/apply-to f args))
+   (clojure.core-native/apply* f args))
   ([f x args]
-   (clojure.core-native/apply-to f (list* x args)))
+   (clojure.core-native/apply* f (list* x args)))
   ([f x y args]
-   (clojure.core-native/apply-to f (list* x y args)))
+   (clojure.core-native/apply* f (list* x y args)))
   ([f x y z args]
-   (clojure.core-native/apply-to f (list* x y z args)))
+   (clojure.core-native/apply* f (list* x y z args)))
   ([f a b c d & args]
-   (clojure.core-native/apply-to f (cons a (cons b (cons c (cons d (spread args))))))))
+   (clojure.core-native/apply* f (cons a (cons b (cons c (cons d (spread args))))))))
 
 (defn constantly
   "Returns a function that takes any number of arguments and returns x."
@@ -1236,23 +1284,6 @@
   [coll]
   (reduce conj '() coll))
 
-; XXX: The real concat will be defined later on, to be lazy.
-(defn- concat*
-  ([]
-   '())
-  ([x]
-   (seq x))
-  ([x y]
-   (reduce (fn [acc e]
-             (cons e acc))
-           y
-           (reverse x)))
-  ([x y & zs]
-   (let [r (concat* x y)]
-     (if (empty? zs)
-       r
-       (recur r (first zs) (rest zs))))))
-
 (defn every?
   "Returns true if (pred x) is logical true for every x in coll, else false."
   [pred coll]
@@ -1571,19 +1602,6 @@
            x)))
 
 ;; Maps.
-; XXX: Clojure returns an array map for the nullary arity, but that sucks.
-(def hash-map
-  "keyval => key val
-   Returns a new hash map with supplied mappings. If any keys are
-   equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/hash-map)
-
-(def sorted-map
-  "keyval => key val
-   Returns a new sorted map with supplied mappings. If any keys are
-   equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/sorted-map)
-
 (defn key
   "Returns the key of the map entry."
   [e]

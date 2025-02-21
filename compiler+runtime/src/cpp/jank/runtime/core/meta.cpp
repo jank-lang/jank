@@ -44,7 +44,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
+          throw std::runtime_error{ fmt::format("not metadatable: {} [{}]",
+                                                typed_o->to_code_string(),
+                                                object_type_str(typed_o->base.type)) };
         }
       },
       o,
@@ -65,7 +67,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
+          throw std::runtime_error{ fmt::format("not metadatable: {} [{}]",
+                                                typed_o->to_code_string(),
+                                                object_type_str(typed_o->base.type)) };
         }
       },
       o,

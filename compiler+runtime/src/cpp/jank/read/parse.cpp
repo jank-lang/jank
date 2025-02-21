@@ -16,6 +16,7 @@
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/util/scope_exit.hpp>
 
+/* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
 {
   using namespace jank::runtime;
@@ -44,12 +45,9 @@ namespace jank::read::parse
         return err("Invalid Unicode digit");
       }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
       /* C++ helpfully deprecated the only standard way of converting Unicode formats.
        * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-#pragma clang diagnostic pop
       native_persistent_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
@@ -827,7 +825,7 @@ namespace jank::read::parse
                                                       "Top-level #?@ usage is not allowed");
           }
 
-          auto const s(next_in_place(it)->first());
+          auto const s(it->next_in_place()->first());
           return visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
               auto const seq(typed_s->fresh_seq());
@@ -838,7 +836,7 @@ namespace jank::read::parse
               auto const first(seq->first());
 
               auto const front(pending_forms.begin());
-              for(auto it(next_in_place(seq)); it != nullptr; it = next_in_place(it))
+              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
               {
                 pending_forms.insert(front, it->first());
               }
@@ -854,11 +852,11 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ next_in_place(it)->first(), start_token, list_end };
+          return object_source_info{ it->next_in_place()->first(), start_token, list_end };
         }
       }
 
-      it = next_in_place(next_in_place(it));
+      it = it->next_in_place()->next_in_place();
     }
 
     return ok(none);
@@ -874,15 +872,16 @@ namespace jank::read::parse
     return visit_seqable(
       [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto const item(it->first());
 
           if(syntax_quote_is_unquote(item, false))
           {
-            ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                         make_box<obj::symbol>("clojure.core/list"),
-                                                         second(item)));
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             second(item)));
           }
           else if(syntax_quote_is_unquote(item, true))
           {
@@ -895,9 +894,10 @@ namespace jank::read::parse
             {
               return quoted_item;
             }
-            ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                         make_box<obj::symbol>("clojure.core/list"),
-                                                         quoted_item.expect_ok()));
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             quoted_item.expect_ok()));
           }
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
@@ -941,8 +941,7 @@ namespace jank::read::parse
         auto const s(typed_form->seq());
         object_ptr const item{ s ? s->first() : obj::nil::nil_const() };
 
-        return make_box<obj::symbol>(
-                 (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))
+        return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);
       },
       [] { return false; },
@@ -951,10 +950,12 @@ namespace jank::read::parse
 
   result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
   {
+    object_ptr ret{};
+
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
     {
-      return make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
+      ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
     }
     /* By default, all symbols get qualified. However, any symbol ending in # does not get
      * qualified, but instead gets a gensym (a unique name). The unique names are kept in
@@ -991,7 +992,7 @@ namespace jank::read::parse
         }
       }
 
-      return make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), sym);
+      ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), sym);
     }
     else if(syntax_quote_is_unquote(form, false))
     {
@@ -1007,20 +1008,28 @@ namespace jank::read::parse
             || form->type == object_type::integer || form->type == object_type::real
             || form->type == object_type::character || form->type == object_type::nil)
     {
-      return form;
+      ret = form;
     }
     else
     {
       /* Handle all sorts of sequences. We do this by recursively walking through them,
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
-      return visit_seqable(
+      auto const res{ visit_seqable(
         [&](auto const typed_form) -> result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
           {
-            auto expanded(syntax_quote_expand_seq(typed_form->seq()));
+            auto const seq(typed_form->seq());
+            if(!seq)
+            {
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "vector"));
+            }
+
+            auto expanded(syntax_quote_expand_seq(seq));
             if(expanded.is_err())
             {
               return expanded;
@@ -1028,12 +1037,12 @@ namespace jank::read::parse
 
             return make_box<obj::persistent_list>(
               std::in_place,
-              make_box<obj::symbol>("clojure.core/apply"),
-              make_box<obj::symbol>("clojure.core/vector"),
+              make_box<obj::symbol>("clojure.core", "apply*"),
+              make_box<obj::symbol>("clojure.core", "vector"),
               make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core/seq"),
-                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
+                make_box<obj::symbol>("clojure.core", "seq"),
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
           }
           if constexpr(behavior::map_like<T>)
           {
@@ -1051,43 +1060,42 @@ namespace jank::read::parse
 
             return make_box<obj::persistent_list>(
               std::in_place,
-              make_box<obj::symbol>("clojure.core/apply"),
-              make_box<obj::symbol>("clojure.core/hash-map"),
+              make_box<obj::symbol>("clojure.core", "apply*"),
+              make_box<obj::symbol>("clojure.core", "hash-map"),
               make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core/seq"),
-                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
+                make_box<obj::symbol>("clojure.core", "seq"),
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
           }
           if constexpr(behavior::set_like<T>)
           {
             return err(error::internal_parse_failure("nyi: set"));
           }
-          if constexpr(std::same_as<T, obj::persistent_list>)
+          if constexpr(behavior::sequenceable<T>)
           {
             auto const seq(typed_form->seq());
             if(!seq)
             {
               return make_box<obj::persistent_list>(std::in_place,
-                                                    make_box<obj::symbol>("clojure.core/list"));
+                                                    make_box<obj::symbol>("clojure.core", "list"));
             }
-            else
+            auto expanded(syntax_quote_expand_seq(seq));
+            if(expanded.is_err())
             {
-              auto expanded(syntax_quote_expand_seq(seq));
-              if(expanded.is_err())
-              {
-                return expanded;
-              }
-
-              return make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core/seq"),
-                conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat")));
+              return expanded;
             }
+
+            /* TODO: Need seq? */
+            return make_box<obj::persistent_list>(
+              std::in_place,
+              make_box<obj::symbol>("clojure.core", "seq"),
+              cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
           }
           else
           {
             return err(
-              error::internal_parse_failure(fmt::format("Unsupported collection type: {}",
+              error::internal_parse_failure(fmt::format("Unsupported collection: {} [{}]",
+                                                        typed_form->to_code_string(),
                                                         object_type_str(typed_form->base.type))));
           }
         },
@@ -1097,8 +1105,33 @@ namespace jank::read::parse
                                                 make_box<obj::symbol>("quote"),
                                                 form);
         },
-        form);
+        form) };
+      if(res.is_err())
+      {
+        return res;
+      }
+      ret = res.expect_ok();
     }
+
+    auto const meta{ runtime::meta(form) };
+    if(meta != obj::nil::nil_const())
+    {
+      /* We quote the meta as well, to ensure it doesn't get evaluated. */
+      /* XXX: Note that Clojure removes the source info from the meta here. We're keeping it
+       * for now, in hopes of providing improved macro expansion errors. */
+      auto const quoted_meta{ syntax_quote(meta) };
+      if(quoted_meta.is_err())
+      {
+        return err(quoted_meta.expect_err());
+      }
+
+      return make_box<obj::persistent_list>(std::in_place,
+                                            make_box<obj::symbol>("clojure.core", "with-meta"),
+                                            ret,
+                                            quoted_meta.expect_ok());
+    }
+
+    return ret;
   }
 
   processor::object_result processor::parse_syntax_quote()
@@ -1155,7 +1188,7 @@ namespace jank::read::parse
     return object_source_info{
       erase(make_box<obj::persistent_list>(
         std::in_place,
-        make_box<obj::symbol>((splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote")),
+        make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote")),
         val_result.expect_ok().unwrap().ptr)),
       start_token,
       latest_token

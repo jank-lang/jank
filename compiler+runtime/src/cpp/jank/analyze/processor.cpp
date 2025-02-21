@@ -931,14 +931,14 @@ namespace jank::analyze
      * ```
      * (loop* [a 1
      *         b 2]
-     *   (println a b))
+     *   (+ a b))
      * ```
      *
      * Becoming this:
      *
      * ```
      * ((fn* [a b]
-     *   (println a b)) 1 2)
+     *   (+ a b)) 1 2)
      * ```
      *
      * This works great, but loop* can actually be used as a let*. That means we can do something
@@ -947,7 +947,7 @@ namespace jank::analyze
      * ```
      * (loop* [a 1
      *         b (* 2 a)]
-     *   (println a b))
+     *   (+ a b))
      * ```
      *
      * But we can't translate that like the one above, since we'd be referring to `a` before it
@@ -957,7 +957,7 @@ namespace jank::analyze
      * (let* [a 1
      *        b (* 2 a)]
      *   ((fn* [a b]
-     *     (println a b)) a b))
+     *     (+ a b)) a b))
      * ```
      */
     runtime::detail::native_persistent_list const args{ binding_syms.rbegin(),
@@ -1723,7 +1723,7 @@ namespace jank::analyze
          * sequences and not just lists. */
         if constexpr(runtime::behavior::sequential<T>)
         {
-          return analyze_call(runtime::obj::persistent_list::create(typed_o->seq()),
+          return analyze_call(runtime::obj::persistent_list::create(meta(typed_o), typed_o->seq()),
                               current_frame,
                               position,
                               fn_ctx,

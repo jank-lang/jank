@@ -383,7 +383,6 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("dissoc-in-place!", &dissoc_in_place);
   intern_fn("pop-in-place!", &pop_in_place);
   intern_fn("disj-in-place!", &disj_in_place);
-  intern_fn("apply-to", &apply_to);
   intern_fn("deref", &deref);
   intern_fn("reduced", &reduced);
   intern_fn("reduced?", &is_reduced);

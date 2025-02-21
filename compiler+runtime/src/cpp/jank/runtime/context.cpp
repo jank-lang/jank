@@ -8,7 +8,6 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
-#include <regex>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
@@ -570,6 +569,7 @@ namespace jank::runtime
     {
       return macroexpand(expanded);
     }
+
     return o;
   }
 
