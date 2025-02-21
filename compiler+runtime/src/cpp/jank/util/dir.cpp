@@ -73,9 +73,8 @@ namespace jank::util
       return res;
     }
 
-    return res = fmt::format("{}/{}",
-                             user_cache_dir(),
-                             binary_version(optimization_level, includes, defines));
+    return res
+      = fmt::format("{}/{}", "target", binary_version(optimization_level, includes, defines));
   }
 
   /* The binary version is composed of two things:

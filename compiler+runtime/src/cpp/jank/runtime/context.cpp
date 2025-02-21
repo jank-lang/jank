@@ -41,10 +41,9 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , binary_cache_dir{ fmt::format(
-        "{}/{}",
-        util::binary_cache_dir(opts.optimization_level, opts.include_dirs, opts.define_macros),
-        "classes") }
+    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
+                                               opts.include_dirs,
+                                               opts.define_macros) }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
