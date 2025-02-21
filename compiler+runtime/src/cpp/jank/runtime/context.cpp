@@ -8,7 +8,6 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
-#include <regex>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
@@ -23,6 +22,7 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -41,7 +41,9 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , output_dir{ opts.compilation_path }
+    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
+                                               opts.include_dirs,
+                                               opts.define_macros) }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -296,7 +298,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
-      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
     };
     boost::filesystem::create_directories(module_path.parent_path());
 
