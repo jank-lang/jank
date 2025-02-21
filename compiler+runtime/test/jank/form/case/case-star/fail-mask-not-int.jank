@@ -1,0 +1,3 @@
+(case* 1 0 0.1 :default
+  {1 (clojure.core/condp clojure.core/= 1 1 1
+       :default)})

@@ -36,4 +36,5 @@ namespace jank::evaluate
   runtime::object_ptr eval(analyze::expr::if_<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::throw_<analyze::expression> const &);
   runtime::object_ptr eval(analyze::expr::try_<analyze::expression> const &);
+  runtime::object_ptr eval(analyze::expr::case_<analyze::expression> const &);
 }
