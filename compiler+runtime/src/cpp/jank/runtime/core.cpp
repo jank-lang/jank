@@ -108,9 +108,8 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != obj::nil::nil_const(); it = next_in_place(it))
+          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            assert(it);
             buff(' ');
             runtime::to_string(it->first(), buff);
           }
@@ -140,9 +139,8 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != obj::nil::nil_const(); it = next_in_place(it))
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            assert(it);
             buff(' ');
             runtime::to_string(it->first(), buff);
           }
@@ -169,9 +167,8 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != obj::nil::nil_const(); it = next_in_place(it))
+          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
           {
-            assert(it);
             buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
@@ -201,9 +198,8 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != obj::nil::nil_const(); it = next_in_place(it))
+          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
           {
-            assert(it);
             buff(' ');
             runtime::to_code_string(it->first(), buff);
           }
@@ -257,8 +253,7 @@ namespace jank::runtime
 
   object_ptr meta(object_ptr const m)
   {
-    assert(m);
-    if(m == obj::nil::nil_const())
+    if(m == nullptr || m == obj::nil::nil_const())
     {
       return obj::nil::nil_const();
     }

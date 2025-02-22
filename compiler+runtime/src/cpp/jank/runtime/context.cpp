@@ -643,9 +643,8 @@ namespace jank::runtime
 
     auto const thread_id(std::this_thread::get_id());
 
-    for(auto it(bindings->fresh_seq()); it != obj::nil::nil_const(); it = runtime::next_in_place(it))
+    for(auto it(bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
     {
-      assert(it);
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));
       if(!var->dynamic.load())
