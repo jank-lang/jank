@@ -8,5 +8,13 @@ pushd "${here}/../"
 popd
 
 pushd "${here}"
-  lein jank run pass
+  if ! lein jank run pass; then
+    echo "Bad exit on 'lein jank run pass'"
+    exit 1
+  fi
+  # FIXME !!!
+  if lein jank run fail; then
+    echo "Bad exit on 'lein jank run pass'"
+    exit 1
+  fi
 popd
