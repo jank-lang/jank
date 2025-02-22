@@ -22,11 +22,7 @@ namespace jank::runtime::obj
 
   persistent_list_ptr persistent_list::create(object_ptr const s)
   {
-    if(s == nullptr)
-    {
-      return make_box<persistent_list>();
-    }
-
+    assert(s);
     return visit_object(
       [](auto const typed_s) -> persistent_list_ptr {
         using T = typename decltype(typed_s)::value_type;
@@ -34,8 +30,9 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
         {
           native_vector<object_ptr> v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nil::nil_const(); i = runtime::next_in_place(i))
           {
+            assert(i);
             v.emplace_back(i->first());
           }
           return make_box<persistent_list>(
@@ -86,18 +83,14 @@ namespace jank::runtime::obj
 
   persistent_list_sequence_ptr persistent_list::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
+    return fresh_seq();
   }
 
   persistent_list_sequence_ptr persistent_list::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return nil::nil_const();
     }
     return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
   }
@@ -128,7 +121,7 @@ namespace jank::runtime::obj
   {
     if(data.size() < 2)
     {
-      return nullptr;
+      return nil::nil_const();
     }
     return make_box<persistent_list_sequence>(this, ++data.begin(), data.end(), data.size() - 1);
   }

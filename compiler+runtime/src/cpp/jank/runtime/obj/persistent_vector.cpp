@@ -34,7 +34,8 @@ namespace jank::runtime::obj
 
   persistent_vector_ptr persistent_vector::create(object_ptr const s)
   {
-    if(s == nullptr)
+    assert(s);
+    if(s == nil::nil_const())
     {
       return make_box<persistent_vector>();
     }
@@ -46,8 +47,9 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nil::nil_const(); i = runtime::next_in_place(i))
           {
+            assert(i);
             v.push_back(i->first());
           }
           return make_box<persistent_vector>(v.persistent());
@@ -96,19 +98,15 @@ namespace jank::runtime::obj
           if constexpr(behavior::sequential<T>)
           {
             size_t i{};
-            for(auto e(typed_o->fresh_seq()); e != nullptr; e = e->next_in_place())
+            for(auto e(typed_o->fresh_seq()); e != nil::nil_const() && i < data.size(); e = e->next_in_place(), ++i)
             {
+              assert(e);
               if(!runtime::equal(data[i], e->first()))
               {
                 return false;
               }
-
-              if(++i == data.size())
-              {
-                return e->next_in_place() == nullptr;
-              }
             }
-            return false;
+            return e == nil::nil_const() && i == data.size();
           }
           else
           {
@@ -182,18 +180,14 @@ namespace jank::runtime::obj
 
   persistent_vector_sequence_ptr persistent_vector::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
+    return fresh_seq();
   }
 
   persistent_vector_sequence_ptr persistent_vector::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return nil::nil_const();
     }
     return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
   }

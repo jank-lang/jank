@@ -32,7 +32,7 @@ namespace jank::runtime::obj
   {
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool native_vector_sequence::equal(object const &o) const
   {
     return runtime::equal(o, data.begin(), data.end());
@@ -65,12 +65,12 @@ namespace jank::runtime::obj
   /* behavior::seqable */
   native_vector_sequence_ptr native_vector_sequence::seq()
   {
-    return data.empty() ? nullptr : this;
+    return data.empty() ? nil::nil_const() : this;
   }
 
   native_vector_sequence_ptr native_vector_sequence::fresh_seq() const
   {
-    return data.empty() ? nullptr : make_box<native_vector_sequence>(data, index);
+    return data.empty() ? nil::nil_const() : make_box<native_vector_sequence>(data, index);
   }
 
   /* behavior::countable */
@@ -93,7 +93,7 @@ namespace jank::runtime::obj
 
     if(n == data.size())
     {
-      return nullptr;
+      return nil::nil_const();
     }
 
     return make_box<native_vector_sequence>(data, n);
@@ -105,7 +105,7 @@ namespace jank::runtime::obj
 
     if(index == data.size())
     {
-      return nullptr;
+      return nil::nil_const();
     }
 
     return this;
@@ -113,13 +113,13 @@ namespace jank::runtime::obj
 
   cons_ptr native_vector_sequence::conj(object_ptr const head)
   {
-    return make_box<cons>(head, data.empty() ? nullptr : this);
+    return make_box<cons>(head, data.empty() ? nil::nil_const() : this);
   }
 
   native_vector_sequence_ptr native_vector_sequence::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto ret(make_box<native_vector_sequence>(data, index));
     ret->meta = meta;
     return ret;
   }

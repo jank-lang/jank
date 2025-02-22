@@ -20,22 +20,24 @@ namespace jank::runtime::obj
     : fn{ fn }
     , sequence{ sequence }
   {
+    assert(sequence);
   }
 
   lazy_sequence_ptr lazy_sequence::seq() const
   {
     resolve_seq();
-    return sequence ? this : nullptr;
+    return sequence != nil::nil_const() ? this : nil::nil_const();
   }
 
   lazy_sequence_ptr lazy_sequence::fresh_seq() const
   {
     resolve_seq();
-    if(!sequence)
+    if(sequence == nil::nil_const())
     {
-      return nullptr;
+      return nil::nil_const();
     }
     auto const s(runtime::fresh_seq(sequence));
+    assert(s);
     assert(s != nil::nil_const());
     return make_box<lazy_sequence>(nullptr, s);
   }
@@ -43,26 +45,19 @@ namespace jank::runtime::obj
   object_ptr lazy_sequence::first() const
   {
     resolve_seq();
-    if(sequence)
-    {
-      return runtime::first(sequence);
-    }
-    return nil::nil_const();
+    return runtime::first(sequence);
   }
 
   lazy_sequence_ptr lazy_sequence::next() const
   {
     resolve_seq();
-    if(sequence)
+    auto const n(runtime::next(sequence));
+    assert(n);
+    if(n == nil::nil_const())
     {
-      auto const n(runtime::next(sequence));
-      if(n == nil::nil_const())
-      {
-        return nullptr;
-      }
-      return make_box<lazy_sequence>(nullptr, n);
+      return nil::nil_const();
     }
-    return nullptr;
+    return make_box<lazy_sequence>(nullptr, n);
   }
 
   lazy_sequence_ptr lazy_sequence::next_in_place()
@@ -71,7 +66,7 @@ namespace jank::runtime::obj
     auto const n(runtime::next_in_place(sequence));
     if(n == nil::nil_const())
     {
-      return nullptr;
+      return nil::nil_const();
     }
     sequence = n;
     return this;
@@ -100,7 +95,8 @@ namespace jank::runtime::obj
   native_hash lazy_sequence::to_hash() const
   {
     auto const s(seq());
-    if(!s)
+    assert(s);
+    if(s == nil::nil_const())
     {
       return 1;
     }
@@ -110,7 +106,7 @@ namespace jank::runtime::obj
   cons_ptr lazy_sequence::conj(object_ptr const head) const
   {
     resolve_seq();
-    return make_box<cons>(head, sequence ? this : nullptr);
+    return make_box<cons>(head, sequence != nil::nil_const() ? this : nil::nil_const());
   }
 
   object_ptr lazy_sequence::resolve_fn() const
@@ -145,12 +141,13 @@ namespace jank::runtime::obj
       if(lazy)
       {
         sequence = runtime::seq(lazy);
-        if(sequence == nil::nil_const())
-        {
-          sequence = nullptr;
-        }
+      }
+      else
+      {
+        sequence = obj::nil::nil_const();
       }
     }
+    assert(sequence);
     return sequence;
   }
 

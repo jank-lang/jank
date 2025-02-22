@@ -80,12 +80,12 @@ namespace jank::runtime::obj
 
   nil_ptr nil::seq()
   {
-    return nullptr;
+    return this;
   }
 
   nil_ptr nil::fresh_seq() const
   {
-    return nullptr;
+    return this;
   }
 
   nil_ptr nil::first() const
@@ -95,11 +95,11 @@ namespace jank::runtime::obj
 
   nil_ptr nil::next() const
   {
-    return nullptr;
+    return this;
   }
 
   nil_ptr nil::next_in_place()
   {
-    return nullptr;
+    return this;
   }
 }

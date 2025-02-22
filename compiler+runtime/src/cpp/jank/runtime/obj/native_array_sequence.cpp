@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     assert(size > 0);
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool native_array_sequence::equal(object const &o) const
   {
     return runtime::equal(o, arr + index, arr + size);
@@ -84,7 +84,7 @@ namespace jank::runtime::obj
 
     if(size <= n)
     {
-      return nullptr;
+      return nil::nil_const();
     }
 
     return make_box<native_array_sequence>(arr, n, size);
@@ -96,7 +96,7 @@ namespace jank::runtime::obj
 
     if(size <= index)
     {
-      return nullptr;
+      return nil::nil_const();
     }
 
     return this;

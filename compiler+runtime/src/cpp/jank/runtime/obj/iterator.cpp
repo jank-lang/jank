@@ -84,16 +84,19 @@ namespace jank::runtime::obj
 
   native_persistent_string iterator::to_string()
   {
+    /* Runs forever. */
     return runtime::to_string(seq());
   }
 
   native_persistent_string iterator::to_code_string()
   {
+    /* Runs forever. */
     return runtime::to_code_string(seq());
   }
 
   native_hash iterator::to_hash() const
   {
+    /* Runs forever. */
     return hash::ordered(&base);
   }
 

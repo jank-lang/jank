@@ -267,9 +267,10 @@ namespace jank::runtime::obj
     };
 
     for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y)));
-        it != nullptr && it != nil::nil_const();
+        it != nil::nil_const();
         it = next_in_place(it))
     {
+      assert(it);
       if(is_preferred(hierarchy, x, first(it)))
       {
         return true;
@@ -277,9 +278,10 @@ namespace jank::runtime::obj
     }
 
     for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x)));
-        it != nullptr && it != nil::nil_const();
+        it != nil::nil_const();
         it = next_in_place(it))
     {
+      assert(it);
       if(is_preferred(hierarchy, first(it), y))
       {
         return true;
@@ -340,16 +342,19 @@ namespace jank::runtime::obj
     object_ptr best_value{ nil::nil_const() };
     persistent_vector_sequence_ptr best_entry{};
 
-    for(auto it(fresh_seq(method_table)); it != nullptr; it = it->next_in_place())
+    for(auto it(fresh_seq(method_table)); it != nil::nil_const(); it = it->next_in_place())
     {
-      auto const entry(it->first());
-      auto const entry_key(entry->seq()->first());
+      assert(it);
+      auto const entry(it->first()->seq());
+      assert(entry);
+      assert(entry != nil::nil_const());
+      auto const entry_key(entry->first());
 
       if(is_a(cached_hierarchy, dispatch_val, entry_key))
       {
         if(best_entry == nullptr || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
         {
-          best_entry = entry->seq();
+          best_entry = entry;
         }
 
         if(!is_dominant(cached_hierarchy, best_entry->first(), entry_key))
