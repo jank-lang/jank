@@ -397,6 +397,7 @@ namespace jank::runtime
       s);
   }
 
+  /* Returns nullptr or a non-empty seq. */
   object_ptr next_in_place(object_ptr const s)
   {
     return visit_object(
@@ -478,21 +479,13 @@ namespace jank::runtime
         {
           return make_box<obj::persistent_list>(std::in_place, o);
         }
-        else if constexpr(behavior::conjable_in_place<T>)
-        {
-          return typed_s->conj_in_place(o);
-        }
         else if constexpr(behavior::conjable<T>)
         {
           return typed_s->conj(o);
         }
-        else if constexpr(behavior::seqable<T>)
-        {
-          return typed_s->seq()->conj(o);
-        }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_string()) };
         }
       },
       s);
@@ -521,11 +514,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->assoc_in_place(k, v);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->assoc(k, v);
         }
@@ -544,11 +533,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->dissoc_in_place(k);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->dissoc(k);
         }

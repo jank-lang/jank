@@ -341,7 +341,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("first", static_cast<object_ptr (*)(object_ptr)>(&first));
   intern_fn("second", static_cast<object_ptr (*)(object_ptr)>(&second));
   intern_fn("next", static_cast<object_ptr (*)(object_ptr)>(&next));
-  intern_fn("next-in-place", static_cast<object_ptr (*)(object_ptr)>(&next_in_place));
+  intern_fn("next-in-place!", static_cast<object_ptr (*)(object_ptr)>(&next_in_place));
   intern_fn("rest", static_cast<object_ptr (*)(object_ptr)>(&rest));
   intern_fn("cons", &cons);
   intern_fn("coll?", &is_collection);

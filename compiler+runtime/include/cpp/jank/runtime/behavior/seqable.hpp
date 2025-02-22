@@ -46,16 +46,16 @@ namespace jank::runtime::behavior
      * Don't do this:
      *
      *   (let [s (fresh-seq ...)
-     *         s'  (-> s next-in-place)
-     *         s'' (-> s next-in-place next-in-place)]
+     *         s'  (-> s next-in-place!)
+     *         s'' (-> s next-in-place! next-in-place!)]
      *                 ^---- UB!! s' owns seq
      *     ...)
      *
      * Do this instead:
      *
      *   (let [s (fresh-seq ...)
-     *         s'  (-> s next-in-place)
-     *         s'' (-> s' next-in-place)]
+     *         s'  (-> s next-in-place!)
+     *         s'' (-> s' next-in-place!)]
      *                 ^---- OK: seq ownership transferred from s' to s''
      *     ...)
      *

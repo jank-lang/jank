@@ -162,11 +162,14 @@ namespace jank::runtime::obj
         for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
+          assert(it != nil::nil_const());
+          assert(seq != nil::nil_const());
           if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
+        assert(seq != nil::nil_const());
         return seq == nullptr;
       },
       []() { return false; },
