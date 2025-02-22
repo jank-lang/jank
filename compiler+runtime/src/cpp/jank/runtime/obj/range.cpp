@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     return lte(val, end);
   }
 
-  //TODO ban these constructors
+  /* Never use constructors outside of this file. Use range::create. */
   range::range(object_ptr const end)
     : start{ make_box(0) }
     , end{ end }
@@ -69,6 +69,7 @@ namespace jank::runtime::obj
     , chunk{ chunk }
     , chunk_next{ chunk_next }
   {
+    assert(chunk_next);
   }
 
   object_ptr range::create(object_ptr const end)
@@ -191,10 +192,6 @@ namespace jank::runtime::obj
   range_ptr range::chunked_next() const
   {
     force_chunk();
-    if(!chunk_next)
-    {
-      return nullptr;
-    }
     return chunk_next;
   }
 
@@ -209,15 +206,17 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it != nil::nil_const();
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          assert(it);
+          assert(seq);
+          if(seq == nil::nil_const() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return seq == nil::nil_const();
       },
       []() { return false; },
       &o);
@@ -246,7 +245,7 @@ namespace jank::runtime::obj
   range_ptr range::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto ret(make_box<range>(start, end, step, bounds_check));
     ret->meta = meta;
     return ret;
   }
