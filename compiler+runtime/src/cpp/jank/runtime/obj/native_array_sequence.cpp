@@ -84,7 +84,7 @@ namespace jank::runtime::obj
 
     if(size <= n)
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return make_box<native_array_sequence>(arr, n, size);
@@ -96,7 +96,7 @@ namespace jank::runtime::obj
 
     if(size <= index)
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return this;
