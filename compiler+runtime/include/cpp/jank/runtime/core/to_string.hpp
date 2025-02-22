@@ -48,8 +48,9 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i != obj::nil::nil_const(); i = i->next_in_place())
     {
+      assert(i);
       if(needs_space)
       {
         buff(' ');
@@ -104,8 +105,9 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i != obj::nil::nil_const(); i = i->next_in_place())
     {
+      assert(i);
       if(needs_space)
       {
         buff(' ');

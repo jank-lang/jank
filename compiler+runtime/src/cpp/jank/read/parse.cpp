@@ -783,8 +783,9 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr;)
+    for(auto it(list->fresh_seq()); it != obj::nil::nil_const(); it = next_in_place(next_in_place(it)))
     {
+      assert(it);
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
@@ -810,8 +811,9 @@ namespace jank::read::parse
               auto const first(seq->first());
 
               auto const front(pending_forms.begin());
-              for(auto it(next_in_place(seq)); it != nullptr; it = next_in_place(it))
+              for(auto it(next_in_place(seq)); it != obj::nil::nil_const(); it = next_in_place(it))
               {
+                assert(it);
                 pending_forms.insert(front, it->first());
               }
 
@@ -829,8 +831,6 @@ namespace jank::read::parse
           return object_source_info{ next_in_place(it)->first(), start_token, list_end };
         }
       }
-
-      it = next_in_place(next_in_place(it));
     }
 
     return ok(none);
@@ -846,8 +846,9 @@ namespace jank::read::parse
     return visit_seqable(
       [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != obj::nil::nil_const(); it = next_in_place(it))
         {
+          assert(it);
           auto const item(it->first());
 
           if(syntax_quote_is_unquote(item, false))
@@ -872,8 +873,7 @@ namespace jank::read::parse
                                                          quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: obj::nil::nil_const();
+        return make_box<obj::persistent_vector>(ret.persistent())->seq();
       },
       []() -> result<object_ptr, error_ptr> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable"));

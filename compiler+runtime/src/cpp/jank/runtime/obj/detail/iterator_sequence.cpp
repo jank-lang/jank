@@ -34,12 +34,13 @@ namespace jank::runtime::obj::detail
         auto seq(typed_o->fresh_seq());
         for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(*it, seq->first()))
+          assert(seq);
+          if(seq == obj::nil::nil_const() || !runtime::equal(*it, seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return seq == obj::nil::nil_const();
       },
       []() { return false; },
       &o);
@@ -105,7 +106,7 @@ namespace jank::runtime::obj::detail
 
     if(n == end)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
 
     return make_box<Derived>(coll, n, end, size);
@@ -118,7 +119,7 @@ namespace jank::runtime::obj::detail
 
     if(begin == end)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
 
     return static_cast<Derived *>(this);

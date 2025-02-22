@@ -108,7 +108,7 @@ namespace jank::runtime::obj
   {
     if(count() <= 1)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
     return make_box<integer_range>(make_box<integer>(add(start, step)), end, step, bounds_check);
   }
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
   {
     if(count() <= 1)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
     start = make_box<integer>(add(start, step));
     return this;
@@ -134,15 +134,17 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it != obj::nil::nil_const();
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          assert(it);
+          assert(seq);
+          if(seq == obj::nil::nil_const() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return seq == obj::nil::nil_const();
       },
       []() { return false; },
       &o);

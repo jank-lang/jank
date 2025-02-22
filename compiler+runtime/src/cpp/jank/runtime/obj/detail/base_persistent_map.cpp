@@ -131,7 +131,7 @@ namespace jank::runtime::obj::detail
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
     return make_box<ST>(static_cast<PT const *>(this),
                         static_cast<PT const *>(this)->data.begin(),
@@ -143,7 +143,7 @@ namespace jank::runtime::obj::detail
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
     return make_box<ST>(static_cast<PT const *>(this),
                         static_cast<PT const *>(this)->data.begin(),

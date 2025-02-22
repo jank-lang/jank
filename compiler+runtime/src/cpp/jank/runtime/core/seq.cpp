@@ -34,7 +34,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
-          return typed_o->seq() == nullptr;
+          return is_nil(typed_o->seq());
         }
         else if constexpr(behavior::countable<T>)
         {
@@ -447,7 +447,7 @@ namespace jank::runtime
           return obj::persistent_list::empty();
         }
         auto const ret(seq->next());
-        if(ret == nullptr)
+        if(is_nil(ret))
         {
           return obj::persistent_list::empty();
         }
@@ -612,8 +612,9 @@ namespace jank::runtime
               if constexpr(behavior::seqable<T>)
               {
                 object_ptr ret{ typed_m };
-                for(auto seq(typed_keys->fresh_seq()); seq != nullptr; seq = next_in_place(seq))
+                for(auto seq(typed_keys->fresh_seq()); seq != obj::nil::nil_const(); seq = next_in_place(seq))
                 {
+                  assert(seq);
                   ret = get(ret, seq->first());
                 }
                 return ret;
@@ -648,8 +649,9 @@ namespace jank::runtime
               if constexpr(behavior::seqable<T>)
               {
                 object_ptr ret{ typed_m };
-                for(auto seq(typed_keys->fresh_seq()); seq != nullptr; seq = next_in_place(seq))
+                for(auto seq(typed_keys->fresh_seq()); seq != obj::nil::nil_const(); seq = next_in_place(seq))
                 {
+                  assert(seq);
                   ret = get(ret, seq->first());
                 }
 
@@ -676,8 +678,9 @@ namespace jank::runtime
 
   object_ptr find(object_ptr const s, object_ptr const key)
   {
+    assert(s);
     auto const nil(obj::nil::nil_const());
-    if(s == nullptr || s == nil)
+    if(s == nil)
     {
       return nil;
     }
@@ -700,7 +703,8 @@ namespace jank::runtime
 
   native_bool contains(object_ptr const s, object_ptr const key)
   {
-    if(s == nullptr || s == obj::nil::nil_const())
+    assert(s);
+    if(s == obj::nil::nil_const())
     {
       return false;
     }
@@ -807,8 +811,9 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); it != obj::nil::nil_const(); it = next_in_place(it), ++i)
           {
+            assert(it);
             if(i == index)
             {
               return it->first();
@@ -847,8 +852,9 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); !is_nil(it); it = next_in_place(it), ++i)
           {
+            assert(it);
             if(i == index)
             {
               return it->first();
@@ -866,7 +872,7 @@ namespace jank::runtime
 
   object_ptr peek(object_ptr const o)
   {
-    if(o == obj::nil::nil_const())
+    if(is_nil(o))
     {
       return o;
     }
@@ -938,8 +944,9 @@ namespace jank::runtime
     }
     return visit_seqable(
       [](auto const typed_args, util::string_builder &buff) -> native_persistent_string {
-        for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_args->fresh_seq()); !is_nil(it); it = it->next_in_place())
         {
+          assert(it);
           auto const fst(it->first());
           if(is_nil(fst))
           {
@@ -978,7 +985,8 @@ namespace jank::runtime
 
   size_t sequence_length(object_ptr const s, size_t const max)
   {
-    if(s == nullptr)
+    assert(s);
+    if(is_nil(s))
     {
       return 0;
     }
@@ -987,19 +995,16 @@ namespace jank::runtime
       [&](auto const typed_s) -> size_t {
         using T = typename decltype(typed_s)::value_type;
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return 0;
-        }
-        else if constexpr(behavior::countable<T>)
+        if constexpr(behavior::countable<T>)
         {
           return typed_s->count();
         }
         else if constexpr(behavior::seqable<T>)
         {
           size_t length{ 0 };
-          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); !is_nil(i) && length < max; i = next_in_place(i))
           {
+            assert(i);
             ++length;
           }
           return length;
@@ -1025,15 +1030,17 @@ namespace jank::runtime
         return visit_seqable(
           [](auto const typed_r, auto const typed_l) -> native_bool {
             auto seq(typed_r->fresh_seq());
-            for(auto it(typed_l->fresh_seq()); it != nullptr;
+            for(auto it(typed_l->fresh_seq()); !is_nil(it);
                 it = it->next_in_place(), seq = seq->next_in_place())
             {
-              if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+              assert(it);
+              assert(seq);
+              if(is_nil(seq) || !runtime::equal(it->first(), seq->first()))
               {
                 return false;
               }
             }
-            return seq == nullptr;
+            return is_nil(seq);
           },
           r,
           typed_l);
@@ -1047,8 +1054,9 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll, object_ptr const f, object_ptr const init) -> object_ptr {
         object_ptr res{ init };
-        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_coll->fresh_seq()); !is_nil(it); it = it->next_in_place())
         {
+          assert(it);
           res = dynamic_call(f, res, it->first());
           if(res->type == object_type::reduced)
           {
@@ -1116,7 +1124,7 @@ namespace jank::runtime
 
         if constexpr(behavior::chunkable<T>)
         {
-          return typed_o->chunked_next() ?: obj::nil::nil_const();
+          return typed_o->chunked_next();
         }
         {
           throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
@@ -1178,8 +1186,9 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll) -> object_ptr {
         native_vector<object_ptr> vec;
-        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_coll->fresh_seq()); !is_nil(it); it = it->next_in_place())
         {
+          assert(it);
           vec.push_back(it->first());
         }
 
@@ -1206,8 +1215,9 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll) -> object_ptr {
         native_vector<object_ptr> vec;
-        for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_coll->fresh_seq()); !is_nil(it); it = it->next_in_place())
         {
+          assert(it);
           vec.push_back(it->first());
         }
 

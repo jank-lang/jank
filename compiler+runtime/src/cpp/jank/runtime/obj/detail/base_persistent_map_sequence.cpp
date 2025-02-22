@@ -14,17 +14,18 @@ namespace jank::runtime::obj::detail
     assert(begin != end);
   }
 
-  // FIXME this looks wrong
   template <typename PT, typename IT>
   native_bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
   {
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it != obj::nil::nil_const();
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          assert(it);
+          assert(seq);
+          if(seq == obj::nil::nil_const() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
@@ -132,7 +133,7 @@ namespace jank::runtime::obj::detail
 
     if(n == end)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
 
     return make_box<PT>(coll, n, end);
@@ -145,7 +146,7 @@ namespace jank::runtime::obj::detail
 
     if(begin == end)
     {
-      return nullptr;
+      return obj::nil::nil_const();
     }
 
     return static_cast<PT *>(this);
