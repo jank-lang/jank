@@ -119,7 +119,8 @@ namespace jank::runtime::obj
   native_vector_sequence_ptr native_vector_sequence::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<native_vector_sequence>(data, index));
+    auto ret(fresh_seq());
+    assert(ret);
     ret->meta = meta;
     return ret;
   }

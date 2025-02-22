@@ -267,7 +267,7 @@ namespace jank::runtime::obj
     };
 
     for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y)));
-        it != nullptr;
+        it != nullptr && it != nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -277,7 +277,7 @@ namespace jank::runtime::obj
     }
 
     for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x)));
-        it != nullptr;
+        it != nullptr && it != nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
