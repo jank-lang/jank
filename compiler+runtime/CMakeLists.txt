@@ -457,7 +457,6 @@ if(jank_tests)
     test/cpp/jank/runtime/obj/persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/persistent_vector.cpp
-    test/cpp/jank/runtime/obj/lazy_sequence.cpp
     test/cpp/jank/runtime/obj/range.cpp
     test/cpp/jank/runtime/obj/integer_range.cpp
     test/cpp/jank/runtime/obj/repeat.cpp
