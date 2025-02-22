@@ -9,10 +9,9 @@ namespace jank::runtime::obj
 {
   cons::cons(object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
     assert(head);
-    assert(tail);
   }
 
   cons_ptr cons::seq() const
@@ -32,9 +31,9 @@ namespace jank::runtime::obj
 
   object_ptr cons::next() const
   {
-    if(tail == nil::nil_const())
+    if(!tail)
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return runtime::seq(tail);
@@ -42,9 +41,9 @@ namespace jank::runtime::obj
 
   cons_ptr cons::next_in_place()
   {
-    if(tail == nil::nil_const())
+    if(!tail)
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     visit_object(
@@ -55,6 +54,10 @@ namespace jank::runtime::obj
         {
           head = typed_tail->first();
           tail = typed_tail->next();
+          if(tail == nil::nil_const())
+          {
+            tail = nullptr;
+          }
         }
         else
         {
@@ -71,17 +74,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nil::nil_const();
+        for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          assert(it);
-          assert(seq);
-          if(seq == nil::nil_const() || !runtime::equal(it->first(), seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nil::nil_const();
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

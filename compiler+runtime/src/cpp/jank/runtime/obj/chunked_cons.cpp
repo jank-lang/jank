@@ -11,19 +11,17 @@ namespace jank::runtime::obj
 {
   chunked_cons::chunked_cons(object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
     assert(head);
-    assert(tail);
   }
 
   chunked_cons::chunked_cons(object_ptr const meta, object_ptr const head, object_ptr const tail)
     : head{ head }
-    , tail{ tail }
+    , tail{ tail == nil::nil_const() ? nullptr : tail }
     , meta{ meta }
   {
     assert(head);
-    assert(tail);
     assert(meta);
   }
 
@@ -81,9 +79,9 @@ namespace jank::runtime::obj
 
   static chunked_cons_ptr next_in_place_non_chunked(chunked_cons_ptr const o)
   {
-    if(o->tail == nil::nil_const())
+    if(!o->tail)
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return visit_object(
@@ -94,6 +92,10 @@ namespace jank::runtime::obj
         {
           o->head = typed_tail->first();
           o->tail = typed_tail->next();
+          if(o->tail == nil::nil_const())
+          {
+            o->tail = nullptr;
+          }
           return o;
         }
         else
@@ -157,16 +159,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nil::nil_const();
+        for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          assert(it);
-          if(seq == nil::nil_const() || !runtime::equal(it->first(), seq->first()))
+          if(seq == nullptr || !runtime::equal(it, seq->first()))
           {
             return false;
           }
         }
-        return seq == nil::nil_const();
+        return seq == nullptr;
       },
       []() { return false; },
       &o);
