@@ -11,9 +11,9 @@ namespace jank::runtime
 
     native_box() = default;
 
-    //native_box(std::nullptr_t)
-    //{
-    //}
+    native_box(std::nullptr_t)
+    {
+    }
 
     native_box(std::remove_const_t<value_type> * const data)
       : data{ data }
@@ -49,20 +49,20 @@ namespace jank::runtime
       return *data;
     }
 
-    //native_bool operator==(std::nullptr_t) const
-    //{
-    //  return data == nullptr;
-    //}
+    native_bool operator==(std::nullptr_t) const
+    {
+      return data == nullptr;
+    }
 
     native_bool operator==(native_box const &rhs) const
     {
       return data == rhs.data;
     }
 
-    //native_bool operator!=(std::nullptr_t) const
-    //{
-    //  return data != nullptr;
-    //}
+    native_bool operator!=(std::nullptr_t) const
+    {
+      return data != nullptr;
+    }
 
     native_bool operator!=(native_box const &rhs) const
     {
@@ -104,9 +104,9 @@ namespace jank::runtime
 
     native_box() = default;
 
-    //native_box(std::nullptr_t)
-    //{
-    //}
+    native_box(std::nullptr_t)
+    {
+    }
 
     native_box(value_type * const data)
       : data{ data }
@@ -156,10 +156,10 @@ namespace jank::runtime
       return *data;
     }
 
-    //native_bool operator==(std::nullptr_t) const
-    //{
-    //  return data == nullptr;
-    //}
+    native_bool operator==(std::nullptr_t) const
+    {
+      return data == nullptr;
+    }
 
     native_bool operator==(native_box const &rhs) const
     {
@@ -180,10 +180,10 @@ namespace jank::runtime
       return data == &rhs->base;
     }
 
-    //native_bool operator!=(std::nullptr_t) const
-    //{
-    //  return data != nullptr;
-    //}
+    native_bool operator!=(std::nullptr_t) const
+    {
+      return data != nullptr;
+    }
 
     native_bool operator!=(native_box const &rhs) const
     {

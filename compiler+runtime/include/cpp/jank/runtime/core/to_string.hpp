@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::runtime
 {

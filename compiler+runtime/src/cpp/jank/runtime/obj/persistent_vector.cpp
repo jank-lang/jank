@@ -98,7 +98,8 @@ namespace jank::runtime::obj
           if constexpr(behavior::sequential<T>)
           {
             size_t i{};
-            for(auto e(typed_o->fresh_seq()); e != nil::nil_const() && i < data.size(); e = e->next_in_place(), ++i)
+            auto e(typed_o->fresh_seq())
+            for(; e != nil::nil_const() && i < data.size(); e = e->next_in_place(), ++i)
             {
               assert(e);
               if(!runtime::equal(data[i], e->first()))
