@@ -79,7 +79,7 @@ namespace jank::runtime::obj
 
     if(n == str->data.size())
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return make_box<persistent_string_sequence>(str, n);
@@ -91,7 +91,7 @@ namespace jank::runtime::obj
 
     if(index == str->data.size())
     {
-      return nil::nil_const();
+      return nullptr;
     }
 
     return this;

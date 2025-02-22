@@ -192,6 +192,10 @@ namespace jank::runtime::obj
   range_ptr range::chunked_next() const
   {
     force_chunk();
+    if(!chunk_next)
+    {
+      return nullptr;
+    }
     return chunk_next;
   }
 
@@ -206,17 +210,15 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nil::nil_const();
+        for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          assert(it);
-          assert(seq);
-          if(seq == nil::nil_const() || !runtime::equal(it->first(), seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nil::nil_const();
+        return seq == nullptr;
       },
       []() { return false; },
       &o);
@@ -245,7 +247,8 @@ namespace jank::runtime::obj
   range_ptr range::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<range>(start, end, step, bounds_check));
+    auto ret(fresh_seq());
+    assert(ret);
     ret->meta = meta;
     return ret;
   }

@@ -163,7 +163,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      return nil::nil_const();
+      return nullptr;
     }
     return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
   }

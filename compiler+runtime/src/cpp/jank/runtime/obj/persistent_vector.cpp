@@ -34,8 +34,7 @@ namespace jank::runtime::obj
 
   persistent_vector_ptr persistent_vector::create(object_ptr const s)
   {
-    assert(s);
-    if(s == nil::nil_const())
+    if(s == nullptr)
     {
       return make_box<persistent_vector>();
     }
@@ -47,9 +46,8 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i != nil::nil_const(); i = runtime::next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
           {
-            assert(i);
             v.push_back(i->first());
           }
           return make_box<persistent_vector>(v.persistent());
@@ -99,15 +97,14 @@ namespace jank::runtime::obj
           {
             size_t i{};
             auto e(typed_o->fresh_seq())
-            for(; e != nil::nil_const() && i < data.size(); e = e->next_in_place(), ++i)
+            for(; e != nullptr && i < data.size(); e = e->next_in_place(), ++i)
             {
-              assert(e);
               if(!runtime::equal(data[i], e->first()))
               {
                 return false;
               }
             }
-            return e == nil::nil_const() && i == data.size();
+            return e == nullptr && i == data.size();
           }
           else
           {
@@ -188,7 +185,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      return nil::nil_const();
+      return nullptr;
     }
     return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
   }

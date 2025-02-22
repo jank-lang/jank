@@ -52,13 +52,11 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_map>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_map::value_type {
         runtime::detail::native_transient_hash_map transient;
-        for(auto it(typed_seq->fresh_seq()); it != nil::nil_const(); it = runtime::next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
         {
-          assert(it);
           auto const key(it->first());
           it = runtime::next_in_place(it);
-          assert(it);
-          if(it == nil::nil_const())
+          if(!it)
           {
             throw std::runtime_error{ fmt::format("Odd number of elements: {}",
                                                   typed_seq->to_string()) };

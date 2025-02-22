@@ -40,13 +40,11 @@ namespace jank::runtime::obj
         if constexpr(behavior::seqable<T>)
         {
           runtime::detail::native_transient_sorted_map transient;
-          for(auto it(typed_seq->fresh_seq()); it != nil::nil_const(); it = runtime::next_in_place(it))
+          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
           {
-            assert(it);
             auto const key(it->first());
             it = runtime::next_in_place(it);
-            assert(it);
-            if(it == nil::nil_const())
+            if(!it)
             {
               throw std::runtime_error{ fmt::format("Odd number of elements: {}",
                                                     typed_seq->to_string()) };
