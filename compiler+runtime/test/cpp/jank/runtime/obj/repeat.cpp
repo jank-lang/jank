@@ -26,11 +26,10 @@ namespace jank::runtime::obj
       CHECK(
         !equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(0), make_box(1))));
 
-      //TODO test https://github.com/jank-lang/jank/issues/251 , https://github.com/jank-lang/jank/issues/250
-      //clojure.core=> (repeat 0 0)
-      //()
-      //clojure.core=> (seq (repeat 0 0))
-      //nil
+      CHECK(
+        equal(repeat::create(make_box(0), make_box(0)), persistent_list::empty()));
+      CHECK(
+        equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
     }
     TEST_CASE("seq")
     {
