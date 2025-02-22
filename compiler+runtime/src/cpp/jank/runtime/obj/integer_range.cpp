@@ -134,17 +134,15 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != obj::nil::nil_const();
+        for(auto it(fresh_seq()); it != nullptr;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          assert(it);
-          assert(seq);
-          if(seq == obj::nil::nil_const() || !runtime::equal(it->first(), seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == obj::nil::nil_const();
+        return seq == nullptr;
       },
       []() { return false; },
       &o);
