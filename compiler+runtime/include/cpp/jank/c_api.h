@@ -255,6 +255,10 @@ extern "C"
   jank_native_bool jank_truthy(jank_object_ptr o);
   jank_native_bool jank_equal(jank_object_ptr l, jank_object_ptr r);
   jank_native_hash jank_to_hash(jank_object_ptr o);
+  jank_native_integer jank_to_integer(jank_object_ptr o);
+  jank_native_integer jank_shift_mask_case_integer(jank_object_ptr o,
+                                                   jank_native_integer shift,
+                                                   jank_native_integer mask);
 
   void jank_set_meta(jank_object_ptr o, jank_object_ptr meta);
 

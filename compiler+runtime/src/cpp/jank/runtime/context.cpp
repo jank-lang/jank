@@ -8,7 +8,6 @@
 #include <llvm/TargetParser/Host.h>
 
 #include <fmt/compile.h>
-#include <regex>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
@@ -23,6 +22,7 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -41,10 +41,18 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , output_dir{ opts.compilation_path }
+    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
+                                               opts.include_dirs,
+                                               opts.define_macros) }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
+
+    auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
+    current_file_var = core->intern_var(file_sym);
+    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->dynamic.store(true);
+
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
     current_ns_var = core->intern_var(ns_sym);
     current_ns_var->bind_root(core);
@@ -146,6 +154,11 @@ namespace jank::runtime
         fmt::format("unable to map file {} due to error: {}", path, file.expect_err())
       };
     }
+
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_file_var, make_box(path))) };
+
     return eval_string({ file.expect_ok().head, file.expect_ok().size });
   }
 
@@ -285,7 +298,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
     boost::filesystem::path const module_path{
-      fmt::format("{}/{}.o", output_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
     };
     boost::filesystem::create_directories(module_path.parent_path());
 
@@ -382,6 +395,11 @@ namespace jank::runtime
 
   ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
   {
+    if(!sym->ns.empty())
+    {
+      throw std::runtime_error{ fmt::format("Can't intern ns. Sym is qualified: {}",
+                                            sym->to_string()) };
+    }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
@@ -448,14 +466,14 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       return err(
-        fmt::format("can't intern var; sym isn't qualified: {}", qualified_sym->to_string()));
+        fmt::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
     }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     {
-      return err(fmt::format("can't intern var; namespace doesn't exist: {}", qualified_sym->ns));
+      return err(fmt::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
     }
 
     return ok(found_ns->second->intern_var(qualified_sym));
@@ -472,10 +490,10 @@ namespace jank::runtime
       /* The ns will be an ns alias. */
       if(!ns.empty())
       {
-        auto const resolved(resolve_ns(make_box<obj::symbol>(ns)));
+        auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve ns for keyword: {}", ns));
+          return err(fmt::format("Unable to resolve namespace alias '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }

@@ -2,7 +2,11 @@ name: "Build"
 
 on:
   pull_request:
+    types:
+      - review_requested
   push:
+    branches:
+      - main
 
 jobs:
   test:
@@ -51,7 +55,8 @@ jobs:
       JANK_SANITIZE: ${{ matrix.sanitize }}
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
-    timeout-minutes: 30
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:

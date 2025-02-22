@@ -289,10 +289,10 @@ namespace jank::runtime::module
     native_transient_string paths{ ps };
     paths += fmt::format(":{}", (jank_path / "classes").string());
     paths += fmt::format(":{}", (jank_path / "../src/jank").string());
-    paths += fmt::format(":{}", rt_ctx.output_dir);
+    paths += fmt::format(":{}", rt_ctx.binary_cache_dir);
     this->paths = paths;
 
-    //fmt::println("module paths: {}", paths);
+    // fmt::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };

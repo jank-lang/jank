@@ -930,23 +930,27 @@ namespace jank::runtime
 
   native_persistent_string str(object_ptr const o, object_ptr const args)
   {
+    util::string_builder buff;
+    buff.reserve(16);
+    if(!is_nil(o))
+    {
+      runtime::to_string(o, buff);
+    }
     return visit_seqable(
-      [=](auto const typed_args) -> native_persistent_string {
-        util::string_builder buff;
-        buff.reserve(16);
-        runtime::to_string(o, buff);
-        if(0 < sequence_length(typed_args))
+      [](auto const typed_args, util::string_builder &buff) -> native_persistent_string {
+        for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
-          auto const fresh(typed_args->fresh_seq());
-          runtime::to_string(fresh->first(), buff);
-          for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+          auto const fst(it->first());
+          if(is_nil(fst))
           {
-            runtime::to_string(it->first(), buff);
+            continue;
           }
+          runtime::to_string(fst, buff);
         }
         return buff.release();
       },
-      args);
+      args,
+      buff);
   }
 
   obj::persistent_list_ptr list(object_ptr const s)

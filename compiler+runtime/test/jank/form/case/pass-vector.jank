@@ -1,0 +1,9 @@
+(assert
+ (=
+  (case [:key1 :key2]
+    [:key1 :key2] :matched
+    :key          :not-matched
+    :default)
+  :matched))
+
+:success

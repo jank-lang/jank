@@ -1,0 +1,7 @@
+(let [x (case 1
+          1       1
+          2       2
+          :default)]
+  (assert (= (+ x 1) 2)))
+
+:success

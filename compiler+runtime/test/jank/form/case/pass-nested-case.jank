@@ -1,0 +1,10 @@
+(assert
+ (=
+  (case 1
+    1 (case 2
+        2 :inner-match
+        :inner-default)
+    :outer-default)
+  :inner-match))
+
+:success
