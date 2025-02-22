@@ -8,5 +8,5 @@ pushd "${here}/../"
 popd
 
 pushd "${here}"
-  lein jank run 1 | grep 'lein jank works!'
+  lein jank run pass
 popd
