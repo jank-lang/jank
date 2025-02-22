@@ -11,12 +11,12 @@
 
 namespace jank::runtime
 {
-  ///* TODO: Constexpr these. */
-  //[[gnu::always_inline, gnu::flatten, gnu::hot]]
-  //inline auto make_box(std::nullptr_t const &)
-  //{
-  //  return runtime::obj::nil::nil_const();
-  //}
+  /* TODO: Constexpr these. */
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  inline auto make_box(std::nullptr_t const &)
+  {
+    return runtime::obj::nil::nil_const();
+  }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_bool const b)
