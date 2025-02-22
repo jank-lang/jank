@@ -21,19 +21,20 @@ namespace jank::runtime::obj
 
     using bounds_check_t = native_bool (*)(object_ptr, object_ptr);
 
-    //range() = default;
-    //range(range &&) noexcept = default;
-    //range(range const &) = default;
-    //range(object_ptr end);
-    //range(object_ptr start, object_ptr end);
-    //range(object_ptr start, object_ptr end, object_ptr step);
-    //range(object_ptr start, object_ptr end, object_ptr step, bounds_check_t bounds_check);
-    //range(object_ptr start,
-    //      object_ptr end,
-    //      object_ptr step,
-    //      bounds_check_t bounds_check,
-    //      obj::array_chunk_ptr chunk,
-    //      range_ptr chunk_next);
+    /* Constructors are only to be used in range.cpp. Prefer range::create. */
+    range() = default;
+    range(range &&) noexcept = default;
+    range(range const &) = default;
+    range(object_ptr end);
+    range(object_ptr start, object_ptr end);
+    range(object_ptr start, object_ptr end, object_ptr step);
+    range(object_ptr start, object_ptr end, object_ptr step, bounds_check_t bounds_check);
+    range(object_ptr start,
+          object_ptr end,
+          object_ptr step,
+          bounds_check_t bounds_check,
+          obj::array_chunk_ptr chunk,
+          range_ptr chunk_next);
 
     static object_ptr create(object_ptr end);
     static object_ptr create(object_ptr start, object_ptr end);

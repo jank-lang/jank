@@ -20,7 +20,6 @@ namespace jank::runtime::obj
     return lte(val, end);
   }
 
-  /* Never use constructors outside of this file. Use range::create. */
   range::range(object_ptr const end)
     : start{ make_box(0) }
     , end{ end }
