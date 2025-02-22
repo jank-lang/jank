@@ -61,17 +61,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != obj::nil::nil_const();
+        for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          assert(it);
-          assert(seq);
-          if(seq == obj::nil::nil_const() || !runtime::equal(it->first(), seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == obj::nil::nil_const();
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

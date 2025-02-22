@@ -108,7 +108,7 @@ namespace jank::runtime::obj
   {
     if(count() <= 1)
     {
-      return obj::nil::nil_const();
+      return nullptr;
     }
     return make_box<integer_range>(make_box<integer>(add(start, step)), end, step, bounds_check);
   }
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
   {
     if(count() <= 1)
     {
-      return obj::nil::nil_const();
+      return nullptr;
     }
     start = make_box<integer>(add(start, step));
     return this;
