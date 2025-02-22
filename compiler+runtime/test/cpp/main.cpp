@@ -14,6 +14,7 @@
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/error/report.hpp>
 #include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
@@ -67,9 +68,9 @@ catch(jank::native_persistent_string const &s)
   fmt::println("Exception: {}", s);
   return 1;
 }
-catch(jank::read::error const &e)
+catch(jank::error_ptr const &e)
 {
-  fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+  jank::error::report(e);
   return 1;
 }
 catch(...)

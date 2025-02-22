@@ -1,0 +1,4 @@
+(case 1
+  (1 2) :one-or-two
+  (2 3) :two-or-three
+  :default)

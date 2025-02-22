@@ -4,7 +4,6 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
-#include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
@@ -958,6 +957,76 @@ namespace jank::codegen
     return call;
   }
 
+  llvm::Value *llvm_processor::gen(expr::case_<expression> const &expr,
+                                   expr::function_arity<expression> const &arity)
+  {
+    auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+    auto const position{ expr.position };
+    auto const value(gen(expr.value_expr, arity));
+    auto const is_return{ position == expression_position::tail };
+    auto const integer_fn_type(llvm::FunctionType::get(
+      ctx->builder->getInt64Ty(),
+      { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+      false));
+    auto const fn(
+      ctx->module->getOrInsertFunction("jank_shift_mask_case_integer", integer_fn_type));
+    llvm::SmallVector<llvm::Value *, 3> const args{
+      value,
+      llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.shift),
+      llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.mask)
+    };
+    auto const call(ctx->builder->CreateCall(fn, args));
+    auto const switch_val(ctx->builder->CreateIntCast(call, ctx->builder->getInt64Ty(), true));
+    auto const default_block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, "default", current_fn) };
+    auto const switch_{ ctx->builder->CreateSwitch(switch_val, default_block, expr.keys.size()) };
+    auto const merge_block{ is_return
+                              ? nullptr
+                              : llvm::BasicBlock::Create(*ctx->llvm_ctx, "merge", current_fn) };
+
+    ctx->builder->SetInsertPoint(default_block);
+    auto const default_val{ gen(expr.default_expr, arity) };
+    if(!is_return)
+    {
+      ctx->builder->CreateBr(merge_block);
+    }
+    auto const default_block_exit{ ctx->builder->GetInsertBlock() };
+
+    llvm::SmallVector<llvm::BasicBlock *> case_blocks;
+    llvm::SmallVector<llvm::Value *> case_values;
+    for(size_t block_counter{}; block_counter < expr.keys.size(); ++block_counter)
+    {
+      auto const block_name{ fmt::format("case_{}", block_counter) };
+      auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn) };
+      switch_->addCase(
+        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr.keys[block_counter]),
+        block);
+
+      ctx->builder->SetInsertPoint(block);
+      auto const case_val{ gen(expr.exprs[block_counter], arity) };
+      case_values.push_back(case_val);
+      if(!is_return)
+      {
+        ctx->builder->CreateBr(merge_block);
+      }
+      case_blocks.push_back(ctx->builder->GetInsertBlock());
+    }
+
+    if(!is_return)
+    {
+      ctx->builder->SetInsertPoint(merge_block);
+      auto const phi{
+        ctx->builder->CreatePHI(ctx->builder->getPtrTy(), expr.keys.size() + 1, "switch_tmp")
+      };
+      phi->addIncoming(default_val, default_block_exit);
+      for(size_t i{}; i < case_blocks.size(); ++i)
+      {
+        phi->addIncoming(case_values[i], case_blocks[i]);
+      }
+      return phi;
+    }
+    return nullptr;
+  }
+
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));
@@ -1257,7 +1326,7 @@ namespace jank::codegen
         auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
         auto const meta(gen_global_from_read_string(s->meta.unwrap()));
-        ctx->builder->CreateCall(set_meta_fn, { global, meta });
+        ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
       if(prev_block == ctx->global_ctor_block)
@@ -1388,8 +1457,11 @@ namespace jank::codegen
               auto const set_meta_fn(
                 ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
+              /* TODO: This shouldn't be its own global; we don't need to reference it later. */
               auto const meta(gen_global_from_read_string(typed_o->meta.unwrap()));
-              ctx->builder->CreateCall(set_meta_fn, { global, meta });
+              auto const meta_name(fmt::format("{}_meta", name));
+              meta->setName(meta_name);
+              ctx->builder->CreateCall(set_meta_fn, { call, meta });
             }
           }
         },

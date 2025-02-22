@@ -43,6 +43,18 @@ namespace jank::runtime
     return new_var;
   }
 
+  result<void, native_persistent_string> ns::unmap(obj::symbol_ptr const &sym)
+  {
+    if(!sym->ns.empty())
+    {
+      return err(fmt::format("Can't unintern namespace-qualified symbol: {}", sym->to_string()));
+    }
+
+    auto locked_vars(vars.wlock());
+    *locked_vars = make_box<obj::persistent_hash_map>((*locked_vars)->data.erase(sym));
+    return ok();
+  }
+
   option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
@@ -60,17 +72,32 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string> ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns)
+  result<void, native_persistent_string>
+  ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
-    if(found && expect_object<var>(*found) != ns)
+    if(found)
     {
-      return err(fmt::format("Alias already bound to a different ns: {}", sym->to_string()));
+      auto const existing(expect_object<ns>(*found));
+      if(existing != nsp)
+      {
+        return err(fmt::format("{} already aliases {} in ns {}, cannot change to {}",
+                               sym->to_string(),
+                               existing->to_string(),
+                               to_string(),
+                               nsp->to_string()));
+      }
+      return ok();
     }
-
-    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, ns));
+    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.set(sym, nsp));
     return ok();
+  }
+
+  void ns::remove_alias(obj::symbol_ptr const &sym)
+  {
+    auto locked_aliases(aliases.wlock());
+    *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
   }
 
   option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const

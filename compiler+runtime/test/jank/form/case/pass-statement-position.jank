@@ -1,0 +1,9 @@
+(let [xfn (fn []
+            (case 3/4
+              4/3 :four-thirds
+              3/4 (def ret :success)
+              :default)
+            :arbitrary-value)]
+  (assert (= (xfn) :arbitrary-value)))
+
+ret
