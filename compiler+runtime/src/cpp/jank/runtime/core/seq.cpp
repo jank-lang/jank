@@ -397,7 +397,6 @@ namespace jank::runtime
       s);
   }
 
-  /* Returns nullptr or a non-empty seq. */
   object_ptr next_in_place(object_ptr const s)
   {
     return visit_object(
