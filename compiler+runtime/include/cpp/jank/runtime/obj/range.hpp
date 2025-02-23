@@ -21,6 +21,7 @@ namespace jank::runtime::obj
 
     using bounds_check_t = native_bool (*)(object_ptr, object_ptr);
 
+    /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
     range(range &&) noexcept = default;
     range(range const &) = default;

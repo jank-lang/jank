@@ -19,6 +19,7 @@ namespace jank::runtime::obj
 
     using bounds_check_t = native_bool (*)(integer_ptr, integer_ptr);
 
+    /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
     integer_range() = default;
     integer_range(integer_range &&) noexcept = default;
     integer_range(integer_range const &) = default;

@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     assert(size > 0);
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool native_array_sequence::equal(object const &o) const
   {
     return runtime::equal(o, arr + index, arr + size);

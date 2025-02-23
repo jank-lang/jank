@@ -32,7 +32,7 @@ namespace jank::runtime::obj
   {
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool native_vector_sequence::equal(object const &o) const
   {
     return runtime::equal(o, data.begin(), data.end());
@@ -120,6 +120,7 @@ namespace jank::runtime::obj
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());
+    assert(ret);
     ret->meta = meta;
     return ret;
   }

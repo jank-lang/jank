@@ -23,12 +23,12 @@ namespace jank::runtime::obj::detail
         for(auto it(fresh_seq()); it != nullptr;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return true;
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

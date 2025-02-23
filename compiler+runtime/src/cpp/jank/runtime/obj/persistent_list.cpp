@@ -86,11 +86,7 @@ namespace jank::runtime::obj
 
   persistent_list_sequence_ptr persistent_list::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
+    return fresh_seq();
   }
 
   persistent_list_sequence_ptr persistent_list::fresh_seq() const

@@ -16,6 +16,7 @@ namespace jank::runtime::obj
     : value{ value }
     , count{ count }
   {
+    assert(0 < to_int(count));
   }
 
   object_ptr repeat::create(object_ptr const value)
@@ -53,7 +54,7 @@ namespace jank::runtime::obj
     {
       return this;
     }
-    if(lt(count, make_box(1)))
+    if(lte(count, make_box(1)))
     {
       return nullptr;
     }
@@ -88,12 +89,15 @@ namespace jank::runtime::obj
         for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          assert(it != nil::nil_const());
+          assert(seq != nil::nil_const());
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return true;
+        assert(seq != nil::nil_const());
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

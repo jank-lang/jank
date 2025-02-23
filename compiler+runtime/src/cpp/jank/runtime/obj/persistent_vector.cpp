@@ -97,17 +97,11 @@ namespace jank::runtime::obj
           {
             size_t i{};
             auto e(typed_o->fresh_seq());
-            for(; e != nullptr; e = e->next_in_place())
+            for(; e != nullptr && i < data.size(); e = e->next_in_place(), ++i)
             {
               if(!runtime::equal(data[i], e->first()))
               {
                 return false;
-              }
-
-              if(++i == data.size())
-              {
-                e = e->next_in_place();
-                break;
               }
             }
             return e == nullptr && i == data.size();
@@ -184,11 +178,7 @@ namespace jank::runtime::obj
 
   persistent_vector_sequence_ptr persistent_vector::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
+    return fresh_seq();
   }
 
   persistent_vector_sequence_ptr persistent_vector::fresh_seq() const

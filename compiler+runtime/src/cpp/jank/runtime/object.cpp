@@ -38,9 +38,10 @@ namespace std
     {
       return !rhs;
     }
-    else if(!rhs)
+    if(!rhs)
     {
-      return !lhs;
+      assert(lhs);
+      return false;
     }
 
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
