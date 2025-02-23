@@ -92,7 +92,6 @@ namespace jank::runtime::obj
 
   native_hash iterator::to_hash() const
   {
-    /* Runs forever. */
     return hash::ordered(&base);
   }
 

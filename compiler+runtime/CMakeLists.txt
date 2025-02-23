@@ -449,6 +449,7 @@ if(jank_tests)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
+    test/cpp/jank/runtime/behavior/callable.cpp
     test/cpp/jank/runtime/core.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
