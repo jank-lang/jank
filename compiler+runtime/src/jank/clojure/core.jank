@@ -123,8 +123,8 @@
   "Returns a seq of the items after the first. Calls seq on its
    argument.  If there are no more items, returns nil."
   clojure.core-native/next)
-(def next-in-place!
-  clojure.core-native/next-in-place!)
+(def next-in-place
+  clojure.core-native/next-in-place)
 (def nnext
   "Same as (next (next x))"
   (fn* nnext [o]
