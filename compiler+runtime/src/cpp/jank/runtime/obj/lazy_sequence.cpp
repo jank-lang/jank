@@ -56,7 +56,6 @@ namespace jank::runtime::obj
     if(sequence)
     {
       auto const n(runtime::next(sequence));
-      assert(n);
       if(n == nil::nil_const())
       {
         return nullptr;
@@ -70,7 +69,6 @@ namespace jank::runtime::obj
   {
     assert(sequence);
     auto const n(runtime::next_in_place(sequence));
-    assert(n);
     if(n == nil::nil_const())
     {
       return nullptr;
