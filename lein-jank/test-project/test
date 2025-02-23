@@ -8,5 +8,16 @@ pushd "${here}/../"
 popd
 
 pushd "${here}"
-  lein jank run 1 | grep 'lein jank works!'
+  if ! lein jank run pass; then
+    echo "Bad exit on 'lein jank run pass'"
+    exit 1
+  fi
+  if lein jank run fail; then
+    echo "Bad exit on 'lein jank run pass'"
+    exit 1
+  fi
+  if lein jank bad-command; then
+    echo "Bad exit on 'lein jank bad-command'"
+    exit 1
+  fi
 popd

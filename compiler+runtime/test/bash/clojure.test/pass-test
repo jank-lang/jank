@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-jank --module-path src run-main clojure-test.self-test | grep ':successfully-finished-clojure-test-self-test'
-jank --module-path src run-main clojure-test.example-test-runner | grep ':successfully-ran-example-test-runner'
+jank --module-path src run-main clojure-test.self-test
+jank --module-path src run-main clojure-test.example-test-runner

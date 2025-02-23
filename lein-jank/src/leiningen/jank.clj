@@ -9,8 +9,7 @@
 
 (defn shell-out! [project classpath command & args]
   (apply ps/shell
-         {:continue true
-          :dir (:root project)
+         {:dir (:root project)
           :extra-env (System/getenv)}
          "jank"
          command
@@ -27,7 +26,8 @@
                     (string/join File/pathSeparatorChar))]
     (if (:main project)
       (apply shell-out! project cp-str "run-main" (:main project) args)
-      (lmain/warn "No :main entrypoint for project"))))
+      (do (lmain/warn "No :main entrypoint for project")
+          (lmain/exit 1)))))
 
 (defn repl!
   "Starts a terminal REPL in your :main ns"
@@ -37,7 +37,8 @@
                     (string/join File/pathSeparatorChar))]
     (if (:main project)
       (apply shell-out! project cp-str "repl" (:main project) args)
-      (lmain/warn "No :main entrypoint for project"))))
+      (do (lmain/warn "No :main entrypoint for project")
+          (lmain/exit 1)))))
 
 (declare print-help!)
 
@@ -59,4 +60,5 @@
     (apply handler project args)
     (do
       (lmain/warn "Invalid subcommand!")
-      (print-help!))))
+      (print-help!)
+      (lmain/exit 1))))

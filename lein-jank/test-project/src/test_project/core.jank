@@ -1,5 +1,6 @@
 (ns test-project.core)
 
 (defn -main [x]
-  (when (= "1" x)
-    (println "lein jank works!")))
+  (case x
+    "pass" 0
+    "fail" (throw "failed")))

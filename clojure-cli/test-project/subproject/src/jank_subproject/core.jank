@@ -1,5 +1,6 @@
 (ns jank-subproject.core)
 
 (defn -main [x]
-  (when (= "1" x)
-    (println "jank with clojure cli works!")))
+  (case x
+    "pass" 0
+    "fail" (throw "fail")))

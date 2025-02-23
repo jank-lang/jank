@@ -131,5 +131,6 @@
   (when (seq namespaces)
     (apply require namespaces)
     ;; TODO (t/run-all-tests) => Exception: "TODO: port all-ns"
-    (assert (t/successful? (apply t/run-tests namespaces))))
+    (when-not (t/successful? (apply t/run-tests namespaces))
+      (throw "failed")))
   (println :clojure-test-suite-successful))

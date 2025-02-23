@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-./run 1 | grep 'jank with clojure cli works!'
+if ! ./run pass; then
+  echo "Bad exit code on ./run pass"
+  exit 1
+fi
+
+if ./run fail; then
+  echo "Bad exit code on ./run fail"
+  exit 1
+fi
