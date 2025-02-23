@@ -12,9 +12,12 @@ pushd "${here}"
     echo "Bad exit on 'lein jank run pass'"
     exit 1
   fi
-  # FIXME !!!
   if lein jank run fail; then
     echo "Bad exit on 'lein jank run pass'"
+    exit 1
+  fi
+  if lein jank bad-command; then
+    echo "Bad exit on 'lein jank bad-command'"
     exit 1
   fi
 popd
