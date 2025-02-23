@@ -1017,7 +1017,7 @@ namespace jank::runtime
                 return false;
               }
             }
-            return !r_it;
+            return r_it == nullptr;
           },
           r,
           typed_l);
