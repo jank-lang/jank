@@ -157,9 +157,8 @@ namespace std
       {
         return !rhs;
       }
-      if(!rhs)
+      else if(!rhs)
       {
-        assert(lhs);
         return false;
       }
       return lhs->equal(*rhs);
