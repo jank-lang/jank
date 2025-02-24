@@ -44,6 +44,10 @@ namespace jank::runtime::obj
 
   repeat_ptr repeat::fresh_seq() const
   {
+    if(runtime::equal(count, make_box(infinite)))
+    {
+      return this;
+    }
     return make_box<repeat>(count, value);
   }
 

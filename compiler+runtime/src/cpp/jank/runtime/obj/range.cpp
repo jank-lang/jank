@@ -244,7 +244,6 @@ namespace jank::runtime::obj
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());
-    assert(ret);
     ret->meta = meta;
     return ret;
   }
