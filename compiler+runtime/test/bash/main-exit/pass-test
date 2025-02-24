@@ -1,0 +1,35 @@
+#!/usr/bin/env bb
+
+(ns jank-test-main-exit
+  (:require [babashka.process :as proc]
+            [clojure.string :as str]
+            [clojure.test :as t :refer [deftest run-test is]]))
+
+(def this-nsym (ns-name *ns*))
+
+(defn is-shell-exit [expected-code & cmd]
+  (let [{:keys [exit] :as res} (apply proc/shell {:out :string
+                                                  :err :string
+                                                  :continue true}
+                                      cmd)]
+    (is (= expected-code exit)
+        (pr-str (select-keys res [:exit :out :cmd])))
+    res))
+
+(deftest jank-exit-code-test
+  (is-shell-exit 0 "jank --module-path src run-main jank-test.successful-exit-code")
+  (is-shell-exit 1 "jank --module-path src run-main jank-test.fail-throw-exit")
+  (is-shell-exit 1 "jank --module-path src run-main jank-test.fail-uncatchable-exit")
+  (is-shell-exit 106 "jank")
+  (is-shell-exit 1 "jank run src/jank_test/throwing_script.jank")
+  (is-shell-exit 1 "jank run src/jank_test/uncatchable_script.jank")
+  (is-shell-exit 0 "jank run src/jank_test/successful_script.jank"))
+
+(defn -main []
+  (System/exit
+    (if (t/successful? (t/run-tests this-nsym))
+      0
+      1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
