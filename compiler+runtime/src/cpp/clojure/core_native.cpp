@@ -578,15 +578,20 @@ jank_object_ptr jank_load_clojure_core_native()
         return obj::boolean::false_const();
       }
 
-      for(auto it(fresh_seq(rest)); it != nullptr; it = next_in_place(it))
-      {
-        if(!is_equiv(l, first(it)))
-        {
-          return obj::boolean::false_const();
-        }
-      }
+      return visit_seqable(
+        [](auto const typed_rest, object_ptr const l) {
+          for(auto it(typed_rest->fresh_seq()); it != nullptr; it = it->next_in_place())
+          {
+            if(!is_equiv(l, it->first()))
+            {
+              return obj::boolean::false_const();
+            }
+          }
 
-      return obj::boolean::true_const();
+          return obj::boolean::true_const();
+        },
+        rest,
+        l);
     };
     intern_fn_obj("==", fn);
   }
