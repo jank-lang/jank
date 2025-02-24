@@ -245,7 +245,7 @@ namespace jank::runtime
     }
     else if(!rhs)
     {
-      return !lhs;
+      return false;
     }
 
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);

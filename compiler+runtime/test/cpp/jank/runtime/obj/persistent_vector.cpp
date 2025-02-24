@@ -63,5 +63,20 @@ namespace jank::runtime::obj
       CHECK(equal(v->get_entry(under), nil));
       CHECK(equal(v->get_entry(non_int), nil));
     }
+    TEST_CASE("equal")
+    {
+      CHECK(equal(make_box<persistent_vector>(std::in_place),
+                  make_box<persistent_vector>(std::in_place)));
+      CHECK(!equal(make_box<persistent_vector>(std::in_place),
+                   make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o'))));
+      CHECK(!equal(make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o')),
+                   make_box<persistent_vector>(std::in_place)));
+      CHECK(equal(make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o')),
+                  make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o'))));
+      CHECK(!equal(make_box<persistent_vector>(std::in_place, make_box('f')),
+                   make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o'))));
+      CHECK(!equal(make_box<persistent_vector>(std::in_place, make_box('f'), make_box('o')),
+                   make_box<persistent_vector>(std::in_place, make_box('f'))));
+    }
   }
 }
