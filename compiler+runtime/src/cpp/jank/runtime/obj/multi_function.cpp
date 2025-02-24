@@ -266,8 +266,7 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y)));
-        it != nullptr && it != nil::nil_const();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -276,8 +275,7 @@ namespace jank::runtime::obj
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x)));
-        it != nullptr && it != nil::nil_const();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != nil::nil_const();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
@@ -340,7 +338,7 @@ namespace jank::runtime::obj
     object_ptr best_value{ nil::nil_const() };
     persistent_vector_sequence_ptr best_entry{};
 
-    for(auto it(fresh_seq(method_table)); it != nullptr; it = it->next_in_place())
+    for(auto it(method_table->fresh_seq()); it != nullptr; it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const entry_key(entry->seq()->first());

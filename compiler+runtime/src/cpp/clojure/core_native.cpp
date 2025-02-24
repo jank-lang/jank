@@ -578,8 +578,7 @@ jank_object_ptr jank_load_clojure_core_native()
         return obj::boolean::false_const();
       }
 
-      for(auto it(fresh_seq(rest)); it != nullptr && it != obj::nil::nil_const();
-          it = next_in_place(it))
+      for(auto it(fresh_seq(rest)); it != obj::nil::nil_const(); it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
