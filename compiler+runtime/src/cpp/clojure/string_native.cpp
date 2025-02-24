@@ -1,11 +1,12 @@
 #include <boost/algorithm/string.hpp>
 
-#include <jank/native_persistent_string/fmt.hpp>
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/visit.hpp>
+#include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 
 namespace clojure::string_native
 {
