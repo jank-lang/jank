@@ -578,237 +578,221 @@ jank_object_ptr jank_load_clojure_core_native()
         return obj::boolean::false_const();
       }
 
-      return visit_seqable(
-        [](auto const typed_rest, object_ptr const l) {
-          for(auto it(typed_rest->fresh_seq()); it != nullptr; it = it->next_in_place())
-          {
-            if(!is_equiv(l, it->first()))
-            {
-              return obj::boolean::false_const();
-            }
-          }
+      for(auto it(fresh_seq(rest)); it != nullptr && it != nil::nil_const(); it = next_in_place(it))
+      {
+        if(!is_equiv(l, first(it)))
+        {
+          return obj::boolean::false_const();
+        }
+      }
 
-          return obj::boolean::true_const();
+      return obj::boolean::true_const();
         },
         rest,
         l);
-    };
-    intern_fn_obj("==", fn);
-  }
+  };
+  intern_fn_obj("==", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return println(seq); };
-    intern_fn_obj("println", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+  fn->arity_1 = [](object * const seq) -> object * { return println(seq); };
+  intern_fn_obj("println", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return print(seq); };
-    intern_fn_obj("print", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+  fn->arity_1 = [](object * const seq) -> object * { return print(seq); };
+  intern_fn_obj("print", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return prn(seq); };
-    intern_fn_obj("prn", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+  fn->arity_1 = [](object * const seq) -> object * { return prn(seq); };
+  intern_fn_obj("prn", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
-    intern_fn_obj("pr", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
+  fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
+  intern_fn_obj("pr", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
-    fn->arity_0 = []() -> object * { return gensym(make_box("G__")); };
-    fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix); };
-    intern_fn_obj("gensym", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
+  fn->arity_0 = []() -> object * { return gensym(make_box("G__")); };
+  fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix); };
+  intern_fn_obj("gensym", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
-    fn->arity_2 = [](object * const atom, object * const fn) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn);
-    };
-    fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1);
-    };
-    fn->arity_4 =
-      [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1, a2);
-    };
-    fn->arity_5 = [](object * const atom,
-                     object * const fn,
-                     object * const a1,
-                     object * const a2,
-                     object * const rest) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
-    };
-    intern_fn_obj("swap!", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
+  fn->arity_2 = [](object * const atom, object * const fn) -> object * {
+    return try_object<obj::atom>(atom)->swap(fn);
+  };
+  fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
+    return try_object<obj::atom>(atom)->swap(fn, a1);
+  };
+  fn->arity_4
+    = [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
+    return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+  };
+  fn->arity_5 = [](object * const atom,
+                   object * const fn,
+                   object * const a1,
+                   object * const a2,
+                   object * const rest) -> object * {
+    return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+  };
+  intern_fn_obj("swap!", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
-    fn->arity_2 = [](object * const atom, object * const fn) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn);
-    };
-    fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1);
-    };
-    fn->arity_4 =
-      [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
-    };
-    fn->arity_5 = [](object * const atom,
-                     object * const fn,
-                     object * const a1,
-                     object * const a2,
-                     object * const rest) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
-    };
-    intern_fn_obj("swap-vals!", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
+  fn->arity_2 = [](object * const atom, object * const fn) -> object * {
+    return try_object<obj::atom>(atom)->swap_vals(fn);
+  };
+  fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+  };
+  fn->arity_4
+    = [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+  };
+  fn->arity_5 = [](object * const atom,
+                   object * const fn,
+                   object * const a1,
+                   object * const a2,
+                   object * const rest) -> object * {
+    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+  };
+  intern_fn_obj("swap-vals!", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
-    fn->arity_2 = [](object * const s, object * const start) -> object * { return subs(s, start); };
-    fn->arity_3 = [](object * const s, object * const start, object * const end) -> object * {
-      return subs(s, start, end);
-    };
-    intern_fn_obj("subs", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
+  fn->arity_2 = [](object * const s, object * const start) -> object * { return subs(s, start); };
+  fn->arity_3 = [](object * const s, object * const start, object * const end) -> object * {
+    return subs(s, start, end);
+  };
+  intern_fn_obj("subs", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_hash_map::empty(); };
-    fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_hash_map::create_from_seq(kvs);
-    };
-    intern_fn_obj("hash-map", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+  fn->arity_0 = []() -> object * { return obj::persistent_hash_map::empty(); };
+  fn->arity_1
+    = [](object * const kvs) -> object * { return obj::persistent_hash_map::create_from_seq(kvs); };
+  intern_fn_obj("hash-map", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_sorted_map::empty(); };
-    fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_sorted_map::create_from_seq(kvs);
-    };
-    intern_fn_obj("sorted-map", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+  fn->arity_0 = []() -> object * { return obj::persistent_sorted_map::empty(); };
+  fn->arity_1 = [](object * const kvs) -> object * {
+    return obj::persistent_sorted_map::create_from_seq(kvs);
+  };
+  intern_fn_obj("sorted-map", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_hash_set::empty(); };
-    fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_hash_set::create_from_seq(kvs);
-    };
-    intern_fn_obj("hash-set", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+  fn->arity_0 = []() -> object * { return obj::persistent_hash_set::empty(); };
+  fn->arity_1
+    = [](object * const kvs) -> object * { return obj::persistent_hash_set::create_from_seq(kvs); };
+  intern_fn_obj("hash-set", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_sorted_set::empty(); };
-    fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_sorted_set::create_from_seq(kvs);
-    };
-    intern_fn_obj("sorted-set", fn);
-  }
+{
+  auto const fn(make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
+  fn->arity_0 = []() -> object * { return obj::persistent_sorted_set::empty(); };
+  fn->arity_1 = [](object * const kvs) -> object * {
+    return obj::persistent_sorted_set::create_from_seq(kvs);
+  };
+  intern_fn_obj("sorted-set", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k); };
-    fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
-      return get(o, k, fallback);
-    };
-    intern_fn_obj("get", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+  fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k); };
+  fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
+    return get(o, k, fallback);
+  };
+  intern_fn_obj("get", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_2 = [](object * const o, object * const k) -> object * { return get_in(o, k); };
-    fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
-      return get_in(o, k, fallback);
-    };
-    intern_fn_obj("get-in", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+  fn->arity_2 = [](object * const o, object * const k) -> object * { return get_in(o, k); };
+  fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
+    return get_in(o, k, fallback);
+  };
+  intern_fn_obj("get-in", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
-    };
-    fn->arity_1 = [](object * const end) -> object * { return obj::range::create(end); };
-    fn->arity_2 = [](object * const start, object * const end) -> object * {
-      return obj::range::create(start, end);
-    };
-    fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
-      return obj::range::create(start, end, step);
-    };
-    intern_fn_obj("range", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+  fn->arity_0 = []() -> object * {
+    return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+  };
+  fn->arity_1 = [](object * const end) -> object * { return obj::range::create(end); };
+  fn->arity_2 = [](object * const start, object * const end) -> object * {
+    return obj::range::create(start, end);
+  };
+  fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
+    return obj::range::create(start, end, step);
+  };
+  intern_fn_obj("range", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
-    };
-    fn->arity_1 = [](object * const end) -> object * {
-      return obj::integer_range::create(try_object<obj::integer>(end));
-    };
-    fn->arity_2 = [](object * const start, object * const end) -> object * {
-      return obj::integer_range::create(try_object<obj::integer>(start),
-                                        try_object<obj::integer>(end));
-    };
-    fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
-      return obj::integer_range::create(try_object<obj::integer>(start),
-                                        try_object<obj::integer>(end),
-                                        try_object<obj::integer>(step));
-    };
-    intern_fn_obj("integer-range", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+  fn->arity_0 = []() -> object * {
+    return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+  };
+  fn->arity_1 = [](object * const end) -> object * {
+    return obj::integer_range::create(try_object<obj::integer>(end));
+  };
+  fn->arity_2 = [](object * const start, object * const end) -> object * {
+    return obj::integer_range::create(try_object<obj::integer>(start),
+                                      try_object<obj::integer>(end));
+  };
+  fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
+    return obj::integer_range::create(try_object<obj::integer>(start),
+                                      try_object<obj::integer>(end),
+                                      try_object<obj::integer>(step));
+  };
+  intern_fn_obj("integer-range", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
-    };
-    fn->arity_2
-      = [](object * const coll, object * const index) -> object * { return nth(coll, index); };
-    fn->arity_3
-      = [](object * const coll, object * const index, object * const fallback) -> object * {
-      return nth(coll, index, fallback);
-    };
-    intern_fn_obj("nth", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
+  fn->arity_0 = []() -> object * {
+    return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+  };
+  fn->arity_2
+    = [](object * const coll, object * const index) -> object * { return nth(coll, index); };
+  fn->arity_3 = [](object * const coll, object * const index, object * const fallback) -> object * {
+    return nth(coll, index, fallback);
+  };
+  intern_fn_obj("nth", fn);
+}
 
-  {
-    auto const fn(
-      make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
-    fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val); };
-    fn->arity_2 = [](object * const n, object * const val) -> object * {
-      return obj::repeat::create(n, val);
-    };
-    intern_fn_obj("repeat", fn);
-  }
+{
+  auto const fn(
+    make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
+  fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val); };
+  fn->arity_2
+    = [](object * const n, object * const val) -> object * { return obj::repeat::create(n, val); };
+  intern_fn_obj("repeat", fn);
+}
 
-  return erase(obj::nil::nil_const());
+return erase(obj::nil::nil_const());
 }
