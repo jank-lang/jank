@@ -156,11 +156,7 @@ namespace jank::runtime::obj
 
   persistent_string_sequence_ptr persistent_string::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
+    return fresh_seq();
   }
 
   persistent_string_sequence_ptr persistent_string::fresh_seq() const

@@ -578,7 +578,8 @@ jank_object_ptr jank_load_clojure_core_native()
         return obj::boolean::false_const();
       }
 
-      for(auto it(fresh_seq(rest)); it != nullptr; it = next_in_place(it))
+      for(auto it(fresh_seq(rest)); it != nullptr && it != obj::nil::nil_const();
+          it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
@@ -798,8 +799,10 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
-    fn->arity_1 = [](object * const val) -> object * { return repeat(val); };
-    fn->arity_2 = [](object * const n, object * const val) -> object * { return repeat(n, val); };
+    fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val); };
+    fn->arity_2 = [](object * const n, object * const val) -> object * {
+      return obj::repeat::create(n, val);
+    };
     intern_fn_obj("repeat", fn);
   }
 

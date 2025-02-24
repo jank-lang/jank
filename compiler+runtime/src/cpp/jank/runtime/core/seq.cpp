@@ -478,21 +478,13 @@ namespace jank::runtime
         {
           return make_box<obj::persistent_list>(std::in_place, o);
         }
-        else if constexpr(behavior::conjable_in_place<T>)
-        {
-          return typed_s->conj_in_place(o);
-        }
         else if constexpr(behavior::conjable<T>)
         {
           return typed_s->conj(o);
         }
-        else if constexpr(behavior::seqable<T>)
-        {
-          return typed_s->seq()->conj(o);
-        }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_string()) };
         }
       },
       s);
@@ -521,11 +513,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->assoc_in_place(k, v);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->assoc(k, v);
         }
@@ -544,11 +532,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->dissoc_in_place(k);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->dissoc(k);
         }
@@ -1025,23 +1009,10 @@ namespace jank::runtime
         return visit_seqable(
           [](auto const typed_r, auto const typed_l) -> native_bool {
             auto r_it(typed_r->fresh_seq());
-            auto l_it(typed_l->fresh_seq());
-            if(!r_it)
+            for(auto l_it(typed_l->fresh_seq()); l_it != nullptr;
+                l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
             {
-              return l_it == nullptr;
-            }
-            if(!l_it)
-            {
-              return r_it == nullptr;
-            }
-
-            for(; l_it != nullptr; l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
-            {
-              if(!r_it)
-              {
-                return false;
-              }
-              if(!runtime::equal(l_it->first(), r_it->first()))
+              if(!r_it || !runtime::equal(l_it->first(), r_it->first()))
               {
                 return false;
               }
@@ -1178,12 +1149,12 @@ namespace jank::runtime
 
   object_ptr repeat(object_ptr const val)
   {
-    return make_box<obj::repeat>(val);
+    return obj::repeat::create(val);
   }
 
   object_ptr repeat(object_ptr const n, object_ptr const val)
   {
-    return make_box<obj::repeat>(n, val);
+    return obj::repeat::create(n, val);
   }
 
   object_ptr sort(object_ptr const coll)

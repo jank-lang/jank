@@ -783,7 +783,7 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr;)
+    for(auto it(list->fresh_seq()); it != nullptr; it = next_in_place(next_in_place(it)))
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -829,8 +829,6 @@ namespace jank::read::parse
           return object_source_info{ next_in_place(it)->first(), start_token, list_end };
         }
       }
-
-      it = next_in_place(next_in_place(it));
     }
 
     return ok(none);
