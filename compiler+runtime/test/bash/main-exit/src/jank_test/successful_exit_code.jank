@@ -1,0 +1,2 @@
+(ns jank-test.successful-exit-code)
+(defn -main [])

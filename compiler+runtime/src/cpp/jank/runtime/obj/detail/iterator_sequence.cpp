@@ -39,7 +39,7 @@ namespace jank::runtime::obj::detail
             return false;
           }
         }
-        return true;
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

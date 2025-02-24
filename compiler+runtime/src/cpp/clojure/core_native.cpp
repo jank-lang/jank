@@ -252,6 +252,18 @@ namespace clojure::core_native
     return obj::nil::nil_const();
   }
 
+  static object_ptr ns_unalias(object_ptr const current_ns, object_ptr const alias)
+  {
+    try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
+    return obj::nil::nil_const();
+  }
+
+  static object_ptr ns_unmap(object_ptr const current_ns, object_ptr const sym)
+  {
+    try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
+    return obj::nil::nil_const();
+  }
+
   static object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
   {
     expect_object<runtime::ns>(current_ns)
@@ -479,6 +491,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("prefers", &core_native::prefers);
   intern_val("int-min", std::numeric_limits<native_integer>::min());
   intern_val("int-max", std::numeric_limits<native_integer>::max());
+  intern_val("int32-min", std::numeric_limits<int32_t>::min());
+  intern_val("int32-max", std::numeric_limits<int32_t>::max());
   intern_fn("sleep", &core_native::sleep);
   intern_fn("current-time", &core_native::current_time);
   intern_fn("create-ns", &core_native::intern_ns);
@@ -492,6 +506,8 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("var-ns", &core_native::var_ns);
   intern_fn("ns-resolve", &core_native::ns_resolve);
   intern_fn("alias", &core_native::alias);
+  intern_fn("ns-unalias", &core_native::ns_unalias);
+  intern_fn("ns-unmap", &core_native::ns_unmap);
   intern_fn("refer", &core_native::refer);
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);
@@ -505,6 +521,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("tagged-literal?", &is_tagged_literal);
   intern_fn("sorted?", &is_sorted);
   intern_fn("sort", &sort);
+  intern_fn("shuffle", &shuffle);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));
@@ -561,7 +578,7 @@ jank_object_ptr jank_load_clojure_core_native()
         return obj::boolean::false_const();
       }
 
-      for(auto it(fresh_seq(rest)); it != nullptr; it = next_in_place(it))
+      for(auto it(fresh_seq(rest)); it != obj::nil::nil_const(); it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
@@ -781,8 +798,10 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
-    fn->arity_1 = [](object * const val) -> object * { return repeat(val); };
-    fn->arity_2 = [](object * const n, object * const val) -> object * { return repeat(n, val); };
+    fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val); };
+    fn->arity_2 = [](object * const n, object * const val) -> object * {
+      return obj::repeat::create(n, val);
+    };
     intern_fn_obj("repeat", fn);
   }
 

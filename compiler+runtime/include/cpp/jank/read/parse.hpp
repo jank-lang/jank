@@ -16,7 +16,6 @@ namespace jank::runtime
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {
-
   struct char_parse_error
   {
     native_persistent_string error;
@@ -27,23 +26,24 @@ namespace jank::read::parse
 
   option<char> get_char_from_literal(native_persistent_string const &s);
 
+  struct object_source_info
+  {
+    native_bool operator==(object_source_info const &rhs) const;
+    native_bool operator!=(object_source_info const &rhs) const;
+
+    runtime::object_ptr ptr{};
+    lex::token start, end;
+  };
+
   struct processor
   {
-    struct object_source_info
-    {
-      native_bool operator==(object_source_info const &rhs) const;
-      native_bool operator!=(object_source_info const &rhs) const;
-
-      runtime::object_ptr ptr{};
-      lex::token start, end;
-    };
-
-    using object_result = result<option<object_source_info>, error>;
+    using object_result = result<option<object_source_info>, error_ptr>;
 
     struct shorthand_function_details
     {
       option<uint8_t> max_fixed_arity{};
       native_bool variadic{};
+      source source;
     };
 
     struct iterator
@@ -98,9 +98,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    string_result<runtime::object_ptr> syntax_quote(runtime::object_ptr form);
-    string_result<runtime::object_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
-    static string_result<runtime::object_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    result<runtime::object_ptr, error_ptr> syntax_quote(runtime::object_ptr form);
+    result<runtime::object_ptr, error_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
+    static result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
     static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
 
   public:
@@ -118,5 +118,7 @@ namespace jank::read::parse
     option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
+    /* Whether or not the next form is considered syntax-quoted. */
+    native_bool syntax_quoted{};
   };
 }

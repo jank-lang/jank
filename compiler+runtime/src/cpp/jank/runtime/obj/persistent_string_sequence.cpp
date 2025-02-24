@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     assert(!s->data.empty() && i < s->data.size());
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool persistent_string_sequence::equal(object const &o) const
   {
     return runtime::equal(o, str->data.begin() + index, str->data.end());

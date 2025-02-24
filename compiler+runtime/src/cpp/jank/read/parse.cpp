@@ -2,17 +2,17 @@
 
 #include <fmt/format.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <jank/native_persistent_string/fmt.hpp>
-#pragma clang diagnostic pop
 #include <jank/read/parse.hpp>
+#include <jank/error/parse.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
+#include <jank/runtime/behavior/set_like.hpp>
 #include <jank/util/scope_exit.hpp>
 
 namespace jank::read::parse
@@ -20,7 +20,6 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   result<native_persistent_string, char_parse_error>
-
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -41,7 +40,7 @@ namespace jank::read::parse
        */
       if(chars_processed != char_literal.size())
       {
-        return err("Invalid unicode digit");
+        return err("Invalid Unicode digit");
       }
 
 #pragma clang diagnostic push
@@ -54,14 +53,14 @@ namespace jank::read::parse
 
       if(converter.converted() != 1)
       {
-        return err("Out of range");
+        return err("Unicode character is out of range");
       }
 
       return ok(converted);
     }
-    catch(std::exception const &e)
+    catch(std::exception const &)
     {
-      return err(e.what());
+      return err("Unable to parse Unicode codepoint");
     }
   }
 
@@ -99,14 +98,12 @@ namespace jank::read::parse
     return none;
   }
 
-  native_bool
-  processor::object_source_info::operator==(processor::object_source_info const &rhs) const
+  native_bool object_source_info::operator==(object_source_info const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool
-  processor::object_source_info::operator!=(processor::object_source_info const &rhs) const
+  native_bool object_source_info::operator!=(object_source_info const &rhs) const
   {
     return ptr != rhs.ptr || start != rhs.start || end != rhs.end;
   }
@@ -197,8 +194,7 @@ namespace jank::read::parse
         case lex::token_kind::close_curly_bracket:
           if(expected_closer != latest_token.kind)
           {
-            return err(error{ latest_token.pos,
-                              native_persistent_string{ "unexpected closing character" } });
+            return error::parse_unexpected_closing_character(latest_token);
           }
           ++token_current;
           expected_closer = none;
@@ -276,9 +272,9 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            return err(error{
-              latest_token.pos,
-              fmt::format("unexpected token kind: {}", lex::token_kind_str(latest_token.kind)) });
+            return error::internal_parse_failure(
+              fmt::format("Unexpected token kind '{}'", lex::token_kind_str(latest_token.kind)),
+              { latest_token.start, latest_token.end });
           }
       }
     }
@@ -295,7 +291,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -308,10 +304,11 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated list" });
+      return error::parse_unterminated_list({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
+
     return object_source_info{
       make_box<obj::persistent_list>(std::in_place, ret.rbegin(), ret.rend()),
       start_token,
@@ -330,7 +327,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -343,7 +340,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated vector" });
+      return error::parse_unterminated_vector(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -364,7 +361,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -377,7 +374,8 @@ namespace jank::read::parse
 
       if(++it == end())
       {
-        return err(error{ start_token.pos, "odd number of items in map" });
+        return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
+                                               { key.unwrap().start.start, key.unwrap().end.end });
       }
 
       if(it.latest.unwrap().is_err())
@@ -390,7 +388,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated map" });
+      return error::parse_unterminated_map(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
@@ -404,7 +402,7 @@ namespace jank::read::parse
     auto const start_token((*token_current).expect_ok());
     ++token_current;
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = !syntax_quoted;
     auto val_result(next());
     quoted = old_quoted;
     if(val_result.is_err())
@@ -413,7 +411,8 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos, native_persistent_string{ "invalid value after quote" } });
+      return error::parse_invalid_quote({ start_token.start, latest_token.end },
+                                        "Quote form is missing its value");
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
@@ -426,10 +425,9 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_character()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
-
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
 
     if(character.is_none())
@@ -440,24 +438,23 @@ namespace jank::read::parse
         auto const base{ (sv[1] == 'u' ? 16 : 8) };
         auto const char_bytes(parse_character_in_base(sv.substr(2), base));
 
-        if(char_bytes.is_ok())
+        if(char_bytes.is_err())
         {
-          return object_source_info{ make_box<obj::character>(char_bytes.expect_ok()),
-                                     token,
-                                     token };
+          return error::parse_invalid_unicode({ start_token.start, latest_token.end },
+                                              char_bytes.expect_err().error);
         }
-        else
-        {
-          return err(error{
-            token.pos,
-            fmt::format("Error reading character `{}`: {}", sv, char_bytes.expect_err().error) });
-        }
+
+        return object_source_info{ make_box<obj::character>(char_bytes.expect_ok()),
+                                   start_token,
+                                   start_token };
       }
 
-      return err(error{ token.pos, fmt::format("invalid character literal `{}`", sv) });
+      return error::parse_invalid_character(start_token);
     }
 
-    return object_source_info{ make_box<obj::character>(character.unwrap()), token, token };
+    return object_source_info{ make_box<obj::character>(character.unwrap()),
+                               start_token,
+                               start_token };
   }
 
   processor::object_result processor::parse_meta_hint()
@@ -471,8 +468,7 @@ namespace jank::read::parse
     }
     else if(meta_val_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "invalid meta value after meta hint" } });
+      return error::parse_invalid_meta_hint_value({ start_token.start, latest_token.end });
     }
 
     auto meta_result(visit_object(
@@ -486,17 +482,13 @@ namespace jank::read::parse
             latest_token
           };
         }
-        /* TODO: Concept for map-like. */
-        if constexpr(std::same_as<T, obj::persistent_hash_map>
-                     || std::same_as<T, obj::persistent_array_map>)
+        if constexpr(behavior::map_like<T>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
         }
         else
         {
-          return err(error{
-            start_token.pos,
-            native_persistent_string{ "value after meta hint ^ must be a keyword or map" } });
+          return error::parse_invalid_meta_hint_value({ start_token.start, latest_token.end });
         }
       },
       meta_val_result.expect_ok().unwrap().ptr));
@@ -512,8 +504,8 @@ namespace jank::read::parse
     }
     else if(target_val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos,
-                        native_persistent_string{ "invalid target value after meta hint" } });
+      return error::parse_invalid_meta_hint_target({ start_token.start, latest_token.end },
+                                                   "Value missing after hint");
     }
 
     return visit_object(
@@ -538,9 +530,9 @@ namespace jank::read::parse
         }
         else
         {
-          return err(
-            error{ start_token.pos,
-                   native_persistent_string{ "target value for meta hint must accept metadata" } });
+          return error::parse_invalid_meta_hint_target(
+            { start_token.start, latest_token.end },
+            "Target value for meta hint must accept metadata");
         }
       },
       target_val_result.expect_ok().unwrap().ptr);
@@ -571,8 +563,7 @@ namespace jank::read::parse
       case lex::token_kind::reader_macro:
         return parse_reader_macro_symbolic_values();
       default:
-        return err(
-          error{ start_token.pos, native_persistent_string{ "unsupported reader macro" } });
+        return error::parse_unsupported_reader_macro({ start_token.start, latest_token.end });
     }
 #pragma clang diagnostic pop
   }
@@ -589,7 +580,7 @@ namespace jank::read::parse
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
         std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     runtime::detail::native_transient_hash_set ret;
     for(auto it(begin()); it != end(); ++it)
@@ -602,7 +593,7 @@ namespace jank::read::parse
     }
     if(expected_closer.is_some())
     {
-      return err(error{ start_token.pos, "Unterminated set" });
+      return error::parse_unterminated_set({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
@@ -617,26 +608,23 @@ namespace jank::read::parse
 
     if(shorthand.is_some())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "nested #() forms are not allowed" } });
+      return error::parse_nested_shorthand_function(
+        start_token.start,
+        { "Outer #() form starts here", shorthand.unwrap().source, error::note::kind::info });
     }
 
-    shorthand = shorthand_function_details{};
+    shorthand = shorthand_function_details{ {}, {}, start_token.start };
 
     auto list_result(next());
     if(list_result.is_err())
     {
       return list_result;
     }
-    else if(list_result.expect_ok().is_none())
+    else if(list_result.expect_ok().is_none()
+            || list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #( must be present" } });
-    }
-    else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
-    {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #( must be a list" } });
+      return error::internal_parse_failure("Value after #( must be present",
+                                           { start_token.start, latest_token.end });
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -677,13 +665,13 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #' must be present" } });
+      return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
+                                             "Value after #' must be present");
     }
     else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #' must be a symbol" } });
+      return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
+                                             "Value after #' must be a symbol");
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
@@ -708,13 +696,13 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ## must be present" } });
+      return error::parse_invalid_reader_symbolic_value("Value after ## must be present",
+                                                        { start_token.start, latest_token.end });
     }
     else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ## must be a symbol" } });
+      return error::parse_invalid_reader_symbolic_value("Value after ## must be a symbol",
+                                                        { start_token.start, latest_token.end });
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
@@ -735,7 +723,8 @@ namespace jank::read::parse
     }
     else
     {
-      return err(error{ start_token.pos, native_persistent_string{ "Unknown symbolic value" } });
+      return error::parse_invalid_reader_symbolic_value("Invalid symbolic value",
+                                                        { start_token.start, latest_token.end });
     }
 
     auto const wrapped(make_box<obj::real>(n));
@@ -754,8 +743,8 @@ namespace jank::read::parse
     }
     else if(ignored_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #_ must be present" } });
+      return error::parse_invalid_reader_comment({ start_token.start, latest_token.end },
+                                                 "Value after #_ must be present");
     }
 
     return ok(none);
@@ -773,13 +762,13 @@ namespace jank::read::parse
     }
     else if(list_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #? must be present" } });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "Value after #? must be present");
     }
     else if(list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after #? must be a list" } });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "Value after #? must be a list");
     }
 
     auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -787,14 +776,14 @@ namespace jank::read::parse
 
     if(list.data->count() % 2 == 1)
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "#? expects an even number of forms" } });
+      return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
+                                                     "#? expects an even number of forms");
     }
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr;)
+    for(auto it(list->fresh_seq()); it != nullptr; it = next_in_place(next_in_place(it)))
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -806,8 +795,8 @@ namespace jank::read::parse
         {
           if(!truthy(splicing_allowed_var->deref()))
           {
-            return err(error{ start_token.pos,
-                              native_persistent_string{ "#?@ splice must not be top-level" } });
+            return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
+                                                      "Top-level #?@ usage is not allowed");
           }
 
           auto const s(next_in_place(it)->first());
@@ -828,9 +817,10 @@ namespace jank::read::parse
 
               return object_source_info{ first, start_token, list_end };
             },
-            [=]() -> processor::object_result {
-              return err(error{ start_token.pos,
-                                native_persistent_string{ "#?@ splice must be a sequence" } });
+            [&]() -> processor::object_result {
+              /* TODO: Get the source of just this form. */
+              return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
+                                                        "#?@ must be used on a sequence");
             },
             s);
         }
@@ -839,14 +829,12 @@ namespace jank::read::parse
           return object_source_info{ next_in_place(it)->first(), start_token, list_end };
         }
       }
-
-      it = next_in_place(next_in_place(it));
     }
 
     return ok(none);
   }
 
-  string_result<object_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
+  result<object_ptr, error_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
   {
     if(!seq)
     {
@@ -854,7 +842,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> string_result<object_ptr> {
+      [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -885,14 +873,13 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<object_ptr> {
-        /* TODO: ICE */
-        return err("not seqable");
+      []() -> result<object_ptr, error_ptr> {
+        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable"));
       },
       seq);
   }
 
-  string_result<object_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
+  result<object_ptr, error_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
   {
     if(!seq)
     {
@@ -900,7 +887,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> string_result<object_ptr> {
+      [](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -911,9 +898,8 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> string_result<object_ptr> {
-        /* TODO: ICE */
-        return err("not seqable");
+      []() -> result<object_ptr, error_ptr> {
+        return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq"));
       },
       seq);
   }
@@ -922,26 +908,18 @@ namespace jank::read::parse
   {
     return visit_seqable(
       [splice](auto const typed_form) {
-        object_ptr item{};
         auto const s(typed_form->seq());
-        if(!s)
-        {
-          item = obj::nil::nil_const();
-        }
-        else
-        {
-          item = s->first();
-        }
+        object_ptr const item{ s ? s->first() : obj::nil::nil_const() };
 
         return make_box<obj::symbol>(
                  (splice ? "clojure.core/unquote-splicing" : "clojure.core/unquote"))
           ->equal(*item);
       },
-      []() { return false; },
+      [] { return false; },
       form);
   }
 
-  string_result<object_ptr> processor::syntax_quote(object_ptr const form)
+  result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
   {
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
@@ -959,7 +937,7 @@ namespace jank::read::parse
         auto const env(__rt_ctx->gensym_env_var->deref());
         if(env->type == object_type::nil)
         {
-          return err("gensym literal is not within a syntax quote");
+          return err(error::internal_parse_failure("Missing gensym env"));
         }
 
         auto gensym(get(env, sym));
@@ -991,7 +969,7 @@ namespace jank::read::parse
     }
     else if(syntax_quote_is_unquote(form, true))
     {
-      return err("unquote splice not in seq");
+      return err(error::parse_invalid_syntax_unquote_splice(meta_source(form)));
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
@@ -1007,7 +985,7 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       return visit_seqable(
-        [&](auto const typed_form) -> string_result<object_ptr> {
+        [&](auto const typed_form) -> result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -1027,8 +1005,7 @@ namespace jank::read::parse
                 make_box<obj::symbol>("clojure.core/seq"),
                 conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
           }
-          if constexpr(std::same_as<T, obj::persistent_hash_map>
-                       || std::same_as<T, obj::persistent_array_map>)
+          if constexpr(behavior::map_like<T>)
           {
             auto flattened(syntax_quote_flatten_map(typed_form->seq()));
             if(flattened.is_err())
@@ -1051,9 +1028,9 @@ namespace jank::read::parse
                 make_box<obj::symbol>("clojure.core/seq"),
                 conj(expanded.expect_ok(), make_box<obj::symbol>("clojure.core/concat"))));
           }
-          if constexpr(std::same_as<T, obj::persistent_hash_set>)
+          if constexpr(behavior::set_like<T>)
           {
-            return err("nyi: set");
+            return err(error::internal_parse_failure("nyi: set"));
           }
           if constexpr(std::same_as<T, obj::persistent_list>)
           {
@@ -1079,12 +1056,13 @@ namespace jank::read::parse
           }
           else
           {
-            return err(fmt::format("unsupported collection type: {}",
-                                   object_type_str(typed_form->base.type)));
+            return err(
+              error::internal_parse_failure(fmt::format("Unsupported collection type: {}",
+                                                        object_type_str(typed_form->base.type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> string_result<object_ptr> {
+        [=]() -> result<object_ptr, error_ptr> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);
@@ -1104,23 +1082,27 @@ namespace jank::read::parse
                                                          obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
-    quoted = true;
+    quoted = false;
+    auto const old_syntax_quoted(syntax_quoted);
+    syntax_quoted = true;
+    quoted = false;
     auto quoted_form(next());
     quoted = old_quoted;
+    syntax_quoted = old_syntax_quoted;
     if(quoted_form.is_err())
     {
       return quoted_form;
     }
     else if(quoted_form.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "value after ` must be present" } });
+      return error::parse_invalid_syntax_quote({ start_token.start, latest_token.end },
+                                               "Value after ` must be present");
     }
 
     auto const res(syntax_quote(quoted_form.expect_ok().unwrap().ptr));
     if(res.is_err())
     {
-      return err(error{ start_token.pos, res.expect_err() });
+      return res.expect_err();
     }
 
     return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
@@ -1137,8 +1119,7 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(
-        error{ start_token.pos, native_persistent_string{ "invalid value after unquote" } });
+      return error::parse_invalid_syntax_unquote({ start_token.start, latest_token.end });
     }
 
     return object_source_info{
@@ -1162,7 +1143,7 @@ namespace jank::read::parse
     }
     else if(val_result.expect_ok().is_none())
     {
-      return err(error{ start_token.pos, native_persistent_string{ "invalid value after @" } });
+      return error::parse_invalid_reader_deref({ start_token.start, latest_token.end });
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
@@ -1189,9 +1170,9 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_symbol()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     auto const slash(sv.find('/'));
     native_persistent_string ns, name;
     if(slash != native_persistent_string::npos)
@@ -1209,15 +1190,18 @@ namespace jank::read::parse
         {
           ns = ns_portion;
         }
-        /* Normal symbols will have the ns resolved immediately. */
+        /* Normal symbols will have the ns resolved immediately if resolvable. */
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
           if(resolved_ns.is_none())
           {
-            return err(error{ token.pos, fmt::format("unknown namespace: {}", ns_portion) });
+            ns = ns_portion;
           }
-          ns = resolved_ns.unwrap()->name->name;
+          else
+          {
+            ns = resolved_ns.unwrap()->name->name;
+          }
         }
         name = sv.substr(slash + 1);
       }
@@ -1235,7 +1219,7 @@ namespace jank::read::parse
         native_bool all_digits{ true };
         for(auto const c : after_percent)
         {
-          all_digits &= std::isdigit(c) != 0;
+          all_digits &= (std::isdigit(c) != 0) && (c != '0');
         }
         if(all_digits)
         {
@@ -1260,8 +1244,8 @@ namespace jank::read::parse
         }
         else
         {
-          return err(error{ token.pos,
-                            native_persistent_string{ "arg literal must be %, %&, or %integer" } });
+          return error::parse_invalid_shorthand_function_parameter(
+            { start_token.start, latest_token.end });
         }
 
         /* This is a hack. We're building up an anonymous function, but that form could be within
@@ -1272,14 +1256,14 @@ namespace jank::read::parse
         name = name + "#";
       }
     }
-    return object_source_info{ make_box<obj::symbol>(ns, name), token, token };
+    return object_source_info{ make_box<obj::symbol>(ns, name), start_token, start_token };
   }
 
   processor::object_result processor::parse_keyword()
   {
-    auto const token((*token_current).expect_ok());
+    auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     native_bool const resolved{ sv[0] != ':' };
@@ -1306,9 +1290,10 @@ namespace jank::read::parse
     auto const intern_res(__rt_ctx->intern_keyword(ns, name, resolved));
     if(intern_res.is_err())
     {
-      return err(intern_res.expect_err());
+      return error::parse_invalid_keyword({ start_token.start, latest_token.end },
+                                          intern_res.expect_err());
     }
-    return object_source_info{ intern_res.expect_ok(), token, token };
+    return object_source_info{ intern_res.expect_ok(), start_token, start_token };
   }
 
   processor::object_result processor::parse_integer()
@@ -1327,7 +1312,8 @@ namespace jank::read::parse
     auto const &ratio_data(boost::get<lex::ratio>(token.data));
     if(ratio_data.denominator == 0)
     {
-      return err(error{ token.pos, "Divide by zero" });
+      return error::parse_invalid_ratio({ token.start, latest_token.end },
+                                        "A ratio may not have a denominator of zero");
     }
     auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
     if(ratio->type == object_type::ratio)
@@ -1340,7 +1326,8 @@ namespace jank::read::parse
     }
     else
     {
-      return err(error{ token.pos, "Internal parsing error" });
+      return error::internal_parse_failure("Unexpected token ratio data",
+                                           { token.start, latest_token.end });
     }
   }
 
@@ -1372,7 +1359,9 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return err(error{ token.pos, res.expect_err().message });
+      return error::internal_parse_failure(
+        fmt::format("Unable to unescape string: {}", res.expect_err().message),
+        { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

@@ -59,7 +59,7 @@ namespace jank::util
             sb('\b');
             break;
           default:
-            return err(unescape_error{ fmt::format("invalid escape sequence: \\{}", c) });
+            return err(unescape_error{ fmt::format("Invalid escape sequence '\\{}'", c) });
         }
         escape = false;
       }

@@ -141,12 +141,14 @@ namespace jank::runtime
     /* TODO: This needs to be a dynamic var. */
     native_unordered_map<native_persistent_string, native_vector<native_persistent_string>>
       module_dependencies;
-    native_persistent_string output_dir;
+    native_persistent_string binary_cache_dir;
     module::loader module_loader;
 
+    var_ptr current_file_var{};
     var_ptr current_ns_var{};
     var_ptr in_ns_var{};
     var_ptr compile_files_var{};
+    var_ptr loaded_libs_var{};
     var_ptr current_module_var{};
     var_ptr assert_var{};
     var_ptr no_recur_var{};
