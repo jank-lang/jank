@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -xeuo pipefail
-jank --module-path src run-main clojure-string.self-test | grep ':successfully-tested-clojure-string-self-test'
+jank --module-path src run-main clojure-string.self-test

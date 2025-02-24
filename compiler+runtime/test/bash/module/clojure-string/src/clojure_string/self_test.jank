@@ -1,6 +1,7 @@
 (ns clojure-string.self-test
   (:require [clojure.string :as str]))
 
+;;TODO delete this namespace and use clojure-test-suite
 ;;https://github.com/jank-lang/jank/issues/226
 (def char-a \a)
 (def char-c \c)
@@ -50,6 +51,4 @@
     (assert (string? (str/upper-case "ASDF")))
     (let [s "asdf"]
       (assert (= "ASDF" (str/upper-case "asdf")))
-      (assert (= "asdf" s) "original string mutated"))
-    (println :successfully-tested-clojure-string-self-test)
-    (catch e (prn e) (println :fail))))
+      (assert (= "asdf" s) "original string mutated"))))
