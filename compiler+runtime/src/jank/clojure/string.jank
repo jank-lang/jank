@@ -1,19 +1,18 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse]))
 
-(defn reverse
-  "Returns s with its characters reversed."
-  [s]
-  (native/raw "auto const s_str(runtime::to_string(~{ s }));
-              __value = make_box<obj::persistent_string>(native_persistent_string{ s_str.rbegin(), s_str.rend() });"))
+(def ^{:doc "returns s with its characters reversed."
+       :arglists '([s])}
+  reverse clojure.string-native/reverse)
+  
+(defn re-quote-replacement
+  "Given a replacement string that you wish to be a literal
+  replacement for a pattern match in replace or replace-first, do the
+  necessary escaping of special characters in the replacement."
+  [replacement]
+  ;(Matcher/quoteReplacement (.toString replacement))
+  (throw "TODO: port clojure.string/re-quote-replacement"))
 
-;(defn re-quote-replacement
-;  "Given a replacement string that you wish to be a literal
-;  replacement for a pattern match in replace or replace-first, do the
-;  necessary escaping of special characters in the replacement."
-;  [replacement]
-;  (Matcher/quoteReplacement (.toString replacement)))
-;
 ;(defn- replace-by
 ;  [s re f]
 ;  (let [m (re-matcher re s)]
@@ -26,42 +25,44 @@
 ;            (do (.appendTail m buffer)
 ;                (.toString buffer)))))
 ;      s)))
-;
-;(defn replace
-;  "Replaces all instance of match with replacement in s.
-;
-;  match/replacement can be:
-;
-;  string / string
-;  char / char
-;  pattern / (string or function of match).
-;
-;  See also replace-first.
-;
-;  The replacement is literal (i.e. none of its characters are treated
-;                                   specially) for all cases above except pattern / string.
-;
-;  For pattern / string, $1, $2, etc. in the replacement string are
-;  substituted with the string that matched the corresponding
-;  parenthesized group in the pattern.  If you wish your replacement
-;  string r to be used literally, use (re-quote-replacement r) as the
-;  replacement argument.  See also documentation for
-;  java.util.regex.Matcher's appendReplacement method.
-;
-;  Example:
-;  (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
-;  -> \"lmostAay igPay atinLay\""
-;  [ s match replacement]
-;  (let [s (.toString s)]
-;    (cond
-;      (instance? Character match) (.replace s match replacement)
-;      (instance? CharSequence match) (.replace s match replacement)
-;      (instance? Pattern match) (if (instance? CharSequence replacement)
-;                                  (.replaceAll (re-matcher match s)
-;                                               (.toString replacement))
-;                                  (replace-by s match replacement))
-;      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
-;
+
+(defn replace
+  "Replaces all instance of match with replacement in s.
+
+  match/replacement can be:
+
+  string / string
+  char / char
+  pattern / (string or function of match).
+
+  See also replace-first.
+
+  The replacement is literal (i.e. none of its characters are treated
+                                   specially) for all cases above except pattern / string.
+
+  For pattern / string, $1, $2, etc. in the replacement string are
+  substituted with the string that matched the corresponding
+  parenthesized group in the pattern.  If you wish your replacement
+  string r to be used literally, use (re-quote-replacement r) as the
+  replacement argument.  See also documentation for
+  java.util.regex.Matcher's appendReplacement method.
+
+  Example:
+  (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
+  -> \"lmostAay igPay atinLay\""
+  [s match replacement]
+  #_
+  (let [s (.toString s)]
+    (cond
+      (instance? Character match) (.replace s match replacement)
+      (instance? CharSequence match) (.replace s match replacement)
+      (instance? Pattern match) (if (instance? CharSequence replacement)
+                                  (.replaceAll (re-matcher match s)
+                                               (.toString replacement))
+                                  (replace-by s match replacement))
+      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
+  (throw "TODO: port clojure.string/replace"))
+
 ;(defn- replace-first-by
 ;  [s re f]
 ;  (let [m (re-matcher re s)]
@@ -89,235 +90,222 @@
 ;      s
 ;      (str (subs s 0 i) replace (subs s (+ i (.length match)))))))
 ;
-;(defn replace-first
-;  "Replaces the first instance of match with replacement in s.
-;
-;  match/replacement can be:
-;
-;  char / char
-;  string / string
-;  pattern / (string or function of match).
-;
-;  See also replace.
-;
-;  The replacement is literal (i.e. none of its characters are treated
-;                                   specially) for all cases above except pattern / string.
-;
-;  For pattern / string, $1, $2, etc. in the replacement string are
-;  substituted with the string that matched the corresponding
-;  parenthesized group in the pattern.  If you wish your replacement
-;  string r to be used literally, use (re-quote-replacement r) as the
-;  replacement argument.  See also documentation for
-;  java.util.regex.Matcher's appendReplacement method.
-;
-;  Example:
-;  (clojure.string/replace-first \"swap first two words\"
-;                                #\"(\\w+)(\\s+)(\\w+)\" \"$3$2$1\")
-;  -> \"first swap two words\""
-;  {:added "1.2"}
-;  [s match replacement]
-;  (let [s (.toString s)]
-;    (cond
-;      (instance? Character match)
-;      (replace-first-char s match replacement)
-;      (instance? CharSequence match)
-;      (replace-first-str s (.toString match)
-;                         (.toString replacement))
-;      (instance? Pattern match)
-;      (if (instance? CharSequence replacement)
-;        (.replaceFirst (re-matcher match s)
-;                       (.toString replacement))
-;        (replace-first-by s match replacement))
-;      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match))))))
-;
-;
-;(defn join
-;  "Returns a string of all elements in coll, as returned by (seq coll),
-;  separated by an optional separator."
-;  {:added "1.2"}
-;  ([coll]
-;   (apply str coll))
-;  ([separator coll]
-;   (loop [sb (StringBuilder. (str (first coll)))
-;          more (next coll)
-;          sep (str separator)]
-;     (if more
-;       (recur (-> sb (.append sep) (.append (str (first more))))
-;              (next more)
-;              sep)
-;       (str sb)))))
-;
-;(defn capitalize
-;  "Converts first character of the string to upper-case, all other
-;  characters to lower-case."
-;  {:added "1.2"}
-;  [s]
-;  (let [s (.toString s)]
-;    (if (< (count s) 2)
-;      (.toUpperCase s)
-;      (str (.toUpperCase (subs s 0 1))
-;           (.toLowerCase (subs s 1))))))
-;
-;(defn upper-case
-;  "Converts string to all upper-case."
-;  {:added "1.2"}
-;  [s]
-;  (.. s toString toUpperCase))
-;
-;(defn lower-case
-;  "Converts string to all lower-case."
-;  {:added "1.2"}
-;  [s]
-;  (.. s toString toLowerCase))
-;
-;(defn split
-;  "Splits string on a regular expression.  Optional argument limit is
-;  the maximum number of parts. Not lazy. Returns vector of the parts.
-;  Trailing empty strings are not returned - pass limit of -1 to return all."
-;  {:added "1.2"}
-;  ([s re]
-;   (LazilyPersistentVector/createOwning (.split re s)))
-;  ([ s re limit]
-;   (LazilyPersistentVector/createOwning (.split re s limit))))
-;
-;(defn split-lines
-;  "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
-;  {:added "1.2"}
-;  [s]
-;  (split s #"\r?\n"))
-;
-;(defn trim
-;  "Removes whitespace from both ends of string."
-;  {:added "1.2"}
-;  [s]
-;  (let [len (.length s)]
-;    (loop [rindex len]
-;      (if (zero? rindex)
-;        ""
-;        (if (Character/isWhitespace (.charAt s (dec rindex)))
-;          (recur (dec rindex))
-;          ;; there is at least one non-whitespace char in the string,
-;          ;; so no need to check for lindex reaching len.
-;          (loop [lindex 0]
-;            (if (Character/isWhitespace (.charAt s lindex))
-;              (recur (inc lindex))
-;              (.. s (subSequence lindex rindex) toString))))))))
-;
-;(defn triml
-;  "Removes whitespace from the left side of string."
-;  {:added "1.2"}
-;  [s]
-;  (let [len (.length s)]
-;    (loop [index 0]
-;      (if (= len index)
-;        ""
-;        (if (Character/isWhitespace (.charAt s index))
-;          (recur (unchecked-inc index))
-;          (.. s (subSequence index len) toString))))))
-;
-;(defn trimr
-;  "Removes whitespace from the right side of string."
-;  {:added "1.2"}
-;  [s]
-;  (loop [index (.length s)]
-;    (if (zero? index)
-;      ""
-;      (if (Character/isWhitespace (.charAt s (unchecked-dec index)))
-;        (recur (unchecked-dec index))
-;        (.. s (subSequence 0 index) toString)))))
-;
-;(defn trim-newline
-;  "Removes all trailing newline \\n or return \\r characters from
-;  string.  Similar to Perl's chomp."
-;  {:added "1.2"}
-;  [s]
-;  (loop [index (.length s)]
-;    (if (zero? index)
-;      ""
-;      (let [ch (.charAt s (dec index))]
-;        (if (or (= ch \newline) (= ch \return))
-;          (recur (dec index))
-;          (.. s (subSequence 0 index) toString))))))
+(defn replace-first
+  "Replaces the first instance of match with replacement in s.
 
-(defn blank?
-  "True if s is nil, empty, or contains only whitespace."
+  match/replacement can be:
+
+  char / char
+  string / string
+  pattern / (string or function of match).
+
+  See also replace.
+
+  The replacement is literal (i.e. none of its characters are treated
+                                   specially) for all cases above except pattern / string.
+
+  For pattern / string, $1, $2, etc. in the replacement string are
+  substituted with the string that matched the corresponding
+  parenthesized group in the pattern.  If you wish your replacement
+  string r to be used literally, use (re-quote-replacement r) as the
+  replacement argument.  See also documentation for
+  java.util.regex.Matcher's appendReplacement method.
+
+  Example:
+  (clojure.string/replace-first \"swap first two words\"
+                                #\"(\\w+)(\\s+)(\\w+)\" \"$3$2$1\")
+  -> \"first swap two words\""
+  [s match replacement]
+  #_
+  (let [s (.toString s)]
+    (cond
+      (instance? Character match)
+      (replace-first-char s match replacement)
+      (instance? CharSequence match)
+      (replace-first-str s (.toString match)
+                         (.toString replacement))
+      (instance? Pattern match)
+      (if (instance? CharSequence replacement)
+        (.replaceFirst (re-matcher match s)
+                       (.toString replacement))
+        (replace-first-by s match replacement))
+      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
+  (throw "TODO: port clojure.string/replace-first"))
+
+(defn join
+  "Returns a string of all elements in coll, as returned by (seq coll),
+  separated by an optional separator."
+  ([coll]
+   (apply str coll))
+  ([separator coll]
+   (loop [s (str (first coll))
+          more (next coll)
+          sep (str separator)]
+     (if more
+       (recur (str s sep (first more))
+              (next more)
+              sep)
+       s))))
+
+(def ^{:doc "Converts string to all upper-case."
+       :arglists '([s])}
+  upper-case clojure.string-native/upper-case)
+
+(def ^{:doc "Converts string to all lower-case."
+       :arglists '([s])}
+  lower-case clojure.string-native/lower-case)
+
+(defn capitalize
+  "Converts first character of the string to upper-case, all other
+  characters to lower-case."
   [s]
-  (native/raw "auto const s_str(runtime::to_string(~{ s }));
-              __value = make_box(s_str.is_blank());"))
+  (let [s (str s)]
+    (if (< (count s) 2)
+      (upper-case s)
+      (str (upper-case (subs s 0 1))
+           (lower-case (subs s 1))))))
 
-;(defn escape
-;  "Return a new string, using cmap to escape each character ch
-;  from s as follows:
-;
-;  If (cmap ch) is nil, append ch to the new string.
-;  If (cmap ch) is non-nil, append (str (cmap ch)) instead."
-;  {:added "1.2"}
-;  [s cmap]
-;  (loop [index (int 0)
-;         buffer (StringBuilder. (.length s))]
-;    (if (= (.length s) index)
-;      (.toString buffer)
-;      (let [ch (.charAt s index)]
-;        (if-let [replacement (cmap ch)]
-;          (.append buffer replacement)
-;          (.append buffer ch))
-;        (recur (inc index) buffer)))))
-;
-;(defn index-of
-;  "Return index of value (string or char) in s, optionally searching
-;  forward from from-index. Return nil if value not found."
-;  {:added "1.8"}
-;  ([s value]
-;   (let [result (if (instance? Character value)
-;                  (.indexOf (.toString s) (.charValue value))
-;                  (.indexOf (.toString s) value))]
-;     (if (= result -1)
-;       nil
-;       result)))
-;  ([s value from-index]
-;   (let [result (if (instance? Character value)
-;                  (.indexOf (.toString s) (.charValue value) (unchecked-int from-index))
-;                  (.indexOf (.toString s) value (unchecked-int from-index)))]
-;     (if (= result -1)
-;       nil
-;       result))))
-;
-;(defn last-index-of
-;  "Return last index of value (string or char) in s, optionally
-;  searching backward from from-index. Return nil if value not found."
-;  {:added "1.8"}
-;  ([s value]
-;   (let [result (if (instance? Character value)
-;                  (.lastIndexOf (.toString s) (.charValue value))
-;                  (.lastIndexOf (.toString s) value))]
-;     (if (= result -1)
-;       nil
-;       result)))
-;  ([s value from-index]
-;   (let [result (if (instance? Character value)
-;                  (.lastIndexOf (.toString s) (.charValue value) (unchecked-int from-index))
-;                  (.lastIndexOf (.toString s) value (unchecked-int from-index)))]
-;     (if (= result -1)
-;       nil
-;       result))))
+(defn split
+  "Splits string on a regular expression.  Optional argument limit is
+  the maximum number of parts. Not lazy. Returns vector of the parts.
+  Trailing empty strings are not returned - pass limit of -1 to return all."
+  ([s re]
+   ;(LazilyPersistentVector/createOwning (.split re s))
+   (throw "TODO: port clojure.string/split"))
+  ([s re limit]
+   ;(LazilyPersistentVector/createOwning (.split re s limit))
+   (throw "TODO: port clojure.string/split")))
 
-(defn starts-with?
-  "True if s starts with substr."
-  [s substr]
-  (native/raw "auto const s_str(runtime::to_string(~{ s }));
-              auto const substr_str(runtime::to_string(~{ substr }));
-              __value = make_box(s_str.starts_with(substr_str));"))
+(defn split-lines
+  "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
+  [s]
+  ;(split s #"\r?\n")
+  (throw "TODO: port clojure.string/split-lines")
+  )
 
-(defn ends-with?
-  "True if s ends with substr."
-  [s substr]
-  (native/raw "auto const s_str(runtime::to_string(~{ s }));
-              auto const substr_str(runtime::to_string(~{ substr }));
-              __value = make_box(s_str.ends_with(substr_str));"))
+(defn trim
+  "Removes whitespace from both ends of string."
+  [s]
+  ;(let [len (.length s)]
+  ;  (loop [rindex len]
+  ;    (if (zero? rindex)
+  ;      ""
+  ;      (if (Character/isWhitespace (.charAt s (dec rindex)))
+  ;        (recur (dec rindex))
+  ;        ;; there is at least one non-whitespace char in the string,
+  ;        ;; so no need to check for lindex reaching len.
+  ;        (loop [lindex 0]
+  ;          (if (Character/isWhitespace (.charAt s lindex))
+  ;            (recur (inc lindex))
+  ;            (.. s (subSequence lindex rindex) toString)))))))
+  (throw "TODO: port clojure.string/trim"))
 
-(defn includes?
-  "True if s includes substr."
-  [s substr]
-  (native/raw "auto const s_str(runtime::to_string(~{ s }));
-              auto const substr_str(runtime::to_string(~{ substr }));
-              __value = make_box(s_str.contains(substr_str));"))
+(defn triml
+  "Removes whitespace from the left side of string."
+  [s]
+  ;(let [len (.length s)]
+  ;  (loop [index 0]
+  ;    (if (= len index)
+  ;      ""
+  ;      (if (Character/isWhitespace (.charAt s index))
+  ;        (recur (unchecked-inc index))
+  ;        (.. s (subSequence index len) toString)))))
+  (throw "TODO: port clojure.string/triml"))
+
+(defn trimr
+  "Removes whitespace from the right side of string."
+  [s]
+  ;(loop [index (.length s)]
+  ;  (if (zero? index)
+  ;    ""
+  ;    (if (Character/isWhitespace (.charAt s (unchecked-dec index)))
+  ;      (recur (unchecked-dec index))
+  ;      (.. s (subSequence 0 index) toString))))
+  (throw "TODO: port clojure.string/trimr"))
+
+(defn trim-newline
+  "Removes all trailing newline \\n or return \\r characters from
+  string.  Similar to Perl's chomp."
+  [s]
+  ;(loop [index (.length s)]
+  ;  (if (zero? index)
+  ;    ""
+  ;    (let [ch (.charAt s (dec index))]
+  ;      (if (or (= ch \newline) (= ch \return))
+  ;        (recur (dec index))
+  ;        (.. s (subSequence 0 index) toString)))))
+  (throw "TODO: port clojure.string/trim-newline"))
+
+(def ^{:doc "True if s is nil, empty, or contains only whitespace."
+       :arglists '([s])}
+  blank? clojure.string-native/blank?)
+
+(defn escape
+  "Return a new string, using cmap to escape each character ch
+  from s as follows:
+
+  If (cmap ch) is nil, append ch to the new string.
+  If (cmap ch) is non-nil, append (str (cmap ch)) instead."
+  [s cmap]
+  (let [c (count s)]
+    (loop [index (int 0)
+           out ""]
+      (if (= c index)
+        out
+        (let [ch (nth s index)]
+          (recur (inc index)
+                 (if-let [replacement (cmap ch)]
+                   (str out replacement)
+                   (str out ch))))))))
+
+(defn index-of
+  "Return index of value (string or char) in s, optionally searching
+  forward from from-index. Return nil if value not found."
+  ([s value]
+   ;(let [result (if (instance? Character value)
+   ;               (.indexOf (.toString s) (.charValue value))
+   ;               (.indexOf (.toString s) value))]
+   ;  (if (= result -1)
+   ;    nil
+   ;    result))
+   (throw "TODO: port clojure.string/index-of"))
+  ([s value from-index]
+   ;(let [result (if (instance? Character value)
+   ;               (.indexOf (.toString s) (.charValue value) (unchecked-int from-index))
+   ;               (.indexOf (.toString s) value (unchecked-int from-index)))]
+   ;  (if (= result -1)
+   ;    nil
+   ;    result))
+   (throw "TODO: port clojure.string/index-of")))
+
+(defn last-index-of
+  "Return last index of value (string or char) in s, optionally
+  searching backward from from-index. Return nil if value not found."
+  ([s value]
+   ;(let [result (if (instance? Character value)
+   ;               (.lastIndexOf (.toString s) (.charValue value))
+   ;               (.lastIndexOf (.toString s) value))]
+   ;  (if (= result -1)
+   ;    nil
+   ;    result))
+   (throw "TODO: port clojure.string/index-of"))
+  ([s value from-index]
+   ;(let [result (if (instance? Character value)
+   ;               (.lastIndexOf (.toString s) (.charValue value) (unchecked-int from-index))
+   ;               (.lastIndexOf (.toString s) value (unchecked-int from-index)))]
+   ;  (if (= result -1)
+   ;    nil
+   ;    result))
+   (throw "TODO: port clojure.string/index-of")))
+
+(def ^{:doc "True if s starts with substr."
+       :arglists '([s substr])}
+  starts-with? clojure.string-native/starts-with?)
+
+(def ^{:doc "True if s ends with substr."
+       :arglists '([s substr])}
+  ends-with? clojure.string-native/ends-with?)
+
+(def ^{:doc "True if s includes substr."
+        :arglists '([s substr])}
+  includes? clojure.string-native/includes?)
