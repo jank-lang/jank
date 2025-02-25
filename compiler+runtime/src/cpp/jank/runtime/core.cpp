@@ -600,4 +600,5 @@ namespace jank::runtime
   {
     return o->type == object_type::tagged_literal;
   }
+
 }

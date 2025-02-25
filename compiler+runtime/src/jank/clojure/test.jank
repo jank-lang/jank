@@ -497,22 +497,15 @@
 (defmethod assert-expr 'thrown? [msg form]
   ;; (is (thrown? expr))
   ;; Asserts that evaluating expr throws something.
-  ;; Returns a true value if thrown otherwise nil.
+  ;; Returns the thing thrown or nil.
   (let [body (nthnext form 1)]
-    `(let [->msg# #(do ~msg)]
-       (clojure.core-native/catch-all
-         #(do ~@body)
-         (fn [res#]
-           (do-report {:type :fail :message (->msg#)
-                       :expected '~form :actual nil})
-           nil)
-         (fn [e#]
-           (do-report {:type :pass :message (->msg#)
-                       :expected '~form :actual e#})
-           (or e# true))
-         #(do (do-report {:type :pass :message (->msg#)
-                          :expected '~form :actual :unknown-exception})
-              true)))))
+    `(try (do ~@body)
+          (do-report {:type :fail :message ~msg
+                      :expected '~form :actual nil})
+          (catch e#
+            (do-report {:type :pass :message ~msg
+                        :expected '~form :actual e#})
+            e#))))
 
 (defmethod assert-expr 'thrown-with-msg? [msg form]
   ;; (is (thrown-with-msg? re expr))
