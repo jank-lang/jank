@@ -56,8 +56,8 @@ namespace jank::runtime::obj
     return value;
   }
 
-  object_ptr
-  repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f, object_ptr const start) const
+  object_ptr repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f,
+                            object_ptr const start) const
   {
     auto ret(start);
     auto const bound(count);
@@ -96,7 +96,7 @@ namespace jank::runtime::obj
       case 1:
         return nullptr;
     }
-    return make_box<repeat>(c-1, value);
+    return make_box<repeat>(c - 1, value);
   }
 
   repeat_ptr repeat::next_in_place()
@@ -109,7 +109,7 @@ namespace jank::runtime::obj
       case 1:
         return nullptr;
     }
-    count = c-1;
+    count = c - 1;
     return this;
   }
 
