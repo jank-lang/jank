@@ -562,7 +562,8 @@ namespace jank::runtime
   }
 
   template <typename F, typename... Args>
-  concept map_visitable = requires(F f) { f(obj::persistent_hash_map_ptr{}, std::declval<Args>()...); };
+  concept map_visitable
+    = requires(F f) { f(obj::persistent_hash_map_ptr{}, std::declval<Args>()...); };
 
   template <typename F1, typename F2, typename... Args>
   requires(map_visitable<F1, Args...> && !std::convertible_to<F2, object const *>)

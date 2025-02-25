@@ -710,10 +710,12 @@ namespace jank::runtime
     return visit_map_like(
       [&](auto const typed_other) {
         object_ptr ret{ m };
+        object_ptr zero(make_box(0));
+        object_ptr one(make_box(1));
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
           auto const e{ seq->first() };
-          ret = assoc(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
+          ret = assoc(ret, runtime::nth(e, zero), runtime::nth(e, one));
         }
         return ret;
       },
