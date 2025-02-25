@@ -125,10 +125,14 @@ namespace jank::runtime::obj
   {
     assert_active();
 
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_sorted_map)
+    if(head == obj::nil::nil_const())
     {
-      return expect_object<transient_sorted_map>(runtime::merge(this, head));
+      return this;
+    }
+
+    if(is_map(head))
+    {
+      return expect_object<transient_sorted_map>(runtime::merge_in_place(this, head));
     }
 
     if(head->type != object_type::persistent_vector)

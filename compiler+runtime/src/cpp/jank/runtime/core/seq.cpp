@@ -720,6 +720,21 @@ namespace jank::runtime
       other);
   }
 
+  object_ptr merge_in_place(object_ptr const m, object_ptr const other)
+  {
+    return visit_map_like(
+      [&](auto const typed_other) {
+        object_ptr ret{ m };
+        for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+        {
+          auto const e{ seq->first() };
+          ret = assoc_in_place(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
+        }
+        return ret;
+      },
+      other);
+  }
+
   object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
   {
     if(o->type != object_type::persistent_vector)
