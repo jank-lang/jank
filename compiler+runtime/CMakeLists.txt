@@ -42,7 +42,7 @@ execute_process(
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-set(jank_version "${CMAKE_PROJECT_VERSION}-${jank_git_hash}")
+set(jank_version "jank-${CMAKE_PROJECT_VERSION}-${jank_git_hash}")
 
 set(jank_cxx_standard cxx_std_20)
 
@@ -71,6 +71,8 @@ set(
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default
   -Wno-invalid-offsetof
+  -Wno-deprecated-declarations
+  -Wno-c++23-extensions
   -fno-common
   -fno-rtti
   -fexceptions
@@ -102,6 +104,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
+endif()
+
+if(jank_tests)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_TEST)
 endif()
 
 include(cmake/coverage.cmake)
@@ -158,6 +164,13 @@ add_library(
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/profile/time.cpp
+  src/cpp/jank/ui/highlight.cpp
+  src/cpp/jank/error.cpp
+  src/cpp/jank/error/report.cpp
+  src/cpp/jank/error/lex.cpp
+  src/cpp/jank/error/parse.cpp
+  src/cpp/jank/error/analyze.cpp
+  src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/runtime/core.cpp
@@ -249,6 +262,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
 )
 
@@ -262,6 +276,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
 include(cmake/dependency/fmt.cmake)
+include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
@@ -278,6 +293,7 @@ target_link_libraries(
   clang-cpp
   LLVM
   Boost::filesystem
+  ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )
 
@@ -433,11 +449,18 @@ if(jank_tests)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
+    test/cpp/jank/runtime/behavior/callable.cpp
+    test/cpp/jank/runtime/core.cpp
+    test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
+    test/cpp/jank/runtime/obj/persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/persistent_vector.cpp
+    test/cpp/jank/runtime/obj/range.cpp
+    test/cpp/jank/runtime/obj/integer_range.cpp
+    test/cpp/jank/runtime/obj/repeat.cpp
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
@@ -503,3 +526,6 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install.cmake)
 endif()
 # ---- Install rules ----
+
+# Summary
+include(cmake/summary.cmake)

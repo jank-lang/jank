@@ -28,7 +28,6 @@ namespace jank::util::cli
     native_vector<native_persistent_string> libs;
 
     /* Compilation. */
-    native_transient_string compilation_path{ "classes" };
     native_integer optimization_level{};
 
     /* Run command. */

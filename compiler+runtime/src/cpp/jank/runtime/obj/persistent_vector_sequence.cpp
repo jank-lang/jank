@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     assert(0 < v->data.size() - index);
   }
 
-  /* behavior::objectable */
+  /* behavior::object_like */
   native_bool persistent_vector_sequence::equal(object const &o) const
   {
     return runtime::equal(

@@ -506,21 +506,13 @@ namespace jank::runtime
         {
           return make_box<obj::persistent_list>(std::in_place, o);
         }
-        else if constexpr(behavior::conjable_in_place<T>)
-        {
-          return typed_s->conj_in_place(o);
-        }
         else if constexpr(behavior::conjable<T>)
         {
           return typed_s->conj(o);
         }
-        else if constexpr(behavior::seqable<T>)
-        {
-          return typed_s->seq()->conj(o);
-        }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_string()) };
         }
       },
       s);
@@ -549,11 +541,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->assoc_in_place(k, v);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->assoc(k, v);
         }
@@ -572,11 +560,7 @@ namespace jank::runtime
       [&](auto const typed_m) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable_in_place<T>)
-        {
-          return typed_m->dissoc_in_place(k);
-        }
-        else if constexpr(behavior::associatively_writable<T>)
+        if constexpr(behavior::associatively_writable<T>)
         {
           return typed_m->dissoc(k);
         }
@@ -958,23 +942,27 @@ namespace jank::runtime
 
   native_persistent_string str(object_ptr const o, object_ptr const args)
   {
+    util::string_builder buff;
+    buff.reserve(16);
+    if(!is_nil(o))
+    {
+      runtime::to_string(o, buff);
+    }
     return visit_seqable(
-      [=](auto const typed_args) -> native_persistent_string {
-        util::string_builder buff;
-        buff.reserve(16);
-        runtime::to_string(o, buff);
-        if(0 < sequence_length(typed_args))
+      [](auto const typed_args, util::string_builder &buff) -> native_persistent_string {
+        for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
-          auto const fresh(typed_args->fresh_seq());
-          runtime::to_string(fresh->first(), buff);
-          for(auto it(fresh->next_in_place()); it != nullptr; it = it->next_in_place())
+          auto const fst(it->first());
+          if(is_nil(fst))
           {
-            runtime::to_string(it->first(), buff);
+            continue;
           }
+          runtime::to_string(fst, buff);
         }
         return buff.release();
       },
-      args);
+      args,
+      buff);
   }
 
   obj::persistent_list_ptr list(object_ptr const s)
@@ -1049,23 +1037,10 @@ namespace jank::runtime
         return visit_seqable(
           [](auto const typed_r, auto const typed_l) -> native_bool {
             auto r_it(typed_r->fresh_seq());
-            auto l_it(typed_l->fresh_seq());
-            if(!r_it)
+            for(auto l_it(typed_l->fresh_seq()); l_it != nullptr;
+                l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
             {
-              return l_it == nullptr;
-            }
-            if(!l_it)
-            {
-              return r_it == nullptr;
-            }
-
-            for(; l_it != nullptr; l_it = l_it->next_in_place(), r_it = r_it->next_in_place())
-            {
-              if(!r_it)
-              {
-                return false;
-              }
-              if(!runtime::equal(l_it->first(), r_it->first()))
+              if(!r_it || !runtime::equal(l_it->first(), r_it->first()))
               {
                 return false;
               }
@@ -1202,12 +1177,12 @@ namespace jank::runtime
 
   object_ptr repeat(object_ptr const val)
   {
-    return make_box<obj::repeat>(val);
+    return obj::repeat::create(val);
   }
 
   object_ptr repeat(object_ptr const n, object_ptr const val)
   {
-    return make_box<obj::repeat>(n, val);
+    return obj::repeat::create(n, val);
   }
 
   object_ptr sort(object_ptr const coll)

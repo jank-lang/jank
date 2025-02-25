@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -9,7 +10,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <folly/FBString.h>
+#include <fmt/format.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
@@ -23,6 +24,8 @@
 #include <jank/jit/processor.hpp>
 #include <jank/native_persistent_string.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/error/report.hpp>
+#include <jank/util/scope_exit.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -141,6 +144,12 @@ namespace jank
     le.setPrompt(get_prompt("=> "));
     native_transient_string input{};
 
+    /* We write every REPL expression to a temporary file, which then allows us
+     * to later review that for error reporting. We automatically clean it up
+     * and we reuse the same file over and over. */
+    auto const tmp{ boost::filesystem::temp_directory_path() };
+    auto const path{ tmp / boost::filesystem::unique_path("jank-repl-%%%%.jank") };
+
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     while(auto buf = le.readLine())
@@ -151,15 +160,22 @@ namespace jank
       if(line.ends_with("\\"))
       {
         input.append(line.substr(0, line.size() - 1));
+        input.append("\n");
         le.setPrompt(get_prompt("=>... "));
         continue;
       }
 
       input += line;
 
+      util::scope_exit const finally{ [&] { boost::filesystem::remove(path); } };
       try
       {
-        auto const res(__rt_ctx->eval_string(input));
+        {
+          std::ofstream ofs{ path.string() };
+          ofs << input;
+        }
+
+        auto const res(__rt_ctx->eval_file(path.c_str()));
         fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
@@ -175,12 +191,13 @@ namespace jank
       {
         fmt::println("Exception: {}", s);
       }
-      catch(jank::read::error const &e)
+      catch(jank::error_ptr const &e)
       {
-        fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+        jank::error::report(e);
       }
 
       input.clear();
+      std::cout << "\n";
       le.setPrompt(get_prompt("=> "));
     }
   }
@@ -242,9 +259,9 @@ namespace jank
       {
         fmt::println("Exception: {}", s);
       }
-      catch(jank::read::error const &e)
+      catch(jank::error_ptr const &e)
       {
-        fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+        jank::error::report(e);
       }
 
       input.clear();
@@ -321,20 +338,25 @@ try
 catch(std::exception const &e)
 {
   fmt::println("Exception: {}", e.what());
+  return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
   fmt::println("Exception: {}", jank::runtime::to_code_string(o));
+  return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
   fmt::println("Exception: {}", s);
+  return 1;
 }
-catch(jank::read::error const &e)
+catch(jank::error_ptr const &e)
 {
-  fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+  jank::error::report(e);
+  return 1;
 }
 catch(...)
 {
   fmt::println("Unknown exception thrown");
+  return 1;
 }
