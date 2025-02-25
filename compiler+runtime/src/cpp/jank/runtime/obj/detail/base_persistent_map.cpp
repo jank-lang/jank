@@ -162,7 +162,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   object_ptr base_persistent_map<PT, ST, V>::conj(object_ptr const head) const
   {
-    auto ret(static_cast<PT const *>(this));
+    auto const ret(static_cast<PT const *>(this));
     if(head == obj::nil::nil_const())
     {
       return ret;
@@ -170,17 +170,7 @@ namespace jank::runtime::obj::detail
 
     if(is_map(head))
     {
-      return visit_map_like(
-        [](auto const typed_head, object_ptr ret) {
-          for(auto seq{ typed_head->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
-          {
-            auto const e{ seq->first() };
-            ret = runtime::assoc(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
-          }
-          return ret;
-        },
-        head,
-        ret);
+      return merge(ret, head);
     }
 
     if(head->type != object_type::persistent_vector)
