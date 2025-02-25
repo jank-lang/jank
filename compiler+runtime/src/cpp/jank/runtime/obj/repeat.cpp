@@ -8,18 +8,17 @@ namespace jank::runtime::obj
 {
   repeat::repeat(object_ptr const value)
     : value{ value }
-    , count{ make_box(infinite) }
   {
   }
 
-  repeat::repeat(object_ptr const count, object_ptr const value)
+  repeat::repeat(size_t const count, object_ptr const value)
     : value{ value }
     , count{ count }
   {
-    if(0 >= to_int(count))
+    if(count == infinite)
     {
       throw std::runtime_error{ "repeat must be constructed with positive count: "
-                                + std::to_string(to_int(count)) };
+                                + std::to_string(count) };
     }
   }
 
@@ -30,11 +29,12 @@ namespace jank::runtime::obj
 
   object_ptr repeat::create(object_ptr const count, object_ptr const value)
   {
-    if(lte(count, make_box(0)))
+    auto const c(to_int(count));
+    if(c <= 0)
     {
       return persistent_list::empty();
     }
-    return make_box<repeat>(count, value);
+    return make_box<repeat>(static_cast<size_t>(c), value);
   }
 
   repeat_ptr repeat::seq()
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
 
   repeat_ptr repeat::fresh_seq() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    if(count == infinite)
     {
       return this;
     }
@@ -60,7 +60,8 @@ namespace jank::runtime::obj
   repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const f, object_ptr const start) const
   {
     object_ptr ret(start);
-    if(runtime::equal(count, make_box(infinite)))
+    auto const bound(count);
+    if(bound == infinite)
     {
       while(true)
       {
@@ -73,8 +74,7 @@ namespace jank::runtime::obj
     }
     else
     {
-      auto const bound(static_cast<size_t>(to_int(count)));
-      for(size_t i{}; i < bound; ++i)
+      for(size_t i{}; i < count; ++i)
       {
         ret = f(ret, value);
         if(ret->type == object_type::reduced)
@@ -88,28 +88,28 @@ namespace jank::runtime::obj
 
   repeat_ptr repeat::next() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    auto const c(count);
+    switch(c)
     {
-      return this;
+      case infinite:
+        return this;
+      case 1:
+        return nullptr;
     }
-    if(lte(count, make_box(1)))
-    {
-      return nullptr;
-    }
-    return make_box<repeat>(make_box(add(count, make_box(-1))), value);
+    return make_box<repeat>(c-1, value);
   }
 
   repeat_ptr repeat::next_in_place()
   {
-    if(runtime::equal(count, make_box(infinite)))
+    auto const c(count);
+    switch(c)
     {
-      return this;
+      case infinite:
+        return this;
+      case 1:
+        return nullptr;
     }
-    if(lte(count, make_box(1)))
-    {
-      return nullptr;
-    }
-    count = add(count, make_box(-1));
+    count = c-1;
     return this;
   }
 

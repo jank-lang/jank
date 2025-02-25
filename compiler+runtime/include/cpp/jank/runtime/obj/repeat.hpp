@@ -13,11 +13,11 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::repeat };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
-    static constexpr native_integer infinite{ -1 };
+    static constexpr size_t infinite{ 0 };
 
     repeat() = default;
     repeat(object_ptr value);
-    repeat(object_ptr count, object_ptr value);
+    repeat(size_t count, object_ptr value);
 
     static object_ptr create(object_ptr value);
     static object_ptr create(object_ptr count, object_ptr value);
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     object_ptr value{};
-    object_ptr count{};
+    size_t count{};
     option<object_ptr> meta{};
   };
 }
