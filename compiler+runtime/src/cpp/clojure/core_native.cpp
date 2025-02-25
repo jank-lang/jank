@@ -386,7 +386,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("deref", &deref);
   intern_fn("reduced", &reduced);
   intern_fn("reduced?", &is_reduced);
-  intern_fn("reduce", &reduce);
+  intern_fn("reduce", static_cast<object_ptr (*)(object_ptr, object_ptr, object_ptr)>(&reduce));
   intern_fn("peek", &peek);
   intern_fn("pop", &pop);
   intern_fn("atom", &atom);

@@ -33,6 +33,9 @@ namespace jank::runtime::obj
     repeat_ptr seq();
     repeat_ptr fresh_seq() const;
 
+    /* behavior::reduceable */
+    object_ptr reduce(std::function<object *(object *, object *)> f, object_ptr init) const;
+
     /* behavior::sequenceable */
     object_ptr first() const;
     repeat_ptr next() const;
