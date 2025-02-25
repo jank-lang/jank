@@ -81,6 +81,7 @@ namespace jank::runtime
 
     object_ptr eval_file(native_persistent_string_view const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
+    void eval_cpp_string(native_persistent_string_view const &code) const;
     object_ptr read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ptr>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
@@ -106,6 +107,8 @@ namespace jank::runtime
     object_ptr eval(object_ptr const o);
 
     string_result<void> write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
+    string_result<void> write_module(native_persistent_string const &module_name,
+                                     std::unique_ptr<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
