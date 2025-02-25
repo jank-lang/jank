@@ -600,38 +600,4 @@ namespace jank::runtime
   {
     return o->type == object_type::tagged_literal;
   }
-
-  object_ptr catch_all(object_ptr const f,
-                       object_ptr const normal,
-                       object_ptr const caught,
-                       object_ptr const unknown)
-  {
-    try
-    {
-      return dynamic_call(normal, dynamic_call(f));
-    }
-    /* TODO: Unify error handling. JEEZE! */
-    catch(std::exception const &e)
-    {
-      return dynamic_call(caught, make_box<obj::persistent_string>(e.what()));
-    }
-    catch(jank::runtime::object_ptr const o)
-    {
-      return dynamic_call(caught, o);
-    }
-    catch(jank::native_persistent_string const &s)
-    {
-      return dynamic_call(caught, make_box<obj::persistent_string>(s));
-    }
-    catch(jank::read::error const &e)
-    {
-      return dynamic_call(caught,
-                          make_box<obj::persistent_string>(
-                            fmt::format("Read error ({} - {}): {}", e.start, e.end, e.message)));
-    }
-    catch(...)
-    {
-      return dynamic_call(unknown);
-    }
-  }
 }
