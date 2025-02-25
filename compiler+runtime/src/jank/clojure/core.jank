@@ -6748,38 +6748,14 @@ fails, attempts to require sym's namespace and retries."
   ;; (java.util.UUID/randomUUID)
   (throw "TODO: port random-uuid"))
 
-;; (extend-protocol clojure.core.protocols/IKVReduce
-;;  nil
-;;  (kv-reduce
-;;   [_ f init]
-;;   init)
-
-;;  ;;slow path default
-;;  java.lang.Object
-;;  (kv-reduce
-;;   [amap f init]
-;;   (reduce (fn [ret ^java.util.Map$Entry me]
-;;             (f ret
-;;                (.getKey me)
-;;                (.getValue me)))
-;;           init
-;;           amap))
-
-;;  clojure.lang.IKVReduce
-;;  (kv-reduce
-;;   [amap f init]
-;;   (.kvreduce amap f init)))
-
-(defn reduce-kv
-  "Reduces an associative collection. f should be a function of 3
-  arguments. Returns the result of applying f to init, the first key
-  and the first value in coll, then applying f to that result and the
-  2nd key and value, etc. If coll contains no entries, returns init
-  and f is not called. Note that reduce-kv is supported on vectors,
-  where the keys will be the ordinals."  
-  ([f init coll]
-    ;;  (clojure.core.protocols/kv-reduce coll f init)
-   (reduce (fn [s [k v]] (f s k v)) init coll)))
+(def ^{:doc "Reduces an associative collection. f should be a function of 3
+             arguments. Returns the result of applying f to init, the first key
+             and the first value in coll, then applying f to that result and the
+             2nd key and value, etc. If coll contains no entries, returns init
+             and f is not called. Note that reduce-kv is supported on vectors,
+             where the keys will be the ordinals."
+       :arglists '([f init coll])}
+  reduce-kv @clojure.core-native/reduce-kv)
 
 (defn- normalize-slurp-opts
   [opts]

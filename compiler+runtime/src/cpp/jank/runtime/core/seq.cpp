@@ -1045,7 +1045,7 @@ namespace jank::runtime
             default:
               if constexpr(std::same_as<T, obj::jit_function>)
               {
-                std::function<object_ptr(object *, object *)> const f(typed_source->arity_2);
+                std::function<object_ptr(object_ptr, object_ptr)> const f(typed_source->arity_2);
                 if(f)
                 {
                   return reduce(f, init, s);
@@ -1069,7 +1069,7 @@ namespace jank::runtime
       s);
   }
 
-  object_ptr reduce(std::function<object *(object *, object *)> const f,
+  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> const f,
                     object_ptr const init,
                     object_ptr const s)
   {
@@ -1102,6 +1102,90 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("cannot reduce: {}", typed_coll->to_string()) };
+        }
+      },
+      s,
+      f,
+      init);
+  }
+
+  object_ptr reduce_kv(object_ptr const f, object_ptr const init, object_ptr const s)
+  {
+    return visit_object(
+      [=](auto const typed_source, auto const init, auto const s) -> object_ptr {
+        using T = typename decltype(typed_source)::value_type;
+        if constexpr(std::is_base_of_v<behavior::callable, T>)
+        {
+          auto const arity_flags(typed_source->get_arity_flags());
+          auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
+          switch(mask)
+          {
+            case behavior::callable::mask_variadic_arity(0):
+            case behavior::callable::mask_variadic_arity(1):
+            case behavior::callable::mask_variadic_arity(2):
+            case behavior::callable::mask_variadic_arity(3):
+              break;
+            default:
+              if constexpr(std::same_as<T, obj::jit_function>)
+              {
+                std::function<object_ptr(object_ptr, object_ptr, object_ptr)> const f(typed_source->arity_3);
+                if(f)
+                {
+                  return reduce_kv(f, init, s);
+                }
+              }
+              else
+              {
+                auto f([&typed_source](object_ptr const a, object_ptr const k, object_ptr const v) -> object_ptr {
+                  return typed_source->call(a, k, v);
+                });
+                return reduce_kv(f, init, s);
+              }
+          }
+        }
+        return reduce_kv([&](auto const a, auto const k, auto const v) { return dynamic_call(typed_source, a, k, v); },
+                         init,
+                         s);
+      },
+      f,
+      init,
+      s);
+  }
+
+  object_ptr reduce_kv(std::function<object_ptr(object_ptr, object_ptr, object_ptr)> const f,
+                       object_ptr const init,
+                       object_ptr const s)
+  {
+    return visit_object(
+      [](auto const typed_coll, auto const f, auto const init) -> object_ptr {
+        using T = typename decltype(typed_coll)::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          return init;
+        }
+        else if constexpr(behavior::reduceable_kv<T>)
+        {
+          return typed_coll->reduce_kv(f, init);
+        }
+        //TODO delete this case
+        else if constexpr(behavior::seqable<T>)
+        {
+          object_ptr res{ init };
+          for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+          {
+            res = f(res, first(it), second(static_cast<object_ptr>(it)));
+            if(res->type == object_type::reduced)
+            {
+              res = expect_object<obj::reduced>(res)->val;
+              break;
+            }
+          }
+          return res;
+        }
+        else
+        {
+          throw std::runtime_error{ fmt::format("cannot reduce-kv: {}", typed_coll->to_string()) };
         }
       },
       s,

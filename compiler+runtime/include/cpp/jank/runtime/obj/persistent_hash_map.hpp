@@ -91,6 +91,9 @@ namespace jank::runtime::obj
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
 
+    /* behavior::reduceable_kv */
+    object_ptr reduce_kv(std::function<object_ptr(object_ptr, object_ptr, object_ptr)>, object_ptr) const;
+
     /* behavior::transientable */
     obj::transient_hash_map_ptr to_transient() const;
 

@@ -57,7 +57,7 @@ namespace jank::runtime::obj
   }
 
   object_ptr
-  repeat::reduce(std::function<object *(object *, object *)> const f, object_ptr const start) const
+  repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const f, object_ptr const start) const
   {
     object_ptr ret(start);
     if(runtime::equal(count, make_box(infinite)))
