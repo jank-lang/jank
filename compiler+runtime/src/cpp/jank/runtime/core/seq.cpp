@@ -708,10 +708,8 @@ namespace jank::runtime
   object_ptr merge(object_ptr const m, object_ptr const other)
   {
     return visit_map_like(
-      [&](auto const typed_other) {
+      [&](auto const typed_other, auto const zero, auto const one) {
         object_ptr ret{ m };
-        object_ptr zero(make_box(0));
-        object_ptr one(make_box(1));
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
           auto const e{ seq->first() };
@@ -719,7 +717,9 @@ namespace jank::runtime
         }
         return ret;
       },
-      other);
+      other,
+      make_box(0),
+      make_box(1));
   }
 
   object_ptr merge_in_place(object_ptr const m, object_ptr const other)
