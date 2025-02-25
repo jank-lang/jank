@@ -160,15 +160,41 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   object_ptr base_persistent_map<PT, ST, V>::conj(object_ptr const head) const
   {
+    auto ret(static_cast<PT const *>(this));
     if(head == obj::nil::nil_const())
     {
-      return this;
+      return ret;
     }
 
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_hash_map)
+    if(is_map(head))
     {
-      return merge(this, head);
+      return visit_map_like(
+        [](auto const typed_head, object_ptr ret) {
+          using T = typename decltype(typed_head)::value_type;
+
+          for(auto const &kv : typed_head->data)
+          {
+            /* The two maps (hash and sorted) have slightly different iterators, so we need to
+             * pull out the entries differently. */
+            object_ptr first{}, second{};
+            if constexpr(std::same_as<T, obj::persistent_sorted_map>)
+            {
+              auto const &entry(kv.get());
+              first = entry.first;
+              second = entry.second;
+            }
+            else
+            {
+              first = kv.first;
+              second = kv.second;
+            }
+
+            ret = runtime::assoc(ret, first, second);
+          }
+          return ret;
+        },
+        head,
+        ret);
     }
 
     if(head->type != object_type::persistent_vector)
@@ -182,7 +208,7 @@ namespace jank::runtime::obj::detail
       throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
-    return runtime::assoc(this, vec->data[0], vec->data[1]);
+    return ret->assoc(vec->data[0], vec->data[1]);
   }
 
   template <typename PT, typename ST, typename V>
