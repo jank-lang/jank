@@ -206,6 +206,20 @@ namespace jank::runtime
     return ret;
   }
 
+  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  {
+    profile::timer const timer{ "rt eval_cpp_string" };
+    auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
+    auto err(jit_prc.interpreter->Execute(partial_tu));
+    llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+
+    if(truthy(compile_files_var->deref()))
+    {
+      auto module_name{runtime::to_string(current_module_var->deref())};
+      write_module(module_name, partial_tu.TheModule).expect_ok();
+    }
+  }
+
   object_ptr context::read_string(native_persistent_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
@@ -336,6 +350,53 @@ namespace jank::runtime
     }
 
     pass.run(*codegen_ctx->module);
+
+    return ok();
+  }
+
+  string_result<void>
+  context::write_module(native_persistent_string const &module_name, std::unique_ptr<llvm::Module> &module) const
+  {
+    profile::timer const timer{ fmt::format("write_module {}", module_name) };
+    boost::filesystem::path const module_path{
+      fmt::format("{}/{}.o", output_dir, module::module_to_path(module_name))
+    };
+    boost::filesystem::create_directories(module_path.parent_path());
+
+    /* TODO: Is there a better place for this block of code? */
+    std::error_code file_error{};
+    llvm::raw_fd_ostream os(module_path.c_str(), file_error, llvm::sys::fs::OpenFlags::OF_None);
+    if(file_error)
+    {
+      return err(fmt::format("failed to open module file {} with error {}",
+                             module_path.c_str(),
+                             file_error.message()));
+    }
+    // codegen_ctx->module->print(llvm::outs(), nullptr);
+
+    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
+    std::string target_error;
+    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple, target_error) };
+    if(!target)
+    {
+      return err(target_error);
+    }
+    llvm::TargetOptions const opt;
+    auto const target_machine{
+      target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
+    };
+    if(!target_machine)
+    {
+      return err(fmt::format("failed to create target machine for {}", target_triple));
+    }
+    llvm::legacy::PassManager pass;
+
+    if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
+    {
+      return err(fmt::format("failed to write module to object file for {}", target_triple));
+    }
+
+    pass.run(*module);
 
     return ok();
   }
