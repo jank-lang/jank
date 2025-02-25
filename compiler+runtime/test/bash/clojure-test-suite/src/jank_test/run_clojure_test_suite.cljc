@@ -113,7 +113,7 @@
     ;clojure.core-test.star-squote ; Read error (405 - 423): number out of range
     ;clojure.core-test.str  ;Read error (1201 - 1203): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.string-qmark ; Read error (405 - 423): number out of range
-    ;clojure.core-test.subs ;https://github.com/jank-lang/jank/issues/248
+    ;clojure.core-test.subs ; https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
     ;clojure.core-test.symbol-qmark ;Read error (456 - 458): invalid number: chars 'N' are invalid for radix 8
     ;clojure.core-test.take ;https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243

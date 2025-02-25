@@ -111,20 +111,16 @@ namespace jank::runtime::obj
     {
       return err(fmt::format("start index {} is less than 0", start));
     }
-    if(end < 0)
+    if(end < start)
     {
-      return err(fmt::format("end index {} is less than 0", start));
-    }
-    else if(static_cast<size_t>(start) > data.size())
-    {
-      return err(fmt::format("start index {} is outside the bounds of {}", start, data.size()));
+      return err(fmt::format("end index {} is less than start {}", end, start));
     }
     else if(static_cast<size_t>(end) > data.size())
     {
-      return err(fmt::format("end index {} is outside the bounds of {}", end, data.size()));
+      return err(fmt::format("end index {} out of bounds for length {}", end, data.size()));
     }
 
-    return ok(make_box(data.substr(start, end)));
+    return ok(make_box(data.substr(start, end - start)));
   }
 
   native_integer persistent_string::first_index_of(object_ptr const m) const
