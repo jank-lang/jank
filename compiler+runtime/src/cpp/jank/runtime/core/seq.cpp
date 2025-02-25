@@ -1031,41 +1031,47 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_source, auto const init, auto const s) -> object_ptr {
-          using T = typename decltype(typed_source)::value_type;
-          if constexpr(std::is_base_of_v<behavior::callable, T>)
+        using T = typename decltype(typed_source)::value_type;
+        if constexpr(std::is_base_of_v<behavior::callable, T>)
+        {
+          auto const arity_flags(typed_source->get_arity_flags());
+          auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
+          switch(mask)
           {
-            auto const arity_flags(typed_source->get_arity_flags());
-            auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
-            switch(mask)
-            {
-              case behavior::callable::mask_variadic_arity(0):
-              case behavior::callable::mask_variadic_arity(1):
-              case behavior::callable::mask_variadic_arity(2):
-                break;
-              default:
-                if constexpr(std::same_as<T, obj::jit_function>)
+            case behavior::callable::mask_variadic_arity(0):
+            case behavior::callable::mask_variadic_arity(1):
+            case behavior::callable::mask_variadic_arity(2):
+              break;
+            default:
+              if constexpr(std::same_as<T, obj::jit_function>)
+              {
+                std::function<object_ptr(object *, object *)> f(typed_source->arity_2);
+                if(f)
                 {
-                  std::function<object_ptr(object *, object *)> f(typed_source->arity_2);
-                  if(f)
-                  {
-                    return reduce(f, init, s);
-                  }
-                }
-                else
-                {
-                  auto f([&typed_source](object_ptr const a, object_ptr const e) -> object_ptr { return typed_source->call(a, e); });
                   return reduce(f, init, s);
                 }
-            }
+              }
+              else
+              {
+                auto f([&typed_source](object_ptr const a, object_ptr const e) -> object_ptr {
+                  return typed_source->call(a, e);
+                });
+                return reduce(f, init, s);
+              }
           }
-          return reduce([&](auto const a, auto const e){ return dynamic_call(typed_source, a, e); }, init, s);
-          },
-          f,
-          init,
-          s);
+        }
+        return reduce([&](auto const a, auto const e) { return dynamic_call(typed_source, a, e); },
+                      init,
+                      s);
+      },
+      f,
+      init,
+      s);
   }
 
-  object_ptr reduce(std::function<object *(object *, object *)> const f, object_ptr const init, object_ptr const s)
+  object_ptr reduce(std::function<object *(object *, object *)> const f,
+                    object_ptr const init,
+                    object_ptr const s)
   {
     return visit_object(
       [](auto const typed_coll, auto const f, auto const init) -> object_ptr {

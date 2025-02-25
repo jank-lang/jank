@@ -56,7 +56,8 @@ namespace jank::runtime::obj
     return value;
   }
 
-  object_ptr repeat::reduce(std::function<object *(object *, object *)> const f, object_ptr const start) const
+  object_ptr
+  repeat::reduce(std::function<object *(object *, object *)> const f, object_ptr const start) const
   {
     object_ptr ret(start);
     if(runtime::equal(count, make_box(infinite)))
@@ -73,7 +74,8 @@ namespace jank::runtime::obj
     else
     {
       auto const bound(to_int(count));
-      for(auto i(0); i<bound; ++i){
+      for(auto i(0); i < bound; ++i)
+      {
         ret = f(ret, value);
         if(ret->type == object_type::reduced)
         {
