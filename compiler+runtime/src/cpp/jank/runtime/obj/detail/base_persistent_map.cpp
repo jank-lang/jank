@@ -1,6 +1,6 @@
 #include <fmt/format.h>
-#include <jank/native_persistent_string/fmt.hpp>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>

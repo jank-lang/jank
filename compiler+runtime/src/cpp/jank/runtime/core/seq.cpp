@@ -707,34 +707,44 @@ namespace jank::runtime
 
   object_ptr merge(object_ptr const m, object_ptr const other)
   {
+    if(other == obj::nil::nil_const())
+    {
+      return m;
+    }
+
     return visit_map_like(
-      [&](auto const typed_other, auto const zero, auto const one) {
+      [](auto const typed_other, auto const m) {
         object_ptr ret{ m };
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
-          auto const e{ seq->first() };
-          ret = assoc(ret, runtime::nth(e, zero), runtime::nth(e, one));
+          auto const e{ expect_object<obj::persistent_vector>(seq->first()) };
+          ret = assoc(ret, e->data[0], e->data[1]);
         }
         return ret;
       },
       other,
-      make_box(0),
-      make_box(1));
+      m);
   }
 
   object_ptr merge_in_place(object_ptr const m, object_ptr const other)
   {
+    if(other == obj::nil::nil_const())
+    {
+      return m;
+    }
+
     return visit_map_like(
-      [&](auto const typed_other) {
+      [](auto const typed_other, auto const m) {
         object_ptr ret{ m };
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
-          auto const e{ seq->first() };
-          ret = assoc_in_place(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
+          auto const e{ expect_object<obj::persistent_vector>(seq->first()) };
+          ret = assoc_in_place(ret, e->data[0], e->data[1]);
         }
         return ret;
       },
-      other);
+      other,
+      m);
   }
 
   object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
