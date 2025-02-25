@@ -711,18 +711,33 @@ namespace jank::runtime
     {
       return m;
     }
-    return visit_map_like(
-      [](auto const typed_other, auto const m) {
-        object_ptr ret{ m };
-        for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+    return visit_object(
+      [](auto const typed_m, auto const other) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+        if constexpr(behavior::associatively_writable<T>)
         {
-          auto const e(seq->first());
-          ret = assoc(ret, e->data[0], e->data[1]);
+          return visit_map_like(
+            [](auto const typed_other, auto const typed_m) -> object_ptr {
+              /* FIXME use auto to use runtime::assoc template */
+              object_ptr ret( typed_m );
+              for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+              {
+                auto const e(seq->first());
+                ret = assoc(ret, e->data[0], e->data[1]);
+              }
+              return ret;
+            },
+            other,
+            typed_m);
         }
-        return ret;
+        else
+        {
+          throw std::runtime_error{ fmt::format("not associatively_writable: {}",
+                                                typed_m->to_string()) };
+        }
       },
-      other,
-      m);
+      m,
+      other);
   }
 
   object_ptr merge_in_place(object_ptr const m, object_ptr const other)
@@ -738,7 +753,7 @@ namespace jank::runtime
         {
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ptr {
-              auto ret{ typed_m };
+              auto ret( typed_m );
               for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
               {
                 auto const e(seq->first());
