@@ -707,6 +707,10 @@ namespace jank::runtime
 
   object_ptr merge(object_ptr const m, object_ptr const other)
   {
+    if(other == nil::nil_const())
+    {
+      return m;
+    }
     return visit_map_like(
       [](auto const typed_other, auto const m) {
         object_ptr ret{ m };
