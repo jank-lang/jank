@@ -727,18 +727,36 @@ namespace jank::runtime
 
   object_ptr merge_in_place(object_ptr const m, object_ptr const other)
   {
-    return visit_map_like(
-      [](auto const typed_other, auto const m) {
-        object_ptr ret{ m };
-        for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+    if(other == obj::nil::nil_const())
+    {
+      return m;
+    }
+    return visit_object(
+      [](auto const typed_m, auto const other) -> object_ptr {
+        using T = typename decltype(typed_m)::value_type;
+        if constexpr(behavior::associatively_writable_in_place<T>)
         {
-          auto const e(seq->first());
-          ret = assoc_in_place(ret, e->data[0], e->data[1]);
+          return visit_map_like(
+            [](auto const typed_other, auto const typed_m) -> object_ptr {
+              auto ret{ typed_m };
+              for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+              {
+                auto const e(seq->first());
+                ret = ret->assoc_in_place(e->data[0], e->data[1]);
+              }
+              return ret;
+            },
+            other,
+            typed_m);
         }
-        return ret;
+        else
+        {
+          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
+                                                typed_m->to_string()) };
+        }
       },
-      other,
-      m);
+      m,
+      other);
   }
 
   object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
