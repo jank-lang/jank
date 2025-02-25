@@ -633,7 +633,7 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
         }
         break;
-      /* Not map-like. */
+      /* Not set-like. */
       default:
         return else_fn();
     }

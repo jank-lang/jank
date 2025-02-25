@@ -468,6 +468,34 @@ namespace jank::runtime
       tail);
   }
 
+  object_ptr conj_map_like(object_ptr const m, object_ptr const head,
+      std::function<object_ptr(object_ptr, object_ptr)> const conj_kv)
+  {
+    if(head == obj::nil::nil_const())
+    {
+      return m;
+    }
+
+    if(head->type == object_type::persistent_array_map
+       || head->type == object_type::persistent_hash_map)
+    {
+      return runtime::merge(m, head);
+    }
+
+    if(head->type != object_type::persistent_vector)
+    {
+      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+    }
+
+    auto const vec(expect_object<obj::persistent_vector>(head));
+    if(vec->count() != 2)
+    {
+      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+    }
+
+    return assoc(m, vec->data[0], vec->data[1]);
+  }
+
   object_ptr conj(object_ptr const s, object_ptr const o)
   {
     return visit_object(

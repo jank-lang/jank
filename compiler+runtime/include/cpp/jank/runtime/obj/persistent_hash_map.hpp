@@ -84,9 +84,6 @@ namespace jank::runtime::obj
     persistent_hash_map_ptr assoc(object_ptr key, object_ptr val) const;
     persistent_hash_map_ptr dissoc(object_ptr key) const;
 
-    /* behavior::conjable */
-    persistent_hash_map_ptr conj(object_ptr head) const;
-
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
