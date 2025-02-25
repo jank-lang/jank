@@ -31,7 +31,7 @@ namespace jank::runtime::obj
       [](auto const typed_s) -> persistent_list_ptr {
         using T = typename decltype(typed_s)::value_type;
 
-        if constexpr(behavior::sequenceable<T>)
+        if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
         {
           native_vector<object_ptr> v;
           for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
@@ -86,11 +86,7 @@ namespace jank::runtime::obj
 
   persistent_list_sequence_ptr persistent_list::seq() const
   {
-    if(data.empty())
-    {
-      return nullptr;
-    }
-    return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
+    return fresh_seq();
   }
 
   persistent_list_sequence_ptr persistent_list::fresh_seq() const

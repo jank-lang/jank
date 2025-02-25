@@ -1,0 +1,8 @@
+(assert
+ (=
+  (case nil nil :empty
+    false       :false-value
+    :default)
+  :empty))
+
+:success

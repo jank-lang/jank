@@ -817,6 +817,44 @@ extern "C"
     return to_hash(o_obj);
   }
 
+  static native_integer to_integer_or_hash(object const *o)
+  {
+    if(o->type == object_type::integer)
+    {
+      return expect_object<obj::integer>(o)->data;
+    }
+
+    return to_hash(o);
+  }
+
+  jank_native_integer jank_to_integer(jank_object_ptr const o)
+  {
+    auto const o_obj(reinterpret_cast<object *>(o));
+    return to_integer_or_hash(o_obj);
+  }
+
+  jank_native_integer jank_shift_mask_case_integer(jank_object_ptr const o,
+                                                   jank_native_integer const shift,
+                                                   jank_native_integer const mask)
+  {
+    auto const o_obj(reinterpret_cast<object *>(o));
+    auto integer{ to_integer_or_hash(o_obj) };
+    if(mask != 0)
+    {
+      if(o_obj->type == object_type::integer)
+      {
+        /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
+         * case macro. */
+        integer = (integer >= std::numeric_limits<int32_t>::min()
+                   && integer <= std::numeric_limits<int32_t>::max())
+          ? integer
+          : hash::integer(integer);
+      }
+      integer = (integer >> shift) & mask;
+    }
+    return integer;
+  }
+
   void jank_set_meta(jank_object_ptr const o, jank_object_ptr const meta)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
@@ -850,14 +888,18 @@ extern "C"
       }
     } };
 
+    auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
+    auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
+    if(catch_fn_obj == obj::nil::nil_const())
+    {
+      return dynamic_call(try_fn_obj);
+    }
     try
     {
-      auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
       return dynamic_call(try_fn_obj);
     }
     catch(object_ptr const e)
     {
-      auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
       return dynamic_call(catch_fn_obj, e);
     }
   }

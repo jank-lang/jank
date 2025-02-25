@@ -42,7 +42,7 @@ namespace jank::runtime
 
   native_bool is_named(object_ptr o);
   native_persistent_string name(object_ptr o);
-  native_persistent_string namespace_(object_ptr o);
+  object_ptr namespace_(object_ptr o);
 
   object_ptr keyword(object_ptr ns, object_ptr name);
   native_bool is_keyword(object_ptr o);
@@ -60,10 +60,11 @@ namespace jank::runtime
 
   object_ptr atom(object_ptr o);
   object_ptr deref(object_ptr o);
-  object_ptr swap(object_ptr atom, object_ptr fn);
-  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1);
-  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
-  object_ptr swap(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
+  object_ptr swap_atom(object_ptr atom, object_ptr fn);
+  object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1);
+  object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
+  object_ptr
+  swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
   object_ptr swap_vals(object_ptr atom, object_ptr fn);
   object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1);
   object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);

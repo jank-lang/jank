@@ -90,7 +90,7 @@ namespace jank::runtime::obj
     }
     /* TODO: Repeat object. */
     //else if(is_zero(step))
-    //{ return make_box<repeat>(start); }
+    //{ return repeat::create(start); }
     return make_box<range>(start,
                            end,
                            step,
@@ -209,12 +209,12 @@ namespace jank::runtime::obj
         for(auto it(fresh_seq()); it != nullptr;
             it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
         {
-          if(seq == nullptr || !runtime::equal(it, seq->first()))
+          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return true;
+        return seq == nullptr;
       },
       []() { return false; },
       &o);

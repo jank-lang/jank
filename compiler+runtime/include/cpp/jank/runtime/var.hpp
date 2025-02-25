@@ -159,7 +159,7 @@ namespace std
       }
       else if(!rhs)
       {
-        return !lhs;
+        return false;
       }
       return lhs->equal(*rhs);
     }

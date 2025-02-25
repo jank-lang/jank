@@ -1,0 +1,9 @@
+(assert
+ (=
+  (case 2
+    (0 1) :zero-or-one
+    (2 3) :two-or-three
+    :default)
+  :two-or-three))
+
+:success

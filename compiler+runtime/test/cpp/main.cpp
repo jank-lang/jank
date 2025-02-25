@@ -14,6 +14,7 @@
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/error/report.hpp>
 #include <clojure/core_native.hpp>
 
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
@@ -55,20 +56,25 @@ try
 catch(std::exception const &e)
 {
   fmt::println("Exception: {}", e.what());
+  return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
   fmt::println("Exception: {}", jank::runtime::to_string(o));
+  return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
   fmt::println("Exception: {}", s);
+  return 1;
 }
-catch(jank::read::error const &e)
+catch(jank::error_ptr const &e)
 {
-  fmt::println("Read error ({} - {}): {}", e.start, e.end, e.message);
+  jank::error::report(e);
+  return 1;
 }
 catch(...)
 {
   fmt::println("Unknown exception thrown");
+  return 1;
 }

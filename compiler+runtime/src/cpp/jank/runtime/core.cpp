@@ -245,7 +245,7 @@ namespace jank::runtime
     }
     else if(!rhs)
     {
-      return !lhs;
+      return false;
     }
 
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
@@ -387,15 +387,16 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string namespace_(object_ptr const o)
+  object_ptr namespace_(object_ptr const o)
   {
     return visit_object(
-      [](auto const typed_o) -> native_persistent_string {
+      [](auto const typed_o) -> object_ptr {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::nameable<T>)
         {
-          return typed_o->get_namespace();
+          auto const ns(typed_o->get_namespace());
+          return (ns.empty() ? obj::nil::nil_const() : make_box<obj::persistent_string>(ns));
         }
         else
         {
@@ -461,27 +462,27 @@ namespace jank::runtime
     return make_box<obj::atom>(o);
   }
 
-  object_ptr swap(object_ptr const atom, object_ptr const fn)
+  object_ptr swap_atom(object_ptr const atom, object_ptr const fn)
   {
     return try_object<obj::atom>(atom)->swap(fn);
   }
 
-  object_ptr swap(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  object_ptr swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1);
   }
 
   object_ptr
-  swap(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2);
   }
 
-  object_ptr swap(object_ptr const atom,
-                  object_ptr const fn,
-                  object_ptr const a1,
-                  object_ptr const a2,
-                  object_ptr const rest)
+  object_ptr swap_atom(object_ptr const atom,
+                       object_ptr const fn,
+                       object_ptr const a1,
+                       object_ptr const a2,
+                       object_ptr const rest)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
   }
