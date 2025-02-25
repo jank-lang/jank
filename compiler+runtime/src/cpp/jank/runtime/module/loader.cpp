@@ -548,7 +548,7 @@ namespace jank::runtime::module
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        rt_ctx.jit_prc.eval_string(zip_entry.readAsText());
+        rt_ctx.eval_cpp_string(zip_entry.readAsText());
       });
     }
     else
@@ -559,7 +559,7 @@ namespace jank::runtime::module
         return err(
           fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.jit_prc.eval_string({ file.expect_ok().head, file.expect_ok().size });
+      rt_ctx.eval_cpp_string({ file.expect_ok().head, file.expect_ok().size });
     }
 
     return ok();
