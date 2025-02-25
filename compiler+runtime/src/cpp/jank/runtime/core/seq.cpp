@@ -1045,7 +1045,7 @@ namespace jank::runtime
             default:
               if constexpr(std::same_as<T, obj::jit_function>)
               {
-                std::function<object_ptr(object *, object *)> f(typed_source->arity_2);
+                std::function<object_ptr(object *, object *)> const f(typed_source->arity_2);
                 if(f)
                 {
                   return reduce(f, init, s);
