@@ -148,11 +148,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //   fmt::println("register_entry {} {} {} {}",
-      //               entry.archive_path.unwrap_or("None"),
-      //               entry.path,
-      //               module_path.string(),
-      //               path_to_module(module_path));
+      //fmt::println("register_entry {} {} {} {}",
+      //             entry.archive_path.unwrap_or("None"),
+      //             entry.path,
+      //             module_path.string(),
+      //             path_to_module(module_path));
     }
   }
 
@@ -243,7 +243,7 @@ namespace jank::runtime::module
     paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     this->paths = paths;
 
-    // fmt::println("module paths: {}", paths);
+    //fmt::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };
@@ -312,7 +312,7 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(fmt::format("unable to find module: {}", module));
+      return err(fmt::format("Unable to find module: {}", module));
     }
 
     if(ori == origin::source)
@@ -336,11 +336,10 @@ namespace jank::runtime::module
        * to it.
        *
        * Portability:
-       * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
+       * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
        * making it hard to share them. */
       if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
-         && entry->second.o.unwrap().exists()
-         && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
+         && entry->second.o.unwrap().exists())
       {
         auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
 
@@ -386,7 +385,7 @@ namespace jank::runtime::module
       }
     }
 
-    return err(fmt::format("no sources for registered module: {}", module));
+    return err(fmt::format("No sources for registered module: {}", module));
   }
 
   native_bool loader::is_loaded(native_persistent_string_view const &module)

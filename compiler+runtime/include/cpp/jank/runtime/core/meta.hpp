@@ -16,9 +16,7 @@ namespace jank::runtime
   object_ptr reset_meta(object_ptr o, object_ptr m);
 
   read::source meta_source(option<object_ptr> const &o);
-  read::source meta_source(option<object_ptr> const &o, native_persistent_string const &file_path);
   read::source object_source(object_ptr const o);
-  read::source object_source(object_ptr const o, native_persistent_string const &file_path);
   obj::persistent_hash_map_ptr
   source_to_meta(read::source_position const &start, read::source_position const &end);
   obj::persistent_hash_map_ptr source_to_meta(object_ptr key,

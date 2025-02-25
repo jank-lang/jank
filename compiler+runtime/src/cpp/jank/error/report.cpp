@@ -96,7 +96,7 @@ namespace jank::error
     /* TODO: Reverse them and add count. */
     for(auto expansion{ e->source.macro_expansion }; expansion != runtime::obj::nil::nil_const();)
     {
-      auto const &source{ runtime::object_source(expansion, e->source.file_path) };
+      auto const &source{ runtime::object_source(expansion) };
       add(note{ "Expanded here", source, note::kind::info });
       expansion = source.macro_expansion;
     }

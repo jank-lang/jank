@@ -78,13 +78,6 @@ namespace jank::runtime
 
   read::source meta_source(option<runtime::object_ptr> const &o)
   {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return meta_source(o, to_string(file));
-  }
-
-  read::source
-  meta_source(option<runtime::object_ptr> const &o, native_persistent_string const &file_path)
-  {
     using namespace jank::runtime;
 
     auto const meta(o.unwrap_or(obj::nil::nil_const()));
@@ -94,6 +87,7 @@ namespace jank::runtime
       return read::source::unknown;
     }
 
+    auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
     auto const start(get(source, __rt_ctx->intern_keyword("start").expect_ok()));
     auto const end(get(source, __rt_ctx->intern_keyword("end").expect_ok()));
 
@@ -109,31 +103,25 @@ namespace jank::runtime
       get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
 
     return {
-      file_path,
+      to_string(file),
       { static_cast<size_t>(to_int(start_offset)),
-        static_cast<size_t>(to_int(start_line)),
-        static_cast<size_t>(to_int(start_col)) },
+              static_cast<size_t>(to_int(start_line)),
+              static_cast<size_t>(to_int(start_col)) },
       {   static_cast<size_t>(to_int(end_offset)),
-        static_cast<size_t>(to_int(end_line)),
-        static_cast<size_t>(to_int(end_col))  },
+              static_cast<size_t>(to_int(end_line)),
+              static_cast<size_t>(to_int(end_col))  },
       macro_expansion
     };
   }
 
-  read::source object_source(runtime::object_ptr const o)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return object_source(o, to_string(file));
-  }
-
-  read::source object_source(object_ptr const o, native_persistent_string const &file_path)
+  read::source object_source(object_ptr const o)
   {
     auto const meta(runtime::meta(o));
     if(meta == obj::nil::nil_const())
     {
       return read::source::unknown;
     }
-    return meta_source(meta, file_path);
+    return meta_source(meta);
   }
 
   obj::persistent_hash_map_ptr
@@ -146,7 +134,11 @@ namespace jank::runtime
                                               read::source_position const &start,
                                               read::source_position const &end)
   {
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+
     auto source{ obj::persistent_array_map::empty()->to_transient() };
+    source = source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
+
     auto const start_map{ obj::persistent_array_map::create_unique(
       __rt_ctx->intern_keyword("offset").expect_ok(),
       make_box(start.offset),
