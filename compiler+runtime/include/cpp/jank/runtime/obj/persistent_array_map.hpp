@@ -79,9 +79,6 @@ namespace jank::runtime::obj
     object_ptr assoc(object_ptr key, object_ptr val) const;
     persistent_array_map_ptr dissoc(object_ptr key) const;
 
-    /* behavior::conjable */
-    object_ptr conj(object_ptr head) const;
-
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;

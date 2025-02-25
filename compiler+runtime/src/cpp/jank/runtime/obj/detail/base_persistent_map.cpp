@@ -1,9 +1,11 @@
 #include <fmt/format.h>
+#include <jank/native_persistent_string/fmt.hpp>
 
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj::detail
@@ -170,26 +172,10 @@ namespace jank::runtime::obj::detail
     {
       return visit_map_like(
         [](auto const typed_head, object_ptr ret) {
-          using T = typename decltype(typed_head)::value_type;
-
-          for(auto const &kv : typed_head->data)
+          for(auto seq{ typed_head->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
           {
-            /* The two maps (hash and sorted) have slightly different iterators, so we need to
-             * pull out the entries differently. */
-            object_ptr first{}, second{};
-            if constexpr(std::same_as<T, obj::persistent_sorted_map>)
-            {
-              auto const &entry(kv.get());
-              first = entry.first;
-              second = entry.second;
-            }
-            else
-            {
-              first = kv.first;
-              second = kv.second;
-            }
-
-            ret = runtime::assoc(ret, first, second);
+            auto const e{ seq->first() };
+            ret = runtime::assoc(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
           }
           return ret;
         },
