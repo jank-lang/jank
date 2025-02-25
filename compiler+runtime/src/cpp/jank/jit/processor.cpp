@@ -160,7 +160,8 @@ namespace jank::jit
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
-    profile::timer const timer{ fmt::format("jit ir module {}", m->getName()) };
+    profile::timer const timer{ fmt::format("jit ir module {}",
+                                            static_cast<std::string_view>(m->getName())) };
     //m->print(llvm::outs(), nullptr);
 
 #if JANK_DEBUG

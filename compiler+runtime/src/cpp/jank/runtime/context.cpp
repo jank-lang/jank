@@ -16,6 +16,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
@@ -567,9 +568,26 @@ namespace jank::runtime
 
   object_ptr context::macroexpand(object_ptr const o)
   {
-    auto const expanded(macroexpand1(o));
+    auto expanded(macroexpand1(o));
     if(expanded != o)
     {
+      /* If we've actually expanded `o` into something else, it's helpful to update the meta
+       * on the expanded data to tie it back to the original form. */
+      auto const source{ object_source(o) };
+      if(source != read::source::unknown)
+      {
+        auto meta{ runtime::meta(expanded) };
+        auto const source_kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
+        auto expanded_source_map{ runtime::get(meta, source_kw) };
+        if(expanded_source_map != obj::nil::nil_const())
+        {
+          auto const macro_kw{ __rt_ctx->intern_keyword("macro-expansion").expect_ok() };
+          expanded_source_map = runtime::assoc(expanded_source_map, macro_kw, o);
+          meta = runtime::assoc(meta, source_kw, expanded_source_map);
+          expanded = with_meta(expanded, meta);
+        }
+      }
+
       return macroexpand(expanded);
     }
 

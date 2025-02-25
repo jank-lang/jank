@@ -97,31 +97,6 @@ namespace jank::read::parse
     return none;
   }
 
-  static obj::persistent_hash_map_ptr
-  source_to_meta(source_position const &start, source_position const &end)
-  {
-    auto source{ obj::persistent_array_map::empty()->to_transient() };
-    auto const start_map{ obj::persistent_array_map::create_unique(
-      __rt_ctx->intern_keyword("offset").expect_ok(),
-      make_box(start.offset),
-      __rt_ctx->intern_keyword("line").expect_ok(),
-      make_box(start.line),
-      __rt_ctx->intern_keyword("col").expect_ok(),
-      make_box(start.col)) };
-    auto const end_map{ obj::persistent_array_map::create_unique(
-      __rt_ctx->intern_keyword("offset").expect_ok(),
-      make_box(end.offset),
-      __rt_ctx->intern_keyword("line").expect_ok(),
-      make_box(end.line),
-      __rt_ctx->intern_keyword("col").expect_ok(),
-      make_box(end.col)) };
-    source = source->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
-    source = source->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
-
-    return obj::persistent_hash_map::create_unique(
-      std::make_pair(__rt_ctx->intern_keyword("jank/source").expect_ok(), source->to_persistent()));
-  }
-
   native_bool object_source_info::operator==(object_source_info const &rhs) const
   {
     return !(*this != rhs);

@@ -4,6 +4,7 @@
 #include <jank/read/reparse.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/error/parse.hpp>
@@ -13,8 +14,10 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   /* TODO: How does macro expansion fall into this? Will we not be able to reparse some things? */
-  static result<source, error_ptr>
-  reparse_nth(native_persistent_string const &file_path, size_t const offset, size_t const n)
+  static result<source, error_ptr> reparse_nth(native_persistent_string const &file_path,
+                                               size_t const offset,
+                                               size_t const n,
+                                               object_ptr const macro_expansion)
   {
     if(file_path == no_source_path)
     {
@@ -52,7 +55,7 @@ namespace jank::read::parse
     }
 
     auto const &res{ it->expect_ok().unwrap() };
-    return source{ file_path, res.start.start, res.end.end };
+    return source{ file_path, res.start.start, res.end.end, macro_expansion };
   }
 
   source reparse_nth(obj::persistent_list_ptr const l, size_t const n)
@@ -65,6 +68,7 @@ namespace jank::read::parse
     }
 
     /* Add one to skip the ( for the list. */
-    return reparse_nth(source.file_path, source.start.offset + 1, n).unwrap_move();
+    return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
+      .unwrap_move();
   }
 }

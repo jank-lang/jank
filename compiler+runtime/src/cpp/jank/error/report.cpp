@@ -8,10 +8,13 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/error/report.hpp>
 #include <jank/ui/highlight.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::error
 {
@@ -74,6 +77,17 @@ namespace jank::error
     for(auto const &n : e->notes)
     {
       add(n);
+    }
+
+    for(auto expansion{ e->source.macro_expansion }; expansion != runtime::obj::nil::nil_const();)
+    {
+      auto const &source{ runtime::object_source(expansion, e->source.file_path) };
+      fmt::println("adding expansion {} at {} with meta {}",
+                   runtime::to_code_string(expansion),
+                   source.file_path,
+                   runtime::to_code_string(runtime::meta(expansion)));
+      add(note{ "Expanded here", source, note::kind::info });
+      expansion = source.macro_expansion;
     }
   }
 

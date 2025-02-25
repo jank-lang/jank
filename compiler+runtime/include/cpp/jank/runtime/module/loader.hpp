@@ -51,7 +51,6 @@ namespace jank::runtime::module
   native_persistent_string path_to_module(boost::filesystem::path const &path);
   native_persistent_string module_to_path(native_persistent_string_view const &module);
   native_persistent_string module_to_load_function(native_persistent_string_view const &module);
-  native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
   native_persistent_string

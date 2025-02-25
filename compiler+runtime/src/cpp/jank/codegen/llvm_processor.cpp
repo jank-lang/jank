@@ -14,6 +14,7 @@
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
@@ -276,7 +277,8 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(gen_global_from_read_string(expr.name->meta.unwrap()));
+      auto const meta(
+        gen_global_from_read_string(strip_source_from_meta(expr.name->meta.unwrap())));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
@@ -1317,7 +1319,7 @@ namespace jank::codegen
                                   false));
         auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
+        auto const meta(gen_global_from_read_string(strip_source_from_meta(s->meta.unwrap())));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
@@ -1450,7 +1452,8 @@ namespace jank::codegen
                 ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
-              auto const meta(gen_global_from_read_string(typed_o->meta.unwrap()));
+              auto const meta(
+                gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
               auto const meta_name(fmt::format("{}_meta", name));
               meta->setName(meta_name);
               ctx->builder->CreateCall(set_meta_fn, { call, meta });
@@ -1582,7 +1585,7 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(gen_global_from_read_string(expr.meta));
+      auto const meta(gen_global_from_read_string(strip_source_from_meta(expr.meta)));
       ctx->builder->CreateCall(set_meta_fn, { fn_obj, meta });
     }
 
