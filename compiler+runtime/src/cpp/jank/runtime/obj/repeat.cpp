@@ -57,9 +57,9 @@ namespace jank::runtime::obj
   }
 
   object_ptr
-  repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const f, object_ptr const start) const
+  repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f, object_ptr const start) const
   {
-    object_ptr ret(start);
+    auto ret(start);
     auto const bound(count);
     if(bound == infinite)
     {

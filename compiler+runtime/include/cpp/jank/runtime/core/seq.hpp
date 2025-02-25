@@ -128,7 +128,7 @@ namespace jank::runtime
   size_t sequence_length(object_ptr const s, size_t const max);
 
   object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
-  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> f, object_ptr init, object_ptr s);
+  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f, object_ptr init, object_ptr s);
   /*
   object_ptr reduce_kv(object_ptr f, object_ptr init, object_ptr s);
   object_ptr reduce_kv(std::function<object_ptr(object_ptr, object_ptr, object_ptr)> f, object_ptr init, object_ptr s);

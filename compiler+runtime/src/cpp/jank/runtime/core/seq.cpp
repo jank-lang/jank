@@ -1069,13 +1069,13 @@ namespace jank::runtime
       s);
   }
 
-  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> const f,
+  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f,
                     object_ptr const init,
                     object_ptr const s)
   {
     return visit_object(
-      [](auto const typed_coll, auto const f, auto const init) -> object_ptr {
-        using T = typename decltype(typed_coll)::value_type;
+      [](auto const typed_s, auto const f, auto const init) -> object_ptr {
+        using T = typename decltype(typed_s)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -1083,12 +1083,12 @@ namespace jank::runtime
         }
         else if constexpr(behavior::reduceable<T>)
         {
-          return typed_coll->reduce(f, init);
+          return typed_s->reduce(f, init);
         }
         else if constexpr(behavior::seqable<T>)
         {
           object_ptr res{ init };
-          for(auto it(typed_coll->fresh_seq()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_s->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             res = f(res, it->first());
             if(res->type == object_type::reduced)
@@ -1101,7 +1101,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("cannot reduce: {}", typed_coll->to_string()) };
+          throw std::runtime_error{ fmt::format("cannot reduce: {}", typed_s->to_string()) };
         }
       },
       s,
