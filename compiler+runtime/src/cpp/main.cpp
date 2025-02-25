@@ -30,6 +30,7 @@
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
 #include <clojure/core_native.hpp>
+#include <clojure/string_native.hpp>
 
 namespace jank
 {
@@ -312,6 +313,7 @@ try
   __rt_ctx = new(GC) runtime::context{ opts };
 
   jank_load_clojure_core_native();
+  jank_load_clojure_string_native();
   jank_load_jank_compiler_native();
   jank_load_jank_perf_native();
 
