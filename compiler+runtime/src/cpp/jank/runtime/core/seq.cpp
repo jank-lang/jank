@@ -1109,6 +1109,7 @@ namespace jank::runtime
       init);
   }
 
+  /*
   object_ptr reduce_kv(object_ptr const f, object_ptr const init, object_ptr const s)
   {
     return visit_object(
@@ -1192,6 +1193,7 @@ namespace jank::runtime
       f,
       init);
   }
+  */
 
   object_ptr reduced(object_ptr const o)
   {

@@ -6755,7 +6755,9 @@ fails, attempts to require sym's namespace and retries."
              and f is not called. Note that reduce-kv is supported on vectors,
              where the keys will be the ordinals."
        :arglists '([f init coll])}
-  reduce-kv @clojure.core-native/reduce-kv)
+  reduce-kv
+  ;;@clojure.core-native/reduce-kv
+  (fn [f init coll] (reduce (fn [s [k v]] (f s k v)) init coll)))
 
 (defn- normalize-slurp-opts
   [opts]

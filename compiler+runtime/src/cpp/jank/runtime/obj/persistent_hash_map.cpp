@@ -158,6 +158,7 @@ namespace jank::runtime::obj
     return make_box<transient_hash_map>(data);
   }
 
+  /*
   object_ptr
   persistent_hash_map::reduce_kv(std::function<object_ptr(object_ptr, object_ptr, object_ptr)> const f, object_ptr const start) const
   {
@@ -168,4 +169,5 @@ namespace jank::runtime::obj
     }
     return ret;
   }
+  */
 }
