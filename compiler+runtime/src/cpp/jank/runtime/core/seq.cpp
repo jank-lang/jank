@@ -707,7 +707,7 @@ namespace jank::runtime
 
   object_ptr merge(object_ptr const m, object_ptr const other)
   {
-    if(other == nil::nil_const())
+    if(other == obj::nil::nil_const())
     {
       return m;
     }
@@ -716,7 +716,7 @@ namespace jank::runtime
         object_ptr ret{ m };
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
-          auto const e{ expect_object<obj::persistent_vector>(seq->first()) };
+          auto const e(seq->first());
           ret = assoc(ret, e->data[0], e->data[1]);
         }
         return ret;
@@ -732,7 +732,7 @@ namespace jank::runtime
         object_ptr ret{ m };
         for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
-          auto const e{ expect_object<obj::persistent_vector>(seq->first()) };
+          auto const e(seq->first());
           ret = assoc_in_place(ret, e->data[0], e->data[1]);
         }
         return ret;
