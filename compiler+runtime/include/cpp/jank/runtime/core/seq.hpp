@@ -110,6 +110,7 @@ namespace jank::runtime
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
+  object_ptr merge_in_place(object_ptr m, object_ptr other);
   object_ptr subvec(object_ptr o, native_integer start, native_integer end);
   object_ptr nth(object_ptr o, object_ptr idx);
   object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);

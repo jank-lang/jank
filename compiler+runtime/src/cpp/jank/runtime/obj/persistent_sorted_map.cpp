@@ -110,29 +110,6 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
-  persistent_sorted_map_ptr persistent_sorted_map::conj(object_ptr const head) const
-  {
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_sorted_map)
-    {
-      return expect_object<persistent_sorted_map>(runtime::merge(this, head));
-    }
-
-    if(head->type != object_type::persistent_vector)
-    {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    auto const vec(expect_object<persistent_vector>(head));
-    if(vec->count() != 2)
-    {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    auto copy(data.insert_or_assign(vec->data[0], vec->data[1]));
-    return make_box<persistent_sorted_map>(meta, std::move(copy));
-  }
-
   object_ptr persistent_sorted_map::call(object_ptr const o) const
   {
     return get(o);

@@ -53,6 +53,9 @@ namespace jank::runtime::obj::detail
     /* behavior::metadatable */
     native_box<PT> with_meta(object_ptr const m) const;
 
+    /* behavior::conjable */
+    object_ptr conj(object_ptr const head) const;
+
     object base{ PT::obj_type };
     option<object_ptr> meta;
     mutable native_hash hash{};

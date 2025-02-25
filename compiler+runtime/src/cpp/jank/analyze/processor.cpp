@@ -241,7 +241,7 @@ namespace jank::analyze
     auto const keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> string_result<keys_and_exprs> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj->seq() }; seq != nullptr; seq = seq->next())
+        for(auto seq{ typed_imap_obj->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
           auto const e{ seq->first() };
           auto const k_obj{ runtime::nth(e, make_box(0)) };

@@ -707,44 +707,34 @@ namespace jank::runtime
 
   object_ptr merge(object_ptr const m, object_ptr const other)
   {
-    return visit_object(
-      [&](auto const typed_m) -> object_ptr {
-        using T = typename decltype(typed_m)::value_type;
-
-        if constexpr(behavior::associatively_writable<T>)
+    return visit_map_like(
+      [&](auto const typed_other, auto const zero, auto const one) {
+        object_ptr ret{ m };
+        for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
         {
-          return visit_object(
-            [&](auto const typed_other) -> object_ptr {
-              using O = typename decltype(typed_other)::value_type;
-
-              if constexpr(std::same_as<O, obj::persistent_hash_map>
-                           || std::same_as<O, obj::persistent_array_map>
-                           || std::same_as<O, obj::transient_hash_map>
-                           //|| std::same_as<O, obj::transient_array_map>
-              )
-              {
-                object_ptr ret{ m };
-                for(auto const &pair : typed_other->data)
-                {
-                  ret = assoc(ret, pair.first, pair.second);
-                }
-                return ret;
-              }
-              else
-              {
-                throw std::runtime_error{ fmt::format("not associatively readable: {}",
-                                                      typed_m->to_string()) };
-              }
-            },
-            other);
+          auto const e{ seq->first() };
+          ret = assoc(ret, runtime::nth(e, zero), runtime::nth(e, one));
         }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_string()) };
-        }
+        return ret;
       },
-      m);
+      other,
+      make_box(0),
+      make_box(1));
+  }
+
+  object_ptr merge_in_place(object_ptr const m, object_ptr const other)
+  {
+    return visit_map_like(
+      [&](auto const typed_other) {
+        object_ptr ret{ m };
+        for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
+        {
+          auto const e{ seq->first() };
+          ret = assoc_in_place(ret, runtime::nth(e, make_box(0)), runtime::nth(e, make_box(1)));
+        }
+        return ret;
+      },
+      other);
   }
 
   object_ptr subvec(object_ptr const o, native_integer const start, native_integer const end)
