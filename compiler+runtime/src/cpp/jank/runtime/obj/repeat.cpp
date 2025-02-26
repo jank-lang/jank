@@ -56,10 +56,14 @@ namespace jank::runtime::obj
     return value;
   }
 
-  object_ptr repeat::reduce(object_ptr const f, object_ptr const start) const
+  object_ptr repeat::reduce(object_ptr f, object_ptr const start) const
   {
+    while(f->type == object_type::var)
+    {
+      f = expect_object<runtime::var>(f)->deref();
+    }
     return visit_object(
-      [](auto const typed_f, auto ret, auto const value, auto const bound) {
+      [](auto const typed_f, auto ret, auto const value, auto const bound) -> object_ptr {
         using T = typename decltype(typed_f)::value_type;
         native_bool direct{};
         if constexpr(std::same_as<T, runtime::obj::jit_function>
@@ -72,8 +76,6 @@ namespace jank::runtime::obj
             case behavior::callable::mask_variadic_arity(0):
             case behavior::callable::mask_variadic_arity(1):
             case behavior::callable::mask_variadic_arity(2):
-              //TODO create new jit_{function,closure} that can be called
-              //with 2 arity so no extra branch is needed for the common case.
               break;
             default:
               direct = true;
@@ -81,24 +83,25 @@ namespace jank::runtime::obj
         }
         if(bound == infinite)
         {
-          while(true)
+          if constexpr(std::same_as<T, runtime::obj::jit_function>
+                       || std::same_as<T, runtime::obj::jit_closure>)
           {
-            if constexpr(std::same_as<T, runtime::obj::jit_function>
-                         || std::same_as<T, runtime::obj::jit_closure>)
+            if(direct)
             {
-              if(direct)
+              while(true)
               {
                 ret = typed_f->call(ret, value);
-              }
-              else
-              {
-                ret = dynamic_call(typed_f, ret, value);
+
+                if(ret->type == object_type::reduced)
+                {
+                  return expect_object<obj::reduced>(ret)->val;
+                }
               }
             }
-            else
-            {
-              ret = dynamic_call(typed_f, ret, value);
-            }
+          }
+          while(true)
+          {
+            ret = dynamic_call(typed_f, ret, value);
 
             if(ret->type == object_type::reduced)
             {
@@ -108,24 +111,26 @@ namespace jank::runtime::obj
         }
         else
         {
-          for(size_t i{}; i < bound; ++i)
+          if constexpr(std::same_as<T, runtime::obj::jit_function>
+                       || std::same_as<T, runtime::obj::jit_closure>)
           {
-            if constexpr(std::same_as<T, runtime::obj::jit_function>
-                         || std::same_as<T, runtime::obj::jit_closure>)
+            if(direct)
             {
-              if(direct)
+              for(size_t i{}; i < bound; ++i)
               {
                 ret = typed_f->call(ret, value);
+
+                if(ret->type == object_type::reduced)
+                {
+                  return expect_object<obj::reduced>(ret)->val;
+                }
               }
-              else
-              {
-                ret = dynamic_call(typed_f, ret, value);
-              }
+              return ret;
             }
-            else
-            {
-              ret = dynamic_call(typed_f, ret, value);
-            }
+          }
+          for(size_t i{}; i < bound; ++i)
+          {
+            ret = dynamic_call(typed_f, ret, value);
 
             if(ret->type == object_type::reduced)
             {
