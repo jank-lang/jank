@@ -72,6 +72,8 @@ namespace jank::runtime::obj
             case behavior::callable::mask_variadic_arity(0):
             case behavior::callable::mask_variadic_arity(1):
             case behavior::callable::mask_variadic_arity(2):
+              //TODO create new jit_{function,closure} that can be called
+              //with 2 arity so no extra branch is needed for the common case.
               break;
             default:
               direct = true;
