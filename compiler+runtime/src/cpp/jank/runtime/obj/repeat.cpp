@@ -65,6 +65,8 @@ namespace jank::runtime::obj
     return visit_object(
       [](auto const typed_f, auto ret, auto const value, auto const bound) -> object_ptr {
         using T = typename decltype(typed_f)::value_type;
+        /* If true, we can call typed_f->call(acc, el) directly.
+         * Otherwise, use dynamic_call(typed_f, acc, el). */
         native_bool direct{};
         if constexpr(std::same_as<T, runtime::obj::jit_function>
                      || std::same_as<T, runtime::obj::jit_closure>)
