@@ -6,10 +6,7 @@ namespace jank::runtime::behavior
 {
   template <typename T>
   concept reduceable = requires(T * const t) {
-    {
-      t->reduce(std::declval<std::function<object_ptr(object_ptr, object_ptr)> const &>(),
-                object_ptr{})
-    } -> std::convertible_to<object_ptr>;
+    { t->reduce(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
   };
 
   /*

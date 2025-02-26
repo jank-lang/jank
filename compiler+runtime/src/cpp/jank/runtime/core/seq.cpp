@@ -1030,50 +1030,6 @@ namespace jank::runtime
   object_ptr reduce(object_ptr const f, object_ptr const init, object_ptr const s)
   {
     return visit_object(
-      [=](auto const typed_source, auto const init, auto const s) -> object_ptr {
-        using T = typename decltype(typed_source)::value_type;
-        if constexpr(std::is_base_of_v<behavior::callable, T>)
-        {
-          auto const arity_flags(typed_source->get_arity_flags());
-          auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
-          switch(mask)
-          {
-            case behavior::callable::mask_variadic_arity(0):
-            case behavior::callable::mask_variadic_arity(1):
-            case behavior::callable::mask_variadic_arity(2):
-              break;
-            default:
-              if constexpr(std::same_as<T, obj::jit_function>)
-              {
-                std::function<object_ptr(object_ptr, object_ptr)> const f(typed_source->arity_2);
-                if(f)
-                {
-                  return reduce(f, init, s);
-                }
-              }
-              else
-              {
-                auto f([&typed_source](object_ptr const a, object_ptr const e) -> object_ptr {
-                  return typed_source->call(a, e);
-                });
-                return reduce(f, init, s);
-              }
-          }
-        }
-        return reduce([&](auto const a, auto const e) { return dynamic_call(typed_source, a, e); },
-                      init,
-                      s);
-      },
-      f,
-      init,
-      s);
-  }
-
-  object_ptr reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f,
-                    object_ptr const init,
-                    object_ptr const s)
-  {
-    return visit_object(
       [](auto const typed_s, auto const f, auto const init) -> object_ptr {
         using T = typename decltype(typed_s)::value_type;
 
@@ -1090,7 +1046,7 @@ namespace jank::runtime
           object_ptr res{ init };
           for(auto it(typed_s->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
-            res = f(res, it->first());
+            res = dynamic_call(f, res, it->first());
             if(res->type == object_type::reduced)
             {
               res = expect_object<obj::reduced>(res)->val;

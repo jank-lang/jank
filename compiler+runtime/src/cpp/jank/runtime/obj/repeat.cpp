@@ -56,34 +56,87 @@ namespace jank::runtime::obj
     return value;
   }
 
-  object_ptr repeat::reduce(std::function<object_ptr(object_ptr, object_ptr)> const &f,
-                            object_ptr const start) const
+  object_ptr repeat::reduce(object_ptr const f, object_ptr const start) const
   {
-    auto ret(start);
-    auto const bound(count);
-    if(bound == infinite)
-    {
-      while(true)
-      {
-        ret = f(ret, value);
-        if(ret->type == object_type::reduced)
+    return visit_object(
+      [](auto const typed_f, auto ret, auto const value, auto const bound) {
+        using T = typename decltype(typed_f)::value_type;
+        native_bool direct{};
+        if constexpr(std::same_as<T, runtime::obj::jit_function>
+                     || std::same_as<T, runtime::obj::jit_closure>)
         {
-          return expect_object<obj::reduced>(ret)->val;
+          auto const arity_flags(typed_f->get_arity_flags());
+          auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
+          switch(mask)
+          {
+            case behavior::callable::mask_variadic_arity(0):
+            case behavior::callable::mask_variadic_arity(1):
+            case behavior::callable::mask_variadic_arity(2):
+              break;
+            default:
+              direct = true;
+          }
         }
-      }
-    }
-    else
-    {
-      for(size_t i{}; i < count; ++i)
-      {
-        ret = f(ret, value);
-        if(ret->type == object_type::reduced)
+        if(bound == infinite)
         {
-          return expect_object<obj::reduced>(ret)->val;
+          while(true)
+          {
+            if constexpr(std::same_as<T, runtime::obj::jit_function>
+                         || std::same_as<T, runtime::obj::jit_closure>)
+            {
+              if(direct)
+              {
+                ret = typed_f->call(ret, value);
+              }
+              else
+              {
+                ret = dynamic_call(typed_f, ret, value);
+              }
+            }
+            else
+            {
+              ret = dynamic_call(typed_f, ret, value);
+            }
+
+            if(ret->type == object_type::reduced)
+            {
+              return expect_object<obj::reduced>(ret)->val;
+            }
+          }
         }
-      }
-      return ret;
-    }
+        else
+        {
+          for(size_t i{}; i < bound; ++i)
+          {
+            if constexpr(std::same_as<T, runtime::obj::jit_function>
+                         || std::same_as<T, runtime::obj::jit_closure>)
+            {
+              if(direct)
+              {
+                ret = typed_f->call(ret, value);
+              }
+              else
+              {
+                ret = dynamic_call(typed_f, ret, value);
+              }
+            }
+            else
+            {
+              ret = dynamic_call(typed_f, ret, value);
+            }
+
+            if(ret->type == object_type::reduced)
+            {
+              return expect_object<obj::reduced>(ret)->val;
+            }
+          }
+          return ret;
+        }
+      },
+      f,
+      start,
+      value,
+      count);
   }
 
   repeat_ptr repeat::next() const
