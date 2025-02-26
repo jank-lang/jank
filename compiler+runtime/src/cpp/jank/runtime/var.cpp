@@ -7,6 +7,8 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/native_persistent_string/fmt.hpp>

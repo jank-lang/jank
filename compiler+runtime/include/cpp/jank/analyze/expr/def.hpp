@@ -1,34 +1,30 @@
 #pragma once
 
-#include <jank/detail/to_runtime_data.hpp>
-#include <jank/analyze/local_frame.hpp>
-#include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expression.hpp>
 #include <jank/option.hpp>
+
+namespace jank::runtime::obj
+{
+  using symbol_ptr = native_box<struct symbol>;
+}
 
 namespace jank::analyze::expr
 {
-  using namespace jank::runtime;
+  using def_ptr = runtime::native_box<struct def>;
 
-  template <typename E>
-  struct def : expression_base
+  struct def : expression
   {
-    obj::symbol_ptr name{};
-    option<native_box<E>> value;
+    static constexpr expression_kind expr_kind{ expression_kind::def };
 
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
+    def(expression_position position,
+        local_frame_ptr frame,
+        native_bool needs_box,
+        runtime::obj::symbol_ptr name,
+        option<expression_ptr> const &value);
 
-    object_ptr to_runtime_data() const
-    {
-      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
-                   obj::persistent_array_map::create_unique(make_box("__type"),
-                                                            make_box("expr::def"),
-                                                            make_box("name"),
-                                                            name,
-                                                            make_box("value"),
-                                                            jank::detail::to_runtime_data(value)));
-    }
+    runtime::object_ptr to_runtime_data() const override;
+
+    runtime::obj::symbol_ptr name{};
+    option<expression_ptr> value;
   };
 }

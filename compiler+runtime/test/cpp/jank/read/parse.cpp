@@ -8,6 +8,8 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/escape.hpp>
 

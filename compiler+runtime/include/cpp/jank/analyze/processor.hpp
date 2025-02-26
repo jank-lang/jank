@@ -6,6 +6,7 @@
 #include <jank/runtime/var.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/expression.hpp>
+#include <jank/analyze/expr/function.hpp>
 #include <jank/option.hpp>
 
 namespace jank::runtime
@@ -76,7 +77,7 @@ namespace jank::analyze
                                  expression_position,
                                  option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
-    result<expr::function_arity<expression>, error_ptr>
+    result<expr::function_arity, error_ptr>
     analyze_fn_arity(runtime::obj::persistent_list_ptr const &,
                      native_persistent_string const &name,
                      local_frame_ptr &);
@@ -130,12 +131,12 @@ namespace jank::analyze
                                      expression_position,
                                      option<expr::function_context_ptr> const &,
                                      native_bool needs_box);
-    expression_result analyze_map(object_ptr const &,
+    expression_result analyze_map(runtime::object_ptr const &,
                                   local_frame_ptr &,
                                   expression_position,
                                   option<expr::function_context_ptr> const &,
                                   native_bool needs_box);
-    expression_result analyze_set(object_ptr const &,
+    expression_result analyze_set(runtime::object_ptr const &,
                                   local_frame_ptr &,
                                   expression_position,
                                   option<expr::function_context_ptr> const &,

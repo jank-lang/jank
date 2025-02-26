@@ -1,40 +1,32 @@
 #pragma once
 
-#include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expression.hpp>
+
+namespace jank::runtime::obj
+{
+  using persistent_list_ptr = native_box<struct persistent_list>;
+}
 
 namespace jank::analyze::expr
 {
-  template <typename E>
-  struct call : expression_base
+  using call_ptr = runtime::native_box<struct call>;
+
+  struct call : expression
   {
+    static constexpr expression_kind expr_kind{ expression_kind::call };
+
+    call(expression_position position,
+         local_frame_ptr frame,
+         native_bool needs_box,
+         expression_ptr source,
+         runtime::obj::persistent_list_ptr args,
+         native_vector<expression_ptr> &&arg_exprs);
+
+    runtime::object_ptr to_runtime_data() const override;
+
     /* Var, local, or callable. */
-    native_box<E> source_expr{};
+    expression_ptr source_expr{};
     runtime::obj::persistent_list_ptr args{};
-    native_vector<native_box<E>> arg_exprs;
-
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
-
-    runtime::object_ptr to_runtime_data() const
-    {
-      runtime::object_ptr arg_expr_maps(make_box<runtime::obj::persistent_vector>());
-      for(auto const &e : arg_exprs)
-      {
-        arg_expr_maps = runtime::conj(arg_expr_maps, e->to_runtime_data());
-      }
-
-      return runtime::merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::call"),
-                                                          make_box("source_expr"),
-                                                          source_expr->to_runtime_data(),
-                                                          make_box("args"),
-                                                          args,
-                                                          make_box("arg_exprs"),
-                                                          arg_expr_maps));
-    }
+    native_vector<expression_ptr> arg_exprs;
   };
 }

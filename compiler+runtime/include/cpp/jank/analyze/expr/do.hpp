@@ -1,37 +1,25 @@
 #pragma once
 
-#include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
 {
-  using namespace jank::runtime;
+  using do_ptr = runtime::native_box<struct do_>;
 
-  template <typename E>
-  struct do_ : expression_base
+  struct do_ : expression
   {
-    native_vector<native_box<E>> values{};
+    static constexpr expression_kind expr_kind{ expression_kind::do_ };
 
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-      if(!values.empty())
-      {
-        values[values.size() - 1]->propagate_position(pos);
-      }
-    }
+    do_();
+    do_(expression_position position, local_frame_ptr frame, native_bool needs_box);
+    do_(expression_position position,
+        local_frame_ptr frame,
+        native_bool needs_box,
+        native_vector<expression_ptr> &&values);
 
-    object_ptr to_runtime_data() const
-    {
-      object_ptr body_maps{ make_box<obj::persistent_vector>() };
-      for(auto const &e : values)
-      {
-        body_maps = conj(body_maps, e->to_runtime_data());
-      }
-      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
-                   obj::persistent_array_map::create_unique(make_box("__type"),
-                                                            make_box("expr::do"),
-                                                            make_box("body"),
-                                                            body_maps));
-    }
+    void propagate_position(expression_position const pos) override;
+    runtime::object_ptr to_runtime_data() const override;
+
+    native_vector<expression_ptr> values{};
   };
 }

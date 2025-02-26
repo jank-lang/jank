@@ -1,4 +1,7 @@
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/jit/processor.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
@@ -9,8 +12,7 @@
 
 namespace jank::analyze
 {
-  using runtime::equal;
-  using runtime::__rt_ctx;
+  using namespace jank::runtime;
 
   TEST_SUITE("analyze::box")
   {

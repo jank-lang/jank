@@ -317,4 +317,10 @@ namespace jank::runtime
     }
     return ret;
   }
+
+  template <typename D, typename B>
+  native_box<D> static_box_cast(native_box<B> const ptr) noexcept
+  {
+    return static_cast<D *>(ptr.data);
+  }
 }

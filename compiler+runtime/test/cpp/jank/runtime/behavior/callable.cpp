@@ -1,4 +1,5 @@
 #include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>

@@ -1,34 +1,34 @@
 #pragma once
 
-#include <jank/runtime/var.hpp>
-#include <jank/analyze/local_frame.hpp>
-#include <jank/analyze/expression_base.hpp>
-#include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/expression.hpp>
+
+namespace jank::runtime
+{
+  namespace obj
+  {
+    using symbol_ptr = native_box<struct symbol>;
+  }
+
+  using var_ptr = native_box<struct var>;
+}
 
 namespace jank::analyze::expr
 {
-  using namespace jank::runtime;
+  using var_ref_ptr = runtime::native_box<struct var_ref>;
 
-  template <typename E>
-  struct var_ref : expression_base
+  struct var_ref : expression
   {
-    obj::symbol_ptr qualified_name{};
-    var_ptr var{};
+    static constexpr expression_kind expr_kind{ expression_kind::var_ref };
 
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
+    var_ref(expression_position position,
+            local_frame_ptr frame,
+            native_bool needs_box,
+            runtime::obj::symbol_ptr qualified_name,
+            runtime::var_ptr var);
 
-    object_ptr to_runtime_data() const
-    {
-      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
-                   obj::persistent_array_map::create_unique(make_box("__type"),
-                                                            make_box("expr::var_ref"),
-                                                            make_box("qualified_name"),
-                                                            qualified_name,
-                                                            make_box("var"),
-                                                            var));
-    }
+    runtime::object_ptr to_runtime_data() const override;
+
+    runtime::obj::symbol_ptr qualified_name{};
+    runtime::var_ptr var{};
   };
 }

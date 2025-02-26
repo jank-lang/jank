@@ -15,68 +15,68 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(std::nullptr_t const &)
   {
-    return runtime::obj::nil::nil_const();
+    return obj::nil::nil_const();
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_bool const b)
   {
-    return b ? runtime::obj::boolean::true_const() : runtime::obj::boolean::false_const();
+    return b ? obj::boolean::true_const() : obj::boolean::false_const();
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(int const i)
   {
-    return make_box<runtime::obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<native_integer>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_integer const i)
   {
-    return make_box<runtime::obj::integer>(i);
+    return make_box<obj::integer>(i);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(char const i)
   {
-    return make_box<runtime::obj::character>(i);
+    return make_box<obj::character>(i);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(size_t const i)
   {
-    return make_box<runtime::obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<native_integer>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_real const r)
   {
-    return make_box<runtime::obj::real>(r);
+    return make_box<obj::real>(r);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(obj::ratio_data const &r)
   {
-    return make_box<runtime::obj::ratio>(r);
+    return make_box<obj::ratio>(r);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_persistent_string_view const &s)
   {
-    return make_box<runtime::obj::persistent_string>(s);
+    return make_box<obj::persistent_string>(s);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline runtime::obj::persistent_string_ptr make_box(char const * const s)
+  inline obj::persistent_string_ptr make_box(char const * const s)
   {
     assert(s);
-    return make_box<runtime::obj::persistent_string>(s);
+    return make_box<obj::persistent_string>(s);
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(runtime::detail::native_persistent_list const &l)
+  inline auto make_box(detail::native_persistent_list const &l)
   {
-    return make_box<runtime::obj::persistent_list>(l);
+    return make_box<obj::persistent_list>(l);
   }
 
   template <typename T>
@@ -84,7 +84,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const d)
   {
-    return make_box<runtime::obj::real>(d);
+    return make_box<obj::real>(d);
   }
 
   template <typename T>
@@ -92,11 +92,11 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const d)
   {
-    return make_box<runtime::obj::integer>(d);
+    return make_box<obj::integer>(d);
   }
 
   template <typename T>
-  requires runtime::behavior::object_like<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T * const d)
   {
@@ -104,7 +104,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires runtime::behavior::object_like<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const * const d)
   {
@@ -112,7 +112,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires runtime::behavior::object_like<T>
+  requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(native_box<T> const &d)
   {
