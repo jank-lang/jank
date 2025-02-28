@@ -19,10 +19,12 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/native_persistent_string.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
@@ -30,6 +32,7 @@
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
 #include <clojure/core_native.hpp>
+#include <clojure/string_native.hpp>
 
 namespace jank
 {
@@ -312,6 +315,7 @@ try
   __rt_ctx = new(GC) runtime::context{ opts };
 
   jank_load_clojure_core_native();
+  jank_load_clojure_string_native();
   jank_load_jank_compiler_native();
   jank_load_jank_perf_native();
 

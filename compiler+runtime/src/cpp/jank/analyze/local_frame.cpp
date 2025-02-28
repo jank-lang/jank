@@ -13,27 +13,21 @@
 
 namespace jank::analyze
 {
+  using namespace jank::runtime;
+
   object_ptr lifted_var::to_runtime_data() const
   {
-    return obj::persistent_array_map::create_unique(make_box("__type"),
-                                                    make_box("lifted_var"),
-                                                    make_box("var_name"),
-                                                    var_name);
+    return obj::persistent_array_map::create_unique(make_box("var_name"), var_name);
   }
 
   object_ptr lifted_constant::to_runtime_data() const
   {
-    return obj::persistent_array_map::create_unique(make_box("__type"),
-                                                    make_box("lifted_constant"),
-                                                    make_box("data"),
-                                                    data);
+    return obj::persistent_array_map::create_unique(make_box("data"), data);
   }
 
   object_ptr local_binding::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
-      make_box("__type"),
-      make_box("local_binding"),
       make_box("name"),
       name,
       make_box("value_expr"),
@@ -97,7 +91,7 @@ namespace jank::analyze
       auto const local_result(it->locals.find(sym));
       if(local_result != it->locals.end())
       {
-        return local_frame::find_result{ local_result->second, std::move(crossed_fns) };
+        return local_frame::find_result{ &local_result->second, std::move(crossed_fns) };
       }
 
       if(allow_captures)
@@ -105,7 +99,7 @@ namespace jank::analyze
         auto const capture_result(it->captures.find(sym));
         if(capture_result != it->locals.end())
         {
-          return local_frame::find_result{ capture_result->second, std::move(crossed_fns) };
+          return local_frame::find_result{ &capture_result->second, std::move(crossed_fns) };
         }
       }
 
@@ -135,7 +129,7 @@ namespace jank::analyze
   {
     for(auto const &crossed_fn : result.crossed_fns)
     {
-      auto res(crossed_fn->captures.emplace(result.binding.name, result.binding));
+      auto res(crossed_fn->captures.emplace(result.binding->name, *result.binding));
       /* We know it needs a box, since it's captured. */
       res.first->second.needs_box = true;
       res.first->second.has_boxed_usage = true;
@@ -276,8 +270,6 @@ namespace jank::analyze
   object_ptr local_frame::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
-      make_box("__type"),
-      make_box("local_frame"),
       make_box("type"),
       make_box(frame_type_str(type)),
       make_box("parent"),

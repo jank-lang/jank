@@ -184,3 +184,33 @@ namespace jank::runtime::obj
     hash = 0;
   }
 }
+
+namespace std
+{
+  size_t
+  hash<jank::runtime::obj::symbol>::operator()(jank::runtime::obj::symbol const &o) const noexcept
+  {
+    return o.to_hash();
+  }
+
+  size_t hash<jank::runtime::obj::symbol_ptr>::operator()(
+    jank::runtime::obj::symbol_ptr const &o) const noexcept
+  {
+    return o->to_hash();
+  }
+
+  bool equal_to<jank::runtime::obj::symbol_ptr>::operator()(
+    jank::runtime::obj::symbol_ptr const &lhs,
+    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
+  {
+    if(!lhs)
+    {
+      return !rhs;
+    }
+    else if(!rhs)
+    {
+      return false;
+    }
+    return lhs->equal(*rhs);
+  }
+}

@@ -181,7 +181,7 @@ namespace jank
       }
       /* If the size difference between our substring and its original string is too great, it's
        * not worth keeping the original string alive just to share the substring. In that case,
-       * we deep copy. This prevents relatively small (yet still categoricall large) substrings
+       * we deep copy. This prevents relatively small (yet still categorically large) substrings
        * from a large file keeping that whole file in memory as long as the substrings live. */
       else if((s_length - count) > max_shared_difference)
       {
@@ -196,7 +196,7 @@ namespace jank
     }
 
     template <typename It>
-    constexpr native_persistent_string(It const begin, It const end)
+    constexpr native_persistent_string(It const &begin, It const &end)
     {
       auto const size(std::distance(begin, end));
       if(size <= max_small_size)
@@ -818,7 +818,7 @@ namespace jank
 
     template <typename It>
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_small(It const begin, It const end) noexcept
+    constexpr void init_small(It const &begin, It const &end) noexcept
     {
       auto const size(std::distance(begin, end));
       assert(size <= max_small_size);
@@ -885,7 +885,7 @@ namespace jank
 
     template <typename It>
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_large_owned(It const begin, It const end) noexcept
+    constexpr void init_large_owned(It const &begin, It const &end) noexcept
     {
       auto const size(std::distance(begin, end));
       assert(max_small_size < size);

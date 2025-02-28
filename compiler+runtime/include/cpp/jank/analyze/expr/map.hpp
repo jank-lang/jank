@@ -1,40 +1,25 @@
 #pragma once
 
-#include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expression.hpp>
+#include <jank/option.hpp>
 
 namespace jank::analyze::expr
 {
-  using namespace jank::runtime;
+  using map_ptr = runtime::native_box<struct map>;
 
-  template <typename E>
-  struct map : expression_base
+  struct map : expression
   {
-    native_vector<std::pair<native_box<E>, native_box<E>>> data_exprs;
-    option<object_ptr> meta;
+    static constexpr expression_kind expr_kind{ expression_kind::map };
 
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
+    map(expression_position position,
+        local_frame_ptr frame,
+        native_bool needs_box,
+        native_vector<std::pair<expression_ptr, expression_ptr>> &&data_exprs,
+        option<runtime::object_ptr> const &meta);
 
-    object_ptr to_runtime_data() const
-    {
-      object_ptr pair_maps(make_box<obj::persistent_vector>());
-      for(auto const &e : data_exprs)
-      {
-        pair_maps = conj(pair_maps,
-                         make_box<obj::persistent_vector>(std::in_place,
-                                                          e.first->to_runtime_data(),
-                                                          e.second->to_runtime_data()));
-      }
+    runtime::object_ptr to_runtime_data() const override;
 
-      return merge(static_cast<expression_base const *>(this)->to_runtime_data(),
-                   obj::persistent_array_map::create_unique(make_box("__type"),
-                                                            make_box("expr::map"),
-                                                            make_box("data_exprs"),
-                                                            pair_maps,
-                                                            make_box("meta"),
-                                                            jank::detail::to_runtime_data(meta)));
-    }
+    native_vector<std::pair<expression_ptr, expression_ptr>> data_exprs;
+    option<runtime::object_ptr> meta;
   };
 }

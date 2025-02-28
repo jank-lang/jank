@@ -236,6 +236,27 @@ add_library(
   src/cpp/jank/runtime/behavior/callable.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/analyze/processor.cpp
+  src/cpp/jank/analyze/expression.cpp
+  src/cpp/jank/analyze/expr/vector.cpp
+  src/cpp/jank/analyze/expr/recursion_reference.cpp
+  src/cpp/jank/analyze/expr/map.cpp
+  src/cpp/jank/analyze/expr/do.cpp
+  src/cpp/jank/analyze/expr/var_deref.cpp
+  src/cpp/jank/analyze/expr/recur.cpp
+  src/cpp/jank/analyze/expr/named_recursion.cpp
+  src/cpp/jank/analyze/expr/local_reference.cpp
+  src/cpp/jank/analyze/expr/def.cpp
+  src/cpp/jank/analyze/expr/let.cpp
+  src/cpp/jank/analyze/expr/throw.cpp
+  src/cpp/jank/analyze/expr/if.cpp
+  src/cpp/jank/analyze/expr/list.cpp
+  src/cpp/jank/analyze/expr/primitive_literal.cpp
+  src/cpp/jank/analyze/expr/call.cpp
+  src/cpp/jank/analyze/expr/set.cpp
+  src/cpp/jank/analyze/expr/var_ref.cpp
+  src/cpp/jank/analyze/expr/function.cpp
+  src/cpp/jank/analyze/expr/try.cpp
+  src/cpp/jank/analyze/expr/case.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/evaluate.cpp
@@ -244,6 +265,7 @@ add_library(
 
   # Native module sources.
   src/cpp/clojure/core_native.cpp
+  src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
   src/cpp/jank/perf_native.cpp
 )
@@ -455,6 +477,7 @@ if(jank_tests)
     test/cpp/jank/runtime/core.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/core.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp

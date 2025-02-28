@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/option.hpp>
-#include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 
 namespace jank::runtime
 {
@@ -53,6 +53,8 @@ namespace jank::analyze
     runtime::object_ptr to_runtime_data() const;
   };
 
+  using local_binding_ptr = runtime::native_box<local_binding>;
+
   struct local_frame : gc
   {
     enum class frame_type : uint8_t
@@ -99,7 +101,7 @@ namespace jank::analyze
 
     struct find_result
     {
-      local_binding &binding;
+      local_binding_ptr binding{};
       native_vector<native_box<local_frame>> crossed_fns;
     };
 
@@ -131,7 +133,6 @@ namespace jank::analyze
 
     frame_type type;
     option<native_box<local_frame>> parent;
-    /* TODO: local_binding_ptr */
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;

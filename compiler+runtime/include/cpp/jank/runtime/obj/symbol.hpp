@@ -71,36 +71,19 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::symbol>
   {
-    size_t operator()(jank::runtime::obj::symbol const &o) const noexcept
-    {
-      return o.to_hash();
-    }
+    size_t operator()(jank::runtime::obj::symbol const &o) const noexcept;
   };
 
   template <>
   struct hash<jank::runtime::obj::symbol_ptr>
   {
-    size_t operator()(jank::runtime::obj::symbol_ptr const &o) const noexcept
-    {
-      return o->to_hash();
-    }
+    size_t operator()(jank::runtime::obj::symbol_ptr const &o) const noexcept;
   };
 
   template <>
   struct equal_to<jank::runtime::obj::symbol_ptr>
   {
     bool operator()(jank::runtime::obj::symbol_ptr const &lhs,
-                    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
-    {
-      if(!lhs)
-      {
-        return !rhs;
-      }
-      else if(!rhs)
-      {
-        return false;
-      }
-      return lhs->equal(*rhs);
-    }
+                    jank::runtime::obj::symbol_ptr const &rhs) const noexcept;
   };
 }

@@ -1,25 +1,24 @@
 #pragma once
 
-#include <jank/analyze/expression_base.hpp>
+#include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
 {
-  template <typename E>
-  struct recursion_reference : expression_base
+  using function_context_ptr = runtime::native_box<struct function_context>;
+  using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
+
+  struct recursion_reference : expression
   {
+    static constexpr expression_kind expr_kind{ expression_kind::recursion_reference };
+
+    recursion_reference();
+    recursion_reference(expression_position position,
+                        local_frame_ptr frame,
+                        native_bool needs_box,
+                        function_context_ptr fn_ctx);
+
+    runtime::object_ptr to_runtime_data() const override;
+
     function_context_ptr fn_ctx{};
-
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
-
-    runtime::object_ptr to_runtime_data() const
-    {
-      return merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::recursion_reference")));
-    }
   };
 }

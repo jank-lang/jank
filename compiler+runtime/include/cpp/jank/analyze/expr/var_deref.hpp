@@ -1,15 +1,33 @@
 #pragma once
 
-#include <jank/runtime/var.hpp>
-#include <jank/analyze/local_frame.hpp>
-#include <jank/analyze/expression_base.hpp>
-#include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/expression.hpp>
+
+namespace jank::runtime
+{
+  namespace obj
+  {
+    using symbol_ptr = native_box<struct symbol>;
+  }
+
+  using var_ptr = native_box<struct var>;
+}
 
 namespace jank::analyze::expr
 {
-  template <typename E>
-  struct var_deref : expression_base
+  using var_deref_ptr = runtime::native_box<struct var_deref>;
+
+  struct var_deref : expression
   {
+    static constexpr expression_kind expr_kind{ expression_kind::var_deref };
+
+    var_deref(expression_position position,
+              local_frame_ptr frame,
+              native_bool needs_box,
+              runtime::obj::symbol_ptr qualified_name,
+              runtime::var_ptr var);
+
+    runtime::object_ptr to_runtime_data() const override;
+
     /* Holds the fully qualified name for the originally resolved var.
      * It will be useful to know that the var deref happened through a
      * referred var, for static analysis and error reporting.
@@ -18,22 +36,5 @@ namespace jank::analyze::expr
      * to the actual value of the var.. */
     runtime::obj::symbol_ptr qualified_name{};
     runtime::var_ptr var{};
-
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
-
-    runtime::object_ptr to_runtime_data() const
-    {
-      return runtime::merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        runtime::obj::persistent_array_map::create_unique(make_box("__type"),
-                                                          make_box("expr::var_deref"),
-                                                          make_box("qualified_name"),
-                                                          qualified_name,
-                                                          make_box("var"),
-                                                          var));
-    }
   };
 }

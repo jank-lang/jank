@@ -1,70 +1,39 @@
 #pragma once
 
-#include <jank/analyze/expression_base.hpp>
-#include <jank/analyze/expr/do.hpp>
-#include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/expression.hpp>
+#include <jank/option.hpp>
+
+namespace jank::runtime::obj
+{
+  using symbol_ptr = native_box<struct symbol>;
+}
 
 namespace jank::analyze::expr
 {
-  template <typename E>
+  using do_ptr = runtime::native_box<struct do_>;
+
   struct catch_
   {
+    void propagate_position(expression_position const pos);
+    runtime::object_ptr to_runtime_data() const;
+
     runtime::obj::symbol_ptr sym{};
-    do_<E> body{};
-
-    void propagate_position(expression_position const pos)
-    {
-      body.propagate_position(pos);
-    }
-
-    runtime::object_ptr to_runtime_data() const
-    {
-      using namespace runtime::obj;
-
-      return persistent_array_map::create_unique(make_box("__type"),
-                                                 make_box("expr::try::catch"),
-                                                 make_box("body"),
-                                                 body.to_runtime_data(),
-                                                 make_box("sym"),
-                                                 sym);
-    }
+    do_ptr body{};
   };
 
-  template <typename E>
-  struct try_ : expression_base
+  using try_ptr = runtime::native_box<struct try_>;
+
+  struct try_ : expression
   {
-    do_<E> body{};
-    option<catch_<E>> catch_body{};
-    option<do_<E>> finally_body{};
+    static constexpr expression_kind expr_kind{ expression_kind::try_ };
 
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-      body.propagate_position(pos);
-      if(catch_body)
-      {
-        catch_body.unwrap().propagate_position(pos);
-      }
-      if(finally_body)
-      {
-        finally_body.unwrap().propagate_position(pos);
-      }
-    }
+    try_(expression_position position, local_frame_ptr frame, native_bool needs_box, do_ptr body);
 
-    runtime::object_ptr to_runtime_data() const
-    {
-      using namespace runtime::obj;
+    void propagate_position(expression_position const pos) override;
+    runtime::object_ptr to_runtime_data() const override;
 
-      return runtime::merge(
-        static_cast<expression_base const *>(this)->to_runtime_data(),
-        persistent_array_map::create_unique(make_box("__type"),
-                                            make_box("expr::try"),
-                                            make_box("body"),
-                                            body.to_runtime_data(),
-                                            make_box("catch"),
-                                            jank::detail::to_runtime_data(catch_body),
-                                            make_box("finally"),
-                                            jank::detail::to_runtime_data(finally_body)));
-    }
+    do_ptr body{};
+    option<catch_> catch_body{};
+    option<do_ptr> finally_body{};
   };
 }

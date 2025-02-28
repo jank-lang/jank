@@ -1,5 +1,6 @@
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/analyze/expression.hpp>
+#include <jank/analyze/visit.hpp>
 
 namespace jank::analyze::step
 {
@@ -8,69 +9,69 @@ namespace jank::analyze::step
   template <typename F>
   static void walk(expression_ptr const expr, F const &f)
   {
-    boost::apply_visitor(
-      [&](auto &typed_expr) {
+    visit_expr(
+      [&](auto const typed_expr) {
         using T = std::decay_t<decltype(typed_expr)>;
 
-        if constexpr(std::same_as<T, expr::if_<expression>>)
+        if constexpr(std::same_as<T, expr::if_>)
         {
-          boost::apply_visitor(f, typed_expr.then->data);
-          if(typed_expr.else_.is_some())
+          visit_expr(f, typed_expr->then);
+          if(typed_expr->else_.is_some())
           {
-            boost::apply_visitor(f, typed_expr.else_.unwrap()->data);
+            visit_expr(f, typed_expr->else_.unwrap());
           }
         }
-        else if constexpr(std::same_as<T, expr::do_<expression>>)
+        else if constexpr(std::same_as<T, expr::do_>)
         {
-          if(!typed_expr.values.empty())
+          if(!typed_expr->values.empty())
           {
-            boost::apply_visitor(f, typed_expr.values.back()->data);
+            visit_expr(f, typed_expr->values.back());
           }
         }
-        else if constexpr(std::same_as<T, expr::let<expression>>)
+        else if constexpr(std::same_as<T, expr::let>)
         {
-          if(!typed_expr.body.values.empty())
+          if(!typed_expr->body.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.body.values.back()->data);
+            visit_expr(f, typed_expr->body.values.back());
           }
         }
-        else if constexpr(std::same_as<T, expr::try_<expression>>)
+        else if constexpr(std::same_as<T, expr::try_>)
         {
-          if(!typed_expr.body.values.empty())
+          if(!typed_expr->body.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.body.values.back()->data);
+            visit_expr(f, typed_expr->body.values.back());
           }
-          if(typed_expr.catch_body && !typed_expr.catch_body.unwrap().body.values.empty())
+          if(typed_expr->catch_body && !typed_expr->catch_body.unwrap().body.values.empty())
           {
-            boost::apply_visitor(f, typed_expr.catch_body.unwrap().body.values.back()->data);
+            visit_expr(f, typed_expr->catch_body.unwrap().body.values.back());
           }
         }
+        /* TODO: Case */
         else
         {
           f(typed_expr);
         }
       },
-      expr->data);
+      expr);
   }
 
-  expr::do_<expression> force_boxed(expr::do_<expression> &&do_)
+  /* Mutated in place. */
+  void force_boxed(expr::do_ptr const do_)
   {
-    if(do_.needs_box)
+    if(do_->needs_box)
     {
-      return std::move(do_);
+      return;
     }
 
-    do_.needs_box = true;
+    do_->needs_box = true;
 
-    if(!do_.values.empty())
+    if(!do_->values.empty())
     {
-      auto &last(do_.values.back());
+      auto &last(do_->values.back());
       walk(last, [](auto &typed_expr) {
         //using T = std::decay_t<decltype(typed_expr)>;
-        typed_expr.needs_box = true;
+        typed_expr->needs_box = true;
       });
     }
-
-    return std::move(do_);
   }
 }

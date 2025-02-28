@@ -13,16 +13,41 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/analyze/processor.hpp>
-#include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/error/analyze.hpp>
 
+#include <jank/analyze/expr/def.hpp>
+#include <jank/analyze/expr/var_deref.hpp>
+#include <jank/analyze/expr/var_ref.hpp>
+#include <jank/analyze/expr/call.hpp>
+#include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/expr/list.hpp>
+#include <jank/analyze/expr/vector.hpp>
+#include <jank/analyze/expr/map.hpp>
+#include <jank/analyze/expr/set.hpp>
+#include <jank/analyze/expr/function.hpp>
+#include <jank/analyze/expr/recur.hpp>
+#include <jank/analyze/expr/recursion_reference.hpp>
+#include <jank/analyze/expr/named_recursion.hpp>
+#include <jank/analyze/expr/local_reference.hpp>
+#include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/do.hpp>
+#include <jank/analyze/expr/if.hpp>
+#include <jank/analyze/expr/throw.hpp>
+#include <jank/analyze/expr/try.hpp>
+#include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/rtti.hpp>
+
 namespace jank::analyze
 {
+  using namespace jank::runtime;
+
   static read::source
   fallback_source(read::source const &source, std::function<read::source()> const &f)
   {
@@ -167,16 +192,13 @@ namespace jank::analyze
     }
 
     /* Lift this so it can be used during codegen. */
+    /* TODO: I don't think lifting meta is actually needed anymore. Verify. */
     if(qualified_sym->meta.is_some())
     {
       current_frame->lift_constant(qualified_sym->meta.unwrap());
     }
 
-    return make_box<expression>(expr::def<expression>{
-      expression_base{ {}, position, current_frame, true },
-      qualified_sym,
-      value_expr
-    });
+    return make_box<expr::def>(position, current_frame, true, qualified_sym, value_expr);
   }
 
   processor::expression_result processor::analyze_case(obj::persistent_list_ptr const &o,
@@ -250,7 +272,7 @@ namespace jank::analyze
       native_vector<expression_ptr> exprs{};
     };
 
-    auto const keys_exprs{ visit_map_like(
+    auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> string_result<keys_and_exprs> {
         keys_and_exprs ret{};
         for(auto seq{ typed_imap_obj->seq() }; seq != nullptr; seq = seq->next())
@@ -283,19 +305,17 @@ namespace jank::analyze
       return error::analysis_invalid_case(keys_exprs.expect_err(), meta_source(o->meta));
     }
 
-    auto case_expr{
-      make_box<expression>(expr::case_<expression>{
-                                                   expression_base{ {}, position, f, needs_box },
-                                                   value_expr.expect_ok(),
-                                                   shift->data,
-                                                   mask->data,
-                                                   default_expr.expect_ok(),
-                                                   keys_exprs.expect_ok().keys,
-                                                   keys_exprs.expect_ok().exprs,
-                                                   }
-      )
-    };
-    return case_expr;
+    auto pairs{ keys_exprs.expect_ok_move() };
+
+    return make_box<expr::case_>(position,
+                                 f,
+                                 needs_box,
+                                 value_expr.expect_ok(),
+                                 shift->data,
+                                 mask->data,
+                                 default_expr.expect_ok(),
+                                 std::move(pairs.keys),
+                                 std::move(pairs.exprs));
   }
 
   processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
@@ -314,7 +334,7 @@ namespace jank::analyze
       local_frame::register_captures(unwrapped_local);
 
       /* Since we're referring to a local, we're boxed if it is boxed. */
-      needs_box |= unwrapped_local.binding.needs_box;
+      needs_box |= unwrapped_local.binding->needs_box;
 
       /* Captured locals are always boxed, even if the originating local is not. */
       if(!unwrapped_local.crossed_fns.empty())
@@ -322,7 +342,7 @@ namespace jank::analyze
         needs_box = true;
 
         /* Capturing counts as a boxed usage for the originating local. */
-        unwrapped_local.binding.has_boxed_usage = true;
+        unwrapped_local.binding->has_boxed_usage = true;
 
         /* The first time we reference a captured local from within a function, we get here.
          * We determine that we had to cross one or more function scopes to find the relevant
@@ -336,18 +356,18 @@ namespace jank::analyze
 
       if(needs_box)
       {
-        unwrapped_local.binding.has_boxed_usage = true;
+        unwrapped_local.binding->has_boxed_usage = true;
       }
       else
       {
-        unwrapped_local.binding.has_unboxed_usage = true;
+        unwrapped_local.binding->has_unboxed_usage = true;
       }
 
-      return make_box<expression>(expr::local_reference{
-        expression_base{ {}, position, current_frame, needs_box },
-        sym,
-        unwrapped_local.binding
-      });
+      return make_box<expr::local_reference>(position,
+                                             current_frame,
+                                             needs_box,
+                                             sym,
+                                             unwrapped_local.binding);
     }
 
     /* If it's not a local and it matches a fn's name, we're dealing with a
@@ -355,10 +375,10 @@ namespace jank::analyze
     auto const found_named_recursion(current_frame->find_named_recursion(sym));
     if(found_named_recursion.is_some())
     {
-      return make_box<expression>(expr::recursion_reference<expression>{
-        expression_base{ {}, position, current_frame, needs_box },
-        found_named_recursion.unwrap()
-      });
+      return make_box<expr::recursion_reference>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 found_named_recursion.unwrap());
     }
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
@@ -378,14 +398,10 @@ namespace jank::analyze
     {
       current_frame->lift_var(qualified_sym);
     }
-    return make_box<expression>(expr::var_deref<expression>{
-      expression_base{ {}, position, current_frame },
-      qualified_sym,
-      unwrapped_var
-    });
+    return make_box<expr::var_deref>(position, current_frame, true, qualified_sym, unwrapped_var);
   }
 
-  result<expr::function_arity<expression>, error_ptr>
+  result<expr::function_arity, error_ptr>
   processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list,
                               native_persistent_string const &name,
                               local_frame_ptr &current_frame)
@@ -485,9 +501,7 @@ namespace jank::analyze
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
     frame->fn_ctx = fn_ctx;
-    expr::do_<expression> body_do{
-      expression_base{ {}, expression_position::tail, frame }
-    };
+    auto body_do{ make_box<expr::do_>(expression_position::tail, frame, true) };
     size_t const form_count{ list->count() - 1 };
     size_t i{};
     for(auto const &item : list->data.rest())
@@ -499,7 +513,7 @@ namespace jank::analyze
       {
         return form.expect_err_move();
       }
-      body_do.values.emplace_back(form.expect_ok());
+      body_do->values.emplace_back(form.expect_ok());
     }
 
     /* If it turns out this function uses recur, we need to ensure that its tail expression
@@ -507,13 +521,13 @@ namespace jank::analyze
      * not work with the generated while/continue we use for recursion. */
     if(fn_ctx->is_tail_recursive)
     {
-      body_do = step::force_boxed(std::move(body_do));
+      step::force_boxed(body_do);
     }
 
-    return ok(expr::function_arity<expression>{ std::move(param_symbols),
-                                                std::move(body_do),
-                                                std::move(frame),
-                                                std::move(fn_ctx) });
+    return ok(expr::function_arity{ std::move(param_symbols),
+                                    body_do,
+                                    std::move(frame),
+                                    std::move(fn_ctx) });
   }
 
   processor::expression_result
@@ -552,7 +566,7 @@ namespace jank::analyze
       unique_name = name;
     }
 
-    native_vector<expr::function_arity<expression>> arities;
+    native_vector<expr::function_arity> arities;
 
     if(first_elem->type == runtime::object_type::persistent_vector)
     {
@@ -643,13 +657,13 @@ namespace jank::analyze
         make_box(runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }
                    .to_string()))));
 
-    auto ret(make_box<expression>(expr::function<expression>{
-      expression_base{ {}, position, current_frame },
-      name,
-      unique_name,
-      {},
-      meta
-    }));
+    auto ret(make_box<expr::function>(position,
+                                      current_frame,
+                                      true,
+                                      name,
+                                      unique_name,
+                                      native_vector<expr::function_arity>{},
+                                      meta));
 
     /* Assert that arities are unique. Lazy implementation, but N is small anyway. */
     for(auto base(arities.begin()); base != arities.end(); ++base)
@@ -676,7 +690,7 @@ namespace jank::analyze
       }
     }
 
-    boost::get<expr::function<expression>>(ret->data).arities = std::move(arities);
+    static_box_cast<expr::function>(ret)->arities = std::move(arities);
 
     return ret;
   }
@@ -732,11 +746,11 @@ namespace jank::analyze
 
     fn_ctx.unwrap()->is_tail_recursive = true;
 
-    return make_box<expression>(expr::recur<expression>{
-      expression_base{ {}, position, current_frame },
-      make_box<runtime::obj::persistent_list>(list->data.rest()),
-      arg_exprs
-    });
+    return make_box<expr::recur>(position,
+                                 current_frame,
+                                 true,
+                                 make_box<runtime::obj::persistent_list>(list->data.rest()),
+                                 std::move(arg_exprs));
   }
 
   processor::expression_result
@@ -746,10 +760,7 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool const needs_box)
   {
-    expr::do_<expression> ret{
-      expression_base{ {}, position, current_frame },
-      {}
-    };
+    expr::do_ ret{ position, current_frame, true, {} };
     size_t const form_count{ list->count() - 1 };
     size_t i{};
     for(auto const &item : list->data.rest())
@@ -768,13 +779,13 @@ namespace jank::analyze
 
       if(is_last)
       {
-        ret.needs_box = form.expect_ok()->get_base()->needs_box;
+        ret.needs_box = form.expect_ok()->needs_box;
       }
 
       ret.values.emplace_back(form.expect_ok());
     }
 
-    return make_box<expression>(std::move(ret));
+    return make_box<expr::do_>(std::move(ret));
   }
 
   processor::expression_result
@@ -798,7 +809,6 @@ namespace jank::analyze
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
-
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
@@ -806,12 +816,14 @@ namespace jank::analyze
                                          meta_source(bindings_obj));
     }
 
-    expr::let<expression> ret{
-      position,
-      needs_box,
+    auto frame{
       make_box<local_frame>(local_frame::frame_type::let, current_frame->rt_ctx, current_frame)
     };
-    ret.body.position = position;
+    auto ret{ make_box<expr::let>(
+      position,
+      frame,
+      needs_box,
+      make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
@@ -829,15 +841,15 @@ namespace jank::analyze
                                            meta_source(sym_obj));
       }
 
-      auto res(analyze(val, ret.frame, expression_position::value, fn_ctx, false));
+      auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(res.is_err())
       {
         return res.expect_err_move();
       }
-      auto it(ret.pairs.emplace_back(sym, res.expect_ok_move()));
-      ret.frame->locals.emplace(
+      auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
+      ret->frame->locals.emplace(
         sym,
-        local_binding{ sym, some(it.second), current_frame, it.second->get_base()->needs_box });
+        local_binding{ sym, it.second, current_frame, it.second->needs_box });
     }
 
     size_t const form_count{ o->count() - 2 };
@@ -846,7 +858,7 @@ namespace jank::analyze
     {
       auto const is_last(++i == form_count);
       auto const form_type(is_last ? position : expression_position::statement);
-      auto res(analyze(item, ret.frame, form_type, fn_ctx, needs_box));
+      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
       if(res.is_err())
       {
         return res.expect_err_move();
@@ -855,13 +867,13 @@ namespace jank::analyze
       /* Ultimately, whether or not this let is boxed is up to the last form. */
       if(is_last)
       {
-        ret.needs_box = res.expect_ok()->get_base()->needs_box;
+        ret->needs_box = res.expect_ok()->needs_box;
       }
 
-      ret.body.values.emplace_back(res.expect_ok_move());
+      ret->body->values.emplace_back(res.expect_ok_move());
     }
 
-    return make_box<expression>(std::move(ret));
+    return ret;
   }
 
   processor::expression_result
@@ -1026,12 +1038,12 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-    return make_box<expression>(expr::if_<expression>{
-      expression_base{ {}, position, current_frame, needs_box },
-      condition_expr.expect_ok(),
-      then_expr.expect_ok(),
-      else_expr_opt
-    });
+    return make_box<expr::if_>(position,
+                               current_frame,
+                               needs_box,
+                               condition_expr.expect_ok(),
+                               then_expr.expect_ok(),
+                               else_expr_opt);
   }
 
   processor::expression_result
@@ -1085,11 +1097,11 @@ namespace jank::analyze
         meta_source(o));
     }
 
-    return make_box<expression>(expr::var_ref<expression>{
-      expression_base{ {}, position, current_frame, true },
-      qualified_sym,
-      found_var.unwrap()
-    });
+    return make_box<expr::var_ref>(position,
+                                   current_frame,
+                                   true,
+                                   qualified_sym,
+                                   found_var.unwrap());
   }
 
   processor::expression_result
@@ -1101,11 +1113,7 @@ namespace jank::analyze
   {
     auto const qualified_sym(
       current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
-    return make_box<expression>(expr::var_ref<expression>{
-      expression_base{ {}, position, current_frame, true },
-      qualified_sym,
-      o
-    });
+    return make_box<expr::var_ref>(position, current_frame, true, qualified_sym, o);
   }
 
   processor::expression_result
@@ -1127,10 +1135,7 @@ namespace jank::analyze
       return arg_expr.expect_err_move();
     }
 
-    return make_box<expression>(expr::throw_<expression>{
-      expression_base{ {}, position, current_frame, true },
-      arg_expr.unwrap_move()
-    });
+    return make_box<expr::throw_>(position, current_frame, true, arg_expr.unwrap_move());
   }
 
   processor::expression_result
@@ -1149,9 +1154,7 @@ namespace jank::analyze
     auto finally_frame(make_box<local_frame>(local_frame::frame_type::finally,
                                              current_frame->rt_ctx,
                                              current_frame));
-    expr::try_<expression> ret{
-      expression_base{ {}, position, try_frame }
-    };
+    auto ret{ make_box<expr::try_>(position, try_frame, true, make_box<expr::do_>()) };
 
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
     rt_ctx
@@ -1170,7 +1173,7 @@ namespace jank::analyze
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
     native_bool has_catch{}, has_finally{};
 
-    for(auto it(next_in_place(list->fresh_seq())); it != nullptr; it = next_in_place(it))
+    for(auto it(list->fresh_seq()->next_in_place()); it != nullptr; it = it->next_in_place())
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
@@ -1220,7 +1223,7 @@ namespace jank::analyze
               return form.expect_err_move();
             }
 
-            ret.body.values.emplace_back(form.expect_ok());
+            ret->body->values.emplace_back(form.expect_ok());
           }
           break;
         case try_expression_type::catch_:
@@ -1278,9 +1281,7 @@ namespace jank::analyze
               return do_res.expect_err_move();
             }
 
-            ret.catch_body = expr::catch_<expression>{ sym,
-                                                       std::move(boost::get<expr::do_<expression>>(
-                                                         do_res.expect_ok()->data)) };
+            ret->catch_body = expr::catch_{ sym, static_box_cast<expr::do_>(do_res.expect_ok()) };
           }
           break;
         case try_expression_type::finally_:
@@ -1305,25 +1306,24 @@ namespace jank::analyze
             {
               return do_res.expect_err_move();
             }
-            ret.finally_body
-              = std::move(boost::get<expr::do_<expression>>(do_res.expect_ok()->data));
+            ret->finally_body = static_box_cast<expr::do_>(do_res.expect_ok());
           }
           break;
       }
     }
 
-    ret.body.frame = try_frame;
-    ret.body.propagate_position(position);
-    if(ret.catch_body.is_some())
+    ret->body->frame = try_frame;
+    ret->body->propagate_position(position);
+    if(ret->catch_body.is_some())
     {
-      ret.catch_body.unwrap().body.frame = catch_frame;
+      ret->catch_body.unwrap().body->frame = catch_frame;
     }
-    if(ret.finally_body.is_some())
+    if(ret->finally_body.is_some())
     {
-      ret.finally_body.unwrap().frame = finally_frame;
+      ret->finally_body.unwrap()->frame = finally_frame;
     }
 
-    return make_box<expression>(std::move(ret));
+    return ret;
   }
 
   processor::expression_result
@@ -1334,10 +1334,7 @@ namespace jank::analyze
                                        native_bool const needs_box)
   {
     current_frame->lift_constant(o);
-    return make_box<expression>(expr::primitive_literal<expression>{
-      expression_base{ {}, position, current_frame, needs_box },
-      o
-    });
+    return make_box<expr::primitive_literal>(position, current_frame, needs_box, o);
   }
 
   /* TODO: Test for this. */
@@ -1359,7 +1356,7 @@ namespace jank::analyze
         return res.expect_err_move();
       }
       exprs.emplace_back(res.expect_ok_move());
-      if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+      if(exprs.back()->kind != expression_kind::primitive_literal)
       {
         literal = false;
       }
@@ -1368,27 +1365,17 @@ namespace jank::analyze
     if(literal)
     {
       /* Eval the literal to resolve exprs such as quotes. */
-      auto const pre_eval_expr(make_box<expression>(expr::vector<expression>{
-        expression_base{ {}, position, current_frame, true },
-        std::move(exprs),
-        o->meta
-      }));
+      auto const pre_eval_expr(
+        make_box<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
       auto const o(evaluate::eval(pre_eval_expr));
 
       /* TODO: Order lifted constants. Use sub constants during codegen. */
       current_frame->lift_constant(o);
 
-      return make_box<expression>(expr::primitive_literal<expression>{
-        expression_base{ {}, position, current_frame, true },
-        o
-      });
+      return make_box<expr::primitive_literal>(position, current_frame, true, o);
     }
 
-    return make_box<expression>(expr::vector<expression>{
-      expression_base{ {}, position, current_frame, true },
-      std::move(exprs),
-      o->meta,
-    });
+    return make_box<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
   }
 
   processor::expression_result
@@ -1437,11 +1424,7 @@ namespace jank::analyze
         }
 
         /* TODO: Uniqueness check. */
-        return make_box<expression>(expr::map<expression>{
-          expression_base{ {}, position, current_frame, true },
-          std::move(exprs),
-          typed_o->meta,
-        });
+        return make_box<expr::map>(position, current_frame, true, std::move(exprs), typed_o->meta);
       },
       o);
   }
@@ -1466,7 +1449,7 @@ namespace jank::analyze
             return res.expect_err_move();
           }
           exprs.emplace_back(res.expect_ok_move());
-          if(!boost::get<expr::primitive_literal<expression>>(&exprs.back()->data))
+          if(exprs.back()->kind != expression_kind::primitive_literal)
           {
             literal = false;
           }
@@ -1475,27 +1458,17 @@ namespace jank::analyze
         if(literal)
         {
           /* Eval the literal to resolve exprs such as quotes. */
-          auto const pre_eval_expr(make_box<expression>(expr::set<expression>{
-            expression_base{ {}, position, current_frame, true },
-            std::move(exprs),
-            typed_o->meta
-          }));
+          auto const pre_eval_expr(
+            make_box<expr::set>(position, current_frame, true, std::move(exprs), typed_o->meta));
           auto const constant(evaluate::eval(pre_eval_expr));
 
           /* TODO: Order lifted constants. Use sub constants during codegen. */
           current_frame->lift_constant(constant);
 
-          return make_box<expression>(expr::primitive_literal<expression>{
-            expression_base{ {}, position, current_frame, true },
-            constant
-          });
+          return make_box<expr::primitive_literal>(position, current_frame, true, constant);
         }
 
-        return make_box<expression>(expr::set<expression>{
-          expression_base{ {}, position, current_frame, true },
-          std::move(exprs),
-          typed_o->meta,
-        });
+        return make_box<expr::set>(position, current_frame, true, std::move(exprs), typed_o->meta);
       },
       o);
   }
@@ -1545,7 +1518,7 @@ namespace jank::analyze
       }
 
       source = sym_result.expect_ok();
-      auto const var_deref(boost::get<expr::var_deref<expression>>(&source->data));
+      auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
@@ -1575,10 +1548,9 @@ namespace jank::analyze
            * tell us what we need. */
           if(fn_res != vars.end())
           {
-            auto const fn(boost::get<expr::function<expression>>(&fn_res->second->data));
-            if(!fn)
+            if(fn_res->second.data->kind != expression_kind::function)
             {
-              return error::internal_analysis_failure("unsupported arity meta on non-function var",
+              return error::internal_analysis_failure("Unsupported arity meta on non-function var",
                                                       meta_source(first));
             }
           }
@@ -1639,32 +1611,32 @@ namespace jank::analyze
         }
         packed_arg_exprs.emplace_back(arg_expr.expect_ok());
       }
-      expr::list<expression> list{
-        expression_base{ {}, expression_position::value, current_frame, needs_arg_box },
-        std::move(packed_arg_exprs),
-        none,
-      };
-      arg_exprs.emplace_back(make_box<expression>(std::move(list)));
+      arg_exprs.emplace_back(make_box<expr::list>(expression_position::value,
+                                                  current_frame,
+                                                  needs_arg_box,
+                                                  std::move(packed_arg_exprs),
+                                                  none));
     }
 
-    auto const recursion_ref(boost::get<expr::recursion_reference<expression>>(&source->data));
+    auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));
     if(recursion_ref)
     {
-      return make_box<expression>(expr::named_recursion<expression>{
-        expression_base{ {}, position, current_frame, needs_ret_box },
-        *recursion_ref,
+      return make_box<expr::named_recursion>(
+        position,
+        current_frame,
+        needs_ret_box,
+        std::move(*recursion_ref),
         make_box<runtime::obj::persistent_list>(o->data.rest()),
-        arg_exprs
-      });
+        std::move(arg_exprs));
     }
     else
     {
-      return make_box<expression>(expr::call<expression>{
-        expression_base{ {}, position, current_frame, needs_ret_box },
-        source,
-        make_box<runtime::obj::persistent_list>(o->data.rest()),
-        arg_exprs
-      });
+      return make_box<expr::call>(position,
+                                  current_frame,
+                                  needs_ret_box,
+                                  source,
+                                  make_box<runtime::obj::persistent_list>(o->data.rest()),
+                                  std::move(arg_exprs));
     }
   }
 
