@@ -1371,7 +1371,7 @@ namespace jank::codegen
       auto const create_fn(
         ctx->module->getOrInsertFunction("jank_character_create", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(c->to_string()) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(c->to_code_string()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
