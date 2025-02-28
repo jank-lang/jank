@@ -1,6 +1,7 @@
 #include <jank/read/source.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::read
 {

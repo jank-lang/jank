@@ -3,6 +3,8 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/math.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/native_persistent_string/fmt.hpp>
