@@ -62,6 +62,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Cache object files
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/compiler+runtime/.ccache
+          key: ${{ env.JANK_MATRIX_ID }}
       - name: Build and test
         run: |
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install

@@ -37,7 +37,7 @@
       (do
         ; Install deps required for running our tests.
         (util/quiet-shell {} "sudo apt-get update -y")
-        (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen")
+        (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen ccache")
         ; TODO: Enable once we're linting Clojure/jank again.
         ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
 
