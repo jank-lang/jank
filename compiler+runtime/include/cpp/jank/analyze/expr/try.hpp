@@ -14,7 +14,7 @@ namespace jank::analyze::expr
 
   struct catch_
   {
-    void propagate_position(expression_position const pos);
+    void propagate_position(expression_position const pos) const;
     runtime::object_ptr to_runtime_data() const;
 
     runtime::obj::symbol_ptr sym{};
