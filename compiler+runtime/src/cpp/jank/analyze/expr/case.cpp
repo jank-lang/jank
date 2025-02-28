@@ -37,13 +37,12 @@ namespace jank::analyze::expr
 
   object_ptr case_::to_runtime_data() const
   {
-    object_ptr pairs{ make_box<obj::persistent_vector>() };
+    auto pairs{ make_box<obj::persistent_vector>() };
     for(size_t i{}; i < keys.size(); ++i)
     {
-      pairs = conj(pairs,
-                   make_box<obj::persistent_vector>(std::in_place,
-                                                    make_box(keys[i]),
-                                                    exprs[i]->to_runtime_data()));
+      pairs = pairs->conj(make_box<obj::persistent_vector>(std::in_place,
+                                                           make_box(keys[i]),
+                                                           exprs[i]->to_runtime_data()));
     }
 
     return merge(expression::to_runtime_data(),

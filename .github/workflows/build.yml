@@ -57,7 +57,7 @@ jobs:
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:

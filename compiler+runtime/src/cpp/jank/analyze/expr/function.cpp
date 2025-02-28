@@ -64,10 +64,10 @@ namespace jank::analyze::expr
 
   object_ptr function::to_runtime_data() const
   {
-    object_ptr arity_maps(make_box<obj::persistent_vector>());
+    auto arity_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arities)
     {
-      arity_maps = conj(arity_maps, e.to_runtime_data());
+      arity_maps = arity_maps->conj(e.to_runtime_data());
     }
 
     return merge(
