@@ -3,6 +3,7 @@ name: "Build"
 on:
   pull_request:
     types:
+      - created
       - review_requested
       - auto_merge_enabled
   push:
