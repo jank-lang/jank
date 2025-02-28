@@ -6,6 +6,7 @@
 #include <jank/runtime/perf.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::perf
 {

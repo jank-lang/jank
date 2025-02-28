@@ -19,10 +19,12 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/native_persistent_string.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>

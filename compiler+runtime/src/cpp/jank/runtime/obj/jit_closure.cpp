@@ -4,9 +4,12 @@
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj
 {

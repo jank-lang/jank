@@ -3719,7 +3719,7 @@
    changes will be visible in all threads. Useful for mocking out
    functions during testing."
   [binding-map fun]
-  (let [root-bind (fn [m]
+  (let [root-bind (fn root-bind [m]
                     (doseq [kv m]
                       (clojure.core-native/var-bind-root (first kv) (second kv))))
         old-vals (zipmap (keys binding-map)

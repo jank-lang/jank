@@ -17,6 +17,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/mapped_file.hpp>
@@ -185,18 +186,15 @@ namespace jank::runtime
           ->to_string());
       /* No matter what's in the fn, we'll return nil. */
       exprs.emplace_back(
-        make_box<analyze::expression>(analyze::expr::primitive_literal<analyze::expression>{
-          analyze::expression_base{ {},
-                                   analyze::expression_position::tail,
-                                   an_prc.root_frame,
-                                   true },
-          obj::nil::nil_const()
-      }));
+        make_box<analyze::expr::primitive_literal>(analyze::expression_position::tail,
+                                                   an_prc.root_frame,
+                                                   true,
+                                                   obj::nil::nil_const()));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
-      auto &fn(boost::get<analyze::expr::function<analyze::expression>>(wrapped_exprs->data));
-      fn.name = module::module_to_load_function(module);
-      fn.unique_name = fn.name;
+      auto fn(static_box_cast<analyze::expr::function>(wrapped_exprs));
+      fn->name = module::module_to_load_function(module);
+      fn->unique_name = fn->name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
       cg_prc.gen().expect_ok();
       write_module(std::move(cg_prc.ctx)).expect_ok();

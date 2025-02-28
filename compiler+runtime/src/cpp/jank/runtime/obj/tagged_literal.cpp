@@ -1,7 +1,10 @@
 #include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::runtime::obj
 {
@@ -26,9 +29,9 @@ namespace jank::runtime::obj
   to_string_impl(object_ptr const &tag, object_ptr const &form, util::string_builder &buff)
   {
     buff('#');
-    to_string(tag, buff);
+    runtime::to_string(tag, buff);
     buff(' ');
-    to_string(form, buff);
+    runtime::to_string(form, buff);
   }
 
   void tagged_literal::to_string(util::string_builder &buff) const

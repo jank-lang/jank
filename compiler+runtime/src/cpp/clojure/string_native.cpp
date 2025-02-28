@@ -1,6 +1,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <clojure/core_native.hpp>
+#include <clojure/string_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>

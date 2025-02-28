@@ -13,6 +13,8 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/detail/to_runtime_data.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/jit_function.hpp>

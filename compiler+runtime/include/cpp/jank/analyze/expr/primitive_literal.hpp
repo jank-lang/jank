@@ -1,29 +1,22 @@
 #pragma once
 
-#include <jank/analyze/local_frame.hpp>
-#include <jank/analyze/expression_base.hpp>
-#include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
 {
-  template <typename E>
-  struct primitive_literal : expression_base
+  using primitive_literal_ptr = runtime::native_box<struct primitive_literal>;
+
+  struct primitive_literal : expression
   {
+    static constexpr expression_kind expr_kind{ expression_kind::primitive_literal };
+
+    primitive_literal(expression_position position,
+                      local_frame_ptr frame,
+                      native_bool needs_box,
+                      runtime::object_ptr data);
+
+    runtime::object_ptr to_runtime_data() const override;
+
     runtime::object_ptr data{};
-
-    void propagate_position(expression_position const pos)
-    {
-      position = pos;
-    }
-
-    runtime::object_ptr to_runtime_data() const
-    {
-      using namespace runtime::obj;
-      return runtime::merge(static_cast<expression_base const *>(this)->to_runtime_data(),
-                            persistent_array_map::create_unique(make_box("__type"),
-                                                                make_box("expr::primitive_literal"),
-                                                                make_box("data"),
-                                                                data));
-    }
   };
 }
