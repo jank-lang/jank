@@ -15,7 +15,7 @@ namespace jank::analyze::expr
   {
   }
 
-  void catch_::propagate_position(expression_position const pos)
+  void catch_::propagate_position(expression_position const pos) const
   {
     body->propagate_position(pos);
   }
