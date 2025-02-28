@@ -2,9 +2,6 @@ name: "Build"
 
 on:
   pull_request:
-    types:
-      - review_requested
-      - auto_merge_enabled
   push:
     branches:
       - main
