@@ -26,10 +26,11 @@
     (System/getProperty "os.name")))
 
 (defmethod install-deps "Linux" []
-  ; Install clang-tidy-cache, since ccache doesn't work with clang-tidy by default.
-  (util/quiet-shell {} "curl -Lo clang-tidy-cache https://github.com/ejfitzgerald/clang-tidy-cache/releases/download/v0.4.0/clang-tidy-cache-linux-amd64")
-  (util/quiet-shell {} "chmod +x clang-tidy-cache")
-  (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
+  (when (= "on" (util/get-env "JANK_ANALYZE"))
+    ; Install clang-tidy-cache, since ccache doesn't work with clang-tidy by default.
+    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://github.com/ejfitzgerald/clang-tidy-cache/releases/download/v0.4.0/clang-tidy-cache-linux-amd64")
+    (util/quiet-shell {} "chmod +x clang-tidy-cache")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin"))
 
   ; TODO: Enable once we're linting Clojure/jank again.
   ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
