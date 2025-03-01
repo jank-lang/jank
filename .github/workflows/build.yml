@@ -62,7 +62,9 @@ jobs:
       - name: Cache object files
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace }}/compiler+runtime/.ccache
+          path: |
+            ${{ github.workspace }}/compiler+runtime/.ccache
+            ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ${{ env.JANK_MATRIX_ID }}
       - name: Build and test
         run: |

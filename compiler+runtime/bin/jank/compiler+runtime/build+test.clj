@@ -17,12 +17,15 @@
     (util/log-info "Not enabled")
     (let [clang (util/find-llvm-tool "clang")
           clang++ (util/find-llvm-tool "clang++")
-          exports {"CC" clang
-                   "CXX" clang++
-                   "CCACHE_BASEDIR" compiler+runtime-dir
-                   "CCACHE_DIR" (str compiler+runtime-dir "/.ccache")
-                   "CCACHE_COMPRESS" "true"
-                   "CCACHE_MAXSIZE" "1G"}
+          exports (merge {"CC" clang
+                          "CXX" clang++
+                          "CCACHE_BASEDIR" compiler+runtime-dir
+                          "CCACHE_DIR" (str compiler+runtime-dir "/.ccache")
+                          "CCACHE_COMPRESS" "true"
+                          "CCACHE_MAXSIZE" "1G"
+                          "CLANG_TIDY_CACHE_DIR" (str compiler+runtime-dir "/.ctcache")}
+                         (when (= "on" analyze)
+                           {"CMAKE_CXX_CLANG_TIDY" "clang-tidy-cache"}))
           configure-flags ["-GNinja"
                            "-Djank_tests=on"
                            "-DCMAKE_C_COMPILER_LAUNCHER=ccache"

@@ -38,6 +38,12 @@
         ; Install deps required for running our tests.
         (util/quiet-shell {} "sudo apt-get update -y")
         (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen ccache")
+
+        ; Install clang-tidy-cache, since ccache doesn't work with clang-tidy by default.
+        (util/quiet-shell {} "curl -Lo clang-tidy-cache https://github.com/ejfitzgerald/clang-tidy-cache/releases/download/v0.4.0/clang-tidy-cache-linux-amd64")
+        (util/quiet-shell {} "chmod +x clang-tidy-cache")
+        (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
+
         ; TODO: Enable once we're linting Clojure/jank again.
         ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
 
