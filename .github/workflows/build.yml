@@ -59,6 +59,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          # The first line is for packages only used by CI. The second line is taken right
+          # from our build.md list of dependencies.
+          packages: |
+            default-jdk software-properties-common lsb-release npm lcov leiningen ccache
+            curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
+          version: 1.0
       - name: Cache object files
         uses: actions/cache@v4
         with:
