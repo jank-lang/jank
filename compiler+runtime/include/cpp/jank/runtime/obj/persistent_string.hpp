@@ -44,6 +44,7 @@ namespace jank::runtime::obj
     object_ptr get_entry(object_ptr key) const;
     native_bool contains(object_ptr key) const;
 
+    /* behavior::indexable */
     object_ptr nth(object_ptr const key) const;
     object_ptr nth(object_ptr const key, object_ptr const fallback) const;
 
