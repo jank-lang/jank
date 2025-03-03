@@ -66,7 +66,7 @@ namespace jank::analyze
       { make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
       {    make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
       {  make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
-      {  make_box<symbol>("letfn*"),  make_fn(&processor::analyze_letfn) },
+      //{  make_box<symbol>("letfn*"),  make_fn(&processor::analyze_letfn) },
       { make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
       {    make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
       { make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },

@@ -6658,7 +6658,9 @@ fails, attempts to require sym's namespace and retries."
         names (map first pairs)
         gm (gensym 'm)
         n->vol (into {} (map (juxt identity gensym)) names)]
-    `(let [~@(mapcat #(list % `(volatile! nil)) (vals n->vol))
+    `(let [~@(mapcat (fn [[n]]
+                       [(n->vol n) `(volatile! nil)])
+                     pairs)
            ~@(mapcat (fn [[n [_ self & tail]]]
                        (assert (simple-symbol? self))
                        (let [arities (cond-> tail
@@ -6676,7 +6678,7 @@ fails, attempts to require sym's namespace and retries."
                                              arities)))))
                      pairs)
            ~@bindings]
-       ~@(map (fn [[n vol]] `(vreset! ~vol ~n)) n->vol)
+       ~@(map (fn [[n]] `(vreset! ~(n->vol n) ~n)) pairs)
        ~@body)))
 
 (defmacro letfn 
