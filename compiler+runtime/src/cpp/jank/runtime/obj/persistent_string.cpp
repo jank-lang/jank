@@ -101,7 +101,22 @@ namespace jank::runtime::obj
 
   object_ptr persistent_string::nth(object_ptr const index) const
   {
-    return get(index);
+    if(index->type == object_type::integer)
+    {
+      auto const i(expect_object<integer>(index)->data);
+      if(i < 0 || data.size() <= static_cast<size_t>(i))
+      {
+        throw std::runtime_error{
+          fmt::format("out of bounds index {}; string has a size of {}", i, data.size())
+        };
+      }
+      return make_box<character>(data[i]);
+    }
+    else
+    {
+      throw std::runtime_error{ fmt::format("nth on a string must be an integer; found {}",
+                                            runtime::to_string(index)) };
+    }
   }
 
   object_ptr persistent_string::nth(object_ptr const index, object_ptr const fallback) const
