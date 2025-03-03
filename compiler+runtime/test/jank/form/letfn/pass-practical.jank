@@ -1,0 +1,40 @@
+; Top-level
+(letfn* [a (clojure.core/fn a [] 1)
+         b (clojure.core/fn b [] 2)]
+  (assert (= [1 2] [(a) (b)])))
+
+; Nested expression.
+(assert (= 1 (letfn* [a (clojure.core/fn a [] 1)
+                      b (clojure.core/fn b []
+                          (if (= 1 (a))
+                            :bee
+                            :uh-oh))]
+               (assert (= (b) :bee))
+               (a))))
+
+; Within fns.
+(def fn-with-letfn
+  (fn* [n]
+    (letfn* [n+1 (clojure.core/fn n+1 [] (+ 1 n))
+             n-1 (clojure.core/fn n-1 [] (+ (n+1) -2))]
+      [(n+1) (n-1)])))
+(assert (= (fn-with-letfn 0) [1 -1]))
+(assert (= (fn-with-letfn 100) [101 99]))
+
+; Fn values within let.
+(let* [inc (clojure.core/fn [n]
+             (+ 1 n))
+       also-inc (clojure.core/fn also-inc [x] (inc x))
+       kw->str (clojure.core/fn kw->str [kw]
+                 (str kw))]
+  (assert (= (inc -7) (also-inc -7)))
+  (assert (= ":foo" (kw->str :foo))))
+
+; Letfn within letfn.
+(letfn* [a (clojure.core/fn a [] 5)
+         b (clojure.core/fn b []
+             (letfn* [c (clojure.core/fn c [] -2)]
+               (+ (a) (c))))]
+  (assert (= (b) 3)))
+
+:success

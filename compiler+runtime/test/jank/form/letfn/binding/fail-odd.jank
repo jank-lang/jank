@@ -1,0 +1,1 @@
+(letfn* [a (clojure.core/fn a [] 1) b])

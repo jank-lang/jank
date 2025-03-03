@@ -6651,6 +6651,34 @@ fails, attempts to require sym's namespace and retries."
   ;; (.isDone f)
   (throw "TODO: port future-done?"))
 
+(defmacro letfn* ;; bootstrap tests
+  [bindings & body]
+  (assert (even? (count bindings)))
+  (let [pairs (partition 2 bindings)
+        names (map first pairs)
+        gm (gensym 'm)
+        n->vol (into {} (map (juxt identity gensym)) names)]
+    `(let [~@(mapcat #(list % `(volatile! nil)) (vals n->vol))
+           ~@(mapcat (fn [[n [_ self & tail]]]
+                       (assert (simple-symbol? self))
+                       (let [arities (cond-> tail
+                                       (vector? (first tail)) list)]
+                         (list n `(fn ~@(map (fn [[argv]]
+                                               (assert (vector? argv))
+                                               (let [vararg (when (some #(= '& %) argv) (gensym "vararg"))
+                                                     gargs (mapv #(gensym (str "arg" %))
+                                                                 (range (cond-> (count argv)
+                                                                          vararg (- 2))))
+                                                     decl (cond-> gargs
+                                                            vararg (conj '& vararg))
+                                                     vol (n->vol n)]
+                                                 `(~decl (~@(when vararg [`apply]) @~vol ~@gargs ~@(some-> vararg list)))))
+                                             arities)))))
+                     pairs)
+           ~@bindings]
+       ~@(map (fn [[n vol]] `(vreset! ~vol ~n)) n->vol)
+       ~@body)))
+
 (defmacro letfn 
   "fnspec ==> (fname [params*] exprs) or (fname ([params*] exprs)+)
 
@@ -6658,9 +6686,9 @@ fails, attempts to require sym's namespace and retries."
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
   {:forms '[(letfn [fnspecs*] exprs*)],
-   :special-form true, :url nil}
-  [fnspecs & body] 
-  `(letfn* ~(vec (interleave (map first fnspecs) 
+   :special-form true}
+  [fnspecs & body]
+  `(letfn* ~(vec (interleave (map first fnspecs)
                              (map #(cons `fn %) fnspecs)))
            ~@body))
 
