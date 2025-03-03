@@ -99,6 +99,16 @@ namespace jank::runtime::obj
     throw std::runtime_error{ fmt::format("get_entry not supported on string") };
   }
 
+  object_ptr persistent_string::nth(object_ptr const index) const
+  {
+    return get(index);
+  }
+
+  object_ptr persistent_string::nth(object_ptr const index, object_ptr const fallback) const
+  {
+    return get(index, fallback);
+  }
+
   string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));
