@@ -7,9 +7,9 @@ namespace jank::analyze::expr
   using namespace jank::runtime;
 
   letfn::letfn(expression_position const position,
-           local_frame_ptr const frame,
-           native_bool const needs_box,
-           do_ptr const body)
+               local_frame_ptr const frame,
+               native_bool const needs_box,
+               do_ptr const body)
     : expression{ expr_kind, position, frame, needs_box }
     , body{ body }
   {

@@ -867,22 +867,22 @@ namespace jank::analyze
 
   processor::expression_result
   processor::analyze_letfn(runtime::obj::persistent_list_ptr const &o,
-                         local_frame_ptr &current_frame,
-                         expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
-                         native_bool const needs_box)
+                           local_frame_ptr &current_frame,
+                           expression_position const position,
+                           option<expr::function_context_ptr> const &fn_ctx,
+                           native_bool const needs_box)
   {
     if(o->count() < 2)
     {
       return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn'",
-                                         meta_source(o));
+                                           meta_source(o));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
       return error::analysis_invalid_letfn("The bindings of a 'letfn' must be in a vector",
-                                         meta_source(bindings_obj));
+                                           meta_source(bindings_obj));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -890,7 +890,7 @@ namespace jank::analyze
     if(binding_parts % 2 == 1)
     {
       return error::analysis_invalid_letfn("There must be an even number of bindings for a 'letfn'",
-                                         meta_source(bindings_obj));
+                                           meta_source(bindings_obj));
     }
 
     auto frame{
@@ -908,14 +908,15 @@ namespace jank::analyze
 
       if(sym_obj->type != runtime::object_type::symbol)
       {
-        return error::analysis_invalid_letfn("The left hand side of a 'letfn' binding must be a symbol",
-                                           meta_source(sym_obj));
+        return error::analysis_invalid_letfn(
+          "The left hand side of a 'letfn' binding must be a symbol",
+          meta_source(sym_obj));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
         return error::analysis_invalid_letfn("'letfn' binding symbols must be unqualified",
-                                           meta_source(sym_obj));
+                                             meta_source(sym_obj));
       }
 
       auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
