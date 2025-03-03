@@ -64,6 +64,7 @@ jobs:
           packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
           # Increment this when the package list changes.
           version: 2
+          execute_install_scripts: true
       - name: Cache object files
         uses: actions/cache@v4
         with:

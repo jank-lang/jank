@@ -17,7 +17,8 @@
   (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE")))
 
 ; Linux deps are installed by a Github action.
-(def os->deps-cmd {"Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
+(def os->deps-cmd {"Linux" "sudo apt install -y libboost-all-dev"
+                   "Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
 
 ; TODO: Cache these deps using https://github.com/actions/cache/
 ; Maybe follow this sort of thing: https://github.com/gerlero/apt-install/blob/main/action.yml
@@ -26,11 +27,22 @@
     (System/getProperty "os.name")))
 
 (defmethod install-deps "Linux" []
+  (util/quiet-shell {} (os->deps-cmd "Linux"))
+
   (when (= "on" (util/get-env "JANK_ANALYZE"))
     ; Install clang-tidy-cache, since ccache doesn't work with clang-tidy by default.
-    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://github.com/ejfitzgerald/clang-tidy-cache/releases/download/v0.4.0/clang-tidy-cache-linux-amd64")
+    ;(util/quiet-shell {} "curl -Lo clang-tidy-cache https://github.com/ejfitzgerald/clang-tidy-cache/releases/download/v0.4.0/clang-tidy-cache-linux-amd64")
+    ;(util/quiet-shell {} "chmod +x clang-tidy-cache")
+    ;(util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin"))
+
+    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
     (util/quiet-shell {} "chmod +x clang-tidy-cache")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin"))
+    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
+    (spit "clang-tidy-cache-wrapper"
+          "#!/bin/bash
+           clang-tidy-cache clang-tidy \"${@}\"")
+    (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
 
   ; TODO: Enable once we're linting Clojure/jank again.
   ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
