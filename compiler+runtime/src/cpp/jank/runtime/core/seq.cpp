@@ -790,6 +790,10 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
+          if constexpr(!behavior::sequential<T> && !std::is_same_v<T, obj::persistent_string>)
+          {
+            throw std::runtime_error{ fmt::format("not ordered: {}", object_type_str(o->type)) };
+          }
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
           {
@@ -830,6 +834,10 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
+          if constexpr(!behavior::sequential<T> && !std::is_same_v<T, obj::persistent_string>)
+          {
+            throw std::runtime_error{ fmt::format("not ordered: {}", object_type_str(o->type)) };
+          }
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
           {
