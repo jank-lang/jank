@@ -682,7 +682,6 @@ jank_object_ptr jank_load_clojure_core_native()
     intern_fn_obj("vswap!", fn);
   }
 
-
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
