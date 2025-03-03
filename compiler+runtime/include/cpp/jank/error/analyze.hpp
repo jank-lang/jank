@@ -21,6 +21,8 @@ namespace jank::error
   error_ptr
   analysis_invalid_let(native_persistent_string const &message, read::source const &source);
   error_ptr
+  analysis_invalid_letfn(native_persistent_string const &message, read::source const &source);
+  error_ptr
   analysis_invalid_loop(native_persistent_string const &message, read::source const &source);
   error_ptr
   analysis_invalid_if(native_persistent_string const &message, read::source const &source);

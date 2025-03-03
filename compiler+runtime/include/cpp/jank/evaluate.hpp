@@ -29,6 +29,7 @@ namespace jank::analyze
     using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
     using named_recursion_ptr = runtime::native_box<struct named_recursion>;
     using let_ptr = runtime::native_box<struct let>;
+    using letfn_ptr = runtime::native_box<struct letfn>;
     using do_ptr = runtime::native_box<struct do_>;
     using if_ptr = runtime::native_box<struct if_>;
     using throw_ptr = runtime::native_box<struct throw_>;
@@ -64,6 +65,7 @@ namespace jank::evaluate
   runtime::object_ptr eval(analyze::expr::recursion_reference_ptr);
   runtime::object_ptr eval(analyze::expr::named_recursion_ptr);
   runtime::object_ptr eval(analyze::expr::let_ptr);
+  runtime::object_ptr eval(analyze::expr::letfn_ptr);
   runtime::object_ptr eval(analyze::expr::do_ptr);
   runtime::object_ptr eval(analyze::expr::if_ptr);
   runtime::object_ptr eval(analyze::expr::throw_ptr);

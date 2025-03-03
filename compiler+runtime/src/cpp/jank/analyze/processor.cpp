@@ -34,6 +34,7 @@
 #include <jank/analyze/expr/named_recursion.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/letfn.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/throw.hpp>
@@ -65,6 +66,7 @@ namespace jank::analyze
       { make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
       {    make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
       {  make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
+      {  make_box<symbol>("letfn*"),  make_fn(&processor::analyze_letfn) },
       { make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
       {    make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
       { make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
@@ -852,6 +854,94 @@ namespace jank::analyze
       }
 
       /* Ultimately, whether or not this let is boxed is up to the last form. */
+      if(is_last)
+      {
+        ret->needs_box = res.expect_ok()->needs_box;
+      }
+
+      ret->body->values.emplace_back(res.expect_ok_move());
+    }
+
+    return ret;
+  }
+
+  processor::expression_result
+  processor::analyze_letfn(runtime::obj::persistent_list_ptr const &o,
+                         local_frame_ptr &current_frame,
+                         expression_position const position,
+                         option<expr::function_context_ptr> const &fn_ctx,
+                         native_bool const needs_box)
+  {
+    if(o->count() < 2)
+    {
+      return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn'",
+                                         meta_source(o));
+    }
+
+    auto const bindings_obj(o->data.rest().first().unwrap());
+    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    {
+      return error::analysis_invalid_letfn("The bindings of a 'letfn' must be in a vector",
+                                         meta_source(bindings_obj));
+    }
+
+    auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
+    auto const binding_parts(bindings->data.size());
+    if(binding_parts % 2 == 1)
+    {
+      return error::analysis_invalid_letfn("There must be an even number of bindings for a 'letfn'",
+                                         meta_source(bindings_obj));
+    }
+
+    auto frame{
+      make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
+    };
+    auto ret{ make_box<expr::letfn>(
+      position,
+      frame,
+      needs_box,
+      make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym_obj(bindings->data[i]);
+      auto const &val(bindings->data[i + 1]);
+
+      if(sym_obj->type != runtime::object_type::symbol)
+      {
+        return error::analysis_invalid_letfn("The left hand side of a 'letfn' binding must be a symbol",
+                                           meta_source(sym_obj));
+      }
+      auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+      if(!sym->ns.empty())
+      {
+        return error::analysis_invalid_letfn("'letfn' binding symbols must be unqualified",
+                                           meta_source(sym_obj));
+      }
+
+      auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+      auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
+      ret->frame->locals.emplace(
+        sym,
+        local_binding{ sym, it.second, current_frame, it.second->needs_box });
+    }
+
+    size_t const form_count{ o->count() - 2 };
+    size_t i{};
+    for(auto const &item : o->data.rest().rest())
+    {
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? position : expression_position::statement);
+      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+
+      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
       if(is_last)
       {
         ret->needs_box = res.expect_ok()->needs_box;

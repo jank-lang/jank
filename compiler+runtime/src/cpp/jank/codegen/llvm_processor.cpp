@@ -771,6 +771,30 @@ namespace jank::codegen
     return ret;
   }
 
+  llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
+  {
+    auto old_locals(locals);
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      if(local.is_none())
+      {
+        throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
+                                              pair.first->to_string()) };
+      }
+
+      locals[pair.first] = gen(pair.second, arity);
+      locals[pair.first]->setName(pair.first->to_string().c_str());
+    }
+
+    auto const ret(gen(expr->body, arity));
+    locals = std::move(old_locals);
+
+    /* XXX: No return creation, since we rely on the body to do that. */
+
+    return ret;
+  }
+
   llvm::Value *llvm_processor::gen(expr::do_ptr const expr, expr::function_arity const &arity)
   {
     llvm::Value *last{};

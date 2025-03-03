@@ -35,6 +35,7 @@ namespace jank::analyze
     using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
     using named_recursion_ptr = runtime::native_box<struct named_recursion>;
     using let_ptr = runtime::native_box<struct let>;
+    using letfn_ptr = runtime::native_box<struct letfn>;
     using do_ptr = runtime::native_box<struct do_>;
     using if_ptr = runtime::native_box<struct if_>;
     using throw_ptr = runtime::native_box<struct throw_>;
@@ -115,6 +116,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::recursion_reference_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::named_recursion_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::let_ptr, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::letfn_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::do_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::if_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::throw_ptr, analyze::expr::function_arity const &);

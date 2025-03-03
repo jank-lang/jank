@@ -245,6 +245,7 @@ add_library(
   src/cpp/jank/analyze/expr/local_reference.cpp
   src/cpp/jank/analyze/expr/def.cpp
   src/cpp/jank/analyze/expr/let.cpp
+  src/cpp/jank/analyze/expr/letfn.cpp
   src/cpp/jank/analyze/expr/throw.cpp
   src/cpp/jank/analyze/expr/if.cpp
   src/cpp/jank/analyze/expr/list.cpp
