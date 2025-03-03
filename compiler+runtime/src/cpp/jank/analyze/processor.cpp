@@ -874,14 +874,14 @@ namespace jank::analyze
   {
     if(o->count() < 2)
     {
-      return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn'",
+      return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn*'",
                                            meta_source(o));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analysis_invalid_letfn("The bindings of a 'letfn' must be in a vector",
+      return error::analysis_invalid_letfn("The bindings of a 'letfn*' must be in a vector",
                                            meta_source(bindings_obj));
     }
 
@@ -889,7 +889,7 @@ namespace jank::analyze
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
-      return error::analysis_invalid_letfn("There must be an even number of bindings for a 'letfn'",
+      return error::analysis_invalid_letfn("There must be an even number of bindings for a 'letfn*'",
                                            meta_source(bindings_obj));
     }
 
@@ -904,20 +904,28 @@ namespace jank::analyze
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
-      auto const &val(bindings->data[i + 1]);
 
       if(sym_obj->type != runtime::object_type::symbol)
       {
         return error::analysis_invalid_letfn(
-          "The left hand side of a 'letfn' binding must be a symbol",
+          "The left hand side of a 'letfn*' binding must be a symbol",
           meta_source(sym_obj));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return error::analysis_invalid_letfn("'letfn' binding symbols must be unqualified",
+        return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
                                              meta_source(sym_obj));
       }
+
+      ret->frame->locals.emplace(
+        sym,
+        local_binding{ sym, none, current_frame });
+    }
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
+      auto const &val(bindings->data[i + 1]);
 
       auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(res.is_err())
