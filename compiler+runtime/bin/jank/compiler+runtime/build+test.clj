@@ -23,7 +23,8 @@
                           "CCACHE_DIR" (str compiler+runtime-dir "/.ccache")
                           "CCACHE_COMPRESS" "true"
                           "CCACHE_MAXSIZE" "1G"
-                          "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")})
+                          "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")
+                          "CTCACHE_DEBUG" "1"})
           configure-flags ["-GNinja"
                            "-Djank_tests=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
@@ -38,7 +39,7 @@
                             (conj "-DCMAKE_CXX_CLANG_TIDY=clang-tidy-cache-wrapper"))
           configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))
           stats-cmd (if (= "on" analyze)
-                      "clang-tidy-cache-wrapper"
+                      "clang-tidy-cache"
                       "ccache")]
       (util/quiet-shell {:dir compiler+runtime-dir
                          :extra-env exports}
