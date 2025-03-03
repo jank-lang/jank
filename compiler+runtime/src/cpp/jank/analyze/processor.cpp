@@ -933,9 +933,10 @@ namespace jank::analyze
         return res.expect_err_move();
       }
       auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
-      ret->frame->locals.emplace(
-        sym,
-        local_binding{ sym, it.second, current_frame, it.second->needs_box });
+      auto local(ret->frame->locals.find(sym)->second);
+      local.value_expr = some(it.second);
+      /* TODO might need to infer earlier for mutually recursive code */
+      local.needs_box = it.second->needs_box;
     }
 
     size_t const form_count{ o->count() - 2 };
