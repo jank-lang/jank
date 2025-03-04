@@ -942,7 +942,7 @@ namespace jank::analyze
         return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
                                              meta_source(sym_obj));
       }
-      auto const unique_res(unique_param_symbols.emplace(*sym));
+      auto const unique_res(unique_bindings.emplace(*sym));
       if(!unique_res.second)
       {
         /* Clojure allows later bindings to shadow earlier ones, but this is not documented.
