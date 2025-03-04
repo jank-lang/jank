@@ -26,7 +26,7 @@
     (System/getProperty "os.name")))
 
 (defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
-  (when-not validate-formatting?
+  #_(when-not validate-formatting?
     (util/quiet-shell {} (os->deps-cmd "Linux")))
 
   ; TODO: Cache this shit.
