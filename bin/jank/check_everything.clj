@@ -28,6 +28,7 @@
 (defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
   #_(when-not validate-formatting?
     (util/quiet-shell {} (os->deps-cmd "Linux")))
+  (util/quiet-shell {} "tree /usr/include")
 
   ; TODO: Cache this shit.
   (when (= "on" (util/get-env "JANK_ANALYZE"))
