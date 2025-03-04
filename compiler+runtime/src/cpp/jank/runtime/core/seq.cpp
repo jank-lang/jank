@@ -788,7 +788,7 @@ namespace jank::runtime
         {
           return typed_o->nth(idx);
         }
-        else if constexpr(behavior::seqable<T>)
+        else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
@@ -828,7 +828,7 @@ namespace jank::runtime
         {
           return typed_o->nth(idx, fallback);
         }
-        else if constexpr(behavior::seqable<T>)
+        else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
           for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
