@@ -21,15 +21,15 @@
 (def os->deps-cmd {"Linux" "sudo apt install -y libboost-all-dev"
                    "Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
 
-; TODO: Cache these deps using https://github.com/actions/cache/
-; Maybe follow this sort of thing: https://github.com/gerlero/apt-install/blob/main/action.yml
 (defmulti install-deps
-  (fn []
+  (fn [_props]
     (System/getProperty "os.name")))
 
-(defmethod install-deps "Linux" []
-  (util/quiet-shell {} (os->deps-cmd "Linux"))
+(defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
+  (when-not validate-formatting?
+    (util/quiet-shell {} (os->deps-cmd "Linux")))
 
+  ; TODO: Cache this shit.
   (when (= "on" (util/get-env "JANK_ANALYZE"))
     (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
     (util/quiet-shell {} "chmod +x clang-tidy-cache")
@@ -56,7 +56,7 @@
   (util/quiet-shell {} "chmod +x linux-install.sh")
   (util/quiet-shell {} "sudo ./linux-install.sh"))
 
-(defmethod install-deps "Mac OS X" []
+(defmethod install-deps "Mac OS X" [props]
   (util/quiet-shell {:extra-env {"HOMEBREW_NO_AUTO_UPDATE" "1"}}
                     (os->deps-cmd "Mac OS X"))
 
@@ -64,7 +64,8 @@
   )
 
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime
-                     clojure-cli lein-jank]}]
+                     clojure-cli lein-jank]
+              :as props}]
   (summary/initialize)
 
   (util/log-boundary "Show environment")
@@ -74,7 +75,7 @@
   (if-not install-deps?
     (util/log-info "Not enabled")
     (util/with-elapsed-time duration
-      (install-deps)
+      (install-deps props)
       (util/log-info-with-time duration "Dependencies installed")))
 
   (jank.compiler+runtime.core/-main {:validate-formatting? validate-formatting?
