@@ -53,7 +53,7 @@
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
-                          "./bin/compile")
+                          "./bin/compile -v")
         (util/log-info-with-time duration "Compiled"))
 
       (util/quiet-shell {:dir compiler+runtime-dir
