@@ -565,7 +565,6 @@ namespace jank::codegen
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity, add_pending_init));
-    //fmt::println("letfn_inits length after gen_function_instance: {}", letfn_inits.size());
 
     if(expr->position == expression_position::tail)
     {
