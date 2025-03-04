@@ -923,6 +923,9 @@ namespace jank::analyze
       frame,
       needs_box,
       make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
+
+    std::set<runtime::obj::symbol> unique_bindings;
+
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
@@ -937,6 +940,14 @@ namespace jank::analyze
       if(!sym->ns.empty())
       {
         return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
+                                             meta_source(sym_obj));
+      }
+      auto const unique_res(unique_param_symbols.emplace(*sym));
+      if(!unique_res.second)
+      {
+        /* Clojure allows later bindings to shadow earlier ones, but this is not documented.
+         * Returning an error here allows us to confidently rearrange the binding order. */
+        return error::analysis_invalid_letfn("'letfn*' binding symbols must be distinct",
                                              meta_source(sym_obj));
       }
 
@@ -965,7 +976,6 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
-    /* TODO Assert letfn bindings are distinct. */
     /* TODO Define strongly connected locals last to eliminate unnecessary pending inits. */
 
     size_t const form_count{ o->count() - 2 };
