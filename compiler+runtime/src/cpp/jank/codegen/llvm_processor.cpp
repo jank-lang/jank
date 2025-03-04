@@ -543,12 +543,12 @@ namespace jank::codegen
     }
 
     return ret;
-
   }
 
   llvm::Value *
-  llvm_processor::gen_function(expr::function_ptr const expr, expr::function_arity const &fn_arity,
-      std::function<void(std::function<void()> &)> const &add_pending_init)
+  llvm_processor::gen_function(expr::function_ptr const expr,
+                               expr::function_arity const &fn_arity,
+                               std::function<void(std::function<void()> &)> const &add_pending_init)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -578,7 +578,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()> &)> const add_pending_init([](auto &){
+    std::function<void(std::function<void()> &)> const add_pending_init([](auto &) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
     return gen_function(expr, fn_arity, add_pending_init);
@@ -791,7 +791,8 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
     std::list<std::function<void()>> letfn_inits{}; // TODO list of (unique) references?
-    auto const add_pending_init([&](std::function<void()> &f) -> void {letfn_inits.push_back(f);});
+    auto const add_pending_init(
+      [&](std::function<void()> &f) -> void { letfn_inits.push_back(f); });
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
@@ -812,7 +813,7 @@ namespace jank::codegen
 
     /* Tie the knot for (letfn [(a [] b) (b [])]) by setting a's reference
      * to b in a's context after b has been created. */
-    for (auto const &pending_init : letfn_inits)
+    for(auto const &pending_init : letfn_inits)
     {
       fmt::println("forcing letfn init");
       pending_init();
@@ -1502,9 +1503,10 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
-                                                     expr::function_arity const &fn_arity,
-                                                     std::function<void(std::function<void()> &)> const &add_pending_init)
+  llvm::Value *llvm_processor::gen_function_instance(
+    expr::function_ptr const expr,
+    expr::function_arity const &fn_arity,
+    std::function<void(std::function<void()> &)> const &add_pending_init)
   {
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
@@ -1581,12 +1583,11 @@ namespace jank::codegen
          * before initializing a's context with b. We push the side effects for generating
          * that code onto a list that ultimately gets forced by gen(letfn_ptr, ...) after
          * all letfn* bindings have been processed. */
-        if (!locals[name])
+        if(!locals[name])
         {
           fmt::println("writing to letfn inits");
-          std::function<void()> create_store([&]() {
-              ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr);
-          });
+          std::function<void()> create_store(
+            [&]() { ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr); });
           add_pending_init(create_store);
         }
         else
@@ -1643,7 +1644,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
                                                      expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()> &)> const add_pending_init([](auto &){
+    std::function<void(std::function<void()> &)> const add_pending_init([](auto &) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
     return gen_function_instance(expr, fn_arity, add_pending_init);

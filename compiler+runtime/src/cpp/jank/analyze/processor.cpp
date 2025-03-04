@@ -61,19 +61,19 @@ namespace jank::analyze
       };
     };
     specials = {
-      {   make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
-      {   make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
-      { make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
-      {    make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
-      {  make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
-      {  make_box<symbol>("letfn*"),  make_fn(&processor::analyze_letfn) },
-      { make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
-      {    make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
-      { make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
-      {   make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
-      { make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
-      {   make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
-      { make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
+      {    make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
+      {    make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
+      {  make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
+      {     make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
+      {   make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
+      { make_box<symbol>("letfn*"),    make_fn(&processor::analyze_letfn) },
+      {  make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
+      {     make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
+      {  make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
+      {    make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
+      {  make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
+      {    make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
+      {  make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
     };
   }
 
@@ -889,8 +889,9 @@ namespace jank::analyze
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
-      return error::analysis_invalid_letfn("There must be an even number of bindings for a 'letfn*'",
-                                           meta_source(bindings_obj));
+      return error::analysis_invalid_letfn(
+        "There must be an even number of bindings for a 'letfn*'",
+        meta_source(bindings_obj));
     }
 
     auto frame{
@@ -918,9 +919,7 @@ namespace jank::analyze
                                              meta_source(sym_obj));
       }
 
-      ret->frame->locals.emplace(
-        sym,
-        local_binding{ sym, none, current_frame });
+      ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
     for(size_t i{}; i < binding_parts; i += 2)
     {
