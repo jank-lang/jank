@@ -30,7 +30,8 @@
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
-                           (str "-Djank_coverage=" coverage)]
+                           (str "-Djank_coverage=" coverage)
+                           (str "-DCMAKE_CXX_FLAGS='-DBOOST_NO_USER_CONFIG'")]
           configure-flags (cond-> configure-flags
                             (not= "on" analyze)
                             (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"
