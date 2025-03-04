@@ -535,14 +535,6 @@ namespace jank::codegen
   llvm_processor::gen(expr::local_reference_ptr const expr, expr::function_arity const &)
   {
     auto const ret(locals[expr->binding->name]);
-    if(!ret)
-    {
-      fmt::println("locals in local_reference_ptr");
-      for (auto const &pair: locals) {
-        std::cout << pair.first->to_string() << " " << (pair.second == nullptr ? "null" : "non-null") << "\n";
-      }
-      //fmt::println("Had locals lookup {}", expr->binding->name->to_string());
-    }
     assert(ret);
 
     if(expr->position == expression_position::tail)
@@ -810,27 +802,17 @@ namespace jank::codegen
                                               pair.first->to_string()) };
       }
       auto const fexpr(runtime::static_box_cast<expr::function>(pair.second));
-      fmt::println("setting locals {}", pair.first->to_string());
 
       /* TODO Topologically sort locals to eliminate unnecessary pending inits. */
       locals[pair.first] = gen_function(fexpr, arity, add_pending_init);
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 
-    fmt::println("letfn inits");
-
-    fmt::println("locals outside closure");
-    for (auto const &pair: locals) {
-      std::cout << pair.first->to_string() << " " << (pair.second == nullptr ? "null" : "non-null") << "\n";
-    }
-
     /* Tie the knot for (letfn [(a [] b) (b [])]) by setting a's reference
      * to b in a's context after b has been created. */
     for(auto const &pending_init : letfn_inits)
     {
-      fmt::println("forcing letfn init");
       pending_init();
-      fmt::println("after forcing letfn init");
     }
 
     auto const ret(gen(expr->body, arity));
