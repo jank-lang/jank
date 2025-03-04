@@ -339,7 +339,7 @@ namespace jank::analyze
          * again to get the binding within our current function, since the one we have now
          * is the originating binding.
          *
-         * All future lookups for this capatured local, in this function, will skip this branch. */
+         * All future lookups for this captured local, in this function, will skip this branch. */
         found_local = current_frame->find_local_or_capture(sym);
       }
 
@@ -935,7 +935,7 @@ namespace jank::analyze
       auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
       auto local(ret->frame->locals.find(sym)->second);
       local.value_expr = some(it.second);
-      /* TODO might need to infer earlier for mutually recursive code */
+      /* TODO This might need to be inferred earlier for mutually recursive code */
       local.needs_box = it.second->needs_box;
     }
 

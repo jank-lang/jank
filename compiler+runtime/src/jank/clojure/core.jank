@@ -6651,6 +6651,7 @@ fails, attempts to require sym's namespace and retries."
   ;; (.isDone f)
   (throw "TODO: port future-done?"))
 
+#_
 (defmacro letfn* ;; bootstrap tests
   [bindings & body]
   (assert (even? (count bindings)))

@@ -210,7 +210,9 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    ctx->fpm->run(*fn, *ctx->fam);
+    //FIXME undo
+    //ctx->fpm->run(*fn, *ctx->fam);
+    //FIXME undo
 
     if(target != compilation_target::function)
     {
@@ -531,7 +533,7 @@ namespace jank::codegen
   llvm_processor::gen(expr::local_reference_ptr const expr, expr::function_arity const &)
   {
     auto const ret(locals[expr->binding->name]);
-    assert(ret); // HERE is where letfn blows up
+    assert(ret);
 
     if(expr->position == expression_position::tail)
     {
@@ -1536,11 +1538,20 @@ namespace jank::codegen
       size_t index{};
       for(auto const &capture : captures)
       {
+        auto const frame(expr->frame);
+        auto const name(capture.first);
+        /* In the case of (letfn* [a (a [] b) b (b [])]) we need to wait for b to be created
+         * before setting a's context. */
+        //TODO actually set this somewhere
+        if (!locals[name] && frame->type == local_frame::frame_type::letfn)
+        {
+          continue;
+        }
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
         expr::local_reference const local_ref{ expression_position::value,
-                                               expr->frame,
+                                               frame,
                                                true,
-                                               capture.first,
+                                               name,
                                                capture.second };
         ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                   field_ptr);
