@@ -965,6 +965,7 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
+    /* TODO Assert letfn bindings are distinct. */
     /* TODO Define strongly connected locals last to eliminate unnecessary pending inits. */
 
     size_t const form_count{ o->count() - 2 };
