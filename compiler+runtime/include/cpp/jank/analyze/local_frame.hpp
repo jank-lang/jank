@@ -47,8 +47,6 @@ namespace jank::analyze
     native_bool needs_box{ true };
     native_bool has_boxed_usage{};
     native_bool has_unboxed_usage{};
-    /* The name of the function itself. */
-    native_bool is_named_recur{};
 
     runtime::object_ptr to_runtime_data() const;
   };

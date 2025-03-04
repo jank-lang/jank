@@ -548,7 +548,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen_function(expr::function_ptr const expr,
                                expr::function_arity const &fn_arity,
-                               std::function<void(std::function<void()> &)> const &add_pending_init)
+                               std::function<void(std::function<void()>)> const &add_pending_init)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -577,7 +577,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()> &)> const add_pending_init([](auto &) {
+    std::function<void(std::function<void()>)> const add_pending_init([](auto) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
     return gen_function(expr, fn_arity, add_pending_init);
@@ -789,9 +789,9 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
-    std::list<std::function<void()>> letfn_inits{}; // TODO list of (unique) references?
+    std::list<std::function<void()>> letfn_inits{};
     auto const add_pending_init(
-      [&](std::function<void()> &f) -> void { letfn_inits.push_back(f); });
+      [&](std::function<void()> f) -> void { letfn_inits.push_back(f); });
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
@@ -1505,7 +1505,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(
     expr::function_ptr const expr,
     expr::function_arity const &fn_arity,
-    std::function<void(std::function<void()> &)> const &add_pending_init)
+    std::function<void(std::function<void()>)> const &add_pending_init)
   {
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
@@ -1586,7 +1586,7 @@ namespace jank::codegen
         {
           fmt::println("writing to letfn inits");
           std::function<void()> create_store(
-            [&]() { ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr); });
+            [&, this]() { ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr); });
           add_pending_init(create_store);
         }
         else
@@ -1643,7 +1643,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
                                                      expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()> &)> const add_pending_init([](auto &) {
+    std::function<void(std::function<void()>)> const add_pending_init([](auto) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
     return gen_function_instance(expr, fn_arity, add_pending_init);
