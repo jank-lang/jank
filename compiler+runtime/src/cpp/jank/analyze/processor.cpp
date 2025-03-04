@@ -1,5 +1,6 @@
 #include <set>
 
+#include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/strong_components.hpp>
 
 #include <fmt/core.h>
@@ -925,7 +926,6 @@ namespace jank::analyze
       make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
 
     std::set<runtime::obj::symbol> unique_bindings;
-
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
@@ -953,6 +953,18 @@ namespace jank::analyze
 
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
+
+    using Graph = boost::adjacency_list<>;
+    using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
+    //using edge_t = boost::graph_traits<Graph>::edge_descriptor;
+
+    /* A directed graph where edge u->v occurs if and only if u closes over v,
+     * such as (letfn [(u [] v) (v [])]). */
+    Graph bindings_dependency_graph(binding_parts / 2);
+
+    /* A set of bindings that can be bound first in any order without additional initialization. */
+    std::set<runtime::obj::symbol> independent_bindings;
+
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
@@ -963,11 +975,34 @@ namespace jank::analyze
       {
         return res.expect_err_move();
       }
-      auto fexpr(res.expect_ok_move());
-      if(fexpr->kind != expression_kind::function)
+      auto maybe_fexpr(res.expect_ok_move());
+      if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analysis_invalid_letfn("The right hand side of a 'letfn*' binding must be a function",
                                              meta_source(val));
+      }
+      auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
+      /* Populate independent_bindings and G in service of reordering bindings to minimize init code. */
+      {
+        auto captures(fexpr->captures());
+        native_bool is_independent{true};
+        for(size_t j{}; j < binding_parts; j += 2)
+        {
+          if(i == j)
+          {
+            continue;
+          }
+          auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
+          if(captures.contains(sym))
+          {
+            is_independent = false;
+            add_edge(i, j, bindings_dependency_graph);
+          }
+        }
+        if(is_independent)
+        {
+          independent_bindings.emplace(*sym);
+        }
       }
       auto it(ret->pairs.emplace_back(sym, fexpr));
       auto local(ret->frame->locals.find(sym)->second);
@@ -977,6 +1012,18 @@ namespace jank::analyze
     }
 
     /* TODO Define strongly connected locals last to eliminate unnecessary pending inits. */
+
+    // Define the vertex index property map using boost::property_map and boost::associative_property_map
+    std::map<vertex_t, std::size_t> index_map;
+    std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
+    auto vi_map = boost::make_assoc_property_map(index_map);
+
+    //int const num_scc =
+      strong_components(
+        bindings_dependency_graph,
+        make_iterator_property_map(component.begin(), vi_map),
+        boost::vertex_index_map(vi_map)
+        );
 
     size_t const form_count{ o->count() - 2 };
     size_t i{};
