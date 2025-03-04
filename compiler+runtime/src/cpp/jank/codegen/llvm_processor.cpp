@@ -535,6 +535,14 @@ namespace jank::codegen
   llvm_processor::gen(expr::local_reference_ptr const expr, expr::function_arity const &)
   {
     auto const ret(locals[expr->binding->name]);
+    if(!ret)
+    {
+      fmt::println("locals in local_reference_ptr");
+      for (auto const &pair: locals) {
+        std::cout << pair.first->to_string() << " " << (pair.second == nullptr ? "null" : "non-null") << "\n";
+      }
+      //fmt::println("Had locals lookup {}", expr->binding->name->to_string());
+    }
     assert(ret);
 
     if(expr->position == expression_position::tail)
@@ -802,6 +810,7 @@ namespace jank::codegen
                                               pair.first->to_string()) };
       }
       auto const fexpr(runtime::static_box_cast<expr::function>(pair.second));
+      fmt::println("setting locals {}", pair.first->to_string());
 
       /* TODO Topologically sort locals to eliminate unnecessary pending inits. */
       locals[pair.first] = gen_function(fexpr, arity, add_pending_init);
@@ -809,6 +818,11 @@ namespace jank::codegen
     }
 
     fmt::println("letfn inits");
+
+    fmt::println("locals outside closure");
+    for (auto const &pair: locals) {
+      std::cout << pair.first->to_string() << " " << (pair.second == nullptr ? "null" : "non-null") << "\n";
+    }
 
     /* Tie the knot for (letfn [(a [] b) (b [])]) by setting a's reference
      * to b in a's context after b has been created. */
@@ -1577,21 +1591,21 @@ namespace jank::codegen
                                                true,
                                                name,
                                                capture.second };
-        auto const lr(expr::local_reference_ptr{ &local_ref });
         /* In the case of (letfn* [a (a [] b) b (b [])]) we need to wait for b to be created
          * before initializing a's context with b. We push the side effects for generating
          * that code onto a list that ultimately gets forced by gen(letfn_ptr, ...) after
          * all letfn* bindings have been processed. */
         if(!locals[name])
         {
-          fmt::println("writing to letfn inits");
           std::function<void()> create_store(
-            [&, this]() { ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr); });
+            [=, this]() {
+            ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity), field_ptr);
+          });
           add_pending_init(create_store);
         }
         else
         {
-          ctx->builder->CreateStore(gen(lr, fn_arity), field_ptr);
+          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity), field_ptr);
         }
       }
 
