@@ -790,8 +790,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
     std::list<std::function<void()>> letfn_inits{};
-    auto const add_pending_init(
-      [&](std::function<void()> f) -> void { letfn_inits.push_back(f); });
+    auto const add_pending_init([&](std::function<void()> f) -> void { letfn_inits.push_back(f); });
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
@@ -1579,15 +1578,16 @@ namespace jank::codegen
          * all letfn* bindings have been processed. */
         if(!locals[name])
         {
-          std::function<void()> create_store(
-            [=, this]() {
-            ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity), field_ptr);
+          std::function<void()> create_store([=, this]() {
+            ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
+                                      field_ptr);
           });
           add_pending_init(create_store);
         }
         else
         {
-          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity), field_ptr);
+          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
+                                    field_ptr);
         }
       }
 
