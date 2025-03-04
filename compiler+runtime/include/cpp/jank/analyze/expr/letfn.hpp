@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/analyze/expr/do.hpp>
+//#include <jank/analyze/expr/function.hpp>
 
 namespace jank::runtime::obj
 {
@@ -13,6 +14,7 @@ namespace jank::analyze::expr
 
   struct letfn : expression
   {
+    // TODO function_ptr vals
     using pair_type = std::pair<runtime::obj::symbol_ptr, expression_ptr>;
 
     static constexpr expression_kind expr_kind{ expression_kind::letfn };

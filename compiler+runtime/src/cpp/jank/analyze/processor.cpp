@@ -896,13 +896,24 @@ namespace jank::analyze
         meta_source(bindings_obj));
     }
 
-    /* Optimize to a let when there are not enough bindings to achieve mutual recursion. */
-    switch(binding_parts)
-    {
-      case 0:
-      case 2:
-        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
-    }
+    /* Optimize to a let when there are insufficient bindings to achieve mutual recursion,
+     * thus letting us skip more expensive analysis. */
+    //switch(binding_parts)
+    //{
+    //  case 0:
+    //  case 2:
+    //    auto const &sym_obj(bindings->data[0]);
+    //    if(sym_obj->type != runtime::object_type::symbol)
+    //    {
+    //      return error::analysis_invalid_letfn(
+    //        "The left hand side of a 'letfn*' binding must be a symbol",
+    //        meta_source(sym_obj));
+    //    }
+    //    /* TODO Permits right hand side to be a non-function. Semantically ok but inconsistent.
+    //     * Could do something simple like assert bindings->data[1] is a seq
+    //     * starting with clojure.core/fn. */
+    //    return analyze_let(o, current_frame, position, fn_ctx, needs_box);
+    //}
 
     auto frame{
       make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
@@ -941,7 +952,13 @@ namespace jank::analyze
       {
         return res.expect_err_move();
       }
-      auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
+      auto fexpr(res.expect_ok_move());
+      if(fexpr->kind != expression_kind::function)
+      {
+        return error::analysis_invalid_letfn("The right hand side of a 'letfn*' binding must be a function",
+                                             meta_source(val));
+      }
+      auto it(ret->pairs.emplace_back(sym, fexpr));
       auto local(ret->frame->locals.find(sym)->second);
       local.value_expr = some(it.second);
       /* TODO This might need to be inferred earlier for mutually recursive code */
