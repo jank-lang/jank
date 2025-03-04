@@ -1,5 +1,7 @@
 #include <set>
 
+#include <boost/graph/strong_components.hpp>
+
 #include <fmt/core.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -894,6 +896,14 @@ namespace jank::analyze
         meta_source(bindings_obj));
     }
 
+    /* Optimize to a let when there are not enough bindings to achieve mutual recursion. */
+    switch(o->count())
+    {
+      case 0:
+      case 2:
+        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
+    }
+
     auto frame{
       make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
     };
@@ -938,6 +948,8 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
+    /* TODO Define strongly connected locals last to eliminate unnecessary pending inits. */
+
     size_t const form_count{ o->count() - 2 };
     size_t i{};
     for(auto const &item : o->data.rest().rest())
@@ -958,6 +970,8 @@ namespace jank::analyze
 
       ret->body->values.emplace_back(res.expect_ok_move());
     }
+
+    /* TODO Return a let if topologically sortable. */
 
     return ret;
   }

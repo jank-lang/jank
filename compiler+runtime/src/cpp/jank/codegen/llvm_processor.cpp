@@ -1,5 +1,7 @@
 #include <list>
 
+#include <boost/graph/topological_sort.hpp>
+
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
@@ -792,6 +794,7 @@ namespace jank::codegen
     std::list<std::function<void()>> deferred_inits{};
     auto const defer_init([&](std::function<void()> f) -> void { deferred_inits.push_back(f); });
     auto old_locals(locals);
+    auto immediate_locals(locals);
     for(auto const &pair : expr->pairs)
     {
       auto const local(expr->frame->find_local_or_capture(pair.first));
@@ -802,12 +805,11 @@ namespace jank::codegen
       }
       auto const fexpr(runtime::static_box_cast<expr::function>(pair.second));
 
-      /* TODO Topologically sort locals to eliminate unnecessary pending inits. */
       locals[pair.first] = gen_function(fexpr, arity, defer_init);
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 
-    /* Tie the knot for (letfn [(a [] b) (b [])]) by setting a's reference
+    /* Tie the knot for (letfn [(a [] b) (b [] a)]) by setting a's reference
      * to b in a's context after b has been created. */
     for(auto const &deferred_init : deferred_inits)
     {
