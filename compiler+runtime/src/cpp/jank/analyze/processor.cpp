@@ -897,7 +897,7 @@ namespace jank::analyze
     }
 
     /* Optimize to a let when there are not enough bindings to achieve mutual recursion. */
-    switch(o->count())
+    switch(binding_parts)
     {
       case 0:
       case 2:
