@@ -1,7 +1,8 @@
 #!/usr/bin/env bb
 
 (ns jank.check-everything
-  (:require [jank.compiler+runtime.core]
+  (:require [babashka.fs :as b.f]
+            [jank.compiler+runtime.core]
             [jank.clojure-cli.core]
             [jank.lein-jank.core]
             [jank.summary :as summary]
@@ -28,6 +29,11 @@
 (defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
   #_(when-not validate-formatting?
     (util/quiet-shell {} (os->deps-cmd "Linux")))
+
+  (when-not (b.f/exists? "/usr/include/boost/config.hpp")
+    (util/quiet-shell {} "curl -LO https://raw.githubusercontent.com/boostorg/config/refs/heads/develop/include/boost/config.hpp")
+    (util/quiet-shell {} "sudo mv config.hpp /usr/include/boost/"))
+
   (util/quiet-shell {} "tree /usr/include")
 
   ; TODO: Cache this shit.
