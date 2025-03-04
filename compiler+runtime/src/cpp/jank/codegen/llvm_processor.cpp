@@ -119,7 +119,7 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* JIT loaded object files don't support global ctors, so we need to call our manually.
+    /* JIT loaded object files don't support global ctors, so we need to call ours manually.
      * Fortunately, we have our load function which we can hook into. So, if we're compiling
      * a module and we've just created the load function fo that module, the first thing
      * we want to do is call our global ctor. */
