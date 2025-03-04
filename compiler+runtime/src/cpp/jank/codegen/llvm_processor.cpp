@@ -548,7 +548,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen_function(expr::function_ptr const expr,
                                expr::function_arity const &fn_arity,
-                               std::function<void(std::function<void()>)> const &add_pending_init)
+                               std::function<void(std::function<void()>)> const &defer_init)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -564,7 +564,7 @@ namespace jank::codegen
       ctx = std::move(nested.ctx);
     }
 
-    auto const fn_obj(gen_function_instance(expr, fn_arity, add_pending_init));
+    auto const fn_obj(gen_function_instance(expr, fn_arity, defer_init));
 
     if(expr->position == expression_position::tail)
     {
@@ -577,10 +577,10 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()>)> const add_pending_init([](auto) {
+    std::function<void(std::function<void()>)> const defer_init([](auto) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
-    return gen_function(expr, fn_arity, add_pending_init);
+    return gen_function(expr, fn_arity, defer_init);
   }
 
 
@@ -789,8 +789,8 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
-    std::list<std::function<void()>> letfn_inits{};
-    auto const add_pending_init([&](std::function<void()> f) -> void { letfn_inits.push_back(f); });
+    std::list<std::function<void()>> deferred_inits{};
+    auto const defer_init([&](std::function<void()> f) -> void { deferred_inits.push_back(f); });
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
@@ -803,15 +803,15 @@ namespace jank::codegen
       auto const fexpr(runtime::static_box_cast<expr::function>(pair.second));
 
       /* TODO Topologically sort locals to eliminate unnecessary pending inits. */
-      locals[pair.first] = gen_function(fexpr, arity, add_pending_init);
+      locals[pair.first] = gen_function(fexpr, arity, defer_init);
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 
     /* Tie the knot for (letfn [(a [] b) (b [])]) by setting a's reference
      * to b in a's context after b has been created. */
-    for(auto const &pending_init : letfn_inits)
+    for(auto const &deferred_init : deferred_inits)
     {
-      pending_init();
+      deferred_init();
     }
 
     auto const ret(gen(expr->body, arity));
@@ -1500,7 +1500,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(
     expr::function_ptr const expr,
     expr::function_arity const &fn_arity,
-    std::function<void(std::function<void()>)> const &add_pending_init)
+    std::function<void(std::function<void()>)> const &defer_init)
   {
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
@@ -1582,7 +1582,7 @@ namespace jank::codegen
             ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                       field_ptr);
           });
-          add_pending_init(create_store);
+          defer_init(create_store);
         }
         else
         {
@@ -1639,10 +1639,10 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
                                                      expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()>)> const add_pending_init([](auto) {
+    std::function<void(std::function<void()>)> const defer_init([](auto) {
       throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
     });
-    return gen_function_instance(expr, fn_arity, add_pending_init);
+    return gen_function_instance(expr, fn_arity, defer_init);
   }
 
   void llvm_processor::create_global_ctor() const
