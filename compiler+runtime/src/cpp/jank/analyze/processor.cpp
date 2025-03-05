@@ -896,14 +896,15 @@ namespace jank::analyze
         "There must be an even number of bindings for a 'letfn*'",
         meta_source(bindings_obj));
     }
+    size_t const nbindings(binding_parts / 2);
 
     /* Optimize to a let when there are insufficient bindings to achieve mutual recursion,
      * thus letting us skip more expensive analysis. */
-    switch(binding_parts)
+    switch(nbindings)
     {
       case 0:
         return analyze_let(o, current_frame, position, fn_ctx, needs_box);
-      case 2:
+      case 1:
         auto const &sym_obj(bindings->data[0]);
         if(sym_obj->type != runtime::object_type::symbol)
         {
@@ -976,13 +977,9 @@ namespace jank::analyze
       ret->body->values.emplace_back(res.expect_ok_move());
     }
 
-    using Graph = boost::adjacency_list<>;
-    using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
-    //using edge_t = boost::graph_traits<Graph>::edge_descriptor;
-
-    /* A directed graph where edge u_i->v_j occurs if and only if u closes over v,
-     * such as (letfn [(u [] v) (v [])]) where i=0, j=1. */
-    Graph bindings_dependency_graph(binding_parts / 2);
+    /* A directed graph where edge u->v occurs if and only if u closes over v,
+     * such as u->v in (letfn [(u [] v) (v [])]). */
+    boost::adjacency_list<> bindings_dependency_graph(nbindings);
 
     for(size_t i{}; i < binding_parts; i += 2)
     {
@@ -1001,22 +998,18 @@ namespace jank::analyze
                                              meta_source(val));
       }
       auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
-      /* Populate bindings_dependency_graph in service of reordering bindings to minimize init code. */
+      auto captures(fexpr->captures());
+      for(size_t j{}; j < binding_parts; j += 2)
       {
-        auto captures(fexpr->captures());
-        for(size_t j{}; j < binding_parts; j += 2)
+        if(i == j)
         {
-          if(i == j)
-          {
-            /* Add self-loop to represent vertex.
-             * TODO use add_vertex. */
-            add_edge(i/2, i/2, bindings_dependency_graph);
-          }
-          auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
-          if(captures.contains(sym))
-          {
-            add_edge(i/2, j/2, bindings_dependency_graph);
-          }
+          continue;
+        }
+        auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
+        if(captures.contains(sym))
+        {
+          //fmt::println("edge: {} {}", i/2, j/2);
+          add_edge(i/2, j/2, bindings_dependency_graph);
         }
       }
       auto it(ret->pairs.emplace_back(sym, fexpr));
@@ -1026,40 +1019,26 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
-    /* TODO Define strongly connected locals last to eliminate unnecessary pending inits. */
-
-    // Define the vertex index property map using boost::property_map and boost::associative_property_map
-    std::map<vertex_t, std::size_t> index_map;
+    /* component is a vector where component[i] is the strongly connected group id of ret->pairs[i]. */
     std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
-    auto vi_map = boost::make_assoc_property_map(index_map);
-
-    /* TODO Return a sorted let if topologically sorted, i.e., if num_scc == nbindings. */
-    //int const num_scc =
-    strong_components(
-      bindings_dependency_graph,
-      make_iterator_property_map(component.begin(), vi_map),
-      boost::vertex_index_map(vi_map)
-      );
+    size_t const num_groups = strong_components( bindings_dependency_graph, &component[0]);
 
     auto old_pairs(ret->pairs);
-    //TODO initialize to correct length
-    native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs{};
-    /* component is a vector where component[i] is the strongly connected group id
-     * of ret->pairs[i]. 
-     * TODO what is the best insertion order? */
-    for(size_t insert_group{}; insert_group != component.size(); ++insert_group)
+    native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs;
+    new_pairs.reserve(old_pairs.size());
+    for(size_t insert_group{}; insert_group < num_groups; ++insert_group)
     {
-      for(size_t c{}; c != component.size(); ++c)
+      for(size_t c{}; c < nbindings; ++c)
       {
         auto const current_group(component[c]);
         if(current_group == insert_group)
         {
+          //fmt::println("inserting: {} in group {} of {}", old_pairs[c].first->to_string(), current_group, num_groups);
           new_pairs.emplace_back(old_pairs[c]);
         }
       }
     }
     assert(new_pairs.size() == old_pairs.size());
-    // FIXME doesn't do anything, (jc/native-source '(letfn [(c [] d) (d [])])) still defines c first
     ret->pairs = new_pairs;
 
     return ret;
