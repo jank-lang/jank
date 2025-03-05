@@ -14,7 +14,7 @@ namespace jank::ui
   /* TODO: Also support core fns? */
   static std::set<native_persistent_string_view> const specials{
     "def", "fn*",   "fn",  "let*", "let",   "loop*",   "loop",  "do",
-    "if",  "quote", "var", "try",  "catch", "finally", "throw",
+    "if",  "quote", "var", "try",  "catch", "finally", "throw", "letfn*",
   };
 
   static Element symbol_color(Element const &e, native_persistent_string_view const &sym)
