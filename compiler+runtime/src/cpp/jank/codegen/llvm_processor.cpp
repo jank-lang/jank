@@ -792,7 +792,6 @@ namespace jank::codegen
     std::list<std::function<void()>> deferred_inits{};
     auto const defer_init([&](std::function<void()> f) -> void { deferred_inits.push_back(f); });
     auto old_locals(locals);
-    auto immediate_locals(locals);
     for(auto const &pair : expr->pairs)
     {
       auto const local(expr->frame->find_local_or_capture(pair.first));
