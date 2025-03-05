@@ -980,9 +980,10 @@ namespace jank::analyze
      * We represent our directed graph using vertices that index ret->pairs
      * (the original order of letfn bindings), where edge i->j occurs if and only if
      * binding ret->pairs[i] closes over ret->pairs[j]. For example,
-     * (letfn [(b [] c) (c [] (b a)) (a [])]) has edges 0->1, 1->0, and 1->2.*/
+     * (letfn [(b [] c) (c [] (b a)) (a [])]) has edges 0->1, 1->0, and 1->2. */
     boost::adjacency_list<> bindings_dependency_graph(nbindings);
 
+    /* Analyze binding inits and populate bindings dependency graph. */
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
@@ -1024,6 +1025,7 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
+    /* Calculate strongly connected bindings. */
     std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
     size_t const num_groups = strong_components(bindings_dependency_graph, &component[0]);
 
@@ -1048,7 +1050,7 @@ namespace jank::analyze
     assert(new_pairs.size() == old_pairs.size());
     ret->pairs = new_pairs;
 
-    /* Analyze body. */
+    /* Analyze letfn body. */
     size_t const form_count{ o->count() - 2 };
     size_t i{};
     for(auto const &item : o->data.rest().rest())
