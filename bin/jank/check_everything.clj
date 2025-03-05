@@ -19,23 +19,13 @@
 
 ; Most Linux deps are installed by a Github action. We need to manually install
 ; boost for some reason. Otherwise, its headers aren't found by clang.
-(def os->deps-cmd {"Linux" "sudo apt install -y libboost-all-dev"
-                   "Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
+(def os->deps-cmd {"Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
 
 (defmulti install-deps
   (fn [_props]
     (System/getProperty "os.name")))
 
 (defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
-  #_(when-not validate-formatting?
-    (util/quiet-shell {} (os->deps-cmd "Linux")))
-
-  (when-not (b.f/exists? "/usr/include/boost/config.hpp")
-    (util/quiet-shell {} "curl -LO https://raw.githubusercontent.com/boostorg/config/refs/heads/develop/include/boost/config.hpp")
-    (util/quiet-shell {} "sudo mv config.hpp /usr/include/boost/"))
-
-  (util/quiet-shell {} "tree /usr/include")
-
   ; TODO: Cache this shit.
   (when (= "on" (util/get-env "JANK_ANALYZE"))
     (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
@@ -63,7 +53,7 @@
   (util/quiet-shell {} "chmod +x linux-install.sh")
   (util/quiet-shell {} "sudo ./linux-install.sh"))
 
-(defmethod install-deps "Mac OS X" [props]
+(defmethod install-deps "Mac OS X" [_props]
   (util/quiet-shell {:extra-env {"HOMEBREW_NO_AUTO_UPDATE" "1"}}
                     (os->deps-cmd "Mac OS X"))
 
