@@ -58,10 +58,6 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    /* TODO: Pass this into each fn below so we only do this once on startup. */
-    auto const jank_path(util::process_location().unwrap().parent_path());
-    auto const include_path(jank_path / "../include");
-
     native_persistent_string O{ "-O0" };
     switch(optimization_level)
     {
@@ -206,14 +202,14 @@ namespace jank::jit
     auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto const default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
+      auto default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
       if(std::filesystem::exists(default_lib_abs_path.c_str()))
       {
         return default_lib_abs_path;
       }
       else
       {
-        auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
+        auto lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
         if(std::filesystem::exists(lib_abs_path))
         {
           return lib_abs_path;

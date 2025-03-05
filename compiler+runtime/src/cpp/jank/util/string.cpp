@@ -2,7 +2,6 @@
 #include <locale>
 #include <codecvt>
 #include <cwctype>
-#include <algorithm>
 
 #include <jank/util/string.hpp>
 #include <ranges>
@@ -13,7 +12,7 @@ namespace jank::util
   {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wide{ converter.from_bytes(s) };
-    std::locale loc("");
+    std::locale const loc{ "" };
 
     auto &facet{ std::use_facet<std::ctype<wchar_t>>(loc) };
     facet.tolower(wide.data(), wide.data() + wide.size());
@@ -25,7 +24,7 @@ namespace jank::util
   {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wide{ converter.from_bytes(s) };
-    std::locale loc("");
+    std::locale const loc{ "" };
 
     auto const &facet{ std::use_facet<std::ctype<wchar_t>>(loc) };
     facet.toupper(wide.data(), wide.data() + wide.size());
@@ -33,6 +32,7 @@ namespace jank::util
     return converter.to_bytes(wide);
   }
 
+  /* Doesn't support Unicode whitespace. */
   void trim(std::string &s)
   {
     auto const not_space{ [](unsigned char const ch) { return !std::isspace(ch); } };
