@@ -230,6 +230,11 @@ namespace jank::error
          native_persistent_string const &message,
          read::source const &source,
          native_persistent_string const &note_message);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         native_persistent_string const &note_message,
+         native_vector<runtime::object_ptr> const &expansions);
     base(kind k, read::source const &source, note const &note);
     base(kind k,
          native_persistent_string const &message,
@@ -247,6 +252,7 @@ namespace jank::error
     native_persistent_string message;
     read::source source;
     native_vector<note> notes;
+    native_vector<runtime::object_ptr> expansions;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -279,6 +285,11 @@ namespace jank
                        native_persistent_string const &message,
                        read::source const &source,
                        native_persistent_string const &error_note_message);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message,
+                       native_vector<runtime::object_ptr> const &expansions);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source_position const &start);

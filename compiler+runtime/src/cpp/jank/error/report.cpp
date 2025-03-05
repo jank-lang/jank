@@ -12,9 +12,12 @@
 #include <jank/util/mapped_file.hpp>
 #include <jank/error/report.hpp>
 #include <jank/ui/highlight.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::error
 {
@@ -84,6 +87,91 @@ namespace jank::error
     native_vector<snippet> snippets;
   };
 
+  // Helper: Capitalize the first letter.
+  static std::string capitalize(std::string const &s)
+  {
+    if(s.empty())
+    {
+      return s;
+    }
+    std::string result = s;
+    result[0] = static_cast<char>(std::toupper(result[0]));
+    return result;
+  }
+
+  // Converts numbers less than 100 into their ordinal word (in lowercase).
+  static std::string ordinalUnder100(std::size_t n)
+  {
+    static std::array<std::string, 20> const ordinal
+      = { "zeroth",    "first",     "second",      "third",      "fourth",
+          "fifth",     "sixth",     "seventh",     "eighth",     "ninth",
+          "tenth",     "eleventh",  "twelfth",     "thirteenth", "fourteenth",
+          "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth" };
+    static std::array<std::string, 10> const tens
+      = { "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
+    static std::array<std::string, 10> const tensOrdinal
+      = { "",         "",         "twentieth",  "thirtieth", "fortieth",
+          "fiftieth", "sixtieth", "seventieth", "eightieth", "ninetieth" };
+
+    if(n < 20)
+    {
+      return ordinal[n];
+    }
+    std::size_t const t = n / 10, u = n % 10;
+    return (u == 0) ? tensOrdinal[t] : tens[t] + "-" + ordinal[u];
+  }
+
+  // Main function: Converts a number (0 <= n <= 999) into its ordinal English representation.
+  static std::string numberToOrdinal(std::size_t n)
+  {
+    if(n > 999)
+    {
+      throw std::out_of_range("Number is too large");
+    }
+
+    // Shift the value by 1: 0 -> 1, 1 -> 2, etc.
+    std::size_t num = n + 1;
+
+    // Special case: num == 1000.
+    if(num == 1000)
+    {
+      return "One thousandth";
+    }
+
+    static std::array<std::string, 10> const cardinal
+      = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+
+    std::string result;
+    if(num < 100)
+    {
+      result = ordinalUnder100(num);
+    }
+    else
+    { // 100 <= num < 1000
+      std::size_t h = num / 100;
+      std::size_t rem = num % 100;
+      if(rem == 0)
+      {
+        result = cardinal[h] + " hundredth";
+      }
+      else
+      {
+        result = cardinal[h] + " hundred " + ordinalUnder100(rem);
+      }
+    }
+    return capitalize(result);
+  }
+
+  // Example usage:
+  // #include <iostream>
+  // int main() {
+  //     std::cout << numberToOrdinal(0) << "\n";   // Zeroth
+  //     std::cout << numberToOrdinal(1) << "\n";   // First
+  //     std::cout << numberToOrdinal(15) << "\n";  // Fifteenth
+  //     std::cout << numberToOrdinal(123) << "\n"; // One hundred twenty-third
+  //     return 0;
+  // }
+
   plan::plan(error_ptr const e)
     : kind{ kind_str(e->kind) }
     , message{ e->message }
@@ -93,12 +181,31 @@ namespace jank::error
       add(n);
     }
 
+    //auto const expansions(runtime::try_object<runtime::obj::persistent_vector>(
+    //  runtime::__rt_ctx->macro_expansions_var->deref()));
+    //fmt::println("expansions {}", to_code_string(expansions));
+    //object_ptr last_expansion{ runtime::obj::nil::nil_const() };
+    //for(auto const expansion : expansions->data)
+    //{
+    //  auto const &source{ runtime::object_source(expansion) };
+    //  fmt::println("adding stacked expansion note for expansion {} with source {}",
+    //               to_code_string(expansion),
+    //               source.file_path);
+    //  add(note{ "Expanded here", source, note::kind::info });
+    //  last_expansion = expansion;
+    //}
+
     /* TODO: Reverse them and add count. */
-    for(auto expansion{ e->source.macro_expansion }; expansion != runtime::obj::nil::nil_const();)
+    std::reverse(e->expansions.begin(), e->expansions.end());
+    for(size_t i{}; i < e->expansions.size(); ++i)
     {
-      auto const &source{ runtime::object_source(expansion) };
-      add(note{ "Expanded here", source, note::kind::info });
-      expansion = source.macro_expansion;
+      auto const expansion{ e->expansions[i] };
+      auto source{ runtime::object_source(expansion) };
+      source.end = source.start;
+      fmt::println("adding expansion note for expansion {} with source {}",
+                   to_code_string(expansion),
+                   source.file_path);
+      add(note{ fmt::format("{} expansion here", numberToOrdinal(i)), source, note::kind::info });
     }
   }
 

@@ -1,4 +1,8 @@
 #include <jank/error/analyze.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/meta.hpp>
 
 namespace jank::error
 {
@@ -22,7 +26,25 @@ namespace jank::error
                                  read::source const &source,
                                  native_persistent_string const &note)
   {
-    return make_error(kind::analysis_invalid_def, message, source, note);
+    native_vector<runtime::object_ptr> expansions;
+    auto const stack(runtime::try_object<runtime::obj::persistent_vector>(
+      runtime::__rt_ctx->macro_expansions_var->deref()));
+    runtime::object_ptr last_expansion{};
+    for(auto const expansion : stack->data)
+    {
+      expansions.push_back(expansion);
+      last_expansion = expansion;
+    }
+    if(last_expansion)
+    {
+      auto const &source{ runtime::object_source(last_expansion) };
+      if(source != read::source::unknown)
+      {
+        expansions.push_back(source.macro_expansion);
+      }
+    }
+
+    return make_error(kind::analysis_invalid_def, message, source, note, expansions);
   }
 
   error_ptr analysis_invalid_fn(native_persistent_string const &message, read::source const &source)

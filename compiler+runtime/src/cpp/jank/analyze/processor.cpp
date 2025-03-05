@@ -59,6 +59,46 @@ namespace jank::analyze
     return f();
   }
 
+  static std::unique_ptr<util::scope_exit> push_macro_expansions(object_ptr const o)
+  {
+    fmt::println("pushing expansion for {}\n", to_code_string(o));
+
+    auto const meta(runtime::meta(o));
+    auto const source(runtime::get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
+    auto const expansion(
+      runtime::get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+
+    if(expansion == obj::nil::nil_const())
+    {
+      /* TODO: Default ctor. */
+      //return { [] {} };
+      return nullptr;
+
+      //auto const old_val(__rt_ctx->macro_expansions_var->deref());
+      ////fmt::println("pushing old val {}", to_code_string(old_val));
+      //__rt_ctx
+      //  ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+      //    std::make_pair(__rt_ctx->macro_expansions_var, old_val)))
+      //  .expect_ok();
+      //return;
+    }
+
+    auto const old_val(__rt_ctx->macro_expansions_var->deref());
+    auto const new_val(runtime::conj(old_val, expansion));
+    fmt::println("\tpushing expansion {} to have {} expansions with meta {}\n",
+                 to_code_string(expansion),
+                 runtime::sequence_length(new_val),
+                 to_code_string(runtime::meta(expansion)));
+
+    /* TODO: Faster to just use a local vector? */
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->macro_expansions_var, new_val)))
+      .expect_ok();
+    return std::make_unique<util::scope_exit>(
+      [=]() { __rt_ctx->pop_thread_bindings().expect_ok(); });
+  }
+
   processor::processor(runtime::context &rt_ctx)
     : rt_ctx{ rt_ctx }
     , root_frame{ make_box<local_frame>(local_frame::frame_type::root, rt_ctx, none) }
@@ -122,6 +162,8 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(l) };
+
     auto const length(l->count());
     if(length < 2)
     {
@@ -136,6 +178,8 @@ namespace jank::analyze
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj->type != runtime::object_type::symbol)
     {
+      fmt::println("macro expansions {}",
+                   runtime::to_code_string(__rt_ctx->macro_expansions_var->deref()));
       return error::analysis_invalid_def(
         "The var name in a 'def' must be a symbol",
         fallback_source(object_source(sym_obj), [=] { return read::parse::reparse_nth(l, 1); }),
@@ -207,6 +251,8 @@ namespace jank::analyze
                                                        option<expr::function_context_ptr> const &fc,
                                                        native_bool const needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(auto const length(o->count()); length != 6)
     {
       return error::analysis_invalid_case("Invalid case*: exactly 6 parameters are needed.",
@@ -324,6 +370,8 @@ namespace jank::analyze
                                                          option<expr::function_context_ptr> const &,
                                                          native_bool needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(sym) };
+
     assert(!sym->to_string().empty());
 
     /* TODO: Assert it doesn't start with __. */
@@ -537,6 +585,8 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &,
                         native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(full_list) };
+
     auto const length(full_list->count());
     if(length < 2)
     {
@@ -702,6 +752,8 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(list) };
+
     if(fn_ctx.is_none())
     {
       return error::analysis_invalid_recur_position(
@@ -760,6 +812,8 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool const needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(list) };
+
     expr::do_ ret{ position, current_frame, true, {} };
     size_t const form_count{ list->count() - 1 };
     size_t i{};
@@ -795,6 +849,8 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(o->count() < 2)
     {
       return error::analysis_invalid_let("A bindings vector must be provided to 'let'",
@@ -883,6 +939,8 @@ namespace jank::analyze
                           option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(o->count() < 2)
     {
       return error::analysis_invalid_loop("A 'loop' form requires a binding vector",
@@ -993,6 +1051,8 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
      * so we're unable to unbox them. */
     needs_box = true;
@@ -1053,6 +1113,8 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(o->count() != 2)
     {
       return error::analysis_invalid_quote("'quote' requires exactly one form to quote",
@@ -1073,6 +1135,8 @@ namespace jank::analyze
                               option<expr::function_context_ptr> const &,
                               native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(o->count() != 2)
     {
       return error::analysis_invalid_var_reference("'var' expects exactly one form to resolve",
@@ -1111,6 +1175,8 @@ namespace jank::analyze
                              option<expr::function_context_ptr> const &,
                              native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     auto const qualified_sym(
       current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
     return make_box<expr::var_ref>(position, current_frame, true, qualified_sym, o);
@@ -1123,6 +1189,8 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     if(o->count() != 2)
     {
       return error::analysis_invalid_throw("'throw' requires exactly one argument", meta_source(o));
@@ -1145,6 +1213,8 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(list) };
+
     auto try_frame(
       make_box<local_frame>(local_frame::frame_type::try_, current_frame->rt_ctx, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
@@ -1333,6 +1403,8 @@ namespace jank::analyze
                                        option<expr::function_context_ptr> const &,
                                        native_bool const needs_box)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     current_frame->lift_constant(o);
     return make_box<expr::primitive_literal>(position, current_frame, needs_box, o);
   }
@@ -1345,6 +1417,8 @@ namespace jank::analyze
                             option<expr::function_context_ptr> const &fn_ctx,
                             native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
@@ -1385,6 +1459,8 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
       [&](auto const typed_o) -> processor::expression_result {
@@ -1436,6 +1512,8 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
+    auto const pop_macro_expansions{ push_macro_expansions(o) };
+
     return visit_set_like(
       [&](auto const typed_o) -> processor::expression_result {
         native_vector<expression_ptr> exprs;
@@ -1480,6 +1558,8 @@ namespace jank::analyze
                           option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const needs_box)
   {
+    std::unique_ptr<util::scope_exit> pop_macro_expansions{};
+
     /* An empty list evaluates to a list, not a call. */
     auto const count(o->count());
     if(count == 0)
@@ -1503,6 +1583,8 @@ namespace jank::analyze
       {
         return found_special->second(o, current_frame, position, fn_ctx, needs_box);
       }
+
+      pop_macro_expansions = push_macro_expansions(o);
 
       auto sym_result(analyze_symbol(sym, current_frame, expression_position::value, fn_ctx, true));
       if(sym_result.is_err())
@@ -1562,6 +1644,8 @@ namespace jank::analyze
     }
     else
     {
+      pop_macro_expansions = push_macro_expansions(o);
+
       auto callable_expr(
         analyze(first, current_frame, expression_position::value, fn_ctx, needs_box));
       if(callable_expr.is_err())

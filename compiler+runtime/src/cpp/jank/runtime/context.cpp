@@ -82,6 +82,9 @@ namespace jank::runtime
       = make_box<runtime::var>(core, make_box<obj::symbol>("*no-recur*"))->set_dynamic(true);
     gensym_env_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
+    macro_expansions_var = make_box<runtime::var>(core, make_box<obj::symbol>("*macro-expansions*"))
+                             ->set_dynamic(true)
+                             ->bind_root(obj::persistent_vector::empty());
 
     /* TODO: Remove this once native/raw is entirely gone. */
     intern_ns(make_box<obj::symbol>("native"));

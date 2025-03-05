@@ -8,7 +8,6 @@ namespace jank::util
   {
     using function_type = std::function<void()>;
 
-    scope_exit(function_type const &f);
     scope_exit(function_type &&f);
     ~scope_exit();
 

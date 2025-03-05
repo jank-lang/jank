@@ -183,6 +183,19 @@ namespace jank::error
   {
   }
 
+  base::base(enum kind const k,
+             native_persistent_string const &message,
+             read::source const &source,
+             native_persistent_string const &note_message,
+             native_vector<runtime::object_ptr> const &expansions)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{{ note_message, source }}
+    , expansions{ expansions }
+  {
+  }
+
   base::base(enum kind const k, read::source const &source, note const &note)
     : kind{ k }
     , message{ kind_to_message(k) }
@@ -285,6 +298,15 @@ namespace jank
                        native_persistent_string const &error_note_message)
   {
     return runtime::make_box<error::base>(kind, message, source, error_note_message);
+  }
+
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       native_persistent_string const &error_note_message,
+                       native_vector<runtime::object_ptr> const &expansions)
+  {
+    return runtime::make_box<error::base>(kind, message, source, error_note_message, expansions);
   }
 
   error_ptr make_error(error::kind const kind,
