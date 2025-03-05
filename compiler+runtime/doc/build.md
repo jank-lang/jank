@@ -6,7 +6,7 @@ scripts to compile your own. See the section on compiling Clang/LLVM below.
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev libboost-dev gcc g++ libgc-dev
 ```
 
 For Arch:
