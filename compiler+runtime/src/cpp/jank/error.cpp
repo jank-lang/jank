@@ -162,6 +162,15 @@ namespace jank::error
   {
   }
 
+  base::base(enum kind const k, native_persistent_string const &message, read::source const &source, native_deque<runtime::object_ptr> const &expansions)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{{ message, source }}
+    , expansions{ expansions }
+  {
+  }
+
   base::base(enum kind const k,
              read::source const &source,
              native_persistent_string const &note_message)
@@ -218,6 +227,19 @@ namespace jank::error
   base::base(enum kind const k,
              native_persistent_string const &message,
              read::source const &source,
+             note const &note,
+             native_deque<runtime::object_ptr> const &expansions)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{ note }
+    , expansions{ expansions }
+  {
+  }
+
+  base::base(enum kind const k,
+             native_persistent_string const &message,
+             read::source const &source,
              native_vector<note> const &notes)
     : kind{ k }
     , message{ message }
@@ -264,6 +286,14 @@ namespace jank
     return runtime::make_box<error::base>(kind, message, source);
   }
 
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       native_deque<runtime::object_ptr> const &expansions)
+  {
+    return runtime::make_box<error::base>(kind, message, source, expansions);
+  }
+
   error_ptr
   make_error(error::kind const kind, read::source const &source, error::note const &error_note)
   {
@@ -276,6 +306,15 @@ namespace jank
                        error::note const &error_note)
   {
     return runtime::make_box<error::base>(kind, message, source, error_note);
+  }
+
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       error::note const &error_note,
+                       native_deque<runtime::object_ptr> const &expansions)
+  {
+    return runtime::make_box<error::base>(kind, message, source, error_note, expansions);
   }
 
   error_ptr make_error(error::kind const kind,

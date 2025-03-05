@@ -225,21 +225,30 @@ namespace jank::error
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
     base(kind k, native_persistent_string const &message, read::source const &source);
-    base(kind k, read::source const &source, native_persistent_string const &note_message);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
-         native_persistent_string const &note_message);
+         native_deque<runtime::object_ptr> const &expansions);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          native_persistent_string const &note_message,
          native_deque<runtime::object_ptr> const &expansions);
+    base(kind k, read::source const &source, native_persistent_string const &note_message);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         native_persistent_string const &note_message);
     base(kind k, read::source const &source, note const &note);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          note const &note);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         note const &note,
+         native_deque<runtime::object_ptr> const &expansions);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
@@ -269,12 +278,21 @@ namespace jank
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       native_deque<runtime::object_ptr> const &expansions);
   error_ptr
   make_error(error::kind const kind, read::source const &source, error::note const &error_note);
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source,
                        error::note const &error_note);
+  error_ptr make_error(error::kind const kind,
+                       native_persistent_string const &message,
+                       read::source const &source,
+                       error::note const &error_note,
+                       native_deque<runtime::object_ptr> const &expansions);
   error_ptr make_error(error::kind const kind,
                        read::source const &source,
                        native_persistent_string const &error_note_message);
