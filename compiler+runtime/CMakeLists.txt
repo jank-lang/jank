@@ -163,6 +163,7 @@ add_library(
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
+  src/cpp/jank/util/string.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp

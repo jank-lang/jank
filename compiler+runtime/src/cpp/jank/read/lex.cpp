@@ -15,7 +15,7 @@ namespace jank::read::lex
   template <typename... Ts>
   static std::ostream &operator<<(std::ostream &os, std::variant<Ts...> const &v)
   {
-    boost::apply_visitor(
+    std::visit(
       [&](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr(std::is_same_v<T, native_persistent_string>
@@ -759,7 +759,7 @@ namespace jank::read::lex
                         pos,
                         token_kind::ratio,
                         { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
-                          .denominator = boost::get<native_integer>(denominator_token.data) }));
+                          .denominator = std::get<native_integer>(denominator_token.data) }));
               }
               return denominator.expect_err();
             }

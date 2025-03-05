@@ -1,5 +1,6 @@
 #include <limits>
 #include <numeric>
+#include <cmath>
 
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/visit.hpp>

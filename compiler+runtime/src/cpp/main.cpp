@@ -2,8 +2,6 @@
 #include <fstream>
 #include <filesystem>
 
-#include <boost/algorithm/string.hpp>
-
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
@@ -28,6 +26,7 @@
 #include <jank/profile/time.hpp>
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/string.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -160,7 +159,7 @@ namespace jank
     while(auto buf = le.readLine())
     {
       auto &line(*buf);
-      boost::trim(line);
+      util::trim(line);
 
       if(line.ends_with("\\"))
       {
@@ -231,7 +230,7 @@ namespace jank
     while(auto buf = le.readLine())
     {
       auto &line(*buf);
-      boost::trim(line);
+      util::trim(line);
 
       if(line.empty())
       {

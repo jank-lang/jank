@@ -72,6 +72,8 @@ namespace jank::runtime::module
      * subsequent matches are ignored. */
     struct entry
     {
+      entry() = default;
+
       option<file_entry> o;
       option<file_entry> cpp;
       option<file_entry> jank;

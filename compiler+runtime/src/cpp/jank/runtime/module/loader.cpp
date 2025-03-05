@@ -363,7 +363,7 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(fmt::format("unable to find module: {}", module));
+      return err(native_persistent_string{ fmt::format("unable to find module: {}", module) });
     }
 
     if(ori == origin::source)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <jank/result.hpp>
 #include <jank/option.hpp>
@@ -193,12 +193,12 @@ namespace jank::read::lex
     static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
-    boost::variant<no_data,
-                   native_integer,
-                   native_real,
-                   native_persistent_string_view,
-                   native_bool,
-                   ratio>
+    std::variant<no_data,
+                 native_integer,
+                 native_real,
+                 native_persistent_string_view,
+                 native_bool,
+                 ratio>
       data;
   };
 

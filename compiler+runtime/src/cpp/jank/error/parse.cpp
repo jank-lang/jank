@@ -55,8 +55,7 @@ namespace jank::error
     util::string_builder sb;
     return make_error(
       kind::parse_invalid_character,
-      sb("Invalid character '")(boost::get<native_persistent_string_view>(token.data))("'")
-        .release(),
+      sb("Invalid character '")(std::get<native_persistent_string_view>(token.data))("'").release(),
       { token.start, token.end },
       "Found here");
   }

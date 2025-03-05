@@ -3,8 +3,6 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <fmt/color.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -77,10 +75,10 @@ namespace jank::jit
         }
 
         auto const filename(dir_entry.path().filename().string());
-        auto const expect_success(boost::algorithm::starts_with(filename, "pass-"));
-        auto const expect_failure(boost::algorithm::starts_with(filename, "fail-"));
-        auto const expect_throw(boost::algorithm::starts_with(filename, "throw-"));
-        auto const allow_failure(boost::algorithm::starts_with(filename, "warn-"));
+        auto const expect_success(filename.starts_with("pass-"));
+        auto const expect_failure(filename.starts_with("fail-"));
+        auto const expect_throw(filename.starts_with("throw-"));
+        auto const allow_failure(filename.starts_with("warn-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
                       "Test file needs to begin with pass- or fail- or throw- or warn-: ",
                       filename);
