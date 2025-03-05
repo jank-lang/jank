@@ -38,11 +38,11 @@ namespace jank::analyze::expr
 
   object_ptr do_::to_runtime_data() const
   {
-    object_ptr body_maps{ make_box<obj::persistent_vector>() };
+    auto body_maps{ make_box<obj::persistent_vector>() };
     for(auto const &e : values)
     {
       visit_expr(
-        [&](auto const typed_e) { body_maps = conj(body_maps, typed_e->to_runtime_data()); },
+        [&](auto const typed_e) { body_maps = body_maps->conj(typed_e->to_runtime_data()); },
         e);
     }
     return merge(expression::to_runtime_data(),

@@ -2,9 +2,6 @@ name: "Build"
 
 on:
   pull_request:
-    types:
-      - review_requested
-      - auto_merge_enabled
   push:
     branches:
       - main
@@ -57,11 +54,23 @@ jobs:
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
+      - uses: awalsh128/cache-apt-pkgs-action@v1.4.3
+        with:
+          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
+          # Increment this when the package list changes.
+          version: 4
+      - name: Cache object files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/.ccache
+            ${{ github.workspace }}/compiler+runtime/.ctcache
+          key: ${{ env.JANK_MATRIX_ID }}
       - name: Build and test
         run: |
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install

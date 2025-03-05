@@ -73,6 +73,7 @@ namespace jank::runtime
 
   object_ptr volatile_(object_ptr o);
   native_bool is_volatile(object_ptr o);
+  object_ptr vswap(object_ptr v, object_ptr fn);
   object_ptr vswap(object_ptr v, object_ptr fn, object_ptr args);
   object_ptr vreset(object_ptr v, object_ptr new_val);
 

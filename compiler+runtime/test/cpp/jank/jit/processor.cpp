@@ -1,8 +1,7 @@
+#include <filesystem>
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
-
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 
 #include <fmt/color.h>
 
@@ -29,7 +28,7 @@ namespace jank::jit
 
   struct failure
   {
-    boost::filesystem::path path;
+    std::filesystem::path path;
     native_persistent_string error;
   };
 
@@ -68,18 +67,18 @@ namespace jank::jit
       //diags.setSuppressAllDiagnostics(true);
       //__rt_ctx->jit_prc.interpreter->getCompilerInstance()->setDiagnostics(&diags);
 
-      for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
+      for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
-        if(!boost::filesystem::is_regular_file(dir_entry.path()))
+        if(!std::filesystem::is_regular_file(dir_entry.path()))
         {
           continue;
         }
 
         auto const filename(dir_entry.path().filename().string());
-        auto const expect_success(boost::algorithm::starts_with(filename, "pass-"));
-        auto const expect_failure(boost::algorithm::starts_with(filename, "fail-"));
-        auto const expect_throw(boost::algorithm::starts_with(filename, "throw-"));
-        auto const allow_failure(boost::algorithm::starts_with(filename, "warn-"));
+        auto const expect_success(filename.starts_with("pass-"));
+        auto const expect_failure(filename.starts_with("fail-"));
+        auto const expect_throw(filename.starts_with("throw-"));
+        auto const allow_failure(filename.starts_with("warn-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
                       "Test file needs to begin with pass- or fail- or throw- or warn-: ",
                       filename);

@@ -18,10 +18,10 @@ namespace jank::analyze::expr
 
   object_ptr vector::to_runtime_data() const
   {
-    object_ptr exprs(make_box<obj::persistent_vector>());
+    auto exprs(make_box<obj::persistent_vector>());
     for(auto const &e : data_exprs)
     {
-      exprs = conj(exprs, e->to_runtime_data());
+      exprs = exprs->conj(e->to_runtime_data());
     }
 
     return merge(expression::to_runtime_data(),

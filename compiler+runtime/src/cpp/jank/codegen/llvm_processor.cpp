@@ -14,9 +14,8 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/visit.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/rtti.hpp>

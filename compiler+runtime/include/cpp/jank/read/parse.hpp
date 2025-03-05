@@ -8,11 +8,6 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/var.hpp>
 
-namespace jank::runtime
-{
-  struct context;
-}
-
 /* TODO: Rename file to processor. */
 namespace jank::read::parse
 {

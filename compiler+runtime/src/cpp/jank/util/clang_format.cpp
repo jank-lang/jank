@@ -24,10 +24,10 @@ namespace jank::util
     auto const jank_path(process_location().unwrap().parent_path());
     auto path(jank_path / ".clang-format");
 
-    if(!boost::filesystem::exists(path))
+    if(!std::filesystem::exists(path))
     {
       path = jank_path / "../share/.clang-format";
-      if(!boost::filesystem::exists(path))
+      if(!std::filesystem::exists(path))
       {
         throw std::runtime_error{ "unable to find .clang-format" };
       }

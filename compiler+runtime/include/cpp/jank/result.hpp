@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <jank/option.hpp>
 #include <jank/util/type_name.hpp>
@@ -54,12 +54,12 @@ namespace jank
     static_assert(!std::same_as<R, E>, "Result and error type must be different.");
 
     constexpr result(detail::result<true, R> &&r)
-      : data{ std::move(r.data) }
+      : data{ R{ std::move(r.data) } }
     {
     }
 
     constexpr result(detail::result<false, E> &&e)
-      : data{ std::move(e.data) }
+      : data{ E{ std::move(e.data) } }
     {
     }
 
@@ -94,12 +94,12 @@ namespace jank
 
     constexpr native_bool is_ok() const
     {
-      return data.which() == 0;
+      return data.index() == 0;
     }
 
     constexpr native_bool is_err() const
     {
-      return data.which() == 1;
+      return data.index() == 1;
     }
 
     constexpr void assert_ok() const
@@ -115,61 +115,61 @@ namespace jank
     constexpr R const &expect_ok() const
     {
       assert_ok();
-      return boost::get<R>(data);
+      return std::get<R>(data);
     }
 
     constexpr R *expect_ok_ptr()
     {
       assert_ok();
-      return &boost::get<R>(data);
+      return &std::get<R>(data);
     }
 
     constexpr R const *expect_ok_ptr() const
     {
       assert_ok();
-      return &boost::get<R>(data);
+      return &std::get<R>(data);
     }
 
     constexpr R expect_ok_move()
     {
       assert_ok();
-      return std::move(boost::get<R>(data));
+      return std::move(std::get<R>(data));
     }
 
     constexpr option<R> ok()
     {
       if(is_ok())
       {
-        return some(boost::get<R>(data));
+        return some(std::get<R>(data));
       }
       return none;
     }
 
     constexpr E const &expect_err() const
     {
-      return boost::get<E>(data);
+      return std::get<E>(data);
     }
 
     constexpr E *expect_err_ptr()
     {
-      return &boost::get<E>(data);
+      return &std::get<E>(data);
     }
 
     constexpr E const *expect_err_ptr() const
     {
-      return &boost::get<E>(data);
+      return &std::get<E>(data);
     }
 
     constexpr E expect_err_move()
     {
-      return std::move(boost::get<E>(data));
+      return std::move(std::get<E>(data));
     }
 
     constexpr option<E> err()
     {
       if(is_err())
       {
-        return some(boost::get<E>(data));
+        return some(std::get<E>(data));
       }
       return none;
     }
@@ -182,14 +182,14 @@ namespace jank
       {
         throw expect_err();
       }
-      return std::move(boost::get<R>(data));
+      return std::move(std::get<R>(data));
     }
 
     constexpr R &unwrap_or(R &fallback)
     {
       if(is_ok())
       {
-        return boost::get<R>(data);
+        return std::get<R>(data);
       }
       return fallback;
     }
@@ -199,7 +199,7 @@ namespace jank
     {
       if(is_ok())
       {
-        return boost::get<R>(data);
+        return std::get<R>(data);
       }
       return std::move(fallback);
     }
@@ -216,15 +216,15 @@ namespace jank
 
     constexpr native_bool operator==(R const &rhs) const
     {
-      return data.which() == 0 && rhs == boost::get<R>(data);
+      return data.index() == 0 && rhs == std::get<R>(data);
     }
 
     constexpr native_bool operator==(E const &rhs) const
     {
-      return data.which() == 1 && rhs == boost::get<E>(data);
+      return data.index() == 1 && rhs == std::get<E>(data);
     }
 
-    boost::variant<R, E> data;
+    std::variant<R, E> data;
   };
 
   struct void_t
@@ -267,12 +267,12 @@ namespace jank
 
     constexpr native_bool is_ok() const
     {
-      return data.which() == 0;
+      return data.index() == 0;
     }
 
     constexpr native_bool is_err() const
     {
-      return data.which() == 1;
+      return data.index() == 1;
     }
 
     constexpr void assert_ok() const
@@ -292,29 +292,29 @@ namespace jank
 
     constexpr E const &expect_err() const
     {
-      return boost::get<E>(data);
+      return std::get<E>(data);
     }
 
     constexpr E *expect_err_ptr()
     {
-      return &boost::get<E>(data);
+      return &std::get<E>(data);
     }
 
     constexpr E const *expect_err_ptr() const
     {
-      return &boost::get<E>(data);
+      return &std::get<E>(data);
     }
 
     constexpr E expect_err_move()
     {
-      return std::move(boost::get<E>(data));
+      return std::move(std::get<E>(data));
     }
 
     constexpr option<E> err()
     {
       if(is_err())
       {
-        return some(boost::get<E>(data));
+        return some(std::get<E>(data));
       }
       return none;
     }
@@ -331,10 +331,10 @@ namespace jank
 
     constexpr native_bool operator==(E const &rhs) const
     {
-      return data.which() == 1 && rhs == boost::get<E>(data);
+      return data.index() == 1 && rhs == std::get<E>(data);
     }
 
-    boost::variant<void_t, E> data;
+    std::variant<void_t, E> data;
   };
 
   constexpr std::ostream &operator<<(std::ostream &os, void_t const &)
@@ -352,7 +352,7 @@ namespace jank
     {
       if constexpr(requires(R t) { os << t; })
       {
-        return os << "ok(" << boost::get<R>(r.data) << ")";
+        return os << "ok(" << std::get<R>(r.data) << ")";
       }
       else
       {
@@ -362,7 +362,7 @@ namespace jank
 
     if constexpr(requires(E t) { os << t; })
     {
-      return os << "err(" << boost::get<E>(r.data) << ")";
+      return os << "err(" << std::get<E>(r.data) << ")";
     }
     else
     {

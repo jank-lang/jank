@@ -18,13 +18,12 @@ namespace jank::analyze::expr
 
   object_ptr map::to_runtime_data() const
   {
-    object_ptr pair_maps(make_box<obj::persistent_vector>());
+    auto pair_maps(make_box<obj::persistent_vector>());
     for(auto const &e : data_exprs)
     {
-      pair_maps = conj(pair_maps,
-                       make_box<obj::persistent_vector>(std::in_place,
-                                                        e.first->to_runtime_data(),
-                                                        e.second->to_runtime_data()));
+      pair_maps = pair_maps->conj(make_box<obj::persistent_vector>(std::in_place,
+                                                                   e.first->to_runtime_data(),
+                                                                   e.second->to_runtime_data()));
     }
 
     return merge(expression::to_runtime_data(),

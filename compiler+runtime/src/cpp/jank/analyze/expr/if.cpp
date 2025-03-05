@@ -21,10 +21,7 @@ namespace jank::analyze::expr
   void if_::propagate_position(expression_position const pos)
   {
     position = pos;
-    if(then)
-    {
-      then->propagate_position(pos);
-    }
+    then->propagate_position(pos);
     if(else_.is_some())
     {
       else_.unwrap()->propagate_position(pos);

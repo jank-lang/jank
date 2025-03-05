@@ -428,7 +428,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<native_persistent_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
 
     if(character.is_none())
@@ -1200,7 +1200,7 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const b(boost::get<native_bool>(token.data));
+    auto const b(std::get<native_bool>(token.data));
     return object_source_info{ make_box<obj::boolean>(b), token, token };
   }
 
@@ -1208,7 +1208,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<native_persistent_string_view>(start_token.data));
     auto const slash(sv.find('/'));
     native_persistent_string ns, name;
     if(slash != native_persistent_string::npos)
@@ -1303,7 +1303,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<native_persistent_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     native_bool const resolved{ sv[0] != ':' };
@@ -1340,7 +1340,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(boost::get<native_integer>(token.data)),
+    return object_source_info{ make_box<obj::integer>(std::get<native_integer>(token.data)),
                                token,
                                token };
   }
@@ -1349,7 +1349,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const &ratio_data(boost::get<lex::ratio>(token.data));
+    auto const &ratio_data(std::get<lex::ratio>(token.data));
     if(ratio_data.denominator == 0)
     {
       return error::parse_invalid_ratio({ token.start, latest_token.end },
@@ -1375,7 +1375,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(boost::get<native_real>(token.data)),
+    return object_source_info{ make_box<obj::real>(std::get<native_real>(token.data)),
                                token,
                                token };
   }
@@ -1384,7 +1384,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<native_persistent_string_view>(token.data));
     return object_source_info{ make_box<obj::persistent_string>(
                                  native_persistent_string{ sv.data(), sv.size() }),
                                token,
@@ -1395,7 +1395,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(boost::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<native_persistent_string_view>(token.data));
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {

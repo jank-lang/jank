@@ -20,10 +20,10 @@ namespace jank::analyze::expr
 
   object_ptr named_recursion::to_runtime_data() const
   {
-    object_ptr arg_expr_maps(make_box<obj::persistent_vector>());
+    auto arg_expr_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arg_exprs)
     {
-      arg_expr_maps = conj(arg_expr_maps, e->to_runtime_data());
+      arg_expr_maps = arg_expr_maps->conj(e->to_runtime_data());
     }
 
     return merge(expression::to_runtime_data(),

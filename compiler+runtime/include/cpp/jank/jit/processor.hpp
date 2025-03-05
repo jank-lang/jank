@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 #include <memory>
 
 #include <clang/Interpreter/Interpreter.h>
@@ -57,6 +57,6 @@ namespace jank::jit
 
     std::unique_ptr<clang::Interpreter> interpreter;
     native_integer optimization_level{};
-    native_vector<boost::filesystem::path> library_dirs;
+    native_vector<std::filesystem::path> library_dirs;
   };
 }

@@ -17,6 +17,7 @@ namespace jank::analyze::expr
   object_ptr primitive_literal::to_runtime_data() const
   {
     using namespace runtime::obj;
+
     return merge(expression::to_runtime_data(),
                  persistent_array_map::create_unique(make_box("data"), data));
   }
