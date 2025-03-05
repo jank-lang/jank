@@ -954,16 +954,37 @@ namespace jank::analyze
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
 
+    size_t const form_count{ o->count() - 2 };
+    size_t i{};
+    for(auto const &item : o->data.rest().rest())
+    {
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? position : expression_position::statement);
+      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+
+      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
+      if(is_last)
+      {
+        ret->needs_box = res.expect_ok()->needs_box;
+      }
+
+      ret->body->values.emplace_back(res.expect_ok_move());
+    }
+
     using Graph = boost::adjacency_list<>;
     using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
     //using edge_t = boost::graph_traits<Graph>::edge_descriptor;
 
-    /* A directed graph where edge u->v occurs if and only if u closes over v,
-     * such as (letfn [(u [] v) (v [])]). */
+    /* A directed graph where edge u_i->v_j occurs if and only if u closes over v,
+     * such as (letfn [(u [] v) (v [])]) where i=0, j=1. */
     Graph bindings_dependency_graph(binding_parts / 2);
 
     /* A set of bindings that can be bound first in any order without additional initialization. */
-    std::set<runtime::obj::symbol> independent_bindings;
+    std::set<size_t> independent_bindings;
 
     for(size_t i{}; i < binding_parts; i += 2)
     {
@@ -996,12 +1017,12 @@ namespace jank::analyze
           if(captures.contains(sym))
           {
             is_independent = false;
-            add_edge(i, j, bindings_dependency_graph);
+            add_edge(i/2, j/2, bindings_dependency_graph);
           }
         }
         if(is_independent)
         {
-          independent_bindings.emplace(*sym);
+          independent_bindings.emplace(i/2);
         }
       }
       auto it(ret->pairs.emplace_back(sym, fexpr));
@@ -1018,35 +1039,32 @@ namespace jank::analyze
     std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
     auto vi_map = boost::make_assoc_property_map(index_map);
 
+    /* TODO Return a sorted let if topologically sorted, i.e., if num_scc == nbindings. */
     //int const num_scc =
-      strong_components(
-        bindings_dependency_graph,
-        make_iterator_property_map(component.begin(), vi_map),
-        boost::vertex_index_map(vi_map)
-        );
+    strong_components(
+      bindings_dependency_graph,
+      make_iterator_property_map(component.begin(), vi_map),
+      boost::vertex_index_map(vi_map)
+      );
 
-    size_t const form_count{ o->count() - 2 };
-    size_t i{};
-    for(auto const &item : o->data.rest().rest())
+    auto old_pairs(ret->pairs);
+    native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs{};
+    for(auto const i : independent_bindings)
     {
-      auto const is_last(++i == form_count);
-      auto const form_type(is_last ? position : expression_position::statement);
-      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
-      if(res.is_err())
-      {
-        return res.expect_err_move();
-      }
-
-      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
-      if(is_last)
-      {
-        ret->needs_box = res.expect_ok()->needs_box;
-      }
-
-      ret->body->values.emplace_back(res.expect_ok_move());
+      new_pairs.emplace_back(old_pairs[i]);
     }
-
-    /* TODO Return a let if topologically sortable. */
+    for(size_t insert_group{}; insert_group != component.size(); ++insert_group)
+    {
+      for(size_t c{}; c != component.size(); ++c)
+      {
+        auto const current_group(component[c]);
+        if(current_group == insert_group)
+        {
+          new_pairs.emplace_back(old_pairs[c]);
+        }
+      }
+    }
+    ret->pairs = new_pairs;
 
     return ret;
   }
