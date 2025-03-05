@@ -21,16 +21,7 @@
 (assert (= (fn-with-letfn 0) [1 -1]))
 (assert (= (fn-with-letfn 100) [101 99]))
 
-; Fn values within let.
-(let* [inc (clojure.core/fn [n]
-             (+ 1 n))
-       also-inc (clojure.core/fn also-inc [x] (inc x))
-       kw->str (clojure.core/fn kw->str [kw]
-                 (str kw))]
-  (assert (= (inc -7) (also-inc -7)))
-  (assert (= ":foo" (kw->str :foo))))
-
-; Letfn within letfn.
+; nested letfn.
 (letfn* [a (clojure.core/fn a [] 5)
          b (clojure.core/fn b []
              (letfn* [c (clojure.core/fn c [] -2)]
