@@ -556,15 +556,21 @@ namespace jank::runtime
     return o->type == object_type::volatile_;
   }
 
+  object_ptr vswap(object_ptr const v, object_ptr const fn)
+  {
+    auto const v_obj(try_object<obj::volatile_>(v));
+    return v_obj->reset(dynamic_call(fn, v_obj->deref()));
+  }
+
   object_ptr vswap(object_ptr const v, object_ptr const fn, object_ptr const args)
   {
-    auto const v_obj(expect_object<obj::volatile_>(v));
+    auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
   }
 
   object_ptr vreset(object_ptr const v, object_ptr const new_val)
   {
-    return expect_object<obj::volatile_>(v)->reset(new_val);
+    return try_object<obj::volatile_>(v)->reset(new_val);
   }
 
   void push_thread_bindings(object_ptr const o)
