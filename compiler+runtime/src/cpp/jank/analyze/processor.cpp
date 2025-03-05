@@ -58,10 +58,9 @@ namespace jank::analyze
     return f();
   }
 
-  static std::unique_ptr<util::scope_exit> push_macro_expansions(object_ptr const o)
+  static std::unique_ptr<util::scope_exit>
+  push_macro_expansions(processor &proc, object_ptr const o)
   {
-    fmt::println("pushing expansion for {}\n", to_code_string(o));
-
     auto const meta(runtime::meta(o));
     auto const source(runtime::get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
     auto const expansion(
@@ -69,33 +68,12 @@ namespace jank::analyze
 
     if(expansion == obj::nil::nil_const())
     {
-      /* TODO: Default ctor. */
-      //return { [] {} };
       return nullptr;
-
-      //auto const old_val(__rt_ctx->macro_expansions_var->deref());
-      ////fmt::println("pushing old val {}", to_code_string(old_val));
-      //__rt_ctx
-      //  ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-      //    std::make_pair(__rt_ctx->macro_expansions_var, old_val)))
-      //  .expect_ok();
-      //return;
     }
 
-    auto const old_val(__rt_ctx->macro_expansions_var->deref());
-    auto const new_val(runtime::conj(old_val, expansion));
-    fmt::println("\tpushing expansion {} to have {} expansions with meta {}\n",
-                 to_code_string(expansion),
-                 runtime::sequence_length(new_val),
-                 to_code_string(runtime::meta(expansion)));
+    proc.macro_expansions.push_back(expansion);
 
-    /* TODO: Faster to just use a local vector? */
-    __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(__rt_ctx->macro_expansions_var, new_val)))
-      .expect_ok();
-    return std::make_unique<util::scope_exit>(
-      [=]() { __rt_ctx->pop_thread_bindings().expect_ok(); });
+    return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_front(); });
   }
 
   processor::processor(runtime::context &rt_ctx)
@@ -161,7 +139,7 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(l) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, l) };
 
     auto const length(l->count());
     if(length < 2)
@@ -177,9 +155,8 @@ namespace jank::analyze
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj->type != runtime::object_type::symbol)
     {
-      fmt::println("macro expansions {}",
-                   runtime::to_code_string(__rt_ctx->macro_expansions_var->deref()));
       return error::analysis_invalid_def(
+        macro_expansions,
         "The var name in a 'def' must be a symbol",
         fallback_source(object_source(sym_obj), [=] { return read::parse::reparse_nth(l, 1); }),
         "A symbol is needed for the name here");
@@ -250,7 +227,7 @@ namespace jank::analyze
                                                        option<expr::function_context_ptr> const &fc,
                                                        native_bool const needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(auto const length(o->count()); length != 6)
     {
@@ -369,7 +346,7 @@ namespace jank::analyze
                                                          option<expr::function_context_ptr> const &,
                                                          native_bool needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(sym) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
 
     assert(!sym->to_string().empty());
 
@@ -584,7 +561,7 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &,
                         native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(full_list) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, full_list) };
 
     auto const length(full_list->count());
     if(length < 2)
@@ -751,7 +728,7 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(list) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
     if(fn_ctx.is_none())
     {
@@ -811,7 +788,7 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool const needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(list) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
     expr::do_ ret{ position, current_frame, true, {} };
     size_t const form_count{ list->count() - 1 };
@@ -848,7 +825,7 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(o->count() < 2)
     {
@@ -938,7 +915,7 @@ namespace jank::analyze
                           option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(o->count() < 2)
     {
@@ -1050,7 +1027,7 @@ namespace jank::analyze
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
      * so we're unable to unbox them. */
@@ -1112,7 +1089,7 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(o->count() != 2)
     {
@@ -1134,7 +1111,7 @@ namespace jank::analyze
                               option<expr::function_context_ptr> const &,
                               native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(o->count() != 2)
     {
@@ -1174,7 +1151,7 @@ namespace jank::analyze
                              option<expr::function_context_ptr> const &,
                              native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     auto const qualified_sym(
       current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
@@ -1188,7 +1165,7 @@ namespace jank::analyze
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     if(o->count() != 2)
     {
@@ -1212,7 +1189,7 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(list) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
     auto try_frame(
       make_box<local_frame>(local_frame::frame_type::try_, current_frame->rt_ctx, current_frame));
@@ -1402,7 +1379,7 @@ namespace jank::analyze
                                        option<expr::function_context_ptr> const &,
                                        native_bool const needs_box)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     current_frame->lift_constant(o);
     return make_box<expr::primitive_literal>(position, current_frame, needs_box, o);
@@ -1416,7 +1393,7 @@ namespace jank::analyze
                             option<expr::function_context_ptr> const &fn_ctx,
                             native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     native_vector<expression_ptr> exprs;
     exprs.reserve(o->count());
@@ -1458,7 +1435,7 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
@@ -1511,7 +1488,7 @@ namespace jank::analyze
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(o) };
+    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     return visit_set_like(
       [&](auto const typed_o) -> processor::expression_result {
@@ -1583,7 +1560,7 @@ namespace jank::analyze
         return found_special->second(o, current_frame, position, fn_ctx, needs_box);
       }
 
-      pop_macro_expansions = push_macro_expansions(o);
+      pop_macro_expansions = push_macro_expansions(*this, o);
 
       auto sym_result(analyze_symbol(sym, current_frame, expression_position::value, fn_ctx, true));
       if(sym_result.is_err())
@@ -1643,7 +1620,7 @@ namespace jank::analyze
     }
     else
     {
-      pop_macro_expansions = push_macro_expansions(o);
+      pop_macro_expansions = push_macro_expansions(*this, o);
 
       auto callable_expr(
         analyze(first, current_frame, expression_position::value, fn_ctx, needs_box));

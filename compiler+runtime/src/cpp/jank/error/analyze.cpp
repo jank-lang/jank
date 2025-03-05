@@ -22,29 +22,21 @@ namespace jank::error
     return make_error(kind::analysis_invalid_def, message, source, "Found here");
   }
 
-  error_ptr analysis_invalid_def(native_persistent_string const &message,
+  error_ptr analysis_invalid_def(native_deque<runtime::object_ptr> macro_expansions,
+                                 native_persistent_string const &message,
                                  read::source const &source,
                                  native_persistent_string const &note)
   {
-    native_vector<runtime::object_ptr> expansions;
-    auto const stack(runtime::try_object<runtime::obj::persistent_vector>(
-      runtime::__rt_ctx->macro_expansions_var->deref()));
-    runtime::object_ptr last_expansion{};
-    for(auto const expansion : stack->data)
+    if(!macro_expansions.empty())
     {
-      expansions.push_back(expansion);
-      last_expansion = expansion;
-    }
-    if(last_expansion)
-    {
-      auto const &source{ runtime::object_source(last_expansion) };
+      auto const &source{ runtime::object_source(macro_expansions.front()) };
       if(source != read::source::unknown)
       {
-        expansions.push_back(source.macro_expansion);
+        macro_expansions.push_front(source.macro_expansion);
       }
     }
 
-    return make_error(kind::analysis_invalid_def, message, source, note, expansions);
+    return make_error(kind::analysis_invalid_def, message, source, note, macro_expansions);
   }
 
   error_ptr analysis_invalid_fn(native_persistent_string const &message, read::source const &source)

@@ -8,7 +8,8 @@ namespace jank::error
   analysis_invalid_case(native_persistent_string const &message, read::source const &source);
   error_ptr
   analysis_invalid_def(native_persistent_string const &message, read::source const &source);
-  error_ptr analysis_invalid_def(native_persistent_string const &message,
+  error_ptr analysis_invalid_def(native_deque<runtime::object_ptr> macro_expansions,
+                                 native_persistent_string const &message,
                                  read::source const &source,
                                  native_persistent_string const &note);
   error_ptr

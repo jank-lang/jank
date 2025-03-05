@@ -187,7 +187,7 @@ namespace jank::error
              native_persistent_string const &message,
              read::source const &source,
              native_persistent_string const &note_message,
-             native_vector<runtime::object_ptr> const &expansions)
+             native_deque<runtime::object_ptr> const &expansions)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -304,7 +304,7 @@ namespace jank
                        native_persistent_string const &message,
                        read::source const &source,
                        native_persistent_string const &error_note_message,
-                       native_vector<runtime::object_ptr> const &expansions)
+                       native_deque<runtime::object_ptr> const &expansions)
   {
     return runtime::make_box<error::base>(kind, message, source, error_note_message, expansions);
   }

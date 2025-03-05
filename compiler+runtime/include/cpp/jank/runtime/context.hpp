@@ -153,7 +153,6 @@ namespace jank::runtime
     var_ptr assert_var{};
     var_ptr no_recur_var{};
     var_ptr gensym_env_var{};
-    var_ptr macro_expansions_var{};
 
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;

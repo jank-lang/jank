@@ -97,30 +97,11 @@ namespace jank::error
       add(n);
     }
 
-    //auto const expansions(runtime::try_object<runtime::obj::persistent_vector>(
-    //  runtime::__rt_ctx->macro_expansions_var->deref()));
-    //fmt::println("expansions {}", to_code_string(expansions));
-    //object_ptr last_expansion{ runtime::obj::nil::nil_const() };
-    //for(auto const expansion : expansions->data)
-    //{
-    //  auto const &source{ runtime::object_source(expansion) };
-    //  fmt::println("adding stacked expansion note for expansion {} with source {}",
-    //               to_code_string(expansion),
-    //               source.file_path);
-    //  add(note{ "Expanded here", source, note::kind::info });
-    //  last_expansion = expansion;
-    //}
-
-    /* TODO: Reverse them and add count. */
-    std::reverse(e->expansions.begin(), e->expansions.end());
     for(size_t i{}; i < e->expansions.size(); ++i)
     {
       auto const expansion{ e->expansions[i] };
       auto source{ runtime::object_source(expansion) };
       source.end = source.start;
-      fmt::println("adding expansion note for expansion {} with source {}",
-                   to_code_string(expansion),
-                   source.file_path);
       add(note{ fmt::format("{} expansion here", util::number_to_ordinal(i)),
                 source,
                 note::kind::info });
