@@ -581,7 +581,6 @@ namespace jank::codegen
     return gen_function(expr, fn_arity, defer_init);
   }
 
-
   llvm::Value *llvm_processor::gen(expr::recur_ptr const expr, expr::function_arity const &arity)
   {
     /* The codegen for the special recur form is very similar to the named recursion
