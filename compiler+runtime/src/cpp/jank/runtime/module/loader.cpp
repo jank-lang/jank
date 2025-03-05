@@ -1,10 +1,8 @@
-#include <boost/filesystem/operations.hpp>
+#include <filesystem>
 #include <regex>
 #include <iostream>
 
 #include <libzippp.h>
-
-#include <boost/filesystem.hpp>
 
 #include <fmt/format.h>
 
@@ -28,12 +26,12 @@
 namespace jank::runtime::module
 {
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
-  native_persistent_string path_to_module(boost::filesystem::path const &path)
+  native_persistent_string path_to_module(std::filesystem::path const &path)
   {
     static std::regex const slash{ "/" };
 
     auto const &s(runtime::demunge(path.string()));
-    std::string ret{ s, 0, s.size() - path.extension().size() };
+    std::string ret{ s, 0, s.size() - path.extension().string().size() };
 
     /* There's a special case of the / function which shouldn't be treated as a path. */
     if(ret.find("$/") == std::string::npos)
@@ -146,10 +144,10 @@ namespace jank::runtime::module
   }
 
   static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                             boost::filesystem::path const &module_path,
+                             std::filesystem::path const &module_path,
                              file_entry const &entry)
   {
-    boost::filesystem::path const p{ native_transient_string{ entry.path } };
+    std::filesystem::path const p{ native_transient_string{ entry.path } };
     auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
@@ -209,10 +207,10 @@ namespace jank::runtime::module
 
   static void
   register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                          boost::filesystem::path const &resource_path,
+                          std::filesystem::path const &resource_path,
                           file_entry const &entry)
   {
-    boost::filesystem::path const p{ native_transient_string{ entry.path } };
+    std::filesystem::path const p{ native_transient_string{ entry.path } };
     /* We need the file path relative to the module path, since the class
      * path portion is not included in part of the module name. For example,
      * the file may live in `src/jank/clojure/core.jank` but the module
@@ -223,11 +221,11 @@ namespace jank::runtime::module
 
   static void
   register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                     boost::filesystem::path const &path)
+                     std::filesystem::path const &path)
   {
-    for(auto const &f : boost::filesystem::recursive_directory_iterator{ path })
+    for(auto const &f : std::filesystem::recursive_directory_iterator{ path })
     {
-      if(boost::filesystem::is_regular_file(f))
+      if(std::filesystem::is_regular_file(f))
       {
         register_relative_entry(entries, path, file_entry{ none, f.path().string() });
       }
@@ -261,13 +259,13 @@ namespace jank::runtime::module
   {
     /* It's entirely possible to have empty entries in the module path, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
-    if(path.empty() || !boost::filesystem::exists(path))
+    if(path.empty() || !std::filesystem::exists(path))
     {
       return;
     }
 
-    boost::filesystem::path const p{ boost::filesystem::canonical(path).lexically_normal() };
-    if(boost::filesystem::is_directory(p))
+    std::filesystem::path const p{ std::filesystem::canonical(path).lexically_normal() };
+    if(std::filesystem::is_directory(p))
     {
       register_directory(entries, p);
     }
@@ -332,7 +330,7 @@ namespace jank::runtime::module
   native_bool file_entry::exists() const
   {
     auto const is_archive{ archive_path.is_some() };
-    if(is_archive && !boost::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
+    if(is_archive && !std::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
     {
       return false;
     }
@@ -344,14 +342,16 @@ namespace jank::runtime::module
         visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
       }
 
-      return source_exists || boost::filesystem::exists(native_transient_string{ path });
+      return source_exists || std::filesystem::exists(native_transient_string{ path });
     }
   }
 
   std::time_t file_entry::last_modified_at() const
   {
     auto const source_path{ archive_path.unwrap_or(path) };
-    return boost::filesystem::last_write_time(native_transient_string{ source_path });
+    return std::filesystem::last_write_time(native_transient_string{ source_path })
+      .time_since_epoch()
+      .count();
   }
 
   string_result<loader::find_result>
@@ -363,7 +363,7 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(fmt::format("unable to find module: {}", module));
+      return err(native_persistent_string{ fmt::format("unable to find module: {}", module) });
     }
 
     if(ori == origin::source)
@@ -414,7 +414,8 @@ namespace jank::runtime::module
             fmt::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
         }
 
-        if(boost::filesystem::last_write_time(o_file_path) >= source_modified_time)
+        if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
+           >= source_modified_time)
         {
           return find_result{ entry->second, module_type::o };
         }

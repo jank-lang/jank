@@ -1,7 +1,8 @@
 #!/usr/bin/env bb
 
 (ns jank.check-everything
-  (:require [jank.compiler+runtime.core]
+  (:require [babashka.fs :as b.f]
+            [jank.compiler+runtime.core]
             [jank.clojure-cli.core]
             [jank.lein-jank.core]
             [jank.summary :as summary]
@@ -16,53 +17,52 @@
   (util/log-info "JANK_ANALYZE: " (System/getenv "JANK_ANALYZE"))
   (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE")))
 
-(def os->deps-cmd {"Linux" "sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev libboost-all-dev gcc g++ libgc-dev"
+; Most Linux deps are installed by a Github action. We need to manually install
+; boost for some reason. Otherwise, its headers aren't found by clang.
+(def os->deps-cmd {"Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
 
-                   "Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2 llvm@19"})
-
-; TODO: Cache these deps using https://github.com/actions/cache/
-; Maybe follow this sort of thing: https://github.com/gerlero/apt-install/blob/main/action.yml
 (defmulti install-deps
-  (fn []
+  (fn [_props]
     (System/getProperty "os.name")))
 
-(defmethod install-deps "Linux" []
-  (let [apt? (try
-               (util/quiet-shell {} "which apt-get")
-               true
-               (catch Exception _e
-                 false))]
-    (if-not apt?
-      (util/log-warning "Skipping dependency install, since we don't have apt-get")
-      (do
-        ; Install deps required for running our tests.
-        (util/quiet-shell {} "sudo apt-get update -y")
-        (util/quiet-shell {} "sudo apt-get install -y default-jdk software-properties-common lsb-release npm lcov leiningen")
-        ; TODO: Enable once we're linting Clojure/jank again.
-        ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
+(defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
+  ; TODO: Cache this shit.
+  (when (= "on" (util/get-env "JANK_ANALYZE"))
+    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
+    (util/quiet-shell {} "chmod +x clang-tidy-cache")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
+    (spit "clang-tidy-cache-wrapper"
+          "#!/bin/bash
+           clang-tidy-cache clang-tidy \"${@}\"")
+    (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
 
-        ; Install jank's build deps.
-        (util/quiet-shell {} (os->deps-cmd "Linux"))
+  ; TODO: Enable once we're linting Clojure/jank again.
+  ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
 
-        ; Install Clang/LLVM.
-        (util/quiet-shell {} "curl -L -O https://apt.llvm.org/llvm.sh")
-        (util/quiet-shell {} "chmod +x llvm.sh")
-        (util/quiet-shell {} (str "sudo ./llvm.sh " util/llvm-version " all"))
-        ; The libc++abi headers conflict with the system headers:
-        ; https://github.com/llvm/llvm-project/issues/121300
-        (util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
+  ; Install Clang/LLVM.
+  (util/quiet-shell {} "curl -L -O https://apt.llvm.org/llvm.sh")
+  (util/quiet-shell {} "chmod +x llvm.sh")
+  (util/quiet-shell {} (str "sudo ./llvm.sh " util/llvm-version " all"))
+  ; The libc++abi headers conflict with the system headers:
+  ; https://github.com/llvm/llvm-project/issues/121300
+  (util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
 
-        ; Install the new Clojure CLI.
-        (util/quiet-shell {} "curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh")
-        (util/quiet-shell {} "chmod +x linux-install.sh")
-        (util/quiet-shell {} "sudo ./linux-install.sh")))))
+  ; Install the new Clojure CLI.
+  (util/quiet-shell {} "curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh")
+  (util/quiet-shell {} "chmod +x linux-install.sh")
+  (util/quiet-shell {} "sudo ./linux-install.sh"))
 
-(defmethod install-deps "Mac OS X" []
+(defmethod install-deps "Mac OS X" [_props]
   (util/quiet-shell {:extra-env {"HOMEBREW_NO_AUTO_UPDATE" "1"}}
-                    (os->deps-cmd "Mac OS X")))
+                    (os->deps-cmd "Mac OS X"))
+
+  ; TODO: This is missing some of the other things above.
+  )
 
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime
-                     clojure-cli lein-jank]}]
+                     clojure-cli lein-jank]
+              :as props}]
   (summary/initialize)
 
   (util/log-boundary "Show environment")
@@ -72,7 +72,7 @@
   (if-not install-deps?
     (util/log-info "Not enabled")
     (util/with-elapsed-time duration
-      (install-deps)
+      (install-deps props)
       (util/log-info-with-time duration "Dependencies installed")))
 
   (jank.compiler+runtime.core/-main {:validate-formatting? validate-formatting?

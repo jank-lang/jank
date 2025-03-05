@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <utility> // move, forward
-#include <type_traits>
 
 #include <jank/type.hpp>
 
@@ -52,17 +51,16 @@ namespace jank
     }
 
     template <typename D = T>
-    constexpr option(D &&d,
-                     std::enable_if_t<std::is_constructible_v<T, D>
-                                      && !std::is_same_v<std::decay_t<D>, option<T>>> * = nullptr)
+    requires(std::is_constructible_v<T, D> && !std::is_same_v<std::decay_t<D>, option<T>>)
+    constexpr option(D &&d)
       : set{ true }
     {
       new(reinterpret_cast<T *>(data)) T{ std::forward<D>(d) };
     }
 
     template <typename D>
-    constexpr option(option<D> const &o,
-                     std::enable_if_t<std::is_constructible_v<T, D>> * = nullptr)
+    requires(std::is_constructible_v<T, D>)
+    constexpr option(option<D> const &o)
       : set{ o.set }
     {
       if(set)

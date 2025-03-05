@@ -295,10 +295,10 @@ namespace jank::runtime
   context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
   {
     profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
-    boost::filesystem::path const module_path{
+    std::filesystem::path const module_path{
       fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
     };
-    boost::filesystem::create_directories(module_path.parent_path());
+    std::filesystem::create_directories(module_path.parent_path());
 
     /* TODO: Is there a better place for this block of code? */
     std::error_code file_error{};

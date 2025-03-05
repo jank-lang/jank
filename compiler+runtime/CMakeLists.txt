@@ -163,6 +163,7 @@ add_library(
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
+  src/cpp/jank/util/string.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -286,6 +287,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
@@ -302,7 +304,6 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
 find_package(BDWgc REQUIRED)
 
 target_link_libraries(
@@ -314,7 +315,6 @@ target_link_libraries(
   clang
   clang-cpp
   LLVM
-  Boost::filesystem
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )
@@ -453,7 +453,6 @@ target_link_libraries(
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
-  Boost::filesystem
 )
 
 jank_hook_llvm(jank_exe)
@@ -503,7 +502,6 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
-    Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)

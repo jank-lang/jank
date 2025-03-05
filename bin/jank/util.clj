@@ -69,10 +69,10 @@
       (do
         (log-error "Failed to run command " cmd)
         (println (:out proc))
-        (summary/shell false cmd (:out proc))
+        (summary/shell false props cmd (:out proc))
         (System/exit 1))
       (do
-        (summary/shell true cmd (:out proc))
+        (summary/shell true props cmd (:out proc))
         proc))))
 
 (defmacro with-elapsed-time

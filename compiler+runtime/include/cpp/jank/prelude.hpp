@@ -2,7 +2,7 @@
 
 #include <random>
 #include <chrono>
-//#include <cassert>
+#include <unordered_map>
 
 #include <gc/gc.h>
 #include <gc/gc_cpp.h>
@@ -11,8 +11,6 @@
 #include <immer/heap/gc_heap.hpp>
 #include <immer/heap/heap_policy.hpp>
 #include <immer/memory_policy.hpp>
-
-#include <boost/unordered_map.hpp>
 
 #include <nanobench.h>
 
