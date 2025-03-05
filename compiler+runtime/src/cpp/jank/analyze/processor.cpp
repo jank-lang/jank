@@ -899,22 +899,23 @@ namespace jank::analyze
 
     /* Optimize to a let when there are insufficient bindings to achieve mutual recursion,
      * thus letting us skip more expensive analysis. */
-    //switch(binding_parts)
-    //{
-    //  case 0:
-    //  case 2:
-    //    auto const &sym_obj(bindings->data[0]);
-    //    if(sym_obj->type != runtime::object_type::symbol)
-    //    {
-    //      return error::analysis_invalid_letfn(
-    //        "The left hand side of a 'letfn*' binding must be a symbol",
-    //        meta_source(sym_obj));
-    //    }
-    //    /* TODO Permits right hand side to be a non-function. Semantically ok but inconsistent.
-    //     * Could do something simple like assert bindings->data[1] is a seq
-    //     * starting with clojure.core/fn. */
-    //    return analyze_let(o, current_frame, position, fn_ctx, needs_box);
-    //}
+    switch(binding_parts)
+    {
+      case 0:
+        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
+      case 2:
+        auto const &sym_obj(bindings->data[0]);
+        if(sym_obj->type != runtime::object_type::symbol)
+        {
+          return error::analysis_invalid_letfn(
+            "The left hand side of a 'letfn*' binding must be a symbol",
+            meta_source(sym_obj));
+        }
+        /* TODO Permits right hand side to be a non-function. Semantically ok but inconsistent.
+         * Could do something simple like assert bindings->data[1] is a seq
+         * starting with clojure.core/fn. */
+        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
+    }
 
     auto frame{
       make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
@@ -1053,6 +1054,9 @@ namespace jank::analyze
     {
       new_pairs.emplace_back(old_pairs[i]);
     }
+    /* component is a vector where component[i] is the strongly connected group id
+     * of ret->pairs[i]. 
+     * TODO what is the best insertion order? */
     for(size_t insert_group{}; insert_group != component.size(); ++insert_group)
     {
       for(size_t c{}; c != component.size(); ++c)
