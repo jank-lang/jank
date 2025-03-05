@@ -984,9 +984,6 @@ namespace jank::analyze
      * such as (letfn [(u [] v) (v [])]) where i=0, j=1. */
     Graph bindings_dependency_graph(binding_parts / 2);
 
-    /* A set of bindings that can be bound first in any order without additional initialization. */
-    std::set<size_t> independent_bindings;
-
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
@@ -1004,26 +1001,22 @@ namespace jank::analyze
                                              meta_source(val));
       }
       auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
-      /* Populate independent_bindings and G in service of reordering bindings to minimize init code. */
+      /* Populate bindings_dependency_graph in service of reordering bindings to minimize init code. */
       {
         auto captures(fexpr->captures());
-        native_bool is_independent{true};
         for(size_t j{}; j < binding_parts; j += 2)
         {
           if(i == j)
           {
-            continue;
+            /* Add self-loop to represent vertex.
+             * TODO use add_vertex. */
+            add_edge(i/2, i/2, bindings_dependency_graph);
           }
           auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
           if(captures.contains(sym))
           {
-            is_independent = false;
             add_edge(i/2, j/2, bindings_dependency_graph);
           }
-        }
-        if(is_independent)
-        {
-          independent_bindings.emplace(i/2);
         }
       }
       auto it(ret->pairs.emplace_back(sym, fexpr));
@@ -1049,11 +1042,8 @@ namespace jank::analyze
       );
 
     auto old_pairs(ret->pairs);
+    //TODO initialize to correct length
     native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs{};
-    for(auto const i : independent_bindings)
-    {
-      new_pairs.emplace_back(old_pairs[i]);
-    }
     /* component is a vector where component[i] is the strongly connected group id
      * of ret->pairs[i]. 
      * TODO what is the best insertion order? */
@@ -1068,6 +1058,8 @@ namespace jank::analyze
         }
       }
     }
+    assert(new_pairs.size() == old_pairs.size());
+    // FIXME doesn't do anything, (jc/native-source '(letfn [(c [] d) (d [])])) still defines c first
     ret->pairs = new_pairs;
 
     return ret;
