@@ -927,6 +927,7 @@ namespace jank::analyze
       needs_box,
       make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
 
+    /* Populate frame with empty local bindings before analyzing right hand sides. */
     std::set<runtime::obj::symbol> unique_bindings;
     for(size_t i{}; i < binding_parts; i += 2)
     {
@@ -956,29 +957,24 @@ namespace jank::analyze
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
 
-    size_t const form_count{ o->count() - 2 };
-    size_t i{};
-    for(auto const &item : o->data.rest().rest())
-    {
-      auto const is_last(++i == form_count);
-      auto const form_type(is_last ? position : expression_position::statement);
-      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
-      if(res.is_err())
-      {
-        return res.expect_err_move();
-      }
-
-      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
-      if(is_last)
-      {
-        ret->needs_box = res.expect_ok()->needs_box;
-      }
-
-      ret->body->values.emplace_back(res.expect_ok_move());
-    }
-
-    /* A directed graph where edge u->v occurs if and only if u closes over v,
-     * such as u->v in (letfn [(u [] v) (v [])]). */
+    /* Mutually recursive letfn bindings require deferred intialization.
+     * For example, (letfn [(u [] v) (v [] u)]) requires that both u and v are created
+     * before setting their contexts to refer to each other.
+     * Bindings that are just forward declared can be rearranged to avoid needing
+     * deferred initialization. For example (letfn [(u [] v) (v [])]) can be
+     * rearranged to (letfn [(v []) (u [] v)]). This allows more optimization opportunies.
+     * Mixed scenarios are also possible, like (letfn [(b [] c) (c [] (b a)) (a [])]),
+     * which has two strongly connected components a and b+c. Placing a before c saves
+     * one deferred initialization of c's context with a.
+     *
+     * To rearrange bindings, we compile a directed graph of their interdependencies.
+     * A strongly connected components algorithm then yields an optimal ordering
+     * that minimizes deferred initialization.
+     *
+     * We represent our directed graph using vertices that index ret->pairs
+     * (the original order of letfn bindings), where edge i->j occurs if and only if
+     * binding ret->pairs[i] closes over ret->pairs[j]. For example,
+     * (letfn [(b [] c) (c [] (b a)) (a [])]) has edges 0->1, 1->0, and 1->2.*/
     boost::adjacency_list<> bindings_dependency_graph(nbindings);
 
     for(size_t i{}; i < binding_parts; i += 2)
@@ -1019,17 +1015,20 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
-    /* component is a vector where component[i] is the strongly connected group id of ret->pairs[i]. */
     std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
     size_t const num_groups = strong_components( bindings_dependency_graph, &component[0]);
 
+    /* Reorder letfn bindings to minimize deferred initialization. */
     auto old_pairs(ret->pairs);
     native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs;
     new_pairs.reserve(old_pairs.size());
+    /* Groups are ordered topologically, starting with the most depended on bindings.
+     * Binding them first reduces the likelihood of needing deferred initialization.*/
     for(size_t insert_group{}; insert_group < num_groups; ++insert_group)
     {
       for(size_t c{}; c < nbindings; ++c)
       {
+        /* component[c] is the strongly connected group id of old_pairs[c]. */
         auto const current_group(component[c]);
         if(current_group == insert_group)
         {
@@ -1040,6 +1039,28 @@ namespace jank::analyze
     }
     assert(new_pairs.size() == old_pairs.size());
     ret->pairs = new_pairs;
+
+    /* Analyze body. */
+    size_t const form_count{ o->count() - 2 };
+    size_t i{};
+    for(auto const &item : o->data.rest().rest())
+    {
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? position : expression_position::statement);
+      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+
+      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
+      if(is_last)
+      {
+        ret->needs_box = res.expect_ok()->needs_box;
+      }
+
+      ret->body->values.emplace_back(res.expect_ok_move());
+    }
 
     return ret;
   }
