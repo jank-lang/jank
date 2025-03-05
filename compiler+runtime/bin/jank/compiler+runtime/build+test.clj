@@ -23,15 +23,13 @@
                           "CCACHE_DIR" (str compiler+runtime-dir "/.ccache")
                           "CCACHE_COMPRESS" "true"
                           "CCACHE_MAXSIZE" "1G"
-                          "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")
-                          "CTCACHE_DEBUG" "1"})
+                          "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")})
           configure-flags ["-GNinja"
                            "-Djank_tests=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
-                           (str "-Djank_coverage=" coverage)
-                           (str "-DCMAKE_CXX_FLAGS='-DBOOST_NO_USER_CONFIG'")]
+                           (str "-Djank_coverage=" coverage)]
           configure-flags (cond-> configure-flags
                             (not= "on" analyze)
                             (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"

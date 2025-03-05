@@ -287,6 +287,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
@@ -303,7 +304,6 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost CONFIG REQUIRED)
 find_package(BDWgc REQUIRED)
 
 target_link_libraries(
