@@ -1,8 +1,9 @@
+#include <filesystem>
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
 
 #include <fmt/color.h>
 
@@ -29,7 +30,7 @@ namespace jank::jit
 
   struct failure
   {
-    boost::filesystem::path path;
+    std::filesystem::path path;
     native_persistent_string error;
   };
 
@@ -68,9 +69,9 @@ namespace jank::jit
       //diags.setSuppressAllDiagnostics(true);
       //__rt_ctx->jit_prc.interpreter->getCompilerInstance()->setDiagnostics(&diags);
 
-      for(auto const &dir_entry : boost::filesystem::recursive_directory_iterator("test/jank"))
+      for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
-        if(!boost::filesystem::is_regular_file(dir_entry.path()))
+        if(!std::filesystem::is_regular_file(dir_entry.path()))
         {
           continue;
         }

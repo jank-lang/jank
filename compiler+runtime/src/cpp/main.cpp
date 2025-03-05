@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <llvm-c/Target.h>
@@ -150,8 +150,10 @@ namespace jank
     /* We write every REPL expression to a temporary file, which then allows us
      * to later review that for error reporting. We automatically clean it up
      * and we reuse the same file over and over. */
-    auto const tmp{ boost::filesystem::temp_directory_path() };
-    auto const path{ tmp / boost::filesystem::unique_path("jank-repl-%%%%.jank") };
+    auto const tmp{ std::filesystem::temp_directory_path() };
+    std::string path_tmp{ "jank-repl-XXXXXX" };
+    mkstemp(path_tmp.data());
+    auto const path{ tmp / path_tmp };
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
@@ -170,7 +172,7 @@ namespace jank
 
       input += line;
 
-      util::scope_exit const finally{ [&] { boost::filesystem::remove(path); } };
+      util::scope_exit const finally{ [&] { std::filesystem::remove(path); } };
       try
       {
         {
