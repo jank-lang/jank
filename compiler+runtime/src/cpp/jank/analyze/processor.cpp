@@ -968,7 +968,7 @@ namespace jank::analyze
      * before setting their contexts to refer to each other.
      * Bindings that are just forward declared can be rearranged to avoid needing
      * deferred initialization. For example (letfn [(u [] v) (v [])]) can be
-     * rearranged to (letfn [(v []) (u [] v)]). This allows more optimization opportunies.
+     * rearranged to (letfn [(v []) (u [] v)]).
      * Mixed scenarios are also possible, like (letfn [(b [] c) (c [] (b a)) (a [])]),
      * which has two strongly connected components a and b+c. Placing a before c saves
      * one deferred initialization of c's context with a.

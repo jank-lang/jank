@@ -787,8 +787,14 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
+    /* Mutually recursive letfn bindings must defer some initialization.
+     * The defer_init function registers thunks will be called to generate deferred initialization
+     * code after binding functions have been generated. Analysis reorders bindings such that only
+     * truly mutually recursive locals require deferred initialization. This means the cost of
+     * std::function calls and building C++ closures as callbacks are only paid in this rare case. */
     std::list<std::function<void()>> deferred_inits{};
     auto const defer_init([&](std::function<void()> f) -> void { deferred_inits.push_back(f); });
+
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
