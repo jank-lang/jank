@@ -1033,7 +1033,8 @@ namespace jank::analyze
     auto old_pairs(ret->pairs);
     decltype(old_pairs) new_pairs;
     new_pairs.reserve(old_pairs.size());
-    /* Groups are ordered topologically, starting with the most depended on bindings.
+    /* If group i comes before group j, then it seems like group i never depends on group j or later.
+     * TODO verify this ^
      * Binding from most to least depended on can reduce the need for deferred initialization. */
     for(size_t insert_group{}; insert_group < num_groups; ++insert_group)
     {
