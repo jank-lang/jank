@@ -104,8 +104,8 @@ namespace jank::analyze
   {
     using runtime::obj::symbol;
     auto const make_fn = [this](auto const fn) -> decltype(specials)::mapped_type {
-      return [this, fn](auto const &list,
-                        auto &current_frame,
+      return [this, fn](auto const list,
+                        auto const current_frame,
                         auto const position,
                         auto const &fn_ctx,
                         auto const needs_box) {
@@ -156,8 +156,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_def(runtime::obj::persistent_list_ptr const &l,
-                         local_frame_ptr &current_frame,
+  processor::analyze_def(runtime::obj::persistent_list_ptr const l,
+                         local_frame_ptr const current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
@@ -253,8 +253,8 @@ namespace jank::analyze
     return make_box<expr::def>(position, current_frame, true, qualified_sym, value_expr);
   }
 
-  processor::expression_result processor::analyze_case(obj::persistent_list_ptr const &o,
-                                                       local_frame_ptr &f,
+  processor::expression_result processor::analyze_case(obj::persistent_list_ptr const o,
+                                                       local_frame_ptr const f,
                                                        expression_position const position,
                                                        option<expr::function_context_ptr> const &fc,
                                                        native_bool const needs_box)
@@ -389,8 +389,8 @@ namespace jank::analyze
                                  std::move(pairs.exprs));
   }
 
-  processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const &sym,
-                                                         local_frame_ptr &current_frame,
+  processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const sym,
+                                                         local_frame_ptr const current_frame,
                                                          expression_position const position,
                                                          option<expr::function_context_ptr> const &,
                                                          native_bool needs_box)
@@ -476,9 +476,9 @@ namespace jank::analyze
   }
 
   result<expr::function_arity, error_ptr>
-  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const &list,
+  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const list,
                               native_persistent_string const &name,
-                              local_frame_ptr &current_frame)
+                              local_frame_ptr const current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
@@ -612,8 +612,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_fn(runtime::obj::persistent_list_ptr const &full_list,
-                        local_frame_ptr &current_frame,
+  processor::analyze_fn(runtime::obj::persistent_list_ptr const full_list,
+                        local_frame_ptr const current_frame,
                         expression_position const position,
                         option<expr::function_context_ptr> const &,
                         native_bool const)
@@ -785,8 +785,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_recur(runtime::obj::persistent_list_ptr const &list,
-                           local_frame_ptr &current_frame,
+  processor::analyze_recur(runtime::obj::persistent_list_ptr const list,
+                           local_frame_ptr const current_frame,
                            expression_position const position,
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
@@ -849,8 +849,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_do(runtime::obj::persistent_list_ptr const &list,
-                        local_frame_ptr &current_frame,
+  processor::analyze_do(runtime::obj::persistent_list_ptr const list,
+                        local_frame_ptr const current_frame,
                         expression_position const position,
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool const needs_box)
@@ -886,8 +886,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_let(runtime::obj::persistent_list_ptr const &o,
-                         local_frame_ptr &current_frame,
+  processor::analyze_let(runtime::obj::persistent_list_ptr const o,
+                         local_frame_ptr const current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const needs_box)
@@ -982,8 +982,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_loop(runtime::obj::persistent_list_ptr const &o,
-                          local_frame_ptr &current_frame,
+  processor::analyze_loop(runtime::obj::persistent_list_ptr const o,
+                          local_frame_ptr const current_frame,
                           expression_position const position,
                           option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const)
@@ -1099,8 +1099,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_if(runtime::obj::persistent_list_ptr const &o,
-                        local_frame_ptr &current_frame,
+  processor::analyze_if(runtime::obj::persistent_list_ptr const o,
+                        local_frame_ptr const current_frame,
                         expression_position const position,
                         option<expr::function_context_ptr> const &fn_ctx,
                         native_bool needs_box)
@@ -1163,8 +1163,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_quote(runtime::obj::persistent_list_ptr const &o,
-                           local_frame_ptr &current_frame,
+  processor::analyze_quote(runtime::obj::persistent_list_ptr const o,
+                           local_frame_ptr const current_frame,
                            expression_position const position,
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const needs_box)
@@ -1186,8 +1186,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_var_call(runtime::obj::persistent_list_ptr const &o,
-                              local_frame_ptr &current_frame,
+  processor::analyze_var_call(runtime::obj::persistent_list_ptr const o,
+                              local_frame_ptr const current_frame,
                               expression_position const position,
                               option<expr::function_context_ptr> const &,
                               native_bool const)
@@ -1229,8 +1229,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_var_val(runtime::var_ptr const &o,
-                             local_frame_ptr &current_frame,
+  processor::analyze_var_val(runtime::var_ptr const o,
+                             local_frame_ptr const current_frame,
                              expression_position const position,
                              option<expr::function_context_ptr> const &,
                              native_bool const)
@@ -1243,8 +1243,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_throw(runtime::obj::persistent_list_ptr const &o,
-                           local_frame_ptr &current_frame,
+  processor::analyze_throw(runtime::obj::persistent_list_ptr const o,
+                           local_frame_ptr const current_frame,
                            expression_position const position,
                            option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
@@ -1269,8 +1269,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_try(runtime::obj::persistent_list_ptr const &list,
-                         local_frame_ptr &current_frame,
+  processor::analyze_try(runtime::obj::persistent_list_ptr const list,
+                         local_frame_ptr const current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
@@ -1467,7 +1467,7 @@ namespace jank::analyze
 
   processor::expression_result
   processor::analyze_primitive_literal(runtime::object_ptr const o,
-                                       local_frame_ptr &current_frame,
+                                       local_frame_ptr const current_frame,
                                        expression_position const position,
                                        option<expr::function_context_ptr> const &,
                                        native_bool const needs_box)
@@ -1480,8 +1480,8 @@ namespace jank::analyze
 
   /* TODO: Test for this. */
   processor::expression_result
-  processor::analyze_vector(runtime::obj::persistent_vector_ptr const &o,
-                            local_frame_ptr &current_frame,
+  processor::analyze_vector(runtime::obj::persistent_vector_ptr const o,
+                            local_frame_ptr const current_frame,
                             expression_position const position,
                             option<expr::function_context_ptr> const &fn_ctx,
                             native_bool const)
@@ -1522,8 +1522,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_map(object_ptr const &o,
-                         local_frame_ptr &current_frame,
+  processor::analyze_map(object_ptr const o,
+                         local_frame_ptr const current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
@@ -1575,8 +1575,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_set(object_ptr const &o,
-                         local_frame_ptr &current_frame,
+  processor::analyze_set(object_ptr const o,
+                         local_frame_ptr const current_frame,
                          expression_position const position,
                          option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
@@ -1621,8 +1621,8 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_call(runtime::obj::persistent_list_ptr const &o,
-                          local_frame_ptr &current_frame,
+  processor::analyze_call(runtime::obj::persistent_list_ptr const o,
+                          local_frame_ptr const current_frame,
                           expression_position const position,
                           option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const needs_box)
@@ -1801,7 +1801,7 @@ namespace jank::analyze
   }
 
   processor::expression_result processor::analyze(object_ptr const o,
-                                                  local_frame_ptr &current_frame,
+                                                  local_frame_ptr const current_frame,
                                                   expression_position const position,
                                                   option<expr::function_context_ptr> const &fn_ctx,
                                                   native_bool const needs_box)
