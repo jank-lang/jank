@@ -798,9 +798,8 @@ namespace jank::codegen
         throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
                                               pair.first->to_string()) };
       }
-      auto const fexpr(runtime::static_box_cast<expr::function>(pair.second));
 
-      locals[pair.first] = gen_function(fexpr, arity, defer_init);
+      locals[pair.first] = gen_function(pair.second, arity, defer_init);
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 

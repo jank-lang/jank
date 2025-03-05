@@ -1031,7 +1031,7 @@ namespace jank::analyze
 
     /* Reorder letfn bindings to minimize deferred initialization. */
     auto old_pairs(ret->pairs);
-    native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs;
+    decltype(old_pairs) new_pairs;
     new_pairs.reserve(old_pairs.size());
     /* Groups are ordered topologically, starting with the most depended on bindings.
      * Binding from most to least depended on can reduce the need for deferred initialization. */
