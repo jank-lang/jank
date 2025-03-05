@@ -912,6 +912,12 @@ namespace jank::analyze
             "The left hand side of a 'letfn*' binding must be a symbol",
             meta_source(sym_obj));
         }
+        auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+        if(!sym->ns.empty())
+        {
+          return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
+                                               meta_source(sym_obj));
+        }
         /* TODO Permits right hand side to be a non-function. Semantically ok but inconsistent.
          * Could do something simple like assert bindings->data[1] is a seq
          * starting with clojure.core/fn. */
@@ -995,6 +1001,8 @@ namespace jank::analyze
           meta_source(val));
       }
       auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
+
+      /* Add graph edges from sym to other letfn bindings fexpr captures. */
       auto captures(fexpr->captures());
       for(size_t j{}; j < binding_parts; j += 2)
       {
@@ -1005,14 +1013,14 @@ namespace jank::analyze
         auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
         if(captures.contains(sym))
         {
-          //fmt::println("edge: {} {}", i/2, j/2);
           add_edge(i / 2, j / 2, bindings_dependency_graph);
         }
       }
+
+      /* Populate the local frame we prepared for sym in the previous loop with its binding. */
       auto it(ret->pairs.emplace_back(sym, fexpr));
       auto local(ret->frame->locals.find(sym)->second);
       local.value_expr = some(it.second);
-      /* TODO This might need to be inferred earlier for mutually recursive code */
       local.needs_box = it.second->needs_box;
     }
 
@@ -1024,7 +1032,7 @@ namespace jank::analyze
     native_vector<std::pair<runtime::obj::symbol_ptr, expression_ptr>> new_pairs;
     new_pairs.reserve(old_pairs.size());
     /* Groups are ordered topologically, starting with the most depended on bindings.
-     * Binding them first reduces the likelihood of needing deferred initialization.*/
+     * Binding from most to least depended on can reduce the need for deferred initialization. */
     for(size_t insert_group{}; insert_group < num_groups; ++insert_group)
     {
       for(size_t c{}; c < nbindings; ++c)
@@ -1033,7 +1041,6 @@ namespace jank::analyze
         auto const current_group(component[c]);
         if(current_group == insert_group)
         {
-          //fmt::println("inserting: {} in group {} of {}", old_pairs[c].first->to_string(), current_group, num_groups);
           new_pairs.emplace_back(old_pairs[c]);
         }
       }

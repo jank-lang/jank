@@ -214,9 +214,7 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    //FIXME undo
-    //ctx->fpm->run(*fn, *ctx->fam);
-    //FIXME undo
+    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
