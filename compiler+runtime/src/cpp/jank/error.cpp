@@ -7,142 +7,144 @@
 
 namespace jank::error
 {
+  static constexpr auto default_note_message{ "Found here" };
+
   static constexpr native_persistent_string_view kind_to_message(kind const k)
   {
     switch(k)
     {
       case kind::lex_unexpected_eof:
-        return "Unexpected end of file";
+        return "Unexpected end of file.";
       case kind::lex_expecting_whitespace:
-        return "Expecting whitespace after the last token";
+        return "Expecting whitespace after the last token.";
       case kind::lex_invalid_unicode:
-        return "Invalid Unicode character";
+        return "Invalid Unicode character.";
       case kind::lex_incomplete_character:
-        return "Incomplete character";
+        return "Incomplete character.";
       case kind::lex_invalid_number:
-        return "Invalid number";
+        return "Invalid number.";
       case kind::lex_invalid_ratio:
-        return "Invalid ratio";
+        return "Invalid ratio.";
       case kind::lex_invalid_symbol:
-        return "Invalid symbol";
+        return "Invalid symbol.";
       case kind::lex_invalid_keyword:
-        return "Invalid keyword";
+        return "Invalid keyword.";
       case kind::lex_unterminated_string:
-        return "Unterminated string";
+        return "Unterminated string.";
       case kind::lex_invalid_string_escape:
-        return "Invalid string escape sequence";
+        return "Invalid string escape sequence.";
       case kind::lex_unexpected_character:
-        return "Unexpected character";
+        return "Unexpected character.";
       case kind::internal_lex_failure:
-        return "Internal lex failure";
+        return "Internal lex failure.";
 
       case kind::parse_invalid_unicode:
-        return "Invalid Unicode character";
+        return "Invalid Unicode character.";
       case kind::parse_invalid_character:
-        return "Invalid character";
+        return "Invalid character.";
       case kind::parse_unexpected_closing_character:
-        return "Unexpected closing character";
+        return "Unexpected closing character.";
       case kind::parse_unterminated_list:
-        return "Unterminated list";
+        return "Unterminated list.";
       case kind::parse_unterminated_vector:
-        return "Unterminated vector";
+        return "Unterminated vector.";
       case kind::parse_unterminated_map:
-        return "Unterminated map";
+        return "Unterminated map.";
       case kind::parse_unterminated_set:
-        return "Unterminated set";
+        return "Unterminated set.";
       case kind::parse_odd_entries_in_map:
-        return "Odd number of entries in map";
+        return "Odd number of entries in map.";
       case kind::parse_invalid_quote:
-        return "Invalid quote";
+        return "Invalid quote.";
       case kind::parse_invalid_meta_hint_value:
-        return "Meta hint must be a keyword or map";
+        return "Meta hint must be a keyword or map.";
       case kind::parse_invalid_meta_hint_target:
-        return "Invalid meta hint target";
+        return "Invalid meta hint target.";
       case kind::parse_unsupported_reader_macro:
-        return "Unsupported reader macro";
+        return "Unsupported reader macro.";
       case kind::parse_nested_shorthand_function:
-        return "Nested #() forms are not allowed";
+        return "Nested #() forms are not allowed.";
       case kind::parse_invalid_shorthand_function:
-        return "Invalid shorthand function";
+        return "Invalid shorthand function.";
       case kind::parse_invalid_shorthand_function_parameter:
-        return "Invalid shorthand function parameter";
+        return "Invalid shorthand function parameter.";
       case kind::parse_invalid_reader_var:
-        return "Invalid reader var reference";
+        return "Invalid reader var reference.";
       case kind::parse_invalid_reader_comment:
-        return "Invalid reader comment";
+        return "Invalid reader comment.";
       case kind::parse_invalid_reader_conditional:
-        return "Invalid reader conditional";
+        return "Invalid reader conditional.";
       case kind::parse_invalid_reader_splice:
-        return "Invalid reader splice";
+        return "Invalid reader splice.";
       case kind::parse_invalid_reader_gensym:
-        return "gensym literal is not within a syntax quote";
+        return "gensym literal is not within a syntax quote.";
       case kind::parse_invalid_reader_symbolic_value:
-        return "Invalid reader symbolic value";
+        return "Invalid reader symbolic value.";
       case kind::parse_invalid_syntax_quote:
-        return "Invalid syntax quote";
+        return "Invalid syntax quote.";
       case kind::parse_invalid_syntax_unquote:
-        return "Invalid syntax unquote";
+        return "Invalid syntax unquote.";
       case kind::parse_invalid_syntax_unquote_splice:
-        return "Unquote splice is not within a sequence";
+        return "Unquote splice is not within a sequence.";
       case kind::parse_invalid_reader_deref:
-        return "Invalid reader deref";
+        return "Invalid reader deref.";
       case kind::parse_invalid_ratio:
-        return "Invalid ratio";
+        return "Invalid ratio.";
       case kind::parse_invalid_keyword:
-        return "Invalid keyword";
+        return "Invalid keyword.";
       case kind::internal_parse_failure:
-        return "Internal parse failure";
+        return "Internal parse failure.";
 
       case kind::analysis_invalid_case:
-        return "Invalid case";
+        return "Invalid case.";
       case kind::analysis_invalid_def:
-        return "Invalid def";
+        return "Invalid def.";
       case kind::analysis_invalid_fn:
-        return "Invalid fn";
+        return "Invalid fn.";
       case kind::analysis_invalid_fn_parameters:
-        return "Invalid fn parameters";
+        return "Invalid fn parameters.";
       case kind::analysis_invalid_recur_position:
-        return "recur must be used from tail position";
+        return "recur must be used from tail position.";
       case kind::analysis_invalid_recur_from_try:
-        return "recur may not be used within a 'try'";
+        return "recur may not be used within a 'try'.";
       case kind::analysis_invalid_recur_args:
-        return "The argument arity passed to 'recur' doesn't match the function's arity";
+        return "The argument arity passed to 'recur' doesn't match the function's arity.";
       case kind::analysis_invalid_let:
-        return "Invalid let";
+        return "Invalid let.";
       case kind::analysis_invalid_loop:
-        return "Invalid loop";
+        return "Invalid loop.";
       case kind::analysis_invalid_if:
-        return "Invalid if";
+        return "Invalid if.";
       case kind::analysis_invalid_quote:
-        return "Invalid quote";
+        return "Invalid quote.";
       case kind::analysis_invalid_var_reference:
-        return "Invalid var reference";
+        return "Invalid var reference.";
       case kind::analysis_invalid_throw:
-        return "Invalid throw";
+        return "Invalid throw.";
       case kind::analysis_invalid_try:
-        return "Invalid try";
+        return "Invalid try.";
       case kind::analysis_unresolved_var:
-        return "Unresolved var";
+        return "Unresolved var.";
       case kind::analysis_unresolved_symbol:
-        return "Unresolved symbol";
+        return "Unresolved symbol.";
       case kind::internal_analysis_failure:
-        return "Internal analysis failure";
+        return "Internal analysis failure.";
 
       case kind::internal_codegen_failure:
-        return "Internal codegen failure";
+        return "Internal codegen failure.";
       case kind::internal_runtime_failure:
-        return "Internal runtime failure";
+        return "Internal runtime failure.";
       case kind::internal_failure:
-        return "Internal failure";
+        return "Internal failure.";
     }
-    return "Unknown error 😮";
+    return "Unknown error 😮!";
   }
 
   base::base(enum kind const k, read::source const &source)
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
-    , notes{{ message, source }}
+    , notes{{default_note_message, source }}
   {
   }
 
@@ -158,7 +160,7 @@ namespace jank::error
     : kind{ k }
     , message{ message }
     , source{ source }
-    , notes{{ message, source }}
+    , notes{{default_note_message, source }}
   {
   }
 
@@ -166,7 +168,7 @@ namespace jank::error
     : kind{ k }
     , message{ message }
     , source{ source }
-    , notes{{ message, source }}
+    , notes{{default_note_message, source }}
     , expansions{ expansions }
   {
   }

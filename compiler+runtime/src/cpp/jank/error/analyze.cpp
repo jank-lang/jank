@@ -22,7 +22,7 @@ namespace jank::error
                                  read::source const &source,
                                  native_deque<runtime::object_ptr> const &macro_expansions)
   {
-    return make_error(kind::analysis_invalid_def, message, source, "Found here", macro_expansions);
+    return make_error(kind::analysis_invalid_def, message, source, macro_expansions);
   }
 
   error_ptr analysis_invalid_def(native_persistent_string const &message,
