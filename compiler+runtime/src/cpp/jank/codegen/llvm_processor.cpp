@@ -1,7 +1,5 @@
 #include <list>
 
-#include <boost/graph/topological_sort.hpp>
-
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>

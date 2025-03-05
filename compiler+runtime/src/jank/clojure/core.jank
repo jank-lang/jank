@@ -6651,37 +6651,6 @@ fails, attempts to require sym's namespace and retries."
   ;; (.isDone f)
   (throw "TODO: port future-done?"))
 
-#_
-(defmacro letfn* ;; bootstrap tests
-  [bindings & body]
-  (assert (even? (count bindings)))
-  (let [pairs (partition 2 bindings)
-        names (map first pairs)
-        gm (gensym 'm)
-        n->vol (into {} (map (juxt identity gensym)) names)]
-    `(let [~@(mapcat (fn [[n]]
-                       [(n->vol n) `(volatile! nil)])
-                     pairs)
-           ~@(mapcat (fn [[n [_ self & tail]]]
-                       (assert (simple-symbol? self))
-                       (let [arities (cond-> tail
-                                       (vector? (first tail)) list)]
-                         (list n `(fn ~@(map (fn [[argv]]
-                                               (assert (vector? argv))
-                                               (let [vararg (when (some #(= '& %) argv) (gensym "vararg"))
-                                                     gargs (mapv #(gensym (str "arg" %))
-                                                                 (range (cond-> (count argv)
-                                                                          vararg (- 2))))
-                                                     decl (cond-> gargs
-                                                            vararg (conj '& vararg))
-                                                     vol (n->vol n)]
-                                                 `(~decl (~@(when vararg [`apply]) @~vol ~@gargs ~@(some-> vararg list)))))
-                                             arities)))))
-                     pairs)
-           ~@bindings]
-       ~@(map (fn [[n]] `(vreset! ~(n->vol n) ~n)) pairs)
-       ~@body)))
-
 (defmacro letfn 
   "fnspec ==> (fname [params*] exprs) or (fname ([params*] exprs)+)
 
@@ -6693,7 +6662,7 @@ fails, attempts to require sym's namespace and retries."
   [fnspecs & body]
   `(letfn* ~(vec (interleave (map first fnspecs)
                              (map #(cons `fn %) fnspecs)))
-           ~@body))
+     ~@body))
 
 (defn stream-reduce!
   "Works like reduce but takes a java.util.stream.BaseStream as its source.
