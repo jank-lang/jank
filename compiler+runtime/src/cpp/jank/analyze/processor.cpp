@@ -990,8 +990,9 @@ namespace jank::analyze
       auto maybe_fexpr(res.expect_ok_move());
       if(maybe_fexpr->kind != expression_kind::function)
       {
-        return error::analysis_invalid_letfn("The right hand side of a 'letfn*' binding must be a function",
-                                             meta_source(val));
+        return error::analysis_invalid_letfn(
+          "The right hand side of a 'letfn*' binding must be a function",
+          meta_source(val));
       }
       auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
       auto captures(fexpr->captures());
@@ -1005,7 +1006,7 @@ namespace jank::analyze
         if(captures.contains(sym))
         {
           //fmt::println("edge: {} {}", i/2, j/2);
-          add_edge(i/2, j/2, bindings_dependency_graph);
+          add_edge(i / 2, j / 2, bindings_dependency_graph);
         }
       }
       auto it(ret->pairs.emplace_back(sym, fexpr));
@@ -1016,7 +1017,7 @@ namespace jank::analyze
     }
 
     std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
-    size_t const num_groups = strong_components( bindings_dependency_graph, &component[0]);
+    size_t const num_groups = strong_components(bindings_dependency_graph, &component[0]);
 
     /* Reorder letfn bindings to minimize deferred initialization. */
     auto old_pairs(ret->pairs);
