@@ -793,7 +793,7 @@ namespace jank::codegen
      * in this rare case. The functional approach conveniently takes care of most bookkeeping and
      * provides a centralized place to ban deferred initialization in unsupported places. */
     std::list<std::function<void()>> deferred_inits{};
-    auto const defer_init([&](std::function<void()> f) -> void { deferred_inits.push_back(f); });
+    auto const defer_init([&](std::function<void()> const f) -> void { deferred_inits.push_back(f); });
 
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
@@ -1580,7 +1580,7 @@ namespace jank::codegen
          * all letfn* bindings have been processed. */
         if(!locals[name])
         {
-          std::function<void()> create_store([=, this]() {
+          std::function<void()> const create_store([local_ref, fn_arity, field_ptr, this]() {
             ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                       field_ptr);
           });
