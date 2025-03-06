@@ -903,7 +903,14 @@ namespace jank::analyze
       needs_box,
       make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ptr>{})) };
 
-    /* Populate frame with empty local bindings before analyzing right hand sides. */
+    /* All bindings in a letfn appear simultaneously and may be mutually recursive.
+     * This makes creating a letfn locals frame a bit more involved than let, where locals
+     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)]) 
+     * requires the other to be in scope in order to be analyzed.
+     *
+     * We tackle this in two steps. First, we create empty local bindings for all names.
+     * Then, we analyze each value under the created scope and use the result to mutate the
+     * respective local binding value. */
     std::set<runtime::obj::symbol> unique_bindings;
     for(size_t i{}; i < binding_parts; i += 2)
     {
@@ -924,7 +931,6 @@ namespace jank::analyze
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
 
-    /* Analyze binding inits. */
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
