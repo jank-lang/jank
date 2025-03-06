@@ -911,7 +911,6 @@ namespace jank::analyze
      * We tackle this in two steps. First, we create empty local bindings for all names.
      * Then, we analyze each value under the created scope and use the result to mutate the
      * respective local binding value. */
-    std::set<runtime::obj::symbol> unique_bindings;
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
