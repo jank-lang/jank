@@ -790,8 +790,12 @@ namespace jank::codegen
      * The defer_init function registers thunks that are called after functions have been generated.
      * Analysis reorders bindings such that only truly mutually recursive locals require deferred
      * initialization. This means the cost of std::function calls and building callbacks are only paid
-     * in this rare case. The functional approach conveniently takes care of most bookkeeping and
-     * provides a centralized place to ban deferred initialization in unsupported places. */
+     * in this rare case.
+     *
+     * The functional approach conveniently takes care of most bookkeeping and
+     * provides a centralized place to ban deferred initialization in unsupported places. However,
+     * lambda captures are quite subtle. Deferring lambdas may capture arity by reference because
+     * it is still alive via this enclosing function by the time we force the side effects. */
     std::list<std::function<void()>> deferred_inits{};
     auto const defer_init(
       [&](std::function<void()> const &f) -> void { deferred_inits.push_back(f); });
@@ -1582,8 +1586,10 @@ namespace jank::codegen
         if(!locals[name])
         {
           std::function<void()> const &create_store([local_ref, &fn_arity, field_ptr, this]() {
-            ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
-                                      field_ptr);
+            /* If not deferred, this call fails immediately in gen(expr::local_reference_ptr, ...)
+             * because name has not yet been defined. */
+            auto const e(gen(expr::local_reference_ptr{ &local_ref }, fn_arity));
+            ctx->builder->CreateStore(e, field_ptr);
           });
           defer_init(create_store);
         }
