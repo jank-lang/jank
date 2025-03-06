@@ -546,7 +546,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen_function(expr::function_ptr const expr,
                                expr::function_arity const &fn_arity,
-                               std::function<void(std::function<void()>)> const &defer_init)
+                               std::function<void(std::function<void()> const &)> const &defer_init)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -794,7 +794,7 @@ namespace jank::codegen
      * provides a centralized place to ban deferred initialization in unsupported places. */
     std::list<std::function<void()>> deferred_inits{};
     auto const defer_init(
-      [&](std::function<void()> const f) -> void { deferred_inits.push_back(f); });
+      [&](std::function<void()> const &f) -> void { deferred_inits.push_back(f); });
 
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
@@ -1503,7 +1503,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(
     expr::function_ptr const expr,
     expr::function_arity const &fn_arity,
-    std::function<void(std::function<void()>)> const &defer_init)
+    std::function<void(std::function<void()> const &)> const &defer_init)
   {
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
@@ -1581,7 +1581,7 @@ namespace jank::codegen
          * all letfn* bindings have been processed. */
         if(!locals[name])
         {
-          std::function<void()> const create_store([local_ref, &fn_arity, field_ptr, this]() {
+          std::function<void()> const &create_store([local_ref, &fn_arity, field_ptr, this]() {
             ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                       field_ptr);
           });

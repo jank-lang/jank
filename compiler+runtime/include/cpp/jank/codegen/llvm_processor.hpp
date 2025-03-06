@@ -145,11 +145,11 @@ namespace jank::codegen
     llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
     llvm::Value *gen_function(analyze::expr::function_ptr const expr,
                               analyze::expr::function_arity const &fn_arity,
-                              std::function<void(std::function<void()>)> const &defer_init);
+                              std::function<void(std::function<void()> const &)> const &defer_init);
     llvm::Value *
     gen_function_instance(analyze::expr::function_ptr expr,
                           analyze::expr::function_arity const &fn_arity,
-                          std::function<void(std::function<void()>)> const &defer_init);
+                          std::function<void(std::function<void()> const &)> const &defer_init);
     llvm::Value *gen_function_instance(analyze::expr::function_ptr expr,
                                        analyze::expr::function_arity const &fn_arity);
 
