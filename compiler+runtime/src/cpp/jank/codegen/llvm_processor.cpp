@@ -575,10 +575,10 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()>)> const defer_init([](auto) {
-      throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
+    return gen_function(expr, fn_arity, [](auto) {
+      throw std::runtime_error{ fmt::format(
+        "Deferred initialization not allowed outside of letfn") };
     });
-    return gen_function(expr, fn_arity, defer_init);
   }
 
   llvm::Value *llvm_processor::gen(expr::recur_ptr const expr, expr::function_arity const &arity)
@@ -793,7 +793,8 @@ namespace jank::codegen
      * in this rare case. The functional approach conveniently takes care of most bookkeeping and
      * provides a centralized place to ban deferred initialization in unsupported places. */
     std::list<std::function<void()>> deferred_inits{};
-    auto const defer_init([&](std::function<void()> const f) -> void { deferred_inits.push_back(f); });
+    auto const defer_init(
+      [&](std::function<void()> const f) -> void { deferred_inits.push_back(f); });
 
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
@@ -1641,10 +1642,10 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
                                                      expr::function_arity const &fn_arity)
   {
-    std::function<void(std::function<void()>)> const defer_init([](auto) {
-      throw std::runtime_error{ fmt::format("Pending init not allowed outside of letfn") };
+    return gen_function_instance(expr, fn_arity, [](auto) {
+      throw std::runtime_error{ fmt::format(
+        "Deferred initialization not allowed outside of letfn") };
     });
-    return gen_function_instance(expr, fn_arity, defer_init);
   }
 
   void llvm_processor::create_global_ctor() const
