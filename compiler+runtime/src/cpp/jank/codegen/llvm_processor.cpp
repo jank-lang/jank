@@ -1,3 +1,5 @@
+#include <list>
+
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
@@ -119,7 +121,7 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* JIT loaded object files don't support global ctors, so we need to call our manually.
+    /* JIT loaded object files don't support global ctors, so we need to call ours manually.
      * Fortunately, we have our load function which we can hook into. So, if we're compiling
      * a module and we've just created the load function fo that module, the first thing
      * we want to do is call our global ctor. */
@@ -542,7 +544,9 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
+  llvm_processor::gen_function(expr::function_ptr const expr,
+                               expr::function_arity const &fn_arity,
+                               std::function<void(std::function<void()> const &)> const &defer_init)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -558,7 +562,7 @@ namespace jank::codegen
       ctx = std::move(nested.ctx);
     }
 
-    auto const fn_obj(gen_function_instance(expr, fn_arity));
+    auto const fn_obj(gen_function_instance(expr, fn_arity, defer_init));
 
     if(expr->position == expression_position::tail)
     {
@@ -566,6 +570,15 @@ namespace jank::codegen
     }
 
     return fn_obj;
+  }
+
+  llvm::Value *
+  llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
+  {
+    return gen_function(expr, fn_arity, [](auto) {
+      throw std::runtime_error{ fmt::format(
+        "Deferred initialization not allowed outside of letfn") };
+    });
   }
 
   llvm::Value *llvm_processor::gen(expr::recur_ptr const expr, expr::function_arity const &arity)
@@ -761,6 +774,60 @@ namespace jank::codegen
 
       locals[pair.first] = gen(pair.second, arity);
       locals[pair.first]->setName(pair.first->to_string().c_str());
+    }
+
+    auto const ret(gen(expr->body, arity));
+    locals = std::move(old_locals);
+
+    /* XXX: No return creation, since we rely on the body to do that. */
+
+    return ret;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
+  {
+    /* Mutually recursive letfn bindings must defer some initialization.
+     *
+     * We can see the problem and the solution by inspecting:
+     *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
+     *
+     *   %1 = call ptr @GC_malloc(i64 8)
+     *   %a = call ptr @jank_closure_create(..., ptr %1)
+     *   ...
+     *   %4 = call ptr @GC_malloc(i64 8)
+     *   store ptr %a, ptr %4, align 8
+     *   %b = call ptr @jank_closure_create(..., ptr nonnull %4)
+     *   store ptr %b, ptr %1, align 8
+     *
+     * The defer_init function registers thunks that are called after functions have been generated.
+     *
+     * The functional approach conveniently takes care of most bookkeeping and
+     * provides a centralized place to ban deferred initialization in unsupported places. However,
+     * lambda captures are quite subtle. Deferring lambdas may capture arity by reference because
+     * it is still alive via this enclosing function by the time we force the side effects. */
+    std::list<std::function<void()>> deferred_inits{};
+    auto const defer_init(
+      [&](std::function<void()> const &f) -> void { deferred_inits.push_back(f); });
+
+    auto old_locals(locals);
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      if(local.is_none())
+      {
+        throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
+                                              pair.first->to_string()) };
+      }
+
+      locals[pair.first] = gen_function(pair.second, arity, defer_init);
+      locals[pair.first]->setName(pair.first->to_string().c_str());
+    }
+
+    /* Tie the knot for (letfn [(a [] b) (b [] a)]) by setting a's reference
+     * to b in a's context after b has been created. */
+    for(auto const &deferred_init : deferred_inits)
+    {
+      deferred_init();
     }
 
     auto const ret(gen(expr->body, arity));
@@ -1446,8 +1513,10 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
-                                                     expr::function_arity const &fn_arity)
+  llvm::Value *llvm_processor::gen_function_instance(
+    expr::function_ptr const expr,
+    expr::function_arity const &fn_arity,
+    std::function<void(std::function<void()> const &)> const &defer_init)
   {
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
@@ -1513,13 +1582,31 @@ namespace jank::codegen
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
+        auto const name(capture.first);
         expr::local_reference const local_ref{ expression_position::value,
                                                expr->frame,
                                                true,
-                                               capture.first,
+                                               name,
                                                capture.second };
-        ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
-                                  field_ptr);
+        /* In the case of (letfn* [a (a [] b) b (b [])]) we need to wait for b to be created
+         * before initializing a's context with b. We push the side effects for generating
+         * that code onto a list that ultimately gets forced by gen(letfn_ptr, ...) after
+         * all letfn* bindings have been processed. */
+        if(!locals[name])
+        {
+          std::function<void()> const &create_store([local_ref, &fn_arity, field_ptr, this]() {
+            /* If not deferred, this call fails immediately in gen(expr::local_reference_ptr, ...)
+             * because name has not yet been defined. */
+            auto const e(gen(expr::local_reference_ptr{ &local_ref }, fn_arity));
+            ctx->builder->CreateStore(e, field_ptr);
+          });
+          defer_init(create_store);
+        }
+        else
+        {
+          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
+                                    field_ptr);
+        }
       }
 
       auto const create_fn_type(
@@ -1565,6 +1652,15 @@ namespace jank::codegen
     }
 
     return fn_obj;
+  }
+
+  llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
+                                                     expr::function_arity const &fn_arity)
+  {
+    return gen_function_instance(expr, fn_arity, [](auto) {
+      throw std::runtime_error{ fmt::format(
+        "Deferred initialization not allowed outside of letfn") };
+    });
   }
 
   void llvm_processor::create_global_ctor() const

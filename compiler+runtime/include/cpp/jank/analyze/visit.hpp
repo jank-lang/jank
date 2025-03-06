@@ -16,6 +16,7 @@
 #include <jank/analyze/expr/named_recursion.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/letfn.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/throw.hpp>
@@ -60,6 +61,8 @@ namespace jank::analyze
         return f(runtime::static_box_cast<expr::local_reference>(e), std::forward<Args>(args)...);
       case expression_kind::let:
         return f(runtime::static_box_cast<expr::let>(e), std::forward<Args>(args)...);
+      case expression_kind::letfn:
+        return f(runtime::static_box_cast<expr::letfn>(e), std::forward<Args>(args)...);
       case expression_kind::do_:
         return f(runtime::static_box_cast<expr::do_>(e), std::forward<Args>(args)...);
       case expression_kind::if_:
