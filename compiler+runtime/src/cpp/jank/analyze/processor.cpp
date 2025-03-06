@@ -1,8 +1,5 @@
 #include <set>
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/strong_components.hpp>
-
 #include <fmt/core.h>
 
 #include <jank/native_persistent_string/fmt.hpp>
@@ -896,33 +893,6 @@ namespace jank::analyze
         "There must be an even number of bindings for a 'letfn*'",
         meta_source(bindings_obj));
     }
-    size_t const nbindings(binding_parts / 2);
-
-    /* Optimize to a let when there are insufficient bindings to achieve mutual recursion,
-     * thus letting us skip more expensive analysis. */
-    switch(nbindings)
-    {
-      case 0:
-        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
-      case 1:
-        auto const &sym_obj(bindings->data[0]);
-        if(sym_obj->type != runtime::object_type::symbol)
-        {
-          return error::analysis_invalid_letfn(
-            "The left hand side of a 'letfn*' binding must be a symbol",
-            meta_source(sym_obj));
-        }
-        auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
-        if(!sym->ns.empty())
-        {
-          return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
-                                               meta_source(sym_obj));
-        }
-        /* TODO Permits right hand side to be a non-function. Semantically ok but inconsistent.
-         * Could do something simple like assert bindings->data[1] is a seq
-         * starting with clojure.core/fn. */
-        return analyze_let(o, current_frame, position, fn_ctx, needs_box);
-    }
 
     auto frame{
       make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
@@ -951,39 +921,10 @@ namespace jank::analyze
         return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
                                              meta_source(sym_obj));
       }
-      auto const unique_res(unique_bindings.emplace(*sym));
-      if(!unique_res.second)
-      {
-        /* Clojure allows later bindings to shadow earlier ones, but this is not documented.
-         * Returning an error here allows us to confidently rearrange the binding order. */
-        return error::analysis_invalid_letfn("'letfn*' binding symbols must be distinct",
-                                             meta_source(sym_obj));
-      }
-
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
 
-    /* Mutually recursive letfn bindings require deferred intialization.
-     * For example, (letfn [(u [] v) (v [] u)]) requires that both u and v are created
-     * before setting their contexts to refer to each other.
-     * Bindings that are just forward declared can be rearranged to avoid needing
-     * deferred initialization. For example (letfn [(u [] v) (v [])]) can be
-     * rearranged to (letfn [(v []) (u [] v)]).
-     * Mixed scenarios are also possible, like (letfn [(b [] c) (c [] (b a)) (a [])]),
-     * which has two strongly connected components a and b+c. Placing a before c saves
-     * one deferred initialization of c's context with a.
-     *
-     * To rearrange bindings, we compile a directed graph of their interdependencies.
-     * A strongly connected components algorithm then yields an optimal ordering
-     * that minimizes deferred initialization.
-     *
-     * We represent our directed graph using vertices that index ret->pairs
-     * (the original order of letfn bindings), where edge i->j occurs if and only if
-     * binding ret->pairs[i] closes over ret->pairs[j]. For example,
-     * (letfn [(b [] c) (c [] (b a)) (a [])]) has edges 0->1, 1->0, and 1->2. */
-    boost::adjacency_list<> bindings_dependency_graph(nbindings);
-
-    /* Analyze binding inits and populate bindings dependency graph. */
+    /* Analyze binding inits. */
     for(size_t i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
@@ -1003,21 +944,6 @@ namespace jank::analyze
       }
       auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
 
-      /* Add graph edges from sym to other letfn bindings fexpr captures. */
-      auto captures(fexpr->captures());
-      for(size_t j{}; j < binding_parts; j += 2)
-      {
-        if(i == j)
-        {
-          continue;
-        }
-        auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[j]));
-        if(captures.contains(sym))
-        {
-          add_edge(i / 2, j / 2, bindings_dependency_graph);
-        }
-      }
-
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
       auto it(ret->pairs.emplace_back(sym, fexpr));
       auto local(ret->frame->locals.find(sym)->second);
@@ -1025,33 +951,6 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
-    /* Calculate strongly connected bindings. */
-    std::vector<std::size_t> component(num_vertices(bindings_dependency_graph));
-    size_t const num_groups = strong_components(bindings_dependency_graph, &component[0]);
-
-    /* Reorder letfn bindings to minimize deferred initialization. */
-    auto old_pairs(ret->pairs);
-    decltype(old_pairs) new_pairs;
-    new_pairs.reserve(old_pairs.size());
-    /* If group i comes before group j, then it seems like group i never depends on group j or later.
-     * TODO verify this ^
-     * Binding from most to least depended on can reduce the need for deferred initialization. */
-    for(size_t insert_group{}; insert_group < num_groups; ++insert_group)
-    {
-      for(size_t c{}; c < nbindings; ++c)
-      {
-        /* component[c] is the strongly connected group id of old_pairs[c]. */
-        auto const current_group(component[c]);
-        if(current_group == insert_group)
-        {
-          new_pairs.emplace_back(old_pairs[c]);
-        }
-      }
-    }
-    assert(new_pairs.size() == old_pairs.size());
-    ret->pairs = new_pairs;
-
-    /* Analyze letfn body. */
     size_t const form_count{ o->count() - 2 };
     size_t i{};
     for(auto const &item : o->data.rest().rest())
