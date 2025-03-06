@@ -1581,7 +1581,7 @@ namespace jank::codegen
          * all letfn* bindings have been processed. */
         if(!locals[name])
         {
-          std::function<void()> const create_store([local_ref, fn_arity, field_ptr, this]() {
+          std::function<void()> const create_store([local_ref, &fn_arity, field_ptr, this]() {
             ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                       field_ptr);
           });
