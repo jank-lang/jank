@@ -787,10 +787,19 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
     /* Mutually recursive letfn bindings must defer some initialization.
+     *
+     * We can see the problem and the solution by inspecting:
+     *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
+     *
+     *   %1 = call ptr @GC_malloc(i64 8)
+     *   %a = call ptr @jank_closure_create(..., ptr %1)
+     *   ...
+     *   %4 = call ptr @GC_malloc(i64 8)
+     *   store ptr %a, ptr %4, align 8
+     *   %b = call ptr @jank_closure_create(..., ptr nonnull %4)
+     *   store ptr %b, ptr %1, align 8
+     *
      * The defer_init function registers thunks that are called after functions have been generated.
-     * Analysis reorders bindings such that only truly mutually recursive locals require deferred
-     * initialization. This means the cost of std::function calls and building callbacks are only paid
-     * in this rare case.
      *
      * The functional approach conveniently takes care of most bookkeeping and
      * provides a centralized place to ban deferred initialization in unsupported places. However,
