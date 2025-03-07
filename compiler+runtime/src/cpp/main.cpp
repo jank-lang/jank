@@ -150,9 +150,8 @@ namespace jank
      * to later review that for error reporting. We automatically clean it up
      * and we reuse the same file over and over. */
     auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ "jank-repl-XXXXXX" };
+    std::string path_tmp{ tmp / "jank-repl-XXXXXX" };
     mkstemp(path_tmp.data());
-    auto const path{ tmp / path_tmp };
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
@@ -171,15 +170,15 @@ namespace jank
 
       input += line;
 
-      util::scope_exit const finally{ [&] { std::filesystem::remove(path); } };
+      util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
       try
       {
         {
-          std::ofstream ofs{ path.string() };
+          std::ofstream ofs{ path_tmp };
           ofs << input;
         }
 
-        auto const res(__rt_ctx->eval_file(path.c_str()));
+        auto const res(__rt_ctx->eval_file(path_tmp));
         fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
