@@ -8,18 +8,17 @@ namespace jank::runtime::obj
 {
   repeat::repeat(object_ptr const value)
     : value{ value }
-    , count{ make_box(infinite) }
   {
   }
 
-  repeat::repeat(object_ptr const count, object_ptr const value)
+  repeat::repeat(size_t const count, object_ptr const value)
     : value{ value }
     , count{ count }
   {
-    if(0 >= to_int(count))
+    if(count == infinite)
     {
       throw std::runtime_error{ "repeat must be constructed with positive count: "
-                                + std::to_string(to_int(count)) };
+                                + std::to_string(count) };
     }
   }
 
@@ -30,11 +29,12 @@ namespace jank::runtime::obj
 
   object_ptr repeat::create(object_ptr const count, object_ptr const value)
   {
-    if(lte(count, make_box(0)))
+    auto const c(to_int(count));
+    if(c <= 0)
     {
       return persistent_list::empty();
     }
-    return make_box<repeat>(count, value);
+    return make_box<repeat>(static_cast<size_t>(c), value);
   }
 
   repeat_ptr repeat::seq()
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
 
   repeat_ptr repeat::fresh_seq() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    if(count == infinite)
     {
       return this;
     }
@@ -56,30 +56,122 @@ namespace jank::runtime::obj
     return value;
   }
 
+  object_ptr repeat::reduce(object_ptr f, object_ptr const start) const
+  {
+    while(f->type == object_type::var)
+    {
+      f = expect_object<runtime::var>(f)->deref();
+    }
+    return visit_object(
+      [](auto const typed_f, auto ret, auto const value, auto const bound) -> object_ptr {
+        using T = typename decltype(typed_f)::value_type;
+        /* If true, we can call typed_f->call(acc, el) directly.
+         * Otherwise, use dynamic_call(typed_f, acc, el). */
+        native_bool direct{};
+        if constexpr(std::same_as<T, runtime::obj::jit_function>
+                     || std::same_as<T, runtime::obj::jit_closure>)
+        {
+          auto const arity_flags(typed_f->get_arity_flags());
+          auto const mask(behavior::callable::extract_variadic_arity_mask(arity_flags));
+          switch(mask)
+          {
+            case behavior::callable::mask_variadic_arity(0):
+            case behavior::callable::mask_variadic_arity(1):
+            case behavior::callable::mask_variadic_arity(2):
+              break;
+            default:
+              direct = true;
+          }
+        }
+        if(bound == infinite)
+        {
+          if constexpr(std::same_as<T, runtime::obj::jit_function>
+                       || std::same_as<T, runtime::obj::jit_closure>)
+          {
+            if(direct)
+            {
+              while(true)
+              {
+                ret = typed_f->call(ret, value);
+
+                if(ret->type == object_type::reduced)
+                {
+                  return expect_object<obj::reduced>(ret)->val;
+                }
+              }
+            }
+          }
+          while(true)
+          {
+            ret = dynamic_call(typed_f, ret, value);
+
+            if(ret->type == object_type::reduced)
+            {
+              return expect_object<obj::reduced>(ret)->val;
+            }
+          }
+        }
+        else
+        {
+          if constexpr(std::same_as<T, runtime::obj::jit_function>
+                       || std::same_as<T, runtime::obj::jit_closure>)
+          {
+            if(direct)
+            {
+              for(size_t i{}; i < bound; ++i)
+              {
+                ret = typed_f->call(ret, value);
+
+                if(ret->type == object_type::reduced)
+                {
+                  return expect_object<obj::reduced>(ret)->val;
+                }
+              }
+              return ret;
+            }
+          }
+          for(size_t i{}; i < bound; ++i)
+          {
+            ret = dynamic_call(typed_f, ret, value);
+
+            if(ret->type == object_type::reduced)
+            {
+              return expect_object<obj::reduced>(ret)->val;
+            }
+          }
+          return ret;
+        }
+      },
+      f,
+      start,
+      value,
+      count);
+  }
+
   repeat_ptr repeat::next() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    auto const c(count);
+    switch(c)
     {
-      return this;
+      case infinite:
+        return this;
+      case 1:
+        return nullptr;
     }
-    if(lte(count, make_box(1)))
-    {
-      return nullptr;
-    }
-    return make_box<repeat>(make_box(add(count, make_box(-1))), value);
+    return make_box<repeat>(c - 1, value);
   }
 
   repeat_ptr repeat::next_in_place()
   {
-    if(runtime::equal(count, make_box(infinite)))
+    auto const c(count);
+    switch(c)
     {
-      return this;
+      case infinite:
+        return this;
+      case 1:
+        return nullptr;
     }
-    if(lte(count, make_box(1)))
-    {
-      return nullptr;
-    }
-    count = add(count, make_box(-1));
+    count = c - 1;
     return this;
   }
 
