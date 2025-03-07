@@ -184,7 +184,7 @@ namespace jank::analyze
       return error::analysis_invalid_def(
         "The var name in a 'def' must be a symbol.",
         maybe_reparse(object_source(sym_obj), [=] { return read::parse::reparse_nth(l, 1); }),
-        "A symbol is needed for the name here",
+        "A symbol is needed for the name here.",
         add_top_expansion(macro_expansions));
     }
 

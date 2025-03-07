@@ -369,11 +369,11 @@ namespace jank::read::lex
 
     if(len == static_cast<size_t>(-1))
     {
-      return error::lex_invalid_unicode("Unfinished character", pos);
+      return error::lex_invalid_unicode("Unfinished character.", pos);
     }
     else if(len == static_cast<size_t>(-2))
     {
-      return error::lex_invalid_unicode("Invalid Unicode character", pos);
+      return error::lex_invalid_unicode("Invalid Unicode character.", pos);
     }
     return ok(codepoint{ static_cast<char32_t>(wc), static_cast<uint8_t>(len) });
   }
@@ -520,7 +520,7 @@ namespace jank::read::lex
           }
           else if(std::iswspace(static_cast<int>(ch.expect_ok().character)))
           {
-            return error::lex_incomplete_character("A \\ must be followed by a character value",
+            return error::lex_incomplete_character("A \\ must be followed by a character value.",
                                                    { token_start, pos });
           }
 
@@ -647,17 +647,17 @@ namespace jank::read::lex
               if(contains_dot || is_scientific || !contains_leading_digit)
               {
                 ++pos;
-                return error::lex_invalid_number("Unexpected '.' found in number",
+                return error::lex_invalid_number("Unexpected '.' found in number.",
                                                  { token_start, pos },
-                                                 error::note{ "Found the '.' here", pos });
+                                                 error::note{ "Found the '.' here.", pos });
               }
               if(found_r)
               {
                 ++pos;
                 return error::lex_invalid_number(
-                  "An arbitrary radix number can only be an integer, so it may not contain a '.'",
+                  "An arbitrary radix number can only be an integer, so it may not contain a '.'.",
                   { token_start, pos },
-                  error::note{ "Found a '.' here", pos });
+                  error::note{ "Found a '.' here.", pos });
               }
               contains_dot = true;
               if(radix != 10 && radix != 8)
@@ -681,17 +681,17 @@ namespace jank::read::lex
                 if(is_scientific || !contains_leading_digit)
                 {
                   ++pos;
-                  return error::lex_invalid_number("Extraneous 'e' found in number",
+                  return error::lex_invalid_number("Extraneous 'e' found in number.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'e' here", pos });
+                                                   error::note{ "Found 'e' here.", pos });
                 }
                 if(found_slash_after_number)
                 {
                   ++pos;
                   found_slash_after_number = false;
-                  return error::lex_invalid_ratio("Ratio cannot have scientific notation",
+                  return error::lex_invalid_ratio("Ratio cannot have scientific notation.",
                                                   { token_start, pos },
-                                                  error::note{ "Found 'e' here", pos });
+                                                  error::note{ "Found 'e' here.", pos });
                 }
                 is_scientific = true;
                 expecting_exponent = true;
@@ -705,9 +705,9 @@ namespace jank::read::lex
                 {
                   ++pos;
                   return error::lex_invalid_number(
-                    fmt::format("Unexpected '{}' in number", static_cast<char>(c)),
+                    fmt::format("Unexpected '{}' in number.", static_cast<char>(c)),
                     { token_start, pos },
-                    error::note{ fmt::format("Found '{}' here", static_cast<char>(c)), pos });
+                    error::note{ fmt::format("Found '{}' here.", static_cast<char>(c)), pos });
                 }
                 found_exponent_sign = true;
               }
@@ -726,7 +726,7 @@ namespace jank::read::lex
                  || expecting_exponent)
               {
                 /* TODO: Add a note for why we're determining this isn't an integer. */
-                return error::lex_invalid_number("Arbitrary radix numbers can only be integers",
+                return error::lex_invalid_number("Arbitrary radix numbers can only be integers.",
                                                  { token_start, pos });
               }
               continue;
@@ -739,7 +739,7 @@ namespace jank::read::lex
                  || found_slash_after_number || (radix != 10 && radix != 8))
               {
                 /* TODO: Add a note for why it's not an integer. */
-                return error::lex_invalid_ratio("A ratio numerator must be an integer",
+                return error::lex_invalid_ratio("A ratio numerator must be an integer.",
                                                 { token_start, pos });
               }
               found_slash_after_number = true;
@@ -752,12 +752,12 @@ namespace jank::read::lex
                 if(denominator.expect_ok().kind != token_kind::integer)
                 {
                   return error::lex_invalid_ratio(
-                    "A ratio denominator must be an integer",
+                    "A ratio denominator must be an integer.",
                     {
                       token_start,
                       pos
                   },
-                    error::note{ "Denominator is here",
+                    error::note{ "Denominator is here.",
                                  { denominator.expect_ok().start, denominator.expect_ok().end } });
                 }
                 auto const &denominator_token(denominator.expect_ok());
@@ -775,7 +775,7 @@ namespace jank::read::lex
               if(expecting_exponent)
               {
                 ++pos;
-                return error::lex_invalid_number("Missing exponent from end of number",
+                return error::lex_invalid_number("Missing exponent from end of number.",
                                                  { token_start, pos });
               }
               if(contains_dot)
@@ -796,7 +796,7 @@ namespace jank::read::lex
                 if(found_r && expecting_more_digits)
                 {
                   ++pos;
-                  return error::lex_invalid_number("Unexpected end of integer",
+                  return error::lex_invalid_number("Unexpected end of integer.",
                                                    { token_start, pos });
                 }
                 if(pos == token_start && file[token_start] == '0')
@@ -821,7 +821,7 @@ namespace jank::read::lex
           if(expecting_exponent)
           {
             ++pos;
-            return error::lex_invalid_number("Unexpected end of decimal number",
+            return error::lex_invalid_number("Unexpected end of decimal number.",
                                              { token_start, pos });
           }
 
@@ -830,10 +830,11 @@ namespace jank::read::lex
             ++pos;
             if(found_r)
             {
-              return error::lex_invalid_number("Unexpected end of integer", { token_start, pos });
+              return error::lex_invalid_number("Unexpected end of integer.", { token_start, pos });
             }
-            return error::lex_invalid_number(fmt::format("Unexpected end of base {} number", radix),
-                                             { token_start, pos });
+            return error::lex_invalid_number(
+              fmt::format("Unexpected end of base {} number.", radix),
+              { token_start, pos });
           }
           /* Tokens beginning with - are ambiguous; it's a negative number only if
            * followed by a number. Otherwise, it's a symbol. */
@@ -883,7 +884,7 @@ namespace jank::read::lex
             if(!invalid_digits.empty())
             {
               return error::lex_invalid_number(
-                fmt::format("Characters '{}' are invalid for a base {} number",
+                fmt::format("Characters '{}' are invalid for a base {} number.",
                             std::string(invalid_digits.begin(), invalid_digits.end()),
                             radix),
                 { token_start, pos });
@@ -907,12 +908,12 @@ namespace jank::read::lex
               /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
               auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
               return error::lex_invalid_number(
-                "Number is too large to be stored",
+                "Number is too large to be stored.",
                 {
                   token_start,
                   pos
               },
-                error::note{ "I can fit about this much",
+                error::note{ "I can fit about this much.",
                              { token_start, token_start + max_width } });
             }
             return ok(token{ token_start, pos, token_kind::integer, parsed_int });
@@ -960,7 +961,7 @@ namespace jank::read::lex
                                                     ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           {
-            return error::lex_invalid_symbol("A symbol may not start with a '/'",
+            return error::lex_invalid_symbol("A symbol may not start with a '/'.",
                                              { token_start, pos });
           }
           else if(name == "nil")
@@ -991,8 +992,9 @@ namespace jank::read::lex
           if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
           {
             ++pos;
-            return error::lex_invalid_keyword("A keyword must contain a valid symbol after the ':'",
-                                              { token_start, pos });
+            return error::lex_invalid_keyword(
+              "A keyword must contain a valid symbol after the ':'.",
+              { token_start, pos });
           }
 
           /* Support auto-resolved qualified keywords. */
@@ -1022,14 +1024,14 @@ namespace jank::read::lex
 
           if(name[0] == '/' && name.size() > 1)
           {
-            return error::lex_invalid_keyword("A keyword may not start with ':/'",
+            return error::lex_invalid_keyword("A keyword may not start with ':/'.",
                                               { token_start, pos });
           }
           else if(name[0] == ':' && name[1] == ':')
           {
-            return error::lex_invalid_keyword("Too many ':' for a valid keyword",
+            return error::lex_invalid_keyword("Too many ':' for a valid keyword.",
                                               { token_start, pos },
-                                              "Only one or two ':' is valid");
+                                              "Only one or two ':' is valid.");
           }
 
           return ok(token{ token_start, pos, token_kind::keyword, name });
@@ -1076,7 +1078,7 @@ namespace jank::read::lex
                 default:
                   util::string_builder sb;
                   return error::lex_invalid_string_escape(
-                    fmt::format("Unsupported string escape character '{}'",
+                    fmt::format("Unsupported string escape character '{}'.",
                                 sb(oc.expect_ok().character).view()),
                     { pos, pos + 2zu });
               }
@@ -1263,7 +1265,7 @@ namespace jank::read::lex
         }
         ++pos;
         return error::lex_unexpected_character(
-          fmt::format("Unexpected character '{}'", file[token_start]),
+          fmt::format("Unexpected character '{}'.", file[token_start]),
           { token_start, pos });
     }
   }
