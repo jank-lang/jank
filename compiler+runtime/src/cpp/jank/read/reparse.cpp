@@ -13,7 +13,6 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  /* TODO: How does macro expansion fall into this? Will we not be able to reparse some things? */
   static result<source, error_ptr> reparse_nth(native_persistent_string const &file_path,
                                                size_t const offset,
                                                size_t const n,
@@ -89,6 +88,10 @@ namespace jank::read::parse
 
   source reparse_nth(runtime::object_ptr const o, size_t const n)
   {
+    /* When we have an object, but we're not sure of the type, let's just
+     * see if it's one of the types we support. If not, we'll error out.
+     * We can do more here, going forward, by supporting various sequences and such,
+     * but this will be fine for now. */
     return visit_seqable(
       [](auto const typed_o, size_t const n) -> source {
         using T = typename decltype(typed_o)::value_type;

@@ -1097,9 +1097,12 @@ namespace jank::read::parse
     auto const meta{ runtime::meta(form) };
     if(meta != obj::nil::nil_const())
     {
-      /* We quote the meta as well, to ensure it doesn't get evaluated. */
-      /* XXX: Note that Clojure removes the source info from the meta here. We're keeping it
-       * for now, in hopes of providing improved macro expansion errors. */
+      /* We quote the meta as well, to ensure it doesn't get evaluated.
+       * Note that Clojure removes the source info from the meta here. We're keeping it
+       * so that we can provide improved macro expansion errors. This comes as a performance
+       * cost during compilation and during startup, as well as higher memory usage for keeping
+       * all of the meta around. */
+      /* TODO: Support a flag to strip this out. */
       auto const quoted_meta{ syntax_quote(meta) };
       if(quoted_meta.is_err())
       {

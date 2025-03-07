@@ -101,6 +101,8 @@ namespace jank::error
     {
       auto const expansion{ e->expansions[i] };
       auto source{ runtime::object_source(expansion) };
+      /* We just want to point at the start of the expansion, not underline the
+       * whole thing. It may be huge! */
       source.end = source.start;
       add(note{ fmt::format("{} macro expansion here", util::number_to_ordinal(i)),
                 source,
