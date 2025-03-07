@@ -22,6 +22,11 @@ namespace jank::error
                                  read::source const &source,
                                  native_deque<runtime::object_ptr> const &macro_expansions);
   error_ptr
+  analysis_invalid_fn_parameters(native_persistent_string const &message,
+                                 read::source const &source,
+                                 native_persistent_string const &error_note_message,
+                                 native_deque<runtime::object_ptr> const &macro_expansions);
+  error_ptr
   analysis_invalid_recur_position(native_persistent_string const &message,
                                   read::source const &source,
                                   native_deque<runtime::object_ptr> const &macro_expansions);

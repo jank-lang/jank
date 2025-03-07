@@ -523,20 +523,12 @@ namespace jank::analyze
       }
       else if(sym->name == "&")
       {
-        if(is_variadic)
+        if(it + 1 == params->data.end())
         {
-          /* TODO: Note the first variadic param. */
-          return error::analysis_invalid_fn_parameters(
-            "Multiple '&' paramters found, but only one may be present.",
-            meta_source(sym->meta),
-            add_top_expansion(macro_expansions));
-        }
-        else if(it + 1 == params->data.end())
-        {
-          /* TODO: Note the variadic param. */
           return error::analysis_invalid_fn_parameters(
             "A symbol must be present after '&' to name the variadic parameter.",
             object_source(*it),
+            "A symbol should come after this '&'.",
             add_top_expansion(macro_expansions));
         }
         else if(it + 2 != params->data.end())
@@ -544,7 +536,8 @@ namespace jank::analyze
           /* TODO: Note the variadic param. */
           return error::analysis_invalid_fn_parameters(
             "There may be no additional parameters after the variadic parameter.",
-            object_source(*(it + 1)),
+            object_source(*(it + 2)),
+            "Every parameter starting here is after the variadic parameter.",
             add_top_expansion(macro_expansions));
         }
 
@@ -645,7 +638,7 @@ namespace jank::analyze
       if(length < 3)
       {
         return error::analysis_invalid_fn("This function is missing its parameter vector.",
-                                          object_source(first_elem),
+                                          meta_source(full_list->meta),
                                           add_top_expansion(macro_expansions));
       }
       first_elem = list->data.rest().rest().first().unwrap();
@@ -670,7 +663,6 @@ namespace jank::analyze
       }
       arities.emplace_back(result.expect_ok_move());
     }
-    /* TODO: Sequence? */
     else
     {
       for(auto it(list->data.rest()); !it.empty(); it = it.rest())
@@ -698,7 +690,7 @@ namespace jank::analyze
               return error::analysis_invalid_fn(
                 "Invalid 'fn' syntax. Please provide either a list of arities or a "
                 "parameter vector.",
-                meta_source(list->meta),
+                meta_source(full_list->meta),
                 add_top_expansion(macro_expansions));
             }
           },
@@ -734,6 +726,7 @@ namespace jank::analyze
       {
         if(!arity.fn_ctx->is_variadic && arity.params.size() >= variadic_arity)
         {
+          /* TODO: Note the variadic arity and the highest fixed arity. */
           return error::analysis_invalid_fn(
             "The variadic arity of this function has fewer parameters than one of "
             "its fixed arities, which would lead to ambiguities when it's called.",
@@ -808,6 +801,7 @@ namespace jank::analyze
     }
     else if(rt_ctx.no_recur_var->is_bound() && runtime::truthy(rt_ctx.no_recur_var->deref()))
     {
+      /* TODO: Note where the try is. */
       return error::analysis_invalid_recur_from_try(
         "It's not permitted to use recur through a try/catch.",
         meta_source(list->meta),
@@ -824,10 +818,11 @@ namespace jank::analyze
     auto const arg_count(list->count() - 1);
     if(fn_ctx.unwrap()->param_count != arg_count)
     {
+      /* TODO: Note where the loop/fn args are. */
       return error::analysis_invalid_recur_args(
-        fmt::format("Invalid number of args passed to recur; expected {}, found {}.",
-                    fn_ctx.unwrap()->param_count,
-                    arg_count),
+        fmt::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
+                    arg_count,
+                    fn_ctx.unwrap()->param_count),
         meta_source(list->meta),
         add_top_expansion(macro_expansions));
     }
@@ -910,15 +905,17 @@ namespace jank::analyze
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analysis_invalid_let("The bindings of a 'let' must be in a vector.",
-                                         object_source(bindings_obj),
-                                         add_top_expansion(macro_expansions));
+      return error::analysis_invalid_let(
+        "The bindings of a 'let' must be in a vector.",
+        maybe_reparse(object_source(bindings_obj), [=] { return read::parse::reparse_nth(o, 1); }),
+        add_top_expansion(macro_expansions));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
+      /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
       return error::analysis_invalid_let("There must be an even number of bindings for a 'let'.",
                                          object_source(bindings_obj),
                                          add_top_expansion(macro_expansions));
@@ -941,7 +938,8 @@ namespace jank::analyze
       {
         return error::analysis_invalid_let(
           "The left hand side of a 'let' binding must be a symbol.",
-          object_source(sym_obj),
+          maybe_reparse(object_source(sym_obj),
+                        [=] { return read::parse::reparse_nth(bindings, i); }),
           add_top_expansion(macro_expansions));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
