@@ -354,7 +354,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
   intern_fn("associative?", &is_associative);
-  intern_fn("assoc", &assoc);
+  intern_fn("assoc", static_cast<object_ptr (*)(object_ptr, object_ptr, object_ptr)>(&assoc));
   intern_fn("pr-str", static_cast<native_persistent_string (*)(object const *)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);

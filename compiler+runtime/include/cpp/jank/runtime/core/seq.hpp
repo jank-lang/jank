@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime
@@ -101,6 +102,14 @@ namespace jank::runtime
   object_ptr cons(object_ptr head, object_ptr tail);
   object_ptr conj(object_ptr s, object_ptr o);
   object_ptr disj(object_ptr s, object_ptr o);
+
+  template <typename T>
+  requires behavior::associatively_writable<T>
+  auto assoc(native_box<T> const m, object_ptr const k, object_ptr const v)
+  {
+    return m->assoc(k, v);
+  }
+
   object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
   object_ptr dissoc(object_ptr m, object_ptr k);
   object_ptr get(object_ptr m, object_ptr key);
@@ -110,6 +119,7 @@ namespace jank::runtime
   object_ptr find(object_ptr s, object_ptr key);
   native_bool contains(object_ptr s, object_ptr key);
   object_ptr merge(object_ptr m, object_ptr other);
+  object_ptr merge_in_place(object_ptr m, object_ptr other);
   object_ptr subvec(object_ptr o, native_integer start, native_integer end);
   object_ptr nth(object_ptr o, object_ptr idx);
   object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);
