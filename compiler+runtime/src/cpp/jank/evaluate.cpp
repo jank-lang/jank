@@ -7,6 +7,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/jit/processor.hpp>
@@ -14,26 +15,6 @@
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
 
-#include <jank/analyze/expr/def.hpp>
-#include <jank/analyze/expr/var_deref.hpp>
-#include <jank/analyze/expr/var_ref.hpp>
-#include <jank/analyze/expr/call.hpp>
-#include <jank/analyze/expr/primitive_literal.hpp>
-#include <jank/analyze/expr/list.hpp>
-#include <jank/analyze/expr/vector.hpp>
-#include <jank/analyze/expr/map.hpp>
-#include <jank/analyze/expr/set.hpp>
-#include <jank/analyze/expr/function.hpp>
-#include <jank/analyze/expr/recur.hpp>
-#include <jank/analyze/expr/recursion_reference.hpp>
-#include <jank/analyze/expr/named_recursion.hpp>
-#include <jank/analyze/expr/local_reference.hpp>
-#include <jank/analyze/expr/let.hpp>
-#include <jank/analyze/expr/do.hpp>
-#include <jank/analyze/expr/if.hpp>
-#include <jank/analyze/expr/throw.hpp>
-#include <jank/analyze/expr/try.hpp>
-#include <jank/analyze/expr/case.hpp>
 #include <jank/analyze/visit.hpp>
 
 namespace jank::evaluate

@@ -417,6 +417,7 @@ namespace jank::read::parse
     }
 
     return object_source_info{ erase(make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
                                  make_box<obj::symbol>("quote"),
                                  val_result.expect_ok().unwrap().ptr)),

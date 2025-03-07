@@ -102,7 +102,7 @@ namespace jank::error
       auto const expansion{ e->expansions[i] };
       auto source{ runtime::object_source(expansion) };
       source.end = source.start;
-      add(note{ fmt::format("{} expansion here", util::number_to_ordinal(i)),
+      add(note{ fmt::format("{} macro expansion here", util::number_to_ordinal(i)),
                 source,
                 note::kind::info });
     }
@@ -364,6 +364,11 @@ namespace jank::error
 
   void plan::add(read::source const &body_source, note const &n)
   {
+    if(n.source == read::source::unknown)
+    {
+      return;
+    }
+
     native_bool added{ false };
     for(auto &snippet : snippets)
     {

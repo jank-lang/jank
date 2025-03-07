@@ -402,7 +402,7 @@ namespace jank::codegen
         }
         else
         {
-          throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n",
+          throw std::runtime_error{ fmt::format("Unimplemented constant codegen: {}\n",
                                                 typed_o->to_string()) };
         }
       },
@@ -1289,7 +1289,9 @@ namespace jank::codegen
                                   false));
         auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-        auto const meta(gen_global_from_read_string(strip_source_from_meta(s->meta.unwrap())));
+        /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
+         * Otherwise, we need this info for macro expansion errors. i.e. `(foo ~'bar) */
+        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
