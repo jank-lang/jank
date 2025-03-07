@@ -345,7 +345,9 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<obj::persistent_vector>(ret.persistent()),
+    return object_source_info{ make_box<obj::persistent_vector>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 ret.persistent()),
                                start_token,
                                latest_token };
   }
@@ -364,6 +366,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
+    /* TODO: Only use an array map if everything can fit. */
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -393,7 +396,9 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<obj::persistent_array_map>(ret),
+    return object_source_info{ make_box<obj::persistent_array_map>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 std::move(ret)),
                                start_token,
                                latest_token };
   }
@@ -599,7 +604,9 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<obj::persistent_hash_set>(std::move(ret).persistent()),
+    return object_source_info{ make_box<obj::persistent_hash_set>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 std::move(ret).persistent()),
                                start_token,
                                latest_token };
   }

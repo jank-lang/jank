@@ -4,6 +4,7 @@
 #include <jank/read/reparse.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/util/mapped_file.hpp>
@@ -58,16 +59,31 @@ namespace jank::read::parse
     return source{ file_path, res.start.start, res.end.end, macro_expansion };
   }
 
-  source reparse_nth(obj::persistent_list_ptr const l, size_t const n)
+  static read::source assert_meta_source(object_ptr const o)
   {
-    auto const source(meta_source(l->meta));
+    auto source(object_source(o));
     if(source == source::unknown)
     {
       throw error::internal_parse_failure(
-        fmt::format("Unknown source while trying to reparse {}", l->to_code_string()));
+        fmt::format("Unknown source while trying to reparse {}", to_code_string(o)));
     }
+    return source;
+  }
+
+  source reparse_nth(obj::persistent_list_ptr const o, size_t const n)
+  {
+    auto const source(assert_meta_source(o));
 
     /* Add one to skip the ( for the list. */
+    return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
+      .unwrap_move();
+  }
+
+  source reparse_nth(runtime::obj::persistent_vector_ptr const o, size_t const n)
+  {
+    auto const source(assert_meta_source(o));
+
+    /* Add one to skip the [ for the vector. */
     return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
       .unwrap_move();
   }

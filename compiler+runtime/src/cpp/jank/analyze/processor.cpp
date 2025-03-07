@@ -483,9 +483,10 @@ namespace jank::analyze
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analysis_invalid_fn_parameters("A function parameter vector must be a vector.",
-                                                   object_source(params_obj),
-                                                   add_top_expansion(macro_expansions));
+      return error::analysis_invalid_fn_parameters(
+        "A function parameter vector must be a vector.",
+        maybe_reparse(object_source(params_obj), [=] { return read::parse::reparse_nth(list, 0); }),
+        add_top_expansion(macro_expansions));
     }
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
@@ -504,24 +505,27 @@ namespace jank::analyze
       auto const p(*it);
       if(p->type != runtime::object_type::symbol)
       {
+        auto const param_idx{ std::distance(params->data.begin(), it) };
         return error::analysis_invalid_fn_parameters(
-          fmt::format("A function parameter must be a symbol, not a '{}'.",
-                      object_type_str(p->type)),
-          object_source(p),
+          "Each function parameter must be a symbol.",
+          maybe_reparse(object_source(p),
+                        [=] { return read::parse::reparse_nth(params, param_idx); }),
           add_top_expansion(macro_expansions));
       }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
       if(!sym->ns.empty())
       {
-        return error::analysis_invalid_fn_parameters("A function parameter must be unqualified.",
-                                                     object_source(p),
-                                                     add_top_expansion(macro_expansions));
+        return error::analysis_invalid_fn_parameters(
+          "Each function parameter must be an unqualified symbol.",
+          object_source(p),
+          add_top_expansion(macro_expansions));
       }
       else if(sym->name == "&")
       {
         if(is_variadic)
         {
+          /* TODO: Note the first variadic param. */
           return error::analysis_invalid_fn_parameters(
             "Multiple '&' paramters found, but only one may be present.",
             meta_source(sym->meta),
@@ -529,6 +533,7 @@ namespace jank::analyze
         }
         else if(it + 1 == params->data.end())
         {
+          /* TODO: Note the variadic param. */
           return error::analysis_invalid_fn_parameters(
             "A symbol must be present after '&' to name the variadic parameter.",
             object_source(*it),
@@ -536,6 +541,7 @@ namespace jank::analyze
         }
         else if(it + 2 != params->data.end())
         {
+          /* TODO: Note the variadic param. */
           return error::analysis_invalid_fn_parameters(
             "There may be no additional parameters after the variadic parameter.",
             object_source(*(it + 1)),
