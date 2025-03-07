@@ -46,6 +46,10 @@ namespace jank::error
   error_ptr analysis_invalid_if(native_persistent_string const &message,
                                 read::source const &source,
                                 native_deque<runtime::object_ptr> const &macro_expansions);
+  error_ptr analysis_invalid_if(native_persistent_string const &message,
+                                read::source const &source,
+                                native_persistent_string const &error_note_message,
+                                native_deque<runtime::object_ptr> const &macro_expansions);
   error_ptr analysis_invalid_quote(native_persistent_string const &message,
                                    read::source const &source,
                                    native_deque<runtime::object_ptr> const &macro_expansions);
@@ -58,6 +62,10 @@ namespace jank::error
                                    native_deque<runtime::object_ptr> const &macro_expansions);
   error_ptr analysis_invalid_try(native_persistent_string const &message,
                                  read::source const &source,
+                                 native_deque<runtime::object_ptr> const &macro_expansions);
+  error_ptr analysis_invalid_try(native_persistent_string const &message,
+                                 read::source const &source,
+                                 note &&extra,
                                  native_deque<runtime::object_ptr> const &macro_expansions);
   error_ptr analysis_unresolved_var(native_persistent_string const &message,
                                     read::source const &source,

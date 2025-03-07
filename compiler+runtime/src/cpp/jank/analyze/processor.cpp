@@ -945,7 +945,7 @@ namespace jank::analyze
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return error::analysis_invalid_let("'let' binding symbols must be unqualified.",
+        return error::analysis_invalid_let("Binding symbols for 'let' must be unqualified.",
                                            object_source(sym_obj),
                                            add_top_expansion(macro_expansions));
       }
@@ -1004,9 +1004,10 @@ namespace jank::analyze
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analysis_invalid_loop("The bindings for a 'loop' must be a vector.",
-                                          object_source(bindings_obj),
-                                          add_top_expansion(macro_expansions));
+      return error::analysis_invalid_loop(
+        "The bindings for a 'loop' must be a vector.",
+        maybe_reparse(object_source(bindings_obj), [=] { return read::parse::reparse_nth(o, 1); }),
+        add_top_expansion(macro_expansions));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -1014,6 +1015,7 @@ namespace jank::analyze
     auto const binding_parts(bindings->data.size());
     if(binding_parts % 2 == 1)
     {
+      /* TODO: Note the last item. Check if it's a symbol? */
       return error::analysis_invalid_loop("There must be an even number of bindings for a 'loop'.",
                                           object_source(bindings_obj),
                                           add_top_expansion(macro_expansions));
@@ -1029,13 +1031,14 @@ namespace jank::analyze
       {
         return error::analysis_invalid_loop(
           "The left hand side of a 'loop' binding must be a symbol.",
-          object_source(sym_obj),
+          maybe_reparse(object_source(sym_obj),
+                        [=] { return read::parse::reparse_nth(bindings, i); }),
           add_top_expansion(macro_expansions));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return error::analysis_invalid_loop("'loop' binding symbols must be unqualified.",
+        return error::analysis_invalid_loop("Binding symbols for 'loop' must be unqualified.",
                                             object_source(sym_obj),
                                             add_top_expansion(macro_expansions));
       }
@@ -1118,15 +1121,19 @@ namespace jank::analyze
     auto const form_count(o->count());
     if(form_count < 3)
     {
-      return error::analysis_invalid_if("'if' needs at least a condition and a 'then' form.",
+      return error::analysis_invalid_if("Each 'if' needs at least a condition and a 'then' form.",
                                         meta_source(o->meta),
                                         add_top_expansion(macro_expansions));
     }
     else if(form_count > 4)
     {
+      /* TODO: Suggestion to wrap in a 'do'. */
       return error::analysis_invalid_if(
-        "Extra form specified in 'if'.",
-        object_source(o->data.rest().rest().rest().rest().first().unwrap()),
+        "An extra form specified in this 'if'. There may only be a condition, a 'then' form, and "
+        "then optionally an 'else' form.",
+        maybe_reparse(object_source(o->data.rest().rest().rest().rest().first().unwrap()),
+                      [=] { return read::parse::reparse_nth(o, 4); }),
+        "Everything starting here is excess.",
         add_top_expansion(macro_expansions));
     }
 
@@ -1208,9 +1215,10 @@ namespace jank::analyze
     auto const arg(o->data.rest().first().unwrap());
     if(arg->type != runtime::object_type::symbol)
     {
-      return error::analysis_invalid_var_reference("The argument to 'var' must be a symbol.",
-                                                   object_source(arg),
-                                                   add_top_expansion(macro_expansions));
+      return error::analysis_invalid_var_reference(
+        "The argument to 'var' must be a symbol.",
+        maybe_reparse(object_source(arg), [=] { return read::parse::reparse_nth(o, 1); }),
+        add_top_expansion(macro_expansions));
     }
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
@@ -1388,7 +1396,7 @@ namespace jank::analyze
             if(catch_body_size == 1)
             {
               return error::analysis_invalid_try(
-                "Symbol required after 'catch', which is used as the binding to "
+                "A symbol is required after 'catch', which is used as the binding to "
                 "hold the exception value.",
                 object_source(item),
                 add_top_expansion(macro_expansions));
@@ -1398,9 +1406,12 @@ namespace jank::analyze
             if(sym_obj->type != runtime::object_type::symbol)
             {
               return error::analysis_invalid_try(
-                "Symbol required after 'catch', which is used as the binding to "
+                "A symbol required after 'catch', which is used as the binding to "
                 "hold the exception value.",
-                object_source(sym_obj),
+                object_source(item),
+                error::note{ "A symbol is required before this form.",
+                             maybe_reparse(object_source(sym_obj),
+                                           [=] { return read::parse::reparse_nth(item, 1); }) },
                 add_top_expansion(macro_expansions));
             }
 

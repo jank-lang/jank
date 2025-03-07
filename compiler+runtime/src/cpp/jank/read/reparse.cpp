@@ -3,10 +3,9 @@
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/reparse.hpp>
 #include <jank/read/parse.hpp>
-#include <jank/runtime/obj/persistent_list.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/error/parse.hpp>
 
@@ -86,5 +85,30 @@ namespace jank::read::parse
     /* Add one to skip the [ for the vector. */
     return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
       .unwrap_move();
+  }
+
+  source reparse_nth(runtime::object_ptr const o, size_t const n)
+  {
+    return visit_seqable(
+      [](auto const typed_o, size_t const n) -> source {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::persistent_list>
+                     || std::same_as<T, obj::persistent_vector>)
+        {
+          return reparse_nth(typed_o, n);
+        }
+        else
+        {
+          throw error::internal_parse_failure(
+            fmt::format("Unsupported object for reparsing {}", typed_o->to_code_string()));
+        }
+      },
+      [=]() -> source {
+        throw error::internal_parse_failure(
+          fmt::format("Unable to reparse object {}", to_code_string(o)));
+      },
+      o,
+      n);
   }
 }
