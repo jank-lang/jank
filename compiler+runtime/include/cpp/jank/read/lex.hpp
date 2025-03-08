@@ -230,6 +230,7 @@ namespace jank::read::lex
     };
 
     processor(native_persistent_string_view const &f);
+    processor(native_persistent_string_view const &f, size_t offset);
 
     result<token, error_ptr> next();
     result<codepoint, error_ptr> peek(size_t const ahead = 1) const;

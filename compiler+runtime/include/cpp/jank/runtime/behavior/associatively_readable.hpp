@@ -5,7 +5,7 @@
 namespace jank::runtime::behavior
 {
   template <typename T>
-  concept associatively_readable = requires(T * const t) {
+  concept associatively_readable = requires(T const * const t) {
     /* Returns the found value or nil. */
     { t->get(object_ptr{}) } -> std::convertible_to<object_ptr>;
 
