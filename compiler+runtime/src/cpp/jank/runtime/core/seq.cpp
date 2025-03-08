@@ -817,7 +817,7 @@ namespace jank::runtime
     }
     else if(o == obj::nil::nil_const())
     {
-      return o;
+      return fallback;
     }
 
     return visit_object(
