@@ -315,7 +315,7 @@ namespace jank::runtime
                                             std::unique_ptr<llvm::Module> const &module) const
   {
     profile::timer const timer{ fmt::format("write_module {}", module_name) };
-    boost::filesystem::path const module_path{
+    std::filesystem::path const module_path{
       fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
     };
     std::filesystem::create_directories(module_path.parent_path());
