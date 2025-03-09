@@ -198,11 +198,30 @@ namespace jank::runtime
       fn->unique_name = fn->name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
       cg_prc.gen().expect_ok();
-      write_module(std::move(cg_prc.ctx)).expect_ok();
+      write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
     assert(ret);
     return ret;
+  }
+
+  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  {
+    profile::timer const timer{ "rt eval_cpp_string" };
+
+    /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
+     * is valuable to the user. */
+    auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
+
+    /* Writing the module before executing it because `llvm::Interpreter::Execute`
+     * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
+    if(truthy(compile_files_var->deref()))
+    {
+      auto module_name{ runtime::to_string(current_module_var->deref()) };
+      write_module(module_name, partial_tu.TheModule).expect_ok();
+    }
+
+    auto err(jit_prc.interpreter->Execute(partial_tu));
   }
 
   object_ptr context::read_string(native_persistent_string_view const &code)
@@ -292,12 +311,12 @@ namespace jank::runtime
     return evaluate::eval(expr.expect_ok());
   }
 
-  string_result<void>
-  context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
+  string_result<void> context::write_module(native_persistent_string const &module_name,
+                                            std::unique_ptr<llvm::Module> const &module) const
   {
-    profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
+    profile::timer const timer{ fmt::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
-      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
     };
     std::filesystem::create_directories(module_path.parent_path());
 
@@ -334,7 +353,7 @@ namespace jank::runtime
       return err(fmt::format("failed to write module to object file for {}", target_triple));
     }
 
-    pass.run(*codegen_ctx->module);
+    pass.run(*module);
 
     return ok();
   }
