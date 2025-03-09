@@ -4,6 +4,7 @@
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
@@ -382,7 +383,6 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("dissoc-in-place!", &dissoc_in_place);
   intern_fn("pop-in-place!", &pop_in_place);
   intern_fn("disj-in-place!", &disj_in_place);
-  intern_fn("apply-to", &apply_to);
   intern_fn("deref", &deref);
   intern_fn("reduced", &reduced);
   intern_fn("reduced?", &is_reduced);
@@ -396,7 +396,6 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("volatile!", &volatile_);
   intern_fn("volatile?", &is_volatile);
   intern_fn("vreset!", &vreset);
-  intern_fn("vswap!", &vswap);
   intern_fn("+", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&add));
   intern_fn("-", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&sub));
   intern_fn("/", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&div));
@@ -671,6 +670,16 @@ jank_object_ptr jank_load_clojure_core_native()
       return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
     };
     intern_fn_obj("swap-vals!", fn);
+  }
+
+  {
+    auto const fn(
+      make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
+    fn->arity_2 = [](object * const vol, object * const fn) -> object * { return vswap(vol, fn); };
+    fn->arity_3 = [](object * const vol, object * const fn, object * const rest) -> object * {
+      return vswap(vol, fn, rest);
+    };
+    intern_fn_obj("vswap!", fn);
   }
 
   {

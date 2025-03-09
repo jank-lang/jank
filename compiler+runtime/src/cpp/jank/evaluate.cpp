@@ -7,6 +7,7 @@
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/jit/processor.hpp>

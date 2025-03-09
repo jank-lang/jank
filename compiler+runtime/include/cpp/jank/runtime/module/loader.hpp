@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 #include <jank/runtime/object.hpp>
 #include <jank/result.hpp>
@@ -48,10 +48,9 @@ namespace jank::runtime::module
     native_persistent_string path;
   };
 
-  native_persistent_string path_to_module(boost::filesystem::path const &path);
+  native_persistent_string path_to_module(std::filesystem::path const &path);
   native_persistent_string module_to_path(native_persistent_string_view const &module);
   native_persistent_string module_to_load_function(native_persistent_string_view const &module);
-  native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
   native_persistent_string
@@ -72,6 +71,8 @@ namespace jank::runtime::module
      * subsequent matches are ignored. */
     struct entry
     {
+      entry() = default;
+
       option<file_entry> o;
       option<file_entry> cpp;
       option<file_entry> jank;

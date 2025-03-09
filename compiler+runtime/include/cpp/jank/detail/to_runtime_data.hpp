@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
@@ -45,7 +45,7 @@ namespace jank::detail
     return make_box<obj::symbol>(d);
   }
 
-  inline object_ptr to_runtime_data(boost::filesystem::path const &p)
+  inline object_ptr to_runtime_data(std::filesystem::path const &p)
   {
     return make_box(p.string());
   }

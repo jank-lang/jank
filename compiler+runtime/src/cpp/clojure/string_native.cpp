@@ -1,5 +1,3 @@
-#include <boost/algorithm/string.hpp>
-
 #include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 #include <jank/runtime/convert.hpp>
@@ -8,6 +6,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/util/string.hpp>
 
 namespace clojure::string_native
 {
@@ -34,7 +33,7 @@ namespace clojure::string_native
   static object_ptr lower_case(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    return make_box(boost::to_lower_copy(s_str));
+    return make_box(util::to_lowercase(s_str));
   }
 
   static object_ptr starts_with(object_ptr const s, object_ptr const substr)
@@ -61,7 +60,7 @@ namespace clojure::string_native
   static object_ptr upper_case(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    return make_box(boost::to_upper_copy(s_str));
+    return make_box(util::to_uppercase(s_str));
   }
 }
 

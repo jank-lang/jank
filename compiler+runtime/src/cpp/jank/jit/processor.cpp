@@ -1,10 +1,12 @@
 #include <cstdlib>
+#include <iostream>
 
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IRReader/IRReader.h>
@@ -55,12 +57,8 @@ namespace jank::jit
 
     for(auto const &library_dir : opts.library_dirs)
     {
-      library_dirs.emplace_back(boost::filesystem::absolute(library_dir.c_str()));
+      library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
-
-    /* TODO: Pass this into each fn below so we only do this once on startup. */
-    auto const jank_path(util::process_location().unwrap().parent_path());
-    auto const include_path(jank_path / "../include");
 
     native_persistent_string O{ "-O0" };
     switch(optimization_level)
@@ -158,8 +156,18 @@ namespace jank::jit
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
-    profile::timer const timer{ fmt::format("jit ir module {}", m->getName()) };
+    profile::timer const timer{ fmt::format("jit ir module {}",
+                                            static_cast<std::string_view>(m->getName())) };
     //m->print(llvm::outs(), nullptr);
+
+#if JANK_DEBUG
+    if(llvm::verifyModule(*m, &llvm::errs()))
+    {
+      std::cerr << "----------\n";
+      m->print(llvm::outs(), nullptr);
+      std::cerr << "----------\n";
+    }
+#endif
 
     auto &ee(interpreter->getExecutionEngine().get());
     llvm::cantFail(
@@ -206,15 +214,15 @@ namespace jank::jit
     auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto const default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
-      if(boost::filesystem::exists(default_lib_abs_path.c_str()))
+      auto default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
+      if(std::filesystem::exists(default_lib_abs_path.c_str()))
       {
         return default_lib_abs_path;
       }
       else
       {
-        auto const lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
-        if(boost::filesystem::exists(lib_abs_path))
+        auto lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
+        if(std::filesystem::exists(lib_abs_path))
         {
           return lib_abs_path;
         }
@@ -229,7 +237,7 @@ namespace jank::jit
   {
     for(auto const &lib : libs)
     {
-      if(boost::filesystem::path{ lib.c_str() }.is_absolute())
+      if(std::filesystem::path{ lib.c_str() }.is_absolute())
       {
         load_dynamic_library(lib);
       }

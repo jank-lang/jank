@@ -163,6 +163,7 @@ add_library(
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
+  src/cpp/jank/util/string.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -173,12 +174,14 @@ add_library(
   src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
+  src/cpp/jank/read/reparse.cpp
   src/cpp/jank/runtime/core.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
   src/cpp/jank/runtime/core/truthy.cpp
   src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/core/math.cpp
+  src/cpp/jank/runtime/core/meta.cpp
   src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
@@ -268,26 +271,6 @@ add_library(
   src/cpp/jank/perf_native.cpp
 )
 
-target_include_directories(
-  jank_lib
-  PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
-)
-target_include_directories(
-  jank_lib
-  SYSTEM
-  PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
-)
-
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
 
 target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
@@ -302,8 +285,29 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(Boost CONFIG REQUIRED COMPONENTS filesystem)
 find_package(BDWgc REQUIRED)
+
+target_include_directories(
+  jank_lib
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+)
+target_include_directories(
+  jank_lib
+  SYSTEM
+  PUBLIC
+  ${BDWGC_INCLUDE_DIR}
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+)
 
 target_link_libraries(
   jank_lib PRIVATE
@@ -314,7 +318,6 @@ target_link_libraries(
   clang
   clang-cpp
   LLVM
-  Boost::filesystem
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )
@@ -453,7 +456,6 @@ target_link_libraries(
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
-  Boost::filesystem
 )
 
 jank_hook_llvm(jank_exe)
@@ -503,7 +505,6 @@ if(jank_tests)
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
     doctest::doctest
-    Boost::filesystem
   )
 
   jank_hook_llvm(jank_test_exe)

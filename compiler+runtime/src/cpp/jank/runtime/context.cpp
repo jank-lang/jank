@@ -16,6 +16,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/evaluate.hpp>
@@ -51,7 +52,7 @@ namespace jank::runtime
 
     auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
     current_file_var = core->intern_var(file_sym);
-    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->bind_root(make_box(read::no_source_path));
     current_file_var->dynamic.store(true);
 
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
@@ -317,7 +318,7 @@ namespace jank::runtime
     boost::filesystem::path const module_path{
       fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
     };
-    boost::filesystem::create_directories(module_path.parent_path());
+    std::filesystem::create_directories(module_path.parent_path());
 
     /* TODO: Is there a better place for this block of code? */
     std::error_code file_error{};
@@ -328,7 +329,7 @@ namespace jank::runtime
                              module_path.c_str(),
                              file_error.message()));
     }
-    // codegen_ctx->module->print(llvm::outs(), nullptr);
+    //codegen_ctx->module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;
@@ -584,11 +585,29 @@ namespace jank::runtime
 
   object_ptr context::macroexpand(object_ptr const o)
   {
-    auto const expanded(macroexpand1(o));
+    auto expanded(macroexpand1(o));
     if(expanded != o)
     {
+      /* If we've actually expanded `o` into something else, it's helpful to update the meta
+       * on the expanded data to tie it back to the original form. */
+      auto const source{ object_source(o) };
+      if(source != read::source::unknown)
+      {
+        auto meta{ runtime::meta(expanded) };
+        auto const source_kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
+        auto expanded_source_map{ runtime::get(meta, source_kw) };
+        if(expanded_source_map != obj::nil::nil_const())
+        {
+          auto const macro_kw{ __rt_ctx->intern_keyword("macro-expansion").expect_ok() };
+          expanded_source_map = runtime::assoc(expanded_source_map, macro_kw, o);
+          meta = runtime::assoc(meta, source_kw, expanded_source_map);
+          expanded = with_meta(expanded, meta);
+        }
+      }
+
       return macroexpand(expanded);
     }
+
     return o;
   }
 

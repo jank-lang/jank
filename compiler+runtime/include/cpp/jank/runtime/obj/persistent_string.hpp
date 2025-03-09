@@ -44,6 +44,10 @@ namespace jank::runtime::obj
     object_ptr get_entry(object_ptr key) const;
     native_bool contains(object_ptr key) const;
 
+    /* behavior::indexable */
+    object_ptr nth(object_ptr const index) const;
+    object_ptr nth(object_ptr const index, object_ptr const fallback) const;
+
     string_result<persistent_string_ptr> substring(native_integer start) const;
     string_result<persistent_string_ptr> substring(native_integer start, native_integer end) const;
 

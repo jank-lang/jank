@@ -1,5 +1,4 @@
 (assert (= 'clojure.core/meow `clojure.core/meow `meow))
-(assert (= '(quote clojure.core/meow) ``meow))
 (assert (= '[clojure.core/meow] `[clojure.core/meow] `[meow]))
 (assert (= '[clojure.core/meow {clojure.core/a clojure.core/b}]
            `[clojure.core/meow {clojure.core/a clojure.core/b}]

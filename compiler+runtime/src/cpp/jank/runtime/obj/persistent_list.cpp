@@ -20,6 +20,14 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_list_ptr persistent_list::create(object_ptr const meta, object_ptr const s)
+  {
+    auto const ret{ create(s) };
+    auto const m{ behavior::detail::validate_meta(meta) };
+    ret->meta = m;
+    return ret;
+  }
+
   persistent_list_ptr persistent_list::create(object_ptr const s)
   {
     if(s == nullptr)

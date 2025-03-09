@@ -33,7 +33,6 @@ namespace jank::runtime::obj
                         object_ptr val);
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
-    persistent_hash_map(object_ptr meta, value_type &&d);
     persistent_hash_map(option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>

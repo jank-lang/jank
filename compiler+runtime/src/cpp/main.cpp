@@ -1,8 +1,6 @@
 #include <iostream>
 #include <fstream>
-
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
+#include <filesystem>
 
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
@@ -28,6 +26,7 @@
 #include <jank/profile/time.hpp>
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/string.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -150,15 +149,16 @@ namespace jank
     /* We write every REPL expression to a temporary file, which then allows us
      * to later review that for error reporting. We automatically clean it up
      * and we reuse the same file over and over. */
-    auto const tmp{ boost::filesystem::temp_directory_path() };
-    auto const path{ tmp / boost::filesystem::unique_path("jank-repl-%%%%.jank") };
+    auto const tmp{ std::filesystem::temp_directory_path() };
+    std::string path_tmp{ tmp / "jank-repl-XXXXXX" };
+    mkstemp(path_tmp.data());
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     while(auto buf = le.readLine())
     {
       auto &line(*buf);
-      boost::trim(line);
+      util::trim(line);
 
       if(line.ends_with("\\"))
       {
@@ -170,15 +170,15 @@ namespace jank
 
       input += line;
 
-      util::scope_exit const finally{ [&] { boost::filesystem::remove(path); } };
+      util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
       try
       {
         {
-          std::ofstream ofs{ path.string() };
+          std::ofstream ofs{ path_tmp };
           ofs << input;
         }
 
-        auto const res(__rt_ctx->eval_file(path.c_str()));
+        auto const res(__rt_ctx->eval_file(path_tmp));
         fmt::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
@@ -229,7 +229,7 @@ namespace jank
     while(auto buf = le.readLine())
     {
       auto &line(*buf);
-      boost::trim(line);
+      util::trim(line);
 
       if(line.empty())
       {

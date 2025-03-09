@@ -17,15 +17,33 @@
     (util/log-info "Not enabled")
     (let [clang (util/find-llvm-tool "clang")
           clang++ (util/find-llvm-tool "clang++")
-          exports {"CC" clang
-                   "CXX" clang++}
+          exports (merge {"CC" clang
+                          "CXX" clang++
+                          "CCACHE_BASEDIR" compiler+runtime-dir
+                          "CCACHE_DIR" (str compiler+runtime-dir "/.ccache")
+                          "CCACHE_COMPRESS" "true"
+                          "CCACHE_MAXSIZE" "1G"
+                          "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")})
           configure-flags ["-GNinja"
                            "-Djank_tests=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
                            (str "-Djank_coverage=" coverage)]
-          configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))]
+          configure-flags (cond-> configure-flags
+                            (not= "on" analyze)
+                            (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"
+                                  "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
+                            (= "on" analyze)
+                            (conj "-DCMAKE_CXX_CLANG_TIDY=clang-tidy-cache-wrapper"))
+          configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))
+          stats-cmd (if (= "on" analyze)
+                      "clang-tidy-cache"
+                      "ccache")]
+      (util/quiet-shell {:dir compiler+runtime-dir
+                         :extra-env exports}
+                        (str stats-cmd " --zero-stats"))
+
       (util/quiet-shell {:dir compiler+runtime-dir
                          :extra-env exports}
                         configure-cmd)
@@ -34,8 +52,12 @@
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
-                          "./bin/compile")
+                          "./bin/compile -v")
         (util/log-info-with-time duration "Compiled"))
+
+      (util/quiet-shell {:dir compiler+runtime-dir
+                         :extra-env exports}
+                        (str stats-cmd " --show-stats"))
 
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir

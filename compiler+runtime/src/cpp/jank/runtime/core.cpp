@@ -251,69 +251,6 @@ namespace jank::runtime
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  object_ptr meta(object_ptr const m)
-  {
-    if(m == nullptr || m == obj::nil::nil_const())
-    {
-      return obj::nil::nil_const();
-    }
-
-    return visit_object(
-      [](auto const typed_m) -> object_ptr {
-        using T = typename decltype(typed_m)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          return typed_m->meta.unwrap_or(obj::nil::nil_const());
-        }
-        else
-        {
-          return obj::nil::nil_const();
-        }
-      },
-      m);
-  }
-
-  object_ptr with_meta(object_ptr const o, object_ptr const m)
-  {
-    return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          return typed_o->with_meta(m);
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
-        }
-      },
-      o,
-      m);
-  }
-
-  object_ptr reset_meta(object_ptr const o, object_ptr const m)
-  {
-    return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          auto const meta(behavior::detail::validate_meta(m));
-          typed_o->meta = meta;
-          return m;
-        }
-        else
-        {
-          throw std::runtime_error{ fmt::format("not metadatable: {}", to_string(m)) };
-        }
-      },
-      o,
-      m);
-  }
-
   obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start)
   {
     return visit_type<obj::persistent_string>(
@@ -556,15 +493,21 @@ namespace jank::runtime
     return o->type == object_type::volatile_;
   }
 
+  object_ptr vswap(object_ptr const v, object_ptr const fn)
+  {
+    auto const v_obj(try_object<obj::volatile_>(v));
+    return v_obj->reset(dynamic_call(fn, v_obj->deref()));
+  }
+
   object_ptr vswap(object_ptr const v, object_ptr const fn, object_ptr const args)
   {
-    auto const v_obj(expect_object<obj::volatile_>(v));
+    auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
   }
 
   object_ptr vreset(object_ptr const v, object_ptr const new_val)
   {
-    return expect_object<obj::volatile_>(v)->reset(new_val);
+    return try_object<obj::volatile_>(v)->reset(new_val);
   }
 
   void push_thread_bindings(object_ptr const o)
