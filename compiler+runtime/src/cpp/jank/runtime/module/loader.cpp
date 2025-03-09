@@ -498,7 +498,7 @@ namespace jank::runtime::module
         res = load_o(module, module_sources.o.unwrap());
         break;
       case module_type::cpp:
-        res = load_cpp(module_sources.cpp.unwrap());
+        res = load_cpp(module, module_sources.cpp.unwrap());
         break;
       case module_type::cljc:
         res = load_cljc(module_sources.cljc.unwrap());
@@ -551,7 +551,8 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_cpp(file_entry const &entry) const
+  string_result<void>
+  loader::load_cpp(native_persistent_string const &module, file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -569,6 +570,13 @@ namespace jank::runtime::module
       }
       rt_ctx.eval_cpp_string({ file.expect_ok().head, file.expect_ok().size });
     }
+
+    /* TODO: What if there is no load function?
+     * What if load function is defined in another module?
+     * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
+    auto const load_function_name{ module_to_load_function(module) };
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
+    load();
 
     return ok();
   }

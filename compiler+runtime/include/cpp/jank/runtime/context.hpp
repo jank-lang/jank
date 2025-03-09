@@ -106,7 +106,6 @@ namespace jank::runtime
 
     object_ptr eval(object_ptr const o);
 
-    string_result<void> write_module(std::unique_ptr<codegen::reusable_context> codegen_ctx) const;
     string_result<void> write_module(native_persistent_string const &module_name,
                                      std::unique_ptr<llvm::Module> const &module) const;
 

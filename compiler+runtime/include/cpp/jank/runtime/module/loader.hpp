@@ -102,7 +102,8 @@ namespace jank::runtime::module
 
     string_result<void>
     load_o(native_persistent_string const &module, file_entry const &entry) const;
-    string_result<void> load_cpp(file_entry const &entry) const;
+    string_result<void>
+    load_cpp(native_persistent_string const &module, file_entry const &entry) const;
     string_result<void> load_jank(file_entry const &entry) const;
     string_result<void> load_cljc(file_entry const &entry) const;
 

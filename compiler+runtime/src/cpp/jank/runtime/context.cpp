@@ -207,9 +207,12 @@ namespace jank::runtime
   void context::eval_cpp_string(native_persistent_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
+
+    /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
+     * is valuable to the user. */
     auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
 
-    /* Writing the module before executing it because `llvm::Interpreter#Execute`
+    /* Writing the module before executing it because `llvm::Interpreter::Execute`
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
@@ -218,7 +221,6 @@ namespace jank::runtime
     }
 
     auto err(jit_prc.interpreter->Execute(partial_tu));
-    llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
 
   object_ptr context::read_string(native_persistent_string_view const &code)
