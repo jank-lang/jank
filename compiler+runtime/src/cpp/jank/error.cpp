@@ -95,39 +95,39 @@ namespace jank::error
       case kind::internal_parse_failure:
         return "Internal parse failure.";
 
-      case kind::analysis_invalid_case:
+      case kind::analyze_invalid_case:
         return "Invalid case.";
-      case kind::analysis_invalid_def:
+      case kind::analyze_invalid_def:
         return "Invalid def.";
-      case kind::analysis_invalid_fn:
+      case kind::analyze_invalid_fn:
         return "Invalid fn.";
-      case kind::analysis_invalid_fn_parameters:
+      case kind::analyze_invalid_fn_parameters:
         return "Invalid fn parameters.";
-      case kind::analysis_invalid_recur_position:
+      case kind::analyze_invalid_recur_position:
         return "recur must be used from tail position.";
-      case kind::analysis_invalid_recur_from_try:
+      case kind::analyze_invalid_recur_from_try:
         return "recur may not be used within a 'try'.";
-      case kind::analysis_invalid_recur_args:
+      case kind::analyze_invalid_recur_args:
         return "The argument arity passed to 'recur' doesn't match the function's arity.";
-      case kind::analysis_invalid_let:
+      case kind::analyze_invalid_let:
         return "Invalid let.";
-      case kind::analysis_invalid_loop:
+      case kind::analyze_invalid_loop:
         return "Invalid loop.";
-      case kind::analysis_invalid_if:
+      case kind::analyze_invalid_if:
         return "Invalid if.";
-      case kind::analysis_invalid_quote:
+      case kind::analyze_invalid_quote:
         return "Invalid quote.";
-      case kind::analysis_invalid_var_reference:
+      case kind::analyze_invalid_var_reference:
         return "Invalid var reference.";
-      case kind::analysis_invalid_throw:
+      case kind::analyze_invalid_throw:
         return "Invalid throw.";
-      case kind::analysis_invalid_try:
+      case kind::analyze_invalid_try:
         return "Invalid try.";
-      case kind::analysis_unresolved_var:
+      case kind::analyze_unresolved_var:
         return "Unresolved var.";
-      case kind::analysis_unresolved_symbol:
+      case kind::analyze_unresolved_symbol:
         return "Unresolved symbol.";
-      case kind::internal_analysis_failure:
+      case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
       case kind::internal_codegen_failure:
