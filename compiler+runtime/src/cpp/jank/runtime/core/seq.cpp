@@ -820,13 +820,9 @@ namespace jank::runtime
   object_ptr nth(object_ptr const o, object_ptr const idx, object_ptr const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0)
+    if(index < 0 || o == obj::nil::nil_const())
     {
       return fallback;
-    }
-    else if(o == obj::nil::nil_const())
-    {
-      return o;
     }
 
     return visit_object(
