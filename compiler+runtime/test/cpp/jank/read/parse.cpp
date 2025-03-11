@@ -6,6 +6,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -861,10 +862,9 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_array_map::empty()));
-        CHECK(equal(
-          meta(r.expect_ok().unwrap().ptr),
-          obj::persistent_array_map::create_unique(__rt_ctx->intern_keyword("foo").expect_ok(),
-                                                   obj::boolean::true_const())));
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(
+          equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), obj::boolean::true_const()));
       }
 
       SUBCASE("Keyword meta for non-metadatable target")
@@ -881,10 +881,9 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_vector::empty()));
-        CHECK(equal(
-          meta(r.expect_ok().unwrap().ptr),
-          obj::persistent_array_map::create_unique(__rt_ctx->intern_keyword("foo").expect_ok(),
-                                                   __rt_ctx->intern_keyword("bar").expect_ok())));
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()),
+                    __rt_ctx->intern_keyword("bar").expect_ok()));
       }
 
       SUBCASE("Map meta for non-metadatable target")
@@ -901,12 +900,12 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_list::empty()));
-        CHECK(equal(
-          meta(r.expect_ok().unwrap().ptr),
-          obj::persistent_array_map::create_unique(__rt_ctx->intern_keyword("foo").expect_ok(),
-                                                   __rt_ctx->intern_keyword("bar").expect_ok(),
-                                                   __rt_ctx->intern_keyword("meow").expect_ok(),
-                                                   obj::boolean::true_const())));
+
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()),
+                    __rt_ctx->intern_keyword("bar").expect_ok()));
+        CHECK(
+          equal(get(m, __rt_ctx->intern_keyword("meow").expect_ok()), obj::boolean::true_const()));
       }
 
       SUBCASE("Nested hints")
@@ -915,12 +914,11 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_vector::empty()));
-        CHECK(equal(meta(r.expect_ok().unwrap().ptr),
-                    obj::persistent_array_map::create_unique(
-                      __rt_ctx->intern_keyword("foo").expect_ok(),
-                      make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::symbol>("quote"),
-                                                     make_box<obj::symbol>("bar")))));
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()),
+                    make_box<obj::persistent_list>(std::in_place,
+                                                   make_box<obj::symbol>("quote"),
+                                                   make_box<obj::symbol>("bar"))));
       }
 
       SUBCASE("Within a call")
@@ -932,13 +930,12 @@ namespace jank::read::parse
                     make_box<obj::persistent_list>(std::in_place,
                                                    make_box<obj::symbol>("str"),
                                                    obj::persistent_hash_set::empty())));
-        CHECK(equal(
-          meta(expect_object<obj::persistent_list>(r.expect_ok().unwrap().ptr)
-                 ->data.rest()
-                 .first()
-                 .unwrap()),
-          obj::persistent_array_map::create_unique(__rt_ctx->intern_keyword("foo").expect_ok(),
-                                                   obj::boolean::true_const())));
+        auto const m{ meta(expect_object<obj::persistent_list>(r.expect_ok().unwrap().ptr)
+                             ->data.rest()
+                             .first()
+                             .unwrap()) };
+        CHECK(
+          equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), obj::boolean::true_const()));
       }
     }
 

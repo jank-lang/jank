@@ -1,10 +1,12 @@
 #include <cstdlib>
+#include <iostream>
 
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IRReader/IRReader.h>
@@ -154,8 +156,18 @@ namespace jank::jit
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
-    profile::timer const timer{ fmt::format("jit ir module {}", m->getName()) };
+    profile::timer const timer{ fmt::format("jit ir module {}",
+                                            static_cast<std::string_view>(m->getName())) };
     //m->print(llvm::outs(), nullptr);
+
+#if JANK_DEBUG
+    if(llvm::verifyModule(*m, &llvm::errs()))
+    {
+      std::cerr << "----------\n";
+      m->print(llvm::outs(), nullptr);
+      std::cerr << "----------\n";
+    }
+#endif
 
     auto &ee(interpreter->getExecutionEngine().get());
     llvm::cantFail(

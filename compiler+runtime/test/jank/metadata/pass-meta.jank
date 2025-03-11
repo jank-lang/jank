@@ -1,11 +1,9 @@
 ; Metadatable
-(assert (= nil (meta {})))
-(assert (= nil (meta [])))
-(assert (= nil (meta '())))
-(assert (= nil (meta 'foo)))
-
-; TODO: Set literals
-;(assert (= nil (meta #{})))
+(assert (map? (meta {})))
+(assert (map? (meta [])))
+(assert (map? (meta '())))
+(assert (map? (meta 'foo)))
+(assert (map? (meta #{})))
 
 ; Non-metadatable
 (assert (= nil (meta "")))

@@ -4,6 +4,8 @@
 #include <set>
 #include <string_view>
 #include <unordered_map>
+#include <deque>
+#include <list>
 
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
@@ -32,6 +34,10 @@ namespace jank
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;
+  template <typename T>
+  using native_deque = std::deque<T, native_allocator<T>>;
+  template <typename T>
+  using native_list = std::list<T, native_allocator<T>>;
   template <typename K, typename V>
   using native_map = std::map<K, V, native_allocator<std::pair<K const, V>>>;
   template <typename T>

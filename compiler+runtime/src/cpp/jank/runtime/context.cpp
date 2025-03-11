@@ -16,6 +16,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/evaluate.hpp>
@@ -51,7 +52,7 @@ namespace jank::runtime
 
     auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
     current_file_var = core->intern_var(file_sym);
-    current_file_var->bind_root(make_box("NO_SOURCE_PATH"));
+    current_file_var->bind_root(make_box(read::no_source_path));
     current_file_var->dynamic.store(true);
 
     auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
@@ -197,11 +198,30 @@ namespace jank::runtime
       fn->unique_name = fn->name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
       cg_prc.gen().expect_ok();
-      write_module(std::move(cg_prc.ctx)).expect_ok();
+      write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
     assert(ret);
     return ret;
+  }
+
+  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  {
+    profile::timer const timer{ "rt eval_cpp_string" };
+
+    /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
+     * is valuable to the user. */
+    auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
+
+    /* Writing the module before executing it because `llvm::Interpreter::Execute`
+     * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
+    if(truthy(compile_files_var->deref()))
+    {
+      auto module_name{ runtime::to_string(current_module_var->deref()) };
+      write_module(module_name, partial_tu.TheModule).expect_ok();
+    }
+
+    auto err(jit_prc.interpreter->Execute(partial_tu));
   }
 
   object_ptr context::read_string(native_persistent_string_view const &code)
@@ -291,12 +311,12 @@ namespace jank::runtime
     return evaluate::eval(expr.expect_ok());
   }
 
-  string_result<void>
-  context::write_module(std::unique_ptr<codegen::reusable_context> const codegen_ctx) const
+  string_result<void> context::write_module(native_persistent_string const &module_name,
+                                            std::unique_ptr<llvm::Module> const &module) const
   {
-    profile::timer const timer{ fmt::format("write_module {}", codegen_ctx->module_name) };
+    profile::timer const timer{ fmt::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
-      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(codegen_ctx->module_name))
+      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
     };
     std::filesystem::create_directories(module_path.parent_path());
 
@@ -309,7 +329,7 @@ namespace jank::runtime
                              module_path.c_str(),
                              file_error.message()));
     }
-    // codegen_ctx->module->print(llvm::outs(), nullptr);
+    //codegen_ctx->module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;
@@ -333,7 +353,7 @@ namespace jank::runtime
       return err(fmt::format("failed to write module to object file for {}", target_triple));
     }
 
-    pass.run(*codegen_ctx->module);
+    pass.run(*module);
 
     return ok();
   }
@@ -565,11 +585,29 @@ namespace jank::runtime
 
   object_ptr context::macroexpand(object_ptr const o)
   {
-    auto const expanded(macroexpand1(o));
+    auto expanded(macroexpand1(o));
     if(expanded != o)
     {
+      /* If we've actually expanded `o` into something else, it's helpful to update the meta
+       * on the expanded data to tie it back to the original form. */
+      auto const source{ object_source(o) };
+      if(source != read::source::unknown)
+      {
+        auto meta{ runtime::meta(expanded) };
+        auto const source_kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
+        auto expanded_source_map{ runtime::get(meta, source_kw) };
+        if(expanded_source_map != obj::nil::nil_const())
+        {
+          auto const macro_kw{ __rt_ctx->intern_keyword("macro-expansion").expect_ok() };
+          expanded_source_map = runtime::assoc(expanded_source_map, macro_kw, o);
+          meta = runtime::assoc(meta, source_kw, expanded_source_map);
+          expanded = with_meta(expanded, meta);
+        }
+      }
+
       return macroexpand(expanded);
     }
+
     return o;
   }
 

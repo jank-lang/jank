@@ -8,10 +8,17 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
+#include <jank/util/string.hpp>
 #include <jank/error/report.hpp>
 #include <jank/ui/highlight.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/rtti.hpp>
 
 namespace jank::error
 {
@@ -34,6 +41,20 @@ namespace jank::error
       ellipsis
     };
 
+    static constexpr char const *kind_str(kind const k)
+    {
+      switch(k)
+      {
+        case kind::file_data:
+          return "file_data";
+        case kind::note:
+          return "note";
+        case kind::ellipsis:
+          return "ellipsis";
+      }
+      return "unknown";
+    }
+
     kind kind{};
     /* Zero means no number. */
     size_t number{};
@@ -43,7 +64,7 @@ namespace jank::error
 
   struct snippet
   {
-    native_bool can_fit(note const &n) const;
+    native_bool can_fit_without_ellipsis(note const &n) const;
     void add(read::source const &body_source, note const &n);
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
@@ -75,9 +96,21 @@ namespace jank::error
     {
       add(n);
     }
+
+    for(size_t i{}; i < e->expansions.size(); ++i)
+    {
+      auto const expansion{ e->expansions[i] };
+      auto source{ runtime::object_source(expansion) };
+      /* We just want to point at the start of the expansion, not underline the
+       * whole thing. It may be huge! */
+      source.end = source.start;
+      add(note{ fmt::format("{} macro expansion here.", util::number_to_ordinal(i)),
+                source,
+                note::kind::info });
+    }
   }
 
-  native_bool snippet::can_fit(note const &n) const
+  native_bool snippet::can_fit_without_ellipsis(note const &n) const
   {
     assert(n.source.file_path == file_path);
 
@@ -91,16 +124,20 @@ namespace jank::error
     /* See if it can fit within our existing line coverage. */
     if(n.source.start.line < line_start)
     {
-      ret &= line_start - n.source.start.line <= new_note_leniency_lines;
+      ret &= (line_start - n.source.start.line) <= new_note_leniency_lines;
     }
-    if(n.source.end.line > line_end)
+    if(line_end < n.source.start.line)
     {
-      ret &= n.source.end.line - line_end <= new_note_leniency_lines;
+      ret &= (n.source.start.line - line_end) <= new_note_leniency_lines;
     }
 
     /* If it can, check each line to see if we have that line represented.
-     * It could be that we have an ellipsis which covers the relevant lines. */
-    if(ret)
+     * It could be that we have an ellipsis which covers the relevant lines.
+     * In that case, it doesn't fit.
+     *
+     * Only do this if the note lives within the existin bounds. If we're
+     * adding to the end, we don't need to look for an ellipsis. */
+    if(ret && n.source.start.line < line_end)
     {
       ret = false;
       for(auto const &l : lines)
@@ -148,7 +185,7 @@ namespace jank::error
      */
 
 
-    if(!can_fit(n))
+    if(!can_fit_without_ellipsis(n))
     {
       add_ellipsis(body_source, n);
       return;
@@ -286,10 +323,11 @@ namespace jank::error
     size_t last_number{};
     for(size_t i{}; i < lines.size(); ++i)
     {
-      /* Remove ellipsis if needed. */
+      /* Remove ellipsis, if needed. */
       if(lines[i].kind == line::kind::ellipsis)
       {
-        /* We can be confident there's no note right after an ellipsis. */
+        /* We can be confident there's no note right after an ellipsis, since
+         * notes only follow normal lines or other notes. */
         auto const diff(lines[i + 1].number - last_number);
         if(diff < min_ellipsis_range)
         {
@@ -316,8 +354,6 @@ namespace jank::error
         last_number = lines[i].number;
       }
     }
-    static_cast<void>(last_number);
-    static_cast<void>(min_ellipsis_range);
 
     line_start = std::min(line_start, s.line_start);
     line_end = std::max(line_end, s.line_end);
@@ -330,6 +366,11 @@ namespace jank::error
 
   void plan::add(read::source const &body_source, note const &n)
   {
+    if(n.source == read::source::unknown)
+    {
+      return;
+    }
+
     native_bool added{ false };
     for(auto &snippet : snippets)
     {

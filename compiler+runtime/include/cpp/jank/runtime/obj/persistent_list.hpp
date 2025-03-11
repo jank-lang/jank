@@ -17,6 +17,7 @@ namespace jank::runtime::obj
     static constexpr native_bool is_sequential{ true };
 
     /* Create from a sequence. */
+    static persistent_list_ptr create(object_ptr meta, object_ptr s);
     static persistent_list_ptr create(object_ptr s);
     static persistent_list_ptr create(persistent_list_ptr s);
 

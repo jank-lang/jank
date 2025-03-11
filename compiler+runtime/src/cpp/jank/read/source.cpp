@@ -1,11 +1,12 @@
 #include <jank/read/source.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::read
 {
   source_position const source_position::unknown{ 0, 0, 0 };
-  source const source::unknown{ "NO_SOURCE_PATH",
+  source const source::unknown{ no_source_path,
                                 source_position::unknown,
                                 source_position::unknown };
 
@@ -17,6 +18,7 @@ namespace jank::read
   source::source(source_position const &start, source_position const &end)
     : start{ start }
     , end{ end }
+    , macro_expansion{ runtime::obj::nil::nil_const() }
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
     file_path = runtime::to_string(file);
@@ -28,6 +30,18 @@ namespace jank::read
     : file_path{ file_path }
     , start{ start }
     , end{ end }
+    , macro_expansion{ runtime::obj::nil::nil_const() }
+  {
+  }
+
+  source::source(native_persistent_string const &file_path,
+                 source_position const &start,
+                 source_position const &end,
+                 runtime::object_ptr const macro_expansion)
+    : file_path{ file_path }
+    , start{ start }
+    , end{ end }
+    , macro_expansion{ macro_expansion }
   {
   }
 

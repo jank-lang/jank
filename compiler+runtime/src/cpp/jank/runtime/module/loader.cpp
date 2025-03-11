@@ -56,55 +56,6 @@ namespace jank::runtime::module
     return fmt::format("jank_load_{}", ret);
   }
 
-  /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
-   * we return a native namespace name. So foo.bar will become foo::bar. But we also strip off
-   * the last nested module, since the way the codegen works is that foo.bar$spam lives in the
-   * native namespace foo::bar. Lastly, we need to split the module into parts and munge each
-   * individually, since we can have a module like clojure.template which will munge cleanly
-   * on its own, but template is a C++ keyword and the resulting clojure::template namespace
-   * will be a problem. So we split the module on each ., munge, and put it back together
-   * using ::. */
-  native_persistent_string module_to_native_ns(native_persistent_string_view const &orig_module)
-  {
-    static std::regex const dollar{ "\\$" };
-
-    native_transient_string module{ munge(orig_module) };
-
-    native_vector<native_transient_string> module_parts;
-    for(size_t dot_pos{}; (dot_pos = module.find('.')) != native_persistent_string::npos;)
-    {
-      module_parts.emplace_back(munge(module.substr(0, dot_pos)));
-      module.erase(0, dot_pos + 1);
-    }
-
-    if(module.find('$') != native_transient_string::npos)
-    {
-      for(size_t dollar_pos{}; (dollar_pos = module.find('$')) != native_persistent_string::npos;)
-      {
-        module_parts.emplace_back(munge(module.substr(0, dollar_pos)));
-        module.erase(0, dollar_pos + 1);
-      }
-    }
-    else
-    {
-      module_parts.emplace_back(munge(module));
-    }
-
-    std::string ret;
-    for(auto &part : module_parts)
-    {
-      part = std::regex_replace(part, dollar, "::");
-
-      if(!ret.empty())
-      {
-        ret += "::";
-      }
-      ret += part;
-    }
-
-    return ret;
-  }
-
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub)
   {
@@ -197,11 +148,11 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //   fmt::println("register_entry {} {} {} {}",
-      //               entry.archive_path.unwrap_or("None"),
-      //               entry.path,
-      //               module_path.string(),
-      //               path_to_module(module_path));
+      //fmt::println("register_entry {} {} {} {}",
+      //             entry.archive_path.unwrap_or("None"),
+      //             entry.path,
+      //             module_path.string(),
+      //             path_to_module(module_path));
     }
   }
 
@@ -287,12 +238,12 @@ namespace jank::runtime::module
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     native_transient_string paths{ ps };
-    paths += fmt::format(":{}", (jank_path / "classes").string());
-    paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     paths += fmt::format(":{}", rt_ctx.binary_cache_dir);
+    paths += fmt::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).string());
+    paths += fmt::format(":{}", (jank_path / "../src/jank").string());
     this->paths = paths;
 
-    // fmt::println("module paths: {}", paths);
+    //fmt::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };
@@ -363,7 +314,7 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(native_persistent_string{ fmt::format("unable to find module: {}", module) });
+      return err(fmt::format("unable to find module: {}", module));
     }
 
     if(ori == origin::source)
@@ -387,11 +338,12 @@ namespace jank::runtime::module
        * to it.
        *
        * Portability:
-       * Unlike class files, object files are tied to the OS, architecture, c++ stdlib etc,
+       * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
        * making it hard to share them. */
       if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
          && entry->second.o.unwrap().exists()
-         && (entry->second.jank.is_some() || entry->second.cljc.is_some()))
+         && (entry->second.jank.is_some() || entry->second.cljc.is_some()
+             || entry->second.cpp.is_some()))
       {
         auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
 
@@ -407,6 +359,11 @@ namespace jank::runtime::module
         {
           source_modified_time = entry->second.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
+        }
+        else if(entry->second.cpp.is_some() && entry->second.cpp.unwrap().exists())
+        {
+          source_modified_time = entry->second.cpp.unwrap().last_modified_at();
+          module_type = module_type::cpp;
         }
         else
         {
@@ -438,7 +395,7 @@ namespace jank::runtime::module
       }
     }
 
-    return err(fmt::format("no sources for registered module: {}", module));
+    return err(fmt::format("No sources for registered module: {}", module));
   }
 
   native_bool loader::is_loaded(native_persistent_string_view const &module)
@@ -493,7 +450,7 @@ namespace jank::runtime::module
         res = load_o(module, module_sources.o.unwrap());
         break;
       case module_type::cpp:
-        res = load_cpp(module_sources.cpp.unwrap());
+        res = load_cpp(module, module_sources.cpp.unwrap());
         break;
       case module_type::cljc:
         res = load_cljc(module_sources.cljc.unwrap());
@@ -546,12 +503,13 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_cpp(file_entry const &entry) const
+  string_result<void>
+  loader::load_cpp(native_persistent_string const &module, file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        rt_ctx.jit_prc.eval_string(zip_entry.readAsText());
+        rt_ctx.eval_cpp_string(zip_entry.readAsText());
       });
     }
     else
@@ -562,8 +520,15 @@ namespace jank::runtime::module
         return err(
           fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.jit_prc.eval_string({ file.expect_ok().head, file.expect_ok().size });
+      rt_ctx.eval_cpp_string({ file.expect_ok().head, file.expect_ok().size });
     }
+
+    /* TODO: What if there is no load function?
+     * What if load function is defined in another module?
+     * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
+    auto const load_function_name{ module_to_load_function(module) };
+    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
+    load();
 
     return ok();
   }
