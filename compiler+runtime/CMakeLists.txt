@@ -92,7 +92,7 @@ set(
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   # After removing boost in https://github.com/jank-lang/jank/commit/beafe61ddb1ac3ee28d88650e4caed10f171ac4d
-  # macOS x86_64 requires using fmt in header-only mode.
+  # macOS x86_64 requires using fmt in header-only mode, as suggested in https://github.com/fmtlib/fmt/issues/3247.
   # TODO restrict workaround to x86_64 architecture
   $<$<PLATFORM_ID:Darwin>:-DFMT_HEADER_ONLY>
   #-DLIBASSERT_USE_FMT=1
