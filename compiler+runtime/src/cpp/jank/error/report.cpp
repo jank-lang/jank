@@ -97,14 +97,13 @@ namespace jank::error
       add(n);
     }
 
-    for(size_t i{}; i < e->expansions.size(); ++i)
+    if(e->expansion)
     {
-      auto const expansion{ e->expansions[i] };
-      auto source{ runtime::object_source(expansion) };
+      auto source{ runtime::object_source(e->expansion) };
       /* We just want to point at the start of the expansion, not underline the
        * whole thing. It may be huge! */
       source.end = source.start;
-      add(note{ fmt::format("{} macro expansion here.", util::number_to_ordinal(i)),
+      add(note{ fmt::format("Expanded from this macro.", util::number_to_ordinal(0)),
                 source,
                 note::kind::info });
     }

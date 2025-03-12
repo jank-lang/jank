@@ -164,12 +164,12 @@ namespace jank::error
   {
   }
 
-  base::base(enum kind const k, native_persistent_string const &message, read::source const &source, native_deque<runtime::object_ptr> const &expansions)
+  base::base(enum kind const k, native_persistent_string const &message, read::source const &source, runtime::object_ptr const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
     , notes{{default_note_message, source }}
-    , expansions{ expansions }
+    , expansion{ expansion }
   {
   }
 
@@ -198,12 +198,12 @@ namespace jank::error
              native_persistent_string const &message,
              read::source const &source,
              native_persistent_string const &note_message,
-             native_deque<runtime::object_ptr> const &expansions)
+             runtime::object_ptr const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
     , notes{{ note_message, source }}
-    , expansions{ expansions }
+    , expansion{ expansion }
   {
   }
 
@@ -230,12 +230,12 @@ namespace jank::error
              native_persistent_string const &message,
              read::source const &source,
              note const &note,
-             native_deque<runtime::object_ptr> const &expansions)
+             runtime::object_ptr const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
     , notes{ note }
-    , expansions{ expansions }
+    , expansion{ expansion }
   {
   }
 
@@ -258,6 +258,30 @@ namespace jank::error
   native_bool base::operator!=(base const &rhs) const
   {
     return kind != rhs.kind || source != rhs.source || message != rhs.message;
+  }
+
+  /* When we create errors, we may want to point at where the error happened, which we
+   * call the usage here. In some cases, the usage is identical to what we already
+   * identified as the source of the error. For those cases, adding the usage does nothing.
+   * For other cases, we'll add an additional note. There's also a final case where
+   * the current error has an unknown source, since we didn't have a good source to
+   * begin with. In that case, we update the existing note rather than adding a new one. */
+  runtime::native_box<base> base::add_usage(read::source const &usage_source)
+  {
+    if(usage_source == read::source::unknown || usage_source.overlaps(source))
+    {
+      return this;
+    }
+    else if(source == read::source::unknown)
+    {
+      source = usage_source;
+      notes[0].source = usage_source;
+    }
+    else
+    {
+      notes.emplace_back("Used here.", usage_source, note::kind::info);
+    }
+    return this;
   }
 
   std::ostream &operator<<(std::ostream &os, base const &e)
@@ -291,9 +315,9 @@ namespace jank
   error_ptr make_error(error::kind const kind,
                        native_persistent_string const &message,
                        read::source const &source,
-                       native_deque<runtime::object_ptr> const &expansions)
+                       runtime::object_ptr const expansion)
   {
-    return runtime::make_box<error::base>(kind, message, source, expansions);
+    return runtime::make_box<error::base>(kind, message, source, expansion);
   }
 
   error_ptr
@@ -314,9 +338,9 @@ namespace jank
                        native_persistent_string const &message,
                        read::source const &source,
                        error::note const &error_note,
-                       native_deque<runtime::object_ptr> const &expansions)
+                       runtime::object_ptr const expansion)
   {
-    return runtime::make_box<error::base>(kind, message, source, error_note, expansions);
+    return runtime::make_box<error::base>(kind, message, source, error_note, expansion);
   }
 
   error_ptr make_error(error::kind const kind,
@@ -345,9 +369,9 @@ namespace jank
                        native_persistent_string const &message,
                        read::source const &source,
                        native_persistent_string const &error_note_message,
-                       native_deque<runtime::object_ptr> const &expansions)
+                       runtime::object_ptr const expansion)
   {
-    return runtime::make_box<error::base>(kind, message, source, error_note_message, expansions);
+    return runtime::make_box<error::base>(kind, message, source, error_note_message, expansion);
   }
 
   error_ptr make_error(error::kind const kind,

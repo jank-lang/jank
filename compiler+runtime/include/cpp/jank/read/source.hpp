@@ -13,6 +13,8 @@ namespace jank::read
 
     native_bool operator==(source_position const &rhs) const;
     native_bool operator!=(source_position const &rhs) const;
+    native_bool operator<=(source_position const &rhs) const;
+    native_bool operator>=(source_position const &rhs) const;
 
     size_t offset{}, line{ 1 }, col{ 1 };
   };
@@ -34,8 +36,13 @@ namespace jank::read
            source_position const &end,
            runtime::object_ptr macro_expansion);
 
+    source &operator=(source const &rhs) = default;
+    source &operator=(source &&rhs) = default;
+
     native_bool operator==(source const &rhs) const;
     native_bool operator!=(source const &rhs) const;
+
+    native_bool overlaps(source const &) const;
 
     native_persistent_string file_path;
     /* Note that start may be equal to end, if the source occupies a single byte. */

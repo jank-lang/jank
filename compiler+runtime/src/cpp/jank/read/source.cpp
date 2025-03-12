@@ -55,6 +55,16 @@ namespace jank::read
     return !(*this == rhs);
   }
 
+  native_bool source_position::operator<=(source_position const &rhs) const
+  {
+    return offset <= rhs.offset;
+  }
+
+  native_bool source_position::operator>=(source_position const &rhs) const
+  {
+    return offset >= rhs.offset;
+  }
+
   native_bool source::operator==(source const &rhs) const
   {
     return file_path == rhs.file_path && start == rhs.start && end == rhs.end;
@@ -63,6 +73,15 @@ namespace jank::read
   native_bool source::operator!=(source const &rhs) const
   {
     return !(*this == rhs);
+  }
+
+  native_bool source::overlaps(source const &rhs) const
+  {
+    if(file_path != rhs.file_path)
+    {
+      return false;
+    }
+    return (rhs.start >= start && rhs.start <= end) || (rhs.end >= start && rhs.end <= end);
   }
 
   std::ostream &operator<<(std::ostream &os, source_position const &p)

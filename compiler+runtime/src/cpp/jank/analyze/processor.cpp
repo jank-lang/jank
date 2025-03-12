@@ -47,17 +47,6 @@ namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  static read::source
-  maybe_reparse(read::source const &source, std::function<read::source()> const &f)
-  {
-    if(source != read::source::unknown)
-    {
-      return source;
-    }
-
-    return f();
-  }
-
   /* For every form we analyze, we keep track of its macro-expansion meta. This allows
    * us to keep a stack of macro expansions, which we can then use for error reporting.
    * However, we need to pop the stack when we're done with that form, so we return
@@ -78,24 +67,7 @@ namespace jank::analyze
 
     proc.macro_expansions.push_back(expansion);
 
-    return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_front(); });
-  }
-
-  /* We keep track of the stack of expansions, but we're always missing the top. The top
-   * is the very first expansion to happen, in the source. We add it once we're ready
-   * to complete the list. We don't add it before, since we'd end up with duplicates. */
-  static native_deque<object_ptr> add_top_expansion(native_deque<object_ptr> macro_expansions)
-  {
-    if(!macro_expansions.empty())
-    {
-      auto const &source{ runtime::object_source(macro_expansions.front()) };
-      if(source != read::source::unknown && source.macro_expansion != obj::nil::nil_const())
-      {
-        macro_expansions.push_front(source.macro_expansion);
-      }
-    }
-
-    return macro_expansions;
+    return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_back(); });
   }
 
   processor::processor(runtime::context &rt_ctx)
@@ -134,7 +106,7 @@ namespace jank::analyze
     if(parse_current == parse_end)
     {
       return error::internal_analyze_failure("Invalid iterator; parse_current == parse_end.",
-                                             add_top_expansion(macro_expansions));
+                                             macro_expansions.back());
     }
 
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
@@ -169,23 +141,23 @@ namespace jank::analyze
     {
       return error::analyze_invalid_def("Missing var name in 'def'.",
                                         meta_source(l->meta),
-                                        add_top_expansion(macro_expansions));
+                                        macro_expansions.back());
     }
     else if(length > 4)
     {
       return error::analyze_invalid_def("Too many arguments provided to 'def'.",
                                         meta_source(l->meta),
-                                        add_top_expansion(macro_expansions));
+                                        macro_expansions.back());
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj->type != runtime::object_type::symbol)
     {
-      return error::analyze_invalid_def(
-        "The var name in a 'def' must be a symbol.",
-        maybe_reparse(object_source(sym_obj), [=] { return read::parse::reparse_nth(l, 1); }),
-        "A symbol is needed for the name here.",
-        add_top_expansion(macro_expansions));
+      return error::analyze_invalid_def("The var name in a 'def' must be a symbol.",
+                                        object_source(sym_obj),
+                                        "A symbol is needed for the name here.",
+                                        macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
@@ -193,7 +165,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_def("The provided var name for a 'def' must not be qualified.",
                                         meta_source(sym->meta),
-                                        add_top_expansion(macro_expansions));
+                                        macro_expansions.back());
     }
 
     auto qualified_sym(current_frame->lift_var(sym));
@@ -203,7 +175,7 @@ namespace jank::analyze
     {
       return error::internal_analyze_failure(var.expect_err(),
                                              meta_source(sym),
-                                             add_top_expansion(macro_expansions));
+                                             macro_expansions.back());
     }
 
     option<native_box<expression>> value_expr;
@@ -230,11 +202,10 @@ namespace jank::analyze
       auto const docstring_obj(l->data.rest().rest().first().unwrap());
       if(docstring_obj->type != runtime::object_type::persistent_string)
       {
-        return error::analyze_invalid_def(
-          "The doc string for a 'def' must be a string.",
-          maybe_reparse(object_source(docstring_obj),
-                        [=] { return read::parse::reparse_nth(l, 2); }),
-          add_top_expansion(macro_expansions));
+        return error::analyze_invalid_def("The doc string for a 'def' must be a string.",
+                                          object_source(docstring_obj),
+                                          macro_expansions.back())
+          ->add_usage(read::parse::reparse_nth(l, 2));
       }
       auto const meta_with_doc(
         runtime::assoc(qualified_sym->meta.unwrap_or(runtime::obj::nil::nil_const()),
@@ -265,7 +236,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Invalid case*: exactly 6 parameters are needed.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
 
     auto it{ o->data.rest() };
@@ -273,7 +244,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Value expression is missing.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const value_expr_obj{ it.first().unwrap() };
     auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
@@ -281,7 +252,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case(value_expr.expect_err()->message,
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
 
     it = it.rest();
@@ -289,14 +260,14 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Shift value is missing.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const shift_obj{ it.first().unwrap() };
     if(shift_obj.data->type != object_type::integer)
     {
       return error::analyze_invalid_case("Shift value should be an integer.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
 
@@ -305,14 +276,14 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Mask value is missing.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const mask_obj{ it.first().unwrap() };
     if(mask_obj.data->type != object_type::integer)
     {
       return error::analyze_invalid_case("Mask value should be an integer.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
 
@@ -321,7 +292,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Default expression is missing.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const default_expr_obj{ it.first().unwrap() };
     auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
@@ -331,7 +302,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("Keys and expressions are missing.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
     auto const imap_obj{ it.first().unwrap() };
 
@@ -373,7 +344,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case(keys_exprs.expect_err(),
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
 
     auto pairs{ keys_exprs.expect_ok_move() };
@@ -461,7 +432,7 @@ namespace jank::analyze
       return error::analyze_unresolved_symbol(
         fmt::format("Unable to resolve symbol '{}'.", sym->to_string()),
         meta_source(sym->meta),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
 
     /* Macros aren't lifted, since they're not used during runtime. */
@@ -483,10 +454,10 @@ namespace jank::analyze
     auto const params_obj(list->data.first().unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analyze_invalid_fn_parameters(
-        "A function parameter vector must be a vector.",
-        maybe_reparse(object_source(params_obj), [=] { return read::parse::reparse_nth(list, 0); }),
-        add_top_expansion(macro_expansions));
+      return error::analyze_invalid_fn_parameters("A function parameter vector must be a vector.",
+                                                  object_source(params_obj),
+                                                  macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(list, 0));
     }
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
@@ -506,11 +477,10 @@ namespace jank::analyze
       if(p->type != runtime::object_type::symbol)
       {
         auto const param_idx{ std::distance(params->data.begin(), it) };
-        return error::analyze_invalid_fn_parameters(
-          "Each function parameter must be a symbol.",
-          maybe_reparse(object_source(p),
-                        [=] { return read::parse::reparse_nth(params, param_idx); }),
-          add_top_expansion(macro_expansions));
+        return error::analyze_invalid_fn_parameters("Each function parameter must be a symbol.",
+                                                    object_source(p),
+                                                    macro_expansions.back())
+          ->add_usage(read::parse::reparse_nth(params, param_idx));
       }
 
       auto const sym(runtime::expect_object<runtime::obj::symbol>(p));
@@ -519,7 +489,7 @@ namespace jank::analyze
         return error::analyze_invalid_fn_parameters(
           "Each function parameter must be an unqualified symbol.",
           object_source(p),
-          add_top_expansion(macro_expansions));
+          macro_expansions.back());
       }
       else if(sym->name == "&")
       {
@@ -529,7 +499,7 @@ namespace jank::analyze
             "A symbol must be present after '&' to name the variadic parameter.",
             object_source(*it),
             "A symbol should come after this '&'.",
-            add_top_expansion(macro_expansions));
+            macro_expansions.back());
         }
         else if(it + 2 != params->data.end())
         {
@@ -538,7 +508,7 @@ namespace jank::analyze
             "There may be no additional parameters after the variadic parameter.",
             object_source(*(it + 2)),
             "Every parameter starting here is after the variadic parameter.",
-            add_top_expansion(macro_expansions));
+            macro_expansions.back());
         }
 
         is_variadic = true;
@@ -573,7 +543,7 @@ namespace jank::analyze
       return error::analyze_invalid_fn_parameters(
         fmt::format("This function has too many parameters. The max is {}.", runtime::max_params),
         object_source(params_obj),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
 
     auto fn_ctx(make_box<expr::function_context>());
@@ -624,7 +594,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_fn("This function is missing its parameter vector.",
                                        meta_source(full_list->meta),
-                                       add_top_expansion(macro_expansions));
+                                       macro_expansions.back());
     }
     auto list(full_list);
 
@@ -639,7 +609,7 @@ namespace jank::analyze
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
                                          meta_source(full_list->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
       }
       first_elem = list->data.rest().rest().first().unwrap();
       list = make_box(list->data.rest());
@@ -691,7 +661,7 @@ namespace jank::analyze
                 "Invalid 'fn' syntax. Please provide either a list of arities or a "
                 "parameter vector.",
                 meta_source(full_list->meta),
-                add_top_expansion(macro_expansions));
+                macro_expansions.back());
             }
           },
           arity_list_obj));
@@ -715,7 +685,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_fn("A function may only have one variadic arity.",
                                        meta_source(full_list->meta),
-                                       add_top_expansion(macro_expansions));
+                                       macro_expansions.back());
     }
 
     /* The variadic arity, if present, must have at least as many fixed params as the
@@ -731,7 +701,7 @@ namespace jank::analyze
             "The variadic arity of this function has fewer parameters than one of "
             "its fixed arities, which would lead to ambiguities when it's called.",
             meta_source(full_list->meta),
-            add_top_expansion(macro_expansions));
+            macro_expansions.back());
         }
       }
     }
@@ -773,7 +743,7 @@ namespace jank::analyze
             "There are multiple overloads with the same number of parameters. Each "
             "one must be unique.",
             meta_source(full_list->meta),
-            add_top_expansion(macro_expansions));
+            macro_expansions.back());
         }
       }
     }
@@ -797,7 +767,7 @@ namespace jank::analyze
       return error::analyze_invalid_recur_position(
         "Unable to use recur outside of a function or loop.",
         meta_source(list->meta),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
     else if(rt_ctx.no_recur_var->is_bound() && runtime::truthy(rt_ctx.no_recur_var->deref()))
     {
@@ -805,13 +775,13 @@ namespace jank::analyze
       return error::analyze_invalid_recur_from_try(
         "It's not permitted to use recur through a try/catch.",
         meta_source(list->meta),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
     else if(position != expression_position::tail)
     {
       return error::analyze_invalid_recur_position("'recur' must be used in tail position.",
                                                    meta_source(list->meta),
-                                                   add_top_expansion(macro_expansions));
+                                                   macro_expansions.back());
     }
 
     /* Minus one to remove recur symbol. */
@@ -824,7 +794,7 @@ namespace jank::analyze
                     arg_count,
                     fn_ctx.unwrap()->param_count),
         meta_source(list->meta),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
 
 
@@ -899,16 +869,16 @@ namespace jank::analyze
     {
       return error::analyze_invalid_let("A bindings vector must be provided to 'let'.",
                                         meta_source(o->meta),
-                                        add_top_expansion(macro_expansions));
+                                        macro_expansions.back());
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analyze_invalid_let(
-        "The bindings of a 'let' must be in a vector.",
-        maybe_reparse(object_source(bindings_obj), [=] { return read::parse::reparse_nth(o, 1); }),
-        add_top_expansion(macro_expansions));
+      return error::analyze_invalid_let("The bindings of a 'let' must be in a vector.",
+                                        object_source(bindings_obj),
+                                        macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -918,7 +888,7 @@ namespace jank::analyze
       /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
       return error::analyze_invalid_let("There must be an even number of bindings for a 'let'.",
                                         object_source(bindings_obj),
-                                        add_top_expansion(macro_expansions));
+                                        macro_expansions.back());
     }
 
     auto frame{
@@ -936,18 +906,17 @@ namespace jank::analyze
 
       if(sym_obj->type != runtime::object_type::symbol)
       {
-        return error::analyze_invalid_let(
-          "The left hand side of a 'let' binding must be a symbol.",
-          maybe_reparse(object_source(sym_obj),
-                        [=] { return read::parse::reparse_nth(bindings, i); }),
-          add_top_expansion(macro_expansions));
+        return error::analyze_invalid_let("The left hand side of a 'let' binding must be a symbol.",
+                                          object_source(sym_obj),
+                                          macro_expansions.back())
+          ->add_usage(read::parse::reparse_nth(bindings, i));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
         return error::analyze_invalid_let("Binding symbols for 'let' must be unqualified.",
                                           object_source(sym_obj),
-                                          add_top_expansion(macro_expansions));
+                                          macro_expansions.back());
       }
 
       auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
@@ -998,16 +967,16 @@ namespace jank::analyze
     {
       return error::analyze_invalid_loop("A 'loop' form requires a binding vector.",
                                          meta_source(o->meta),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analyze_invalid_loop(
-        "The bindings for a 'loop' must be a vector.",
-        maybe_reparse(object_source(bindings_obj), [=] { return read::parse::reparse_nth(o, 1); }),
-        add_top_expansion(macro_expansions));
+      return error::analyze_invalid_loop("The bindings for a 'loop' must be a vector.",
+                                         object_source(bindings_obj),
+                                         macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -1018,7 +987,7 @@ namespace jank::analyze
       /* TODO: Note the last item. Check if it's a symbol? */
       return error::analyze_invalid_loop("There must be an even number of bindings for a 'loop'.",
                                          object_source(bindings_obj),
-                                         add_top_expansion(macro_expansions));
+                                         macro_expansions.back());
     }
 
     runtime::detail::native_transient_vector binding_syms, binding_vals;
@@ -1030,17 +999,17 @@ namespace jank::analyze
       if(sym_obj->type != runtime::object_type::symbol)
       {
         return error::analyze_invalid_loop(
-          "The left hand side of a 'loop' binding must be a symbol.",
-          maybe_reparse(object_source(sym_obj),
-                        [=] { return read::parse::reparse_nth(bindings, i); }),
-          add_top_expansion(macro_expansions));
+                 "The left hand side of a 'loop' binding must be a symbol.",
+                 object_source(sym_obj),
+                 macro_expansions.back())
+          ->add_usage(read::parse::reparse_nth(bindings, i));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
         return error::analyze_invalid_loop("Binding symbols for 'loop' must be unqualified.",
                                            object_source(sym_obj),
-                                           add_top_expansion(macro_expansions));
+                                           macro_expansions.back());
       }
 
       binding_syms.push_back(sym_obj);
@@ -1123,18 +1092,19 @@ namespace jank::analyze
     {
       return error::analyze_invalid_if("Each 'if' needs at least a condition and a 'then' form.",
                                        meta_source(o->meta),
-                                       add_top_expansion(macro_expansions));
+                                       macro_expansions.back());
     }
     else if(form_count > 4)
     {
       /* TODO: Suggestion to wrap in a 'do'. */
       return error::analyze_invalid_if(
-        "An extra form specified in this 'if'. There may only be a condition, a 'then' form, and "
-        "then optionally an 'else' form.",
-        maybe_reparse(object_source(o->data.rest().rest().rest().rest().first().unwrap()),
-                      [=] { return read::parse::reparse_nth(o, 4); }),
-        "Everything starting here is excess.",
-        add_top_expansion(macro_expansions));
+               "An extra form specified in this 'if'. There may only be a condition, a 'then' "
+               "form, and "
+               "then optionally an 'else' form.",
+               object_source(o->data.rest().rest().rest().rest().first().unwrap()),
+               "Everything starting here is excess.",
+               macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(o, 4));
     }
 
     auto const condition(o->data.rest().first().unwrap());
@@ -1186,7 +1156,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_quote("'quote' requires exactly one form to quote.",
                                           meta_source(o->meta),
-                                          add_top_expansion(macro_expansions));
+                                          macro_expansions.back());
     }
 
     return analyze_primitive_literal(o->data.rest().first().unwrap(),
@@ -1209,16 +1179,16 @@ namespace jank::analyze
     {
       return error::analyze_invalid_var_reference("'var' expects exactly one form to resolve.",
                                                   meta_source(o->meta),
-                                                  add_top_expansion(macro_expansions));
+                                                  macro_expansions.back());
     }
 
     auto const arg(o->data.rest().first().unwrap());
     if(arg->type != runtime::object_type::symbol)
     {
-      return error::analyze_invalid_var_reference(
-        "The argument to 'var' must be a symbol.",
-        maybe_reparse(object_source(arg), [=] { return read::parse::reparse_nth(o, 1); }),
-        add_top_expansion(macro_expansions));
+      return error::analyze_invalid_var_reference("The argument to 'var' must be a symbol.",
+                                                  object_source(arg),
+                                                  macro_expansions.back())
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
@@ -1230,7 +1200,7 @@ namespace jank::analyze
       return error::analyze_unresolved_var(
         fmt::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
         meta_source(o->meta),
-        add_top_expansion(macro_expansions));
+        macro_expansions.back());
     }
 
     return make_box<expr::var_ref>(position,
@@ -1267,7 +1237,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_throw("'throw' requires exactly one argument.",
                                           meta_source(o->meta),
-                                          add_top_expansion(macro_expansions));
+                                          macro_expansions.back());
     }
 
     auto const arg(o->data.rest().first().unwrap());
@@ -1357,7 +1327,7 @@ namespace jank::analyze
               return error::analyze_invalid_try(
                 "No extra forms may appear after 'catch' or 'finally'.",
                 object_source(item),
-                add_top_expansion(macro_expansions));
+                macro_expansions.back());
             }
 
             auto const is_last(it->next() == nullptr);
@@ -1379,14 +1349,14 @@ namespace jank::analyze
               return error::analyze_invalid_try(
                 "No 'catch' forms are permitted after a 'finally' form has been been provided.",
                 object_source(item),
-                add_top_expansion(macro_expansions));
+                macro_expansions.back());
             }
             if(has_catch)
             {
               /* TODO: Note where the other catch is. */
               return error::analyze_invalid_try("Only one 'catch' form may be supplied.",
                                                 object_source(item),
-                                                add_top_expansion(macro_expansions));
+                                                macro_expansions.back());
             }
             has_catch = true;
 
@@ -1399,20 +1369,22 @@ namespace jank::analyze
                 "A symbol is required after 'catch', which is used as the binding to "
                 "hold the exception value.",
                 object_source(item),
-                add_top_expansion(macro_expansions));
+                macro_expansions.back());
             }
 
             auto const sym_obj(catch_list->data.rest().first().unwrap());
             if(sym_obj->type != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
-                "A symbol required after 'catch', which is used as the binding to "
-                "hold the exception value.",
-                object_source(item),
-                error::note{ "A symbol is required before this form.",
-                             maybe_reparse(object_source(sym_obj),
-                                           [=] { return read::parse::reparse_nth(item, 1); }) },
-                add_top_expansion(macro_expansions));
+                       "A symbol required after 'catch', which is used as the binding to "
+                       "hold the exception value.",
+                       object_source(item),
+                       error::note{
+                         "A symbol is required before this form.",
+                         object_source(sym_obj),
+                       },
+                       macro_expansions.back())
+                ->add_usage(read::parse::reparse_nth(item, 1));
             }
 
             auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
@@ -1420,7 +1392,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_try("The symbol after 'catch' must be unqualified.",
                                                 object_source(sym_obj),
-                                                add_top_expansion(macro_expansions));
+                                                macro_expansions.back());
             }
 
             catch_frame->locals.emplace(sym, local_binding{ sym, none, catch_frame });
@@ -1444,7 +1416,7 @@ namespace jank::analyze
               /* TODO: Note the other finally */
               return error::analyze_invalid_try("Only one finally may be supplied.",
                                                 object_source(item),
-                                                add_top_expansion(macro_expansions));
+                                                macro_expansions.back());
             }
             has_finally = true;
 
@@ -1718,7 +1690,7 @@ namespace jank::analyze
             {
               return error::internal_analyze_failure("Unsupported arity meta on non-function var.",
                                                      object_source(first),
-                                                     add_top_expansion(macro_expansions));
+                                                     macro_expansions.back());
             }
           }
 
@@ -1825,7 +1797,7 @@ namespace jank::analyze
     {
       return error::internal_analyze_failure("Unexpected nullptr in processor::analyze.",
                                              read::source::unknown,
-                                             add_top_expansion(macro_expansions));
+                                             macro_expansions.back());
     }
 
     return runtime::visit_object(
@@ -1881,7 +1853,7 @@ namespace jank::analyze
             fmt::format("Unimplemented analysis for object type '{}'.",
                         object_type_str(typed_o->base.type)),
             object_source(o),
-            add_top_expansion(macro_expansions));
+            macro_expansions.back());
         }
       },
       o);
