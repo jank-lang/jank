@@ -16,6 +16,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/analyze/visit.hpp>
@@ -230,14 +231,6 @@ namespace jank::codegen
       }
 
       ctx->builder->CreateRetVoid();
-
-      if(llvm::verifyModule(*ctx->module, &llvm::errs()))
-      {
-        std::cerr << "----------\n";
-        to_string();
-        std::cerr << "----------\n";
-        return err(fmt::format("invalid IR module {}", ctx->module_name));
-      }
     }
 
     return ok();
@@ -277,7 +270,8 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(gen_global_from_read_string(expr->name->meta.unwrap()));
+      auto const meta(
+        gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
@@ -410,7 +404,7 @@ namespace jank::codegen
         }
         else
         {
-          throw std::runtime_error{ fmt::format("unimplemented constant codegen: {}\n",
+          throw std::runtime_error{ fmt::format("Unimplemented constant codegen: {}\n",
                                                 typed_o->to_string()) };
         }
       },
@@ -1362,6 +1356,8 @@ namespace jank::codegen
                                   false));
         auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
+        /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
+         * Otherwise, we need this info for macro expansion errors. i.e. `(foo ~'bar) */
         auto const meta(gen_global_from_read_string(s->meta.unwrap()));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
@@ -1495,7 +1491,8 @@ namespace jank::codegen
                 ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
-              auto const meta(gen_global_from_read_string(typed_o->meta.unwrap()));
+              auto const meta(
+                gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
               auto const meta_name(fmt::format("{}_meta", name));
               meta->setName(meta_name);
               ctx->builder->CreateCall(set_meta_fn, { call, meta });
@@ -1647,7 +1644,7 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(gen_global_from_read_string(expr->meta));
+      auto const meta(gen_global_from_read_string(strip_source_from_meta(expr->meta)));
       ctx->builder->CreateCall(set_meta_fn, { fn_obj, meta });
     }
 

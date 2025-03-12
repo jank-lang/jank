@@ -22,7 +22,6 @@ namespace jank::runtime::obj
     persistent_hash_set(persistent_hash_set const &) = default;
     persistent_hash_set(value_type &&d);
     persistent_hash_set(value_type const &d);
-    persistent_hash_set(object_ptr meta, value_type &&d);
     persistent_hash_set(option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>

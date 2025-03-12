@@ -5,15 +5,14 @@
 #endif
 
 #include <string>
-
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <jank/option.hpp>
 
 namespace jank::util
 {
   /* TODO: Put this in a cpp file. */
-  inline option<boost::filesystem::path> process_location()
+  inline option<std::filesystem::path> process_location()
 #if defined(__APPLE__)
   {
     uint32_t path_length{};
@@ -28,11 +27,11 @@ namespace jank::util
     {
       return none;
     }
-    return boost::filesystem::canonical(path);
+    return std::filesystem::canonical(path);
   }
 #elif defined(__linux__)
   {
-    return boost::filesystem::canonical("/proc/self/exe");
+    return std::filesystem::canonical("/proc/self/exe");
   }
 #else
   {

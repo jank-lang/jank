@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include <fmt/format.h>
 
 #include <jank/runtime/obj/delay.hpp>

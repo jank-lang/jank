@@ -8,4 +8,7 @@ if(jank_analyze)
       set(CMAKE_CXX_CLANG_TIDY clang-tidy --use-color)
     endif()
   endif()
+
+  # Use a stable version name for analysis builds, to enable caching.
+  set(jank_version "jank-${CMAKE_PROJECT_VERSION}-analyze")
 endif()

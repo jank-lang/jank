@@ -25,7 +25,6 @@
 
             ## Required libs.
             boehmgc
-            boost
             libzip
             openssl
 

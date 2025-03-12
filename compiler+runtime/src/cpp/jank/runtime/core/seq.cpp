@@ -43,7 +43,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("cannot check if this is empty: {}",
-                                                typed_o->to_string()) };
+                                                typed_o->to_code_string()) };
         }
       },
       o);
@@ -165,7 +165,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not transientable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ fmt::format("not transientable: {}",
+                                                typed_o->to_code_string()) };
         }
       },
       o);
@@ -183,7 +184,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not persistentable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ fmt::format("not persistentable: {}",
+                                                typed_o->to_code_string()) };
         }
       },
       o);
@@ -202,7 +204,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not conjable_in_place: {}",
-                                                typed_coll->to_string()) };
+                                                typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -222,7 +224,7 @@ namespace jank::runtime
     }
 
     throw std::runtime_error{ fmt::format("not disjoinable_in_place: {}",
-                                          runtime::to_string(coll)) };
+                                          runtime::to_code_string(coll)) };
   }
 
   object_ptr assoc_in_place(object_ptr const coll, object_ptr const k, object_ptr const v)
@@ -238,7 +240,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
-                                                typed_coll->to_string()) };
+                                                typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -259,7 +261,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
-                                                typed_coll->to_string()) };
+                                                typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -294,7 +296,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -322,7 +324,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -354,7 +356,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -391,7 +393,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -427,7 +429,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -463,7 +465,7 @@ namespace jank::runtime
         return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
       },
       [=]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_string(tail)) };
+        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_code_string(tail)) };
       },
       tail);
   }
@@ -484,7 +486,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -503,7 +505,7 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::to_string(s)) };
+      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::to_code_string(s)) };
     }
   }
 
@@ -520,7 +522,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_string()) };
+                                                typed_m->to_code_string()) };
         }
       },
       m);
@@ -539,7 +541,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_string()) };
+                                                typed_m->to_code_string()) };
         }
       },
       m);
@@ -604,7 +606,8 @@ namespace jank::runtime
               }
               else
               {
-                throw std::runtime_error{ fmt::format("not seqable: {}", typed_keys->to_string()) };
+                throw std::runtime_error{ fmt::format("not seqable: {}",
+                                                      typed_keys->to_code_string()) };
               }
             },
             keys);
@@ -645,7 +648,8 @@ namespace jank::runtime
               }
               else
               {
-                throw std::runtime_error{ fmt::format("not seqable: {}", typed_keys->to_string()) };
+                throw std::runtime_error{ fmt::format("not seqable: {}",
+                                                      typed_keys->to_code_string()) };
               }
             },
             keys);
@@ -723,17 +727,22 @@ namespace jank::runtime
                            //|| std::same_as<O, obj::transient_array_map>
               )
               {
-                object_ptr ret{ m };
+                object_ptr ret{ typed_m };
                 for(auto const &pair : typed_other->data)
                 {
                   ret = assoc(ret, pair.first, pair.second);
                 }
                 return ret;
               }
+              else if(std::same_as<O, obj::nil>)
+              {
+                return typed_m;
+              }
               else
               {
-                throw std::runtime_error{ fmt::format("not associatively readable: {}",
-                                                      typed_m->to_string()) };
+                throw std::runtime_error{ fmt::format("not associatively readable: {} [{}]",
+                                                      typed_other->to_code_string(),
+                                                      object_type_str(typed_other->base.type)) };
               }
             },
             other);
@@ -741,7 +750,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_string()) };
+                                                typed_m->to_code_string()) };
         }
       },
       m);
@@ -811,13 +820,9 @@ namespace jank::runtime
   object_ptr nth(object_ptr const o, object_ptr const idx, object_ptr const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0)
+    if(index < 0 || o == obj::nil::nil_const())
     {
       return fallback;
-    }
-    else if(o == obj::nil::nil_const())
-    {
-      return o;
     }
 
     return visit_object(
@@ -990,7 +995,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_string()) };
+          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -1086,7 +1091,7 @@ namespace jank::runtime
           return typed_o->chunked_first();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);
@@ -1103,7 +1108,7 @@ namespace jank::runtime
           return typed_o->chunked_next() ?: obj::nil::nil_const();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);
@@ -1120,7 +1125,7 @@ namespace jank::runtime
           return typed_o->chunked_next() ?: obj::persistent_list::empty();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);

@@ -64,7 +64,7 @@ namespace jank::ui
       case token_kind::escaped_string:
         return e | color(Color::GreenLight);
       case token_kind::symbol:
-        return symbol_color(e, boost::get<native_persistent_string_view>(token.data));
+        return symbol_color(e, std::get<native_persistent_string_view>(token.data));
       case token_kind::eof:
         return e | color(Color::Default);
         break;

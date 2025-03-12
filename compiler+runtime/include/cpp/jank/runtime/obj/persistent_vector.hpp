@@ -23,7 +23,6 @@ namespace jank::runtime::obj
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(object_ptr meta, value_type &&d);
     persistent_vector(option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>

@@ -28,7 +28,6 @@ namespace jank::runtime::obj
     persistent_array_map(persistent_array_map const &) = default;
     persistent_array_map(value_type &&d);
     persistent_array_map(value_type const &d);
-    persistent_array_map(object_ptr meta, value_type &&d);
     persistent_array_map(option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>

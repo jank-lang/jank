@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <cmath>
 
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/core/make_box.hpp>

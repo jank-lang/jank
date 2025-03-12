@@ -3,8 +3,9 @@
 #include <map>
 #include <set>
 #include <string_view>
-
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
+#include <deque>
+#include <list>
 
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
@@ -33,15 +34,18 @@ namespace jank
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;
+  template <typename T>
+  using native_deque = std::deque<T, native_allocator<T>>;
+  template <typename T>
+  using native_list = std::list<T, native_allocator<T>>;
   template <typename K, typename V>
   using native_map = std::map<K, V, native_allocator<std::pair<K const, V>>>;
   template <typename T>
   using native_set = std::set<T, std::less<T>, native_allocator<T>>;
 
-  /* TODO: Try out unordered_flat_map once vcpkg has boost 1.81.0. */
   template <typename K, typename V, typename Hash = std::hash<K>, typename Pred = std::equal_to<K>>
   using native_unordered_map
-    = boost::unordered_map<K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
+    = std::unordered_map<K, V, Hash, Pred, native_allocator<std::pair<K const, V>>>;
 
   /* TODO: This will leak if it's stored in a GC-tracked object. */
   using native_transient_string = std::string;
