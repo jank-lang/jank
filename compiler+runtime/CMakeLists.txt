@@ -94,7 +94,7 @@ set(
   # After removing boost in https://github.com/jank-lang/jank/commit/beafe61ddb1ac3ee28d88650e4caed10f171ac4d
   # macOS x86_64 requires using fmt in header-only mode.
   # TODO restrict workaround to x86_64 architecture
-  "$<$<PLATFORM_ID:Darwin>:-DFMT_HEADER_ONLY>"
+  $<$<PLATFORM_ID:Darwin>:-DFMT_HEADER_ONLY>
   #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
@@ -108,6 +108,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
+endif()
+
+if(jank_tests)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_TEST)
 endif()
 
 include(cmake/coverage.cmake)
