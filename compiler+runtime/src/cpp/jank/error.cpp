@@ -1,8 +1,10 @@
 #include <fmt/format.h>
+#include <algorithm>
 
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 
 namespace jank::error
@@ -140,6 +142,22 @@ namespace jank::error
     return "Unknown error 😮!";
   }
 
+  native_persistent_string note::to_string() const
+  {
+    util::string_builder sb;
+    return sb("note(\"")(message)("\", ")(source.to_string())(", ")(note::kind_str(kind))(")")
+      .release();
+  }
+
+  static void add_expansion_note(base &e, runtime::object_ptr const expansion)
+  {
+    auto source{ runtime::object_source(expansion) };
+    /* We just want to point at the start of the expansion, not underline the
+       * whole thing. It may be huge! */
+    source.end = source.start;
+    e.notes.emplace_back("Expanded from this macro.", source, note::kind::info);
+  }
+
   base::base(enum kind const k, read::source const &source)
     : kind{ k }
     , message{ kind_to_message(k) }
@@ -169,8 +187,8 @@ namespace jank::error
     , message{ message }
     , source{ source }
     , notes{{default_note_message, source }}
-    , expansion{ expansion }
   {
+    add_expansion_note(*this, expansion);
   }
 
   base::base(enum kind const k,
@@ -203,8 +221,8 @@ namespace jank::error
     , message{ message }
     , source{ source }
     , notes{{ note_message, source }}
-    , expansion{ expansion }
   {
+    add_expansion_note(*this, expansion);
   }
 
   base::base(enum kind const k, read::source const &source, note const &note)
@@ -235,8 +253,8 @@ namespace jank::error
     , message{ message }
     , source{ source }
     , notes{ note }
-    , expansion{ expansion }
   {
+    add_expansion_note(*this, expansion);
   }
 
   base::base(enum kind const k,
@@ -258,6 +276,22 @@ namespace jank::error
   native_bool base::operator!=(base const &rhs) const
   {
     return kind != rhs.kind || source != rhs.source || message != rhs.message;
+  }
+
+  /* Sort notes by file, line, and column. This makes it easier to add them
+   * sequentially and know they're going top-to-bottom and left-to-right.
+   * Without sorting them, you cannot know that. */
+  void base::sort_notes()
+  {
+    std::ranges::stable_sort(notes, [](note const &lhs, note const &rhs) -> bool {
+      return lhs.source.start.col < rhs.source.start.col;
+    });
+    std::ranges::stable_sort(notes, [](note const &lhs, note const &rhs) -> bool {
+      return lhs.source.start.line < rhs.source.start.line;
+    });
+    std::ranges::stable_sort(notes, [](note const &lhs, note const &rhs) -> bool {
+      return lhs.source.file_path < rhs.source.file_path;
+    });
   }
 
   /* When we create errors, we may want to point at where the error happened, which we

@@ -92,20 +92,11 @@ namespace jank::error
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
+    e->sort_notes();
+
     for(auto const &n : e->notes)
     {
       add(n);
-    }
-
-    if(e->expansion)
-    {
-      auto source{ runtime::object_source(e->expansion) };
-      /* We just want to point at the start of the expansion, not underline the
-       * whole thing. It may be huge! */
-      source.end = source.start;
-      add(note{ fmt::format("Expanded from this macro.", util::number_to_ordinal(0)),
-                source,
-                note::kind::info });
     }
   }
 
@@ -157,7 +148,7 @@ namespace jank::error
     add(n.source, n);
   }
 
-  /* TODO: Make sure notes are sorted left to right. Handle multiple notes on one line. */
+  /* TODO: Handle multiple notes on one line. */
   void snippet::add(read::source const &body_source, note const &n)
   {
     assert(n.source.file_path == file_path);
@@ -182,7 +173,6 @@ namespace jank::error
      * outcome here may result in our note with an ellipsis on top/bottom or
      * perhaps the ellipsis going away altogether.
      */
-
 
     if(!can_fit_without_ellipsis(n))
     {

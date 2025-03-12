@@ -212,6 +212,22 @@ namespace jank::error
       error
     };
 
+    static constexpr char const *kind_str(kind const k)
+    {
+      switch(k)
+      {
+        case kind::info:
+          return "info";
+        case kind::warning:
+          return "warning";
+        case kind::error:
+          return "error";
+      }
+      return "unknown";
+    }
+
+    native_persistent_string to_string() const;
+
     native_persistent_string message;
     read::source source;
     kind kind{ kind::error };
@@ -257,13 +273,13 @@ namespace jank::error
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
 
+    void sort_notes();
     runtime::native_box<base> add_usage(read::source const &usage_source);
 
     kind kind{};
     native_persistent_string message;
     read::source source;
     native_vector<note> notes;
-    runtime::object_ptr expansion;
     /* TODO: context */
     /* TODO: suggestions */
   };
