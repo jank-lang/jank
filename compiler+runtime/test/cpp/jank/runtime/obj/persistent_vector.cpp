@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/equal.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>

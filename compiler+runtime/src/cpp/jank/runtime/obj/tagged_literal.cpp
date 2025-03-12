@@ -5,6 +5,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/equal.hpp>
 
 namespace jank::runtime::obj
 {

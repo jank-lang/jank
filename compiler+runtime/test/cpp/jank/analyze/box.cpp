@@ -1,7 +1,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/equal.hpp>
 #include <jank/jit/processor.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */

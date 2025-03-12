@@ -19,6 +19,7 @@
 #include <jank/runtime/behavior/chunkable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/equal.hpp>
 
 namespace jank::runtime
 {

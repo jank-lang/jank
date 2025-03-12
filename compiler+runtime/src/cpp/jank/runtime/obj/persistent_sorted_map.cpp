@@ -31,6 +31,12 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_sorted_map_ptr persistent_sorted_map::empty()
+  {
+    static auto const ret(make_box<persistent_sorted_map>());
+    return ret;
+  }
+
   persistent_sorted_map_ptr persistent_sorted_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_map>(visit_object(

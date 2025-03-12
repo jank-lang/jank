@@ -5,8 +5,11 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>

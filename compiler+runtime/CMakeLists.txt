@@ -175,7 +175,9 @@ add_library(
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/read/reparse.cpp
+  src/cpp/jank/runtime/detail/type.cpp
   src/cpp/jank/runtime/core.cpp
+  src/cpp/jank/runtime/core/equal.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
   src/cpp/jank/runtime/core/truthy.cpp
@@ -474,10 +476,9 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/behavior/callable.cpp
-    test/cpp/jank/runtime/core.cpp
+    test/cpp/jank/runtime/core/equal.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
-    test/cpp/jank/runtime/core.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp
