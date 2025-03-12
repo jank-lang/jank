@@ -40,8 +40,9 @@ namespace jank::error
   error_ptr analysis_invalid_let(native_persistent_string const &message,
                                  read::source const &source,
                                  native_deque<runtime::object_ptr> const &macro_expansions);
-  error_ptr analysis_invalid_letfn(native_persistent_string const &message, read::source const &source,
-      native_deque<runtime::object_ptr> const &macro_expansions);
+  error_ptr analysis_invalid_letfn(native_persistent_string const &message,
+                                   read::source const &source,
+                                   native_deque<runtime::object_ptr> const &macro_expansions);
   error_ptr analysis_invalid_loop(native_persistent_string const &message,
                                   read::source const &source,
                                   native_deque<runtime::object_ptr> const &macro_expansions);
