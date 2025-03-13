@@ -1,5 +1,5 @@
 #include <clojure/core_native.hpp>
-#include <jank/runtime/convert.hpp>
+#include <jank/runtime/convert/function.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/meta.hpp>

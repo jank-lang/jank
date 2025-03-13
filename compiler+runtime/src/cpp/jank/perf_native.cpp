@@ -1,11 +1,12 @@
 #include <jank/perf_native.hpp>
-#include <jank/runtime/convert.hpp>
+#include <jank/runtime/convert/function.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/perf.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/rtti.hpp>
 
 jank_object_ptr jank_load_jank_perf_native()
 {
