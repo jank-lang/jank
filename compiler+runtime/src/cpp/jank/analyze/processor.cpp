@@ -1,3 +1,4 @@
+#include <ranges>
 #include <set>
 
 #include <jank/read/reparse.hpp>
@@ -16,7 +17,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/error/analyze.hpp>
 
 #include <jank/analyze/expr/def.hpp>
@@ -68,13 +69,34 @@ namespace jank::analyze
     return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_back(); });
   }
 
-  object_ptr latest_expansion(native_vector<runtime::object_ptr> const &expansions)
+  static object_ptr latest_expansion(native_vector<runtime::object_ptr> const &expansions)
   {
     if(expansions.empty())
     {
       return obj::nil::nil_const();
     }
-    return expansions.back();
+
+    /* Try to find an expansion which specifically has the `macro-expansion` key
+     * set in the source. This is the root of our most recent expansion. */
+    for(auto const latest : std::ranges::reverse_view(expansions))
+    {
+      auto const latest_meta{ meta(latest) };
+      auto const source(
+        runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
+      auto const expansion(
+        runtime::get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+
+      if(expansion != obj::nil::nil_const())
+      {
+        return expansion;
+      }
+    }
+
+    /* If we don't find a good match, just return the first macro expansion. This will
+     * be the very start of the defn/fn, or expression. It may not be the exact form, but
+     * it's a good starting point. If we return the back, we may be deep into the woods
+     * with no idea of which caller brought us there. */
+    return expansions.front();
   }
 
   processor::processor(runtime::context &rt_ctx)
