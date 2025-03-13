@@ -7,6 +7,7 @@ namespace jank::util
   native_persistent_string format(char const * const fmt);
   void format(string_builder &sb, char const * const fmt);
 
+  /* TODO: We can extern template all common usages here, if they show up in the trace. */
   template <typename T>
   void format(string_builder &sb, char const *&fmt, T &&arg)
   {

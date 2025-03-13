@@ -29,7 +29,7 @@ namespace jank::util
 
     TEST_CASE("no args, with format specifier")
     {
-      CHECK_EQ("foo {}", util::format("foo {}"));
+      CHECK_THROWS(util::format("foo {}"));
     }
 
     TEST_CASE("just a format specifier")
