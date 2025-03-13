@@ -577,7 +577,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return fallback;
         }
       },
       m);
