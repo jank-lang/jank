@@ -1580,8 +1580,8 @@ namespace jank::codegen
         if(!locals.contains(name))
         {
           //TODO deep copy local ref?
-          deferred_init d{expr::local_reference_ptr{ &local_ref }, std::move(field_ptr)};
-          deferred_inits.push_back(std::move(d));
+          deferred_init d{expr::local_reference_ptr{ &local_ref }, field_ptr};
+          deferred_inits.push_back(d);
         }
         else
         {
