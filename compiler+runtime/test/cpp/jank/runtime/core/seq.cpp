@@ -1,4 +1,4 @@
-#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>

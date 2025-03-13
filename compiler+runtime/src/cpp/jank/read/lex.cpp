@@ -1,12 +1,12 @@
 #include <iostream>
 #include <iomanip>
-#include <fmt/format.h>
 
 #include <jank/read/lex.hpp>
 #include <jank/error/lex.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/util/fmt.hpp>
 
 using namespace std::string_view_literals;
 
@@ -705,9 +705,9 @@ namespace jank::read::lex
                 {
                   ++pos;
                   return error::lex_invalid_number(
-                    fmt::format("Unexpected '{}' in number.", static_cast<char>(c)),
+                    util::format("Unexpected '{}' in number.", static_cast<char>(c)),
                     { token_start, pos },
-                    error::note{ fmt::format("Found '{}' here.", static_cast<char>(c)), pos });
+                    error::note{ util::format("Found '{}' here.", static_cast<char>(c)), pos });
                 }
                 found_exponent_sign = true;
               }
@@ -833,7 +833,7 @@ namespace jank::read::lex
               return error::lex_invalid_number("Unexpected end of integer.", { token_start, pos });
             }
             return error::lex_invalid_number(
-              fmt::format("Unexpected end of base {} number.", radix),
+              util::format("Unexpected end of base {} number.", radix),
               { token_start, pos });
           }
           /* Tokens beginning with - are ambiguous; it's a negative number only if
@@ -860,7 +860,7 @@ namespace jank::read::lex
               if(radix < 2 || radix > 36)
               {
                 return error::lex_invalid_number(
-                  fmt::format(
+                  util::format(
                     "Base {} is out of range. The supported bases are 2 through 36, inclusive.",
                     radix),
                   { token_start, pos });
@@ -884,9 +884,9 @@ namespace jank::read::lex
             if(!invalid_digits.empty())
             {
               return error::lex_invalid_number(
-                fmt::format("Characters '{}' are invalid for a base {} number.",
-                            std::string(invalid_digits.begin(), invalid_digits.end()),
-                            radix),
+                util::format("Characters '{}' are invalid for a base {} number.",
+                             std::string(invalid_digits.begin(), invalid_digits.end()),
+                             radix),
                 { token_start, pos });
             }
             /* Real numbers. */
@@ -1078,8 +1078,8 @@ namespace jank::read::lex
                 default:
                   util::string_builder sb;
                   return error::lex_invalid_string_escape(
-                    fmt::format("Unsupported string escape character '{}'.",
-                                sb(oc.expect_ok().character).view()),
+                    util::format("Unsupported string escape character '{}'.",
+                                 sb(oc.expect_ok().character).view()),
                     { pos, pos + 2zu });
               }
               escaped = false;
@@ -1265,7 +1265,7 @@ namespace jank::read::lex
         }
         ++pos;
         return error::lex_unexpected_character(
-          fmt::format("Unexpected character '{}'.", file[token_start]),
+          util::format("Unexpected character '{}'.", file[token_start]),
           { token_start, pos });
     }
   }

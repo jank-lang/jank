@@ -1,11 +1,9 @@
-#include <fmt/core.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/util/make_array.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -36,8 +34,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 0 args to {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 0 args to {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -83,8 +81,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 1 arg to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 1 arg to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -130,8 +128,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 2 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 2 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -173,8 +171,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 3 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 3 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -221,8 +219,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 4 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 4 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -272,8 +270,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 5 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 5 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -338,8 +336,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 6 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 6 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -409,8 +407,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 7 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 7 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -485,8 +483,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 8 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 8 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -564,8 +562,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 9 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 9 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -689,8 +687,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 10 args to: {}",
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 10 args to: {}",
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -852,14 +850,14 @@ namespace jank::runtime
                                           make_box<obj::native_vector_sequence>(std::move(packed)));
               }
             default:
-              throw std::runtime_error{ fmt::format("unsupported arity: {}", 10 + rest->count()) };
+              throw std::runtime_error{ util::format("unsupported arity: {}", 10 + rest->count()) };
           }
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with {} args to: {}",
-                                                10 + sequence_length(rest),
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with {} args to: {}",
+                                                 10 + sequence_length(rest),
+                                                 typed_source->to_string()) };
         }
       },
       source);

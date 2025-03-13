@@ -11,12 +11,10 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IRReader/IRReader.h>
 
-#include <fmt/ranges.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -25,11 +23,11 @@ namespace jank::jit
   static native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
 #if defined(__APPLE__)
   {
-    return fmt::format("{}.dylib", lib);
+    return util::format("{}.dylib", lib);
   }
 #elif defined(__linux__)
   {
-    return fmt::format("lib{}.so", lib);
+    return util::format("lib{}.so", lib);
   }
 #endif
 
@@ -75,8 +73,8 @@ namespace jank::jit
         O = "-Ofast";
         break;
       default:
-        throw std::runtime_error{ fmt::format("invalid optimization level {}",
-                                              optimization_level) };
+        throw std::runtime_error{ util::format("invalid optimization level {}",
+                                               optimization_level) };
     }
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
@@ -94,20 +92,20 @@ namespace jank::jit
 
     for(auto const &include_path : opts.include_dirs)
     {
-      args.emplace_back(strdup(fmt::format("-I{}", include_path).c_str()));
+      args.emplace_back(strdup(util::format("-I{}", include_path).c_str()));
     }
 
     for(auto const &library_path : opts.library_dirs)
     {
-      args.emplace_back(strdup(fmt::format("-L{}", library_path).c_str()));
+      args.emplace_back(strdup(util::format("-L{}", library_path).c_str()));
     }
 
     for(auto const &define_macro : opts.define_macros)
     {
-      args.emplace_back(strdup(fmt::format("-D{}", define_macro).c_str()));
+      args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
-    //fmt::println("jit flags {}", args);
+    //util::println("jit flags {}", args);
 
     clang::IncrementalCompilerBuilder compiler_builder;
     compiler_builder.SetCompilerArgs(args);
@@ -134,7 +132,7 @@ namespace jank::jit
   void processor::eval_string(native_persistent_string const &s) const
   {
     profile::timer const timer{ "jit eval_string" };
-    //fmt::println("// eval_string:\n{}\n", s);
+    //util::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
   }
@@ -145,7 +143,7 @@ namespace jank::jit
     auto file{ llvm::MemoryBuffer::getFile(path) };
     if(!file)
     {
-      throw std::runtime_error{ fmt::format("failed to load object file: {}", path) };
+      throw std::runtime_error{ util::format("failed to load object file: {}", path) };
     }
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
@@ -156,8 +154,8 @@ namespace jank::jit
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
                                  std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
   {
-    profile::timer const timer{ fmt::format("jit ir module {}",
-                                            static_cast<std::string_view>(m->getName())) };
+    profile::timer const timer{ util::format("jit ir module {}",
+                                             static_cast<std::string_view>(m->getName())) };
     //m->print(llvm::outs(), nullptr);
 
 #if JANK_DEBUG
@@ -189,7 +187,7 @@ namespace jank::jit
     {
       err.print("jank", llvm::errs());
       /* TODO: Return a result. */
-      throw std::runtime_error{ fmt::format("unable to load module") };
+      throw std::runtime_error{ util::format("unable to load module") };
     }
     load_ir_module(std::move(ir_module), std::move(ctx));
   }
@@ -203,7 +201,7 @@ namespace jank::jit
 
     if(error.isA<llvm::orc::SymbolsCouldNotBeRemoved>())
     {
-      return err(fmt::format("Failed to remove the symbol: '{}'", name));
+      return err(util::format("Failed to remove the symbol: '{}'", name));
     }
     return ok();
   }
@@ -214,15 +212,15 @@ namespace jank::jit
     auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto default_lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), default_lib_name) };
+      auto default_lib_abs_path{ util::format("{}/{}", lib_dir.string(), default_lib_name) };
       if(std::filesystem::exists(default_lib_abs_path.c_str()))
       {
         return default_lib_abs_path;
       }
       else
       {
-        auto lib_abs_path{ fmt::format("{}/{}", lib_dir.string(), lib) };
-        if(std::filesystem::exists(lib_abs_path))
+        auto lib_abs_path{ util::format("{}/{}", lib_dir.string(), lib) };
+        if(std::filesystem::exists(lib_abs_path.c_str()))
         {
           return lib_abs_path;
         }
@@ -246,7 +244,7 @@ namespace jank::jit
         auto const result{ processor::find_dynamic_lib(lib) };
         if(result.is_none())
         {
-          return err(fmt::format("Failed to load dynamic library `{}`", lib));
+          return err(util::format("Failed to load dynamic library `{}`", lib));
         }
         else
         {

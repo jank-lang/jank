@@ -1,10 +1,8 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -47,7 +45,7 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      return err(fmt::format("Can't unintern namespace-qualified symbol: {}", sym->to_string()));
+      return err(util::format("Can't unintern namespace-qualified symbol: {}", sym->to_string()));
     }
 
     auto locked_vars(vars.wlock());
@@ -82,11 +80,11 @@ namespace jank::runtime
       auto const existing(expect_object<ns>(*found));
       if(existing != nsp)
       {
-        return err(fmt::format("{} already aliases {} in ns {}, cannot change to {}",
-                               sym->to_string(),
-                               existing->to_string(),
-                               to_string(),
-                               nsp->to_string()));
+        return err(util::format("{} already aliases {} in ns {}, cannot change to {}",
+                                sym->to_string(),
+                                existing->to_string(),
+                                to_string(),
+                                nsp->to_string()));
       }
       return ok();
     }
@@ -122,10 +120,10 @@ namespace jank::runtime
         auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")).unwrap());
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
-          return err(fmt::format("{} already refers to {} in ns {}",
-                                 sym->to_string(),
-                                 expect_object<runtime::var>(*found)->to_string(),
-                                 to_string()));
+          return err(util::format("{} already refers to {} in ns {}",
+                                  sym->to_string(),
+                                  expect_object<runtime::var>(*found)->to_string(),
+                                  to_string()));
         }
       }
     }

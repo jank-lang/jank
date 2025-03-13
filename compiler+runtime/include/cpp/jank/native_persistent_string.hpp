@@ -578,6 +578,20 @@ namespace jank
     }
 
     [[gnu::const]]
+    constexpr native_bool operator!=(native_persistent_string_view const &s) const noexcept
+    {
+      auto const length(s.size());
+      /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
+      return size() != length || traits_type::compare(data(), s.data(), length);
+    }
+
+    [[gnu::const]]
+    constexpr native_bool operator==(native_persistent_string_view const &s) const noexcept
+    {
+      return !(*this != s);
+    }
+
+    [[gnu::const]]
     constexpr int compare(native_persistent_string const &s) const
     {
       auto const length(size());
@@ -898,6 +912,13 @@ namespace jank
 
     storage store;
   };
+
+  [[gnu::const]]
+  constexpr native_bool
+  operator==(native_persistent_string_view const &lhs, native_persistent_string const &rhs) noexcept
+  {
+    return !(rhs != lhs);
+  }
 
   [[gnu::const]]
   constexpr native_bool

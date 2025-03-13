@@ -42,6 +42,7 @@
             # For clang-tidy.
             llvmPackages.clang-tools
             gdb
+            clangbuildanalyzer
 
             ## Dev libs.
             doctest

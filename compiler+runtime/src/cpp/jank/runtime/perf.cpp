@@ -1,12 +1,10 @@
 #include <nanobench.h>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/perf.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::perf
 {
@@ -41,7 +39,7 @@ namespace jank::runtime::perf
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not callable: {}", typed_f->to_string()) };
+          throw std::runtime_error{ util::format("not callable: {}", typed_f->to_string()) };
         }
       },
       f,

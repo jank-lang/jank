@@ -1,12 +1,10 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -45,8 +43,7 @@ namespace jank::runtime::obj
 
   void transient_vector::to_string(util::string_builder &buff) const
   {
-    auto inserter(std::back_inserter(buff));
-    fmt::format_to(inserter, "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string transient_vector::to_code_string() const
@@ -89,7 +86,7 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          fmt::format("Index out of bound; index = {}, count = {}", i, count())
+          util::format("Index out of bound; index = {}, count = {}", i, count())
         };
       }
 
@@ -97,8 +94,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::to_string(idx)) };
+      throw std::runtime_error{ util::format("key must be an integer; found {}",
+                                             runtime::to_string(idx)) };
     }
   }
 
@@ -117,8 +114,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::to_string(idx)) };
+      throw std::runtime_error{ util::format("key must be an integer; found {}",
+                                             runtime::to_string(idx)) };
     }
   }
 
@@ -137,8 +134,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ fmt::format("key must be an integer; found {}",
-                                            runtime::to_string(idx)) };
+      throw std::runtime_error{ util::format("key must be an integer; found {}",
+                                             runtime::to_string(idx)) };
     }
   }
 
@@ -156,8 +153,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ fmt::format("get_entry on a vector must be an integer; found {}",
-                                            runtime::to_string(idx)) };
+      throw std::runtime_error{ util::format("get_entry on a vector must be an integer; found {}",
+                                             runtime::to_string(idx)) };
     }
   }
 

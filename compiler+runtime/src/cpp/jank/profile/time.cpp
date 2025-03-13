@@ -1,9 +1,7 @@
 #include <fstream>
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-
 #include <jank/profile/time.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::profile
 {
@@ -29,9 +27,9 @@ namespace jank::profile
       if(!output.is_open())
       {
         enabled = false;
-        fmt::println(stderr,
-                     "Unable to open profile file: {}\nProfiling is now disabled.",
-                     opts.profiler_file);
+        util::println(stderr,
+                      "Unable to open profile file: {}\nProfiling is now disabled.",
+                      opts.profiler_file);
       }
     }
   }
@@ -45,7 +43,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      fmt::println(output, "{} {} enter {}", tag, now(), region);
+      output << util::format("{} {} enter {}", tag, now(), region);
     }
   }
 
@@ -53,7 +51,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      fmt::println(output, "{} {} exit {}", tag, now(), region);
+      output << util::format("{} {} exit {}", tag, now(), region);
     }
   }
 
@@ -61,7 +59,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      fmt::println(output, "{} {} report {}", tag, now(), boundary);
+      output << util::format("{} {} report {}", tag, now(), boundary);
     }
   }
 

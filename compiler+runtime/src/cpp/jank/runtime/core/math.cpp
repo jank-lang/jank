@@ -1,11 +1,10 @@
 #include <random>
 
-#include <fmt/format.h>
-
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -1713,7 +1712,7 @@ namespace jank::runtime
     }
     else
     {
-      throw erase(make_box(fmt::format("Expected string, got {}", object_type_str(o->type))));
+      throw erase(make_box(util::format("Expected string, got {}", object_type_str(o->type))));
     }
   }
 
@@ -1725,7 +1724,7 @@ namespace jank::runtime
     }
     else
     {
-      throw erase(make_box(fmt::format("Expected string, got {}", object_type_str(o->type))));
+      throw erase(make_box(util::format("Expected string, got {}", object_type_str(o->type))));
     }
   }
 }

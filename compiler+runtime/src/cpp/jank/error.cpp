@@ -1,10 +1,7 @@
-#include <fmt/format.h>
-#include <algorithm>
-
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 
 namespace jank::error

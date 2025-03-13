@@ -1,8 +1,8 @@
-#include <fmt/format.h>
+#include <cmath>
 
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -64,7 +64,7 @@ namespace jank::runtime::obj
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
@@ -204,7 +204,7 @@ namespace jank::runtime::obj
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
-        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }

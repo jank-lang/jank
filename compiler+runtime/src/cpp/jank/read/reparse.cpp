@@ -1,12 +1,10 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/reparse.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/mapped_file.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/error/parse.hpp>
 
 namespace jank::read::parse
@@ -28,7 +26,7 @@ namespace jank::read::parse
     if(file.is_err())
     {
       return error::internal_parse_failure(
-        fmt::format("Unable to map file {} due to error: {}", file_path, file.expect_err()));
+        util::format("Unable to map file {} due to error: {}", file_path, file.expect_err()));
     }
 
     lex::processor l_prc{
@@ -42,15 +40,16 @@ namespace jank::read::parse
     {
       if(it->is_err())
       {
-        return error::internal_parse_failure(fmt::format("Unable to reparse {} due to error: {}",
-                                                         file_path,
-                                                         it->expect_err()->message));
+        return error::internal_parse_failure(util::format("Unable to reparse {} due to error: {}",
+                                                          file_path,
+                                                          it->expect_err()->message));
       }
     }
     if(it->is_err())
     {
-      return error::internal_parse_failure(
-        fmt::format("Unable to reparse {} due to error: {}", file_path, it->expect_err()->message));
+      return error::internal_parse_failure(util::format("Unable to reparse {} due to error: {}",
+                                                        file_path,
+                                                        it->expect_err()->message));
     }
 
     auto const &res{ it->expect_ok().unwrap() };
@@ -63,7 +62,7 @@ namespace jank::read::parse
     if(source == source::unknown)
     {
       throw error::internal_parse_failure(
-        fmt::format("Unknown source while trying to reparse {}", to_code_string(o)));
+        util::format("Unknown source while trying to reparse {}", to_code_string(o)));
     }
     return source;
   }
@@ -104,12 +103,12 @@ namespace jank::read::parse
         else
         {
           throw error::internal_parse_failure(
-            fmt::format("Unsupported object for reparsing {}", typed_o->to_code_string()));
+            util::format("Unsupported object for reparsing {}", typed_o->to_code_string()));
         }
       },
       [=]() -> source {
         throw error::internal_parse_failure(
-          fmt::format("Unable to reparse object {}", to_code_string(o)));
+          util::format("Unable to reparse object {}", to_code_string(o)));
       },
       o,
       n);

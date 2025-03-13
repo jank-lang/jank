@@ -1,8 +1,7 @@
 #include <CLI/CLI.hpp>
 
-#include <fmt/format.h>
-
 #include <jank/util/cli.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/runtime/module/loader.hpp>
 
 namespace jank::util::cli
@@ -18,7 +17,7 @@ namespace jank::util::cli
     cli.add_option(
       "--module-path",
       opts.module_path,
-      fmt::format(
+      util::format(
         "A {} separated list of directories, JAR files, and ZIP files to search for modules.",
         runtime::module::loader::module_separator));
     cli.add_flag("--profile", opts.profiler_enabled, "Enable compiler and runtime profiling.");
