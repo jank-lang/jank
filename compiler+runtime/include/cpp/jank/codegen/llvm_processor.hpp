@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
@@ -87,6 +89,12 @@ namespace jank::codegen
     std::unique_ptr<llvm::StandardInstrumentations> si;
   };
 
+  struct deferred_init
+  {
+    analyze::expr::local_reference_ptr local_ref;
+    llvm::Value *field_ptr;
+  };
+
   struct llvm_processor
   {
     llvm_processor() = delete;
@@ -143,13 +151,6 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::keyword_ptr k) const;
     llvm::Value *gen_global(runtime::obj::character_ptr c) const;
     llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
-    llvm::Value *gen_function(analyze::expr::function_ptr const expr,
-                              analyze::expr::function_arity const &fn_arity,
-                              std::function<void(std::function<void()> const &)> const &defer_init);
-    llvm::Value *
-    gen_function_instance(analyze::expr::function_ptr expr,
-                          analyze::expr::function_arity const &fn_arity,
-                          std::function<void(std::function<void()> const &)> const &defer_init);
     llvm::Value *gen_function_instance(analyze::expr::function_ptr expr,
                                        analyze::expr::function_arity const &fn_arity);
 
@@ -161,5 +162,6 @@ namespace jank::codegen
     llvm::Function *fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
+    std::list<deferred_init> deferred_inits{};
   };
 }
