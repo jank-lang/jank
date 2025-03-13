@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
@@ -42,6 +44,7 @@ namespace jank::analyze
     using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
     using named_recursion_ptr = runtime::native_box<struct named_recursion>;
     using let_ptr = runtime::native_box<struct let>;
+    using letfn_ptr = runtime::native_box<struct letfn>;
     using do_ptr = runtime::native_box<struct do_>;
     using if_ptr = runtime::native_box<struct if_>;
     using throw_ptr = runtime::native_box<struct throw_>;
@@ -93,6 +96,12 @@ namespace jank::codegen
     std::unique_ptr<llvm::StandardInstrumentations> si;
   };
 
+  struct deferred_init
+  {
+    analyze::expr::local_reference_ptr local_ref;
+    llvm::Value *field_ptr;
+  };
+
   struct llvm_processor
   {
     llvm_processor() = delete;
@@ -122,6 +131,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::recursion_reference_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::named_recursion_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::let_ptr, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::letfn_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::do_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::if_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::throw_ptr, analyze::expr::function_arity const &);
@@ -159,5 +169,6 @@ namespace jank::codegen
     llvm::Function *fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
+    std::list<deferred_init> deferred_inits{};
   };
 }

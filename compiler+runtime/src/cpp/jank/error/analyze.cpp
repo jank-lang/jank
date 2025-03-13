@@ -91,6 +91,13 @@ namespace jank::error
     return make_error(kind::analysis_invalid_let, message, source, macro_expansions);
   }
 
+  error_ptr analysis_invalid_letfn(native_persistent_string const &message,
+                                   read::source const &source,
+                                   native_deque<runtime::object_ptr> const &macro_expansions)
+  {
+    return make_error(kind::analysis_invalid_letfn, message, source, macro_expansions);
+  }
+
   error_ptr analysis_invalid_loop(native_persistent_string const &message,
                                   read::source const &source,
                                   native_deque<runtime::object_ptr> const &macro_expansions)
