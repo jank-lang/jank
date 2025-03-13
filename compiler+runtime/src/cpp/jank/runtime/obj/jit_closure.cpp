@@ -1,6 +1,3 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>
@@ -10,6 +7,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -40,12 +38,12 @@ namespace jank::runtime::obj
   {
     auto const name(
       get(meta.unwrap_or(nil::nil_const()), __rt_ctx->intern_keyword("name").expect_ok()));
-    fmt::format_to(
-      std::back_inserter(buff),
+    util::format_to(
+      buff,
       "{} ({}@{})",
       (name->type == object_type::nil ? "unknown" : expect_object<persistent_string>(name)->data),
       object_type_str(base.type),
-      fmt::ptr(&base));
+      &base);
   }
 
   native_persistent_string jit_closure::to_code_string()

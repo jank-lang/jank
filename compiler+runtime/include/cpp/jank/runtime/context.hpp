@@ -47,7 +47,7 @@ namespace jank::runtime
 
     void dump() const;
 
-    ns_ptr intern_ns(native_persistent_string_view const &);
+    ns_ptr intern_ns(native_persistent_string const &);
     ns_ptr intern_ns(obj::symbol_ptr const &);
     option<ns_ptr> remove_ns(obj::symbol_ptr const &);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
@@ -70,11 +70,11 @@ namespace jank::runtime
     find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
     result<obj::keyword_ptr, native_persistent_string>
-    intern_keyword(native_persistent_string_view const &ns,
-                   native_persistent_string_view const &name,
+    intern_keyword(native_persistent_string const &ns,
+                   native_persistent_string const &name,
                    native_bool resolved = true);
     result<obj::keyword_ptr, native_persistent_string>
-    intern_keyword(native_persistent_string_view const &s);
+    intern_keyword(native_persistent_string const &s);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);

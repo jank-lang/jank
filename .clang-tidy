@@ -19,6 +19,7 @@ misc-definitions-in-headers,\
 -modernize-pass-by-value,\
 -modernize-avoid-c-arrays,\
 -modernize-use-designated-initializers,\
+-modernize-use-transparent-functors,\
 -cppcoreguidelines-non-private-member-variables-in-classes,\
 -cppcoreguidelines-avoid-c-arrays,\
 -cppcoreguidelines-avoid-magic-numbers,\

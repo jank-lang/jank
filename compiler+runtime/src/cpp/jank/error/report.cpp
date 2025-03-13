@@ -2,15 +2,13 @@
 #include <iostream>
 #include <deque>
 
-#include <fmt/format.h>
-
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/string.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/error/report.hpp>
 #include <jank/ui/highlight.hpp>
 #include <jank/runtime/context.hpp>
@@ -104,7 +102,7 @@ namespace jank::error
       /* We just want to point at the start of the expansion, not underline the
        * whole thing. It may be huge! */
       source.end = source.start;
-      add(note{ fmt::format("{} macro expansion here.", util::number_to_ordinal(i)),
+      add(note{ util::format("{} macro expansion here.", util::number_to_ordinal(i)),
                 source,
                 note::kind::info });
     }
@@ -430,8 +428,8 @@ namespace jank::error
     auto const file(util::map_file(s.file_path));
     if(file.is_err())
     {
-      return window(text(fmt::format(" {} ", s.file_path)),
-                    hbox({ text(fmt::format("Unable to map file: {}", file.expect_err())) }));
+      return window(text(util::format(" {} ", s.file_path)),
+                    hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }
 
     /* TODO: Horizontal centering. */
@@ -471,7 +469,7 @@ namespace jank::error
       vlines.emplace_back(hbox({ line_numbers[i], separator(), lines[i] }));
     }
 
-    return window(text(fmt::format(" {} ", s.file_path)), vbox(std::move(vlines)));
+    return window(text(util::format(" {} ", s.file_path)), vbox(std::move(vlines)));
   }
 
   void report(error_ptr const e)

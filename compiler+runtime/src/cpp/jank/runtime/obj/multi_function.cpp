@@ -1,5 +1,3 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
@@ -7,7 +5,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -39,11 +37,7 @@ namespace jank::runtime::obj
 
   void multi_function::to_string(util::string_builder &buff)
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "{} ({}@{})",
-                   name->to_string(),
-                   object_type_str(base.type),
-                   fmt::ptr(&base));
+    util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(base.type), &base);
   }
 
   native_persistent_string multi_function::to_code_string()
@@ -238,7 +232,7 @@ namespace jank::runtime::obj
 
     if(is_preferred(deref(hierarchy), y, x))
     {
-      throw std::runtime_error{ fmt::format(
+      throw std::runtime_error{ util::format(
         "Preference conflict in multimethod '{}': {} is already preferred to {}",
         runtime::to_string(name),
         runtime::to_string(y),
@@ -308,9 +302,9 @@ namespace jank::runtime::obj
     auto const target(get_method(dispatch_val));
     if(target == nil::nil_const())
     {
-      throw std::runtime_error{ fmt::format("No method in multimethod '{}' for dispatch value: {}",
-                                            runtime::to_string(name),
-                                            runtime::to_string(dispatch_val)) };
+      throw std::runtime_error{ util::format("No method in multimethod '{}' for dispatch value: {}",
+                                             runtime::to_string(name),
+                                             runtime::to_string(dispatch_val)) };
     }
     return target;
   }
@@ -352,7 +346,7 @@ namespace jank::runtime::obj
 
         if(!is_dominant(cached_hierarchy, best_entry->first(), entry_key))
         {
-          throw std::runtime_error{ fmt::format(
+          throw std::runtime_error{ util::format(
             "Multiple methods in multimethod '{}' match dispatch value: {} -> {} and {}, and "
             "neither is preferred",
             runtime::to_string(name),

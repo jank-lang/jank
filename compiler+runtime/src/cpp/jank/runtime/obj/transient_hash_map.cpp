@@ -1,6 +1,3 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -9,6 +6,7 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -48,8 +46,7 @@ namespace jank::runtime::obj
 
   void transient_hash_map::to_string(util::string_builder &buff) const
   {
-    auto inserter(std::back_inserter(buff));
-    fmt::format_to(inserter, "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string transient_hash_map::to_string() const
@@ -142,13 +139,13 @@ namespace jank::runtime::obj
 
     if(head->type != object_type::persistent_vector)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
     auto const vec(expect_object<persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
     data.set(vec->data[0], vec->data[1]);

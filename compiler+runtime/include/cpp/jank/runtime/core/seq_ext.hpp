@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/core/equal.hpp>
 
 namespace jank::runtime
 {

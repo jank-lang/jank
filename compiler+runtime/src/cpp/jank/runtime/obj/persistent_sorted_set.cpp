@@ -27,6 +27,12 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_sorted_set_ptr persistent_sorted_set::empty()
+  {
+    static auto const ret(make_box<persistent_sorted_set>());
+    return ret;
+  }
+
   persistent_sorted_set_ptr persistent_sorted_set::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_set>(visit_seqable(
@@ -154,4 +160,12 @@ namespace jank::runtime::obj
     auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
     return ret;
   }
+}
+
+namespace jank::runtime
+{
+  template obj::persistent_sorted_set_ptr
+  make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type &&);
+  template obj::persistent_sorted_set_ptr
+  make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type const &);
 }

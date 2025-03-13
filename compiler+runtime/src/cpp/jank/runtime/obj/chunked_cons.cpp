@@ -1,11 +1,9 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/chunked_cons.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -47,8 +45,8 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid chunked cons head: {}",
-                                                typed_head->to_string()) };
+          throw std::runtime_error{ util::format("invalid chunked cons head: {}",
+                                                 typed_head->to_string()) };
         }
       },
       head);
@@ -70,8 +68,8 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid chunked cons head: {}",
-                                                typed_head->to_string()) };
+          throw std::runtime_error{ util::format("invalid chunked cons head: {}",
+                                                 typed_head->to_string()) };
         }
       },
       head);
@@ -100,7 +98,7 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_tail->to_string()) };
+          throw std::runtime_error{ util::format("invalid sequence: {}", typed_tail->to_string()) };
         }
       },
       o->tail);

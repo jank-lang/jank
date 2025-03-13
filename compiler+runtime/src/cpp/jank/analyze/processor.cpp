@@ -1,8 +1,5 @@
 #include <set>
 
-#include <fmt/core.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
@@ -19,6 +16,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/error/analyze.hpp>
 
 #include <jank/analyze/expr/def.hpp>
@@ -459,7 +457,7 @@ namespace jank::analyze
     if(var.is_none())
     {
       return error::analysis_unresolved_symbol(
-        fmt::format("Unable to resolve symbol '{}'.", sym->to_string()),
+        util::format("Unable to resolve symbol '{}'.", sym->to_string()),
         meta_source(sym->meta),
         add_top_expansion(macro_expansions));
     }
@@ -571,7 +569,7 @@ namespace jank::analyze
     {
       /* TODO: Suggestion: use & args to capture the rest */
       return error::analysis_invalid_fn_parameters(
-        fmt::format("This function has too many parameters. The max is {}.", runtime::max_params),
+        util::format("This function has too many parameters. The max is {}.", runtime::max_params),
         object_source(params_obj),
         add_top_expansion(macro_expansions));
     }
@@ -820,9 +818,9 @@ namespace jank::analyze
     {
       /* TODO: Note where the loop/fn args are. */
       return error::analysis_invalid_recur_args(
-        fmt::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
-                    arg_count,
-                    fn_ctx.unwrap()->param_count),
+        util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
+                     arg_count,
+                     fn_ctx.unwrap()->param_count),
         meta_source(list->meta),
         add_top_expansion(macro_expansions));
     }
@@ -1228,7 +1226,7 @@ namespace jank::analyze
     if(found_var.is_none())
     {
       return error::analysis_unresolved_var(
-        fmt::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
+        util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
         meta_source(o->meta),
         add_top_expansion(macro_expansions));
     }
@@ -1878,8 +1876,8 @@ namespace jank::analyze
         else
         {
           return error::internal_analysis_failure(
-            fmt::format("Unimplemented analysis for object type '{}'.",
-                        object_type_str(typed_o->base.type)),
+            util::format("Unimplemented analysis for object type '{}'.",
+                         object_type_str(typed_o->base.type)),
             object_source(o),
             add_top_expansion(macro_expansions));
         }

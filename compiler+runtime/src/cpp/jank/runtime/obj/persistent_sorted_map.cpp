@@ -1,11 +1,9 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_sorted_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_sorted_map.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -31,6 +29,12 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_sorted_map_ptr persistent_sorted_map::empty()
+  {
+    static auto const ret(make_box<persistent_sorted_map>());
+    return ret;
+  }
+
   persistent_sorted_map_ptr persistent_sorted_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_map>(visit_object(
@@ -46,8 +50,8 @@ namespace jank::runtime::obj
             it = runtime::next_in_place(it);
             if(!it)
             {
-              throw std::runtime_error{ fmt::format("Odd number of elements: {}",
-                                                    typed_seq->to_string()) };
+              throw std::runtime_error{ util::format("Odd number of elements: {}",
+                                                     typed_seq->to_string()) };
             }
             auto const val(it->first());
             transient.insert_or_assign(key, val);
@@ -56,7 +60,7 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{ fmt::format("Not seqable: {}", typed_seq->to_string()) };
+          throw std::runtime_error{ util::format("Not seqable: {}", typed_seq->to_string()) };
         }
       },
       seq));
@@ -120,13 +124,13 @@ namespace jank::runtime::obj
 
     if(head->type != object_type::persistent_vector)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
     auto const vec(expect_object<persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
     auto copy(data.insert_or_assign(vec->data[0], vec->data[1]));

@@ -1,8 +1,5 @@
 #include <functional>
 
-#include <fmt/core.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/munge.hpp>
@@ -10,6 +7,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/detail/to_runtime_data.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::analyze
 {
@@ -117,7 +115,7 @@ namespace jank::analyze
       }
     }
 
-    throw std::runtime_error{ fmt::format("unable to find local: {}", sym->to_string()) };
+    throw std::runtime_error{ util::format("unable to find local: {}", sym->to_string()) };
   }
 
   option<local_frame::find_result> local_frame::find_local_or_capture(obj::symbol_ptr const sym)

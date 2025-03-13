@@ -1,8 +1,7 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -25,7 +24,7 @@ namespace jank::runtime::obj
 
   void delay::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string delay::to_code_string() const
