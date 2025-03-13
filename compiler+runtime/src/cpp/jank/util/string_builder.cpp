@@ -139,6 +139,19 @@ namespace jank::util
     return *this;
   }
 
+  string_builder &string_builder::operator()(long const d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const required{ snprintf(nullptr, 0, "%li", d) };
+    maybe_realloc(*this, required);
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    snprintf(buffer + pos, capacity - pos, "%li", d);
+    pos += required;
+
+    return *this;
+  }
+
   string_builder &string_builder::operator()(size_t const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -227,6 +240,11 @@ namespace jank::util
   }
 
   void string_builder::push_back(int const d) &
+  {
+    (*this)(d);
+  }
+
+  void string_builder::push_back(long const d) &
   {
     (*this)(d);
   }

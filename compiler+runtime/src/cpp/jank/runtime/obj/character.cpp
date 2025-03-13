@@ -1,9 +1,7 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/escape.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -26,12 +24,12 @@ namespace jank::runtime::obj
         case '\r':
           return R"(\return)";
         default:
-          return fmt::format(R"(\{})", bytes[0]);
+          return util::format(R"(\{})", bytes[0]);
       }
     }
     else
     {
-      return fmt::format(R"(\{})", bytes);
+      return util::format(R"(\{})", bytes);
     }
   }
 

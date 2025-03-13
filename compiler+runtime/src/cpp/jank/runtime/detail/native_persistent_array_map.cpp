@@ -1,7 +1,6 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/detail/native_persistent_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::detail
 {
@@ -104,7 +103,7 @@ namespace jank::runtime::detail
         }
       // TODO: Convert to hash map.
       default:
-        throw std::runtime_error{ fmt::format("unsupported array size: {}", length + 2) };
+        throw std::runtime_error{ util::format("unsupported array size: {}", length + 2) };
     }
   }
 

@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <random>
-#include <fmt/core.h>
 
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
@@ -20,6 +18,7 @@
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -43,8 +42,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("cannot check if this is empty: {}",
-                                                typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("cannot check if this is empty: {}",
+                                                 typed_o->to_code_string()) };
         }
       },
       o);
@@ -166,8 +165,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not transientable: {}",
-                                                typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not transientable: {}",
+                                                 typed_o->to_code_string()) };
         }
       },
       o);
@@ -185,8 +184,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not persistentable: {}",
-                                                typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not persistentable: {}",
+                                                 typed_o->to_code_string()) };
         }
       },
       o);
@@ -204,8 +203,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not conjable_in_place: {}",
-                                                typed_coll->to_code_string()) };
+          throw std::runtime_error{ util::format("not conjable_in_place: {}",
+                                                 typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -224,8 +223,8 @@ namespace jank::runtime
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
 
-    throw std::runtime_error{ fmt::format("not disjoinable_in_place: {}",
-                                          runtime::to_code_string(coll)) };
+    throw std::runtime_error{ util::format("not disjoinable_in_place: {}",
+                                           runtime::to_code_string(coll)) };
   }
 
   object_ptr assoc_in_place(object_ptr const coll, object_ptr const k, object_ptr const v)
@@ -240,8 +239,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
-                                                typed_coll->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
+                                                 typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -261,8 +260,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
-                                                typed_coll->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
+                                                 typed_coll->to_code_string()) };
         }
       },
       coll,
@@ -297,7 +296,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -325,7 +324,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -357,7 +356,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -394,7 +393,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -430,7 +429,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -466,7 +465,7 @@ namespace jank::runtime
         return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
       },
       [=]() -> object_ptr {
-        throw std::runtime_error{ fmt::format("not seqable: {}", runtime::to_code_string(tail)) };
+        throw std::runtime_error{ util::format("not seqable: {}", runtime::to_code_string(tail)) };
       },
       tail);
   }
@@ -487,7 +486,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not conjable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not conjable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -506,7 +505,7 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ fmt::format("not disjoinable: {}", runtime::to_code_string(s)) };
+      throw std::runtime_error{ util::format("not disjoinable: {}", runtime::to_code_string(s)) };
     }
   }
 
@@ -522,8 +521,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively writable: {}",
+                                                 typed_m->to_code_string()) };
         }
       },
       m);
@@ -541,8 +540,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively writable: {}",
+                                                 typed_m->to_code_string()) };
         }
       },
       m);
@@ -607,8 +606,8 @@ namespace jank::runtime
               }
               else
               {
-                throw std::runtime_error{ fmt::format("not seqable: {}",
-                                                      typed_keys->to_code_string()) };
+                throw std::runtime_error{ util::format("not seqable: {}",
+                                                       typed_keys->to_code_string()) };
               }
             },
             keys);
@@ -649,8 +648,8 @@ namespace jank::runtime
               }
               else
               {
-                throw std::runtime_error{ fmt::format("not seqable: {}",
-                                                      typed_keys->to_code_string()) };
+                throw std::runtime_error{ util::format("not seqable: {}",
+                                                       typed_keys->to_code_string()) };
               }
             },
             keys);
@@ -741,17 +740,17 @@ namespace jank::runtime
               }
               else
               {
-                throw std::runtime_error{ fmt::format("not associatively readable: {} [{}]",
-                                                      typed_other->to_code_string(),
-                                                      object_type_str(typed_other->base.type)) };
+                throw std::runtime_error{ util::format("not associatively readable: {} [{}]",
+                                                       typed_other->to_code_string(),
+                                                       object_type_str(typed_other->base.type)) };
               }
             },
             other);
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively writable: {}",
-                                                typed_m->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively writable: {}",
+                                                 typed_m->to_code_string()) };
         }
       },
       m);
@@ -783,7 +782,7 @@ namespace jank::runtime
     auto const index(to_int(idx));
     if(index < 0)
     {
-      throw std::runtime_error{ fmt::format("index out of bounds: {}", index) };
+      throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
     else if(o == obj::nil::nil_const())
     {
@@ -808,11 +807,11 @@ namespace jank::runtime
               return it->first();
             }
           }
-          throw std::runtime_error{ fmt::format("index out of bounds: {}", index) };
+          throw std::runtime_error{ util::format("index out of bounds: {}", index) };
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -852,7 +851,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not indexable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -875,7 +874,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -898,7 +897,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not stackable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o->type)) };
         }
       },
       o);
@@ -1000,7 +999,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
         }
       },
       s);
@@ -1096,7 +1095,7 @@ namespace jank::runtime
           return typed_o->chunked_first();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);
@@ -1113,7 +1112,7 @@ namespace jank::runtime
           return typed_o->chunked_next() ?: obj::nil::nil_const();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);
@@ -1130,7 +1129,7 @@ namespace jank::runtime
           return typed_o->chunked_next() ?: obj::persistent_list::empty();
         }
         {
-          throw std::runtime_error{ fmt::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
         }
       },
       o);

@@ -7,9 +7,6 @@
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/TargetParser/Host.h>
 
-#include <fmt/compile.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -25,6 +22,7 @@
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -153,7 +151,7 @@ namespace jank::runtime
     if(file.is_err())
     {
       throw std::runtime_error{
-        fmt::format("unable to map file {} due to error: {}", path, file.expect_err())
+        util::format("unable to map file {} due to error: {}", path, file.expect_err())
       };
     }
 
@@ -253,6 +251,10 @@ namespace jank::runtime
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       if(eval)
       {
+        if(expr.is_err())
+        {
+          util::println("{}", expr.expect_err()->message);
+        }
         evaluate::eval(expr.expect_ok());
       }
       ret.emplace_back(expr.expect_ok());
@@ -302,7 +304,7 @@ namespace jank::runtime
                                     std::make_pair(compile_files_var, obj::boolean::true_const()),
                                     std::make_pair(current_module_var, make_box(module))) };
 
-    return load_module(fmt::format("/{}", module), module::origin::latest);
+    return load_module(util::format("/{}", module), module::origin::latest);
   }
 
   object_ptr context::eval(object_ptr const o)
@@ -314,9 +316,9 @@ namespace jank::runtime
   string_result<void> context::write_module(native_persistent_string const &module_name,
                                             std::unique_ptr<llvm::Module> const &module) const
   {
-    profile::timer const timer{ fmt::format("write_module {}", module_name) };
+    profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
-      fmt::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
+      util::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
     };
     std::filesystem::create_directories(module_path.parent_path());
 
@@ -325,9 +327,9 @@ namespace jank::runtime
     llvm::raw_fd_ostream os(module_path.c_str(), file_error, llvm::sys::fs::OpenFlags::OF_None);
     if(file_error)
     {
-      return err(fmt::format("failed to open module file {} with error {}",
-                             module_path.c_str(),
-                             file_error.message()));
+      return err(util::format("failed to open module file {} with error {}",
+                              module_path.c_str(),
+                              file_error.message()));
     }
     //codegen_ctx->module->print(llvm::outs(), nullptr);
 
@@ -344,13 +346,13 @@ namespace jank::runtime
     };
     if(!target_machine)
     {
-      return err(fmt::format("failed to create target machine for {}", target_triple));
+      return err(util::format("failed to create target machine for {}", target_triple));
     }
     llvm::legacy::PassManager pass;
 
     if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
     {
-      return err(fmt::format("failed to write module to object file for {}", target_triple));
+      return err(util::format("failed to write module to object file for {}", target_triple));
     }
 
     pass.run(*module);
@@ -367,10 +369,10 @@ namespace jank::runtime
   {
     static native_persistent_string const dot{ "\\." };
     auto const ns{ current_ns() };
-    return fmt::format(FMT_COMPILE("{}-{}-{}"),
-                       runtime::munge_extra(ns->name->get_name(), dot, "_"),
-                       prefix.data(),
-                       ++ns->symbol_counter);
+    return util::format("{}-{}-{}",
+                        runtime::munge_extra(ns->name->get_name(), dot, "_"),
+                        prefix.data(),
+                        ++ns->symbol_counter);
   }
 
   obj::symbol context::unique_symbol()
@@ -406,7 +408,7 @@ namespace jank::runtime
     }
   }
 
-  ns_ptr context::intern_ns(native_persistent_string_view const &name)
+  ns_ptr context::intern_ns(native_persistent_string const &name)
   {
     return intern_ns(make_box<obj::symbol>(name));
   }
@@ -415,8 +417,8 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      throw std::runtime_error{ fmt::format("Can't intern ns. Sym is qualified: {}",
-                                            sym->to_string()) };
+      throw std::runtime_error{ util::format("Can't intern ns. Sym is qualified: {}",
+                                             sym->to_string()) };
     }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
@@ -484,22 +486,22 @@ namespace jank::runtime
     if(qualified_sym->ns.empty())
     {
       return err(
-        fmt::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
+        util::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
     }
 
     auto locked_namespaces(namespaces.wlock());
     auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
     if(found_ns == locked_namespaces->end())
     {
-      return err(fmt::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
+      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
     }
 
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
   result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string_view const &ns,
-                          native_persistent_string_view const &name,
+  context::intern_keyword(native_persistent_string const &ns,
+                          native_persistent_string const &name,
                           bool const resolved)
   {
     native_persistent_string resolved_ns{ ns };
@@ -511,7 +513,7 @@ namespace jank::runtime
         auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
         if(resolved.is_none())
         {
-          return err(fmt::format("Unable to resolve namespace alias '{}'", ns));
+          return err(util::format("Unable to resolve namespace alias '{}'", ns));
         }
         resolved_ns = resolved.unwrap()->name->name;
       }
@@ -521,11 +523,11 @@ namespace jank::runtime
         resolved_ns = current_ns->name->name;
       }
     }
-    return intern_keyword(resolved_ns.empty() ? name : fmt::format("{}/{}", resolved_ns, name));
+    return intern_keyword(resolved_ns.empty() ? name : util::format("{}/{}", resolved_ns, name));
   }
 
   result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string_view const &s)
+  context::intern_keyword(native_persistent_string const &s)
   {
     profile::timer const timer{ "rt intern_keyword" };
 
@@ -660,8 +662,8 @@ namespace jank::runtime
     assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
-      return err(fmt::format("invalid thread binding map (must be hash map): {}",
-                             runtime::to_string(bindings)));
+      return err(util::format("invalid thread binding map (must be hash map): {}",
+                              runtime::to_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
@@ -685,7 +687,7 @@ namespace jank::runtime
       auto const var(expect_object<var>(entry->data[0]));
       if(!var->dynamic.load())
       {
-        return err(fmt::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
+        return err(util::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
       }
       /* TODO: Where is this unset? */
       var->thread_bound.store(true);

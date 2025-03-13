@@ -4,10 +4,9 @@
 
 #include <libzippp.h>
 
-#include <fmt/format.h>
-
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
@@ -21,7 +20,6 @@
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::runtime::module
 {
@@ -53,7 +51,7 @@ namespace jank::runtime::module
     static native_persistent_string const dot{ "\\." };
     std::string ret{ runtime::munge_extra(module, dot, "_") };
 
-    return fmt::format("jank_load_{}", ret);
+    return util::format("jank_load_{}", ret);
   }
 
   native_persistent_string
@@ -69,7 +67,7 @@ namespace jank::runtime::module
   {
     assert(!native_ns.empty());
     assert(!end.empty());
-    return fmt::format("::{}::{}", native_ns, end);
+    return util::format("::{}::{}", native_ns, end);
   }
 
   /* If it has two or more occurences of $, it's nested. */
@@ -87,7 +85,7 @@ namespace jank::runtime::module
     auto const success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      throw std::runtime_error{ fmt::format("Failed to open jar on module path: {}", path) };
+      throw std::runtime_error{ util::format("Failed to open jar on module path: {}", path) };
     }
 
     auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
@@ -148,7 +146,7 @@ namespace jank::runtime::module
 
     if(registered)
     {
-      //fmt::println("register_entry {} {} {} {}",
+      //util::println("register_entry {} {} {} {}",
       //             entry.archive_path.unwrap_or("None"),
       //             entry.path,
       //             module_path.string(),
@@ -190,7 +188,7 @@ namespace jank::runtime::module
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      std::cerr << fmt::format("Failed to open jar on module path: {}\n", path);
+      std::cerr << util::format("Failed to open jar on module path: {}\n", path);
       return;
     }
 
@@ -238,12 +236,12 @@ namespace jank::runtime::module
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     native_transient_string paths{ ps };
-    paths += fmt::format(":{}", rt_ctx.binary_cache_dir);
-    paths += fmt::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).string());
-    paths += fmt::format(":{}", (jank_path / "../src/jank").string());
+    paths += util::format(":{}", rt_ctx.binary_cache_dir);
+    paths += util::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).string());
+    paths += util::format(":{}", (jank_path / "../src/jank").string());
     this->paths = paths;
 
-    //fmt::println("module paths: {}", paths);
+    //util::println("module paths: {}", paths);
 
     size_t start{};
     size_t i{ paths.find(module_separator, start) };
@@ -314,7 +312,7 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(fmt::format("unable to find module: {}", module));
+      return err(util::format("unable to find module: {}", module));
     }
 
     if(ori == origin::source)
@@ -368,7 +366,7 @@ namespace jank::runtime::module
         else
         {
           return err(
-            fmt::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
+            util::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
         }
 
         if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
@@ -395,7 +393,7 @@ namespace jank::runtime::module
       }
     }
 
-    return err(fmt::format("No sources for registered module: {}", module));
+    return err(util::format("No sources for registered module: {}", module));
   }
 
   native_bool loader::is_loaded(native_persistent_string_view const &module)
@@ -436,7 +434,7 @@ namespace jank::runtime::module
       return err(found_module.expect_err());
     }
 
-    string_result<void> res(err(fmt::format("Couldn't load module: {}", module)));
+    string_result<void> res(err(util::format("Couldn't load module: {}", module)));
 
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
@@ -469,7 +467,7 @@ namespace jank::runtime::module
   string_result<void>
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
-    profile::timer const timer{ fmt::format("load object {}", module) };
+    profile::timer const timer{ util::format("load object {}", module) };
 
     /* While loading an object, if the main ns loading symbol exists, then
      * we don't need to load the object file again.
@@ -518,7 +516,7 @@ namespace jank::runtime::module
       if(file.is_err())
       {
         return err(
-          fmt::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
+          util::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
       rt_ctx.eval_cpp_string({ file.expect_ok().head, file.expect_ok().size });
     }

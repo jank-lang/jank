@@ -1,5 +1,3 @@
-#include <fmt/compile.h>
-
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
@@ -11,7 +9,7 @@
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -128,12 +126,12 @@ namespace jank::runtime
     auto const binding(get_thread_binding());
     if(!binding)
     {
-      return err(fmt::format("Cannot set non-thread-bound var: {}", to_string()));
+      return err(util::format("Cannot set non-thread-bound var: {}", to_string()));
     }
     else if(std::this_thread::get_id() != binding->thread_id)
     {
-      return err(
-        fmt::format("Cannot set {} from a thread different from that which bound it", to_string()));
+      return err(util::format("Cannot set {} from a thread different from that which bound it",
+                              to_string()));
     }
 
     binding->value = r;
@@ -238,10 +236,7 @@ namespace jank::runtime
 
   void var_unbound_root::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff),
-                   "unbound@{} for var {}",
-                   fmt::ptr(&base),
-                   var->to_string());
+    util::format_to(buff, "unbound@{} for var {}", &base, var->to_string());
   }
 
   native_persistent_string var_unbound_root::to_code_string() const

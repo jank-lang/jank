@@ -91,7 +91,6 @@ set(
   jank_common_compiler_flags
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
-  #-DLIBASSERT_USE_FMT=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
 )
@@ -164,6 +163,8 @@ add_library(
   src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/util/string.cpp
+  src/cpp/jank/util/fmt.cpp
+  src/cpp/jank/util/fmt/print.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -282,7 +283,6 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
-include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 
@@ -305,7 +305,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/fmt/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
@@ -313,7 +312,6 @@ target_include_directories(
 
 target_link_libraries(
   jank_lib PRIVATE
-  fmt::fmt
   ${BDWGC_LIBRARIES}
   libzippp::libzippp
   # TODO: How can we force clang/llvm to be shared?
@@ -432,7 +430,6 @@ set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(
   folly_lib PUBLIC
-  fmt::fmt
 )
 # ---- libfolly.a ----
 
@@ -457,7 +454,6 @@ target_link_libraries(
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
-  fmt::fmt
 )
 
 jank_hook_llvm(jank_exe)
@@ -472,6 +468,7 @@ if(jank_tests)
     test/cpp/main.cpp
     test/cpp/jank/native_persistent_string.cpp
     test/cpp/jank/util/string_builder.cpp
+    test/cpp/jank/util/fmt.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

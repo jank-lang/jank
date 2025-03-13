@@ -8,9 +8,6 @@
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
@@ -20,6 +17,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/util/fmt.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -111,9 +109,10 @@ namespace jank::codegen
                                                ctx->builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
     std::string const name{ munge(root_fn->unique_name) };
-    auto fn_value(ctx->module->getOrInsertFunction(
-      target == compilation_target::module ? name : fmt::format("{}_{}", name, arity.params.size()),
-      fn_type));
+    auto const fn_name{ target == compilation_target::module
+                          ? native_persistent_string{ name }
+                          : util::format("{}_{}", name, arity.params.size()) };
+    auto fn_value(ctx->module->getOrInsertFunction(fn_name.c_str(), fn_type));
     fn = llvm::cast<llvm::Function>(fn_value.getCallee());
     fn->setLinkage(llvm::Function::ExternalLinkage);
 
@@ -168,7 +167,7 @@ namespace jank::codegen
       auto const captures(root_fn->captures());
       std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
-        get_or_insert_struct_type(fmt::format("{}_context", munge(root_fn->unique_name)),
+        get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
       size_t index{};
       for(auto const &capture : captures)
@@ -225,7 +224,7 @@ namespace jank::codegen
         auto const fn(ctx->module->getOrInsertFunction("jank_profile_exit", fn_type));
         ctx->builder->CreateCall(
           fn,
-          { gen_c_string(fmt::format("global ctor for {}", root_fn->name)) });
+          { gen_c_string(util::format("global ctor for {}", root_fn->name)) });
       }
 
       ctx->builder->CreateRetVoid();
@@ -335,9 +334,9 @@ namespace jank::codegen
     switch(arity)
     {
       case 0 ... runtime::max_params:
-        return fmt::format("jank_call{}", arity);
+        return util::format("jank_call{}", arity);
       default:
-        return fmt::format("jank_call{}", runtime::max_params + 1);
+        return util::format("jank_call{}", runtime::max_params + 1);
     }
   }
 
@@ -402,8 +401,8 @@ namespace jank::codegen
         }
         else
         {
-          throw std::runtime_error{ fmt::format("Unimplemented constant codegen: {}\n",
-                                                typed_o->to_string()) };
+          throw std::runtime_error{ util::format("Unimplemented constant codegen: {}\n",
+                                                 typed_o->to_string()) };
         }
       },
       expr->data));
@@ -590,9 +589,9 @@ namespace jank::codegen
     }
 
     auto const call_fn_name(
-      fmt::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
+      util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-    auto const fn(ctx->module->getOrInsertFunction(call_fn_name, fn_type));
+    auto const fn(ctx->module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
     auto const call(ctx->builder->CreateCall(fn, arg_handles));
 
     if(expr->position == expression_position::tail)
@@ -679,7 +678,7 @@ namespace jank::codegen
         auto const &fn(*expr->recursion_ref.fn_ctx->fn);
         std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
         auto const closure_ctx_type(
-          get_or_insert_struct_type(fmt::format("{}_context", munge(fn.unique_name)),
+          get_or_insert_struct_type(util::format("{}_context", munge(fn.unique_name)),
                                     capture_types));
 
         auto const malloc_fn_type(
@@ -727,9 +726,9 @@ namespace jank::codegen
     else
     {
       auto const call_fn_name(
-        fmt::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
+        util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-      auto const fn(ctx->module->getOrInsertFunction(call_fn_name, fn_type));
+      auto const fn(ctx->module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
       call = ctx->builder->CreateCall(fn, arg_handles);
     }
 
@@ -749,8 +748,8 @@ namespace jank::codegen
       auto const local(expr->frame->find_local_or_capture(pair.first));
       if(local.is_none())
       {
-        throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
-                                              pair.first->to_string()) };
+        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
+                                               pair.first->to_string()) };
       }
 
       locals[pair.first] = gen(pair.second, arity);
@@ -959,8 +958,8 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *> case_values;
     for(size_t block_counter{}; block_counter < expr->keys.size(); ++block_counter)
     {
-      auto const block_name{ fmt::format("case_{}", block_counter) };
-      auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name, current_fn) };
+      auto const block_name{ util::format("case_{}", block_counter) };
+      auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name.c_str(), current_fn) };
       switch_->addCase(
         llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr->keys[block_counter]),
         block);
@@ -1000,7 +999,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->var_globals[qualified_name]);
-    auto const name(fmt::format("var_{}", munge(qualified_name->to_string())));
+    auto const name(util::format("var_{}", munge(qualified_name->to_string())));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1092,8 +1091,8 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const create_fn(
-        ctx->module->getOrInsertFunction(fmt::format("jank_{}", name), create_fn_type));
+      auto const fn_name{ util::format("jank_{}", name) };
+      auto const create_fn(ctx->module->getOrInsertFunction(fn_name.c_str(), create_fn_type));
       auto const call(ctx->builder->CreateCall(create_fn));
       ctx->builder->CreateStore(call, global);
 
@@ -1115,7 +1114,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[i]);
-    auto const name(fmt::format("int_{}", i->data));
+    auto const name(util::format("int_{}", i->data));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1150,7 +1149,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[r]);
-    auto const name(fmt::format("real_{}", r->to_hash()));
+    auto const name(util::format("real_{}", r->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1184,7 +1183,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[r]);
-    auto const name(fmt::format("ratio_{}", r->to_hash()));
+    auto const name(util::format("ratio_{}", r->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1224,7 +1223,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[s]);
-    auto const name(fmt::format("string_{}", s->to_hash()));
+    auto const name(util::format("string_{}", s->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1260,7 +1259,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[s]);
-    auto const name(fmt::format("symbol_{}", s->to_hash()));
+    auto const name(util::format("symbol_{}", s->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1313,7 +1312,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[k]);
-    auto const name(fmt::format("keyword_{}", k->to_hash()));
+    auto const name(util::format("keyword_{}", k->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1352,7 +1351,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[c]);
-    auto const name(fmt::format("char_{}", c->to_hash()));
+    auto const name(util::format("char_{}", c->to_hash()));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1389,7 +1388,7 @@ namespace jank::codegen
     }
 
     auto &global(ctx->literal_globals[o]);
-    auto const name(fmt::format("data_{}", to_hash(o)));
+    auto const name(util::format("data_{}", to_hash(o)));
     auto const var(create_global_var(name));
     ctx->module->insertGlobalVariable(var);
     global = var;
@@ -1426,8 +1425,8 @@ namespace jank::codegen
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
               auto const meta(
                 gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
-              auto const meta_name(fmt::format("{}_meta", name));
-              meta->setName(meta_name);
+              auto const meta_name(util::format("{}_meta", name));
+              meta->setName(meta_name.c_str());
               ctx->builder->CreateCall(set_meta_fn, { call, meta });
             }
           }
@@ -1497,7 +1496,7 @@ namespace jank::codegen
     {
       std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
-        get_or_insert_struct_type(fmt::format("{}_context", munge(expr->unique_name)),
+        get_or_insert_struct_type(util::format("{}_context", munge(expr->unique_name)),
                                   capture_types));
 
       auto const malloc_fn_type(
@@ -1533,18 +1532,21 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getVoidTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
-      auto const set_arity_fn(ctx->module->getOrInsertFunction(
-        is_closure ? fmt::format("jank_closure_set_arity{}", arity.params.size())
-                   : fmt::format("jank_function_set_arity{}", arity.params.size()),
-        set_arity_fn_type));
+      auto const set_arity_fn_name{
+        is_closure ? util::format("jank_closure_set_arity{}", arity.params.size())
+                   : util::format("jank_function_set_arity{}", arity.params.size())
+      };
+      auto const set_arity_fn(
+        ctx->module->getOrInsertFunction(set_arity_fn_name.c_str(), set_arity_fn_type));
 
       std::vector<llvm::Type *> const target_arg_types{ arity.params.size(),
                                                         ctx->builder->getPtrTy() };
       auto const target_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), target_arg_types, false));
-      auto target_fn(ctx->module->getOrInsertFunction(
-        fmt::format("{}_{}", munge(expr->unique_name), arity.params.size()),
-        target_fn_type));
+      auto const target_fn_name{
+        util::format("{}_{}", munge(expr->unique_name), arity.params.size())
+      };
+      auto target_fn(ctx->module->getOrInsertFunction(target_fn_name.c_str(), target_fn_type));
 
       ctx->builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
     }
@@ -1590,7 +1592,7 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
       auto const fn(ctx->module->getOrInsertFunction("jank_profile_enter", fn_type));
       ctx->builder->CreateCall(fn,
-                               { gen_c_string(fmt::format("global ctor for {}", root_fn->name)) });
+                               { gen_c_string(util::format("global ctor for {}", root_fn->name)) });
     }
   }
 

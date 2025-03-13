@@ -1,11 +1,9 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -78,8 +76,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_args->to_string()) };
+          throw std::runtime_error{ util::format("expected a sequence: {}",
+                                                 typed_args->to_string()) };
         }
       },
       args);
@@ -110,8 +108,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_more->to_string()) };
+          throw std::runtime_error{ util::format("expected a sequence: {}",
+                                                 typed_more->to_string()) };
         }
       },
       args);
@@ -137,8 +135,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_args->to_string()) };
+          throw std::runtime_error{ util::format("expected a sequence: {}",
+                                                 typed_args->to_string()) };
         }
       },
       args);
@@ -169,8 +167,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("expected a sequence: {}",
-                                                typed_more->to_string()) };
+          throw std::runtime_error{ util::format("expected a sequence: {}",
+                                                 typed_more->to_string()) };
         }
       },
       args);
@@ -182,7 +180,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_o) -> native_real { return typed_o->to_real(); },
       [=]() -> native_real {
-        throw std::runtime_error{ fmt::format("not a number: {}", to_string(o)) };
+        throw std::runtime_error{ util::format("not a number: {}", to_string(o)) };
       },
       o);
   }
@@ -254,7 +252,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not nameable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not nameable: {}", typed_o->to_string()) };
         }
       },
       o);
@@ -273,7 +271,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not nameable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not nameable: {}", typed_o->to_string()) };
         }
       },
       o);
@@ -413,7 +411,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not derefable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not derefable: {}", typed_o->to_string()) };
         }
       },
       o);

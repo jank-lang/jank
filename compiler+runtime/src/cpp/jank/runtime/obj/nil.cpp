@@ -1,5 +1,3 @@
-#include <fmt/compile.h>
-
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/cons.hpp>
@@ -30,7 +28,7 @@ namespace jank::runtime::obj
 
   void nil::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "nil");
+    buff("nil");
   }
 
   native_hash nil::to_hash() const

@@ -1,5 +1,3 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/math.hpp>
@@ -7,7 +5,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -46,9 +44,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not metadatable: {} [{}]",
-                                                typed_o->to_code_string(),
-                                                object_type_str(typed_o->base.type)) };
+          throw std::runtime_error{ util::format("not metadatable: {} [{}]",
+                                                 typed_o->to_code_string(),
+                                                 object_type_str(typed_o->base.type)) };
         }
       },
       o,
@@ -69,9 +67,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not metadatable: {} [{}]",
-                                                typed_o->to_code_string(),
-                                                object_type_str(typed_o->base.type)) };
+          throw std::runtime_error{ util::format("not metadatable: {} [{}]",
+                                                 typed_o->to_code_string(),
+                                                 object_type_str(typed_o->base.type)) };
         }
       },
       o,

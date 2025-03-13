@@ -3,11 +3,9 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
-#include <fmt/color.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -47,27 +45,7 @@ namespace jank::jit
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
 
-      /* TODO: Disable diagnostic printing. The below works in non-test code, but crashes
-       * in test code. Even when it did work, it had two issues.
-       *
-       * 1. It didn't capture the output to display later
-       * 2. It still showed the "error: Parsing failed." line
-       *
-       */
-      //std::vector<char const *> args{ "clang++", "-w" };
-      //static llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{
-      //  clang::CreateAndPopulateDiagOpts(args)
-      //};
-      //static clang::TextDiagnosticPrinter diag_printer(llvm::nulls(), &*diag_opts);
-      //static clang::DiagnosticsEngine diags(
-      //  llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()),
-      //  &*diag_opts,
-      //  &diag_printer,
-      //  false);
-      /* TODO: Why does this crash? Should be what we want. */
-      //diags.setSuppressAllDiagnostics(true);
-      //__rt_ctx->jit_prc.interpreter->getCompilerInstance()->setDiagnostics(&diags);
-
+      /* TODO: Add color back in, once we have a good API for it. */
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
         if(!std::filesystem::is_regular_file(dir_entry.path()))
@@ -90,7 +68,7 @@ namespace jank::jit
         bool passed{ true };
         std::stringstream const captured_output;
 
-        fmt::print("testing file {} => ", dir_entry.path().string());
+        util::print("testing file {} => ", dir_entry.path().string());
 
         try
         {
@@ -108,8 +86,8 @@ namespace jank::jit
           {
             failures.push_back(
               { dir_entry.path(),
-                fmt::format("Test failure was expected, but it passed with {}",
-                            (result == nullptr ? "nullptr" : runtime::to_string(result))) });
+                util::format("Test failure was expected, but it passed with {}",
+                             (result == nullptr ? "nullptr" : runtime::to_string(result))) });
             passed = false;
           }
           else
@@ -123,7 +101,7 @@ namespace jank::jit
             {
               failures.push_back(
                 { dir_entry.path(),
-                  fmt::format("Result is not :success: {}", runtime::to_string(result)) });
+                  util::format("Result is not :success: {}", runtime::to_string(result)) });
               passed = false;
             }
           }
@@ -132,7 +110,8 @@ namespace jank::jit
         {
           if(expect_success || expect_throw)
           {
-            failures.push_back({ dir_entry.path(), fmt::format("Exception thrown: {}", e.what()) });
+            failures.push_back(
+              { dir_entry.path(), util::format("Exception thrown: {}", e.what()) });
             passed = false;
           }
         }
@@ -141,14 +120,14 @@ namespace jank::jit
           if(expect_success || (expect_throw && !runtime::equal(e, cardinal_result)))
           {
             failures.push_back(
-              { dir_entry.path(), fmt::format("Exception thrown: {}", runtime::to_string(e)) });
+              { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
           else if(expect_failure && runtime::equal(e, cardinal_result))
           {
             failures.push_back(
               { dir_entry.path(),
-                fmt::format("Expected failure, thrown: {}", runtime::to_string(e)) });
+                util::format("Expected failure, thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
         }
@@ -157,7 +136,7 @@ namespace jank::jit
           if(!expect_throw || !runtime::equal(e, cardinal_result))
           {
             failures.push_back(
-              { dir_entry.path(), fmt::format("Exception thrown: {}", runtime::to_string(e)) });
+              { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });
             passed = false;
           }
         }
@@ -172,15 +151,15 @@ namespace jank::jit
 
         if(allow_failure)
         {
-          fmt::print(fmt::fg(fmt::color::orange), "allowed failure\n");
+          util::print("allowed failure\n");
         }
         else if(passed)
         {
-          fmt::print(fmt::fg(fmt::color::green), "success\n");
+          util::print("success\n");
         }
         else
         {
-          fmt::print(fmt::fg(fmt::color::red), "failure\n");
+          util::print("failure\n");
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
@@ -189,12 +168,9 @@ namespace jank::jit
       CHECK(failures.empty());
       for(auto const &f : failures)
       {
-        fmt::print("{}: {} {}\n",
-                   fmt::styled("failure", fmt::fg(fmt::color::red)),
-                   f.path.string(),
-                   f.error);
+        util::print("{}: {} {}\n", "failure", f.path.string(), f.error);
       }
-      fmt::print("tested {} jank files\n", test_count);
+      util::print("tested {} jank files\n", test_count);
     }
   }
 }

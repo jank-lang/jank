@@ -1,6 +1,3 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <clojure/core_native.hpp>
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
@@ -9,6 +6,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace clojure::core_native
 {
@@ -53,8 +51,8 @@ namespace clojure::core_native
         }
         else
         {
-          throw std::runtime_error{ fmt::format("can't convert {} to a symbol",
-                                                typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("can't convert {} to a symbol",
+                                                 typed_o->to_code_string()) };
         }
       },
       o);

@@ -26,6 +26,7 @@ namespace jank::util
     string_builder &operator()(native_hash d) &;
     string_builder &operator()(void const *d) &;
     string_builder &operator()(int d) &;
+    string_builder &operator()(long d) &;
     string_builder &operator()(size_t d) &;
     string_builder &operator()(char d) &;
     string_builder &operator()(char32_t d) &;
@@ -39,6 +40,7 @@ namespace jank::util
     void push_back(native_hash d) &;
     void push_back(void const *d) &;
     void push_back(int d) &;
+    void push_back(long d) &;
     void push_back(size_t d) &;
     void push_back(char d) &;
     void push_back(char32_t d) &;

@@ -1,9 +1,7 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/behavior/comparable.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -55,7 +53,7 @@ namespace jank::runtime
           }
           else
           {
-            throw std::runtime_error{ fmt::format("not comparable: {}", typed_l->to_string()) };
+            throw std::runtime_error{ util::format("not comparable: {}", typed_l->to_string()) };
           }
         },
         l,

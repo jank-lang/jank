@@ -1,5 +1,3 @@
-#include <fmt/format.h>
-
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>

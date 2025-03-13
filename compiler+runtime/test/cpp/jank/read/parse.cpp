@@ -1,7 +1,5 @@
 #include <unistd.h>
 
-#include <fmt/format.h>
-
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -16,6 +14,7 @@
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/escape.hpp>
+#include <jank/util/fmt.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -426,7 +425,7 @@ namespace jank::read::parse
                 == lex::token{ offset,
                                len,
                                lex::token_kind::symbol,
-                               fmt::format("{}/{}", s.first, s.second) });
+                               util::format("{}/{}", s.first, s.second) });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each symbol is 1 space apart. */
           offset += len + 1;
@@ -481,8 +480,8 @@ namespace jank::read::parse
                 == lex::token{ offset,
                                len,
                                lex::token_kind::symbol,
-                               (ns_len == 0 ? fmt::format("{}", s.second)
-                                            : fmt::format("{}/{}", s.first, s.second)) });
+                               (ns_len == 0 ? util::format("{}", s.second)
+                                            : util::format("{}/{}", s.first, s.second)) });
           /* Each symbol is 1 space apart. */
           offset += len + 1;
         }
@@ -532,7 +531,7 @@ namespace jank::read::parse
                 == lex::token{ offset,
                                len,
                                lex::token_kind::keyword,
-                               fmt::format("{}/{}", s.first, s.second) });
+                               util::format("{}/{}", s.first, s.second) });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each symbol is 1 space apart. */
           offset += len + 1;
@@ -554,7 +553,7 @@ namespace jank::read::parse
           /* We add one for each colon. */
           auto const len(strlen(s) + 2);
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, len, lex::token_kind::keyword, fmt::format(":{}", s) });
+                == lex::token{ offset, len, lex::token_kind::keyword, util::format(":{}", s) });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
           /* Each keyword is 1 space apart. */
           offset += len + 1;
