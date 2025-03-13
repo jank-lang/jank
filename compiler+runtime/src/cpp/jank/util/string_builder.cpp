@@ -74,19 +74,6 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_integer const d) &
-  {
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%lld", d) };
-    maybe_realloc(*this, required);
-
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%lld", d);
-    pos += required;
-
-    return *this;
-  }
-
   string_builder &string_builder::operator()(float const d) &
   {
     /* snprintf %f implicitly casts to double anyway. */
@@ -153,6 +140,19 @@ namespace jank::util
 
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     snprintf(buffer + pos, capacity - pos, "%li", d);
+    pos += required;
+
+    return *this;
+  }
+
+  string_builder &string_builder::operator()(long long const d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const required{ snprintf(nullptr, 0, "%lld", d) };
+    maybe_realloc(*this, required);
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    snprintf(buffer + pos, capacity - pos, "%lld", d);
     pos += required;
 
     return *this;
@@ -234,11 +234,6 @@ namespace jank::util
   }
 
   void string_builder::push_back(native_bool const d) &
-  {
-    (*this)(d);
-  }
-
-  void string_builder::push_back(native_integer const d) &
   {
     (*this)(d);
   }
