@@ -1,11 +1,7 @@
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-
 #include <ftxui/dom/elements.hpp>
 
 #include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
-#include <jank/native_persistent_string/fmt.hpp>
 
 namespace jank::ui
 {

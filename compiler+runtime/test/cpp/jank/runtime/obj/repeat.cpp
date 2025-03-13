@@ -1,6 +1,7 @@
 #include <jank/runtime/obj/repeat.hpp>
-#include <jank/runtime/core.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>

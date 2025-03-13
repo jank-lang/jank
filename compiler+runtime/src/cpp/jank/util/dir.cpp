@@ -1,12 +1,10 @@
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/sha256.hpp>
 #include <jank/util/string_builder.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::util
 {
@@ -37,10 +35,10 @@ namespace jank::util
     auto const home(getenv("XDG_CACHE_HOME"));
     if(home)
     {
-      res = fmt::format("{}/jank", home);
+      res = util::format("{}/jank", home);
       return res;
     }
-    res = fmt::format("{}/.cache/jank", user_home_dir());
+    res = util::format("{}/.cache/jank", user_home_dir());
     return res;
   }
 
@@ -55,10 +53,10 @@ namespace jank::util
     auto const home(getenv("XDG_CONFIG_HOME"));
     if(home)
     {
-      res = fmt::format("{}/jank", home);
+      res = util::format("{}/jank", home);
       return res;
     }
-    res = fmt::format("{}/.config/jank", user_home_dir());
+    res = util::format("{}/.config/jank", user_home_dir());
     return res;
   }
 
@@ -73,7 +71,7 @@ namespace jank::util
       return res;
     }
 
-    return res = fmt::format("target/{}", binary_version(optimization_level, includes, defines));
+    return res = util::format("target/{}", binary_version(optimization_level, includes, defines));
   }
 
   /* The binary version is composed of two things:
@@ -111,15 +109,15 @@ namespace jank::util
       sb(def);
     }
 
-    auto const input(fmt::format("{}.{}.{}.{}.{}",
-                                 JANK_VERSION,
-                                 clang::getClangRevision(),
-                                 JANK_JIT_FLAGS,
-                                 optimization_level,
-                                 sb.release()));
-    res = fmt::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
+    auto const input(util::format("{}.{}.{}.{}.{}",
+                                  JANK_VERSION,
+                                  clang::getClangRevision(),
+                                  JANK_JIT_FLAGS,
+                                  optimization_level,
+                                  sb.release()));
+    res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
 
-    //fmt::println("binary_version {}", res);
+    //util::println("binary_version {}", res);
 
     return res;
   }

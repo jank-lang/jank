@@ -8,9 +8,6 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -27,6 +24,7 @@
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string.hpp>
+#include <jank/util/fmt/print.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -95,8 +93,8 @@ namespace jank
       }
       else
       {
-        throw std::runtime_error{ fmt::format("Could not find #'{}/-main function!",
-                                              opts.target_module) };
+        throw std::runtime_error{ util::format("Could not find #'{}/-main function!",
+                                               opts.target_module) };
       }
     }
   }
@@ -179,20 +177,20 @@ namespace jank
         }
 
         auto const res(__rt_ctx->eval_file(path_tmp));
-        fmt::println("{}", runtime::to_code_string(res));
+        util::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
       {
-        fmt::println("Exception: {}", e.what());
+        util::println("Exception: {}", e.what());
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
+        util::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
-        fmt::println("Exception: {}", s);
+        util::println("Exception: {}", s);
       }
       catch(jank::error_ptr const &e)
       {
@@ -252,15 +250,15 @@ namespace jank
       /* TODO: Unify error handling. JEEZE! */
       catch(std::exception const &e)
       {
-        fmt::println("Exception: {}", e.what());
+        util::println("Exception: {}", e.what());
       }
       catch(jank::runtime::object_ptr const o)
       {
-        fmt::println("Exception: {}", jank::runtime::to_code_string(o));
+        util::println("Exception: {}", jank::runtime::to_code_string(o));
       }
       catch(jank::native_persistent_string const &s)
       {
-        fmt::println("Exception: {}", s);
+        util::println("Exception: {}", s);
       }
       catch(jank::error_ptr const &e)
       {
@@ -341,17 +339,17 @@ try
 /* TODO: Unify error handling. JEEZE! */
 catch(std::exception const &e)
 {
-  fmt::println("Exception: {}", e.what());
+  jank::util::println("Exception: {}", e.what());
   return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
-  fmt::println("Exception: {}", jank::runtime::to_code_string(o));
+  jank::util::println("Exception: {}", jank::runtime::to_code_string(o));
   return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
-  fmt::println("Exception: {}", s);
+  jank::util::println("Exception: {}", s);
   return 1;
 }
 catch(jank::error_ptr const &e)
@@ -361,6 +359,6 @@ catch(jank::error_ptr const &e)
 }
 catch(...)
 {
-  fmt::println("Unknown exception thrown");
+  jank::util::println("Unknown exception thrown");
   return 1;
 }

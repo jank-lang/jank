@@ -1,12 +1,11 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -48,7 +47,7 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid sequence: {}", typed_s->to_string()) };
+          throw std::runtime_error{ util::format("invalid sequence: {}", typed_s->to_string()) };
         }
       },
       s);
@@ -290,15 +289,15 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          fmt::format("out of bounds index {}; vector has a size of {}", i, data.size())
+          util::format("out of bounds index {}; vector has a size of {}", i, data.size())
         };
       }
       return data[i];
     }
     else
     {
-      throw std::runtime_error{ fmt::format("nth on a vector must be an integer; found {}",
-                                            runtime::to_string(index)) };
+      throw std::runtime_error{ util::format("nth on a vector must be an integer; found {}",
+                                             runtime::to_string(index)) };
     }
   }
 

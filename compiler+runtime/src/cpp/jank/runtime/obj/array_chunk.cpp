@@ -1,10 +1,8 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -39,7 +37,7 @@ namespace jank::runtime::obj
 
   void array_chunk::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string array_chunk::to_code_string() const
@@ -84,7 +82,7 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(index)->data);
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{ fmt::format(
+        throw std::runtime_error{ util::format(
           "out of bounds index {}; array_chunk has a size of {} and offset of {}",
           i,
           buffer.size(),
@@ -94,8 +92,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ fmt::format("nth on a array_chunk must be an integer; found {}",
-                                            runtime::to_string(index)) };
+      throw std::runtime_error{ util::format("nth on a array_chunk must be an integer; found {}",
+                                             runtime::to_string(index)) };
     }
   }
 

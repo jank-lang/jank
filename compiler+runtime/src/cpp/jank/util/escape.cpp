@@ -1,7 +1,6 @@
-#include <fmt/format.h>
-
 #include <jank/util/escape.hpp>
 #include <jank/util/string_builder.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::util
 {
@@ -59,7 +58,7 @@ namespace jank::util
             sb('\b');
             break;
           default:
-            return err(unescape_error{ fmt::format("Invalid escape sequence '\\{}'", c) });
+            return err(unescape_error{ util::format("Invalid escape sequence '\\{}'", c) });
         }
         escape = false;
       }

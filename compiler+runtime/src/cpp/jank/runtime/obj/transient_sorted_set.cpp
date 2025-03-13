@@ -1,9 +1,8 @@
-#include <fmt/format.h>
-
 #include <jank/runtime/obj/transient_sorted_set.hpp>
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -42,8 +41,7 @@ namespace jank::runtime::obj
 
   void transient_sorted_set::to_string(util::string_builder &buff) const
   {
-    auto inserter(std::back_inserter(buff));
-    fmt::format_to(inserter, "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string transient_sorted_set::to_code_string() const

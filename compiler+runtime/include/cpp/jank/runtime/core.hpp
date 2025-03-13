@@ -10,11 +10,6 @@
 
 namespace jank::runtime
 {
-  /* TODO: Header for this, with sequence equality fns. */
-  native_bool equal(object_ptr lhs, object_ptr rhs);
-  native_integer compare(object_ptr, object_ptr);
-  native_bool is_identical(object_ptr lhs, object_ptr rhs);
-
   native_persistent_string type(object_ptr o);
   native_bool is_nil(object_ptr o);
   native_bool is_true(object_ptr o);

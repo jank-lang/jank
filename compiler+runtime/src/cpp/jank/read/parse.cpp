@@ -1,8 +1,5 @@
 #include <codecvt>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/error/parse.hpp>
 #include <jank/util/escape.hpp>
@@ -15,6 +12,7 @@
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/fmt.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -272,7 +270,7 @@ namespace jank::read::parse
         default:
           {
             return error::internal_parse_failure(
-              fmt::format("Unexpected token kind '{}'.", lex::token_kind_str(latest_token.kind)),
+              util::format("Unexpected token kind '{}'.", lex::token_kind_str(latest_token.kind)),
               { latest_token.start, latest_token.end });
           }
       }
@@ -644,7 +642,7 @@ namespace jank::read::parse
     {
       for(uint8_t i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
       {
-        arg_trans.push_back(make_box<obj::symbol>(fmt::format("%{}#", i + 1)));
+        arg_trans.push_back(make_box<obj::symbol>(util::format("%{}#", i + 1)));
       }
     }
     if(shorthand.unwrap().variadic)
@@ -1075,9 +1073,9 @@ namespace jank::read::parse
           else
           {
             return err(
-              error::internal_parse_failure(fmt::format("Unsupported collection: {} [{}]",
-                                                        typed_form->to_code_string(),
-                                                        object_type_str(typed_form->base.type))));
+              error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
+                                                         typed_form->to_code_string(),
+                                                         object_type_str(typed_form->base.type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
@@ -1411,7 +1409,7 @@ namespace jank::read::parse
     if(res.is_err())
     {
       return error::internal_parse_failure(
-        fmt::format("Unable to unescape string: {}", res.expect_err().message),
+        util::format("Unable to unescape string: {}", res.expect_err().message),
         { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),

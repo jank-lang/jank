@@ -1,12 +1,10 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/escape.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -96,7 +94,7 @@ namespace jank::runtime::obj
 
   object_ptr persistent_string::get_entry(object_ptr const) const
   {
-    throw std::runtime_error{ fmt::format("get_entry not supported on string") };
+    throw std::runtime_error{ util::format("get_entry not supported on string") };
   }
 
   object_ptr persistent_string::nth(object_ptr const index) const
@@ -107,15 +105,15 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          fmt::format("out of bounds index {}; string has a size of {}", i, data.size())
+          util::format("out of bounds index {}; string has a size of {}", i, data.size())
         };
       }
       return make_box<character>(data[i]);
     }
     else
     {
-      throw std::runtime_error{ fmt::format("nth on a string must be an integer; found {}",
-                                            runtime::to_string(index)) };
+      throw std::runtime_error{ util::format("nth on a string must be an integer; found {}",
+                                             runtime::to_string(index)) };
     }
   }
 
@@ -134,15 +132,15 @@ namespace jank::runtime::obj
   {
     if(start < 0)
     {
-      return err(fmt::format("start index {} is less than 0", start));
+      return err(util::format("start index {} is less than 0", start));
     }
     if(end < start)
     {
-      return err(fmt::format("end index {} is less than start {}", end, start));
+      return err(util::format("end index {} is less than start {}", end, start));
     }
     else if(static_cast<size_t>(end) > data.size())
     {
-      return err(fmt::format("end index {} out of bounds for length {}", end, data.size()));
+      return err(util::format("end index {} out of bounds for length {}", end, data.size()));
     }
 
     return ok(make_box(data.substr(start, end - start)));

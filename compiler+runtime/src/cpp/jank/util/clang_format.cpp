@@ -1,12 +1,11 @@
 #include <fstream>
 
-#include <fmt/format.h>
-
 #include <clang/Format/Format.h>
 
 #include <jank/util/clang_format.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/dir.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::util
 {
@@ -50,8 +49,8 @@ namespace jank::util
       {
         delete ret;
         ret = nullptr;
-        throw std::runtime_error{ fmt::format("unable to parse clang format yaml: {}",
-                                              error_code.message()) };
+        throw std::runtime_error{ util::format("unable to parse clang format yaml: {}",
+                                               error_code.message()) };
       }
     }
 

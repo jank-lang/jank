@@ -74,20 +74,13 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_integer const d) &
+  string_builder &string_builder::operator()(float const d) &
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%lld", d) };
-    maybe_realloc(*this, required);
-
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%lld", d);
-    pos += required;
-
-    return *this;
+    /* snprintf %f implicitly casts to double anyway. */
+    return (*this)(static_cast<double>(d));
   }
 
-  string_builder &string_builder::operator()(native_real const d) &
+  string_builder &string_builder::operator()(double const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const required{ snprintf(nullptr, 0, "%f", d) };
@@ -139,14 +132,53 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(size_t const d) &
+  string_builder &string_builder::operator()(long const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%zu", d) };
+    auto const required{ snprintf(nullptr, 0, "%li", d) };
     maybe_realloc(*this, required);
 
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%zu", d);
+    snprintf(buffer + pos, capacity - pos, "%li", d);
+    pos += required;
+
+    return *this;
+  }
+
+  string_builder &string_builder::operator()(long long const d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const required{ snprintf(nullptr, 0, "%lld", d) };
+    maybe_realloc(*this, required);
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    snprintf(buffer + pos, capacity - pos, "%lld", d);
+    pos += required;
+
+    return *this;
+  }
+
+  string_builder &string_builder::operator()(unsigned long const d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const required{ snprintf(nullptr, 0, "%lu", d) };
+    maybe_realloc(*this, required);
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    snprintf(buffer + pos, capacity - pos, "%lu", d);
+    pos += required;
+
+    return *this;
+  }
+
+  string_builder &string_builder::operator()(unsigned long long const d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const required{ snprintf(nullptr, 0, "%llu", d) };
+    maybe_realloc(*this, required);
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    snprintf(buffer + pos, capacity - pos, "%llu", d);
     pos += required;
 
     return *this;
@@ -206,12 +238,12 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(native_integer const d) &
+  void string_builder::push_back(float const d) &
   {
     (*this)(d);
   }
 
-  void string_builder::push_back(native_real const d) &
+  void string_builder::push_back(double const d) &
   {
     (*this)(d);
   }
@@ -231,7 +263,22 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(size_t const d) &
+  void string_builder::push_back(long const d) &
+  {
+    (*this)(d);
+  }
+
+  void string_builder::push_back(long long const d) &
+  {
+    (*this)(d);
+  }
+
+  void string_builder::push_back(unsigned long const d) &
+  {
+    (*this)(d);
+  }
+
+  void string_builder::push_back(unsigned long long const d) &
   {
     (*this)(d);
   }

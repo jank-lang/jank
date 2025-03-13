@@ -1,12 +1,10 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -27,7 +25,7 @@ namespace jank::runtime::obj
 
   void native_function_wrapper::to_string(util::string_builder &buff) const
   {
-    fmt::format_to(std::back_inserter(buff), "{}@{}", object_type_str(base.type), fmt::ptr(&base));
+    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   native_persistent_string native_function_wrapper::to_string() const

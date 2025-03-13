@@ -1,8 +1,5 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/visit.hpp>
@@ -14,7 +11,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
-
+#include <jank/util/fmt.hpp>
 #include <jank/analyze/visit.hpp>
 
 namespace jank::evaluate
@@ -402,7 +399,7 @@ namespace jank::evaluate
           if(s != 1)
           {
             throw std::runtime_error{
-              fmt::format("invalid call with {} args to: {}", s, typed_source->to_string())
+              util::format("invalid call with {} args to: {}", s, typed_source->to_string())
             };
           }
           return typed_source->call(eval(expr->arg_exprs[0]));
@@ -420,15 +417,15 @@ namespace jank::evaluate
               return typed_source->call(eval(expr->arg_exprs[0]), eval(expr->arg_exprs[1]));
             default:
               throw std::runtime_error{
-                fmt::format("invalid call with {} args to: {}", s, typed_source->to_string())
+                util::format("invalid call with {} args to: {}", s, typed_source->to_string())
               };
           }
         }
         else
         {
-          throw std::runtime_error{ fmt::format("invalid call with 0 args to: {}",
-                                                expr->arg_exprs.size(),
-                                                typed_source->to_string()) };
+          throw std::runtime_error{ util::format("invalid call with 0 args to: {}",
+                                                 expr->arg_exprs.size(),
+                                                 typed_source->to_string()) };
         }
       },
       source);
@@ -560,13 +557,13 @@ namespace jank::evaluate
     cg_prc.gen().expect_ok();
 
     {
-      profile::timer const timer{ fmt::format("ir jit compile {}", expr->name) };
+      profile::timer const timer{ util::format("ir jit compile {}", expr->name) };
       __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
                                        std::move(cg_prc.ctx->llvm_ctx));
 
       auto const fn(
         __rt_ctx->jit_prc
-          .find_symbol<object *(*)()>(fmt::format("{}_0", munge(cg_prc.root_fn->unique_name)))
+          .find_symbol<object *(*)()>(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
           .expect_ok());
       return fn();
     }

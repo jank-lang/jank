@@ -44,11 +44,7 @@ namespace jank::runtime::obj
       this->meta = meta;
     }
 
-    static persistent_sorted_map_ptr empty()
-    {
-      static auto const ret(make_box<persistent_sorted_map>());
-      return ret;
-    }
+    static persistent_sorted_map_ptr empty();
 
     using base_persistent_map::base_persistent_map;
 

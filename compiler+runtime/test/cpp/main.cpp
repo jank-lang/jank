@@ -4,16 +4,14 @@
 #include <gc/gc.h>
 #include <gc/gc_cpp.h>
 
-#include <fmt/format.h>
-
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/error/report.hpp>
 #include <clojure/core_native.hpp>
 
@@ -55,17 +53,17 @@ try
 /* TODO: Unify error handling. JEEZE! */
 catch(std::exception const &e)
 {
-  fmt::println("Exception: {}", e.what());
+  jank::util::println("Exception: {}", e.what());
   return 1;
 }
 catch(jank::runtime::object_ptr const o)
 {
-  fmt::println("Exception: {}", jank::runtime::to_string(o));
+  jank::util::println("Exception: {}", jank::runtime::to_string(o));
   return 1;
 }
 catch(jank::native_persistent_string const &s)
 {
-  fmt::println("Exception: {}", s);
+  jank::util::println("Exception: {}", s);
   return 1;
 }
 catch(jank::error_ptr const &e)
@@ -75,6 +73,6 @@ catch(jank::error_ptr const &e)
 }
 catch(...)
 {
-  fmt::println("Unknown exception thrown");
+  jank::util::println("Unknown exception thrown");
   return 1;
 }

@@ -1,11 +1,12 @@
 #include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
-#include <jank/runtime/convert.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/runtime/convert/function.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/util/string.hpp>
 
 namespace clojure::string_native

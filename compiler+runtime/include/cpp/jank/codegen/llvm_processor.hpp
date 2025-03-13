@@ -13,7 +13,14 @@
 
 namespace jank::runtime::obj
 {
+  using nil_ptr = native_box<struct nil>;
   using keyword_ptr = native_box<struct keyword>;
+  using boolean_ptr = native_box<struct boolean>;
+  using integer_ptr = native_box<struct integer>;
+  using real_ptr = native_box<struct real>;
+  using ratio_ptr = native_box<struct ratio>;
+  using persistent_string_ptr = native_box<struct persistent_string>;
+  using character_ptr = native_box<struct character>;
 }
 
 namespace jank::analyze
