@@ -1589,7 +1589,7 @@ namespace jank::codegen
          * before initializing a's context with b. We push the side effects for generating
          * that code onto a list that ultimately gets forced by gen(letfn_ptr, ...) after
          * all letfn* bindings have been processed. */
-        if(!locals[name])
+        if(!locals.contains(name))
         {
           std::function<void()> const &create_store([local_ref, &fn_arity, field_ptr, this]() {
             /* If not deferred, this call fails immediately in gen(expr::local_reference_ptr, ...)
