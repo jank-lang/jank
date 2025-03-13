@@ -596,15 +596,9 @@ namespace jank::runtime
       if(source != read::source::unknown)
       {
         auto meta{ runtime::meta(expanded) };
-        auto const source_kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
-        auto expanded_source_map{ runtime::get(meta, source_kw) };
-        if(expanded_source_map != obj::nil::nil_const())
-        {
-          auto const macro_kw{ __rt_ctx->intern_keyword("macro-expansion").expect_ok() };
-          expanded_source_map = runtime::assoc(expanded_source_map, macro_kw, o);
-          meta = runtime::assoc(meta, source_kw, expanded_source_map);
-          expanded = with_meta(expanded, meta);
-        }
+        auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };
+        meta = runtime::assoc(meta, macro_kw, o);
+        expanded = with_meta(expanded, meta);
       }
 
       return macroexpand(expanded);

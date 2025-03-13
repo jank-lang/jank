@@ -55,9 +55,8 @@ namespace jank::analyze
   push_macro_expansions(processor &proc, object_ptr const o)
   {
     auto const meta(runtime::meta(o));
-    auto const source(runtime::get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
     auto const expansion(
-      runtime::get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+      runtime::get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
     if(expansion == obj::nil::nil_const())
     {
@@ -76,15 +75,13 @@ namespace jank::analyze
       return obj::nil::nil_const();
     }
 
-    /* Try to find an expansion which specifically has the `macro-expansion` key
-     * set in the source. This is the root of our most recent expansion. */
+    /* Try to find an expansion which specifically has the `jank/macro-expansion` key
+     * set in the meta. This is the root of our most recent expansion. */
     for(auto const latest : std::ranges::reverse_view(expansions))
     {
       auto const latest_meta{ meta(latest) };
-      auto const source(
-        runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
       auto const expansion(
-        runtime::get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+        runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
       if(expansion != obj::nil::nil_const())
       {
@@ -92,11 +89,10 @@ namespace jank::analyze
       }
     }
 
-    /* If we don't find a good match, just return the first macro expansion. This will
-     * be the very start of the defn/fn, or expression. It may not be the exact form, but
-     * it's a good starting point. If we return the back, we may be deep into the woods
-     * with no idea of which caller brought us there. */
-    return expansions.front();
+    /* If we don't find a good match, just return the last macro expansion. We only
+     * wouldn't find a match in the case of synthetic macro data. In which case, the
+     * latest macro we have is the closest to the synthetic macro. */
+    return expansions.back();
   }
 
   processor::processor(runtime::context &rt_ctx)

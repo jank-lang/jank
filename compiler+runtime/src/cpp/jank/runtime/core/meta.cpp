@@ -100,7 +100,7 @@ namespace jank::runtime
     auto const end_col(get(end, __rt_ctx->intern_keyword("col").expect_ok()));
 
     auto const macro_expansion(
-      get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+      get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
     return {
       to_string(file),

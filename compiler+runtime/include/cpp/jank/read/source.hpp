@@ -51,6 +51,9 @@ namespace jank::read
     native_persistent_string file_path;
     /* Note that start may be equal to end, if the source occupies a single byte. */
     source_position start, end;
+    /* The form (and its meta) from which the form at this location expanded. Note
+     * that this isn't stored within the jank/source key. It has its own key, since
+     * it may be attached to synthetic data which has no source info. */
     runtime::object_ptr macro_expansion{};
   };
 
