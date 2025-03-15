@@ -443,6 +443,11 @@ namespace jank::error
     {
       title_bottom_line += "─";
     }
+    std::string bottom_line{ "─────┴──" };
+    for(size_t i{ 8 }; i < max_width; ++i)
+    {
+      bottom_line += "─";
+    }
 
     std::vector<Element> numbered_lines;
     for(size_t i{}; i < line_numbers.size(); ++i)
@@ -454,7 +459,8 @@ namespace jank::error
     return vbox({ text(title_top_line) | color(Color::GrayDark),
                   hbox({ text(pre_title) | color(Color::GrayDark), text(title) | bold }),
                   text(title_bottom_line) | color(Color::GrayDark),
-                  vbox(std::move(numbered_lines)) });
+                  vbox(std::move(numbered_lines)),
+                  text(bottom_line) | color(Color::GrayDark) });
   }
 
   static Element code_snippet(snippet const &s, size_t const max_width)
