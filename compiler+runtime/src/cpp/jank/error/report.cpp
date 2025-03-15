@@ -25,8 +25,6 @@ namespace jank::error
   using namespace jank::runtime;
   using namespace ftxui;
 
-  /* TODO: Use terminal width. */
-  static constexpr size_t max_width{ 80 };
   static constexpr size_t max_body_lines{ 6 };
   static constexpr size_t min_body_lines{ 1 };
   static constexpr size_t max_top_margin_lines{ 2 };
@@ -378,7 +376,7 @@ namespace jank::error
     }
   }
 
-  static Element header(std::string const &title)
+  static Element header(std::string const &title, size_t const max_width)
   {
     auto const padding_count(max_width - 3 - title.size());
     std::string padding;
@@ -431,7 +429,8 @@ namespace jank::error
 
   static Element code_snippet_box(native_persistent_string const &title,
                                   std::vector<Element> const &line_numbers,
-                                  std::vector<Element> const &line_contents)
+                                  std::vector<Element> const &line_contents,
+                                  size_t const max_width)
   {
     std::string title_top_line{ "─────┬──" };
     for(size_t i{ 8 }; i < max_width; ++i)
@@ -458,7 +457,7 @@ namespace jank::error
                   vbox(std::move(numbered_lines)) });
   }
 
-  static Element code_snippet(snippet const &s)
+  static Element code_snippet(snippet const &s, size_t const max_width)
   {
     /* TODO: Handle unknown source. */
     /* TODO: Handle files in JARs.
@@ -500,14 +499,16 @@ namespace jank::error
       lines.emplace_back(line_content);
     }
 
-    return code_snippet_box(s.file_path, line_numbers, lines);
+    return code_snippet_box(s.file_path, line_numbers, lines, max_width);
   }
 
   void report(error_ptr const e)
   {
     plan const p{ e };
 
-    auto error{ vbox({ header(kind_str(e->kind)),
+    auto const max_width{ std::min(Terminal::Size().dimx, 80) };
+
+    auto error{ vbox({ header(kind_str(e->kind), max_width),
                        hbox({
                          text("error: ") | bold | color(Color::Red),
                          paragraph(e->message) | bold,
@@ -537,10 +538,10 @@ namespace jank::error
 
     for(auto const &s : p.snippets)
     {
-      doc_body.emplace_back(code_snippet(s));
+      doc_body.emplace_back(code_snippet(s, max_width));
     }
 
-    auto document{ vbox(doc_body) /*| size(WIDTH, LESS_THAN, max_width) */ };
+    auto document{ vbox(doc_body) };
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
     std::cout << screen.ToString() << '\0' << '\n';
