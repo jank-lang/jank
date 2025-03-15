@@ -190,7 +190,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_def("The provided var name for a 'def' must not be qualified.",
                                         meta_source(sym->meta),
-                                        latest_expansion(macro_expansions));
+                                        latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto qualified_sym(current_frame->lift_var(sym));

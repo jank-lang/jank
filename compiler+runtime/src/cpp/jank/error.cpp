@@ -6,7 +6,7 @@
 
 namespace jank::error
 {
-  static constexpr auto default_note_message{ "Found here" };
+  static constexpr auto default_note_message{ "Found here." };
 
   static constexpr native_persistent_string_view kind_to_message(kind const k)
   {

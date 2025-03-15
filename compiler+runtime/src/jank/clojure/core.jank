@@ -7325,5 +7325,3 @@ fails, attempts to require sym's namespace and retries."
 (def infinite?
   "Returns true if num is negative or positive infinity, else false"
   clojure.core-native/infinite?)
-
-;(println "Bottom of clojure.core")

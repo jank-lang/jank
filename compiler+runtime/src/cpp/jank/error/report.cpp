@@ -17,6 +17,7 @@
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::error
 {
@@ -24,6 +25,8 @@ namespace jank::error
   using namespace jank::runtime;
   using namespace ftxui;
 
+  /* TODO: Use terminal width. */
+  static constexpr size_t max_width{ 80 };
   static constexpr size_t max_body_lines{ 6 };
   static constexpr size_t min_body_lines{ 1 };
   static constexpr size_t max_top_margin_lines{ 2 };
@@ -146,7 +149,7 @@ namespace jank::error
     add(n.source, n);
   }
 
-  /* TODO: Handle multiple notes on one line. */
+  /* TODO: Handle multiple notes on one line by building bridges. */
   void snippet::add(read::source const &body_source, note const &n)
   {
     assert(n.source.file_path == file_path);
@@ -375,6 +378,22 @@ namespace jank::error
     }
   }
 
+  static Element header(std::string const &title)
+  {
+    auto const padding_count(max_width - 3 - title.size());
+    std::string padding;
+    for(size_t i{}; i < padding_count; ++i)
+    {
+      padding.insert(padding.size(), "─");
+    }
+    return hbox({
+      text("─ ") | color(Color::GrayDark),
+      text(title) | color(Color::BlueLight),
+      text(" "),
+      text(padding) | color(Color::GrayDark),
+    });
+  }
+
   /* In order to flex properly, we need line number columns to all be the same width.
    * This requires some work, since the numbers themselves can vary. For example, a
    * snippet spanning lines 8 through 12 will have two lines (8 - 9) which have a
@@ -387,7 +406,8 @@ namespace jank::error
       /* We add space to the beginning so we can keep numbers right aligned. */
       num.insert(num.begin(), max_line_number_width - num.size(), ' ');
     }
-    return text(std::move(num)) | color(Color::GrayDark);
+    return hbox({ paragraphAlignRight(std::move(num)), text("  ") }) | color(Color::GrayDark)
+      | size(WIDTH, EQUAL, 5);
   }
 
   static Element underline_note(note const &n)
@@ -409,6 +429,35 @@ namespace jank::error
     }
   }
 
+  static Element code_snippet_box(native_persistent_string const &title,
+                                  std::vector<Element> const &line_numbers,
+                                  std::vector<Element> const &line_contents)
+  {
+    std::string title_top_line{ "─────┬──" };
+    for(size_t i{ 8 }; i < max_width; ++i)
+    {
+      title_top_line += "─";
+    }
+    std::string const pre_title{ "     │ " };
+    std::string title_bottom_line{ "─────┼──" };
+    for(size_t i{ 8 }; i < max_width; ++i)
+    {
+      title_bottom_line += "─";
+    }
+
+    std::vector<Element> numbered_lines;
+    for(size_t i{}; i < line_numbers.size(); ++i)
+    {
+      numbered_lines.push_back(
+        hbox({ line_numbers[i], separator() | color(Color::GrayDark), line_contents[i] }));
+    }
+
+    return vbox({ text(title_top_line) | color(Color::GrayDark),
+                  hbox({ text(pre_title) | color(Color::GrayDark), text(title) | bold }),
+                  text(title_bottom_line) | color(Color::GrayDark),
+                  vbox(std::move(numbered_lines)) });
+  }
+
   static Element code_snippet(snippet const &s)
   {
     /* TODO: Handle unknown source. */
@@ -421,7 +470,6 @@ namespace jank::error
                     hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }
 
-    /* TODO: Horizontal centering. */
     auto const highlighted_lines{
       ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
     };
@@ -437,11 +485,11 @@ namespace jank::error
       {
         case line::kind::file_data:
           line_num = line_number(max_line_number_width, std::to_string(l.number));
-          line_content = highlighted_lines.at(l.number) | flex;
+          line_content = highlighted_lines.at(l.number);
           break;
         case line::kind::note:
           line_num = line_number(max_line_number_width, "");
-          line_content = underline_note(l.note.unwrap()) | flex;
+          line_content = underline_note(l.note.unwrap());
           break;
         case line::kind::ellipsis:
           line_num = line_number(max_line_number_width, "");
@@ -452,35 +500,12 @@ namespace jank::error
       lines.emplace_back(line_content);
     }
 
-    std::vector<Element> vlines;
-    for(size_t i{}; i < lines.size(); ++i)
-    {
-      vlines.emplace_back(hbox({ line_numbers[i], separator(), lines[i] }));
-    }
-
-    return window(text(util::format(" {} ", s.file_path)), vbox(std::move(vlines)));
+    return code_snippet_box(s.file_path, line_numbers, lines);
   }
 
   void report(error_ptr const e)
   {
-    static constexpr size_t max_width{ 80 };
-
     plan const p{ e };
-
-    auto header{ [&](std::string const &title) {
-      auto const padding_count(max_width - 2 - title.size());
-      std::string padding;
-      for(size_t i{}; i < padding_count; ++i)
-      {
-        padding.insert(padding.size(), "─");
-      }
-      return hbox({
-        text("─ "),
-        text(title) | color(Color::BlueLight),
-        text(" "),
-        text(padding),
-      });
-    } };
 
     auto error{ vbox({ header(kind_str(e->kind)),
                        hbox({
@@ -515,7 +540,7 @@ namespace jank::error
       doc_body.emplace_back(code_snippet(s));
     }
 
-    auto document{ vbox(doc_body) | size(WIDTH, LESS_THAN, max_width) };
+    auto document{ vbox(doc_body) /*| size(WIDTH, LESS_THAN, max_width) */ };
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
     std::cout << screen.ToString() << '\0' << '\n';
