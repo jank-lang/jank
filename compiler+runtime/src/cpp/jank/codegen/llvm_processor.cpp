@@ -771,27 +771,22 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::letfn_ptr const expr, expr::function_arity const &arity)
   {
-    /* Mutually recursive letfn bindings must defer some initialization.
-     *
-     * We can see the problem and the solution by inspecting:
+    /* We generate bindings left-to-right, so for mutually recursive letfn bindings
+     * we must defer some initialization via `deferred_inits`.
+     * 
+     * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
+     * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
      *
      *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
      *   =>
      *   1 | %1 = call ptr @GC_malloc(i64 8)
-     *   2 | ...
+     *   2 | ...                                                     // %b not in scope. store moved to line 8
      *   3 | %a = call ptr @jank_closure_create(..., ptr %1)
      *   4 | ...
      *   5 | %4 = call ptr @GC_malloc(i64 8)
-     *   6 | store ptr %a, ptr %4, align 8
+     *   6 | store ptr %a, ptr %4, align 8                           // %a is in scope, ok to store
      *   7 | %b = call ptr @jank_closure_create(..., ptr nonnull %4)
-     *   8 | store ptr %b, ptr %1, align 8
-     *
-     * The easy case is `b`. The context for `b` is allocated on line 5 and stored with `a` on line 6.
-     * The hard case is `a`. The context for `a` is allocated on line 1.
-     * Since `b` is not available when creating the context for `a`, we must move the store from line 2 to line 8.
-     *
-     * This is achieved by setting deferred_inits when a local meant to populate a context is detected to not
-     * be initializated yet.
+     *   8 | store ptr %b, ptr %1, align 8                           // deferred initialization of %a since %b is in scope
      * */
     auto old_deferred_inits(deferred_inits);
     deferred_inits = {};

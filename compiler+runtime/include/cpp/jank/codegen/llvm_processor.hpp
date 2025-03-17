@@ -101,7 +101,7 @@ namespace jank::codegen
     analyze::expr::function_ptr expr;
     obj::symbol_ptr name;
     analyze::local_binding_ptr binding;
-    llvm::Value *field_ptr;
+    llvm::Value *field_ptr{};
   };
 
   struct llvm_processor
