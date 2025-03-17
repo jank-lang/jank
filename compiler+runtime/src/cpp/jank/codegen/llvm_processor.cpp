@@ -771,22 +771,21 @@ namespace jank::codegen
     /* Mutually recursive letfn bindings must defer some initialization.
      *
      * We can see the problem and the solution by inspecting:
+     *
      *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
+     *   =>
+     *   1 | %1 = call ptr @GC_malloc(i64 8)
+     *   2 | ...
+     *   3 | %a = call ptr @jank_closure_create(..., ptr %1)
+     *   4 | ...
+     *   5 | %4 = call ptr @GC_malloc(i64 8)
+     *   6 | store ptr %a, ptr %4, align 8
+     *   7 | %b = call ptr @jank_closure_create(..., ptr nonnull %4)
+     *   8 | store ptr %b, ptr %1, align 8
      *
-     *   %1 = call ptr @GC_malloc(i64 8)
-     *   %a = call ptr @jank_closure_create(..., ptr %1)
-     *   ...
-     *   %4 = call ptr @GC_malloc(i64 8)
-     *   store ptr %a, ptr %4, align 8
-     *   %b = call ptr @jank_closure_create(..., ptr nonnull %4)
-     *   store ptr %b, ptr %1, align 8
-     *
-     * The defer_init function registers thunks that are called after functions have been generated.
-     *
-     * The functional approach conveniently takes care of most bookkeeping and
-     * provides a centralized place to ban deferred initialization in unsupported places. However,
-     * lambda captures are quite subtle. Deferring lambdas may capture arity by reference because
-     * it is still alive via this enclosing function by the time we force the side effects. */
+     * The context for `b` is allocated on line 5 and stored with `a` on line 6.
+     * Since `b` is not available when creating the context for `a`, we must
+     * move the store from line 2 to line 8. */
     auto old_deferred_inits(deferred_inits);
     deferred_inits = {};
 
