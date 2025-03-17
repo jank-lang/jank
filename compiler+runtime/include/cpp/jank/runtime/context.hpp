@@ -79,7 +79,7 @@ namespace jank::runtime
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
 
-    object_ptr eval_file(native_persistent_string_view const &path);
+    object_ptr eval_file(native_persistent_string const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
     void eval_cpp_string(native_persistent_string_view const &code) const;
     object_ptr read_string(native_persistent_string_view const &code);

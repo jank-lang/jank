@@ -145,7 +145,7 @@ namespace jank::runtime
     return none;
   }
 
-  object_ptr context::eval_file(native_persistent_string_view const &path)
+  object_ptr context::eval_file(native_persistent_string const &path)
   {
     auto const file(util::map_file({ path.data(), path.size() }));
     if(file.is_err())

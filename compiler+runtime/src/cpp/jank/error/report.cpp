@@ -427,21 +427,21 @@ namespace jank::error
     }
   }
 
-  static Element code_snippet_box(native_persistent_string const &title,
+  static Element code_snippet_box(std::filesystem::path const &path,
                                   std::vector<Element> const &line_numbers,
                                   std::vector<Element> const &line_contents,
                                   size_t const max_width)
   {
-    std::string title_top_line{ "─────┬──" };
+    std::string top_line{ "─────┬──" };
     for(size_t i{ 8 }; i < max_width; ++i)
     {
-      title_top_line += "─";
+      top_line += "─";
     }
     std::string const pre_title{ "     │ " };
-    std::string title_bottom_line{ "─────┼──" };
+    std::string middle_line{ "─────┼──" };
     for(size_t i{ 8 }; i < max_width; ++i)
     {
-      title_bottom_line += "─";
+      middle_line += "─";
     }
     std::string bottom_line{ "─────┴──" };
     for(size_t i{ 8 }; i < max_width; ++i)
@@ -456,9 +456,9 @@ namespace jank::error
         hbox({ line_numbers[i], separator() | color(Color::GrayDark), line_contents[i] }));
     }
 
-    return vbox({ text(title_top_line) | color(Color::GrayDark),
-                  hbox({ text(pre_title) | color(Color::GrayDark), text(title) | bold }),
-                  text(title_bottom_line) | color(Color::GrayDark),
+    return vbox({ text(top_line) | color(Color::GrayDark),
+                  hbox({ text(pre_title) | color(Color::GrayDark), text(path.string()) | bold }),
+                  text(middle_line) | color(Color::GrayDark),
                   vbox(std::move(numbered_lines)),
                   text(bottom_line) | color(Color::GrayDark) });
   }
@@ -505,7 +505,11 @@ namespace jank::error
       lines.emplace_back(line_content);
     }
 
-    return code_snippet_box(s.file_path, line_numbers, lines, max_width);
+    /* We want to render paths as relative, if we can. This not only keeps them shorter,
+     * it also makes our test suite more portable. */
+    auto const &cwd{ std::filesystem::current_path() };
+    auto const &relative_path{ std::filesystem::path{ s.file_path }.lexically_proximate(cwd) };
+    return code_snippet_box(relative_path, line_numbers, lines, max_width);
   }
 
   void report(error_ptr const e)
