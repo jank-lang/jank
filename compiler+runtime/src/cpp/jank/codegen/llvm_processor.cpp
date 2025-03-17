@@ -796,8 +796,8 @@ namespace jank::codegen
       auto const local(expr->frame->find_local_or_capture(pair.first));
       if(local.is_none())
       {
-        throw std::runtime_error{ fmt::format("ICE: unable to find local: {}",
-                                              pair.first->to_string()) };
+        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
+                                               pair.first->to_string()) };
       }
 
       locals[pair.first] = gen(pair.second, arity);
