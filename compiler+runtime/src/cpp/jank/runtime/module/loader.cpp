@@ -1,12 +1,11 @@
 #include <filesystem>
 #include <regex>
-#include <iostream>
 
 #include <libzippp.h>
 
 #include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
@@ -40,13 +39,13 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_persistent_string module_to_path(native_persistent_string_view const &module)
+  native_persistent_string module_to_path(native_persistent_string const &module)
   {
     static native_persistent_string const dot{ "\\." };
     return runtime::munge_extra(module, dot, "/");
   }
 
-  native_persistent_string module_to_load_function(native_persistent_string_view const &module)
+  native_persistent_string module_to_load_function(native_persistent_string const &module)
   {
     static native_persistent_string const dot{ "\\." };
     auto const &ret{ runtime::munge_extra(module, dot, "_") };
@@ -182,13 +181,13 @@ namespace jank::runtime::module
   }
 
   static void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                           native_persistent_string_view const &path)
+                           native_persistent_string const &path)
   {
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      std::cerr << util::format("Failed to open jar on module path: {}\n", path);
+      //util::println(stderr, "Failed to open jar on module path: {}\n", path);
       return;
     }
 
@@ -231,7 +230,7 @@ namespace jank::runtime::module
     }
   }
 
-  loader::loader(context &rt_ctx, native_persistent_string_view const &ps)
+  loader::loader(context &rt_ctx, native_persistent_string const &ps)
     : rt_ctx{ rt_ctx }
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
@@ -247,13 +246,13 @@ namespace jank::runtime::module
     size_t i{ paths.find(module_separator, start) };
 
     /* Looks like it's either an empty path list or there's only entry. */
-    if(i == native_persistent_string_view::npos)
+    if(i == native_persistent_string::npos)
     {
       register_path(entries, paths);
     }
     else
     {
-      while(i != native_persistent_string_view::npos)
+      while(i != native_persistent_string::npos)
       {
         register_path(entries, paths.substr(start, i - start));
 
@@ -304,7 +303,7 @@ namespace jank::runtime::module
   }
 
   string_result<loader::find_result>
-  loader::find(native_persistent_string_view const &module, origin const ori)
+  loader::find(native_persistent_string const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
@@ -396,7 +395,7 @@ namespace jank::runtime::module
     return err(util::format("No sources for registered module: {}", module));
   }
 
-  native_bool loader::is_loaded(native_persistent_string_view const &module)
+  native_bool loader::is_loaded(native_persistent_string const &module)
   {
     auto const atom{
       runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
@@ -406,7 +405,7 @@ namespace jank::runtime::module
     return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
   }
 
-  void loader::set_is_loaded(native_persistent_string_view const &module)
+  void loader::set_is_loaded(native_persistent_string const &module)
   {
     auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
       __rt_ctx->loaded_libs_var->deref()) };
@@ -421,7 +420,7 @@ namespace jank::runtime::module
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 
-  string_result<void> loader::load(native_persistent_string_view const &module, origin const ori)
+  string_result<void> loader::load(native_persistent_string const &module, origin const ori)
   {
     if(ori != origin::source && loader::is_loaded(module))
     {
@@ -438,6 +437,8 @@ namespace jank::runtime::module
 
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
+
+    //util::println("Loading module {} from .{} file", module, module_type_str(module_type_to_load));
 
     switch(module_type_to_load)
     {

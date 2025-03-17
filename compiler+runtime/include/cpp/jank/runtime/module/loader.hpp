@@ -35,6 +35,22 @@ namespace jank::runtime::module
     cljc
   };
 
+  constexpr char const *module_type_str(module_type const t)
+  {
+    switch(t)
+    {
+      case module_type::o:
+        return "o";
+      case module_type::cpp:
+        return "cpp";
+      case module_type::jank:
+        return "jank";
+      case module_type::cljc:
+        return "cljc";
+    }
+    return "unknown";
+  }
+
   struct file_entry
   {
     object_ptr to_runtime_data() const;
@@ -49,8 +65,8 @@ namespace jank::runtime::module
   };
 
   native_persistent_string path_to_module(std::filesystem::path const &path);
-  native_persistent_string module_to_path(native_persistent_string_view const &module);
-  native_persistent_string module_to_load_function(native_persistent_string_view const &module);
+  native_persistent_string module_to_path(native_persistent_string const &module);
+  native_persistent_string module_to_load_function(native_persistent_string const &module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
   native_persistent_string
@@ -94,12 +110,12 @@ namespace jank::runtime::module
     static constexpr char module_separator{ ':' };
 #endif
 
-    loader(context &rt_ctx, native_persistent_string_view const &ps);
+    loader(context &rt_ctx, native_persistent_string const &ps);
 
-    string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
-    native_bool is_loaded(native_persistent_string_view const &module);
-    void set_is_loaded(native_persistent_string_view const &module);
-    string_result<void> load(native_persistent_string_view const &module, origin const ori);
+    string_result<find_result> find(native_persistent_string const &module, origin const ori);
+    native_bool is_loaded(native_persistent_string const &module);
+    void set_is_loaded(native_persistent_string const &module);
+    string_result<void> load(native_persistent_string const &module, origin const ori);
 
     string_result<void>
     load_o(native_persistent_string const &module, file_entry const &entry) const;
