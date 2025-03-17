@@ -1,5 +1,3 @@
-#include <list>
-
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
@@ -20,9 +18,6 @@
 #include <jank/analyze/rtti.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt.hpp>
-
-//debug
-#include <jank/util/fmt/print.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
