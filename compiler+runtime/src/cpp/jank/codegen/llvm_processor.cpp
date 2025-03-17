@@ -21,6 +21,9 @@
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt.hpp>
 
+//debug
+#include <jank/util/fmt/print.hpp>
+
 /* TODO: Remove exceptions. */
 namespace jank::codegen
 {
@@ -783,9 +786,13 @@ namespace jank::codegen
      *   7 | %b = call ptr @jank_closure_create(..., ptr nonnull %4)
      *   8 | store ptr %b, ptr %1, align 8
      *
-     * The context for `b` is allocated on line 5 and stored with `a` on line 6.
-     * Since `b` is not available when creating the context for `a`, we must
-     * move the store from line 2 to line 8. */
+     * The easy case is `b`. The context for `b` is allocated on line 5 and stored with `a` on line 6.
+     * The hard case is `a`. The context for `a` is allocated on line 1.
+     * Since `b` is not available when creating the context for `a`, we must move the store from line 2 to line 8.
+     *
+     * This is achieved by setting deferred_inits when a local meant to populate a context is detected to not
+     * be initializated yet.
+     * */
     auto old_deferred_inits(deferred_inits);
     deferred_inits = {};
 
@@ -803,11 +810,14 @@ namespace jank::codegen
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }
 
-    /* Tie the knot for (letfn [(a [] b) (b [] a)]) by setting a's reference
-     * to b in a's context after b has been created. */
     for(auto const &deferred_init : deferred_inits)
     {
-      auto const e(gen(deferred_init.local_ref, arity));
+      expr::local_reference const local_ref{ expression_position::value,
+                                             deferred_init.expr->frame,
+                                             true,
+                                             deferred_init.name,
+                                             deferred_init.binding };
+      auto const e(gen(expr::local_reference_ptr{ &local_ref }, arity));
       ctx->builder->CreateStore(e, deferred_init.field_ptr);
     }
 
@@ -1566,23 +1576,18 @@ namespace jank::codegen
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
         auto const name(capture.first);
-        expr::local_reference const local_ref{ expression_position::value,
-                                               expr->frame,
-                                               true,
-                                               name,
-                                               capture.second };
-        /* In the case of (letfn* [a (a [] b) b (b [])]) we need to wait for b to be created
-         * before initializing a's context with b. We push the side effects for generating
-         * that code onto a list that ultimately gets forced by gen(letfn_ptr, ...) after
-         * all letfn* bindings have been processed. */
         if(!locals.contains(name))
         {
-          //TODO deep copy local ref?
-          deferred_init d{ expr::local_reference_ptr{ &local_ref }, field_ptr };
+          deferred_init d{ expr, name, capture.second, field_ptr };
           deferred_inits.push_back(d);
         }
         else
         {
+          expr::local_reference const local_ref{ expression_position::value,
+                                                 expr->frame,
+                                                 true,
+                                                 name,
+                                                 capture.second };
           ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
                                     field_ptr);
         }

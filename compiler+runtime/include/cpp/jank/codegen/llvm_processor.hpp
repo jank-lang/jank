@@ -98,7 +98,9 @@ namespace jank::codegen
 
   struct deferred_init
   {
-    analyze::expr::local_reference_ptr local_ref;
+    analyze::expr::function_ptr expr;
+    obj::symbol_ptr name;
+    analyze::local_binding_ptr binding;
     llvm::Value *field_ptr;
   };
 
