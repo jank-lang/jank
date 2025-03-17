@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-#include <mutex>
-
-#include <fmt/format.h>
-
-=======
->>>>>>> main
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/make_box.hpp>
