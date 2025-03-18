@@ -1568,7 +1568,7 @@ namespace jank::codegen
         auto const name(capture.first);
         if(!locals.contains(name))
         {
-          deferred_init d{ expr, name, capture.second, field_ptr };
+          deferred_init const d{ expr, name, capture.second, field_ptr };
           deferred_inits.push_back(d);
         }
         else
