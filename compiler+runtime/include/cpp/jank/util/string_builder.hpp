@@ -22,6 +22,7 @@ namespace jank::util
 
     string_builder &operator()(native_bool d) &;
     string_builder &operator()(native_integer d) &;
+    string_builder &operator()(mpz_class const &d) &;
     string_builder &operator()(native_real d) &;
     string_builder &operator()(native_hash d) &;
     string_builder &operator()(void const *d) &;

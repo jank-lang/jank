@@ -260,6 +260,8 @@ namespace jank::read::parse
           return parse_keyword();
         case lex::token_kind::integer:
           return parse_integer();
+        case lex::token_kind::big_integer:
+          return parse_big_integer();
         case lex::token_kind::real:
           return parse_real();
         case lex::token_kind::ratio:
@@ -1301,6 +1303,14 @@ namespace jank::read::parse
     auto const token(token_current->expect_ok());
     ++token_current;
     return object_source_info{ make_box<obj::integer>(std::get<native_integer>(token.data)),
+                               token,
+                               token };
+  }
+  processor::object_result processor::parse_big_integer()
+  {
+    auto const token(token_current->expect_ok());
+    ++token_current;
+    return object_source_info{ make_box<obj::big_integer>(std::get<mpz_class>(token.data)),
                                token,
                                token };
   }

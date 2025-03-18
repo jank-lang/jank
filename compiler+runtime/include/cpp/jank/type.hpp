@@ -14,6 +14,8 @@
 
 #include <folly/FBVector.h>
 
+#include <gmpxx.h>
+
 namespace jank
 {
   template <typename T>

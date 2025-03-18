@@ -69,6 +69,40 @@ namespace jank::runtime::obj
     object base{ obj_type };
   };
 
+
+  struct big_integer : gc
+  {
+    static constexpr object_type obj_type{ object_type::big_integer };
+    static constexpr native_bool pointer_free{ false };
+
+    big_integer() = default;
+    big_integer(big_integer &&) noexcept = default;
+    big_integer(big_integer const &) = default;
+    big_integer(mpz_class const d);
+
+    /* behavior::object_like */
+    native_bool equal(object const &) const;
+    native_persistent_string to_string() const;
+    void to_string(util::string_builder &buff) const;
+    native_persistent_string to_code_string() const;
+    native_hash to_hash() const;
+
+    /* behavior::comparable */
+    native_integer compare(object const &) const;
+
+    /* behavior::comparable extended */
+    native_integer compare(integer const &) const;
+    native_integer compare(big_integer const &) const;
+
+    /* behavior::number_like */
+    native_integer to_integer() const;
+    native_real to_real() const;
+
+    mpz_class data{};
+    object base{ obj_type };
+  };
+
+
   struct real : gc
   {
     static constexpr object_type obj_type{ object_type::real };

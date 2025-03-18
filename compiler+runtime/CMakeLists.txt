@@ -288,6 +288,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/gmp>"
 )
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
@@ -302,6 +303,7 @@ include(FetchContent)
 include(cmake/dependency/fmt.cmake)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
+include(cmake/dependency/gmp.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -311,6 +313,8 @@ target_link_libraries(
   fmt::fmt
   ${BDWGC_LIBRARIES}
   libzippp::libzippp
+  gmp_static
+  gmpxx_static
   # TODO: How can we force clang/llvm to be shared?
   clang
   clang-cpp
@@ -447,12 +451,16 @@ target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
+add_dependencies(jank_lib gmp_static gmpxx_static)
+
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
   fmt::fmt
+  gmp_static
+  gmpxx_static
 )
 
 jank_hook_llvm(jank_exe)

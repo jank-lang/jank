@@ -8,6 +8,8 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 
+#include <string>
+
 using namespace std::string_view_literals;
 
 namespace jank::read::lex
@@ -56,6 +58,17 @@ namespace jank::read::lex
                movable_position const &e,
                token_kind const k,
                native_integer const d)
+    : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
+    , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(movable_position const &s,
+               movable_position const &e,
+               token_kind const k,
+               mpz_class const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -585,6 +598,7 @@ namespace jank::read::lex
           native_bool found_exponent_sign{};
           native_bool expecting_exponent{};
           native_bool expecting_more_digits{};
+          native_bool big_number{};
           int radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           native_bool found_beginning_negative{};
@@ -763,6 +777,39 @@ namespace jank::read::lex
               }
               return denominator.expect_err();
             }
+            else if(c == 'N')
+            {
+              ++pos;
+              big_number = true;
+              expecting_more_digits = false;
+              require_space = true;
+              std::cerr << "Found a big boy!\n";
+
+              if(found_slash_after_number || contains_dot || found_exponent_sign
+                 || expecting_exponent)
+              {
+                /* TODO: Add a note for why we're determining this isn't an integer. */
+                return error::lex_invalid_number("Big integers can only be integers",
+                                                 { token_start, pos });
+              }
+              continue;
+            }
+            // else if(c == 'M')
+            // {
+            //   ++pos;
+            //   big_number = true;
+            //   expecting_more_digits = false;
+            //   std::cout << "Found big boy!\n";
+
+            //   if(found_slash_after_number || contains_dot || found_exponent_sign
+            //      || expecting_exponent)
+            //   {
+            //     /* TODO: Add a note for why we're determining this isn't an integer. */
+            //     return error::lex_invalid_number("Big decimals can only be integers",
+            //                                      { token_start, pos });
+            //   }
+            //   continue;
+            // }
             else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
             {
               if(expecting_exponent)
@@ -866,7 +913,8 @@ namespace jank::read::lex
 
             /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
-            for(auto i{ number_start }; i < pos; i++)
+            /* The N and M suffix are not invalid digits so we skip them */
+            for(auto i{ number_start }; i < (big_number ? pos - 1 : pos); i++)
             {
               if(!is_valid_num_char(file[i], radix))
               {
@@ -884,31 +932,51 @@ namespace jank::read::lex
             /* Real numbers. */
             if(contains_dot || is_scientific || found_exponent_sign)
             {
-              return ok(token{ token_start,
-                               pos,
-                               token_kind::real,
-                               std::strtod(file.data() + token_start, nullptr) });
+              if(big_number)
+              {
+                return error::lex_invalid_number("not implemented (big decimal)", { token_start, pos });
+              }
+              else
+              {
+                return ok(token{ token_start,
+                                 pos,
+                                 token_kind::real,
+                                 std::strtod(file.data() + token_start, nullptr) });
+              }
             }
 
             /* Integers */
             errno = 0;
-            auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
-                                   * (found_beginning_negative ? -1 : 1) };
-            if(errno == ERANGE)
+            if(big_number)
             {
-              static constexpr auto const max(std::numeric_limits<native_integer>::max());
-              /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-              auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
-              return error::lex_invalid_number(
-                "Number is too large to be stored",
-                {
-                  token_start,
-                  pos
-              },
-                error::note{ "I can fit about this much",
-                             { token_start, token_start + max_width } });
+              /* Minus one for the trailing 'N' */
+              mpz_class big_integer{ std::string(file.data() + number_start,
+                                                 pos.offset - number_start - 1),
+                                     radix };
+
+              // return error::lex_invalid_number("not implemented (big integer)", { token_start, pos });
+              return ok(token{ token_start, pos, token_kind::big_integer, big_integer });
             }
-            return ok(token{ token_start, pos, token_kind::integer, parsed_int });
+            else
+            {
+              auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
+                                     * (found_beginning_negative ? -1 : 1) };
+              if(errno == ERANGE)
+              {
+                static constexpr auto const max(std::numeric_limits<native_integer>::max());
+                /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
+                return error::lex_invalid_number(
+                  "Number is too large to be stored",
+                  {
+                    token_start,
+                    pos
+                },
+                  error::note{ "I can fit about this much",
+                               { token_start, token_start + max_width } });
+              }
+              return ok(token{ token_start, pos, token_kind::integer, parsed_int });
+            }
           }
           /* XXX: Fall through to symbol starting with - */
         }

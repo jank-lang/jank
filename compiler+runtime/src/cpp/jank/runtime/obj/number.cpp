@@ -1,5 +1,6 @@
 #include <fmt/format.h>
 
+#include <gmpxx.h>
 #include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
@@ -137,6 +138,75 @@ namespace jank::runtime::obj
   native_real integer::to_real() const
   {
     return static_cast<native_real>(data);
+  }
+
+  /***** big_integer *****/
+  big_integer::big_integer(mpz_class const d)
+    : data{ d }
+  {
+  }
+
+  native_bool big_integer::equal(object const &o) const
+  {
+    if(o.type != object_type::big_integer)
+    {
+      return false;
+    }
+
+    auto const i(expect_object<big_integer>(&o));
+    return data == i->data;
+  }
+
+  native_persistent_string big_integer::to_string() const
+  {
+    util::string_builder sb;
+    return sb(data).release();
+  }
+
+  void big_integer::to_string(util::string_builder &buff) const
+  {
+    buff(data);
+  }
+
+  native_persistent_string big_integer::to_code_string() const
+  {
+    return to_string();
+  }
+
+  native_hash big_integer::to_hash() const
+  {
+    return 1337;
+    // return hash::integer(data);
+  }
+
+  native_integer big_integer::compare(object const &o) const
+  {
+    return visit_number_like(
+      [](auto const _) -> native_integer {
+        throw std::runtime_error{ "not comparable big integer to object not implemented" };
+        // return cmp(data, typed_o->data);
+      },
+      [&]() -> native_integer {
+        throw std::runtime_error{ fmt::format("not comparable: {}", runtime::to_string(&o)) };
+      },
+      &o);
+  }
+
+  native_integer big_integer::compare(big_integer const &o) const
+  {
+    return cmp(data, o.data);
+  }
+
+  native_integer big_integer::to_integer() const
+  {
+    return 1337;
+    // return data;
+  }
+
+  native_real big_integer::to_real() const
+  {
+    return 0.0;
+    // return static_cast<native_real>(data);
   }
 
   /***** real *****/

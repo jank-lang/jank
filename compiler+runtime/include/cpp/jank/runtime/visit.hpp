@@ -92,6 +92,11 @@ namespace jank::runtime
           return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
         }
         break;
+      case object_type::big_integer:
+        {
+          return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
+        }
+        break;
       case object_type::real:
         {
           return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);

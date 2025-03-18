@@ -87,6 +87,21 @@ namespace jank::util
     return *this;
   }
 
+
+  string_builder &string_builder::operator()(mpz_class const &d) &
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const str{ d.get_str() };
+    maybe_realloc(*this, str.length());
+
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    std::memcpy(buffer + pos, str.c_str(), str.length());
+    pos += str.length();
+
+    return *this;
+  }
+
+
   string_builder &string_builder::operator()(native_real const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */

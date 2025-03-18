@@ -39,6 +39,8 @@ namespace jank::read::lex
     keyword,
     /* Has int data. */
     integer,
+    /* Has GMP MPZ data. */
+    big_integer,
     /* Has double data. */
     real,
     /* Has two integer data. */
@@ -100,6 +102,8 @@ namespace jank::read::lex
         return "keyword";
       case token_kind::integer:
         return "integer";
+      case token_kind::big_integer:
+        return "big_integer";
       case token_kind::real:
         return "real";
       case token_kind::ratio:
@@ -153,6 +157,10 @@ namespace jank::read::lex
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
+          mpz_class const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
           native_real const);
     token(movable_position const &s,
           movable_position const &e,
@@ -198,7 +206,8 @@ namespace jank::read::lex
                  native_real,
                  native_persistent_string_view,
                  native_bool,
-                 ratio>
+                 ratio,
+                 mpz_class>
       data;
   };
 

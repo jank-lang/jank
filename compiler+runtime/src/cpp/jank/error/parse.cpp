@@ -36,6 +36,7 @@ namespace jank::error
       case read::lex::token_kind::symbol:
       case read::lex::token_kind::keyword:
       case read::lex::token_kind::integer:
+      case read::lex::token_kind::big_integer:
       case read::lex::token_kind::real:
       case read::lex::token_kind::ratio:
       case read::lex::token_kind::string:
