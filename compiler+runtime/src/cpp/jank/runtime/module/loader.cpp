@@ -1,11 +1,15 @@
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <filesystem>
 #include <regex>
 
 #include <libzippp.h>
 
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
@@ -16,6 +20,7 @@
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_sorted_set.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/profile/time.hpp>
@@ -27,8 +32,8 @@ namespace jank::runtime::module
   {
     static std::regex const slash{ "/" };
 
-    auto const &s(runtime::demunge(path.string()));
-    std::string ret{ s, 0, s.size() - path.extension().string().size() };
+    auto const &s(runtime::demunge(path.native()));
+    std::string ret{ s, 0, s.size() - path.extension().native().size() };
 
     /* There's a special case of the / function which shouldn't be treated as a path. */
     if(ret.find("$/") == std::string::npos)
@@ -96,7 +101,7 @@ namespace jank::runtime::module
                              file_entry const &entry)
   {
     std::filesystem::path const p{ native_transient_string{ entry.path } };
-    auto const ext(p.extension().string());
+    auto const ext(p.extension().native());
     bool registered{};
     if(ext == ".jank")
     {
@@ -146,10 +151,10 @@ namespace jank::runtime::module
     if(registered)
     {
       //util::println("register_entry {} {} {} {}",
-      //             entry.archive_path.unwrap_or("None"),
-      //             entry.path,
-      //             module_path.string(),
-      //             path_to_module(module_path));
+      //              entry.archive_path.unwrap_or("None"),
+      //              entry.path,
+      //              module_path.native(),
+      //              path_to_module(module_path));
     }
   }
 
@@ -175,7 +180,7 @@ namespace jank::runtime::module
     {
       if(std::filesystem::is_regular_file(f))
       {
-        register_relative_entry(entries, path, file_entry{ none, f.path().string() });
+        register_relative_entry(entries, path, file_entry{ none, f.path().native() });
       }
     }
   }
@@ -217,7 +222,7 @@ namespace jank::runtime::module
     {
       register_directory(entries, p);
     }
-    else if(p.extension().string() == ".jar")
+    else if(p.extension().native() == ".jar")
     {
       register_jar(entries, path);
     }
@@ -225,7 +230,7 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      auto const &module_path(p.string());
+      auto const &module_path(p.native());
       register_entry(entries, module_path, { none, module_path });
     }
   }
@@ -236,8 +241,8 @@ namespace jank::runtime::module
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
     native_transient_string paths{ ps };
     paths += util::format(":{}", rt_ctx.binary_cache_dir);
-    paths += util::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).string());
-    paths += util::format(":{}", (jank_path / "../src/jank").string());
+    paths += util::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).native());
+    paths += util::format(":{}", (jank_path / "../src/jank").native());
     this->paths = paths;
 
     //util::println("module paths: {}", paths);
@@ -300,6 +305,120 @@ namespace jank::runtime::module
     return std::filesystem::last_write_time(native_transient_string{ source_path })
       .time_since_epoch()
       .count();
+  }
+
+  file_view::file_view(file_view &&mf) noexcept
+    : fd{ mf.fd }
+    , head{ mf.head }
+    , len{ mf.len }
+    , buff{ std::move(mf.buff) }
+  {
+    mf.fd = -1;
+    mf.head = nullptr;
+  }
+
+  file_view::file_view(int const f, char const * const h, size_t const s)
+    : fd{ f }
+    , head{ h }
+    , len{ s }
+  {
+  }
+
+  file_view::file_view(native_persistent_string const &buff)
+    : buff{ buff }
+  {
+  }
+
+  file_view::~file_view()
+  {
+    if(head != nullptr)
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): I want const everywhere else. */
+    {
+      munmap(reinterpret_cast<void *>(const_cast<char *>(head)), len);
+    }
+    if(fd >= 0)
+    {
+      ::close(fd);
+    }
+  }
+
+  char const *file_view::data() const
+  {
+    return buff.empty() ? head : buff.data();
+  }
+
+  size_t file_view::size() const
+  {
+    return buff.empty() ? len : buff.size();
+  }
+
+  native_persistent_string_view file_view::view() const
+  {
+    return { data(), size() };
+  }
+
+  static string_result<file_view> read_jar_file(native_persistent_string const &path)
+  {
+    using namespace runtime;
+    using namespace runtime::module;
+
+    auto const colon{ path.find(':') };
+    auto const jar_path{ path.substr(0, colon) };
+    auto const file_path{ path.substr(colon + 1) };
+    auto const module{ path_to_module(std::string{ file_path.data(), file_path.size() }) };
+    auto const found_module{ __rt_ctx->module_loader.find(module, origin::source) };
+    if(found_module.is_err())
+    {
+      return err(found_module.expect_err());
+    }
+
+    libzippp::ZipArchive zf{ std::string{ jar_path } };
+    auto const success{ zf.open(libzippp::ZipArchive::ReadOnly) };
+    if(!success)
+    {
+      return err(util::format("Failed to open jar on module path: {}", path));
+    }
+
+    auto const &zip_entry{ zf.getEntry(std::string{ file_path }) };
+    return ok(file_view{ zip_entry.readAsText() });
+  }
+
+  static string_result<file_view> map_file(native_persistent_string const &path)
+  {
+    if(!std::filesystem::exists(path.c_str()))
+    {
+      return err("File doesn't exist");
+    }
+    auto const file_size(std::filesystem::file_size(path.c_str()));
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const fd(::open(path.c_str(), O_RDONLY));
+    if(fd < 0)
+    {
+      return err("Unable to open file");
+    }
+    auto const head(
+      reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+
+    /* MAP_FAILED is a macro which does a C-style cast. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr) */
+    if(head == MAP_FAILED)
+#pragma clang diagnostic pop
+    {
+      return err("Mapping failed for unknown reason");
+    }
+
+    return ok(file_view{ fd, head, file_size });
+  }
+
+  string_result<file_view> loader::read_file(native_persistent_string const &path)
+  {
+    if(path.contains(".jar:"))
+    {
+      return read_jar_file(path);
+    }
+    return map_file(path);
   }
 
   string_result<loader::find_result>
@@ -420,6 +539,78 @@ namespace jank::runtime::module
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 
+  [[maybe_unused]]
+  static void log_load(native_persistent_string const &module,
+                       module_type const type,
+                       loader::entry const &sources)
+  {
+    native_persistent_string path{ "undefined" };
+    switch(type)
+    {
+      case module_type::jank:
+        {
+          auto const &source{ sources.jank.unwrap() };
+          if(source.archive_path.is_some())
+          {
+            path = util::format("{}:{}",
+                                util::relative_path(source.archive_path.unwrap()),
+                                source.path);
+          }
+          else
+          {
+            path = util::relative_path(source.path);
+          }
+        }
+        break;
+      case module_type::o:
+        {
+          auto const &source{ sources.o.unwrap() };
+          if(source.archive_path.is_some())
+          {
+            path = util::format("{}:{}",
+                                util::relative_path(source.archive_path.unwrap()),
+                                source.path);
+          }
+          else
+          {
+            path = util::relative_path(source.path);
+          }
+        }
+        break;
+      case module_type::cpp:
+        {
+          auto const &source{ sources.cpp.unwrap() };
+          if(source.archive_path.is_some())
+          {
+            path = util::format("{}:{}",
+                                util::relative_path(source.archive_path.unwrap()),
+                                source.path);
+          }
+          else
+          {
+            path = util::relative_path(source.path);
+          }
+        }
+        break;
+      case module_type::cljc:
+        {
+          auto const &source{ sources.cljc.unwrap() };
+          if(source.archive_path.is_some())
+          {
+            path = util::format("{}:{}",
+                                util::relative_path(source.archive_path.unwrap()),
+                                source.path);
+          }
+          else
+          {
+            path = util::relative_path(source.path);
+          }
+        }
+        break;
+    }
+    util::println("Loading module {} from {}", module, path);
+  }
+
   string_result<void> loader::load(native_persistent_string const &module, origin const ori)
   {
     if(ori != origin::source && loader::is_loaded(module))
@@ -438,7 +629,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    //util::println("Loading module {} from .{} file", module, module_type_str(module_type_to_load));
+    //log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {
@@ -486,10 +677,9 @@ namespace jank::runtime::module
       return ok();
     }
 
+    /* We intentionally don't load object files from JARs. */
     if(entry.archive_path.is_some())
     {
-      /* TODO: Load object code from string. */
-      //visit_jar_entry(entry, [&](auto const &str) { rt_ctx.jit_prc.load_object(module, str); });
     }
     else
     {
@@ -513,13 +703,13 @@ namespace jank::runtime::module
     }
     else
     {
-      auto const file(util::map_file(entry.path));
+      auto const file(module::loader::read_file(entry.path));
       if(file.is_err())
       {
         return err(
           util::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.eval_cpp_string({ file.expect_ok().head, file.expect_ok().size });
+      rt_ctx.eval_cpp_string(file.expect_ok().view());
     }
 
     /* TODO: What if there is no load function?
@@ -536,8 +726,15 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry,
-                      [&](auto const &zip_entry) { rt_ctx.eval_string(zip_entry.readAsText()); });
+      visit_jar_entry(entry, [&](auto const &zip_entry) {
+        /* TODO: Helper to get a jar file path like this. */
+        auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
+        context::binding_scope const preserve{ rt_ctx,
+                                               runtime::obj::persistent_hash_map::create_unique(
+                                                 std::make_pair(rt_ctx.current_file_var,
+                                                                make_box(path))) };
+        rt_ctx.eval_string(zip_entry.readAsText());
+      });
     }
     else
     {
@@ -549,7 +746,7 @@ namespace jank::runtime::module
 
   string_result<void> loader::load_cljc(file_entry const &entry) const
   {
-    return loader::load_jank(entry);
+    return load_jank(entry);
   }
 
   object_ptr loader::to_runtime_data() const

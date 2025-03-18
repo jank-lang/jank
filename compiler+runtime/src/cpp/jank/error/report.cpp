@@ -6,7 +6,6 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/error/report.hpp>
@@ -18,6 +17,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/path.hpp>
 
 namespace jank::error
 {
@@ -427,6 +427,17 @@ namespace jank::error
     }
   }
 
+  static std::string strip_jar_path(std::string const &path)
+  {
+    auto const jar{ path.find("jar:") };
+    if(jar == std::string::npos)
+    {
+      return path;
+    }
+
+    return path.substr(jar + 4);
+  }
+
   static Element code_snippet_box(std::filesystem::path const &path,
                                   std::vector<Element> const &line_numbers,
                                   std::vector<Element> const &line_contents,
@@ -452,12 +463,13 @@ namespace jank::error
     std::vector<Element> numbered_lines;
     for(size_t i{}; i < line_numbers.size(); ++i)
     {
-      numbered_lines.push_back(
-        hbox({ line_numbers[i], separator() | color(Color::GrayDark), line_contents[i] }));
+      numbered_lines.push_back(hbox(
+        { line_numbers[i], separator() | color(Color::GrayDark), text(" "), line_contents[i] }));
     }
 
     return vbox({ text(top_line) | color(Color::GrayDark),
-                  hbox({ text(pre_title) | color(Color::GrayDark), text(path.string()) | bold }),
+                  hbox({ text(pre_title) | color(Color::GrayDark),
+                         text(strip_jar_path(path.string())) | bold }),
                   text(middle_line) | color(Color::GrayDark),
                   vbox(std::move(numbered_lines)),
                   text(bottom_line) | color(Color::GrayDark) });
@@ -466,18 +478,15 @@ namespace jank::error
   static Element code_snippet(snippet const &s, size_t const max_width)
   {
     /* TODO: Handle unknown source. */
-    /* TODO: Handle files in JARs.
-     *   Map current ns back to its module source */
-    auto const file(util::map_file(s.file_path));
+    auto const file(module::loader::read_file(s.file_path));
     if(file.is_err())
     {
+      /* TODO: Update UI. */
       return window(text(util::format(" {} ", s.file_path)),
                     hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }
 
-    auto const highlighted_lines{
-      ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
-    };
+    auto const highlighted_lines{ ui::highlight(file.expect_ok(), s.line_start, s.line_end) };
 
     std::vector<Element> line_numbers, lines;
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -507,9 +516,7 @@ namespace jank::error
 
     /* We want to render paths as relative, if we can. This not only keeps them shorter,
      * it also makes our test suite more portable. */
-    auto const &cwd{ std::filesystem::current_path() };
-    auto const &relative_path{ std::filesystem::path{ s.file_path }.lexically_proximate(cwd) };
-    return code_snippet_box(relative_path, line_numbers, lines, max_width);
+    return code_snippet_box(util::relative_path(s.file_path), line_numbers, lines, max_width);
   }
 
   void report(error_ptr const e)

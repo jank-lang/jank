@@ -3,7 +3,6 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/read/lex.hpp>

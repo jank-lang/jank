@@ -18,7 +18,6 @@
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
@@ -147,7 +146,7 @@ namespace jank::runtime
 
   object_ptr context::eval_file(native_persistent_string const &path)
   {
-    auto const file(util::map_file({ path.data(), path.size() }));
+    auto const file(module::loader::read_file(path));
     if(file.is_err())
     {
       throw std::runtime_error{
@@ -159,7 +158,7 @@ namespace jank::runtime
                                   obj::persistent_hash_map::create_unique(
                                     std::make_pair(current_file_var, make_box(path))) };
 
-    return eval_string({ file.expect_ok().head, file.expect_ok().size });
+    return eval_string(file.expect_ok().view());
   }
 
   object_ptr context::eval_string(native_persistent_string_view const &code)

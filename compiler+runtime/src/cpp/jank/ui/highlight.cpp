@@ -2,6 +2,7 @@
 
 #include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
+#include <jank/runtime/module/loader.hpp>
 
 namespace jank::ui
 {
@@ -70,11 +71,10 @@ namespace jank::ui
   /* This function will return a map of line numbers to highlighted lines. It gracefully
    * handles lex errors by not highlighting those tokens and skipping to the next token.
    * The map will at least contain lines within the range specified and maybe some others. */
-  /* TODO: Center horizontally if the line is too long. */
   std::map<size_t, Element>
-  highlight(native_persistent_string const &code, size_t const line_start, size_t const line_end)
+  highlight(runtime::module::file_view const &code, size_t const line_start, size_t const line_end)
   {
-    read::lex::processor l_prc{ code };
+    read::lex::processor l_prc{ code.view() };
     auto const end{ l_prc.end() };
     size_t last_offset{}, last_line{ 1 };
     std::map<size_t, Element> lines;

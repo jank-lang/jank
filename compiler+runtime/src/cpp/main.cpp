@@ -8,7 +8,6 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <jank/util/mapped_file.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>

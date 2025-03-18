@@ -791,7 +791,7 @@ namespace jank::analyze
     if(fn_ctx.is_none())
     {
       return error::analyze_invalid_recur_position(
-        "Unable to use recur outside of a function or loop.",
+        "Unable to use 'recur' outside of a function or 'loop'.",
         meta_source(list->meta),
         latest_expansion(macro_expansions));
     }
@@ -799,7 +799,7 @@ namespace jank::analyze
     {
       /* TODO: Note where the try is. */
       return error::analyze_invalid_recur_from_try(
-        "It's not permitted to use recur through a try/catch.",
+        "It's not permitted to use 'recur' through a 'try'.",
         meta_source(list->meta),
         latest_expansion(macro_expansions));
     }

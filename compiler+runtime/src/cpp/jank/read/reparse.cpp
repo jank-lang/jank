@@ -3,7 +3,7 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
-#include <jank/util/mapped_file.hpp>
+#include <jank/runtime/module/loader.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/error/parse.hpp>
 
@@ -21,18 +21,14 @@ namespace jank::read::parse
       return error::internal_parse_failure("Cannot reparse object with no source path");
     }
 
-    /* TODO: JAR support */
-    auto const file(util::map_file({ file_path.data(), file_path.size() }));
+    auto const file(module::loader::read_file(file_path));
     if(file.is_err())
     {
       return error::internal_parse_failure(
         util::format("Unable to map file {} due to error: {}", file_path, file.expect_err()));
     }
 
-    lex::processor l_prc{
-      { file.expect_ok().head, file.expect_ok().size },
-      offset
-    };
+    lex::processor l_prc{ file.expect_ok().view(), offset };
     parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     auto it{ p_prc.begin() };
