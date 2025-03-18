@@ -469,6 +469,7 @@ if(jank_tests)
     test/cpp/jank/native_persistent_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
+    test/cpp/jank/util/path.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

@@ -19,4 +19,26 @@ namespace jank::util
   {
     return relative_path(std::filesystem::path{ path.c_str() });
   }
+
+  std::string compact_path(std::filesystem::path const &path, size_t const max_size)
+  {
+    if(path.native().size() <= max_size)
+    {
+      return path.native();
+    }
+
+    auto str{ path.native() };
+    while(str.size() + 1 > max_size)
+    {
+      auto const slash{ str.find('/') };
+      if(slash == decltype(str)::npos)
+      {
+        auto const diff{ str.size() - max_size + 1 };
+        return "…" + str.erase(0, diff);
+      }
+
+      str.erase(0, slash + 1);
+    }
+    return "…" + str;
+  }
 }

@@ -427,35 +427,25 @@ namespace jank::error
     }
   }
 
-  static std::string strip_jar_path(std::string const &path)
-  {
-    auto const jar{ path.find("jar:") };
-    if(jar == std::string::npos)
-    {
-      return path;
-    }
-
-    return path.substr(jar + 4);
-  }
-
   static Element code_snippet_box(std::filesystem::path const &path,
                                   std::vector<Element> const &line_numbers,
                                   std::vector<Element> const &line_contents,
                                   size_t const max_width)
   {
+    static constexpr auto margin{ 8 };
     std::string top_line{ "─────┬──" };
-    for(size_t i{ 8 }; i < max_width; ++i)
+    for(size_t i{ margin }; i < max_width; ++i)
     {
       top_line += "─";
     }
     std::string const pre_title{ "     │ " };
     std::string middle_line{ "─────┼──" };
-    for(size_t i{ 8 }; i < max_width; ++i)
+    for(size_t i{ margin }; i < max_width; ++i)
     {
       middle_line += "─";
     }
     std::string bottom_line{ "─────┴──" };
-    for(size_t i{ 8 }; i < max_width; ++i)
+    for(size_t i{ margin }; i < max_width; ++i)
     {
       bottom_line += "─";
     }
@@ -469,7 +459,7 @@ namespace jank::error
 
     return vbox({ text(top_line) | color(Color::GrayDark),
                   hbox({ text(pre_title) | color(Color::GrayDark),
-                         text(strip_jar_path(path.string())) | bold }),
+                         text(util::compact_path(path, max_width - margin)) | bold }),
                   text(middle_line) | color(Color::GrayDark),
                   vbox(std::move(numbered_lines)),
                   text(bottom_line) | color(Color::GrayDark) });
@@ -523,7 +513,8 @@ namespace jank::error
   {
     plan const p{ e };
 
-    auto const max_width{ std::min(Terminal::Size().dimx, 80) };
+    auto const terminal_width{ Terminal::Size().dimx };
+    auto const max_width{ std::min(terminal_width, 100) };
 
     auto error{ vbox({ header(kind_str(e->kind), max_width),
                        hbox({
