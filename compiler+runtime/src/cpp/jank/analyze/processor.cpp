@@ -994,7 +994,7 @@ namespace jank::analyze
   {
     if(o->count() < 2)
     {
-      return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn*'",
+      return error::analysis_invalid_letfn("A bindings vector must be provided to 'letfn*'.",
                                            meta_source(o),
                                            add_top_expansion(macro_expansions));
     }
@@ -1002,7 +1002,7 @@ namespace jank::analyze
     auto const bindings_obj(o->data.rest().first().unwrap());
     if(bindings_obj->type != runtime::object_type::persistent_vector)
     {
-      return error::analysis_invalid_letfn("The bindings of a 'letfn*' must be in a vector",
+      return error::analysis_invalid_letfn("The bindings of a 'letfn*' must be in a vector.",
                                            meta_source(bindings_obj),
                                            add_top_expansion(macro_expansions));
     }
@@ -1012,7 +1012,7 @@ namespace jank::analyze
     if(binding_parts % 2 == 1)
     {
       return error::analysis_invalid_letfn(
-        "There must be an even number of bindings for a 'letfn*'",
+        "There must be an even number of bindings for a 'letfn*'.",
         meta_source(bindings_obj),
         add_top_expansion(macro_expansions));
     }
@@ -1041,14 +1041,14 @@ namespace jank::analyze
       if(sym_obj->type != runtime::object_type::symbol)
       {
         return error::analysis_invalid_letfn(
-          "The left hand side of a 'letfn*' binding must be a symbol",
+          "The left hand side of a 'letfn*' binding must be a symbol.",
           meta_source(sym_obj),
           add_top_expansion(macro_expansions));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
-        return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified",
+        return error::analysis_invalid_letfn("'letfn*' binding symbols must be unqualified.",
                                              meta_source(sym_obj),
                                              add_top_expansion(macro_expansions));
       }
@@ -1069,7 +1069,7 @@ namespace jank::analyze
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analysis_invalid_letfn(
-          "The right hand side of a 'letfn*' binding must be a function",
+          "The right hand side of a 'letfn*' binding must be a function.",
           meta_source(val),
           add_top_expansion(macro_expansions));
       }
