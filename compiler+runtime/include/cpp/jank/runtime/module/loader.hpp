@@ -10,11 +10,6 @@ namespace jank::runtime
   struct context;
 }
 
-namespace jank::jit
-{
-  struct processor;
-}
-
 namespace jank::runtime::module
 {
   enum class origin : uint8_t
