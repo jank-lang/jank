@@ -6,7 +6,6 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/error/report.hpp>
@@ -17,6 +16,8 @@
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt/print.hpp>
+#include <jank/util/path.hpp>
 
 namespace jank::error
 {
@@ -90,21 +91,11 @@ namespace jank::error
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
+    e->sort_notes();
+
     for(auto const &n : e->notes)
     {
       add(n);
-    }
-
-    for(size_t i{}; i < e->expansions.size(); ++i)
-    {
-      auto const expansion{ e->expansions[i] };
-      auto source{ runtime::object_source(expansion) };
-      /* We just want to point at the start of the expansion, not underline the
-       * whole thing. It may be huge! */
-      source.end = source.start;
-      add(note{ util::format("{} macro expansion here.", util::number_to_ordinal(i)),
-                source,
-                note::kind::info });
     }
   }
 
@@ -156,7 +147,7 @@ namespace jank::error
     add(n.source, n);
   }
 
-  /* TODO: Make sure notes are sorted left to right. Handle multiple notes on one line. */
+  /* TODO: Handle multiple notes on one line by building bridges. */
   void snippet::add(read::source const &body_source, note const &n)
   {
     assert(n.source.file_path == file_path);
@@ -181,7 +172,6 @@ namespace jank::error
      * outcome here may result in our note with an ellipsis on top/bottom or
      * perhaps the ellipsis going away altogether.
      */
-
 
     if(!can_fit_without_ellipsis(n))
     {
@@ -386,6 +376,22 @@ namespace jank::error
     }
   }
 
+  static Element header(std::string const &title, size_t const max_width)
+  {
+    auto const padding_count(max_width - 3 - title.size());
+    std::string padding;
+    for(size_t i{}; i < padding_count; ++i)
+    {
+      padding.insert(padding.size(), "─");
+    }
+    return hbox({
+      text("─ ") | color(Color::GrayDark),
+      text(title) | color(Color::BlueLight),
+      text(" "),
+      text(padding) | color(Color::GrayDark),
+    });
+  }
+
   /* In order to flex properly, we need line number columns to all be the same width.
    * This requires some work, since the numbers themselves can vary. For example, a
    * snippet spanning lines 8 through 12 will have two lines (8 - 9) which have a
@@ -398,7 +404,8 @@ namespace jank::error
       /* We add space to the beginning so we can keep numbers right aligned. */
       num.insert(num.begin(), max_line_number_width - num.size(), ' ');
     }
-    return text(std::move(num)) | color(Color::GrayDark);
+    return hbox({ paragraphAlignRight(std::move(num)), text("  ") }) | color(Color::GrayDark)
+      | size(WIDTH, EQUAL, 5);
   }
 
   static Element underline_note(note const &n)
@@ -408,6 +415,8 @@ namespace jank::error
     underline.insert(underline.end(), width, '^');
     underline += ' ';
 
+    /* TODO: This is broken for very long lines, which wrap, since the
+     * note doesn't wrap the same way. */
     auto const ret{ hbox({ text(underline), paragraph(n.message) }) };
     switch(n.kind)
     {
@@ -420,22 +429,54 @@ namespace jank::error
     }
   }
 
-  static Element code_snippet(snippet const &s)
+  static Element code_snippet_box(std::filesystem::path const &path,
+                                  std::vector<Element> const &line_numbers,
+                                  std::vector<Element> const &line_contents,
+                                  size_t const max_width)
   {
-    /* TODO: Handle unknown source. */
-    /* TODO: Handle files in JARs.
-     *   Map current ns back to its module source */
-    auto const file(util::map_file(s.file_path));
+    static constexpr auto margin{ 8 };
+    std::string top_line{ "─────┬──" };
+    for(size_t i{ margin }; i < max_width; ++i)
+    {
+      top_line += "─";
+    }
+    std::string const pre_title{ "     │ " };
+    std::string middle_line{ "─────┼──" };
+    for(size_t i{ margin }; i < max_width; ++i)
+    {
+      middle_line += "─";
+    }
+    std::string bottom_line{ "─────┴──" };
+    for(size_t i{ margin }; i < max_width; ++i)
+    {
+      bottom_line += "─";
+    }
+
+    std::vector<Element> numbered_lines;
+    for(size_t i{}; i < line_numbers.size(); ++i)
+    {
+      numbered_lines.push_back(hbox(
+        { line_numbers[i], separator() | color(Color::GrayDark), text(" "), line_contents[i] }));
+    }
+
+    return vbox({ text(top_line) | color(Color::GrayDark),
+                  hbox({ text(pre_title) | color(Color::GrayDark),
+                         text(util::compact_path(path, max_width - margin)) | bold }),
+                  text(middle_line) | color(Color::GrayDark),
+                  vbox(std::move(numbered_lines)),
+                  text(bottom_line) | color(Color::GrayDark) });
+  }
+
+  static Element code_snippet(snippet const &s, size_t const max_width)
+  {
+    auto const file(module::loader::read_file(s.file_path));
     if(file.is_err())
     {
       return window(text(util::format(" {} ", s.file_path)),
                     hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }
 
-    /* TODO: Horizontal centering. */
-    auto const highlighted_lines{
-      ui::highlight({ file.expect_ok().head, file.expect_ok().size }, s.line_start, s.line_end)
-    };
+    auto const highlighted_lines{ ui::highlight(file.expect_ok(), s.line_start, s.line_end) };
 
     std::vector<Element> line_numbers, lines;
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -448,11 +489,11 @@ namespace jank::error
       {
         case line::kind::file_data:
           line_num = line_number(max_line_number_width, std::to_string(l.number));
-          line_content = highlighted_lines.at(l.number) | flex;
+          line_content = highlighted_lines.at(l.number);
           break;
         case line::kind::note:
           line_num = line_number(max_line_number_width, "");
-          line_content = underline_note(l.note.unwrap()) | flex;
+          line_content = underline_note(l.note.unwrap());
           break;
         case line::kind::ellipsis:
           line_num = line_number(max_line_number_width, "");
@@ -463,37 +504,19 @@ namespace jank::error
       lines.emplace_back(line_content);
     }
 
-    std::vector<Element> vlines;
-    for(size_t i{}; i < lines.size(); ++i)
-    {
-      vlines.emplace_back(hbox({ line_numbers[i], separator(), lines[i] }));
-    }
-
-    return window(text(util::format(" {} ", s.file_path)), vbox(std::move(vlines)));
+    /* We want to render paths as relative, if we can. This not only keeps them shorter,
+     * it also makes our test suite more portable. */
+    return code_snippet_box(util::relative_path(s.file_path), line_numbers, lines, max_width);
   }
 
   void report(error_ptr const e)
   {
-    static constexpr size_t max_width{ 80 };
-
     plan const p{ e };
 
-    auto header{ [&](std::string const &title) {
-      auto const padding_count(max_width - 2 - title.size());
-      std::string padding;
-      for(size_t i{}; i < padding_count; ++i)
-      {
-        padding.insert(padding.size(), "─");
-      }
-      return hbox({
-        text("─ "),
-        text(title) | color(Color::BlueLight),
-        text(" "),
-        text(padding),
-      });
-    } };
+    auto const terminal_width{ Terminal::Size().dimx };
+    auto const max_width{ std::min(terminal_width, 100) };
 
-    auto error{ vbox({ header(kind_str(e->kind)),
+    auto error{ vbox({ header(kind_str(e->kind), max_width),
                        hbox({
                          text("error: ") | bold | color(Color::Red),
                          paragraph(e->message) | bold,
@@ -523,10 +546,10 @@ namespace jank::error
 
     for(auto const &s : p.snippets)
     {
-      doc_body.emplace_back(code_snippet(s));
+      doc_body.emplace_back(code_snippet(s, max_width));
     }
 
-    auto document{ vbox(doc_body) | size(WIDTH, LESS_THAN, max_width) };
+    auto document{ vbox(doc_body) };
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
     std::cout << screen.ToString() << '\0' << '\n';

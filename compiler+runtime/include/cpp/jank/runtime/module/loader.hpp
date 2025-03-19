@@ -10,11 +10,6 @@ namespace jank::runtime
   struct context;
 }
 
-namespace jank::jit
-{
-  struct processor;
-}
-
 namespace jank::runtime::module
 {
   enum class origin : uint8_t
@@ -35,6 +30,22 @@ namespace jank::runtime::module
     cljc
   };
 
+  constexpr char const *module_type_str(module_type const t)
+  {
+    switch(t)
+    {
+      case module_type::o:
+        return "o";
+      case module_type::cpp:
+        return "cpp";
+      case module_type::jank:
+        return "jank";
+      case module_type::cljc:
+        return "cljc";
+    }
+    return "unknown";
+  }
+
   struct file_entry
   {
     object_ptr to_runtime_data() const;
@@ -48,9 +59,40 @@ namespace jank::runtime::module
     native_persistent_string path;
   };
 
+  /* When reading a file, we may find it on the filesystem or within a JAR. In the
+   * first case, we map it with `mmap`, but we can't do that for JAR files since
+   * we need to decompress them into memory. This `file_view` gives us one view
+   * into either type of file, with the same interface. */
+  struct file_view
+  {
+    file_view() = default;
+    file_view(file_view const &) = delete;
+    file_view(file_view &&) noexcept;
+    file_view(int const f, char const * const h, size_t const s);
+    file_view(native_persistent_string const &buff);
+    ~file_view();
+
+    char const *data() const;
+    size_t size() const;
+
+    native_persistent_string_view view() const;
+
+  private:
+    /* In the case where we map a file, we track this information so we can read it and
+     * later unmap it. */
+    int fd{};
+    char const *head{};
+    size_t len{};
+
+    /* In the case where we're not mapping, such as when we read the file from a JAR,
+     * we'll just have the data instead. Checking data.empty() is how we know which
+     * of these cases to follow. */
+    native_persistent_string buff;
+  };
+
   native_persistent_string path_to_module(std::filesystem::path const &path);
-  native_persistent_string module_to_path(native_persistent_string_view const &module);
-  native_persistent_string module_to_load_function(native_persistent_string_view const &module);
+  native_persistent_string module_to_path(native_persistent_string const &module);
+  native_persistent_string module_to_load_function(native_persistent_string const &module);
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub);
   native_persistent_string
@@ -94,13 +136,16 @@ namespace jank::runtime::module
     static constexpr char module_separator{ ':' };
 #endif
 
-    loader(context &rt_ctx, native_persistent_string_view const &ps);
+    loader(context &rt_ctx, native_persistent_string const &ps);
 
-    string_result<find_result> find(native_persistent_string_view const &module, origin const ori);
-    native_bool is_loaded(native_persistent_string_view const &module);
-    void set_is_loaded(native_persistent_string_view const &module);
-    string_result<void> load(native_persistent_string_view const &module, origin const ori);
+    static string_result<file_view> read_file(native_persistent_string const &path);
 
+    string_result<find_result> find(native_persistent_string const &module, origin const ori);
+
+    native_bool is_loaded(native_persistent_string const &module);
+    void set_is_loaded(native_persistent_string const &module);
+
+    string_result<void> load(native_persistent_string const &module, origin const ori);
     string_result<void>
     load_o(native_persistent_string const &module, file_entry const &entry) const;
     string_result<void>
@@ -114,7 +159,7 @@ namespace jank::runtime::module
     native_persistent_string paths;
     /* TODO: These will need synchonization. */
     /* This maps module strings to entries. Module strings are like fully qualified Java
-     * class names. */
+     * class names. For example, `clojure.core`, `jank.compiler`, etc. */
     native_unordered_map<native_persistent_string, entry> entries;
   };
 }

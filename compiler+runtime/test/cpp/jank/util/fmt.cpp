@@ -5,7 +5,7 @@
 
 namespace jank::util
 {
-  TEST_SUITE("fmt")
+  TEST_SUITE("util::fmt")
   {
     TEST_CASE("empty")
     {

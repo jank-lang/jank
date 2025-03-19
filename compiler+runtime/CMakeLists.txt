@@ -157,7 +157,6 @@ add_library(
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/dir.cpp
-  src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
@@ -165,6 +164,7 @@ add_library(
   src/cpp/jank/util/string.cpp
   src/cpp/jank/util/fmt.cpp
   src/cpp/jank/util/fmt/print.cpp
+  src/cpp/jank/util/path.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -469,6 +469,7 @@ if(jank_tests)
     test/cpp/jank/native_persistent_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
+    test/cpp/jank/util/path.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

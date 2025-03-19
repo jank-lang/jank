@@ -1,0 +1,4 @@
+(ns input)
+
+(def m {:foo "foo\pbar" :bar "bar"}) ; boop
+(def d 42)

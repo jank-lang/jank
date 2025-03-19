@@ -1,0 +1,23 @@
+(ns input)
+
+(defmacro foo [& args]
+  `(def ~@args 2))
+
+
+
+
+
+
+
+
+
+(defn -main [& args]
+  (let [a (first args)]
+    (foo #_(do
+             (println "meow")
+             [1 2 3])
+
+
+
+
+         [1 2 3])))

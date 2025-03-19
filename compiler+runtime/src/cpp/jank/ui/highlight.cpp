@@ -2,6 +2,7 @@
 
 #include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
+#include <jank/runtime/module/loader.hpp>
 
 namespace jank::ui
 {
@@ -70,16 +71,16 @@ namespace jank::ui
   /* This function will return a map of line numbers to highlighted lines. It gracefully
    * handles lex errors by not highlighting those tokens and skipping to the next token.
    * The map will at least contain lines within the range specified and maybe some others. */
-  /* TODO: Center horizontally if the line is too long. */
   std::map<size_t, Element>
-  highlight(native_persistent_string const &code, size_t const line_start, size_t const line_end)
+  highlight(runtime::module::file_view const &code, size_t const line_start, size_t const line_end)
   {
-    read::lex::processor l_prc{ code };
+    read::lex::processor l_prc{ code.view() };
     auto const end{ l_prc.end() };
     size_t last_offset{}, last_line{ 1 };
     std::map<size_t, Element> lines;
     std::vector<Element> current_line;
     native_bool ended_on_error{};
+    static auto const config{ FlexboxConfig().SetGap(0, 0) };
 
     auto const fill_space([&](native_bool const skip, size_t const offset) {
       std::string_view const space{ code.data() + last_offset, offset - last_offset };
@@ -92,7 +93,7 @@ namespace jank::ui
         {
           std::string line{ space.substr(last_newline, it - last_newline) };
           current_line.emplace_back(text(std::move(line)));
-          lines.emplace(last_line, hbox(std::move(current_line)));
+          lines.emplace(last_line, flexbox(std::move(current_line), config));
           current_line.clear();
         }
         last_newline = it + 1;
@@ -124,6 +125,8 @@ namespace jank::ui
       auto const skip(token.start.line < line_start);
       fill_space(skip, token.start.offset);
 
+      /* TODO: Large tokens can be broken up further, to aid in line wrapping. For example,
+       * using `paragraph` for comments. */
       auto const token_size(std::max(token.end.offset - token.start.offset, 1zu));
       if(!skip)
       {
@@ -139,7 +142,7 @@ namespace jank::ui
       fill_space(false, code.size());
     }
 
-    lines.emplace(last_line, hbox(std::move(current_line)));
+    lines.emplace(last_line, flexbox(std::move(current_line), config));
 
     return lines;
   }
