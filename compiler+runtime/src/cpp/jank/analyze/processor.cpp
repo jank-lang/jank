@@ -1674,6 +1674,7 @@ namespace jank::analyze
         return sym_result;
       }
 
+      /* TODO: Catch exceptions here and convert them info errors. */
       /* If this is a macro, recur so we can start over. */
       auto const expanded(rt_ctx.macroexpand(o));
       if(expanded != o)
