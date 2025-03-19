@@ -25,7 +25,8 @@
 (defn strip-ansi-codes
   "Removes ANSI color codes from the given string."
   [s]
-  (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" ""))
+  (-> (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" "")
+      (clojure.string/replace #"\r\n" "\n")))
 
 (defn find-tests! []
   (let [inputs (b.f/glob src-dir "**/input.jank")]
