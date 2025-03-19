@@ -1,0 +1,65 @@
+(ns input)
+
+(defmacro foo []
+  `(def :foo 5))
+
+(defn vec3-create [r g b]
+  {:r r
+   :g g
+   :b b})
+
+(defn vec3-scale [l n]
+  {:r (* (get l :r) n)
+   :g (* (get l :g) n)
+   :b (* (get l :b) n)})
+
+(defn vec3-add [l r]
+  {:r (+ (get l :r) (get r :r))
+   :g (+ (get l :g) (get r :g))
+   :b (+ (get l :b) (get r :b))})
+
+(defn vec3-sub [l r]
+  {:r (- (get l :r) (get r :r))
+   :g (- (get l :g) (get r :g))
+   :b (- (get l :b) (get r :b))})
+
+(defn vec3-mul [l r]
+  {:r (* (get l :r) (get r :r))
+   :g (* (get l :g) (get r :g))
+   :b (* (get l :b) (get r :b))})
+
+(defn vec3-div [l n]
+  {:r (/ (get l :r) n)
+   :g (/ (get l :g) n)
+   :b (/ (get l :b) n)})
+
+(defn vec3-length-squared [v]
+  (+ (+ (* (get v :r) (get v :r))
+        (* (get v :g) (get v :g)))
+     (* (get v :b) (get v :b))))
+
+(defn vec3-dot [l r]
+  (+ (+ (* (get l :r) (get r :r))
+        (* (get l :g) (get r :g)))
+     (* (get l :b) (get r :b))))
+
+(defn vec3-cross [l r]
+  (vec3-create (- (* (get l :g) (get r :b))
+                  (* (get l :b) (get r :g)))
+               (- (* (get l :b) (get r :r))
+                  (* (get l :r) (get r :b)))
+               (- (* (get l :r) (get r :g))
+                  (* (get l :g) (get r :r)))))
+
+(defn vec3-rand []
+  (vec3-create (rand) (rand) (rand)))
+
+(defn vec3-near-zero? [v]
+  (let [epsilon 0.0000008]
+    (and (and (< (abs (get v :r)) epsilon)
+              (< (abs (get v :g)) epsilon))
+         (< (abs (get v :b)) epsilon))))
+
+(defn -main [& args]
+  (let [v (vec3-create 0 0 0)]
+    (foo)))

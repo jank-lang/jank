@@ -1,0 +1,4 @@
+(ns input)
+
+(defn doworkson [a b]
+  (throw a b 3))

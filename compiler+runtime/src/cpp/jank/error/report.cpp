@@ -415,6 +415,8 @@ namespace jank::error
     underline.insert(underline.end(), width, '^');
     underline += ' ';
 
+    /* TODO: This is broken for very long lines, which wrap, since the
+     * note doesn't wrap the same way. */
     auto const ret{ hbox({ text(underline), paragraph(n.message) }) };
     switch(n.kind)
     {
@@ -467,11 +469,9 @@ namespace jank::error
 
   static Element code_snippet(snippet const &s, size_t const max_width)
   {
-    /* TODO: Handle unknown source. */
     auto const file(module::loader::read_file(s.file_path));
     if(file.is_err())
     {
-      /* TODO: Update UI. */
       return window(text(util::format(" {} ", s.file_path)),
                     hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }

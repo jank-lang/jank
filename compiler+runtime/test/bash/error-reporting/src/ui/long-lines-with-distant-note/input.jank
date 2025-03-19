@@ -1,0 +1,3 @@
+(ns input)
+
+(defn this-is-a-very-long-function-name-which-will-push-the-limits-of-the-window [] (def inside-the-function-is-another-long-name-which-may-be-even-longer-than-the-first unknown))
