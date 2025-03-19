@@ -5,6 +5,21 @@
             [babashka.fs :as b.f]
             [clojure.string :as string]))
 
+; This test suite finds `input.jank` files, each in their own directory,
+; and runs them. They're all expected to fail and the stdout is captured
+; and compared to an `output` file in the same directory. The output must
+; match, or the test fails. If a `setup` script exists in the directory,
+; it will be called prior to loading `input.jank`.
+;
+; This sript can be executed with either `test` or `generate` as a parameter.
+;
+; Providing `test` will invoke all `input.jank` files and ensure their output
+; matches their `output` files.
+;
+; Providing `generate` will invoke all `input.jank` files and will update the
+; corresponding `output` file with the output. This allows for batch regeneration
+; of output, but the changes must be reviewed carefully.
+
 (def src-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../../src"))))
 
 (defn find-tests! []
@@ -54,11 +69,16 @@
             (vswap! ret inc)))))
     (System/exit @ret)))
 
-(defn -main [cmd]
-  (let [tests (map run-input! (find-tests!))]
-    (case cmd
-      "generate" (generate! tests)
-      "test" (test! tests))))
+(defn -main [& args]
+  (if-not (= (count args) 1)
+    (do
+      (println "Usage: ./bin/test/error_reporting.clj <test|generate>")
+      (System/exit 1))
+    (let [cmd (first args)
+          tests (map run-input! (find-tests!))]
+      (case cmd
+        "generate" (generate! tests)
+        "test" (test! tests)))))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))

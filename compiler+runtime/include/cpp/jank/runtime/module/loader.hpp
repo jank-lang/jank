@@ -64,6 +64,10 @@ namespace jank::runtime::module
     native_persistent_string path;
   };
 
+  /* When reading a file, we may find it on the filesystem or within a JAR. In the
+   * first case, we map it with `mmap`, but we can't do that for JAR files since
+   * we need to decompress them into memory. This `file_view` gives us one view
+   * into either type of file, with the same interface. */
   struct file_view
   {
     file_view() = default;
