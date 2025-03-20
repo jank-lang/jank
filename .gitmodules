@@ -1,6 +1,3 @@
-[submodule "third-party/vcpkg"]
-	path = compiler+runtime/third-party/vcpkg
-	url = https://github.com/jank-lang/vcpkg.git
 [submodule "compiler+runtime/third-party/folly"]
 	path = compiler+runtime/third-party/folly
 	url = https://github.com/jank-lang/folly.git
@@ -25,3 +22,6 @@
 [submodule "compiler+runtime/test/bash/clojure-test-suite/clojure-test-suite"]
 	path = compiler+runtime/test/bash/clojure-test-suite/clojure-test-suite
 	url = https://github.com/jank-lang/clojure-test-suite
+[submodule "compiler+runtime/third-party/cpptrace"]
+	path = compiler+runtime/third-party/cpptrace
+	url = https://github.com/jank-lang/cpptrace
