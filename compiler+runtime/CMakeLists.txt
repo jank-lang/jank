@@ -285,6 +285,7 @@ set(BUILD_SHARED_LIBS OFF)
 include(FetchContent)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
+include(cmake/dependency/cpptrace.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -307,6 +308,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
@@ -314,7 +316,7 @@ target_link_libraries(
   jank_lib PRIVATE
   ${BDWGC_LIBRARIES}
   libzippp::libzippp
-  # TODO: How can we force clang/llvm to be shared?
+  cpptrace::cpptrace
   clang
   clang-cpp
   LLVM
