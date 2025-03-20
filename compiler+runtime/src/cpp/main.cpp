@@ -1,12 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <regex>
 
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
+
+#include <cpptrace/from_current.hpp>
+#include <cpptrace/formatting.hpp>
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -32,6 +36,51 @@
 
 namespace jank
 {
+  /* jank's stack frame symbols can be immense, due to templated return and
+   * parameter types. For a quick glance at a stacktrace to see what's up,
+   * we don't need more than the function name, file, and line. */
+  static void strip_frame_symbol(cpptrace::stacktrace_frame &frame)
+  {
+    auto &sym{ frame.symbol };
+    auto const paren{ sym.find('(') };
+    if(paren == std::string::npos)
+    {
+      return;
+    }
+
+    /* Remove the parameters. */
+    sym.erase(paren);
+
+    static std::regex const template_return_type{ "^.*>\\s+[a-zA-Z]" };
+    std::smatch match;
+    if(std::regex_search(sym, match, template_return_type))
+    {
+      sym.erase(0, match.length() - 1);
+      return;
+    }
+
+    static std::regex const normal_return_type{ "^.*\\s+[a-zA-Z]" };
+    if(std::regex_search(sym, match, normal_return_type))
+    {
+      sym.erase(0, match.length() - 1);
+      return;
+    }
+  }
+
+  static auto const formatter{ cpptrace::formatter{}
+                                 .header("Stack trace (most recent call first):")
+                                 .addresses(cpptrace::formatter::address_mode::none)
+                                 .paths(cpptrace::formatter::path_mode::basename)
+                                 .columns(false)
+                                 .snippets(false) };
+
+  static void print_exception_stack_trace()
+  {
+    auto trace{ cpptrace::from_current_exception() };
+    trace.transform(&strip_frame_symbol);
+    formatter.print(trace);
+  }
+
   static void run(util::cli::options const &opts)
   {
     using namespace jank;
@@ -168,7 +217,7 @@ namespace jank
       input += line;
 
       util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
-      try
+      CPPTRACE_TRY
       {
         {
           std::ofstream ofs{ path_tmp };
@@ -179,7 +228,7 @@ namespace jank
         util::println("{}", runtime::to_code_string(res));
       }
       /* TODO: Unify error handling. JEEZE! */
-      catch(std::exception const &e)
+      CPPTRACE_CATCH(std::exception const &e)
       {
         util::println("Exception: {}", e.what());
       }
@@ -242,12 +291,12 @@ namespace jank
 
       input += line;
 
-      try
+      CPPTRACE_TRY
       {
         __rt_ctx->jit_prc.eval_string(input);
       }
       /* TODO: Unify error handling. JEEZE! */
-      catch(std::exception const &e)
+      CPPTRACE_CATCH(std::exception const &e)
       {
         util::println("Exception: {}", e.what());
       }
@@ -272,92 +321,98 @@ namespace jank
 
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
-try
 {
-  using namespace jank;
-  using namespace jank::runtime;
+  CPPTRACE_TRY
+  {
+    using namespace jank;
+    using namespace jank::runtime;
 
-  /* To handle UTF-8 Text , we set the locale to the current environment locale
+    /* To handle UTF-8 Text , we set the locale to the current environment locale
    * Usage of the local locale allows better localization.
    * Notably this might make text encoding become more platform dependent.
    */
-  std::locale::global(std::locale(""));
+    std::locale::global(std::locale(""));
 
-  /* The GC needs to enabled even before arg parsing, since our native types,
+    /* The GC needs to enabled even before arg parsing, since our native types,
    * like strings, use the GC for allocations. It can still be configured later. */
-  GC_set_all_interior_pointers(1);
-  GC_enable();
+    GC_set_all_interior_pointers(1);
+    GC_enable();
 
-  llvm::llvm_shutdown_obj const Y{};
+    llvm::llvm_shutdown_obj const Y{};
 
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmParser();
-  llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
 
-  auto const parse_result(util::cli::parse(argc, argv));
-  if(parse_result.is_err())
-  {
-    return parse_result.expect_err();
+    auto const parse_result(util::cli::parse(argc, argv));
+    if(parse_result.is_err())
+    {
+      return parse_result.expect_err();
+    }
+    auto const &opts(parse_result.expect_ok());
+
+    if(opts.gc_incremental)
+    {
+      GC_enable_incremental();
+    }
+
+    profile::configure(opts);
+    profile::timer const timer{ "main" };
+
+    __rt_ctx = new(GC) runtime::context{ opts };
+
+    jank_load_clojure_core_native();
+    jank_load_clojure_string_native();
+    jank_load_jank_compiler_native();
+    jank_load_jank_perf_native();
+
+    switch(opts.command)
+    {
+      case util::cli::command::run:
+        run(opts);
+        break;
+      case util::cli::command::compile:
+        compile(opts);
+        break;
+      case util::cli::command::repl:
+        repl(opts);
+        break;
+      case util::cli::command::cpp_repl:
+        cpp_repl(opts);
+        break;
+      case util::cli::command::run_main:
+        run_main(opts);
+        break;
+    }
   }
-  auto const &opts(parse_result.expect_ok());
-
-  if(opts.gc_incremental)
+  /* TODO: Unify error handling. JEEZE! */
+  CPPTRACE_CATCH(std::exception const &e)
   {
-    GC_enable_incremental();
+    jank::util::println("Exception: {}", e.what());
+    jank::print_exception_stack_trace();
+    return 1;
   }
-
-  profile::configure(opts);
-  profile::timer const timer{ "main" };
-
-  __rt_ctx = new(GC) runtime::context{ opts };
-
-  jank_load_clojure_core_native();
-  jank_load_clojure_string_native();
-  jank_load_jank_compiler_native();
-  jank_load_jank_perf_native();
-
-  switch(opts.command)
+  catch(jank::runtime::object_ptr const o)
   {
-    case util::cli::command::run:
-      run(opts);
-      break;
-    case util::cli::command::compile:
-      compile(opts);
-      break;
-    case util::cli::command::repl:
-      repl(opts);
-      break;
-    case util::cli::command::cpp_repl:
-      cpp_repl(opts);
-      break;
-    case util::cli::command::run_main:
-      run_main(opts);
-      break;
+    jank::util::println("Exception: {}", jank::runtime::to_code_string(o));
+    jank::print_exception_stack_trace();
+    return 1;
   }
-}
-/* TODO: Unify error handling. JEEZE! */
-catch(std::exception const &e)
-{
-  jank::util::println("Exception: {}", e.what());
-  return 1;
-}
-catch(jank::runtime::object_ptr const o)
-{
-  jank::util::println("Exception: {}", jank::runtime::to_code_string(o));
-  return 1;
-}
-catch(jank::native_persistent_string const &s)
-{
-  jank::util::println("Exception: {}", s);
-  return 1;
-}
-catch(jank::error_ptr const &e)
-{
-  jank::error::report(e);
-  return 1;
-}
-catch(...)
-{
-  jank::util::println("Unknown exception thrown");
-  return 1;
+  catch(jank::native_persistent_string const &s)
+  {
+    jank::util::println("Exception: {}", s);
+    jank::print_exception_stack_trace();
+    return 1;
+  }
+  catch(jank::error_ptr const &e)
+  {
+    jank::error::report(e);
+    return 1;
+  }
+  catch(...)
+  {
+    jank::util::println("Unknown exception thrown");
+    jank::print_exception_stack_trace();
+    return 1;
+  }
 }
