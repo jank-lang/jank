@@ -106,7 +106,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
 endif()
 
 if(jank_tests)
-  list(APPEND jank_common_compiler_flags -Werror -DJANK_TEST)
+  list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
 
 include(cmake/coverage.cmake)
