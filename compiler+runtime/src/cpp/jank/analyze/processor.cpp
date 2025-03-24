@@ -1,6 +1,8 @@
 #include <ranges>
 #include <set>
 
+#include <cpptrace/from_current.hpp>
+
 #include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
@@ -1674,9 +1676,25 @@ namespace jank::analyze
         return sym_result;
       }
 
-      /* TODO: Catch exceptions here and convert them info errors. */
-      /* If this is a macro, recur so we can start over. */
-      auto const expanded(rt_ctx.macroexpand(o));
+      /* TODO: Remove redundancy with a macro? */
+      object_ptr expanded{ o };
+      CPPTRACE_TRY
+      {
+        expanded = rt_ctx.macroexpand(o);
+      }
+      CPPTRACE_CATCH(std::exception const &e)
+      {
+      }
+      catch(jank::runtime::object_ptr const o)
+      {
+      }
+      catch(jank::native_persistent_string const &s)
+      {
+      }
+      catch(jank::error_ptr const &e)
+      {
+      }
+
       if(expanded != o)
       {
         return analyze(expanded, current_frame, position, fn_ctx, needs_box);
