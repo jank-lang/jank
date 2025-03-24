@@ -109,8 +109,6 @@ namespace jank
         return;
       }
 
-      /* TODO: Update all of these throws to throw a consistent type, regardless of the
-       * error type. This simplifies our catching logic. */
       throw expect_err();
     }
 
