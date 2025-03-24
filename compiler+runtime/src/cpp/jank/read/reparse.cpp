@@ -18,7 +18,7 @@ namespace jank::read::parse
   {
     if(file_path == no_source_path)
     {
-      return error::internal_parse_failure("Cannot reparse object with no source path");
+      return error::internal_parse_failure("Cannot reparse object with no source path.");
     }
 
     auto const file(module::loader::read_file(file_path));
@@ -52,20 +52,13 @@ namespace jank::read::parse
     return source{ file_path, res.start.start, res.end.end, macro_expansion };
   }
 
-  static read::source assert_meta_source(object_ptr const o)
+  source reparse_nth(obj::persistent_list_ptr const o, size_t const n)
   {
     auto source(object_source(o));
     if(source == source::unknown)
     {
-      throw error::internal_parse_failure(
-        util::format("Unknown source while trying to reparse {}", to_code_string(o)));
+      return source;
     }
-    return source;
-  }
-
-  source reparse_nth(obj::persistent_list_ptr const o, size_t const n)
-  {
-    auto const source(assert_meta_source(o));
 
     /* Add one to skip the ( for the list. */
     return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
@@ -74,7 +67,11 @@ namespace jank::read::parse
 
   source reparse_nth(runtime::obj::persistent_vector_ptr const o, size_t const n)
   {
-    auto const source(assert_meta_source(o));
+    auto source(object_source(o));
+    if(source == source::unknown)
+    {
+      return source;
+    }
 
     /* Add one to skip the [ for the vector. */
     return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)

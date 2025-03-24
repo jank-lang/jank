@@ -20,6 +20,7 @@
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/try.hpp>
 #include <jank/error/analyze.hpp>
 
 #include <jank/analyze/expr/def.hpp>
@@ -1676,24 +1677,21 @@ namespace jank::analyze
         return sym_result;
       }
 
-      /* TODO: Remove redundancy with a macro? */
       object_ptr expanded{ o };
-      CPPTRACE_TRY
+      error_ptr expansion_error{};
+      JANK_TRY
       {
         expanded = rt_ctx.macroexpand(o);
       }
-      CPPTRACE_CATCH(std::exception const &e)
-      {
-      }
-      catch(jank::runtime::object_ptr const o)
-      {
-      }
-      catch(jank::native_persistent_string const &s)
-      {
-      }
-      catch(jank::error_ptr const &e)
-      {
-      }
+      JANK_CATCH_THEN(
+        [&](auto const &e) {
+          expansion_error
+            = error::analyze_macro_expansion_exception(e,
+                                                       cpptrace::from_current_exception(),
+                                                       object_source(o),
+                                                       latest_expansion(macro_expansions));
+        },
+        return expansion_error)
 
       if(expanded != o)
       {
@@ -1821,7 +1819,7 @@ namespace jank::analyze
                                   current_frame,
                                   needs_ret_box,
                                   source,
-                                  make_box<runtime::obj::persistent_list>(o->data.rest()),
+                                  o,
                                   std::move(arg_exprs));
     }
   }

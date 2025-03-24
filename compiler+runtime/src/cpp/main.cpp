@@ -1,16 +1,12 @@
 #include <iostream>
-#include <fstream>
 #include <filesystem>
-#include <regex>
+#include <fstream>
 
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
-
-#include <cpptrace/from_current.hpp>
-#include <cpptrace/formatting.hpp>
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
@@ -28,6 +24,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/try.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -36,51 +33,6 @@
 
 namespace jank
 {
-  /* jank's stack frame symbols can be immense, due to templated return and
-   * parameter types. For a quick glance at a stacktrace to see what's up,
-   * we don't need more than the function name, file, and line. */
-  static cpptrace::stacktrace_frame strip_frame_symbol(cpptrace::stacktrace_frame &&frame)
-  {
-    auto const paren{ frame.symbol.find('(') };
-    if(paren == std::string::npos)
-    {
-      return std::move(frame);
-    }
-
-    /* Remove the parameters. */
-    frame.symbol.erase(paren);
-
-    static std::regex const template_return_type{ "^.*>\\s+[a-zA-Z]" };
-    std::smatch match;
-    if(std::regex_search(frame.symbol, match, template_return_type))
-    {
-      frame.symbol.erase(0, match.length() - 1);
-      return std::move(frame);
-    }
-
-    static std::regex const normal_return_type{ "^.*\\s+[a-zA-Z]" };
-    if(std::regex_search(frame.symbol, match, normal_return_type))
-    {
-      frame.symbol.erase(0, match.length() - 1);
-      return std::move(frame);
-    }
-
-    return std::move(frame);
-  }
-
-  static auto const formatter{ cpptrace::formatter{}
-                                 .header("Stack trace (most recent call first):")
-                                 .addresses(cpptrace::formatter::address_mode::none)
-                                 .paths(cpptrace::formatter::path_mode::basename)
-                                 .columns(false)
-                                 .snippets(false)
-                                 .transform(&strip_frame_symbol) };
-
-  static void print_exception_stack_trace()
-  {
-    formatter.print(cpptrace::from_current_exception());
-  }
-
   static void run(util::cli::options const &opts)
   {
     using namespace jank;
@@ -217,7 +169,7 @@ namespace jank
       input += line;
 
       util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
-      CPPTRACE_TRY
+      JANK_TRY
       {
         {
           std::ofstream ofs{ path_tmp };
@@ -227,27 +179,7 @@ namespace jank
         auto const res(__rt_ctx->eval_file(path_tmp));
         util::println("{}", runtime::to_code_string(res));
       }
-      /* TODO: Unify error handling. JEEZE! */
-      CPPTRACE_CATCH(std::exception const &e)
-      {
-        util::println("Uncaught exception: {}", e.what());
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::runtime::object_ptr const o)
-      {
-        util::println("Uncaught exception: {}", jank::runtime::to_code_string(o));
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::native_persistent_string const &s)
-      {
-        util::println("Uncaught exception: {}", s);
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::error_ptr const &e)
-      {
-        jank::error::report(e);
-        jank::print_exception_stack_trace();
-      }
+      JANK_CATCH(jank::util::print_exception)
 
       input.clear();
       std::cout << "\n";
@@ -295,31 +227,11 @@ namespace jank
 
       input += line;
 
-      CPPTRACE_TRY
+      JANK_TRY
       {
         __rt_ctx->jit_prc.eval_string(input);
       }
-      /* TODO: Unify error handling. JEEZE! */
-      CPPTRACE_CATCH(std::exception const &e)
-      {
-        util::println("Uncaught exception: {}", e.what());
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::runtime::object_ptr const o)
-      {
-        util::println("Uncaught exception: {}", jank::runtime::to_code_string(o));
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::native_persistent_string const &s)
-      {
-        util::println("Uncaught exception: {}", s);
-        jank::print_exception_stack_trace();
-      }
-      catch(jank::error_ptr const &e)
-      {
-        jank::error::report(e);
-        jank::print_exception_stack_trace();
-      }
+      JANK_CATCH(jank::util::print_exception)
 
       input.clear();
       le.setPrompt("native> ");
@@ -330,7 +242,7 @@ namespace jank
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
 {
-  CPPTRACE_TRY
+  JANK_TRY
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -393,34 +305,5 @@ int main(int const argc, char const **argv)
         break;
     }
   }
-  /* TODO: Unify error handling. JEEZE! */
-  CPPTRACE_CATCH(std::exception const &e)
-  {
-    jank::util::println("Uncaught exception: {}", e.what());
-    jank::print_exception_stack_trace();
-    return 1;
-  }
-  catch(jank::runtime::object_ptr const o)
-  {
-    jank::util::println("Uncaught exception: {}", jank::runtime::to_code_string(o));
-    jank::print_exception_stack_trace();
-    return 1;
-  }
-  catch(jank::native_persistent_string const &s)
-  {
-    jank::util::println("Uncaught exception: {}", s);
-    jank::print_exception_stack_trace();
-    return 1;
-  }
-  catch(jank::error_ptr const &e)
-  {
-    jank::error::report(e);
-    return 1;
-  }
-  catch(...)
-  {
-    jank::util::println("Unknown exception thrown");
-    jank::print_exception_stack_trace();
-    return 1;
-  }
+  JANK_CATCH_THEN(jank::util::print_exception, return 1)
 }

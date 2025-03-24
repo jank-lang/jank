@@ -21,6 +21,7 @@ pom.xml.asc
 .hgignore
 .hg/
 .clj-kondo
+.nrepl-port
 
 # C++
 .ccls-cache
