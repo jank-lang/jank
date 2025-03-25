@@ -101,7 +101,7 @@ namespace jank::error
 
   native_bool snippet::can_fit_without_ellipsis(note const &n) const
   {
-    assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.file_path == file_path);
 
     if(line_end == 0)
     {
@@ -150,7 +150,7 @@ namespace jank::error
   /* TODO: Handle multiple notes on one line by building bridges. */
   void snippet::add(read::source const &body_source, note const &n)
   {
-    assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.file_path == file_path);
 
     /* Adding a note follows some rules to determine how it will fit.
      *

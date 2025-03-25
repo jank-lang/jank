@@ -9,7 +9,7 @@ namespace jank::runtime::obj
     : head{ head }
     , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
-    assert(head);
+    jank_debug_assert(head);
   }
 
   cons_ptr cons::seq() const

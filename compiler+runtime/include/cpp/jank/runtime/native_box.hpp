@@ -34,7 +34,7 @@ namespace jank::runtime
 
     value_type *operator->() const
     {
-      assert(data);
+      jank_debug_assert(data);
       return data;
     }
 
@@ -45,7 +45,7 @@ namespace jank::runtime
 
     value_type &operator*() const
     {
-      assert(data);
+      jank_debug_assert(data);
       return *data;
     }
 
@@ -102,6 +102,8 @@ namespace jank::runtime
   {
     using value_type = object;
 
+    static constexpr auto assertion_error{ "Invalid null box." };
+
     native_box() = default;
 
     native_box(std::nullptr_t)
@@ -141,7 +143,7 @@ namespace jank::runtime
 
     value_type *operator->() const
     {
-      assert(data);
+      jank_debug_assert(data);
       return data;
     }
 
@@ -152,7 +154,7 @@ namespace jank::runtime
 
     value_type &operator*() const
     {
-      assert(data);
+      jank_debug_assert(data);
       return *data;
     }
 

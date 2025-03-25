@@ -8,8 +8,8 @@ namespace jank::runtime::obj
     : arr{ arr }
     , size{ size }
   {
-    assert(arr);
-    assert(size > 0);
+    jank_debug_assert(arr);
+    jank_debug_assert(size > 0);
   }
 
   native_array_sequence::native_array_sequence(object_ptr * const arr,
@@ -19,8 +19,8 @@ namespace jank::runtime::obj
     , index{ index }
     , size{ size }
   {
-    assert(arr);
-    assert(size > 0);
+    jank_debug_assert(arr);
+    jank_debug_assert(size > 0);
   }
 
   /* behavior::object_like */
@@ -73,7 +73,7 @@ namespace jank::runtime::obj
   /* behavior::sequence */
   object_ptr native_array_sequence::first() const
   {
-    assert(index < size);
+    jank_debug_assert(index < size);
     return arr[index];
   }
 

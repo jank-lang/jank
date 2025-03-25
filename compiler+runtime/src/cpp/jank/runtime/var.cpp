@@ -151,14 +151,14 @@ namespace jank::runtime
       return nullptr;
     }
 
-    assert(n);
+    jank_debug_assert(n);
     auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
     if(tbfs.empty())
     {
       return nullptr;
     }
 
-    assert(tbfs.front().bindings);
+    jank_debug_assert(tbfs.front().bindings);
     auto const found(tbfs.front().bindings->get_entry(this));
     if(found == obj::nil::nil_const())
     {
@@ -166,7 +166,7 @@ namespace jank::runtime
     }
 
     auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
-    assert(ret);
+    jank_debug_assert(ret);
     return expect_object<var_thread_binding>(ret);
   }
 
@@ -175,7 +175,7 @@ namespace jank::runtime
     auto const binding(get_thread_binding());
     if(binding)
     {
-      assert(binding->value);
+      jank_debug_assert(binding->value);
       return binding->value;
     }
     return *root.rlock();

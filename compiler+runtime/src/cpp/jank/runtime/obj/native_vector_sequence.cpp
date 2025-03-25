@@ -9,20 +9,20 @@ namespace jank::runtime::obj
     : data{ data }
     , index{ index }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data)
     : data{ std::move(data) }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data, size_t index)
     : data{ std::move(data) }
     , index{ index }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta,
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
   /* behavior::sequence */
   object_ptr native_vector_sequence::first() const
   {
-    assert(index < data.size());
+    jank_debug_assert(index < data.size());
     return data[index];
   }
 

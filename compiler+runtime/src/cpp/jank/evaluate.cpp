@@ -248,7 +248,7 @@ namespace jank::evaluate
     profile::timer const timer{ "eval ast node" };
     object_ptr ret{};
     visit_expr([&ret](auto const typed_ex) { ret = eval(typed_ex); }, ex);
-    assert(ret);
+    jank_debug_assert(ret);
     return ret;
   }
 

@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s)
     : str{ s }
   {
-    assert(!s->data.empty());
+    jank_debug_assert(!s->data.empty());
   }
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s,
@@ -16,7 +16,7 @@ namespace jank::runtime::obj
     : str{ s }
     , index{ i }
   {
-    assert(!s->data.empty() && i < s->data.size());
+    jank_debug_assert(!s->data.empty() && i < s->data.size());
   }
 
   /* behavior::object_like */

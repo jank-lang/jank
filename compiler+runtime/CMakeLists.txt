@@ -153,6 +153,8 @@ endfunction()
 
 add_library(
   jank_lib STATIC
+  src/cpp/jtl/panic.cpp
+  src/cpp/jtl/assert.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp

@@ -220,7 +220,7 @@ namespace jank::analyze
   option<std::reference_wrapper<lifted_var const>>
   local_frame::find_lifted_var(obj::symbol_ptr const &sym) const
   {
-    assert(sym);
+    jank_debug_assert(sym);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
     if(found != closest_fn.lifted_vars.end())
@@ -232,7 +232,7 @@ namespace jank::analyze
 
   void local_frame::lift_constant(object_ptr const constant)
   {
-    assert(constant);
+    jank_debug_assert(constant);
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
@@ -255,7 +255,7 @@ namespace jank::analyze
   option<std::reference_wrapper<lifted_constant const>>
   local_frame::find_lifted_constant(object_ptr const o) const
   {
-    assert(o);
+    jank_debug_assert(o);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));
     if(found != closest_fn.lifted_constants.end())

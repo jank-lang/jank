@@ -61,16 +61,16 @@ namespace jank::runtime::module
   native_persistent_string
   nest_module(native_persistent_string const &module, native_persistent_string const &sub)
   {
-    assert(!module.empty());
-    assert(!sub.empty());
+    jank_debug_assert(!module.empty());
+    jank_debug_assert(!sub.empty());
     return module + "$" + sub;
   }
 
   native_persistent_string
   nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end)
   {
-    assert(!native_ns.empty());
-    assert(!end.empty());
+    jank_debug_assert(!native_ns.empty());
+    jank_debug_assert(!end.empty());
     return util::format("::{}::{}", native_ns, end);
   }
 

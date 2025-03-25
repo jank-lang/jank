@@ -13,7 +13,7 @@ namespace jank::runtime::obj
   lazy_sequence::lazy_sequence(object_ptr const fn)
     : fn{ fn }
   {
-    assert(fn);
+    jank_debug_assert(fn);
   }
 
   lazy_sequence::lazy_sequence(object_ptr const fn, object_ptr const sequence)
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
       return nullptr;
     }
     auto const s(runtime::fresh_seq(sequence));
-    assert(s != nil::nil_const());
+    jank_debug_assert(s != nil::nil_const());
     return make_box<lazy_sequence>(nullptr, s);
   }
 
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
 
   lazy_sequence_ptr lazy_sequence::next_in_place()
   {
-    assert(sequence);
+    jank_debug_assert(sequence);
     auto const n(runtime::next_in_place(sequence));
     if(n == nil::nil_const())
     {

@@ -5,6 +5,8 @@
 #include <jank/type.hpp>
 #include <jank/util/string_builder.hpp>
 
+#include <jtl/ref.hpp>
+
 namespace jank::runtime
 {
   enum class object_type : uint8_t
@@ -294,5 +296,139 @@ namespace std
   {
     bool operator()(jank::runtime::object_ptr const lhs,
                     jank::runtime::object_ptr const rhs) const noexcept;
+  };
+}
+
+namespace jtl
+{
+  template <>
+  struct ref<jank::runtime::object>
+  {
+    using value_type = jank::runtime::object;
+
+    ref() = default;
+
+    ref(nullptr_t)
+    {
+    }
+
+    ref(value_type &data)
+      : data{ &data }
+    {
+    }
+
+    ref(value_type const &data)
+      : data{ const_cast<value_type *>(&data) }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    ref(T &typed_data)
+      : data{ &typed_data.base }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    ref(T const &typed_data)
+      : data{ const_cast<jank::runtime::object *>(&typed_data.base) }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    ref(ref<T> const typed_data)
+      : data{ &typed_data->base }
+    {
+    }
+
+    value_type *operator->() const
+    {
+      jank_debug_assert(data);
+      return data;
+    }
+
+    bool operator!() const
+    {
+      return !data;
+    }
+
+    value_type &operator*() const
+    {
+      jank_debug_assert(data);
+      return *data;
+    }
+
+    bool operator==(nullptr_t) const
+    {
+      return data == nullptr;
+    }
+
+    bool operator==(ref const &rhs) const
+    {
+      return data == rhs.data;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    bool operator==(T const &rhs) const
+    {
+      return data == &rhs->base;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    bool operator==(ref<T> const &rhs) const
+    {
+      return data == &rhs->base;
+    }
+
+    bool operator!=(nullptr_t) const
+    {
+      return data != nullptr;
+    }
+
+    bool operator!=(ref const &rhs) const
+    {
+      return data != rhs.data;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    bool operator!=(T const &rhs) const
+    {
+      return data != &rhs->base;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    bool operator!=(ref<T> const &rhs) const
+    {
+      return data != &rhs->base;
+    }
+
+    bool operator<(ref const &rhs) const
+    {
+      return data < rhs.data;
+    }
+
+    operator ref<value_type const>() const
+    {
+      jank_debug_assert(data);
+      return *data;
+    }
+
+    operator value_type *() const
+    {
+      return data;
+    }
+
+    explicit operator bool() const
+    {
+      return data;
+    }
+
+    value_type *data{};
   };
 }

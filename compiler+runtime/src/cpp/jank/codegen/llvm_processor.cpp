@@ -524,7 +524,7 @@ namespace jank::codegen
   llvm_processor::gen(expr::local_reference_ptr const expr, expr::function_arity const &)
   {
     auto const ret(locals[expr->binding->name]);
-    assert(ret);
+    jank_debug_assert(ret);
 
     if(expr->position == expression_position::tail)
     {

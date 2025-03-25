@@ -198,7 +198,7 @@ namespace jank::runtime
       write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
-    assert(ret);
+    jank_debug_assert(ret);
     return ret;
   }
 
@@ -653,13 +653,13 @@ namespace jank::runtime
       return ok();
     }
 
-    assert(bindings);
+    jank_debug_assert(bindings);
     return push_thread_bindings(bindings);
   }
 
   string_result<void> context::push_thread_bindings(object_ptr const bindings)
   {
-    assert(bindings);
+    jank_debug_assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
@@ -671,7 +671,7 @@ namespace jank::runtime
 
   string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
-    assert(bindings);
+    jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
@@ -708,7 +708,7 @@ namespace jank::runtime
       }
     }
 
-    assert(frame.bindings);
+    jank_debug_assert(frame.bindings);
     tbfs.push_front(std::move(frame));
     return ok();
   }

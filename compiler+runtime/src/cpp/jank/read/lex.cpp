@@ -257,7 +257,7 @@ namespace jank::read::lex
 
   movable_position &movable_position::operator++()
   {
-    assert(offset < proc->file.size());
+    jank_debug_assert(offset < proc->file.size());
 
     if(proc->file[offset] == '\n')
     {

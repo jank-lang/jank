@@ -2,6 +2,8 @@
 
 #include <bit>
 
+#include <jtl/assert.hpp>
+
 #include <jank/type.hpp>
 
 namespace jank
@@ -763,20 +765,20 @@ namespace jank
     [[gnu::const]]
     constexpr size_type get_small_size() const noexcept
     {
-      assert(get_category() == category::small);
+      jank_debug_assert(get_category() == category::small);
       auto const small_shifted(static_cast<size_type>(store.small[max_small_size]) >> small_shift);
-      assert(max_small_size >= small_shifted);
+      jank_debug_assert(max_small_size >= small_shifted);
       return max_small_size - small_shifted;
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void set_small_size(size_type const s) noexcept
     {
-      assert(s <= max_small_size);
+      jank_debug_assert(s <= max_small_size);
       /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index) */
       store.small[s] = 0;
       store.small[max_small_size] = value_type((max_small_size - s) << small_shift);
-      assert(get_category() == category::small && size() == s);
+      jank_debug_assert(get_category() == category::small && size() == s);
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -784,7 +786,7 @@ namespace jank
     {
       /* If `data` is word-aligned, we can do three quick word copies.
        *
-       * XXX: However, this is actuall undefined behavior, since we copy
+       * XXX: However, this is actually undefined behavior, since we copy
        * a word at a time, which may overshoot the null terminator. We never
        * use that data, but we do indeed copy it. Clang's address sanitizer
        * picks this up, so we only do it when that's not looking. */
@@ -824,7 +826,7 @@ namespace jank
                               const_pointer_type const rhs,
                               uint8_t const rhs_size) noexcept
     {
-      assert(lhs_size + rhs_size <= max_small_size);
+      jank_debug_assert(lhs_size + rhs_size <= max_small_size);
       traits_type::copy(store.small, lhs, lhs_size);
       traits_type::copy(store.small + lhs_size, rhs, rhs_size);
       set_small_size(lhs_size + rhs_size);
@@ -835,7 +837,7 @@ namespace jank
     constexpr void init_small(It const &begin, It const &end) noexcept
     {
       auto const size(std::distance(begin, end));
-      assert(size <= max_small_size);
+      jank_debug_assert(size <= max_small_size);
       std::copy(begin, end, store.small);
       set_small_size(size);
     }
@@ -843,7 +845,7 @@ namespace jank
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small_fill(value_type const fill, uint8_t const size) noexcept
     {
-      assert(size <= max_small_size);
+      jank_debug_assert(size <= max_small_size);
       traits_type::assign(store.small, size, fill);
       set_small_size(size);
     }
@@ -852,7 +854,7 @@ namespace jank
     constexpr void init_large_shared(const_pointer_type const data, size_type const size) noexcept
     {
       /* NOTE: This is likely NOT null-terminated. We need to look out for this in c_str(). */
-      assert(max_small_size < size);
+      jank_debug_assert(max_small_size < size);
       store.large.data = const_cast<pointer_type>(data);
       store.large.size = size;
       store.large.set_category(category::large_shared);
@@ -861,7 +863,7 @@ namespace jank
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_owned(const_pointer_type const data, size_type const size) noexcept
     {
-      assert(max_small_size < size);
+      jank_debug_assert(max_small_size < size);
       /* TODO: Apply gnu::malloc to this fn. */
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, data, size);
@@ -873,7 +875,7 @@ namespace jank
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_large_fill(value_type const fill, uint8_t const size) noexcept
     {
-      assert(max_small_size < size);
+      jank_debug_assert(max_small_size < size);
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::assign(store.large.data, size, fill);
       store.large.data[size] = 0;
@@ -888,7 +890,7 @@ namespace jank
                                     size_type const rhs_size) noexcept
     {
       auto const size(lhs_size + rhs_size);
-      assert(max_small_size < size);
+      jank_debug_assert(max_small_size < size);
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
@@ -902,7 +904,7 @@ namespace jank
     constexpr void init_large_owned(It const &begin, It const &end) noexcept
     {
       auto const size(std::distance(begin, end));
-      assert(max_small_size < size);
+      jank_debug_assert(max_small_size < size);
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
       std::copy(begin, end, store.large.data);
       store.large.data[size] = 0;

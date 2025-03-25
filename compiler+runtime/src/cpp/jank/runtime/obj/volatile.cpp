@@ -6,7 +6,7 @@ namespace jank::runtime::obj
   volatile_::volatile_(object_ptr const o)
     : val{ o }
   {
-    assert(val);
+    jank_debug_assert(val);
   }
 
   native_bool volatile_::equal(object const &o) const
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
   object_ptr volatile_::reset(object_ptr const o)
   {
     val = o;
-    assert(val);
+    jank_debug_assert(val);
     return val;
   }
 }

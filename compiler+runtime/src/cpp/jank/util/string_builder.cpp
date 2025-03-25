@@ -1,9 +1,8 @@
 #include <bit>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <codecvt>
 #include <locale>
-#pragma clang diagnostic pop
+
+#include <jtl/assert.hpp>
 
 #include <jank/util/string_builder.hpp>
 
@@ -328,7 +327,7 @@ namespace jank::util
 
   native_persistent_string string_builder::release()
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
 
     native_persistent_string ret;
     if(pos <= native_persistent_string::max_small_size)
@@ -348,14 +347,14 @@ namespace jank::util
 
   native_transient_string string_builder::str() const
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
     buffer[pos] = 0;
     return { buffer, pos };
   }
 
   native_persistent_string_view string_builder::view() const &
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
     buffer[pos] = 0;
     return { buffer, pos };
   }

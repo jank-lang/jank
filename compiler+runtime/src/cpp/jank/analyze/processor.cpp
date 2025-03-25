@@ -397,7 +397,7 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
 
-    assert(!sym->to_string().empty());
+    jank_debug_assert(!sym->to_string().empty());
 
     /* TODO: Assert it doesn't start with __. */
     auto found_local(current_frame->find_local_or_capture(sym));

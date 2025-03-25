@@ -11,7 +11,7 @@ namespace jank::runtime::obj::detail
     , begin{ b }
     , end{ e }
   {
-    assert(begin != end);
+    jank_debug_assert(begin != end);
   }
 
   template <typename PT, typename IT>

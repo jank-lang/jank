@@ -11,7 +11,7 @@ namespace jank::runtime::obj
     : head{ head }
     , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
-    assert(head);
+    jank_debug_assert(head);
   }
 
   chunked_cons::chunked_cons(object_ptr const meta, object_ptr const head, object_ptr const tail)
@@ -19,8 +19,8 @@ namespace jank::runtime::obj
     , tail{ tail == nil::nil_const() ? nullptr : tail }
     , meta{ meta }
   {
-    assert(head);
-    assert(meta);
+    jank_debug_assert(head);
+    jank_debug_assert(meta);
   }
 
   chunked_cons_ptr chunked_cons::seq() const

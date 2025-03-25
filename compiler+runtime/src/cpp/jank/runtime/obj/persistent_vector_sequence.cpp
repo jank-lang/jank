@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v)
     : vec{ v }
   {
-    assert(!v->data.empty());
+    jank_debug_assert(!v->data.empty());
   }
 
   persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v,
@@ -16,8 +16,8 @@ namespace jank::runtime::obj
     : vec{ v }
     , index{ i }
   {
-    assert(index < v->data.size());
-    assert(0 < v->data.size() - index);
+    jank_debug_assert(index < v->data.size());
+    jank_debug_assert(0 < v->data.size() - index);
   }
 
   /* behavior::object_like */
