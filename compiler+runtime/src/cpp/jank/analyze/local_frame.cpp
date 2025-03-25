@@ -42,7 +42,7 @@ namespace jank::analyze
 
   local_frame::local_frame(frame_type const &type,
                            context &rt_ctx,
-                           option<native_box<local_frame>> const &p)
+                           option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
     , rt_ctx{ rt_ctx }
@@ -148,7 +148,7 @@ namespace jank::analyze
     {
       if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
       {
-        return it->fn_ctx;
+        return *it->fn_ctx;
       }
 
       if(it->parent.is_some())

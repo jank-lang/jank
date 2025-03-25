@@ -306,125 +306,125 @@ namespace jtl
   {
     using value_type = jank::runtime::object;
 
-    ref() = default;
+    constexpr ref() = default;
 
-    ref(nullptr_t)
+    constexpr ref(nullptr_t) noexcept
     {
     }
 
-    ref(value_type &data)
+    constexpr ref(value_type &data) noexcept
       : data{ &data }
     {
     }
 
-    ref(value_type const &data)
+    constexpr ref(value_type const &data) noexcept
       : data{ const_cast<value_type *>(&data) }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    ref(T &typed_data)
+    constexpr ref(T &typed_data) noexcept
       : data{ &typed_data.base }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    ref(T const &typed_data)
+    constexpr ref(T const &typed_data) noexcept
       : data{ const_cast<jank::runtime::object *>(&typed_data.base) }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    ref(ref<T> const typed_data)
+    constexpr ref(ref<T> const typed_data) noexcept
       : data{ &typed_data->base }
     {
     }
 
-    value_type *operator->() const
+    constexpr value_type *operator->() const noexcept
     {
       jank_debug_assert(data);
       return data;
     }
 
-    bool operator!() const
+    constexpr bool operator!() const noexcept
     {
       return !data;
     }
 
-    value_type &operator*() const
+    constexpr value_type &operator*() const noexcept
     {
       jank_debug_assert(data);
       return *data;
     }
 
-    bool operator==(nullptr_t) const
+    constexpr bool operator==(nullptr_t) const noexcept
     {
       return data == nullptr;
     }
 
-    bool operator==(ref const &rhs) const
+    constexpr bool operator==(ref const &rhs) const noexcept
     {
       return data == rhs.data;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    bool operator==(T const &rhs) const
+    constexpr bool operator==(T const &rhs) const noexcept
     {
       return data == &rhs->base;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    bool operator==(ref<T> const &rhs) const
+    constexpr bool operator==(ref<T> const &rhs) const noexcept
     {
       return data == &rhs->base;
     }
 
-    bool operator!=(nullptr_t) const
+    constexpr bool operator!=(nullptr_t) const noexcept
     {
       return data != nullptr;
     }
 
-    bool operator!=(ref const &rhs) const
+    constexpr bool operator!=(ref const &rhs) const noexcept
     {
       return data != rhs.data;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    bool operator!=(T const &rhs) const
+    constexpr bool operator!=(T const &rhs) const noexcept
     {
       return data != &rhs->base;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    bool operator!=(ref<T> const &rhs) const
+    constexpr bool operator!=(ref<T> const &rhs) const noexcept
     {
       return data != &rhs->base;
     }
 
-    bool operator<(ref const &rhs) const
+    constexpr bool operator<(ref const &rhs) const noexcept
     {
       return data < rhs.data;
     }
 
-    operator ref<value_type const>() const
+    constexpr operator ref<value_type const>() const noexcept
     {
       jank_debug_assert(data);
       return *data;
     }
 
-    operator value_type *() const
+    constexpr operator value_type *() const noexcept
     {
       return data;
     }
 
-    explicit operator bool() const
+    constexpr explicit operator bool() const noexcept
     {
       return data;
     }

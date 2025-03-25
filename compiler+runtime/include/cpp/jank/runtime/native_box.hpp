@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/ref.hpp>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime
@@ -87,6 +89,12 @@ namespace jank::runtime
     operator object *() const
     {
       return &data->base;
+    }
+
+    operator jtl::ref<value_type>() const
+    {
+      jank_debug_assert(data);
+      return *data;
     }
 
     explicit operator native_bool() const

@@ -11,18 +11,18 @@ namespace jank::runtime::obj
 
 namespace jank::analyze
 {
-  using local_binding_ptr = runtime::native_box<struct local_binding>;
+  using local_binding_ptr = jtl::ptr<struct local_binding>;
 }
 
 namespace jank::analyze::expr
 {
-  using function_ptr = runtime::native_box<struct function>;
+  using function_ptr = jtl::ref<struct function>;
 
   struct function_context : gc
   {
     static constexpr native_bool pointer_free{ true };
 
-    function_ptr fn{};
+    jtl::ptr<function> fn;
     native_persistent_string name;
     native_persistent_string unique_name;
     size_t param_count{};
@@ -31,16 +31,16 @@ namespace jank::analyze::expr
     /* TODO: is_pure */
   };
 
-  using function_context_ptr = runtime::native_box<function_context>;
+  using function_context_ptr = jtl::ref<function_context>;
 
   struct function_arity
   {
     runtime::object_ptr to_runtime_data() const;
 
     native_vector<runtime::obj::symbol_ptr> params;
-    do_ptr body{};
-    local_frame_ptr frame{};
-    function_context_ptr fn_ctx{};
+    do_ptr body;
+    local_frame_ptr frame;
+    function_context_ptr fn_ctx;
   };
 
   struct arity_key
@@ -51,7 +51,7 @@ namespace jank::analyze::expr
     native_bool is_variadic{};
   };
 
-  using function_ptr = runtime::native_box<struct function>;
+  using function_ptr = jtl::ref<struct function>;
 
   struct function : expression
   {

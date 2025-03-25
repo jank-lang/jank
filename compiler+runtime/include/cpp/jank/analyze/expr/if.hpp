@@ -5,7 +5,7 @@
 
 namespace jank::analyze::expr
 {
-  using if_ptr = runtime::native_box<struct if_>;
+  using if_ptr = jtl::ref<struct if_>;
 
   struct if_ : expression
   {
@@ -21,8 +21,8 @@ namespace jank::analyze::expr
     void propagate_position(expression_position const pos) override;
     runtime::object_ptr to_runtime_data() const override;
 
-    expression_ptr condition{};
-    expression_ptr then{};
+    expression_ptr condition;
+    expression_ptr then;
     option<expression_ptr> else_;
   };
 }

@@ -129,13 +129,13 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  static expr::function_ptr wrap_expression(native_box<E> const orig_expr,
+  static expr::function_ptr wrap_expression(jtl::ref<E> const orig_expr,
                                             native_persistent_string const &name,
                                             native_vector<obj::symbol_ptr> params)
   {
-    auto ret{ make_box<expr::function>() };
+    auto ret{ jtl::make_ref<expr::function>() };
     /* TODO: Deep clone? */
-    auto expr{ make_box<E>(*orig_expr) };
+    auto expr{ jtl::make_ref<E>(*orig_expr) };
     ret->kind = analyze::expression_kind::function;
     ret->name = name;
     ret->unique_name = __rt_ctx->unique_string(ret->name);
@@ -143,28 +143,31 @@ namespace jank::evaluate
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));
 
-    expr::function_arity arity;
-    arity.frame
-      = make_box<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent);
+    auto const frame{
+      jtl::make_ref<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent)
+    };
+    auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
+    expr::function_arity arity{ std::move(params),
+                                jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
+                                frame,
+                                fn_ctx };
     expr->frame->parent = arity.frame;
     ret->frame = arity.frame->parent.unwrap_or(arity.frame);
     ret->frame->lift_constant(ret->meta);
-    arity.frame->fn_ctx = make_box<expr::function_context>();
-    arity.frame->fn_ctx->name = ret->name;
-    arity.frame->fn_ctx->unique_name = ret->unique_name;
-    arity.frame->fn_ctx->fn = ret;
-    arity.fn_ctx = arity.frame->fn_ctx;
+    fn_ctx->name = ret->name;
+    fn_ctx->unique_name = ret->unique_name;
+    fn_ctx->fn = ret;
+    arity.frame->fn_ctx = fn_ctx;
+    arity.fn_ctx = fn_ctx;
 
     arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
 
-    arity.params = std::move(params);
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const sym : arity.params)
     {
       arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
     }
 
-    arity.body = make_box<expr::do_>(expression_position::tail, arity.frame, true);
     arity.body->values.push_back(expr);
 
     walk(arity, [&](auto const &form) {
@@ -199,10 +202,10 @@ namespace jank::evaluate
   {
     if(exprs.empty())
     {
-      return wrap_expression(make_box<expr::primitive_literal>(expression_position::tail,
-                                                               an_prc.root_frame,
-                                                               true,
-                                                               obj::nil::nil_const()),
+      return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
+                                                                    an_prc.root_frame,
+                                                                    true,
+                                                                    obj::nil::nil_const()),
                              name,
                              {});
     }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
 #include <jank/option.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 
@@ -16,11 +18,10 @@ namespace jank::runtime
 namespace jank::analyze
 {
   struct expression;
-  using jank::runtime::native_box;
 
   namespace expr
   {
-    using function_context_ptr = native_box<struct function_context>;
+    using function_context_ptr = jtl::ref<struct function_context>;
   }
 
   struct lifted_var
@@ -42,8 +43,8 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
-    option<native_box<expression>> value_expr{};
-    native_box<struct local_frame> originating_frame{};
+    option<jtl::ref<expression>> value_expr{};
+    jtl::ptr<struct local_frame> originating_frame;
     native_bool needs_box{ true };
     native_bool has_boxed_usage{};
     native_bool has_unboxed_usage{};
@@ -53,7 +54,7 @@ namespace jank::analyze
     runtime::object_ptr to_runtime_data() const;
   };
 
-  using local_binding_ptr = runtime::native_box<local_binding>;
+  using local_binding_ptr = jtl::ptr<local_binding>;
 
   struct local_frame : gc
   {
@@ -94,15 +95,15 @@ namespace jank::analyze
     local_frame(local_frame &&) noexcept = default;
     local_frame(frame_type const &type,
                 runtime::context &ctx,
-                option<native_box<local_frame>> const &p);
+                option<jtl::ptr<local_frame>> const &p);
 
     local_frame &operator=(local_frame const &rhs);
     local_frame &operator=(local_frame &&rhs) noexcept;
 
     struct find_result
     {
-      local_binding_ptr binding{};
-      native_vector<native_box<local_frame>> crossed_fns;
+      local_binding_ptr binding;
+      native_vector<jtl::ptr<local_frame>> crossed_fns;
     };
 
     /* This is used to find both captures and regular locals, since it's
@@ -116,7 +117,7 @@ namespace jank::analyze
 
     option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
 
-    static native_bool within_same_fn(native_box<local_frame>, native_box<local_frame>);
+    static native_bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
     option<std::reference_wrapper<lifted_var const>>
@@ -132,7 +133,7 @@ namespace jank::analyze
     runtime::object_ptr to_runtime_data() const;
 
     frame_type type;
-    option<native_box<local_frame>> parent;
+    option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;
@@ -142,10 +143,11 @@ namespace jank::analyze
                          runtime::very_equal_to>
       lifted_constants;
     /* This is only set if the frame type is fn. */
-    expr::function_context_ptr fn_ctx{};
+    jtl::ptr<expr::function_context> fn_ctx;
     /* TODO: Remove this. */
     runtime::context &rt_ctx;
   };
 
-  using local_frame_ptr = native_box<local_frame>;
+  /* TODO: Use a ref. */
+  using local_frame_ptr = jtl::ptr<local_frame>;
 }

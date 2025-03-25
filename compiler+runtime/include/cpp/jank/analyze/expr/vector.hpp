@@ -5,7 +5,7 @@
 
 namespace jank::analyze::expr
 {
-  using vector_ptr = runtime::native_box<struct vector>;
+  using vector_ptr = jtl::ref<struct vector>;
 
   struct vector : expression
   {

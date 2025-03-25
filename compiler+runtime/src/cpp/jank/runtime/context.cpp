@@ -184,13 +184,13 @@ namespace jank::runtime
           ->to_string());
       /* No matter what's in the fn, we'll return nil. */
       exprs.emplace_back(
-        make_box<analyze::expr::primitive_literal>(analyze::expression_position::tail,
+        make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
                                                    an_prc.root_frame,
                                                    true,
                                                    obj::nil::nil_const()));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
-      auto fn(static_box_cast<analyze::expr::function>(wrapped_exprs));
+      auto fn(static_ref_cast<analyze::expr::function>(wrapped_exprs));
       fn->name = module::module_to_load_function(module);
       fn->unique_name = fn->name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };

@@ -5,11 +5,6 @@ namespace jank::analyze::expr
 {
   using namespace jank::runtime;
 
-  recursion_reference::recursion_reference()
-    : expression{ expr_kind }
-  {
-  }
-
   recursion_reference::recursion_reference(expression_position const position,
                                            local_frame_ptr const frame,
                                            native_bool const needs_box,

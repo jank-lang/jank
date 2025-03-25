@@ -56,7 +56,7 @@ namespace jank::analyze::expr
     {
       for(auto const &capture : arity.frame->captures)
       {
-        ret.emplace(capture.first, &capture.second);
+        ret.emplace(capture.first, capture.second);
       }
     }
     return ret;

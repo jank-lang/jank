@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using call_ptr = runtime::native_box<struct call>;
+  using call_ptr = jtl::ref<struct call>;
 
   struct call : expression
   {
@@ -25,7 +25,7 @@ namespace jank::analyze::expr
     runtime::object_ptr to_runtime_data() const override;
 
     /* Var, local, or callable. */
-    expression_ptr source_expr{};
+    expression_ptr source_expr;
     /* We keep the original form from the call expression so we can point
      * back to it if an exception is thrown during eval. */
     runtime::obj::persistent_list_ptr form{};

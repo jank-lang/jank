@@ -5,7 +5,7 @@
 
 namespace jank::analyze::expr
 {
-  using list_ptr = runtime::native_box<struct list>;
+  using list_ptr = jtl::ref<struct list>;
 
   struct list : expression
   {

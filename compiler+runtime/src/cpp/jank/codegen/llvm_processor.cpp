@@ -72,7 +72,7 @@ namespace jank::codegen
                                  native_persistent_string const &module_name,
                                  compilation_target const target)
     : target{ target }
-    , root_fn{ expr.data }
+    , root_fn{ expr }
     , ctx{ std::make_unique<reusable_context>(module_name) }
   {
   }
@@ -613,7 +613,7 @@ namespace jank::codegen
      * inside of a class which has a `this` which can just be used. They're standalone. So,
      * if you want an instance of that fn within the fn itself, we need to make one. For
      * closures, this will copy the current context to the new one. */
-    auto const &fn_obj(gen_function_instance(expr->fn_ctx->fn, arity));
+    auto const &fn_obj(gen_function_instance(*expr->fn_ctx->fn, arity));
 
     if(expr->position == expression_position::tail)
     {
@@ -665,7 +665,7 @@ namespace jank::codegen
 
     if(arity.fn_ctx->is_variadic)
     {
-      arg_handles.emplace_back(gen_function_instance(arity.fn_ctx->fn, arity));
+      arg_handles.emplace_back(gen_function_instance(*arity.fn_ctx->fn, arity));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
     else if(is_closure)
@@ -697,7 +697,7 @@ namespace jank::codegen
                                                  true,
                                                  capture.first,
                                                  capture.second };
-          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, arity), field_ptr);
+          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ local_ref }, arity), field_ptr);
         }
         arg_handles.emplace_back(closure_obj);
         arg_types.emplace_back(ctx->builder->getPtrTy());
@@ -1514,8 +1514,7 @@ namespace jank::codegen
                                                true,
                                                capture.first,
                                                capture.second };
-        ctx->builder->CreateStore(gen(expr::local_reference_ptr{ &local_ref }, fn_arity),
-                                  field_ptr);
+        ctx->builder->CreateStore(gen(expr::local_reference_ptr{ local_ref }, fn_arity), field_ptr);
       }
 
       auto const create_fn_type(

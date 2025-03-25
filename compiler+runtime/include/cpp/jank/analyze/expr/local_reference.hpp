@@ -9,12 +9,12 @@ namespace jank::runtime::obj
 
 namespace jank::analyze
 {
-  using local_binding_ptr = runtime::native_box<struct local_binding>;
+  using local_binding_ptr = jtl::ptr<struct local_binding>;
 }
 
 namespace jank::analyze::expr
 {
-  using local_reference_ptr = runtime::native_box<struct local_reference>;
+  using local_reference_ptr = jtl::ref<struct local_reference>;
 
   struct local_reference : expression
   {
@@ -29,6 +29,6 @@ namespace jank::analyze::expr
     runtime::object_ptr to_runtime_data() const override;
 
     runtime::obj::symbol_ptr name{};
-    local_binding_ptr binding{};
+    local_binding_ptr binding;
   };
 }

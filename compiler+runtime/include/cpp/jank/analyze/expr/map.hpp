@@ -5,7 +5,7 @@
 
 namespace jank::analyze::expr
 {
-  using map_ptr = runtime::native_box<struct map>;
+  using map_ptr = jtl::ref<struct map>;
 
   struct map : expression
   {

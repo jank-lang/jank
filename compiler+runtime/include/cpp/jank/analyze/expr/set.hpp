@@ -5,7 +5,7 @@
 
 namespace jank::analyze::expr
 {
-  using set_ptr = runtime::native_box<struct set>;
+  using set_ptr = jtl::ref<struct set>;
 
   struct set : expression
   {

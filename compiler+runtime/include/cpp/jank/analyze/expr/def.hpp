@@ -10,7 +10,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using def_ptr = runtime::native_box<struct def>;
+  using def_ptr = jtl::ref<struct def>;
 
   struct def : expression
   {

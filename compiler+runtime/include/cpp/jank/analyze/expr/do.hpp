@@ -4,7 +4,7 @@
 
 namespace jank::analyze::expr
 {
-  using do_ptr = runtime::native_box<struct do_>;
+  using do_ptr = jtl::ref<struct do_>;
 
   struct do_ : expression
   {

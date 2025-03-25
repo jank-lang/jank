@@ -7,6 +7,8 @@
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
 
+#include <jtl/ptr.hpp>
+
 #include <jank/analyze/processor.hpp>
 
 namespace jank::runtime::obj
@@ -23,30 +25,30 @@ namespace jank::runtime::obj
 
 namespace jank::analyze
 {
-  using expression_ptr = runtime::native_box<struct expression>;
+  using expression_ptr = jtl::ref<struct expression>;
 
   namespace expr
   {
-    using def_ptr = runtime::native_box<struct def>;
-    using var_deref_ptr = runtime::native_box<struct var_deref>;
-    using var_ref_ptr = runtime::native_box<struct var_ref>;
-    using call_ptr = runtime::native_box<struct call>;
-    using primitive_literal_ptr = runtime::native_box<struct primitive_literal>;
-    using list_ptr = runtime::native_box<struct list>;
-    using vector_ptr = runtime::native_box<struct vector>;
-    using map_ptr = runtime::native_box<struct map>;
-    using set_ptr = runtime::native_box<struct set>;
-    using local_reference_ptr = runtime::native_box<struct local_reference>;
-    using function_ptr = runtime::native_box<struct function>;
-    using recur_ptr = runtime::native_box<struct recur>;
-    using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
-    using named_recursion_ptr = runtime::native_box<struct named_recursion>;
-    using let_ptr = runtime::native_box<struct let>;
-    using do_ptr = runtime::native_box<struct do_>;
-    using if_ptr = runtime::native_box<struct if_>;
-    using throw_ptr = runtime::native_box<struct throw_>;
-    using try_ptr = runtime::native_box<struct try_>;
-    using case_ptr = runtime::native_box<struct case_>;
+    using def_ptr = jtl::ref<struct def>;
+    using var_deref_ptr = jtl::ref<struct var_deref>;
+    using var_ref_ptr = jtl::ref<struct var_ref>;
+    using call_ptr = jtl::ref<struct call>;
+    using primitive_literal_ptr = jtl::ref<struct primitive_literal>;
+    using list_ptr = jtl::ref<struct list>;
+    using vector_ptr = jtl::ref<struct vector>;
+    using map_ptr = jtl::ref<struct map>;
+    using set_ptr = jtl::ref<struct set>;
+    using local_reference_ptr = jtl::ref<struct local_reference>;
+    using function_ptr = jtl::ref<struct function>;
+    using recur_ptr = jtl::ref<struct recur>;
+    using recursion_reference_ptr = jtl::ref<struct recursion_reference>;
+    using named_recursion_ptr = jtl::ref<struct named_recursion>;
+    using let_ptr = jtl::ref<struct let>;
+    using do_ptr = jtl::ref<struct do_>;
+    using if_ptr = jtl::ref<struct if_>;
+    using throw_ptr = jtl::ref<struct throw_>;
+    using try_ptr = jtl::ref<struct try_>;
+    using case_ptr = jtl::ref<struct case_>;
   }
 }
 
@@ -155,8 +157,8 @@ namespace jank::codegen
                                                 std::vector<llvm::Type *> const &fields) const;
 
     compilation_target target{};
-    analyze::expr::function_ptr root_fn{};
-    llvm::Function *fn{};
+    analyze::expr::function_ptr root_fn;
+    jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
   };

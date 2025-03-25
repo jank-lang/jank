@@ -17,6 +17,7 @@ namespace jank::util
   static void realloc(string_builder &sb, size_t const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
+    /* TODO: Pointer-free GC alloc. */
     auto const new_data{ allocator_traits::allocate(allocator, new_capacity) };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
     allocator_traits::deallocate(allocator, sb.buffer, sb.pos);

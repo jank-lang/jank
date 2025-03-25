@@ -23,13 +23,10 @@ namespace jtl
   template <typename From, typename To>
   concept is_implicitly_convertible = requires { declval<void (&)(To)>()(declval<From>()); };
 
-  /* TODO: Concept. */
   template <typename From, typename To>
-  constexpr bool is_convertible() noexcept
-  {
-    return (is_returnable<To> && is_implicitly_convertible<From, To>)
-      || (is_void<From> && is_void<To>);
-  }
+  concept is_convertible = requires {
+    (is_returnable<To> && is_implicitly_convertible<From, To>) || (is_void<From> && is_void<To>);
+  };
 
   template <typename T>
   concept is_lvalue_reference = is_same<T, T &>::value;

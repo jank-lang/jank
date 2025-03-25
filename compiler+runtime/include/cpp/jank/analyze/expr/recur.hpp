@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using recur_ptr = runtime::native_box<struct recur>;
+  using recur_ptr = jtl::ref<struct recur>;
 
   struct recur : expression
   {

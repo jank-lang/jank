@@ -1,8 +1,6 @@
 #pragma once
 
-#include <jtl/primitive.hpp>
-#include <jtl/trait/transform.hpp>
-#include <jtl/assert.hpp>
+#include <jtl/ref.hpp>
 
 namespace jtl
 {
@@ -30,6 +28,11 @@ namespace jtl
     template <typename C>
     requires is_convertible<C *, T *>
     constexpr ptr(ptr<C> const data)
+      : data{ data.data }
+    {
+    }
+
+    constexpr ptr(ref<value_type> const data)
       : data{ data.data }
     {
     }

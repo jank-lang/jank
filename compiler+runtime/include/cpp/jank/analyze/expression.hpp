@@ -1,10 +1,12 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::analyze
 {
-  using local_frame_ptr = runtime::native_box<struct local_frame>;
+  using local_frame_ptr = jtl::ptr<struct local_frame>;
 
   enum class expression_position : uint8_t
   {
@@ -119,12 +121,11 @@ namespace jank::analyze
 
     expression_kind kind{};
     expression_position position{};
-    local_frame_ptr frame{};
+    local_frame_ptr frame;
     native_bool needs_box{ true };
   };
 
-  /* TODO: Use something non-nullable. */
-  using expression_ptr = runtime::native_box<expression>;
+  using expression_ptr = jtl::ref<expression>;
 
   /* Captures both expressions and things which inherit from expression. */
   template <typename T>
