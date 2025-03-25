@@ -1695,7 +1695,7 @@ namespace jank::analyze
       }
 
       object_ptr expanded{ o };
-      error_ptr expansion_error{};
+      jtl::ptr<error::base> expansion_error{};
       JANK_TRY
       {
         expanded = rt_ctx.macroexpand(o);
@@ -1708,7 +1708,7 @@ namespace jank::analyze
                                                        object_source(o),
                                                        latest_expansion(macro_expansions));
         },
-        return expansion_error)
+        return *expansion_error)
 
       if(expanded != o)
       {

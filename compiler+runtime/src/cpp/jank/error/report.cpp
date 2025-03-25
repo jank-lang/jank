@@ -556,7 +556,7 @@ namespace jank::error
 
     if(e->cause)
     {
-      report(e->cause);
+      report(*e->cause);
     }
   }
 }

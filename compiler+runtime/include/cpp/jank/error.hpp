@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/read/source.hpp>
 #include <jank/option.hpp>
@@ -288,25 +290,25 @@ namespace jank::error
          native_persistent_string const &message,
          read::source const &source,
          runtime::object_ptr expansion,
-         runtime::native_box<base> cause);
+         jtl::ref<base> cause);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          runtime::object_ptr expansion,
-         runtime::native_box<base> cause,
+         jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
 
     void sort_notes();
-    runtime::native_box<base> add_usage(read::source const &usage_source);
+    jtl::ref<base> add_usage(read::source const &usage_source);
 
     kind kind{};
     native_persistent_string message;
     read::source source;
     native_vector<note> notes;
-    runtime::native_box<base> cause;
+    jtl::ptr<base> cause;
     std::unique_ptr<cpptrace::stacktrace> trace;
     /* TODO: context */
     /* TODO: suggestions */
@@ -317,11 +319,11 @@ namespace jank::error
 
 namespace jank
 {
-  using error_ptr = runtime::native_box<error::base>;
+  using error_ptr = jtl::ref<error::base>;
 
   template <typename... Args>
   error_ptr make_error(Args &&...args)
   {
-    return runtime::make_box<error::base>(std::forward<Args>(args)...);
+    return jtl::make_ref<error::base>(std::forward<Args>(args)...);
   }
 }

@@ -21,12 +21,11 @@ namespace jtl
   concept is_returnable = requires { static_cast<T (*)()>(nullptr); };
 
   template <typename From, typename To>
-  concept is_implicitly_convertible = requires { declval<void (&)(To)>()(declval<From>()); };
+  concept is_implicitly_convertible = requires(void (&fn)(To), From &f) { fn(f); };
 
   template <typename From, typename To>
-  concept is_convertible = requires {
-    (is_returnable<To> && is_implicitly_convertible<From, To>) || (is_void<From> && is_void<To>);
-  };
+  concept is_convertible
+    = (is_returnable<To> && is_implicitly_convertible<From, To>) || (is_void<From> && is_void<To>);
 
   template <typename T>
   concept is_lvalue_reference = is_same<T, T &>::value;

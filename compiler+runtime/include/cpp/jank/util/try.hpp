@@ -11,7 +11,7 @@ namespace jank
     struct base;
   }
 
-  using error_ptr = runtime::native_box<error::base>;
+  using error_ptr = jtl::ref<error::base>;
 }
 
 namespace jank::util

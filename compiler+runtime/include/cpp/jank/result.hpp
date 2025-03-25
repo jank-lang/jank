@@ -65,13 +65,15 @@ namespace jank
 
     /* Allow implicit construction of R and E from their ctor args. */
     template <typename T>
-    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
+    requires std::is_constructible_v<R, T>
+    constexpr result(T &&t)
       : data{ std::forward<T>(t) }
     {
     }
 
     template <typename T>
-    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
+    requires std::is_constructible_v<E, T>
+    constexpr result(T &&t)
       : data{ std::forward<T>(t) }
     {
     }
