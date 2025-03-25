@@ -17,11 +17,13 @@ namespace jtl
     constexpr ref(remove_const_t<value_type> &data)
       : data{ &data }
     {
+      jank_debug_assert(this->data);
     }
 
     constexpr ref(value_type const &data)
       : data{ const_cast<value_type *>(&data) }
     {
+      jank_debug_assert(this->data);
     }
 
     template <typename C>
@@ -29,6 +31,7 @@ namespace jtl
     constexpr ref(ref<C> const data)
       : data{ data.data }
     {
+      jank_debug_assert(data);
     }
 
     constexpr value_type *operator->() const
@@ -37,30 +40,15 @@ namespace jtl
       return data;
     }
 
-    constexpr bool operator!() const
-    {
-      return !data;
-    }
-
     constexpr value_type &operator*() const
     {
       jank_debug_assert(data);
       return *data;
     }
 
-    constexpr bool operator==(nullptr_t) const
-    {
-      return data == nullptr;
-    }
-
     constexpr bool operator==(ref const &rhs) const
     {
       return data == rhs.data;
-    }
-
-    constexpr bool operator!=(nullptr_t) const
-    {
-      return data != nullptr;
     }
 
     constexpr bool operator!=(ref const &rhs) const
@@ -78,20 +66,10 @@ namespace jtl
       return data;
     }
 
-    constexpr operator value_type *() const
-    {
-      return data;
-    }
-
     //operator object *() const
     //{
     //  return &data->base;
     //}
-
-    constexpr explicit operator bool() const
-    {
-      return data;
-    }
 
     value_type *data{};
   };
