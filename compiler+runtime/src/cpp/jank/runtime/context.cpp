@@ -224,6 +224,13 @@ namespace jank::runtime
   object_ptr context::read_string(native_persistent_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
+
+    /* When reading an arbitrary string, we don't want the last *current-file* to
+     * be set as source file, so we need to bind it to nil. */
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_file_var, obj::nil::nil_const())) };
+
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 

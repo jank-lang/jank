@@ -707,7 +707,7 @@ namespace jank::runtime::module
       if(file.is_err())
       {
         return err(
-          util::format("unable to map file {} due to error: {}", entry.path, file.expect_err()));
+          util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
       rt_ctx.eval_cpp_string(file.expect_ok().view());
     }

@@ -166,6 +166,7 @@ add_library(
   src/cpp/jank/util/fmt.cpp
   src/cpp/jank/util/fmt/print.cpp
   src/cpp/jank/util/path.cpp
+  src/cpp/jank/util/try.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp

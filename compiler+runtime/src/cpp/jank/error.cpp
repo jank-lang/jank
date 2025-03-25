@@ -1,3 +1,5 @@
+#include <cpptrace/cpptrace.hpp>
+
 #include <jank/error.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/meta.hpp>
@@ -126,6 +128,8 @@ namespace jank::error
         return "Unresolved var.";
       case kind::analyze_unresolved_symbol:
         return "Unresolved symbol.";
+      case kind::analyze_macro_expansion_exception:
+        return "Macro expansion exception.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
@@ -159,7 +163,7 @@ namespace jank::error
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
-    , notes{{default_note_message, source }}
+    , notes{{ default_note_message, source }}
   {
   }
 
@@ -175,7 +179,7 @@ namespace jank::error
     : kind{ k }
     , message{ message }
     , source{ source }
-    , notes{{default_note_message, source }}
+    , notes{{ default_note_message, source }}
   {
   }
 
@@ -183,7 +187,21 @@ namespace jank::error
     : kind{ k }
     , message{ message }
     , source{ source }
-    , notes{{default_note_message, source }}
+    , notes{{ default_note_message, source }}
+  {
+    add_expansion_note(*this, expansion);
+  }
+
+  base::base(enum kind const k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr const expansion,
+         std::unique_ptr<cpptrace::stacktrace> trace)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{{ default_note_message, source }}
+    , trace{ std::move(trace) }
   {
     add_expansion_note(*this, expansion);
   }
@@ -265,6 +283,36 @@ namespace jank::error
   {
   }
 
+  base::base(enum kind const k,
+             native_persistent_string const &message,
+             read::source const &source,
+             runtime::object_ptr const expansion,
+             runtime::native_box<base> const cause)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{{ default_note_message, source }}
+    , cause{ cause }
+  {
+    add_expansion_note(*this, expansion);
+  }
+
+  base::base(enum kind const k,
+             native_persistent_string const &message,
+             read::source const &source,
+             runtime::object_ptr const expansion,
+             runtime::native_box<base> const cause,
+             std::unique_ptr<cpptrace::stacktrace> trace)
+    : kind{ k }
+    , message{ message }
+    , source{ source }
+    , notes{{ default_note_message, source }}
+    , cause{ cause }
+    , trace{ std::move(trace) }
+  {
+    add_expansion_note(*this, expansion);
+  }
+
   native_bool base::operator==(base const &rhs) const
   {
     return !(*this != rhs);
@@ -319,111 +367,4 @@ namespace jank::error
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";
   }
-}
-
-namespace jank
-{
-  error_ptr make_error(error::kind const kind, native_persistent_string const &message)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(kind,
-                                          message,
-                                          read::source{ runtime::to_string(file), {}, {} });
-  }
-
-  error_ptr make_error(error::kind const kind, read::source const &source)
-  {
-    return runtime::make_box<error::base>(kind, source);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source)
-  {
-    return runtime::make_box<error::base>(kind, message, source);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       runtime::object_ptr const expansion)
-  {
-    return runtime::make_box<error::base>(kind, message, source, expansion);
-  }
-
-  error_ptr
-  make_error(error::kind const kind, read::source const &source, error::note const &error_note)
-  {
-    return runtime::make_box<error::base>(kind, source, error_note);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note)
-  {
-    return runtime::make_box<error::base>(kind, message, source, error_note);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note,
-                       runtime::object_ptr const expansion)
-  {
-    return runtime::make_box<error::base>(kind, message, source, error_note, expansion);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message)
-  {
-    return runtime::make_box<error::base>(kind, source, error_note_message);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_vector<error::note> const &notes)
-  {
-    return runtime::make_box<error::base>(kind, source, notes);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message)
-  {
-    return runtime::make_box<error::base>(kind, message, source, error_note_message);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message,
-                       runtime::object_ptr const expansion)
-  {
-    return runtime::make_box<error::base>(kind, message, source, error_note_message, expansion);
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(kind,
-                                          message,
-                                          read::source{ runtime::to_string(file), start, start });
-  }
-
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start,
-                       read::source_position const &end)
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    return runtime::make_box<error::base>(kind,
-                                          message,
-                                          read::source{ runtime::to_string(file), start, end });
-  }
-
 }

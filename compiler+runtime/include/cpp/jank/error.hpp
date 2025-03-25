@@ -4,6 +4,11 @@
 #include <jank/read/source.hpp>
 #include <jank/option.hpp>
 
+namespace cpptrace
+{
+  struct stacktrace;
+}
+
 namespace jank::error
 {
   enum class kind : uint8_t
@@ -66,6 +71,7 @@ namespace jank::error
     analyze_invalid_try,
     analyze_unresolved_var,
     analyze_unresolved_symbol,
+    analyze_macro_expansion_exception,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -191,6 +197,8 @@ namespace jank::error
         return "analyze/unresolved-var";
       case kind::analyze_unresolved_symbol:
         return "analyze/unresolved-symbol";
+      case kind::analyze_macro_expansion_exception:
+        return "analyze/macro-expansion-exception";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
@@ -233,10 +241,12 @@ namespace jank::error
     kind kind{ kind::error };
   };
 
-  struct base : gc
+  /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
+   * is because cpptrace doesn't use our GC allocator. */
+  struct base : gc_cleanup
   {
     base() = delete;
-    base(base const &) = default;
+    base(base const &) = delete;
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
@@ -245,6 +255,11 @@ namespace jank::error
          native_persistent_string const &message,
          read::source const &source,
          runtime::object_ptr expansion);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
@@ -269,6 +284,17 @@ namespace jank::error
          native_persistent_string const &message,
          read::source const &source,
          native_vector<note> const &notes);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         runtime::native_box<base> cause);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         runtime::native_box<base> cause,
+         std::unique_ptr<cpptrace::stacktrace> trace);
 
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
@@ -280,6 +306,8 @@ namespace jank::error
     native_persistent_string message;
     read::source source;
     native_vector<note> notes;
+    runtime::native_box<base> cause;
+    std::unique_ptr<cpptrace::stacktrace> trace;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -291,46 +319,9 @@ namespace jank
 {
   using error_ptr = runtime::native_box<error::base>;
 
-  error_ptr make_error(error::kind const kind, native_persistent_string const &message);
-  error_ptr make_error(error::kind const kind, read::source const &source);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       runtime::object_ptr expansion);
-  error_ptr
-  make_error(error::kind const kind, read::source const &source, error::note const &error_note);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note,
-                       runtime::object_ptr expansion);
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message);
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_vector<error::note> const &notes);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message,
-                       runtime::object_ptr expansion);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start,
-                       read::source_position const &end);
+  template <typename... Args>
+  error_ptr make_error(Args &&...args)
+  {
+    return runtime::make_box<error::base>(std::forward<Args>(args)...);
+  }
 }

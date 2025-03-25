@@ -2,6 +2,11 @@
 
 #include <jank/error.hpp>
 
+namespace cpptrace
+{
+  struct stacktrace;
+}
+
 namespace jank::error
 {
   error_ptr analyze_invalid_case(native_persistent_string const &message,
@@ -68,6 +73,22 @@ namespace jank::error
   error_ptr analyze_unresolved_symbol(native_persistent_string const &message,
                                       read::source const &source,
                                       runtime::object_ptr expansion);
+  error_ptr analyze_macro_expansion_exception(std::exception const &e,
+                                              cpptrace::stacktrace const &trace,
+                                              read::source const &source,
+                                              runtime::object_ptr expansion);
+  error_ptr analyze_macro_expansion_exception(runtime::object_ptr const e,
+                                              cpptrace::stacktrace const &trace,
+                                              read::source const &source,
+                                              runtime::object_ptr expansion);
+  error_ptr analyze_macro_expansion_exception(native_persistent_string const &e,
+                                              cpptrace::stacktrace const &trace,
+                                              read::source const &source,
+                                              runtime::object_ptr expansion);
+  error_ptr analyze_macro_expansion_exception(error_ptr e,
+                                              cpptrace::stacktrace const &trace,
+                                              read::source const &source,
+                                              runtime::object_ptr expansion);
   error_ptr
   internal_analyze_failure(native_persistent_string const &message, runtime::object_ptr expansion);
   error_ptr internal_analyze_failure(native_persistent_string const &message,

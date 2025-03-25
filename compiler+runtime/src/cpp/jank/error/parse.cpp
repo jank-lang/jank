@@ -57,7 +57,7 @@ namespace jank::error
       kind::parse_invalid_character,
       sb("Invalid character '")(std::get<native_persistent_string_view>(token.data))("'.")
         .release(),
-      { token.start, token.end });
+      read::source{ token.start, token.end });
   }
 
   error_ptr parse_unexpected_closing_character(read::lex::token const &token)

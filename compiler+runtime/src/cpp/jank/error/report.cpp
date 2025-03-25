@@ -553,5 +553,10 @@ namespace jank::error
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
     std::cout << screen.ToString() << '\0' << '\n';
+
+    if(e->cause)
+    {
+      report(e->cause);
+    }
   }
 }

@@ -1,6 +1,8 @@
 #include <ranges>
 #include <set>
 
+#include <cpptrace/from_current.hpp>
+
 #include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
@@ -18,6 +20,7 @@
 #include <jank/result.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/try.hpp>
 #include <jank/error/analyze.hpp>
 
 #include <jank/analyze/expr/def.hpp>
@@ -1674,9 +1677,22 @@ namespace jank::analyze
         return sym_result;
       }
 
-      /* TODO: Catch exceptions here and convert them info errors. */
-      /* If this is a macro, recur so we can start over. */
-      auto const expanded(rt_ctx.macroexpand(o));
+      object_ptr expanded{ o };
+      error_ptr expansion_error{};
+      JANK_TRY
+      {
+        expanded = rt_ctx.macroexpand(o);
+      }
+      JANK_CATCH_THEN(
+        [&](auto const &e) {
+          expansion_error
+            = error::analyze_macro_expansion_exception(e,
+                                                       cpptrace::from_current_exception(),
+                                                       object_source(o),
+                                                       latest_expansion(macro_expansions));
+        },
+        return expansion_error)
+
       if(expanded != o)
       {
         return analyze(expanded, current_frame, position, fn_ctx, needs_box);
@@ -1803,7 +1819,7 @@ namespace jank::analyze
                                   current_frame,
                                   needs_ret_box,
                                   source,
-                                  make_box<runtime::obj::persistent_list>(o->data.rest()),
+                                  o,
                                   std::move(arg_exprs));
     }
   }
