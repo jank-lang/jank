@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set::persistent_sorted_set(option<object_ptr> const &meta, value_type &&d)
+  persistent_sorted_set::persistent_sorted_set(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {

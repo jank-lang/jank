@@ -49,24 +49,24 @@ namespace jank::runtime
 
     ns_ptr intern_ns(native_persistent_string const &);
     ns_ptr intern_ns(obj::symbol_ptr const &);
-    option<ns_ptr> remove_ns(obj::symbol_ptr const &);
+    jtl::option<ns_ptr> remove_ns(obj::symbol_ptr const &);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
-    option<ns_ptr> find_ns(obj::symbol_ptr const &);
+    jtl::option<ns_ptr> find_ns(obj::symbol_ptr const &);
     /* Resolves a symbol which could be an alias to its ns, based on the aliases
      * in the current ns. Does not intern. */
-    option<ns_ptr> resolve_ns(obj::symbol_ptr const &);
+    jtl::option<ns_ptr> resolve_ns(obj::symbol_ptr const &);
     ns_ptr current_ns();
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &) const;
-    option<object_ptr> find_local(obj::symbol_ptr const &);
+    jtl::option<object_ptr> find_local(obj::symbol_ptr const &);
 
     result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
     result<var_ptr, native_persistent_string>
     intern_var(native_persistent_string const &ns, native_persistent_string const &name);
-    option<var_ptr> find_var(obj::symbol_ptr const &);
-    option<var_ptr>
+    jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
+    jtl::option<var_ptr>
     find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
     result<obj::keyword_ptr, native_persistent_string>
@@ -133,7 +133,7 @@ namespace jank::runtime
     string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
     string_result<void> pop_thread_bindings();
     obj::persistent_hash_map_ptr get_thread_bindings() const;
-    option<thread_binding_frame> current_thread_binding_frame();
+    jtl::option<thread_binding_frame> current_thread_binding_frame();
 
     /* The analyze processor is reused across evaluations so we can keep the semantic information
      * of previous code. This is essential for REPL use. */

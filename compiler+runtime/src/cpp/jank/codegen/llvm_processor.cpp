@@ -256,7 +256,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(fn, args);
     }
 
-    option<std::reference_wrapper<lifted_constant const>> meta;
+    jtl::option<std::reference_wrapper<lifted_constant const>> meta;
     if(expr->name->meta.is_some())
     {
       meta = expr->frame->find_lifted_constant(expr->name->meta.unwrap()).unwrap();

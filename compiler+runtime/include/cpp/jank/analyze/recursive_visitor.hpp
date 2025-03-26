@@ -1,9 +1,8 @@
 #pragma once
 
-#include <type_traits>
+#include <jtl/option.hpp>
 
 #include <jank/result.hpp>
-#include <jank/option.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze

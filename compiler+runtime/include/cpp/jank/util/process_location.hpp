@@ -7,12 +7,12 @@
 #include <string>
 #include <filesystem>
 
-#include <jank/option.hpp>
+#include <jtl/option.hpp>
 
 namespace jank::util
 {
   /* TODO: Put this in a cpp file. */
-  inline option<std::filesystem::path> process_location()
+  inline jtl::option<std::filesystem::path> process_location()
 #if defined(__APPLE__)
   {
     uint32_t path_length{};

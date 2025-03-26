@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -33,7 +34,7 @@ namespace jank::analyze::expr
     runtime::object_ptr to_runtime_data() const override;
 
     do_ptr body;
-    option<catch_> catch_body{};
-    option<do_ptr> finally_body{};
+    jtl::option<catch_> catch_body{};
+    jtl::option<do_ptr> finally_body{};
   };
 }

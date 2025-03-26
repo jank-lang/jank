@@ -53,7 +53,7 @@ namespace jank::runtime::module
     std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
-    option<native_persistent_string> archive_path;
+    jtl::option<native_persistent_string> archive_path;
     /* If there's an archive path, this path is within the archive. Otherwise, it's the
      * filesystem path. */
     native_persistent_string path;
@@ -115,10 +115,10 @@ namespace jank::runtime::module
     {
       entry() = default;
 
-      option<file_entry> o;
-      option<file_entry> cpp;
-      option<file_entry> jank;
-      option<file_entry> cljc;
+      jtl::option<file_entry> o;
+      jtl::option<file_entry> cpp;
+      jtl::option<file_entry> jank;
+      jtl::option<file_entry> cljc;
     };
 
     struct find_result
@@ -126,7 +126,7 @@ namespace jank::runtime::module
       /* All the sources for a module */
       entry sources;
       /* On the basis of origin, source that should be loaded. */
-      option<module_type> to_load;
+      jtl::option<module_type> to_load;
     };
 
     /* These separators match what the JVM does on each system. */

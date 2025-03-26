@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -49,6 +50,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     object_ptr value{};
     object_ptr count{};
-    option<object_ptr> meta{};
+    jtl::option<object_ptr> meta{};
   };
 }

@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(option<object_ptr> const &meta, value_type &&d);
+    persistent_vector(jtl::option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
@@ -87,7 +87,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     value_type data;
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
   };
 }

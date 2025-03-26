@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -61,7 +62,7 @@ namespace jank::runtime::obj
     native_persistent_string ns;
     native_persistent_string name;
 
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
   };
 }

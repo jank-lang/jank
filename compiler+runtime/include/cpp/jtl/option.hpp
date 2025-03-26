@@ -3,9 +3,7 @@
 #include <jtl/assert.hpp>
 #include <jtl/storage.hpp>
 
-#include <jank/type.hpp>
-
-namespace jank
+namespace jtl
 {
   struct none_t
   {
@@ -13,7 +11,7 @@ namespace jank
 
   namespace detail
   {
-    template <native_bool Ok, typename T>
+    template <bool Ok, typename T>
     struct result;
   }
 
@@ -142,12 +140,12 @@ namespace jank
       set = false;
     }
 
-    constexpr native_bool is_some() const noexcept
+    constexpr bool is_some() const noexcept
     {
       return set;
     }
 
-    constexpr native_bool is_none() const noexcept
+    constexpr bool is_none() const noexcept
     {
       return !set;
     }
@@ -213,7 +211,7 @@ namespace jank
       return jtl::move(fallback);
     }
 
-    constexpr native_bool operator!=(option<T> const &rhs) const noexcept
+    constexpr bool operator!=(option<T> const &rhs) const noexcept
     {
       if(set != rhs.set)
       {
@@ -227,28 +225,28 @@ namespace jank
       return false;
     }
 
-    constexpr native_bool operator==(option<T> const &rhs) const noexcept
+    constexpr bool operator==(option<T> const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
-    constexpr native_bool operator!=(T const &rhs) const noexcept
+    constexpr bool operator!=(T const &rhs) const noexcept
     {
       return !set || (*data.ptr() != rhs);
     }
 
-    constexpr native_bool operator==(T const &rhs) const noexcept
+    constexpr bool operator==(T const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
-    constexpr operator native_bool() const noexcept
+    constexpr operator bool() const noexcept
     {
       return is_some();
     }
 
     jtl::storage<T> data;
-    native_bool set{};
+    bool set{};
   };
 
   template <typename T, typename Decayed = jtl::decay_t<T>>
@@ -258,4 +256,10 @@ namespace jank
   }
 
   constexpr inline none_t none = none_t{};
+}
+
+namespace jank
+{
+  using jtl::some;
+  using jtl::none;
 }

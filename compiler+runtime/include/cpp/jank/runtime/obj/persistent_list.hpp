@@ -81,6 +81,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     value_type data;
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
   };
 }

@@ -350,7 +350,7 @@ namespace jank::read::lex
     return { some(token_kind::eof), *this };
   }
 
-  option<error_ptr> processor::check_whitespace(native_bool const found_space)
+  jtl::option<error_ptr> processor::check_whitespace(native_bool const found_space)
   {
     if(require_space && !found_space)
     {

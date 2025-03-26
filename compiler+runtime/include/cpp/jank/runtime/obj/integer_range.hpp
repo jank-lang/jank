@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -83,6 +84,6 @@ namespace jank::runtime::obj
     /* mutable array_chunk_ptr chunk{}; */
     /* mutable integer_range_ptr chunk_next{}; */
     /* mutable integer_range_ptr cached_next{}; */
-    option<object_ptr> meta{};
+    jtl::option<object_ptr> meta{};
   };
 }

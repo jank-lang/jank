@@ -2,8 +2,9 @@
 
 #include <list>
 
+#include <jtl/option.hpp>
+
 #include <jank/result.hpp>
-#include <jank/option.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/var.hpp>
@@ -19,7 +20,7 @@ namespace jank::read::parse
   result<native_persistent_string, char_parse_error>
   parse_character_in_base(native_persistent_string const &char_literal, int const base);
 
-  option<char> get_char_from_literal(native_persistent_string const &s);
+  jtl::option<char> get_char_from_literal(native_persistent_string const &s);
 
   struct object_source_info
   {
@@ -32,11 +33,11 @@ namespace jank::read::parse
 
   struct processor
   {
-    using object_result = result<option<object_source_info>, error_ptr>;
+    using object_result = result<jtl::option<object_source_info>, error_ptr>;
 
     struct shorthand_function_details
     {
-      option<uint8_t> max_fixed_arity{};
+      jtl::option<uint8_t> max_fixed_arity{};
       native_bool variadic{};
       source source;
     };
@@ -56,7 +57,7 @@ namespace jank::read::parse
       native_bool operator==(iterator const &rhs) const;
       iterator &operator=(iterator const &);
 
-      option<value_type> latest;
+      jtl::option<value_type> latest;
       processor &p;
     };
 
@@ -100,7 +101,7 @@ namespace jank::read::parse
 
   public:
     lex::processor::iterator token_current, token_end;
-    option<lex::token_kind> expected_closer;
+    jtl::option<lex::token_kind> expected_closer;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing
      * some other form, such as a list, we'll bind this var to true. */
     runtime::var_ptr splicing_allowed_var{};
@@ -110,7 +111,7 @@ namespace jank::read::parse
      * turns one form into many. */
     std::list<runtime::object_ptr> pending_forms;
     lex::token latest_token;
-    option<shorthand_function_details> shorthand;
+    jtl::option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
     native_bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */

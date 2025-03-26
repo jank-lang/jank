@@ -1,8 +1,8 @@
 #pragma once
 
 #include <jtl/ptr.hpp>
+#include <jtl/option.hpp>
 
-#include <jank/option.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 
 namespace jank::runtime
@@ -43,7 +43,7 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ptr name{};
-    option<jtl::ref<expression>> value_expr{};
+    jtl::option<jtl::ref<expression>> value_expr{};
     jtl::ptr<struct local_frame> originating_frame;
     native_bool needs_box{ true };
     native_bool has_boxed_usage{};
@@ -95,7 +95,7 @@ namespace jank::analyze
     local_frame(local_frame &&) noexcept = default;
     local_frame(frame_type const &type,
                 runtime::context &ctx,
-                option<jtl::ptr<local_frame>> const &p);
+                jtl::option<jtl::ptr<local_frame>> const &p);
 
     local_frame &operator=(local_frame const &rhs);
     local_frame &operator=(local_frame &&rhs) noexcept;
@@ -108,23 +108,23 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    option<find_result> find_local_or_capture(runtime::obj::symbol_ptr sym);
+    jtl::option<find_result> find_local_or_capture(runtime::obj::symbol_ptr sym);
     static void register_captures(find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
-    option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
+    jtl::option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
 
-    option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
+    jtl::option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
 
     static native_bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 
     runtime::obj::symbol_ptr lift_var(runtime::obj::symbol_ptr const &);
-    option<std::reference_wrapper<lifted_var const>>
+    jtl::option<std::reference_wrapper<lifted_var const>>
     find_lifted_var(runtime::obj::symbol_ptr const &) const;
 
     void lift_constant(runtime::object_ptr);
-    option<std::reference_wrapper<lifted_constant const>>
+    jtl::option<std::reference_wrapper<lifted_constant const>>
       find_lifted_constant(runtime::object_ptr) const;
 
     static local_frame const &find_closest_fn_frame(local_frame const &frame);
@@ -133,7 +133,7 @@ namespace jank::analyze
     runtime::object_ptr to_runtime_data() const;
 
     frame_type type;
-    option<jtl::ptr<local_frame>> parent;
+    jtl::option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ptr, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ptr, lifted_var> lifted_vars;

@@ -10,7 +10,7 @@ namespace jank::analyze::expr
            native_bool const needs_box,
            expression_ptr const condition,
            expression_ptr const then,
-           option<expression_ptr> const &else_)
+           jtl::option<expression_ptr> const &else_)
     : expression{ expr_kind, position, frame, needs_box }
     , condition{ condition }
     , then{ then }

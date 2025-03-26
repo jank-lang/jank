@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
-#include <jank/option.hpp>
 
 namespace jank::analyze::expr
 {
@@ -16,13 +17,13 @@ namespace jank::analyze::expr
         native_bool needs_box,
         expression_ptr condition,
         expression_ptr then,
-        option<expression_ptr> const &else_);
+        jtl::option<expression_ptr> const &else_);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ptr to_runtime_data() const override;
 
     expression_ptr condition;
     expression_ptr then;
-    option<expression_ptr> else_;
+    jtl::option<expression_ptr> else_;
   };
 }

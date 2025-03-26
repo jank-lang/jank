@@ -2,7 +2,9 @@
 
 #include <variant>
 
-#include <jank/option.hpp>
+#include <jtl/option.hpp>
+
+#include <jank/native_persistent_string.hpp>
 #include <jank/util/type_name.hpp>
 
 namespace jank
@@ -79,7 +81,7 @@ namespace jank
     }
 
     /* Allow implicit construction from results with compatible constructor args. This allows
-     * things like ok(none) for option<R>. */
+     * things like ok(none) for jtl::option<R>. */
     template <typename T>
     constexpr result(detail::result<true, T> const &t,
                      std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
@@ -94,12 +96,12 @@ namespace jank
     {
     }
 
-    constexpr native_bool is_ok() const
+    constexpr bool is_ok() const
     {
       return data.index() == 0;
     }
 
-    constexpr native_bool is_err() const
+    constexpr bool is_err() const
     {
       return data.index() == 1;
     }
@@ -140,7 +142,7 @@ namespace jank
       return std::move(std::get<R>(data));
     }
 
-    constexpr option<R> ok()
+    constexpr jtl::option<R> ok()
     {
       if(is_ok())
       {
@@ -169,7 +171,7 @@ namespace jank
       return std::move(std::get<E>(data));
     }
 
-    constexpr option<E> err()
+    constexpr jtl::option<E> err()
     {
       if(is_err())
       {
@@ -208,22 +210,22 @@ namespace jank
       return std::move(fallback);
     }
 
-    constexpr native_bool operator==(result const &rhs) const
+    constexpr bool operator==(result const &rhs) const
     {
       return rhs.data == data;
     }
 
-    constexpr native_bool operator!=(result const &rhs) const
+    constexpr bool operator!=(result const &rhs) const
     {
       return rhs.data != data;
     }
 
-    constexpr native_bool operator==(R const &rhs) const
+    constexpr bool operator==(R const &rhs) const
     {
       return data.index() == 0 && rhs == std::get<R>(data);
     }
 
-    constexpr native_bool operator==(E const &rhs) const
+    constexpr bool operator==(E const &rhs) const
     {
       return data.index() == 1 && rhs == std::get<E>(data);
     }
@@ -239,7 +241,7 @@ namespace jank
    * It still uses a variant, but with a special void_t type which does nothing. The normal
    * "ok" functions for extracting data are gone.
    *
-   * This is favorable over an option<E> since result<R, E> is clearly used for error handling. */
+   * This is favorable over an jtl::option<E> since result<R, E> is clearly used for error handling. */
   template <typename E>
   struct [[nodiscard]] result<void, E>
   {
@@ -261,7 +263,7 @@ namespace jank
     }
 
     /* Allow implicit construction from results with compatible constructor args. This allows
-     * things like ok(none) for option<R>. */
+     * things like ok(none) for jtl::option<R>. */
     template <typename T>
     constexpr result(detail::result<false, T> const &t,
                      std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
@@ -269,12 +271,12 @@ namespace jank
     {
     }
 
-    constexpr native_bool is_ok() const
+    constexpr bool is_ok() const
     {
       return data.index() == 0;
     }
 
-    constexpr native_bool is_err() const
+    constexpr bool is_err() const
     {
       return data.index() == 1;
     }
@@ -314,7 +316,7 @@ namespace jank
       return std::move(std::get<E>(data));
     }
 
-    constexpr option<E> err()
+    constexpr jtl::option<E> err()
     {
       if(is_err())
       {
@@ -323,17 +325,17 @@ namespace jank
       return none;
     }
 
-    constexpr native_bool operator==(result const &rhs) const
+    constexpr bool operator==(result const &rhs) const
     {
       return rhs.data == data;
     }
 
-    constexpr native_bool operator!=(result const &rhs) const
+    constexpr bool operator!=(result const &rhs) const
     {
       return rhs.data != data;
     }
 
-    constexpr native_bool operator==(E const &rhs) const
+    constexpr bool operator==(E const &rhs) const
     {
       return data.index() == 1 && rhs == std::get<E>(data);
     }

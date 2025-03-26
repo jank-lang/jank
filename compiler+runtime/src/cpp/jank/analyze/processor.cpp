@@ -159,7 +159,7 @@ namespace jank::analyze
   processor::analyze_def(runtime::obj::persistent_list_ptr const l,
                          local_frame_ptr const current_frame,
                          expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
+                         jtl::option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, l) };
@@ -207,7 +207,7 @@ namespace jank::analyze
                                              latest_expansion(macro_expansions));
     }
 
-    option<jtl::ref<expression>> value_expr;
+    jtl::option<jtl::ref<expression>> value_expr;
     native_bool const has_value{ 3 <= length };
     native_bool const has_docstring{ 4 <= length };
 
@@ -256,7 +256,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze_case(obj::persistent_list_ptr const o,
                                                        local_frame_ptr const f,
                                                        expression_position const position,
-                                                       option<expr::function_context_ptr> const &fc,
+                                                       jtl::option<expr::function_context_ptr> const &fc,
                                                        native_bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -392,7 +392,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze_symbol(runtime::obj::symbol_ptr const sym,
                                                          local_frame_ptr const current_frame,
                                                          expression_position const position,
-                                                         option<expr::function_context_ptr> const &,
+                                                         jtl::option<expr::function_context_ptr> const &,
                                                          native_bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
@@ -617,7 +617,7 @@ namespace jank::analyze
   processor::analyze_fn(runtime::obj::persistent_list_ptr const full_list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
-                        option<expr::function_context_ptr> const &,
+                        jtl::option<expr::function_context_ptr> const &,
                         native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, full_list) };
@@ -790,7 +790,7 @@ namespace jank::analyze
   processor::analyze_recur(runtime::obj::persistent_list_ptr const list,
                            local_frame_ptr const current_frame,
                            expression_position const position,
-                           option<expr::function_context_ptr> const &fn_ctx,
+                           jtl::option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
@@ -856,7 +856,7 @@ namespace jank::analyze
   processor::analyze_do(runtime::obj::persistent_list_ptr const list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
-                        option<expr::function_context_ptr> const &fn_ctx,
+                        jtl::option<expr::function_context_ptr> const &fn_ctx,
                         native_bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
@@ -893,7 +893,7 @@ namespace jank::analyze
   processor::analyze_let(runtime::obj::persistent_list_ptr const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
+                         jtl::option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -991,7 +991,7 @@ namespace jank::analyze
   processor::analyze_loop(runtime::obj::persistent_list_ptr const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
-                          option<expr::function_context_ptr> const &fn_ctx,
+                          jtl::option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1111,7 +1111,7 @@ namespace jank::analyze
   processor::analyze_if(runtime::obj::persistent_list_ptr const o,
                         local_frame_ptr const current_frame,
                         expression_position const position,
-                        option<expr::function_context_ptr> const &fn_ctx,
+                        jtl::option<expr::function_context_ptr> const &fn_ctx,
                         native_bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1155,7 +1155,7 @@ namespace jank::analyze
       return then_expr.expect_err_move();
     }
 
-    option<expression_ptr> else_expr_opt;
+    jtl::option<expression_ptr> else_expr_opt;
     if(form_count == 4)
     {
       auto const else_(o->data.rest().rest().rest().first().unwrap());
@@ -1180,7 +1180,7 @@ namespace jank::analyze
   processor::analyze_quote(runtime::obj::persistent_list_ptr const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
-                           option<expr::function_context_ptr> const &fn_ctx,
+                           jtl::option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1203,7 +1203,7 @@ namespace jank::analyze
   processor::analyze_var_call(runtime::obj::persistent_list_ptr const o,
                               local_frame_ptr const current_frame,
                               expression_position const position,
-                              option<expr::function_context_ptr> const &,
+                              jtl::option<expr::function_context_ptr> const &,
                               native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1247,7 +1247,7 @@ namespace jank::analyze
   processor::analyze_var_val(runtime::var_ptr const o,
                              local_frame_ptr const current_frame,
                              expression_position const position,
-                             option<expr::function_context_ptr> const &,
+                             jtl::option<expr::function_context_ptr> const &,
                              native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1261,7 +1261,7 @@ namespace jank::analyze
   processor::analyze_throw(runtime::obj::persistent_list_ptr const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
-                           option<expr::function_context_ptr> const &fn_ctx,
+                           jtl::option<expr::function_context_ptr> const &fn_ctx,
                            native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1287,7 +1287,7 @@ namespace jank::analyze
   processor::analyze_try(runtime::obj::persistent_list_ptr const list,
                          local_frame_ptr const current_frame,
                          expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
+                         jtl::option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
@@ -1491,7 +1491,7 @@ namespace jank::analyze
   processor::analyze_primitive_literal(runtime::object_ptr const o,
                                        local_frame_ptr const current_frame,
                                        expression_position const position,
-                                       option<expr::function_context_ptr> const &,
+                                       jtl::option<expr::function_context_ptr> const &,
                                        native_bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1505,7 +1505,7 @@ namespace jank::analyze
   processor::analyze_vector(runtime::obj::persistent_vector_ptr const o,
                             local_frame_ptr const current_frame,
                             expression_position const position,
-                            option<expr::function_context_ptr> const &fn_ctx,
+                            jtl::option<expr::function_context_ptr> const &fn_ctx,
                             native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1547,7 +1547,7 @@ namespace jank::analyze
   processor::analyze_map(object_ptr const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
+                         jtl::option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1604,7 +1604,7 @@ namespace jank::analyze
   processor::analyze_set(object_ptr const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
-                         option<expr::function_context_ptr> const &fn_ctx,
+                         jtl::option<expr::function_context_ptr> const &fn_ctx,
                          native_bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -1657,7 +1657,7 @@ namespace jank::analyze
   processor::analyze_call(runtime::obj::persistent_list_ptr const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
-                          option<expr::function_context_ptr> const &fn_ctx,
+                          jtl::option<expr::function_context_ptr> const &fn_ctx,
                           native_bool const needs_box)
   {
     std::unique_ptr<util::scope_exit> pop_macro_expansions{};
@@ -1850,7 +1850,7 @@ namespace jank::analyze
   processor::expression_result processor::analyze(object_ptr const o,
                                                   local_frame_ptr const current_frame,
                                                   expression_position const position,
-                                                  option<expr::function_context_ptr> const &fn_ctx,
+                                                  jtl::option<expr::function_context_ptr> const &fn_ctx,
                                                   native_bool const needs_box)
   {
     if(o == nullptr)

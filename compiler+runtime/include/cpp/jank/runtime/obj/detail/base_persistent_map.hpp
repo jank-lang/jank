@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime
 {
@@ -29,7 +30,7 @@ namespace jank::runtime::obj::detail
     using value_type = V;
 
     base_persistent_map() = default;
-    base_persistent_map(option<object_ptr> const &meta);
+    base_persistent_map(jtl::option<object_ptr> const &meta);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -54,7 +55,7 @@ namespace jank::runtime::obj::detail
     native_box<PT> with_meta(object_ptr const m) const;
 
     object base{ PT::obj_type };
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
   };
 }

@@ -108,7 +108,7 @@ namespace jank::runtime
     return qualified_sym;
   }
 
-  option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
+  jtl::option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
     profile::timer const timer{ "rt find_var" };
     if(!sym->ns.empty())
@@ -133,13 +133,13 @@ namespace jank::runtime
     }
   }
 
-  option<var_ptr>
+  jtl::option<var_ptr>
   context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
   {
     return find_var(make_box<obj::symbol>(ns, name));
   }
 
-  option<object_ptr> context::find_local(obj::symbol_ptr const &)
+  jtl::option<object_ptr> context::find_local(obj::symbol_ptr const &)
   {
     return none;
   }
@@ -437,7 +437,7 @@ namespace jank::runtime
     return result.first->second;
   }
 
-  option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
+  jtl::option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
   {
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
@@ -450,7 +450,7 @@ namespace jank::runtime
     return none;
   }
 
-  option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
+  jtl::option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
   {
     auto locked_namespaces(namespaces.rlock());
     auto const found(locked_namespaces->find(sym));
@@ -461,7 +461,7 @@ namespace jank::runtime
     return none;
   }
 
-  option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
+  jtl::option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
   {
     auto const ns(current_ns());
     auto const alias(ns->find_alias(target));
@@ -736,7 +736,7 @@ namespace jank::runtime
     return tbfs.front().bindings;
   }
 
-  option<thread_binding_frame> context::current_thread_binding_frame()
+  jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())

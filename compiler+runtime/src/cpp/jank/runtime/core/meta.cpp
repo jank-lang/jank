@@ -76,7 +76,7 @@ namespace jank::runtime
       m);
   }
 
-  read::source meta_source(option<runtime::object_ptr> const &o)
+  read::source meta_source(jtl::option<runtime::object_ptr> const &o)
   {
     using namespace jank::runtime;
 

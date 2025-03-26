@@ -206,7 +206,7 @@ namespace jank::jit
     return ok();
   }
 
-  option<native_persistent_string>
+  jtl::option<native_persistent_string>
   processor::find_dynamic_lib(native_persistent_string const &lib) const
   {
     auto const &default_lib_name{ default_shared_lib_name(lib) };

@@ -71,7 +71,7 @@ namespace jank::runtime
     ns_ptr n{};
     /* Unqualified. */
     obj::symbol_ptr name{};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
 
   private:

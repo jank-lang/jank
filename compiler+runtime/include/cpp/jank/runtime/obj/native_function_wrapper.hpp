@@ -132,7 +132,7 @@ namespace jank::runtime
 
       object base{ obj_type };
       obj::detail::function_type data{};
-      option<object_ptr> meta;
+      jtl::option<object_ptr> meta;
     };
   }
 

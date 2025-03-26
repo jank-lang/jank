@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::detail
 {
@@ -178,7 +179,7 @@ namespace jank::runtime::detail
       return data ? data->length == 0 : true;
     }
 
-    option<T> first() const
+    jtl::option<T> first() const
     {
       if(data)
       {

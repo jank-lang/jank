@@ -58,7 +58,7 @@ namespace jank::error
     /* Zero means no number. */
     size_t number{};
     /* Only set when kind == note. */
-    option<note> note;
+    jtl::option<note> note;
   };
 
   struct snippet

@@ -1,8 +1,9 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -54,6 +55,6 @@ namespace jank::runtime::obj
     mutable object_ptr fn{};
     mutable object_ptr fn_result{};
     mutable object_ptr sequence{};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
   };
 }

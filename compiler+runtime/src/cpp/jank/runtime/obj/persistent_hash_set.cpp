@@ -14,7 +14,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_set::persistent_hash_set(option<object_ptr> const &meta, value_type &&d)
+  persistent_hash_set::persistent_hash_set(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {

@@ -78,7 +78,7 @@ namespace jank::detail
   }
 
   template <typename T>
-  object_ptr to_runtime_data(option<T> const &m)
+  object_ptr to_runtime_data(jtl::option<T> const &m)
   {
     return obj::persistent_array_map::create_unique(
       make_box("__type"),

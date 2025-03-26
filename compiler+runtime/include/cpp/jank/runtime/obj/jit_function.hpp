@@ -102,7 +102,7 @@ namespace jank::runtime::obj
                         object *,
                         object *,
                         object *){};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     arity_flag_t arity_flags{};
   };
 }

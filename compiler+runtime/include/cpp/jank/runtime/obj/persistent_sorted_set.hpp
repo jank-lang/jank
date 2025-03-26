@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     persistent_sorted_set(value_type &&d);
     persistent_sorted_set(value_type const &d);
     persistent_sorted_set(object_ptr meta, value_type &&d);
-    persistent_sorted_set(option<object_ptr> const &meta, value_type &&d);
+    persistent_sorted_set(jtl::option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_set(std::in_place_t, Args &&...args)
@@ -72,7 +72,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     value_type data;
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
   };
 }
 

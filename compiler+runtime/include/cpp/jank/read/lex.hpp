@@ -2,8 +2,9 @@
 
 #include <variant>
 
+#include <jtl/option.hpp>
+
 #include <jank/result.hpp>
-#include <jank/option.hpp>
 #include <jank/error.hpp>
 
 namespace jank::read::lex
@@ -225,7 +226,7 @@ namespace jank::read::lex
       native_bool operator==(iterator const &rhs) const;
       native_bool operator!=(iterator const &rhs) const;
 
-      option<value_type> latest;
+      jtl::option<value_type> latest;
       processor &p;
     };
 
@@ -234,7 +235,7 @@ namespace jank::read::lex
 
     result<token, error_ptr> next();
     result<codepoint, error_ptr> peek(size_t const ahead = 1) const;
-    option<error_ptr> check_whitespace(native_bool const found_space);
+    jtl::option<error_ptr> check_whitespace(native_bool const found_space);
 
     iterator begin();
     iterator end();

@@ -53,7 +53,7 @@ namespace jank::runtime
     return ok();
   }
 
-  option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
+  jtl::option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -98,7 +98,7 @@ namespace jank::runtime
     *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
   }
 
-  option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
+  jtl::option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
   {
     auto locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));

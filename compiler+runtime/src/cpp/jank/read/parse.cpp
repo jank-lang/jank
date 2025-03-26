@@ -61,7 +61,7 @@ namespace jank::read::parse
     }
   }
 
-  option<char> get_char_from_literal(native_persistent_string const &s)
+  jtl::option<char> get_char_from_literal(native_persistent_string const &s)
   {
     if(s.size() == 2)
     {

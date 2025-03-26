@@ -19,7 +19,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_vector::persistent_vector(option<object_ptr> const &meta, value_type &&d)
+  persistent_vector::persistent_vector(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
