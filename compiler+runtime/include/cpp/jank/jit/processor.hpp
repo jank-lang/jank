@@ -5,7 +5,7 @@
 
 #include <clang/Interpreter/Interpreter.h>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/string_builder.hpp>
 
@@ -36,10 +36,10 @@ namespace jank::jit
     void load_bitcode(native_persistent_string const &module,
                       native_persistent_string_view const &bitcode) const;
 
-    string_result<void> remove_symbol(native_persistent_string const &name) const;
+    jtl::string_result<void> remove_symbol(native_persistent_string const &name) const;
 
     template <typename T>
-    string_result<T> find_symbol(native_persistent_string const &name) const
+    jtl::string_result<T> find_symbol(native_persistent_string const &name) const
     {
       if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
       {
@@ -51,7 +51,7 @@ namespace jank::jit
       return err(sb.release());
     }
 
-    result<void, native_persistent_string>
+    jtl::result<void, native_persistent_string>
     load_dynamic_libs(native_vector<native_persistent_string> const &libs) const;
     jtl::option<native_persistent_string> find_dynamic_lib(native_persistent_string const &lib) const;
 

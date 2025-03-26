@@ -33,7 +33,7 @@ namespace jank::analyze
 
   struct processor
   {
-    using expression_result = result<expression_ptr, error_ptr>;
+    using expression_result = jtl::result<expression_ptr, error_ptr>;
 
     processor() = delete;
     processor(runtime::context &rt_ctx);
@@ -78,7 +78,7 @@ namespace jank::analyze
                                  expression_position,
                                  jtl::option<expr::function_context_ptr> const &,
                                  native_bool needs_box);
-    result<expr::function_arity, error_ptr>
+    jtl::result<expr::function_arity, error_ptr>
     analyze_fn_arity(runtime::obj::persistent_list_ptr const,
                      native_persistent_string const &name,
                      local_frame_ptr);

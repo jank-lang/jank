@@ -269,7 +269,7 @@ namespace jank::runtime
     return ret;
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, native_persistent_string>
   context::load_module(native_persistent_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
@@ -300,7 +300,7 @@ namespace jank::runtime
     }
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, native_persistent_string>
   context::compile_module(native_persistent_string_view const &module)
   {
     module_dependencies.clear();
@@ -319,7 +319,7 @@ namespace jank::runtime
     return evaluate::eval(expr.expect_ok());
   }
 
-  string_result<void> context::write_module(native_persistent_string const &module_name,
+  jtl::string_result<void> context::write_module(native_persistent_string const &module_name,
                                             std::unique_ptr<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
@@ -479,13 +479,13 @@ namespace jank::runtime
     return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref());
   }
 
-  result<var_ptr, native_persistent_string>
+  jtl::result<var_ptr, native_persistent_string>
   context::intern_var(native_persistent_string const &ns, native_persistent_string const &name)
   {
     return intern_var(make_box<obj::symbol>(ns, name));
   }
 
-  result<var_ptr, native_persistent_string>
+  jtl::result<var_ptr, native_persistent_string>
   context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer const timer{ "intern_var" };
@@ -505,7 +505,7 @@ namespace jank::runtime
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
-  result<obj::keyword_ptr, native_persistent_string>
+  jtl::result<obj::keyword_ptr, native_persistent_string>
   context::intern_keyword(native_persistent_string const &ns,
                           native_persistent_string const &name,
                           bool const resolved)
@@ -532,7 +532,7 @@ namespace jank::runtime
     return intern_keyword(resolved_ns.empty() ? name : util::format("{}/{}", resolved_ns, name));
   }
 
-  result<obj::keyword_ptr, native_persistent_string>
+  jtl::result<obj::keyword_ptr, native_persistent_string>
   context::intern_keyword(native_persistent_string const &s)
   {
     profile::timer const timer{ "rt intern_keyword" };
@@ -639,7 +639,7 @@ namespace jank::runtime
     }
   }
 
-  string_result<void> context::push_thread_bindings()
+  jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
     auto &tbfs(thread_binding_frames[this]);
@@ -657,7 +657,7 @@ namespace jank::runtime
     return push_thread_bindings(bindings);
   }
 
-  string_result<void> context::push_thread_bindings(object_ptr const bindings)
+  jtl::string_result<void> context::push_thread_bindings(object_ptr const bindings)
   {
     jank_debug_assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
@@ -669,7 +669,7 @@ namespace jank::runtime
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
   }
 
-  string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
+  jtl::string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
     jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
@@ -713,7 +713,7 @@ namespace jank::runtime
     return ok();
   }
 
-  string_result<void> context::pop_thread_bindings()
+  jtl::string_result<void> context::pop_thread_bindings()
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())

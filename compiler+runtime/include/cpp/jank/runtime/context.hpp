@@ -4,7 +4,7 @@
 
 #include <folly/Synchronized.h>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
@@ -62,18 +62,18 @@ namespace jank::runtime
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &) const;
     jtl::option<object_ptr> find_local(obj::symbol_ptr const &);
 
-    result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
-    result<var_ptr, native_persistent_string>
+    jtl::result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
+    jtl::result<var_ptr, native_persistent_string>
     intern_var(native_persistent_string const &ns, native_persistent_string const &name);
     jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
     jtl::option<var_ptr>
     find_var(native_persistent_string const &ns, native_persistent_string const &name);
 
-    result<obj::keyword_ptr, native_persistent_string>
+    jtl::result<obj::keyword_ptr, native_persistent_string>
     intern_keyword(native_persistent_string const &ns,
                    native_persistent_string const &name,
                    native_bool resolved = true);
-    result<obj::keyword_ptr, native_persistent_string>
+    jtl::result<obj::keyword_ptr, native_persistent_string>
     intern_keyword(native_persistent_string const &s);
 
     object_ptr macroexpand1(object_ptr o);
@@ -97,16 +97,16 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    result<void, native_persistent_string>
+    jtl::result<void, native_persistent_string>
     load_module(native_persistent_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    result<void, native_persistent_string>
+    jtl::result<void, native_persistent_string>
     compile_module(native_persistent_string_view const &module);
 
     object_ptr eval(object_ptr const o);
 
-    string_result<void> write_module(native_persistent_string const &module_name,
+    jtl::string_result<void> write_module(native_persistent_string const &module_name,
                                      std::unique_ptr<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
@@ -128,10 +128,10 @@ namespace jank::runtime
       context &rt_ctx;
     };
 
-    string_result<void> push_thread_bindings();
-    string_result<void> push_thread_bindings(object_ptr const bindings);
-    string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
-    string_result<void> pop_thread_bindings();
+    jtl::string_result<void> push_thread_bindings();
+    jtl::string_result<void> push_thread_bindings(object_ptr const bindings);
+    jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
+    jtl::string_result<void> pop_thread_bindings();
     obj::persistent_hash_map_ptr get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();
 

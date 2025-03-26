@@ -2,7 +2,7 @@
 
 #include <jtl/option.hpp>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze
@@ -46,7 +46,7 @@ namespace jank::analyze
   template <typename R, typename E>
   struct recursive_visitor
   {
-    using result_type = result<R, E>;
+    using result_type = jtl::result<R, E>;
 
     struct context
     {

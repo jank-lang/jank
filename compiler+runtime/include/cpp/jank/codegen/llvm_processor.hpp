@@ -107,7 +107,7 @@ namespace jank::codegen
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
 
-    string_result<void> gen();
+    jtl::string_result<void> gen();
     llvm::Value *gen(analyze::expression_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::def_ptr, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::var_deref_ptr, analyze::expr::function_arity const &);

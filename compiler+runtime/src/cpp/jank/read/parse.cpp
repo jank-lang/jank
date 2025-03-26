@@ -19,7 +19,7 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  result<native_persistent_string, char_parse_error>
+  jtl::result<native_persistent_string, char_parse_error>
   parse_character_in_base(native_persistent_string const &char_literal, int const base)
   {
     try
@@ -841,7 +841,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
+  jtl::result<object_ptr, error_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
   {
     if(!seq)
     {
@@ -849,7 +849,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
+      [this](auto const typed_seq) -> jtl::result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
@@ -882,13 +882,13 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> result<object_ptr, error_ptr> {
+      []() -> jtl::result<object_ptr, error_ptr> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
       },
       seq);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
+  jtl::result<object_ptr, error_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
   {
     if(!seq)
     {
@@ -896,7 +896,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> result<object_ptr, error_ptr> {
+      [](auto const typed_seq) -> jtl::result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
         {
@@ -907,7 +907,7 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> result<object_ptr, error_ptr> {
+      []() -> jtl::result<object_ptr, error_ptr> {
         return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
       },
       seq);
@@ -927,7 +927,7 @@ namespace jank::read::parse
       form);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
+  jtl::result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
   {
     object_ptr ret{};
 
@@ -995,7 +995,7 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       auto const res{ visit_seqable(
-        [&](auto const typed_form) -> result<object_ptr, error_ptr> {
+        [&](auto const typed_form) -> jtl::result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -1079,7 +1079,7 @@ namespace jank::read::parse
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> result<object_ptr, error_ptr> {
+        [=]() -> jtl::result<object_ptr, error_ptr> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);

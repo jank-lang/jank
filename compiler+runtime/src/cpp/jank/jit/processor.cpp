@@ -192,7 +192,7 @@ namespace jank::jit
     load_ir_module(std::move(ir_module), std::move(ctx));
   }
 
-  string_result<void> processor::remove_symbol(native_persistent_string const &name) const
+  jtl::string_result<void> processor::remove_symbol(native_persistent_string const &name) const
   {
     auto &ee{ interpreter->getExecutionEngine().get() };
     llvm::orc::SymbolNameSet to_remove{};
@@ -230,7 +230,7 @@ namespace jank::jit
     return none;
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, native_persistent_string>
   processor::load_dynamic_libs(native_vector<native_persistent_string> const &libs) const
   {
     for(auto const &lib : libs)

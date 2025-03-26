@@ -41,7 +41,7 @@ namespace jank::runtime
     return new_var;
   }
 
-  result<void, native_persistent_string> ns::unmap(obj::symbol_ptr const &sym)
+  jtl::result<void, native_persistent_string> ns::unmap(obj::symbol_ptr const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -70,7 +70,7 @@ namespace jank::runtime
     return { expect_object<var>(*found) };
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, native_persistent_string>
   ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
   {
     auto locked_aliases(aliases.wlock());
@@ -109,7 +109,7 @@ namespace jank::runtime
     return none;
   }
 
-  result<void, native_persistent_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
+  jtl::result<void, native_persistent_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
   {
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))

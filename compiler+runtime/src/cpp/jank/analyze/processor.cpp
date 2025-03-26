@@ -17,7 +17,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/evaluate.hpp>
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
@@ -342,7 +342,7 @@ namespace jank::analyze
     };
 
     auto keys_exprs{ visit_map_like(
-      [&](auto const typed_imap_obj) -> string_result<keys_and_exprs> {
+      [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
         for(auto seq{ typed_imap_obj->seq() }; seq != nullptr; seq = seq->next())
         {
@@ -364,7 +364,7 @@ namespace jank::analyze
         }
         return ret;
       },
-      [&]() -> string_result<keys_and_exprs> {
+      [&]() -> jtl::string_result<keys_and_exprs> {
         return err("Case keys and expressions should be a map-like.");
       },
       imap_obj) };
@@ -479,7 +479,7 @@ namespace jank::analyze
                                           unwrapped_var);
   }
 
-  result<expr::function_arity, error_ptr>
+  jtl::result<expr::function_arity, error_ptr>
   processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const list,
                               native_persistent_string const &name,
                               local_frame_ptr const current_frame)
@@ -673,7 +673,7 @@ namespace jank::analyze
         auto arity_list_obj(it.first().unwrap());
 
         auto const err(runtime::visit_object(
-          [&](auto const typed_arity_list) -> result<void, error_ptr> {
+          [&](auto const typed_arity_list) -> jtl::result<void, error_ptr> {
             using T = typename decltype(typed_arity_list)::value_type;
 
             if constexpr(runtime::behavior::sequenceable<T>)

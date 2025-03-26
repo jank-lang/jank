@@ -4,7 +4,7 @@
 
 #include <jtl/option.hpp>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/var.hpp>
@@ -17,7 +17,7 @@ namespace jank::read::parse
     native_persistent_string error;
   };
 
-  result<native_persistent_string, char_parse_error>
+  jtl::result<native_persistent_string, char_parse_error>
   parse_character_in_base(native_persistent_string const &char_literal, int const base);
 
   jtl::option<char> get_char_from_literal(native_persistent_string const &s);
@@ -33,7 +33,7 @@ namespace jank::read::parse
 
   struct processor
   {
-    using object_result = result<jtl::option<object_source_info>, error_ptr>;
+    using object_result = jtl::result<jtl::option<object_source_info>, error_ptr>;
 
     struct shorthand_function_details
     {
@@ -94,9 +94,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    result<runtime::object_ptr, error_ptr> syntax_quote(runtime::object_ptr form);
-    result<runtime::object_ptr, error_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
-    static result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    jtl::result<runtime::object_ptr, error_ptr> syntax_quote(runtime::object_ptr form);
+    jtl::result<runtime::object_ptr, error_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
+    static jtl::result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
     static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
 
   public:

@@ -122,12 +122,12 @@ namespace jank::runtime::obj
     return get(index, fallback);
   }
 
-  string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
+  jtl::string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));
   }
 
-  string_result<persistent_string_ptr>
+  jtl::string_result<persistent_string_ptr>
   persistent_string::substring(native_integer const start, native_integer const end) const
   {
     if(start < 0)

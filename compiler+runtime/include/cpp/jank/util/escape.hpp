@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/native_persistent_string.hpp>
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::util
 {
@@ -11,6 +11,6 @@ namespace jank::util
   };
 
   /* These provide normal escaping/unescaping, with no quoting. */
-  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input);
+  jtl::result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input);
   native_persistent_string escape(native_persistent_string const &input);
 }

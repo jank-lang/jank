@@ -5,7 +5,7 @@
 namespace jank::util
 {
   /* Converts escape sequences starting with backslash to their mapped character. e.g., \" => " */
-  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
+  jtl::result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
   {
     util::string_builder sb{ input.size() };
     native_bool escape{};

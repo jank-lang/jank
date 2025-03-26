@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::util::cli
 {
@@ -51,5 +51,5 @@ namespace jank::util::cli
     command command{ command::repl };
   };
 
-  result<options, int> parse(int const argc, char const **argv);
+  jtl::result<options, int> parse(int const argc, char const **argv);
 }

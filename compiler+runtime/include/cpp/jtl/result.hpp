@@ -7,7 +7,7 @@
 #include <jank/native_persistent_string.hpp>
 #include <jank/util/type_name.hpp>
 
-namespace jank
+namespace jtl
 {
   namespace detail
   {
@@ -81,7 +81,7 @@ namespace jank
     }
 
     /* Allow implicit construction from results with compatible constructor args. This allows
-     * things like ok(none) for jtl::option<R>. */
+     * things like ok(none) for option<R>. */
     template <typename T>
     constexpr result(detail::result<true, T> const &t,
                      std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
@@ -142,7 +142,7 @@ namespace jank
       return std::move(std::get<R>(data));
     }
 
-    constexpr jtl::option<R> ok()
+    constexpr option<R> ok()
     {
       if(is_ok())
       {
@@ -171,7 +171,7 @@ namespace jank
       return std::move(std::get<E>(data));
     }
 
-    constexpr jtl::option<E> err()
+    constexpr option<E> err()
     {
       if(is_err())
       {
@@ -241,7 +241,7 @@ namespace jank
    * It still uses a variant, but with a special void_t type which does nothing. The normal
    * "ok" functions for extracting data are gone.
    *
-   * This is favorable over an jtl::option<E> since result<R, E> is clearly used for error handling. */
+   * This is favorable over an option<E> since result<R, E> is clearly used for error handling. */
   template <typename E>
   struct [[nodiscard]] result<void, E>
   {
@@ -263,7 +263,7 @@ namespace jank
     }
 
     /* Allow implicit construction from results with compatible constructor args. This allows
-     * things like ok(none) for jtl::option<R>. */
+     * things like ok(none) for option<R>. */
     template <typename T>
     constexpr result(detail::result<false, T> const &t,
                      std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
@@ -316,7 +316,7 @@ namespace jank
       return std::move(std::get<E>(data));
     }
 
-    constexpr jtl::option<E> err()
+    constexpr option<E> err()
     {
       if(is_err())
       {
@@ -362,7 +362,7 @@ namespace jank
       }
       else
       {
-        return os << "ok(" << util::type_name<R>() << ")";
+        return os << "ok(" << jank::util::type_name<R>() << ")";
       }
     }
 
@@ -372,10 +372,16 @@ namespace jank
     }
     else
     {
-      return os << "err(" << util::type_name<E>() << ")";
+      return os << "err(" << jank::util::type_name<E>() << ")";
     }
   }
 
   template <typename R>
-  using string_result = result<R, native_persistent_string>;
+  using string_result = result<R, jank::native_persistent_string>;
+}
+
+namespace jank
+{
+  using jtl::ok;
+  using jtl::err;
 }

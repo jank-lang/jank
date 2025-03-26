@@ -4,7 +4,7 @@
 
 #include <folly/Synchronized.h>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 
@@ -54,7 +54,7 @@ namespace jank::runtime
     object_ptr alter_root(object_ptr f, object_ptr args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
-    string_result<void> set(object_ptr r) const;
+    jtl::string_result<void> set(object_ptr r) const;
 
     var_ptr set_dynamic(native_bool dyn);
 

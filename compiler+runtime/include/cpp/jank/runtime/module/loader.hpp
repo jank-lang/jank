@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include <jank/runtime/object.hpp>
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::runtime
 {
@@ -138,20 +138,20 @@ namespace jank::runtime::module
 
     loader(context &rt_ctx, native_persistent_string const &ps);
 
-    static string_result<file_view> read_file(native_persistent_string const &path);
+    static jtl::string_result<file_view> read_file(native_persistent_string const &path);
 
-    string_result<find_result> find(native_persistent_string const &module, origin const ori);
+    jtl::string_result<find_result> find(native_persistent_string const &module, origin const ori);
 
     native_bool is_loaded(native_persistent_string const &module);
     void set_is_loaded(native_persistent_string const &module);
 
-    string_result<void> load(native_persistent_string const &module, origin const ori);
-    string_result<void>
+    jtl::string_result<void> load(native_persistent_string const &module, origin const ori);
+    jtl::string_result<void>
     load_o(native_persistent_string const &module, file_entry const &entry) const;
-    string_result<void>
+    jtl::string_result<void>
     load_cpp(native_persistent_string const &module, file_entry const &entry) const;
-    string_result<void> load_jank(file_entry const &entry) const;
-    string_result<void> load_cljc(file_entry const &entry) const;
+    jtl::string_result<void> load_jank(file_entry const &entry) const;
+    jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
     object_ptr to_runtime_data() const;
 

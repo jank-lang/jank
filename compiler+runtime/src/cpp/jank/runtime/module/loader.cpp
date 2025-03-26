@@ -357,7 +357,7 @@ namespace jank::runtime::module
     return { data(), size() };
   }
 
-  static string_result<file_view> read_jar_file(native_persistent_string const &path)
+  static jtl::string_result<file_view> read_jar_file(native_persistent_string const &path)
   {
     using namespace runtime;
     using namespace runtime::module;
@@ -383,7 +383,7 @@ namespace jank::runtime::module
     return ok(file_view{ zip_entry.readAsText() });
   }
 
-  static string_result<file_view> map_file(native_persistent_string const &path)
+  static jtl::string_result<file_view> map_file(native_persistent_string const &path)
   {
     if(!std::filesystem::exists(path.c_str()))
     {
@@ -412,7 +412,7 @@ namespace jank::runtime::module
     return ok(file_view{ fd, head, file_size });
   }
 
-  string_result<file_view> loader::read_file(native_persistent_string const &path)
+  jtl::string_result<file_view> loader::read_file(native_persistent_string const &path)
   {
     if(path.contains(".jar:"))
     {
@@ -421,7 +421,7 @@ namespace jank::runtime::module
     return map_file(path);
   }
 
-  string_result<loader::find_result>
+  jtl::string_result<loader::find_result>
   loader::find(native_persistent_string const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
@@ -611,7 +611,7 @@ namespace jank::runtime::module
     util::println("Loading module {} from {}", module, path);
   }
 
-  string_result<void> loader::load(native_persistent_string const &module, origin const ori)
+  jtl::string_result<void> loader::load(native_persistent_string const &module, origin const ori)
   {
     if(ori != origin::source && loader::is_loaded(module))
     {
@@ -624,7 +624,7 @@ namespace jank::runtime::module
       return err(found_module.expect_err());
     }
 
-    string_result<void> res(err(util::format("Couldn't load module: {}", module)));
+    jtl::string_result<void> res(err(util::format("Couldn't load module: {}", module)));
 
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
@@ -656,7 +656,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void>
+  jtl::string_result<void>
   loader::load_o(native_persistent_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ util::format("load object {}", module) };
@@ -692,7 +692,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void>
+  jtl::string_result<void>
   loader::load_cpp(native_persistent_string const &module, file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
@@ -722,7 +722,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_jank(file_entry const &entry) const
+  jtl::string_result<void> loader::load_jank(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
@@ -744,7 +744,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  string_result<void> loader::load_cljc(file_entry const &entry) const
+  jtl::string_result<void> loader::load_cljc(file_entry const &entry) const
   {
     return load_jank(entry);
   }

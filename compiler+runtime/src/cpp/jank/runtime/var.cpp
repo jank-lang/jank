@@ -119,7 +119,7 @@ namespace jank::runtime
     return *locked_root;
   }
 
-  string_result<void> var::set(object_ptr const r) const
+  jtl::string_result<void> var::set(object_ptr const r) const
   {
     profile::timer const timer{ "var set" };
 

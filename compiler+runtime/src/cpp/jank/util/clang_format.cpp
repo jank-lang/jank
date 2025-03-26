@@ -57,7 +57,7 @@ namespace jank::util
     return *ret;
   }
 
-  result<native_persistent_string, format_failure>
+  jtl::result<native_persistent_string, format_failure>
   format_cpp_source(native_persistent_string const &source)
   {
     std::string const code{ source };
