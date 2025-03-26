@@ -634,8 +634,7 @@ namespace jank::runtime
     }
     catch(...)
     {
-      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): I need to log without exceptions. */
-      std::printf("Exception caught while destructing binding_scope");
+      util::println("Exception caught while destructing binding_scope");
     }
   }
 

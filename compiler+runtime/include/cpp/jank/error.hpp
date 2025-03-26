@@ -325,6 +325,6 @@ namespace jank
   template <typename... Args>
   error_ptr make_error(Args &&...args)
   {
-    return jtl::make_ref<error::base>(std::forward<Args>(args)...);
+    return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
   }
 }
