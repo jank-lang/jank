@@ -4,8 +4,7 @@
 
 #include <jtl/option.hpp>
 #include <jtl/immutable_string.hpp>
-
-#include <jank/util/type_name.hpp>
+#include <jtl/trait/type_name.hpp>
 
 namespace jtl
 {
@@ -362,7 +361,7 @@ namespace jtl
       }
       else
       {
-        return os << "ok(" << jank::util::type_name<R>() << ")";
+        return os << "ok(" << type_name<R>() << ")";
       }
     }
 
@@ -372,7 +371,7 @@ namespace jtl
     }
     else
     {
-      return os << "err(" << jank::util::type_name<E>() << ")";
+      return os << "err(" << type_name<E>() << ")";
     }
   }
 
