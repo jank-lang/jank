@@ -31,19 +31,12 @@
 #include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 
-#include <jtl/ref.hpp>
-#include <jtl/panic.hpp>
-#include <jtl/assert.hpp>
-
 namespace jank
 {
   static void run(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
-
-    int *p{};
-    jtl::ref<int> r{ *p };
 
     {
       profile::timer const timer{ "load clojure.core" };

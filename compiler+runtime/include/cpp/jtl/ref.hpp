@@ -5,6 +5,7 @@
 #include <jtl/primitive.hpp>
 #include <jtl/trait/transform.hpp>
 #include <jtl/assert.hpp>
+#include <jtl/memory.hpp>
 
 namespace jtl
 {

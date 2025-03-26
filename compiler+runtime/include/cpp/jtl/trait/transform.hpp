@@ -44,23 +44,35 @@ namespace jtl
   using remove_const_t = typename remove_const<T>::type;
 
   template <typename T>
-  add_rvalue_reference_t<T> declval() noexcept
+  struct decay
   {
-    static_assert(false, "declval not allowed in an evaluated context");
-  }
-
-  /* TODO: Maybe put these in std? For cppcoreguidelines-missing-std-forward. */
-  template <typename T>
-  constexpr T &&forward(remove_reference_t<T> &t) noexcept
-  {
-    return static_cast<T &&>(t);
-  }
+    using type = T;
+  };
 
   template <typename T>
-  constexpr T &&forward(remove_reference_t<T> &&t) noexcept
+  struct decay<T const>
   {
-    static_assert(!is_lvalue_reference<T>,
-                  "jtl::forward must not be used to convert an rvalue to an lvalue");
-    return static_cast<T &&>(t);
-  }
+    using type = typename decay<T>::type;
+  };
+
+  template <typename T>
+  struct decay<volatile T>
+  {
+    using type = typename decay<T>::type;
+  };
+
+  template <typename T>
+  struct decay<T &>
+  {
+    using type = typename decay<T>::type;
+  };
+
+  template <typename T>
+  struct decay<T &&>
+  {
+    using type = typename decay<T>::type;
+  };
+
+  template <typename T>
+  using decay_t = typename decay<T>::type;
 }

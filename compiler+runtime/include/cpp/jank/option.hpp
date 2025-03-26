@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cassert>
-#include <utility> // move, forward
+#include <jtl/assert.hpp>
+#include <jtl/storage.hpp>
 
 #include <jank/type.hpp>
 
@@ -20,28 +20,26 @@ namespace jank
   template <typename T>
   struct option
   {
-    /* NOLINTNEXTLINE(bugprone-sizeof-expression): Safe to do this. */
-    using storage_type = char[sizeof(T)];
     using value_type = T;
 
-    constexpr option() = default;
+    constexpr option() noexcept = default;
 
-    constexpr option(option<T> const &o)
+    constexpr option(option<T> const &o) noexcept
       : set{ o.set }
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
+        data.construct(o.unwrap_unchecked());
       }
     }
 
     constexpr option(option &&o) noexcept
-      : set{ std::move(o.set) }
+      : set{ jtl::move(o.set) }
     {
       o.set = false;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
+        data.construct(jtl::move(o.unwrap_unchecked()));
       }
     }
 
@@ -51,41 +49,41 @@ namespace jank
     }
 
     template <typename D = T>
-    requires(std::is_constructible_v<T, D> && !std::is_same_v<std::decay_t<D>, option<T>>)
-    constexpr option(D &&d)
+    requires(jtl::is_constructible<T, D> && !jtl::is_same<jtl::decay_t<D>, option<T>>)
+    constexpr option(D &&d) noexcept
       : set{ true }
     {
-      new(reinterpret_cast<T *>(data)) T{ std::forward<D>(d) };
+      data.construct(jtl::forward<D>(d));
     }
 
     template <typename D>
-    requires(std::is_constructible_v<T, D>)
-    constexpr option(option<D> const &o)
+    requires(jtl::is_constructible<T, D>)
+    constexpr option(option<D> const &o) noexcept
       : set{ o.set }
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ o.unwrap_unchecked() };
+        data.construct(o.unwrap_unchecked());
       }
     }
 
     template <typename D>
-    requires(std::is_constructible_v<T, D>)
-    constexpr option(option<D> &&o)
-      : set{ std::move(o.set) }
+    requires(jtl::is_constructible<T, D>)
+    constexpr option(option<D> &&o) noexcept
+      : set{ jtl::move(o.set) }
     {
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(o.unwrap_unchecked()) };
+        data.construct(jtl::move(o.unwrap_unchecked()));
       }
       o.reset();
     }
 
-    constexpr option(none_t const &)
+    constexpr option(none_t const &) noexcept
     {
     }
 
-    constexpr option<T> &operator=(option<T> const &rhs)
+    constexpr option<T> &operator=(option<T> const &rhs) noexcept
     {
       if(this == &rhs)
       {
@@ -96,7 +94,7 @@ namespace jank
       set = rhs.set;
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ rhs.unwrap_unchecked() };
+        data.construct(rhs.unwrap_unchecked());
       }
       return *this;
     }
@@ -109,30 +107,29 @@ namespace jank
       }
       reset();
 
-      set = std::move(rhs.set);
+      set = jtl::move(rhs.set);
       if(set)
       {
-        new(reinterpret_cast<T *>(data)) T{ std::move(rhs.unwrap_unchecked()) };
+        data.construct(jtl::move(rhs.unwrap_unchecked()));
       }
       rhs.reset();
       return *this;
     }
 
-    constexpr option<T> &operator=(none_t const &)
+    constexpr option<T> &operator=(none_t const &) noexcept
     {
       reset();
       return *this;
     }
 
     template <typename D>
-    requires(std::is_constructible_v<T, D>)
-    // NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): It gets this wrong.
-    constexpr option<T> &operator=(D &&rhs)
+    requires(jtl::is_constructible<T, D>)
+    constexpr option &operator=(D &&rhs) noexcept
     {
       reset();
 
       set = true;
-      new(reinterpret_cast<T *>(data)) T{ std::forward<D>(rhs) };
+      data.construct(jtl::forward<D>(rhs));
       return *this;
     }
 
@@ -140,46 +137,44 @@ namespace jank
     {
       if(set)
       {
-        reinterpret_cast<T *>(data)->~T();
+        data.destruct();
       }
       set = false;
     }
 
-    constexpr native_bool is_some() const
+    constexpr native_bool is_some() const noexcept
     {
       return set;
     }
 
-    constexpr native_bool is_none() const
+    constexpr native_bool is_none() const noexcept
     {
       return !set;
     }
 
-    constexpr T &unwrap()
+    constexpr T &unwrap() noexcept
     {
-      /* TODO: Panic fn. */
-      assert(set);
-      return *reinterpret_cast<T *>(data);
+      jank_debug_assert(set);
+      return *data;
     }
 
-    constexpr T const &unwrap() const
+    constexpr T const &unwrap() const noexcept
     {
-      /* TODO: Panic fn. */
-      assert(set);
-      return *reinterpret_cast<T const *>(data);
+      jank_debug_assert(set);
+      return *data;
     }
 
-    constexpr T &unwrap_unchecked()
+    constexpr T &unwrap_unchecked() noexcept
     {
-      return *reinterpret_cast<T *>(data);
+      return *data;
     }
 
-    constexpr T const &unwrap_unchecked() const
+    constexpr T const &unwrap_unchecked() const noexcept
     {
-      return *reinterpret_cast<T const *>(data);
+      return *data;
     }
 
-    constexpr T &unwrap_or(T &fallback)
+    constexpr T &unwrap_or(T &fallback) noexcept
     {
       if(set)
       {
@@ -189,17 +184,17 @@ namespace jank
     }
 
     /* We don't take const& and return it since that's just asking for lifetime issues. */
-    constexpr T unwrap_or(T fallback) const
+    constexpr T unwrap_or(T fallback) const noexcept
     {
       if(set)
       {
         return unwrap_unchecked();
       }
-      return std::move(fallback);
+      return jtl::move(fallback);
     }
 
     template <typename F>
-    constexpr auto map(F const &f) const -> option<decltype(f(std::declval<T>()))>
+    constexpr auto map(F const &f) const noexcept -> option<decltype(f(jtl::declval<T>()))>
     {
       if(set)
       {
@@ -209,16 +204,16 @@ namespace jank
     }
 
     template <typename F>
-    constexpr T map_or(T fallback, F const &f) const
+    constexpr T map_or(T fallback, F const &f) const noexcept
     {
       if(set)
       {
         return f(unwrap_unchecked());
       }
-      return std::move(fallback);
+      return jtl::move(fallback);
     }
 
-    constexpr native_bool operator!=(option<T> const &rhs) const
+    constexpr native_bool operator!=(option<T> const &rhs) const noexcept
     {
       if(set != rhs.set)
       {
@@ -232,34 +227,34 @@ namespace jank
       return false;
     }
 
-    constexpr native_bool operator==(option<T> const &rhs) const
+    constexpr native_bool operator==(option<T> const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
-    constexpr native_bool operator!=(T const &rhs) const
+    constexpr native_bool operator!=(T const &rhs) const noexcept
     {
-      return !set || (*reinterpret_cast<T const *>(data) != rhs);
+      return !set || (*data.ptr() != rhs);
     }
 
-    constexpr native_bool operator==(T const &rhs) const
+    constexpr native_bool operator==(T const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
-    constexpr operator native_bool() const
+    constexpr operator native_bool() const noexcept
     {
       return is_some();
     }
 
-    alignas(alignof(T)) storage_type data{};
+    jtl::storage<T> data;
     native_bool set{};
   };
 
-  template <typename T, typename Decayed = std::decay_t<T>>
-  option<Decayed> some(T &&t)
+  template <typename T, typename Decayed = jtl::decay_t<T>>
+  constexpr option<Decayed> some(T &&t) noexcept
   {
-    return { std::forward<T>(t) };
+    return { jtl::forward<T>(t) };
   }
 
   constexpr inline none_t none = none_t{};

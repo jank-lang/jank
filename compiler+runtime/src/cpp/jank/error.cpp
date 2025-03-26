@@ -143,6 +143,21 @@ namespace jank::error
     return "Unknown error 😮!";
   }
 
+  //note::note(native_persistent_string const &message, read::source const &source) noexcept
+  //  : message{ message }
+  //  , source{ source }
+  //{
+  //}
+
+  //note::note(native_persistent_string const &message,
+  //           read::source const &source,
+  //           enum kind kind) noexcept
+  //  : message{ message }
+  //  , source{ source }
+  //  , kind{ kind }
+  //{
+  //}
+
   native_persistent_string note::to_string() const
   {
     util::string_builder sb;

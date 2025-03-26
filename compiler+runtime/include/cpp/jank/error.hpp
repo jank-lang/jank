@@ -236,6 +236,12 @@ namespace jank::error
       return "unknown";
     }
 
+    //note() = delete;
+    //note(note const &) = default;
+    //note(note &&) noexcept = default;
+    //note(native_persistent_string const &message, read::source const &source) noexcept;
+    //note(native_persistent_string const &message, read::source const &source, kind kind) noexcept;
+
     native_persistent_string to_string() const;
 
     native_persistent_string message;

@@ -2,6 +2,7 @@
 
 #include <jank/util/fmt.hpp>
 #include <jtl/trait/transform.hpp>
+#include <jtl/memory.hpp>
 
 namespace jtl
 {
