@@ -10,7 +10,7 @@
 
 namespace jank::runtime
 {
-  native_persistent_string type(object_ptr o);
+  jtl::immutable_string type(object_ptr o);
   native_bool is_nil(object_ptr o);
   native_bool is_true(object_ptr o);
   native_bool is_false(object_ptr o);
@@ -33,7 +33,7 @@ namespace jank::runtime
   native_integer last_index_of(object_ptr s, object_ptr m);
 
   native_bool is_named(object_ptr o);
-  native_persistent_string name(object_ptr o);
+  jtl::immutable_string name(object_ptr o);
   object_ptr namespace_(object_ptr o);
 
   object_ptr keyword(object_ptr ns, object_ptr name);

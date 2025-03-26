@@ -65,10 +65,10 @@ namespace jank::codegen
 
   struct reusable_context
   {
-    reusable_context(native_persistent_string const &module_name);
+    reusable_context(jtl::immutable_string const &module_name);
 
-    native_persistent_string module_name;
-    native_persistent_string ctor_name;
+    jtl::immutable_string module_name;
+    jtl::immutable_string ctor_name;
 
     std::unique_ptr<llvm::LLVMContext> llvm_ctx;
     std::unique_ptr<llvm::Module> module;
@@ -83,7 +83,7 @@ namespace jank::codegen
                          very_equal_to>
       literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
-    native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
+    native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
     std::unique_ptr<llvm::FunctionPassManager> fpm;
@@ -99,7 +99,7 @@ namespace jank::codegen
   {
     llvm_processor() = delete;
     llvm_processor(analyze::expr::function_ptr const expr,
-                   native_persistent_string const &module,
+                   jtl::immutable_string const &module,
                    compilation_target target);
     /* For this ctor, we're inheriting the context from another function, which means
      * we're building a nested function. */
@@ -131,14 +131,14 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ptr, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
-    llvm::Value *gen_c_string(native_persistent_string const &s) const;
+    llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
     void create_function();
     void create_function(analyze::expr::function_arity const &arity);
     void create_global_ctor() const;
-    llvm::GlobalVariable *create_global_var(native_persistent_string const &name) const;
+    llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
     llvm::Value *gen_global(runtime::obj::nil_ptr) const;
     llvm::Value *gen_global(runtime::obj::boolean_ptr b) const;

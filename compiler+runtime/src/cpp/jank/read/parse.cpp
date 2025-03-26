@@ -19,8 +19,8 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  jtl::result<native_persistent_string, char_parse_error>
-  parse_character_in_base(native_persistent_string const &char_literal, int const base)
+  jtl::result<jtl::immutable_string, char_parse_error>
+  parse_character_in_base(jtl::immutable_string const &char_literal, int const base)
   {
     try
     {
@@ -46,7 +46,7 @@ namespace jank::read::parse
       /* C++ helpfully deprecated the only standard way of converting Unicode formats.
        * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-      native_persistent_string const converted(converter.to_bytes(codepoint));
+      jtl::immutable_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
       {
@@ -61,7 +61,7 @@ namespace jank::read::parse
     }
   }
 
-  jtl::option<char> get_char_from_literal(native_persistent_string const &s)
+  jtl::option<char> get_char_from_literal(jtl::immutable_string const &s)
   {
     if(s.size() == 2)
     {
@@ -1219,8 +1219,8 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<native_persistent_string_view>(start_token.data));
     auto const slash(sv.find('/'));
-    native_persistent_string ns, name;
-    if(slash != native_persistent_string::npos)
+    jtl::immutable_string ns, name;
+    if(slash != jtl::immutable_string::npos)
     {
       /* If it's only a slash, it's a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
@@ -1318,8 +1318,8 @@ namespace jank::read::parse
     native_bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
-    native_persistent_string ns, name;
-    if(slash != native_persistent_string::npos)
+    jtl::immutable_string ns, name;
+    if(slash != jtl::immutable_string::npos)
     {
       if(resolved)
       {
@@ -1395,7 +1395,7 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<native_persistent_string_view>(token.data));
     return object_source_info{ make_box<obj::persistent_string>(
-                                 native_persistent_string{ sv.data(), sv.size() }),
+                                 jtl::immutable_string{ sv.data(), sv.size() }),
                                token,
                                token };
   }

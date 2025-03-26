@@ -18,7 +18,7 @@ namespace jank::util
 {
   void print_exception(std::exception const &e);
   void print_exception(runtime::object_ptr const e);
-  void print_exception(native_persistent_string const &e);
+  void print_exception(jtl::immutable_string const &e);
   void print_exception(error_ptr e);
 }
 
@@ -59,7 +59,7 @@ namespace jank::util
     fun(e);                                      \
     then;                                        \
   }                                              \
-  catch(jank::native_persistent_string const &e) \
+  catch(jtl::immutable_string const &e) \
   {                                              \
     fun(e);                                      \
     then;                                        \

@@ -80,7 +80,7 @@ namespace jank::analyze
                                  native_bool needs_box);
     jtl::result<expr::function_arity, error_ptr>
     analyze_fn_arity(runtime::obj::persistent_list_ptr const,
-                     native_persistent_string const &name,
+                     jtl::immutable_string const &name,
                      local_frame_ptr);
     expression_result analyze_let(runtime::obj::persistent_list_ptr const,
                                   local_frame_ptr,

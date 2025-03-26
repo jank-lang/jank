@@ -54,7 +54,7 @@ namespace jank::runtime
   template <size_t Arity>
   struct invalid_arity : std::runtime_error
   {
-    invalid_arity(native_persistent_string const &name)
+    invalid_arity(jtl::immutable_string const &name)
       : std::runtime_error{ std::string{ "invalid call to " } + name + " with "
                             + std::to_string(Arity) + " args provided" }
     {
@@ -81,9 +81,9 @@ namespace jank::runtime
 
       /* behavior::object_like */
       native_bool equal(object const &) const;
-      native_persistent_string to_string() const;
+      jtl::immutable_string to_string() const;
       void to_string(util::string_builder &buff) const;
-      native_persistent_string to_code_string() const;
+      jtl::immutable_string to_code_string() const;
       native_hash to_hash() const;
 
       /* behavior::callable */

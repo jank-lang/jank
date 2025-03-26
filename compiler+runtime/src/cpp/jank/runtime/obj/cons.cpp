@@ -91,12 +91,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string cons::to_string() const
+  jtl::immutable_string cons::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string cons::to_code_string() const
+  jtl::immutable_string cons::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }

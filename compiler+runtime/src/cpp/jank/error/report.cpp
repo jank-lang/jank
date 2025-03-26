@@ -68,7 +68,7 @@ namespace jank::error
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
 
-    native_persistent_string file_path;
+    jtl::immutable_string file_path;
     /* Zero means we have no lines yet. */
     size_t line_start{};
     size_t line_end{};
@@ -82,8 +82,8 @@ namespace jank::error
     void add(read::source const &body_source, note const &n);
     void add(note const &n);
 
-    native_persistent_string kind;
-    native_persistent_string message;
+    jtl::immutable_string kind;
+    jtl::immutable_string message;
     native_vector<snippet> snippets;
   };
 

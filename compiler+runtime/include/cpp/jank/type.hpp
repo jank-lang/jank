@@ -53,7 +53,7 @@ namespace jank
 
 #include <jank/hash.hpp>
 
-/* NOTE: native_persistent_string.hpp includes this file to learn about integer
+/* NOTE: jtl::immutable_string.hpp includes this file to learn about integer
  * types, but we also include it to forward our string type. Pragma once allows
  * this to work, but we need to make sure the order is right. */
-#include <jank/native_persistent_string.hpp>
+#include <jtl/immutable_string.hpp>

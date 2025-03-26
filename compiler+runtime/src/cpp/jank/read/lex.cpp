@@ -18,7 +18,7 @@ namespace jank::read::lex
     std::visit(
       [&](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr(std::is_same_v<T, native_persistent_string>
+        if constexpr(std::is_same_v<T, jtl::immutable_string>
                      || std::is_same_v<T, native_persistent_string_view>)
         {
           os << std::quoted(arg);

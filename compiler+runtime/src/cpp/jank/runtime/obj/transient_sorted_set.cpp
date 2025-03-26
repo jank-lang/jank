@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  native_persistent_string transient_sorted_set::to_string() const
+  jtl::immutable_string transient_sorted_set::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string transient_sorted_set::to_code_string() const
+  jtl::immutable_string transient_sorted_set::to_code_string() const
   {
     return to_string();
   }

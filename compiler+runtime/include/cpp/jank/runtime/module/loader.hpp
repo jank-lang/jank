@@ -53,10 +53,10 @@ namespace jank::runtime::module
     std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
-    jtl::option<native_persistent_string> archive_path;
+    jtl::option<jtl::immutable_string> archive_path;
     /* If there's an archive path, this path is within the archive. Otherwise, it's the
      * filesystem path. */
-    native_persistent_string path;
+    jtl::immutable_string path;
   };
 
   /* When reading a file, we may find it on the filesystem or within a JAR. In the
@@ -69,7 +69,7 @@ namespace jank::runtime::module
     file_view(file_view const &) = delete;
     file_view(file_view &&) noexcept;
     file_view(int const f, char const * const h, size_t const s);
-    file_view(native_persistent_string const &buff);
+    file_view(jtl::immutable_string const &buff);
     ~file_view();
 
     char const *data() const;
@@ -87,17 +87,17 @@ namespace jank::runtime::module
     /* In the case where we're not mapping, such as when we read the file from a JAR,
      * we'll just have the data instead. Checking data.empty() is how we know which
      * of these cases to follow. */
-    native_persistent_string buff;
+    jtl::immutable_string buff;
   };
 
-  native_persistent_string path_to_module(std::filesystem::path const &path);
-  native_persistent_string module_to_path(native_persistent_string const &module);
-  native_persistent_string module_to_load_function(native_persistent_string const &module);
-  native_persistent_string
-  nest_module(native_persistent_string const &module, native_persistent_string const &sub);
-  native_persistent_string
-  nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end);
-  native_bool is_nested_module(native_persistent_string const &module);
+  jtl::immutable_string path_to_module(std::filesystem::path const &path);
+  jtl::immutable_string module_to_path(jtl::immutable_string const &module);
+  jtl::immutable_string module_to_load_function(jtl::immutable_string const &module);
+  jtl::immutable_string
+  nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub);
+  jtl::immutable_string
+  nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
+  native_bool is_nested_module(jtl::immutable_string const &module);
 
   struct loader
   {
@@ -136,30 +136,30 @@ namespace jank::runtime::module
     static constexpr char module_separator{ ':' };
 #endif
 
-    loader(context &rt_ctx, native_persistent_string const &ps);
+    loader(context &rt_ctx, jtl::immutable_string const &ps);
 
-    static jtl::string_result<file_view> read_file(native_persistent_string const &path);
+    static jtl::string_result<file_view> read_file(jtl::immutable_string const &path);
 
-    jtl::string_result<find_result> find(native_persistent_string const &module, origin const ori);
+    jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
 
-    native_bool is_loaded(native_persistent_string const &module);
-    void set_is_loaded(native_persistent_string const &module);
+    native_bool is_loaded(jtl::immutable_string const &module);
+    void set_is_loaded(jtl::immutable_string const &module);
 
-    jtl::string_result<void> load(native_persistent_string const &module, origin const ori);
+    jtl::string_result<void> load(jtl::immutable_string const &module, origin const ori);
     jtl::string_result<void>
-    load_o(native_persistent_string const &module, file_entry const &entry) const;
+    load_o(jtl::immutable_string const &module, file_entry const &entry) const;
     jtl::string_result<void>
-    load_cpp(native_persistent_string const &module, file_entry const &entry) const;
+    load_cpp(jtl::immutable_string const &module, file_entry const &entry) const;
     jtl::string_result<void> load_jank(file_entry const &entry) const;
     jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
     object_ptr to_runtime_data() const;
 
     context &rt_ctx;
-    native_persistent_string paths;
+    jtl::immutable_string paths;
     /* TODO: These will need synchonization. */
     /* This maps module strings to entries. Module strings are like fully qualified Java
      * class names. For example, `clojure.core`, `jank.compiler`, etc. */
-    native_unordered_map<native_persistent_string, entry> entries;
+    native_unordered_map<jtl::immutable_string, entry> entries;
   };
 }

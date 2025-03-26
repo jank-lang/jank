@@ -51,7 +51,7 @@ namespace jank::detail
     return make_box(sb("ptr(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
-  inline object_ptr to_runtime_data(native_persistent_string const &d)
+  inline object_ptr to_runtime_data(jtl::immutable_string const &d)
   {
     return make_box(d);
   }

@@ -14,13 +14,13 @@ namespace jank::read::parse
 {
   struct char_parse_error
   {
-    native_persistent_string error;
+    jtl::immutable_string error;
   };
 
-  jtl::result<native_persistent_string, char_parse_error>
-  parse_character_in_base(native_persistent_string const &char_literal, int const base);
+  jtl::result<jtl::immutable_string, char_parse_error>
+  parse_character_in_base(jtl::immutable_string const &char_literal, int const base);
 
-  jtl::option<char> get_char_from_literal(native_persistent_string const &s);
+  jtl::option<char> get_char_from_literal(jtl::immutable_string const &s);
 
   struct object_source_info
   {

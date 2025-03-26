@@ -242,11 +242,11 @@ namespace jank::runtime::behavior
     /* Returns a string version of the object, generally for printing or displaying. This
      * is distinct from its code representation, which doesn't yet have a corresponding
      * function in this behavior. */
-    { t->to_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_string() } -> std::convertible_to<jtl::immutable_string>;
     { t->to_string(std::declval<util::string_builder &>()) } -> std::same_as<void>;
 
     /* Returns the code representation of the object. */
-    { t->to_code_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_code_string() } -> std::convertible_to<jtl::immutable_string>;
 
     /* Returns a deterministic hash value for the object. For some objects, like functions
      * and transients, the hash is actually just the object's address. For others, it's

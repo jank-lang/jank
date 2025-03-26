@@ -897,7 +897,7 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string str(object_ptr const o, object_ptr const args)
+  jtl::immutable_string str(object_ptr const o, object_ptr const args)
   {
     util::string_builder buff;
     buff.reserve(16);
@@ -906,7 +906,7 @@ namespace jank::runtime
       runtime::to_string(o, buff);
     }
     return visit_seqable(
-      [](auto const typed_args, util::string_builder &buff) -> native_persistent_string {
+      [](auto const typed_args, util::string_builder &buff) -> jtl::immutable_string {
         for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto const fst(it->first());

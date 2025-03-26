@@ -481,7 +481,7 @@ namespace jank::analyze
 
   jtl::result<expr::function_arity, error_ptr>
   processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const list,
-                              native_persistent_string const &name,
+                              jtl::immutable_string const &name,
                               local_frame_ptr const current_frame)
   {
     auto const params_obj(list->data.first().unwrap());
@@ -631,7 +631,7 @@ namespace jank::analyze
     }
     auto list(full_list);
 
-    native_persistent_string name, unique_name;
+    jtl::immutable_string name, unique_name;
     auto first_elem(list->data.rest().first().unwrap());
     if(first_elem->type == runtime::object_type::symbol)
     {

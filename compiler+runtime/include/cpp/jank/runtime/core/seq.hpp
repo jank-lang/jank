@@ -117,7 +117,7 @@ namespace jank::runtime
   object_ptr pop(object_ptr o);
   object_ptr empty(object_ptr o);
 
-  native_persistent_string str(object_ptr o, object_ptr args);
+  jtl::immutable_string str(object_ptr o, object_ptr args);
 
   obj::persistent_list_ptr list(object_ptr s);
   obj::persistent_vector_ptr vec(object_ptr s);

@@ -24,7 +24,7 @@ namespace jank::read
     file_path = runtime::to_string(file);
   }
 
-  source::source(native_persistent_string const &file_path,
+  source::source(jtl::immutable_string const &file_path,
                  source_position const &start,
                  source_position const &end)
     : file_path{ file_path }
@@ -34,7 +34,7 @@ namespace jank::read
   {
   }
 
-  source::source(native_persistent_string const &file_path,
+  source::source(jtl::immutable_string const &file_path,
                  source_position const &start,
                  source_position const &end,
                  runtime::object_ptr const macro_expansion)
@@ -65,7 +65,7 @@ namespace jank::read
     return offset >= rhs.offset;
   }
 
-  native_persistent_string source_position::to_string() const
+  jtl::immutable_string source_position::to_string() const
   {
     util::string_builder sb;
     return sb("source_position(")(offset)(", ")(line)(":")(col)(")").release();
@@ -90,7 +90,7 @@ namespace jank::read
     return (rhs.start >= start && rhs.start <= end) || (rhs.end >= start && rhs.end <= end);
   }
 
-  native_persistent_string source::to_string() const
+  jtl::immutable_string source::to_string() const
   {
     util::string_builder sb;
     return sb("source(")(file_path)(" ")(start.to_string())(" -> ")(end.to_string())(")").release();

@@ -237,9 +237,9 @@ namespace jank::error
       return "unknown";
     }
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
-    native_persistent_string message;
+    jtl::immutable_string message;
     read::source source;
     kind kind{ kind::error };
   };
@@ -253,47 +253,47 @@ namespace jank::error
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
-    base(kind k, native_persistent_string const &message, read::source const &source);
+    base(kind k, jtl::immutable_string const &message, read::source const &source);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ptr expansion);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ptr expansion,
          std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         native_persistent_string const &note_message,
+         jtl::immutable_string const &note_message,
          runtime::object_ptr expansion);
-    base(kind k, read::source const &source, native_persistent_string const &note_message);
+    base(kind k, read::source const &source, jtl::immutable_string const &note_message);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         native_persistent_string const &note_message);
+         jtl::immutable_string const &note_message);
     base(kind k, read::source const &source, note const &note);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          note const &note);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          note const &note,
          runtime::object_ptr expansion);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          native_vector<note> const &notes);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ptr expansion,
          jtl::ref<base> cause);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ptr expansion,
          jtl::ref<base> cause,
@@ -306,7 +306,7 @@ namespace jank::error
     jtl::ref<base> add_usage(read::source const &usage_source);
 
     kind kind{};
-    native_persistent_string message;
+    jtl::immutable_string message;
     read::source source;
     native_vector<note> notes;
     jtl::ptr<base> cause;

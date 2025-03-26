@@ -40,8 +40,8 @@ namespace jank::runtime::obj::detail
                                native_bool const to_code);
     void to_string(util::string_builder &buff) const;
 
-    native_persistent_string to_string() const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::seqable */

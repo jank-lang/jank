@@ -28,18 +28,18 @@ namespace jank::jit
     processor(util::cli::options const &opts);
     ~processor();
 
-    void eval_string(native_persistent_string const &s) const;
+    void eval_string(jtl::immutable_string const &s) const;
     void load_object(native_persistent_string_view const &path) const;
-    void load_dynamic_library(native_persistent_string const &path) const;
+    void load_dynamic_library(jtl::immutable_string const &path) const;
     void load_ir_module(std::unique_ptr<llvm::Module> m,
                         std::unique_ptr<llvm::LLVMContext> llvm_ctx) const;
-    void load_bitcode(native_persistent_string const &module,
+    void load_bitcode(jtl::immutable_string const &module,
                       native_persistent_string_view const &bitcode) const;
 
-    jtl::string_result<void> remove_symbol(native_persistent_string const &name) const;
+    jtl::string_result<void> remove_symbol(jtl::immutable_string const &name) const;
 
     template <typename T>
-    jtl::string_result<T> find_symbol(native_persistent_string const &name) const
+    jtl::string_result<T> find_symbol(jtl::immutable_string const &name) const
     {
       if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
       {
@@ -51,9 +51,9 @@ namespace jank::jit
       return err(sb.release());
     }
 
-    jtl::result<void, native_persistent_string>
-    load_dynamic_libs(native_vector<native_persistent_string> const &libs) const;
-    jtl::option<native_persistent_string> find_dynamic_lib(native_persistent_string const &lib) const;
+    jtl::result<void, jtl::immutable_string>
+    load_dynamic_libs(native_vector<jtl::immutable_string> const &libs) const;
+    jtl::option<jtl::immutable_string> find_dynamic_lib(jtl::immutable_string const &lib) const;
 
     std::unique_ptr<clang::Interpreter> interpreter;
     native_integer optimization_level{};

@@ -13,13 +13,13 @@ namespace jank::error
     return make_error(kind::lex_expecting_whitespace, source);
   }
 
-  error_ptr lex_invalid_unicode(native_persistent_string const &message, read::source const &source)
+  error_ptr lex_invalid_unicode(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_unicode, message, source);
   }
 
   error_ptr
-  lex_incomplete_character(native_persistent_string const &message, read::source const &source)
+  lex_incomplete_character(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_incomplete_character,
                       message,
@@ -27,60 +27,60 @@ namespace jank::error
                       "Expected a character value here, like \\a.");
   }
 
-  error_ptr lex_invalid_number(read::source const &source, native_persistent_string const &note)
+  error_ptr lex_invalid_number(read::source const &source, jtl::immutable_string const &note)
   {
     return make_error(kind::lex_invalid_number, source, note);
   }
 
-  error_ptr lex_invalid_number(native_persistent_string const &message, read::source const &source)
+  error_ptr lex_invalid_number(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_number, message, source);
   }
 
-  error_ptr lex_invalid_number(native_persistent_string const &message,
+  error_ptr lex_invalid_number(jtl::immutable_string const &message,
                                read::source const &source,
-                               native_persistent_string const &note)
+                               jtl::immutable_string const &note)
   {
     return make_error(kind::lex_invalid_number, message, source, note);
   }
 
-  error_ptr lex_invalid_number(native_persistent_string const &message,
+  error_ptr lex_invalid_number(jtl::immutable_string const &message,
                                read::source const &source,
                                note const &note)
   {
     return make_error(kind::lex_invalid_number, message, source, note);
   }
 
-  error_ptr lex_invalid_ratio(native_persistent_string const &message, read::source const &source)
+  error_ptr lex_invalid_ratio(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_ratio, message, source);
   }
 
-  error_ptr lex_invalid_ratio(read::source const &source, native_persistent_string const &note)
+  error_ptr lex_invalid_ratio(read::source const &source, jtl::immutable_string const &note)
   {
     return make_error(kind::lex_invalid_ratio, source, note);
   }
 
-  error_ptr lex_invalid_ratio(native_persistent_string const &message,
+  error_ptr lex_invalid_ratio(jtl::immutable_string const &message,
                               read::source const &source,
                               note const &note)
   {
     return make_error(kind::lex_invalid_ratio, message, source, note);
   }
 
-  error_ptr lex_invalid_symbol(native_persistent_string const &message, read::source const &source)
+  error_ptr lex_invalid_symbol(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_symbol, message, source);
   }
 
-  error_ptr lex_invalid_keyword(native_persistent_string const &message, read::source const &source)
+  error_ptr lex_invalid_keyword(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_keyword, message, source);
   }
 
-  error_ptr lex_invalid_keyword(native_persistent_string const &message,
+  error_ptr lex_invalid_keyword(jtl::immutable_string const &message,
                                 read::source const &source,
-                                native_persistent_string const &note)
+                                jtl::immutable_string const &note)
   {
     return make_error(kind::lex_invalid_keyword, message, source, note);
   }
@@ -91,13 +91,13 @@ namespace jank::error
   }
 
   error_ptr
-  lex_invalid_string_escape(native_persistent_string const &message, read::source const &source)
+  lex_invalid_string_escape(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_invalid_string_escape, message, source);
   }
 
   error_ptr
-  lex_unexpected_character(native_persistent_string const &message, read::source const &source)
+  lex_unexpected_character(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_unexpected_character, message, source);
   }

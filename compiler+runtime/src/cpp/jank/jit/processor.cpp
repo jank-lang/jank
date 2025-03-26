@@ -20,7 +20,7 @@
 
 namespace jank::jit
 {
-  static native_persistent_string default_shared_lib_name(native_persistent_string const &lib)
+  static jtl::immutable_string default_shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
     return util::format("{}.dylib", lib);
@@ -58,7 +58,7 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    native_persistent_string O{ "-O0" };
+    jtl::immutable_string O{ "-O0" };
     switch(optimization_level)
     {
       case 0:
@@ -129,7 +129,7 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
-  void processor::eval_string(native_persistent_string const &s) const
+  void processor::eval_string(jtl::immutable_string const &s) const
   {
     profile::timer const timer{ "jit eval_string" };
     //util::println("// eval_string:\n{}\n", s);
@@ -173,7 +173,7 @@ namespace jank::jit
     llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
   }
 
-  void processor::load_bitcode(native_persistent_string const &module,
+  void processor::load_bitcode(jtl::immutable_string const &module,
                                native_persistent_string_view const &bitcode) const
   {
     auto ctx{ std::make_unique<llvm::LLVMContext>() };
@@ -192,7 +192,7 @@ namespace jank::jit
     load_ir_module(std::move(ir_module), std::move(ctx));
   }
 
-  jtl::string_result<void> processor::remove_symbol(native_persistent_string const &name) const
+  jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
   {
     auto &ee{ interpreter->getExecutionEngine().get() };
     llvm::orc::SymbolNameSet to_remove{};
@@ -206,8 +206,8 @@ namespace jank::jit
     return ok();
   }
 
-  jtl::option<native_persistent_string>
-  processor::find_dynamic_lib(native_persistent_string const &lib) const
+  jtl::option<jtl::immutable_string>
+  processor::find_dynamic_lib(jtl::immutable_string const &lib) const
   {
     auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
@@ -230,8 +230,8 @@ namespace jank::jit
     return none;
   }
 
-  jtl::result<void, native_persistent_string>
-  processor::load_dynamic_libs(native_vector<native_persistent_string> const &libs) const
+  jtl::result<void, jtl::immutable_string>
+  processor::load_dynamic_libs(native_vector<jtl::immutable_string> const &libs) const
   {
     for(auto const &lib : libs)
     {
@@ -256,7 +256,7 @@ namespace jank::jit
     return ok();
   }
 
-  void processor::load_dynamic_library(native_persistent_string const &path) const
+  void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
     llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
   }

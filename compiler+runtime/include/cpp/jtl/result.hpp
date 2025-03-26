@@ -3,8 +3,8 @@
 #include <variant>
 
 #include <jtl/option.hpp>
+#include <jtl/immutable_string.hpp>
 
-#include <jank/native_persistent_string.hpp>
 #include <jank/util/type_name.hpp>
 
 namespace jtl
@@ -377,7 +377,7 @@ namespace jtl
   }
 
   template <typename R>
-  using string_result = result<R, jank::native_persistent_string>;
+  using string_result = result<R, immutable_string>;
 }
 
 namespace jank

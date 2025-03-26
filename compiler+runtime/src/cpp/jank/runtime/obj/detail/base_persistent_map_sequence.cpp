@@ -76,7 +76,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  native_persistent_string base_persistent_map_sequence<PT, IT>::to_string() const
+  jtl::immutable_string base_persistent_map_sequence<PT, IT>::to_string() const
   {
     util::string_builder buff;
     to_string_impl(buff, false);
@@ -84,7 +84,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  native_persistent_string base_persistent_map_sequence<PT, IT>::to_code_string() const
+  jtl::immutable_string base_persistent_map_sequence<PT, IT>::to_code_string() const
   {
     util::string_builder buff;
     to_string_impl(buff, true);

@@ -61,7 +61,7 @@ catch(jank::runtime::object_ptr const o)
   jank::util::println("Exception: {}", jank::runtime::to_string(o));
   return 1;
 }
-catch(jank::native_persistent_string const &s)
+catch(jtl::immutable_string const &s)
 {
   jank::util::println("Exception: {}", s);
   return 1;

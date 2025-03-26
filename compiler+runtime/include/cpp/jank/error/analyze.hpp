@@ -9,68 +9,68 @@ namespace cpptrace
 
 namespace jank::error
 {
-  error_ptr analyze_invalid_case(native_persistent_string const &message,
+  error_ptr analyze_invalid_case(jtl::immutable_string const &message,
                                  read::source const &source,
                                  runtime::object_ptr expansion);
-  error_ptr analyze_invalid_def(native_persistent_string const &message,
+  error_ptr analyze_invalid_def(jtl::immutable_string const &message,
                                 read::source const &source,
                                 runtime::object_ptr expansion);
-  error_ptr analyze_invalid_def(native_persistent_string const &message,
+  error_ptr analyze_invalid_def(jtl::immutable_string const &message,
                                 read::source const &source,
-                                native_persistent_string const &note,
+                                jtl::immutable_string const &note,
                                 runtime::object_ptr expansion);
-  error_ptr analyze_invalid_fn(native_persistent_string const &message,
+  error_ptr analyze_invalid_fn(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ptr expansion);
-  error_ptr analyze_invalid_fn_parameters(native_persistent_string const &message,
+  error_ptr analyze_invalid_fn_parameters(jtl::immutable_string const &message,
                                           read::source const &source,
                                           runtime::object_ptr expansion);
-  error_ptr analyze_invalid_fn_parameters(native_persistent_string const &message,
+  error_ptr analyze_invalid_fn_parameters(jtl::immutable_string const &message,
                                           read::source const &source,
-                                          native_persistent_string const &error_note_message,
+                                          jtl::immutable_string const &error_note_message,
                                           runtime::object_ptr expansion);
-  error_ptr analyze_invalid_recur_position(native_persistent_string const &message,
+  error_ptr analyze_invalid_recur_position(jtl::immutable_string const &message,
                                            read::source const &source,
                                            runtime::object_ptr expansion);
-  error_ptr analyze_invalid_recur_from_try(native_persistent_string const &message,
+  error_ptr analyze_invalid_recur_from_try(jtl::immutable_string const &message,
                                            read::source const &source,
                                            runtime::object_ptr expansion);
-  error_ptr analyze_invalid_recur_args(native_persistent_string const &message,
+  error_ptr analyze_invalid_recur_args(jtl::immutable_string const &message,
                                        read::source const &source,
                                        runtime::object_ptr expansion);
-  error_ptr analyze_invalid_let(native_persistent_string const &message,
+  error_ptr analyze_invalid_let(jtl::immutable_string const &message,
                                 read::source const &source,
                                 runtime::object_ptr expansion);
-  error_ptr analyze_invalid_loop(native_persistent_string const &message,
+  error_ptr analyze_invalid_loop(jtl::immutable_string const &message,
                                  read::source const &source,
                                  runtime::object_ptr expansion);
-  error_ptr analyze_invalid_if(native_persistent_string const &message,
+  error_ptr analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ptr expansion);
-  error_ptr analyze_invalid_if(native_persistent_string const &message,
+  error_ptr analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
-                               native_persistent_string const &error_note_message,
+                               jtl::immutable_string const &error_note_message,
                                runtime::object_ptr expansion);
-  error_ptr analyze_invalid_quote(native_persistent_string const &message,
+  error_ptr analyze_invalid_quote(jtl::immutable_string const &message,
                                   read::source const &source,
                                   runtime::object_ptr expansion);
-  error_ptr analyze_invalid_var_reference(native_persistent_string const &message,
+  error_ptr analyze_invalid_var_reference(jtl::immutable_string const &message,
                                           read::source const &source,
                                           runtime::object_ptr expansion);
-  error_ptr analyze_invalid_throw(native_persistent_string const &message,
+  error_ptr analyze_invalid_throw(jtl::immutable_string const &message,
                                   read::source const &source,
                                   runtime::object_ptr expansion);
-  error_ptr analyze_invalid_try(native_persistent_string const &message,
+  error_ptr analyze_invalid_try(jtl::immutable_string const &message,
                                 read::source const &source,
                                 runtime::object_ptr expansion);
-  error_ptr analyze_invalid_try(native_persistent_string const &message,
+  error_ptr analyze_invalid_try(jtl::immutable_string const &message,
                                 read::source const &source,
                                 note &&extra,
                                 runtime::object_ptr expansion);
-  error_ptr analyze_unresolved_var(native_persistent_string const &message,
+  error_ptr analyze_unresolved_var(jtl::immutable_string const &message,
                                    read::source const &source,
                                    runtime::object_ptr expansion);
-  error_ptr analyze_unresolved_symbol(native_persistent_string const &message,
+  error_ptr analyze_unresolved_symbol(jtl::immutable_string const &message,
                                       read::source const &source,
                                       runtime::object_ptr expansion);
   error_ptr analyze_macro_expansion_exception(std::exception const &e,
@@ -81,7 +81,7 @@ namespace jank::error
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,
                                               runtime::object_ptr expansion);
-  error_ptr analyze_macro_expansion_exception(native_persistent_string const &e,
+  error_ptr analyze_macro_expansion_exception(jtl::immutable_string const &e,
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,
                                               runtime::object_ptr expansion);
@@ -90,8 +90,8 @@ namespace jank::error
                                               read::source const &source,
                                               runtime::object_ptr expansion);
   error_ptr
-  internal_analyze_failure(native_persistent_string const &message, runtime::object_ptr expansion);
-  error_ptr internal_analyze_failure(native_persistent_string const &message,
+  internal_analyze_failure(jtl::immutable_string const &message, runtime::object_ptr expansion);
+  error_ptr internal_analyze_failure(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ptr expansion);
 }

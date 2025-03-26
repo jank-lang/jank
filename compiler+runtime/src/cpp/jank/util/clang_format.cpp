@@ -57,8 +57,8 @@ namespace jank::util
     return *ret;
   }
 
-  jtl::result<native_persistent_string, format_failure>
-  format_cpp_source(native_persistent_string const &source)
+  jtl::result<jtl::immutable_string, format_failure>
+  format_cpp_source(jtl::immutable_string const &source)
   {
     std::string const code{ source };
     auto const &style(clang_format_style());
@@ -68,6 +68,6 @@ namespace jank::util
     {
       return err(llvm::toString(formatted_code.takeError()));
     }
-    return ok(native_persistent_string{ *formatted_code });
+    return ok(jtl::immutable_string{ *formatted_code });
   }
 }

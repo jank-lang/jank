@@ -153,12 +153,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string integer_range::to_string() const
+  jtl::immutable_string integer_range::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string integer_range::to_code_string() const
+  jtl::immutable_string integer_range::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }

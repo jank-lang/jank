@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     return &base == &rhs;
   }
 
-  native_persistent_string jit_function::to_string()
+  jtl::immutable_string jit_function::to_string()
   {
     util::string_builder buff;
     to_string(buff);
@@ -45,7 +45,7 @@ namespace jank::runtime::obj
       &base);
   }
 
-  native_persistent_string jit_function::to_code_string()
+  jtl::immutable_string jit_function::to_code_string()
   {
     return to_string();
   }

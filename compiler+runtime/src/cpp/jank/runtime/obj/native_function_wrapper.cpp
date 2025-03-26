@@ -28,14 +28,14 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string native_function_wrapper::to_string() const
+  jtl::immutable_string native_function_wrapper::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  native_persistent_string native_function_wrapper::to_code_string() const
+  jtl::immutable_string native_function_wrapper::to_code_string() const
   {
     return to_string();
   }
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
     auto const * const func_ptr(f.data.template get<function_type>());
     if(!func_ptr)
     {
-      native_persistent_string name{ f.to_string() };
+      jtl::immutable_string name{ f.to_string() };
       if(f.meta.is_some())
       {
         auto const name_kw(__rt_ctx->intern_keyword("name").expect_ok());

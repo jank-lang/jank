@@ -472,7 +472,7 @@ if(jank_tests)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
-    test/cpp/jank/native_persistent_string.cpp
+    test/cpp/jtl/immutable_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp

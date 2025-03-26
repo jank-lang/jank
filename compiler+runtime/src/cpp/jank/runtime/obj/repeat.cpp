@@ -113,12 +113,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string repeat::to_string()
+  jtl::immutable_string repeat::to_string()
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string repeat::to_code_string()
+  jtl::immutable_string repeat::to_code_string()
   {
     return runtime::to_code_string(seq());
   }

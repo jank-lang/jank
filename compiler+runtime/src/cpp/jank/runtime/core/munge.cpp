@@ -261,7 +261,7 @@ namespace jank::runtime
     "xor_eq__",
   };
 
-  native_persistent_string munge(native_persistent_string const &o)
+  jtl::immutable_string munge(jtl::immutable_string const &o)
   {
     native_transient_string munged;
     for(auto const &c : o)
@@ -285,8 +285,8 @@ namespace jank::runtime
     return munged;
   }
 
-  native_persistent_string munge_extra(native_persistent_string const &o,
-                                       native_persistent_string const &search,
+  jtl::immutable_string munge_extra(jtl::immutable_string const &o,
+                                       jtl::immutable_string const &search,
                                        char const * const replace)
   {
     native_transient_string const ret{ munge(o) };
@@ -307,7 +307,7 @@ namespace jank::runtime
     }
   }
 
-  native_persistent_string demunge(native_persistent_string const &o)
+  jtl::immutable_string demunge(jtl::immutable_string const &o)
   {
     if(munged_cpp_keywords.contains(o))
     {

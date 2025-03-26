@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  static native_persistent_string get_literal_from_char_bytes(native_persistent_string const &bytes)
+  static jtl::immutable_string get_literal_from_char_bytes(jtl::immutable_string const &bytes)
   {
     if(bytes.size() == 1)
     {
@@ -33,7 +33,7 @@ namespace jank::runtime::obj
     }
   }
 
-  character::character(native_persistent_string const &d)
+  character::character(jtl::immutable_string const &d)
     : data{ d }
   {
   }
@@ -59,12 +59,12 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string character::to_string() const
+  jtl::immutable_string character::to_string() const
   {
     return data;
   }
 
-  native_persistent_string character::to_code_string() const
+  jtl::immutable_string character::to_code_string() const
   {
     return get_literal_from_char_bytes(data);
   }

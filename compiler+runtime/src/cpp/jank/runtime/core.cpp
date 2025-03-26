@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  native_persistent_string type(object_ptr const o)
+  jtl::immutable_string type(object_ptr const o)
   {
     return object_type_str(o->type);
   }
@@ -236,10 +236,10 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string name(object_ptr const o)
+  jtl::immutable_string name(object_ptr const o)
   {
     return visit_object(
-      [](auto const typed_o) -> native_persistent_string {
+      [](auto const typed_o) -> jtl::immutable_string {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_string>)

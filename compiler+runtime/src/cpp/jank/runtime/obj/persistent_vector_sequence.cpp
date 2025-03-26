@@ -39,7 +39,7 @@ namespace jank::runtime::obj
                        buff);
   }
 
-  native_persistent_string persistent_vector_sequence::to_string() const
+  jtl::immutable_string persistent_vector_sequence::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(vec->data.begin()
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_persistent_string persistent_vector_sequence::to_code_string() const
+  jtl::immutable_string persistent_vector_sequence::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(

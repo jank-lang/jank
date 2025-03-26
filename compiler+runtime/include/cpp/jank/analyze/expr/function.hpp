@@ -23,8 +23,8 @@ namespace jank::analyze::expr
     static constexpr native_bool pointer_free{ true };
 
     jtl::ptr<function> fn;
-    native_persistent_string name;
-    native_persistent_string unique_name;
+    jtl::immutable_string name;
+    jtl::immutable_string unique_name;
     size_t param_count{};
     native_bool is_variadic{};
     native_bool is_tail_recursive{};
@@ -61,8 +61,8 @@ namespace jank::analyze::expr
     function(expression_position position,
              local_frame_ptr frame,
              native_bool needs_box,
-             native_persistent_string const &name,
-             native_persistent_string const &unique_name,
+             jtl::immutable_string const &name,
+             jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,
              runtime::obj::persistent_hash_map_ptr meta);
 
@@ -73,8 +73,8 @@ namespace jank::analyze::expr
     native_unordered_map<runtime::obj::symbol_ptr, local_binding_ptr> captures() const;
     runtime::object_ptr to_runtime_data() const override;
 
-    native_persistent_string name;
-    native_persistent_string unique_name;
+    jtl::immutable_string name;
+    jtl::immutable_string unique_name;
     native_vector<function_arity> arities;
     runtime::obj::persistent_hash_map_ptr meta{};
   };

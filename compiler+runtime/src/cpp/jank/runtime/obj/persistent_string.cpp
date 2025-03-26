@@ -8,12 +8,12 @@
 
 namespace jank::runtime::obj
 {
-  persistent_string::persistent_string(native_persistent_string const &d)
+  persistent_string::persistent_string(jtl::immutable_string const &d)
     : data{ d }
   {
   }
 
-  persistent_string::persistent_string(native_persistent_string &&d)
+  persistent_string::persistent_string(jtl::immutable_string &&d)
     : data{ std::move(d) }
   {
   }
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     return data == s->data;
   }
 
-  native_persistent_string const &persistent_string::to_string() const
+  jtl::immutable_string const &persistent_string::to_string() const
   {
     return data;
   }
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string persistent_string::to_code_string() const
+  jtl::immutable_string persistent_string::to_code_string() const
   {
     util::string_builder sb;
     return sb('"')(util::escape(data))('"').release();
@@ -150,7 +150,7 @@ namespace jank::runtime::obj
   {
     auto const s(runtime::to_string(m));
     auto const found(data.find(s));
-    if(found == native_persistent_string::npos)
+    if(found == jtl::immutable_string::npos)
     {
       return -1;
     }
@@ -161,7 +161,7 @@ namespace jank::runtime::obj
   {
     auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));
-    if(found == native_persistent_string::npos)
+    if(found == jtl::immutable_string::npos)
     {
       return -1;
     }

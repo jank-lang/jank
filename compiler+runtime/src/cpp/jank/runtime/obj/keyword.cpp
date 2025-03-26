@@ -34,14 +34,14 @@ namespace jank::runtime::obj
     to_string_impl(*sym, buff);
   }
 
-  native_persistent_string keyword::to_string() const
+  jtl::immutable_string keyword::to_string() const
   {
     util::string_builder buff;
     to_string_impl(*sym, buff);
     return buff.release();
   }
 
-  native_persistent_string keyword::to_code_string() const
+  jtl::immutable_string keyword::to_code_string() const
   {
     return to_string();
   }
@@ -61,12 +61,12 @@ namespace jank::runtime::obj
     return sym->compare(*s.sym);
   }
 
-  native_persistent_string const &keyword::get_name() const
+  jtl::immutable_string const &keyword::get_name() const
   {
     return sym->name;
   }
 
-  native_persistent_string const &keyword::get_namespace() const
+  jtl::immutable_string const &keyword::get_namespace() const
   {
     return sym->ns;
   }

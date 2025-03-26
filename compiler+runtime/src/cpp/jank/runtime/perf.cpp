@@ -13,7 +13,7 @@ namespace jank::runtime::perf
     auto const label(get(opts, __rt_ctx->intern_keyword("label").expect_ok()));
     auto const label_str(to_string(label));
     visit_object(
-      [](auto const typed_f, native_persistent_string const &label) {
+      [](auto const typed_f, jtl::immutable_string const &label) {
         using T = typename decltype(typed_f)::value_type;
 
         if constexpr(std::is_base_of_v<behavior::callable, T>)

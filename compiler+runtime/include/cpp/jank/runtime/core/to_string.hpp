@@ -5,11 +5,11 @@
 
 namespace jank::runtime
 {
-  native_persistent_string to_string(object const *o);
+  jtl::immutable_string to_string(object const *o);
   void to_string(char ch, util::string_builder &buff);
   void to_string(object_ptr o, util::string_builder &buff);
 
-  native_persistent_string to_code_string(object const *o);
+  jtl::immutable_string to_code_string(object const *o);
   void to_code_string(char ch, util::string_builder &buff);
   void to_code_string(object_ptr o, util::string_builder &buff);
 
@@ -62,7 +62,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  native_persistent_string to_string(native_box<T> const s)
+  jtl::immutable_string to_string(native_box<T> const s)
   {
     util::string_builder buff;
     runtime::to_string(s, buff);
@@ -118,7 +118,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  native_persistent_string to_code_string(native_box<T> const s)
+  jtl::immutable_string to_code_string(native_box<T> const s)
   {
     util::string_builder buff;
     runtime::to_code_string(s, buff);

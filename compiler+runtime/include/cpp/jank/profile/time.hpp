@@ -18,6 +18,6 @@ namespace jank::profile
 
     void report(native_persistent_string_view const &boundary) const;
 
-    native_persistent_string region;
+    jtl::immutable_string region;
   };
 }

@@ -24,7 +24,7 @@ namespace jank::codegen
 {
   using namespace jank::analyze;
 
-  reusable_context::reusable_context(native_persistent_string const &module_name)
+  reusable_context::reusable_context(jtl::immutable_string const &module_name)
     : module_name{ module_name }
     , ctor_name{ runtime::munge(__rt_ctx->unique_string("jank_global_init")) }
     , llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
@@ -69,7 +69,7 @@ namespace jank::codegen
   }
 
   llvm_processor::llvm_processor(expr::function_ptr const expr,
-                                 native_persistent_string const &module_name,
+                                 jtl::immutable_string const &module_name,
                                  compilation_target const target)
     : target{ target }
     , root_fn{ expr }
@@ -110,7 +110,7 @@ namespace jank::codegen
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
     std::string const name{ munge(root_fn->unique_name) };
     auto const fn_name{ target == compilation_target::module
-                          ? native_persistent_string{ name }
+                          ? jtl::immutable_string{ name }
                           : util::format("{}_{}", name, arity.params.size()) };
     auto fn_value(ctx->module->getOrInsertFunction(fn_name.c_str(), fn_type));
     fn = llvm::cast<llvm::Function>(fn_value.getCallee());
@@ -327,7 +327,7 @@ namespace jank::codegen
     return var;
   }
 
-  static native_persistent_string arity_to_call_fn(size_t const arity)
+  static jtl::immutable_string arity_to_call_fn(size_t const arity)
   {
     /* Anything max_params + 1 or higher gets packed into a list so we
      * just end up calling max_params + 1 at most. */
@@ -1028,7 +1028,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_c_string(native_persistent_string const &s) const
+  llvm::Value *llvm_processor::gen_c_string(jtl::immutable_string const &s) const
   {
     auto const found(ctx->c_string_globals.find(s));
     if(found != ctx->c_string_globals.end())
@@ -1596,7 +1596,7 @@ namespace jank::codegen
   }
 
   llvm::GlobalVariable *
-  llvm_processor::create_global_var(native_persistent_string const &name) const
+  llvm_processor::create_global_var(jtl::immutable_string const &name) const
   {
     return new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
                                      false,
@@ -1620,7 +1620,7 @@ namespace jank::codegen
     return struct_type;
   }
 
-  native_persistent_string llvm_processor::to_string() const
+  jtl::immutable_string llvm_processor::to_string() const
   {
     ctx->module->print(llvm::outs(), nullptr);
     return "";

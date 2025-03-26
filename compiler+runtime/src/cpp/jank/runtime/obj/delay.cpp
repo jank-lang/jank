@@ -15,7 +15,7 @@ namespace jank::runtime::obj
     return &o == &base;
   }
 
-  native_persistent_string delay::to_string() const
+  jtl::immutable_string delay::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -27,7 +27,7 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string delay::to_code_string() const
+  jtl::immutable_string delay::to_code_string() const
   {
     return to_string();
   }

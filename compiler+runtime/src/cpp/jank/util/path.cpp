@@ -15,7 +15,7 @@ namespace jank::util
     return path;
   }
 
-  std::filesystem::path relative_path(native_persistent_string const &path)
+  std::filesystem::path relative_path(jtl::immutable_string const &path)
   {
     return relative_path(std::filesystem::path{ path.c_str() });
   }

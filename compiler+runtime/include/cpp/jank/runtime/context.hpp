@@ -47,7 +47,7 @@ namespace jank::runtime
 
     void dump() const;
 
-    ns_ptr intern_ns(native_persistent_string const &);
+    ns_ptr intern_ns(jtl::immutable_string const &);
     ns_ptr intern_ns(obj::symbol_ptr const &);
     jtl::option<ns_ptr> remove_ns(obj::symbol_ptr const &);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
@@ -62,24 +62,24 @@ namespace jank::runtime
     obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &) const;
     jtl::option<object_ptr> find_local(obj::symbol_ptr const &);
 
-    jtl::result<var_ptr, native_persistent_string> intern_var(obj::symbol_ptr const &);
-    jtl::result<var_ptr, native_persistent_string>
-    intern_var(native_persistent_string const &ns, native_persistent_string const &name);
+    jtl::result<var_ptr, jtl::immutable_string> intern_var(obj::symbol_ptr const &);
+    jtl::result<var_ptr, jtl::immutable_string>
+    intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
     jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
     jtl::option<var_ptr>
-    find_var(native_persistent_string const &ns, native_persistent_string const &name);
+    find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
 
-    jtl::result<obj::keyword_ptr, native_persistent_string>
-    intern_keyword(native_persistent_string const &ns,
-                   native_persistent_string const &name,
+    jtl::result<obj::keyword_ptr, jtl::immutable_string>
+    intern_keyword(jtl::immutable_string const &ns,
+                   jtl::immutable_string const &name,
                    native_bool resolved = true);
-    jtl::result<obj::keyword_ptr, native_persistent_string>
-    intern_keyword(native_persistent_string const &s);
+    jtl::result<obj::keyword_ptr, jtl::immutable_string>
+    intern_keyword(jtl::immutable_string const &s);
 
     object_ptr macroexpand1(object_ptr o);
     object_ptr macroexpand(object_ptr o);
 
-    object_ptr eval_file(native_persistent_string const &path);
+    object_ptr eval_file(jtl::immutable_string const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
     void eval_cpp_string(native_persistent_string_view const &code) const;
     object_ptr read_string(native_persistent_string_view const &code);
@@ -97,27 +97,27 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    jtl::result<void, native_persistent_string>
+    jtl::result<void, jtl::immutable_string>
     load_module(native_persistent_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    jtl::result<void, native_persistent_string>
+    jtl::result<void, jtl::immutable_string>
     compile_module(native_persistent_string_view const &module);
 
     object_ptr eval(object_ptr const o);
 
-    jtl::string_result<void> write_module(native_persistent_string const &module_name,
+    jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    native_persistent_string unique_string();
-    native_persistent_string unique_string(native_persistent_string_view const &prefix);
+    jtl::immutable_string unique_string();
+    jtl::immutable_string unique_string(native_persistent_string_view const &prefix);
     obj::symbol unique_symbol();
     obj::symbol unique_symbol(native_persistent_string_view const &prefix);
 
     folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
-    folly::Synchronized<native_unordered_map<native_persistent_string, obj::keyword_ptr>> keywords;
+    folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ptr>> keywords;
 
     struct binding_scope
     {
@@ -141,9 +141,9 @@ namespace jank::runtime
     analyze::processor an_prc{ *this };
     jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */
-    native_unordered_map<native_persistent_string, native_vector<native_persistent_string>>
+    native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
-    native_persistent_string binary_cache_dir;
+    jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
     var_ptr current_file_var{};

@@ -16,8 +16,8 @@ namespace jank::runtime::obj
     persistent_string() = default;
     persistent_string(persistent_string &&) noexcept = default;
     persistent_string(persistent_string const &) = default;
-    persistent_string(native_persistent_string const &d);
-    persistent_string(native_persistent_string &&d);
+    persistent_string(jtl::immutable_string const &d);
+    persistent_string(jtl::immutable_string &&d);
 
     static persistent_string_ptr empty()
     {
@@ -27,9 +27,9 @@ namespace jank::runtime::obj
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string const &to_string() const;
+    jtl::immutable_string const &to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::comparable */
@@ -64,6 +64,6 @@ namespace jank::runtime::obj
     obj::persistent_string_sequence_ptr fresh_seq() const;
 
     object base{ obj_type };
-    native_persistent_string data;
+    jtl::immutable_string data;
   };
 }

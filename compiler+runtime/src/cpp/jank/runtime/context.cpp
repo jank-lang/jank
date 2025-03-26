@@ -134,7 +134,7 @@ namespace jank::runtime
   }
 
   jtl::option<var_ptr>
-  context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
+  context::find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return find_var(make_box<obj::symbol>(ns, name));
   }
@@ -144,7 +144,7 @@ namespace jank::runtime
     return none;
   }
 
-  object_ptr context::eval_file(native_persistent_string const &path)
+  object_ptr context::eval_file(jtl::immutable_string const &path)
   {
     auto const file(module::loader::read_file(path));
     if(file.is_err())
@@ -269,12 +269,12 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::result<void, native_persistent_string>
+  jtl::result<void, jtl::immutable_string>
   context::load_module(native_persistent_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
-    native_persistent_string absolute_module;
+    jtl::immutable_string absolute_module;
     if(module.starts_with('/'))
     {
       absolute_module = module.substr(1);
@@ -300,7 +300,7 @@ namespace jank::runtime
     }
   }
 
-  jtl::result<void, native_persistent_string>
+  jtl::result<void, jtl::immutable_string>
   context::compile_module(native_persistent_string_view const &module)
   {
     module_dependencies.clear();
@@ -319,7 +319,7 @@ namespace jank::runtime
     return evaluate::eval(expr.expect_ok());
   }
 
-  jtl::string_result<void> context::write_module(native_persistent_string const &module_name,
+  jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
                                             std::unique_ptr<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
@@ -366,14 +366,14 @@ namespace jank::runtime
     return ok();
   }
 
-  native_persistent_string context::unique_string()
+  jtl::immutable_string context::unique_string()
   {
     return unique_string("G_");
   }
 
-  native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
+  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix)
   {
-    static native_persistent_string const dot{ "\\." };
+    static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
     return util::format("{}-{}-{}",
                         runtime::munge_extra(ns->name->get_name(), dot, "_"),
@@ -414,7 +414,7 @@ namespace jank::runtime
     }
   }
 
-  ns_ptr context::intern_ns(native_persistent_string const &name)
+  ns_ptr context::intern_ns(jtl::immutable_string const &name)
   {
     return intern_ns(make_box<obj::symbol>(name));
   }
@@ -479,13 +479,13 @@ namespace jank::runtime
     return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref());
   }
 
-  jtl::result<var_ptr, native_persistent_string>
-  context::intern_var(native_persistent_string const &ns, native_persistent_string const &name)
+  jtl::result<var_ptr, jtl::immutable_string>
+  context::intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_var(make_box<obj::symbol>(ns, name));
   }
 
-  jtl::result<var_ptr, native_persistent_string>
+  jtl::result<var_ptr, jtl::immutable_string>
   context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer const timer{ "intern_var" };
@@ -505,12 +505,12 @@ namespace jank::runtime
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
-  jtl::result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string const &ns,
-                          native_persistent_string const &name,
+  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  context::intern_keyword(jtl::immutable_string const &ns,
+                          jtl::immutable_string const &name,
                           bool const resolved)
   {
-    native_persistent_string resolved_ns{ ns };
+    jtl::immutable_string resolved_ns{ ns };
     if(!resolved)
     {
       /* The ns will be an ns alias. */
@@ -532,8 +532,8 @@ namespace jank::runtime
     return intern_keyword(resolved_ns.empty() ? name : util::format("{}/{}", resolved_ns, name));
   }
 
-  jtl::result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string const &s)
+  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  context::intern_keyword(jtl::immutable_string const &s)
   {
     profile::timer const timer{ "rt intern_keyword" };
 

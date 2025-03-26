@@ -21,8 +21,8 @@ namespace jank::util
       return none;
     }
 
-    /* XXX: This needs to be a std::string, not a native_persistent_string. */
-    std::string path(path_length, native_persistent_string::value_type{});
+    /* XXX: This needs to be a std::string, not a jtl::immutable_string. */
+    std::string path(path_length, jtl::immutable_string::value_type{});
     if(_NSGetExecutablePath(path.data(), &path_length) != 0)
     {
       return none;

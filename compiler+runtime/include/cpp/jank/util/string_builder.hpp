@@ -34,7 +34,7 @@ namespace jank::util
     string_builder &operator()(char32_t d) &;
     string_builder &operator()(char const *d) &;
     string_builder &operator()(native_transient_string const &d) &;
-    string_builder &operator()(native_persistent_string const &d) &;
+    string_builder &operator()(jtl::immutable_string const &d) &;
 
     void push_back(native_bool d) &;
     void push_back(float d) &;
@@ -50,13 +50,13 @@ namespace jank::util
     void push_back(char32_t d) &;
     void push_back(char const *d) &;
     void push_back(native_transient_string const &d) &;
-    void push_back(native_persistent_string const &d) &;
+    void push_back(jtl::immutable_string const &d) &;
 
     void reserve(size_t capacity);
     value_type *data() const;
     size_t size() const;
 
-    native_persistent_string release();
+    jtl::immutable_string release();
     native_transient_string str() const;
     native_persistent_string_view view() const &;
 

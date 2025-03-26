@@ -27,8 +27,7 @@ namespace clojure::string_native
   static object_ptr reverse(object_ptr const s)
   {
     auto const s_str(runtime::to_string(s));
-    return make_box<obj::persistent_string>(
-      native_persistent_string{ s_str.rbegin(), s_str.rend() });
+    return make_box<obj::persistent_string>(jtl::immutable_string{ s_str.rbegin(), s_str.rend() });
   }
 
   static object_ptr lower_case(object_ptr const s)
@@ -73,7 +72,7 @@ jank_object_ptr jank_load_clojure_string_native()
 
   auto const ns(__rt_ctx->intern_ns("clojure.string-native"));
 
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(

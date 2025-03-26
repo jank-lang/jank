@@ -223,7 +223,7 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_persistent_string const &d) &
+  string_builder &string_builder::operator()(jtl::immutable_string const &d) &
   {
     auto const required{ d.size() };
     maybe_realloc(*this, required);
@@ -303,7 +303,7 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(native_persistent_string const &d) &
+  void string_builder::push_back(jtl::immutable_string const &d) &
   {
     (*this)(d);
   }
@@ -326,12 +326,12 @@ namespace jank::util
     return pos;
   }
 
-  native_persistent_string string_builder::release()
+  jtl::immutable_string string_builder::release()
   {
     jank_debug_assert(pos < capacity);
 
-    native_persistent_string ret;
-    if(pos <= native_persistent_string::max_small_size)
+    jtl::immutable_string ret;
+    if(pos <= jtl::immutable_string::max_small_size)
     {
       ret.init_small(buffer, pos);
     }

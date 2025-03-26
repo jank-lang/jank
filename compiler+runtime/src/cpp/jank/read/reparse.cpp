@@ -11,7 +11,7 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  static jtl::result<source, error_ptr> reparse_nth(native_persistent_string const &file_path,
+  static jtl::result<source, error_ptr> reparse_nth(jtl::immutable_string const &file_path,
                                                size_t const offset,
                                                size_t const n,
                                                object_ptr const macro_expansion)

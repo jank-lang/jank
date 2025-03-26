@@ -40,14 +40,14 @@ namespace jank::runtime::obj
     to_string_impl(tag, form, buff);
   }
 
-  native_persistent_string tagged_literal::to_string() const
+  jtl::immutable_string tagged_literal::to_string() const
   {
     util::string_builder buff;
     to_string_impl(tag, form, buff);
     return buff.release();
   }
 
-  native_persistent_string tagged_literal::to_code_string() const
+  jtl::immutable_string tagged_literal::to_code_string() const
   {
     return to_string();
   }

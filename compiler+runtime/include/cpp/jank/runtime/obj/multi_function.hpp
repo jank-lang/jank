@@ -23,9 +23,9 @@ namespace jank::runtime::obj
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string();
+    jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
-    native_persistent_string to_code_string();
+    jtl::immutable_string to_code_string();
     native_hash to_hash() const;
 
     /* behavior::callable */

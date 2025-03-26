@@ -134,7 +134,7 @@ namespace jank
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
-    auto const get_prompt([](native_persistent_string const &suffix) {
+    auto const get_prompt([](jtl::immutable_string const &suffix) {
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 

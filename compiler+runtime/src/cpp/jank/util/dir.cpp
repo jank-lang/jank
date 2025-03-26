@@ -8,9 +8,9 @@
 
 namespace jank::util
 {
-  native_persistent_string const &user_home_dir()
+  jtl::immutable_string const &user_home_dir()
   {
-    static native_persistent_string res;
+    static jtl::immutable_string res;
     if(!res.empty())
     {
       return res;
@@ -24,9 +24,9 @@ namespace jank::util
     return res;
   }
 
-  native_persistent_string const &user_cache_dir()
+  jtl::immutable_string const &user_cache_dir()
   {
-    static native_persistent_string res;
+    static jtl::immutable_string res;
     if(!res.empty())
     {
       return res;
@@ -42,9 +42,9 @@ namespace jank::util
     return res;
   }
 
-  native_persistent_string const &user_config_dir()
+  jtl::immutable_string const &user_config_dir()
   {
-    static native_persistent_string res;
+    static jtl::immutable_string res;
     if(!res.empty())
     {
       return res;
@@ -60,12 +60,12 @@ namespace jank::util
     return res;
   }
 
-  native_persistent_string const &
+  jtl::immutable_string const &
   binary_cache_dir(native_integer const optimization_level,
-                   native_vector<native_persistent_string> const &includes,
-                   native_vector<native_persistent_string> const &defines)
+                   native_vector<jtl::immutable_string> const &includes,
+                   native_vector<jtl::immutable_string> const &defines)
   {
-    static native_persistent_string res;
+    static jtl::immutable_string res;
     if(!res.empty())
     {
       return res;
@@ -85,12 +85,12 @@ namespace jank::util
    * every module. I think this is much safer than trying to reconcile ABI
    * changes more granularly.
    */
-  native_persistent_string const &
+  jtl::immutable_string const &
   binary_version(native_integer const optimization_level,
-                 native_vector<native_persistent_string> const &includes,
-                 native_vector<native_persistent_string> const &defines)
+                 native_vector<jtl::immutable_string> const &includes,
+                 native_vector<jtl::immutable_string> const &defines)
   {
-    static native_persistent_string res;
+    static jtl::immutable_string res;
     if(!res.empty())
     {
       return res;

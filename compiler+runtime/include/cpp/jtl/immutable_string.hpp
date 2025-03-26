@@ -2,6 +2,7 @@
 
 #include <bit>
 
+#include <jtl/primitive.hpp>
 #include <jtl/assert.hpp>
 
 #include <jank/type.hpp>
@@ -10,14 +11,17 @@ namespace jank
 {
   namespace hash
   {
-    uint32_t integer(native_hash const input);
+    u32 integer(uhash const input);
   }
 
   namespace util
   {
     struct string_builder;
   }
+}
 
+namespace jtl
+{
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
@@ -52,10 +56,10 @@ namespace jank
    * null-terminated. We'll lazily own the string if c_str() is called on a shared string, but
    * data() is not expected to return a null-terminated string.
    */
-  struct native_persistent_string
+  struct immutable_string
   {
     using value_type = char;
-    using allocator_type = native_allocator<value_type>;
+    using allocator_type = jank::native_allocator<value_type>;
     using allocator_traits = std::allocator_traits<allocator_type>;
     using size_type = allocator_traits::size_type;
     using traits_type = std::char_traits<value_type>;
@@ -68,32 +72,32 @@ namespace jank
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-    friend struct util::string_builder;
+    friend struct jank::util::string_builder;
 
-    constexpr native_persistent_string() noexcept
+    constexpr immutable_string() noexcept
     {
       set_small_size(0);
     }
 
-    constexpr native_persistent_string(native_persistent_string const &s) noexcept
+    constexpr immutable_string(immutable_string const &s) noexcept
       : store{ s.store }
     {
       /* NOTE: An if saves us a couple of instructions, versus a switch here. */
       if(s.get_category() != category::small)
       {
-        const_cast<native_persistent_string &>(s).store.large.set_category(category::large_shared);
+        const_cast<immutable_string &>(s).store.large.set_category(category::large_shared);
         store.large.set_category(category::large_shared);
       }
     }
 
-    constexpr native_persistent_string(native_persistent_string &&s) noexcept
+    constexpr immutable_string(immutable_string &&s) noexcept
       : store{ std::move(s.store) }
     {
       s.set_small_size(0);
     }
 
     template <size_type N>
-    constexpr native_persistent_string(value_type const (&new_data)[N]) noexcept
+    constexpr immutable_string(value_type const (&new_data)[N]) noexcept
     {
       if constexpr(N <= max_small_size)
       {
@@ -106,13 +110,13 @@ namespace jank
     }
 
     [[gnu::nonnull(2)]]
-    constexpr native_persistent_string(const_pointer_type const s) noexcept
-      : native_persistent_string{ s, traits_type::length(s) }
+    constexpr immutable_string(const_pointer_type const s) noexcept
+      : immutable_string{ s, traits_type::length(s) }
     {
     }
 
     [[gnu::nonnull(2)]]
-    constexpr native_persistent_string(const_pointer_type const s, size_type const size) noexcept
+    constexpr immutable_string(const_pointer_type const s, size_type const size) noexcept
     {
       if(size <= max_small_size)
       {
@@ -125,10 +129,10 @@ namespace jank
     }
 
     [[gnu::nonnull(2, 4)]]
-    constexpr native_persistent_string(const_pointer_type const lhs,
-                                       size_type const lhs_size,
-                                       const_pointer_type const rhs,
-                                       size_type const rhs_size) noexcept
+    constexpr immutable_string(const_pointer_type const lhs,
+                               size_type const lhs_size,
+                               const_pointer_type const rhs,
+                               size_type const rhs_size) noexcept
     {
       auto const combined_size(lhs_size + rhs_size);
       if(combined_size <= max_small_size)
@@ -141,7 +145,7 @@ namespace jank
       }
     }
 
-    constexpr native_persistent_string(size_type const size, value_type const fill) noexcept
+    constexpr immutable_string(size_type const size, value_type const fill) noexcept
     {
       if(size <= max_small_size)
       {
@@ -153,19 +157,17 @@ namespace jank
       }
     }
 
-    constexpr native_persistent_string(native_persistent_string_view const &s)
-      : native_persistent_string{ s.data(), s.size() }
+    constexpr immutable_string(jank::native_persistent_string_view const &s)
+      : immutable_string{ s.data(), s.size() }
     {
     }
 
-    constexpr native_persistent_string(native_transient_string const &s)
-      : native_persistent_string{ s.data(), s.size() }
+    constexpr immutable_string(jank::native_transient_string const &s)
+      : immutable_string{ s.data(), s.size() }
     {
     }
 
-    constexpr native_persistent_string(native_persistent_string const &s,
-                                       size_type const pos,
-                                       size_type count)
+    constexpr immutable_string(immutable_string const &s, size_type const pos, size_type count)
     {
       auto const s_length(s.size());
       if(s_length < pos) [[unlikely]]
@@ -192,13 +194,13 @@ namespace jank
       else
       {
         /* NOTE: Not necessarily null-terminated! */
-        const_cast<native_persistent_string &>(s).store.large.set_category(category::large_shared);
+        const_cast<immutable_string &>(s).store.large.set_category(category::large_shared);
         init_large_shared(s.store.large.data + pos, count);
       }
     }
 
     template <typename It>
-    constexpr native_persistent_string(It const &begin, It const &end)
+    constexpr immutable_string(It const &begin, It const &end)
     {
       auto const size(std::distance(begin, end));
       if(size <= max_small_size)
@@ -211,14 +213,14 @@ namespace jank
       }
     }
 
-    constexpr ~native_persistent_string() noexcept
+    constexpr ~immutable_string() noexcept
     {
       destroy();
     }
 
     /*** Data accessors. ***/
     [[gnu::const]]
-    constexpr native_bool empty() const noexcept
+    constexpr bool empty() const noexcept
     {
       return size() == 0;
     }
@@ -253,15 +255,15 @@ namespace jank
         case category::large_shared:
           {
             /* Shared strings are always large. */
-            const_cast<native_persistent_string *>(this)->init_large_owned(store.large.data,
-                                                                           store.large.size);
+            const_cast<immutable_string *>(this)->init_large_owned(store.large.data,
+                                                                   store.large.size);
             return store.large.data;
           }
       }
     }
 
     [[gnu::const]]
-    constexpr value_type operator[](size_t const index) const noexcept
+    constexpr value_type operator[](size_type const index) const noexcept
     {
       return data()[index];
     }
@@ -269,7 +271,7 @@ namespace jank
     /*** Searches. ***/
     [[gnu::const]]
     constexpr size_type
-    find(native_persistent_string const &pattern, size_type const pos = 0) const noexcept
+    find(immutable_string const &pattern, size_type const pos = 0) const noexcept
     {
       return find(pattern.data(), pos, pattern.size());
     }
@@ -343,8 +345,7 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr size_type
-    rfind(native_persistent_string const &s, size_type const pos = npos) const noexcept
+    constexpr size_type rfind(immutable_string const &s, size_type const pos = npos) const noexcept
     {
       return rfind(s.data(), pos, s.size());
     }
@@ -388,7 +389,7 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr size_t rfind(value_type const c, size_type const pos = npos) const noexcept
+    constexpr size_type rfind(value_type const c, size_type const pos = npos) const noexcept
     {
       auto length(size());
       if(length)
@@ -410,13 +411,13 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool starts_with(value_type const c) const noexcept
+    constexpr bool starts_with(value_type const c) const noexcept
     {
       return size() > 0 && data()[0] == c;
     }
 
     [[gnu::const]]
-    constexpr native_bool starts_with(const_pointer_type const s) const noexcept
+    constexpr bool starts_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(traits_type::length(s));
@@ -428,7 +429,7 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool starts_with(native_persistent_string_view const &s) const noexcept
+    constexpr bool starts_with(jank::native_persistent_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -441,14 +442,14 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool ends_with(value_type const c) const noexcept
+    constexpr bool ends_with(value_type const c) const noexcept
     {
       auto const s(size());
       return s > 0 && data()[s - 1] == c;
     }
 
     [[gnu::const]]
-    constexpr native_bool ends_with(const_pointer_type const s) const noexcept
+    constexpr bool ends_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(traits_type::length(s));
@@ -460,7 +461,7 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool ends_with(native_persistent_string_view const &s) const noexcept
+    constexpr bool ends_with(jank::native_persistent_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -473,32 +474,31 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool contains(value_type const c) const noexcept
+    constexpr bool contains(value_type const c) const noexcept
     {
       return find(c) != npos;
     }
 
     [[gnu::const]]
-    constexpr native_bool contains(const_pointer_type const s) const noexcept
+    constexpr bool contains(const_pointer_type const s) const noexcept
     {
       return find(s) != npos;
     }
 
     [[gnu::const]]
-    constexpr native_bool contains(native_persistent_string_view const &s) const noexcept
+    constexpr bool contains(jank::native_persistent_string_view const &s) const noexcept
     {
       return find(s) != npos;
     }
 
     /*** Immutable modifications. ***/
-    constexpr native_persistent_string
-    substr(size_type const pos = 0, size_type const count = npos) const
+    constexpr immutable_string substr(size_type const pos = 0, size_type const count = npos) const
     {
       return { *this, pos, count };
     }
 
     /*** Mutations. ***/
-    constexpr native_persistent_string &operator=(native_persistent_string const &rhs)
+    constexpr immutable_string &operator=(immutable_string const &rhs)
     {
       if(this == &rhs)
       {
@@ -510,15 +510,14 @@ namespace jank
       store = rhs.store;
       if(rhs.get_category() == category::large_owned)
       {
-        const_cast<native_persistent_string &>(rhs).store.large.set_category(
-          category::large_shared);
+        const_cast<immutable_string &>(rhs).store.large.set_category(category::large_shared);
         store.large.set_category(category::large_shared);
       }
 
       return *this;
     }
 
-    constexpr native_persistent_string &operator=(const_pointer_type const rhs)
+    constexpr immutable_string &operator=(const_pointer_type const rhs)
     {
       destroy();
 
@@ -535,7 +534,7 @@ namespace jank
       return *this;
     }
 
-    constexpr native_persistent_string &operator=(native_transient_string const &rhs)
+    constexpr immutable_string &operator=(jank::native_transient_string const &rhs)
     {
       destroy();
 
@@ -554,33 +553,33 @@ namespace jank
 
     /*** Comparisons. ***/
     [[gnu::const]]
-    constexpr native_bool operator!=(native_persistent_string const &s) const noexcept
+    constexpr bool operator!=(immutable_string const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
 
     [[gnu::const]]
-    constexpr native_bool operator==(native_persistent_string const &s) const noexcept
+    constexpr bool operator==(immutable_string const &s) const noexcept
     {
       return !(*this != s);
     }
 
     [[gnu::const, gnu::nonnull(2)]]
-    constexpr native_bool operator!=(const_pointer_type const s) const noexcept
+    constexpr bool operator!=(const_pointer_type const s) const noexcept
     {
       auto const length(traits_type::length(s));
       return size() != length || traits_type::compare(data(), s, length);
     }
 
     [[gnu::const, gnu::nonnull(2)]]
-    constexpr native_bool operator==(const_pointer_type const s) const noexcept
+    constexpr bool operator==(const_pointer_type const s) const noexcept
     {
       return !(*this != s);
     }
 
     [[gnu::const]]
-    constexpr native_bool operator!=(native_persistent_string_view const &s) const noexcept
+    constexpr bool operator!=(jank::native_persistent_string_view const &s) const noexcept
     {
       auto const length(s.size());
       /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
@@ -588,13 +587,13 @@ namespace jank
     }
 
     [[gnu::const]]
-    constexpr native_bool operator==(native_persistent_string_view const &s) const noexcept
+    constexpr bool operator==(jank::native_persistent_string_view const &s) const noexcept
     {
       return !(*this != s);
     }
 
     [[gnu::const]]
-    constexpr int compare(native_persistent_string const &s) const
+    constexpr int compare(immutable_string const &s) const
     {
       auto const length(size());
       auto const s_length(s.size());
@@ -655,14 +654,14 @@ namespace jank
     }
 
     /*** Conversions. ***/
-    constexpr operator native_persistent_string_view() const
+    constexpr operator jank::native_persistent_string_view() const
     {
       return { data(), size() };
     }
 
     /*** Miscellaneous predicates. ***/
     [[gnu::const]]
-    constexpr native_bool is_blank() const noexcept
+    constexpr bool is_blank() const noexcept
     {
       for(auto const c : *this)
       {
@@ -675,7 +674,7 @@ namespace jank
     }
 
     /*** Hashing. ***/
-    constexpr native_hash to_hash() const noexcept
+    constexpr uhash to_hash() const noexcept
     {
       if(store.hash != 0)
       {
@@ -684,21 +683,21 @@ namespace jank
 
       /* https://github.com/openjdk/jdk/blob/7e30130e354ebfed14617effd2a517ab2f4140a5/src/java.base/share/classes/java/lang/StringLatin1.java#L194 */
       auto const ptr(data());
-      for(size_t i{}; i != size(); ++i)
+      for(size_type i{}; i != size(); ++i)
       {
         store.hash = 31 * store.hash + (ptr[i] & 0xff);
       }
-      return store.hash = hash::integer(store.hash);
+      return store.hash = jank::hash::integer(store.hash);
     }
 
     /*** Conversions. ***/
-    constexpr operator native_transient_string() const
+    constexpr operator jank::native_transient_string() const
     {
       return { data(), size() };
     }
 
   private:
-    static constexpr native_bool is_little_endian{ std::endian::native == std::endian::little };
+    static constexpr bool is_little_endian{ std::endian::native == std::endian::little };
 
     enum class category : uint8_t
     {
@@ -744,7 +743,7 @@ namespace jank
 
       /* TODO: On 64bit systems, this has 32bits of wasted data. We could use it, but that would
        * impact the "three word" setup now, which would slow down a lot of operations. Worth it? */
-      mutable native_hash hash{};
+      mutable uhash hash{};
     };
 
     constexpr void destroy()
@@ -916,58 +915,54 @@ namespace jank
   };
 
   [[gnu::const]]
-  constexpr native_bool
-  operator==(native_persistent_string_view const &lhs, native_persistent_string const &rhs) noexcept
+  constexpr bool
+  operator==(jank::native_persistent_string_view const &lhs, immutable_string const &rhs) noexcept
   {
     return !(rhs != lhs);
   }
 
   [[gnu::const]]
-  constexpr native_bool
-  operator<(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
+  constexpr bool operator<(immutable_string const &lhs, immutable_string const &rhs) noexcept
   {
     return lhs.compare(rhs) < 0;
   }
 
-  constexpr native_persistent_string
-  operator+(native_persistent_string const &lhs, native_persistent_string const &rhs) noexcept
+  constexpr immutable_string
+  operator+(immutable_string const &lhs, immutable_string const &rhs) noexcept
   {
     return { lhs.data(), lhs.size(), rhs.data(), rhs.size() };
   }
 
-  constexpr native_persistent_string
-  operator+(native_persistent_string::const_pointer_type const lhs,
-            native_persistent_string const &rhs) noexcept
+  constexpr immutable_string
+  operator+(immutable_string::const_pointer_type const lhs, immutable_string const &rhs) noexcept
   {
-    return { lhs, native_persistent_string::traits_type::length(lhs), rhs.data(), rhs.size() };
+    return { lhs, immutable_string::traits_type::length(lhs), rhs.data(), rhs.size() };
   }
 
-  constexpr native_persistent_string
-  operator+(native_persistent_string const &lhs,
-            native_persistent_string::const_pointer_type const rhs) noexcept
+  constexpr immutable_string
+  operator+(immutable_string const &lhs, immutable_string::const_pointer_type const rhs) noexcept
   {
-    return { lhs.data(), lhs.size(), rhs, native_persistent_string::traits_type::length(rhs) };
+    return { lhs.data(), lhs.size(), rhs, immutable_string::traits_type::length(rhs) };
   }
 
-  constexpr native_persistent_string
-  operator+(native_persistent_string const &lhs,
-            native_persistent_string::value_type const rhs) noexcept
+  constexpr immutable_string
+  operator+(immutable_string const &lhs, immutable_string::value_type const rhs) noexcept
   {
     return { lhs.data(), lhs.size(), &rhs, 1 };
   }
 
-  constexpr std::ostream &operator<<(std::ostream &os, native_persistent_string const &s)
+  constexpr std::ostream &operator<<(std::ostream &os, immutable_string const &s)
   {
-    return os << static_cast<native_persistent_string_view>(s);
+    return os << static_cast<jank::native_persistent_string_view>(s);
   }
 }
 
 namespace std
 {
   template <>
-  struct hash<jank::native_persistent_string>
+  struct hash<jtl::immutable_string>
   {
-    size_t operator()(jank::native_persistent_string const &s) const
+    size_t operator()(jtl::immutable_string const &s) const
     {
       return s.to_hash();
     }

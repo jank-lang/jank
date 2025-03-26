@@ -130,7 +130,7 @@ namespace jank::evaluate
    * type to a fn frame. */
   template <typename E>
   static expr::function_ptr wrap_expression(jtl::ref<E> const orig_expr,
-                                            native_persistent_string const &name,
+                                            jtl::immutable_string const &name,
                                             native_vector<obj::symbol_ptr> params)
   {
     auto ret{ jtl::make_ref<expr::function>() };
@@ -198,7 +198,7 @@ namespace jank::evaluate
   /* TODO: Expression wrapping makes sense in analyze, not eval. We use it all over the place. */
   expr::function_ptr wrap_expressions(native_vector<expression_ptr> const &exprs,
                                       processor const &an_prc,
-                                      native_persistent_string const &name)
+                                      jtl::immutable_string const &name)
   {
     if(exprs.empty())
     {
@@ -238,7 +238,7 @@ namespace jank::evaluate
   }
 
   expr::function_ptr wrap_expression(expression_ptr const expr,
-                                     native_persistent_string const &name,
+                                     jtl::immutable_string const &name,
                                      native_vector<obj::symbol_ptr> params)
   {
     return visit_expr(

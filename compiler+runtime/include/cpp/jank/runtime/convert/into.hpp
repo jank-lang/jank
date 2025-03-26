@@ -93,7 +93,7 @@ namespace jank::runtime
 
   /* Native strings. */
   template <typename Input>
-  requires(same_as_any<Input, native_persistent_string, native_persistent_string_view, std::string>)
+  requires(same_as_any<Input, jtl::immutable_string, native_persistent_string_view, std::string>)
   struct convert<Input, object_ptr>
   {
     static object_ptr call(Input const &o)

@@ -52,7 +52,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_persistent_string iterator_sequence<Derived, It>::to_string() const
+  jtl::immutable_string iterator_sequence<Derived, It>::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(begin, end, "(", ')', buff);
@@ -60,7 +60,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_persistent_string iterator_sequence<Derived, It>::to_code_string() const
+  jtl::immutable_string iterator_sequence<Derived, It>::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(begin, end, "(", ')', buff);

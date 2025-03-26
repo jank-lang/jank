@@ -41,11 +41,11 @@ namespace jank::analyze
 namespace jank::evaluate
 {
   analyze::expr::function_ptr wrap_expression(analyze::expression_ptr const expr,
-                                              native_persistent_string const &name,
+                                              jtl::immutable_string const &name,
                                               native_vector<runtime::obj::symbol_ptr> params);
   analyze::expr::function_ptr wrap_expressions(native_vector<analyze::expression_ptr> const &exprs,
                                                analyze::processor const &an_prc,
-                                               native_persistent_string const &name);
+                                               jtl::immutable_string const &name);
 
   runtime::object_ptr eval(analyze::expression_ptr);
   runtime::object_ptr eval(analyze::expr::def_ptr);

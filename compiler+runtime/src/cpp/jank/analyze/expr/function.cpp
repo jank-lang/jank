@@ -14,8 +14,8 @@ namespace jank::analyze::expr
   function::function(expression_position const position,
                      local_frame_ptr const frame,
                      native_bool const needs_box,
-                     native_persistent_string const &name,
-                     native_persistent_string const &unique_name,
+                     jtl::immutable_string const &name,
+                     jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
                      runtime::obj::persistent_hash_map_ptr const meta)
     : expression{ expr_kind, position, frame, needs_box }

@@ -138,7 +138,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
+        for(jtl::immutable_string const ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
@@ -159,7 +159,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const &ch :
+        for(jtl::immutable_string const &ch :
             { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
         {
           auto const r(p.next());
@@ -182,7 +182,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_persistent_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
+        for(jtl::immutable_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
@@ -222,7 +222,7 @@ namespace jank::read::parse
           processor p{ lp.begin(), lp.end() };
 
           size_t offset{};
-          for(native_persistent_string const &ch :
+          for(jtl::immutable_string const &ch :
               { "\\u1234", "\\u5678", "\\u90ab", "\\ucdef", "\\uABCD", "\\uEFa0" })
           {
             auto const r(p.next());
@@ -273,7 +273,7 @@ namespace jank::read::parse
           processor p{ lp.begin(), lp.end() };
 
           size_t offset{};
-          for(native_persistent_string const &ch : { "\\o012", "\\o345", "\\o670" })
+          for(jtl::immutable_string const &ch : { "\\o012", "\\o345", "\\o670" })
           {
             auto const r(p.next());
             CHECK(equal(

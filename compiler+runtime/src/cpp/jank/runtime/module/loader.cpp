@@ -28,7 +28,7 @@
 namespace jank::runtime::module
 {
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
-  native_persistent_string path_to_module(std::filesystem::path const &path)
+  jtl::immutable_string path_to_module(std::filesystem::path const &path)
   {
     static std::regex const slash{ "/" };
 
@@ -44,30 +44,30 @@ namespace jank::runtime::module
     return ret;
   }
 
-  native_persistent_string module_to_path(native_persistent_string const &module)
+  jtl::immutable_string module_to_path(jtl::immutable_string const &module)
   {
-    static native_persistent_string const dot{ "\\." };
+    static jtl::immutable_string const dot{ "\\." };
     return runtime::munge_extra(module, dot, "/");
   }
 
-  native_persistent_string module_to_load_function(native_persistent_string const &module)
+  jtl::immutable_string module_to_load_function(jtl::immutable_string const &module)
   {
-    static native_persistent_string const dot{ "\\." };
+    static jtl::immutable_string const dot{ "\\." };
     auto const &ret{ runtime::munge_extra(module, dot, "_") };
 
     return util::format("jank_load_{}", ret);
   }
 
-  native_persistent_string
-  nest_module(native_persistent_string const &module, native_persistent_string const &sub)
+  jtl::immutable_string
+  nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub)
   {
     jank_debug_assert(!module.empty());
     jank_debug_assert(!sub.empty());
     return module + "$" + sub;
   }
 
-  native_persistent_string
-  nest_native_ns(native_persistent_string const &native_ns, native_persistent_string const &end)
+  jtl::immutable_string
+  nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end)
   {
     jank_debug_assert(!native_ns.empty());
     jank_debug_assert(!end.empty());
@@ -75,7 +75,7 @@ namespace jank::runtime::module
   }
 
   /* If it has two or more occurences of $, it's nested. */
-  native_bool is_nested_module(native_persistent_string const &module)
+  native_bool is_nested_module(jtl::immutable_string const &module)
   {
     return module.find('$') != module.rfind('$');
   }
@@ -96,7 +96,7 @@ namespace jank::runtime::module
     fn(zip_entry);
   }
 
-  static void register_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+  static void register_entry(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                              std::filesystem::path const &module_path,
                              file_entry const &entry)
   {
@@ -159,7 +159,7 @@ namespace jank::runtime::module
   }
 
   static void
-  register_relative_entry(native_unordered_map<native_persistent_string, loader::entry> &entries,
+  register_relative_entry(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                           std::filesystem::path const &resource_path,
                           file_entry const &entry)
   {
@@ -173,7 +173,7 @@ namespace jank::runtime::module
   }
 
   static void
-  register_directory(native_unordered_map<native_persistent_string, loader::entry> &entries,
+  register_directory(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                      std::filesystem::path const &path)
   {
     for(auto const &f : std::filesystem::recursive_directory_iterator{ path })
@@ -185,8 +185,8 @@ namespace jank::runtime::module
     }
   }
 
-  static void register_jar(native_unordered_map<native_persistent_string, loader::entry> &entries,
-                           native_persistent_string const &path)
+  static void register_jar(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
+                           jtl::immutable_string const &path)
   {
     libzippp::ZipArchive zf{ std::string{ path } };
     auto success(zf.open(libzippp::ZipArchive::ReadOnly));
@@ -207,7 +207,7 @@ namespace jank::runtime::module
     }
   }
 
-  static void register_path(native_unordered_map<native_persistent_string, loader::entry> &entries,
+  static void register_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                             native_persistent_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the module path, mainly due to lazy string
@@ -235,7 +235,7 @@ namespace jank::runtime::module
     }
   }
 
-  loader::loader(context &rt_ctx, native_persistent_string const &ps)
+  loader::loader(context &rt_ctx, jtl::immutable_string const &ps)
     : rt_ctx{ rt_ctx }
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
@@ -251,13 +251,13 @@ namespace jank::runtime::module
     size_t i{ paths.find(module_separator, start) };
 
     /* Looks like it's either an empty path list or there's only entry. */
-    if(i == native_persistent_string::npos)
+    if(i == jtl::immutable_string::npos)
     {
       register_path(entries, paths);
     }
     else
     {
-      while(i != native_persistent_string::npos)
+      while(i != jtl::immutable_string::npos)
       {
         register_path(entries, paths.substr(start, i - start));
 
@@ -324,7 +324,7 @@ namespace jank::runtime::module
   {
   }
 
-  file_view::file_view(native_persistent_string const &buff)
+  file_view::file_view(jtl::immutable_string const &buff)
     : buff{ buff }
   {
   }
@@ -357,7 +357,7 @@ namespace jank::runtime::module
     return { data(), size() };
   }
 
-  static jtl::string_result<file_view> read_jar_file(native_persistent_string const &path)
+  static jtl::string_result<file_view> read_jar_file(jtl::immutable_string const &path)
   {
     using namespace runtime;
     using namespace runtime::module;
@@ -383,7 +383,7 @@ namespace jank::runtime::module
     return ok(file_view{ zip_entry.readAsText() });
   }
 
-  static jtl::string_result<file_view> map_file(native_persistent_string const &path)
+  static jtl::string_result<file_view> map_file(jtl::immutable_string const &path)
   {
     if(!std::filesystem::exists(path.c_str()))
     {
@@ -412,7 +412,7 @@ namespace jank::runtime::module
     return ok(file_view{ fd, head, file_size });
   }
 
-  jtl::string_result<file_view> loader::read_file(native_persistent_string const &path)
+  jtl::string_result<file_view> loader::read_file(jtl::immutable_string const &path)
   {
     if(path.contains(".jar:"))
     {
@@ -422,7 +422,7 @@ namespace jank::runtime::module
   }
 
   jtl::string_result<loader::find_result>
-  loader::find(native_persistent_string const &module, origin const ori)
+  loader::find(jtl::immutable_string const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
@@ -514,7 +514,7 @@ namespace jank::runtime::module
     return err(util::format("No sources for registered module: {}", module));
   }
 
-  native_bool loader::is_loaded(native_persistent_string const &module)
+  native_bool loader::is_loaded(jtl::immutable_string const &module)
   {
     auto const atom{
       runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
@@ -524,7 +524,7 @@ namespace jank::runtime::module
     return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
   }
 
-  void loader::set_is_loaded(native_persistent_string const &module)
+  void loader::set_is_loaded(jtl::immutable_string const &module)
   {
     auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
       __rt_ctx->loaded_libs_var->deref()) };
@@ -540,11 +540,11 @@ namespace jank::runtime::module
   }
 
   [[maybe_unused]]
-  static void log_load(native_persistent_string const &module,
+  static void log_load(jtl::immutable_string const &module,
                        module_type const type,
                        loader::entry const &sources)
   {
-    native_persistent_string path{ "undefined" };
+    jtl::immutable_string path{ "undefined" };
     switch(type)
     {
       case module_type::jank:
@@ -611,7 +611,7 @@ namespace jank::runtime::module
     util::println("Loading module {} from {}", module, path);
   }
 
-  jtl::string_result<void> loader::load(native_persistent_string const &module, origin const ori)
+  jtl::string_result<void> loader::load(jtl::immutable_string const &module, origin const ori)
   {
     if(ori != origin::source && loader::is_loaded(module))
     {
@@ -657,7 +657,7 @@ namespace jank::runtime::module
   }
 
   jtl::string_result<void>
-  loader::load_o(native_persistent_string const &module, file_entry const &entry) const
+  loader::load_o(jtl::immutable_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ util::format("load object {}", module) };
 
@@ -693,7 +693,7 @@ namespace jank::runtime::module
   }
 
   jtl::string_result<void>
-  loader::load_cpp(native_persistent_string const &module, file_entry const &entry) const
+  loader::load_cpp(jtl::immutable_string const &module, file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
