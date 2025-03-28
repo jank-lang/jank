@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_set::value_type {
         runtime::detail::native_transient_hash_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           transient.insert(it->first());
         }

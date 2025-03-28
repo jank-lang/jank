@@ -790,7 +790,7 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr; it = next_in_place(next_in_place(it)))
+    for(auto it(list->fresh_seq()); it != nullptr; it = it->next_in_place()->next_in_place())
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -898,7 +898,7 @@ namespace jank::read::parse
     return visit_seqable(
       [](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto item(it->first());
           ret.push_back(first(item));

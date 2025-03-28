@@ -67,7 +67,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -98,7 +98,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -126,7 +126,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);
@@ -157,7 +157,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);

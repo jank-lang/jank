@@ -1515,7 +1515,7 @@ namespace jank::analyze
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d != nullptr; d = next_in_place(d))
+    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
       if(res.is_err())
@@ -1616,7 +1616,7 @@ namespace jank::analyze
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
         native_bool literal{ true };
-        for(auto d = typed_o->fresh_seq(); d != nullptr; d = next_in_place(d))
+        for(auto d = typed_o->fresh_seq(); d != nullptr; d = d->next_in_place())
         {
           auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
           if(res.is_err())

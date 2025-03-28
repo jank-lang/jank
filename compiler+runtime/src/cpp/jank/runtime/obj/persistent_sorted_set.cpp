@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_sorted_set::value_type {
         runtime::detail::native_transient_sorted_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           transient.insert_v(it->first());
         }

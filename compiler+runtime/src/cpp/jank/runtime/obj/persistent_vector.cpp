@@ -39,7 +39,7 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           {
             v.push_back(i->first());
           }

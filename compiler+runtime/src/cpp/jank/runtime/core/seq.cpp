@@ -425,7 +425,7 @@ namespace jank::runtime
             return obj::nil::nil_const();
           }
 
-          return next_in_place(ret) ?: obj::nil::nil_const();
+          return ret->next_in_place() ?: obj::nil::nil_const();
         }
         else
         {
@@ -780,7 +780,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
           {
             if(i == index)
             {
@@ -816,7 +816,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
           {
             if(i == index)
             {
@@ -967,7 +967,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T>)
         {
           size_t length{ 0 };
-          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = i->next_in_place())
           {
             ++length;
           }

@@ -168,7 +168,7 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_sequence->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             hash = 31 * hash + visit(it->first());
             ++n;
@@ -194,7 +194,7 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_sequence->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             hash += visit(it->first());
             ++n;
