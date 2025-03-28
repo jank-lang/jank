@@ -21,7 +21,7 @@ namespace jank::analyze
 
   namespace expr
   {
-    using function_context_ptr = jtl::ref<struct function_context>;
+    using function_context_ref = jtl::ref<struct function_context>;
   }
 
   struct lifted_var
@@ -115,7 +115,7 @@ namespace jank::analyze
      * originating local. */
     jtl::option<find_result> find_originating_local(runtime::obj::symbol_ptr sym);
 
-    jtl::option<expr::function_context_ptr> find_named_recursion(runtime::obj::symbol_ptr sym);
+    jtl::option<expr::function_context_ref> find_named_recursion(runtime::obj::symbol_ptr sym);
 
     static native_bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 

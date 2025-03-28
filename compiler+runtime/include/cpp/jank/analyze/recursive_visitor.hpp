@@ -58,7 +58,7 @@ namespace jank::analyze
 
     virtual ~recursive_visitor() = default;
 
-    result_type visit(expression_ptr expr);
+    result_type visit(expression_ref expr);
 
     virtual result_type visit(expr::def const &expr);
     virtual result_type visit(expr::var_deref const &expr);

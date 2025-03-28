@@ -11,10 +11,10 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  static jtl::result<source, error_ptr> reparse_nth(jtl::immutable_string const &file_path,
-                                               size_t const offset,
-                                               size_t const n,
-                                               object_ptr const macro_expansion)
+  static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &file_path,
+                                                    size_t const offset,
+                                                    size_t const n,
+                                                    object_ptr const macro_expansion)
   {
     if(file_path == no_source_path)
     {

@@ -4,7 +4,7 @@
 
 namespace jank::analyze::expr
 {
-  using do_ptr = jtl::ref<struct do_>;
+  using do_ref = jtl::ref<struct do_>;
 
   struct do_ : expression
   {
@@ -15,11 +15,11 @@ namespace jank::analyze::expr
     do_(expression_position position,
         local_frame_ptr frame,
         native_bool needs_box,
-        native_vector<expression_ptr> &&values);
+        native_vector<expression_ref> &&values);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ptr to_runtime_data() const override;
 
-    native_vector<expression_ptr> values{};
+    native_vector<expression_ref> values{};
   };
 }

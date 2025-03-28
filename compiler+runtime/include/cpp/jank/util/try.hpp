@@ -11,7 +11,7 @@ namespace jank
     struct base;
   }
 
-  using error_ptr = jtl::ref<error::base>;
+  using error_ref = jtl::ref<error::base>;
 }
 
 namespace jank::util
@@ -19,7 +19,7 @@ namespace jank::util
   void print_exception(std::exception const &e);
   void print_exception(runtime::object_ptr const e);
   void print_exception(jtl::immutable_string const &e);
-  void print_exception(error_ptr e);
+  void print_exception(error_ref e);
 }
 
 /* We use cpptrace to wrap our try/catch blocks so that we
@@ -48,26 +48,26 @@ namespace jank::util
 #define JANK_TRY CPPTRACE_TRY
 
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-#define JANK_CATCH_THEN(fun, then)               \
-  CPPTRACE_CATCH(std::exception const &e)        \
-  {                                              \
-    fun(e);                                      \
-    then;                                        \
-  }                                              \
-  catch(jank::runtime::object_ptr const e)       \
-  {                                              \
-    fun(e);                                      \
-    then;                                        \
-  }                                              \
-  catch(jtl::immutable_string const &e) \
-  {                                              \
-    fun(e);                                      \
-    then;                                        \
-  }                                              \
-  catch(jank::error_ptr const &e)                \
-  {                                              \
-    fun(e);                                      \
-    then;                                        \
+#define JANK_CATCH_THEN(fun, then)         \
+  CPPTRACE_CATCH(std::exception const &e)  \
+  {                                        \
+    fun(e);                                \
+    then;                                  \
+  }                                        \
+  catch(jank::runtime::object_ptr const e) \
+  {                                        \
+    fun(e);                                \
+    then;                                  \
+  }                                        \
+  catch(jtl::immutable_string const &e)    \
+  {                                        \
+    fun(e);                                \
+    then;                                  \
+  }                                        \
+  catch(jank::error_ref const &e)          \
+  {                                        \
+    fun(e);                                \
+    then;                                  \
   }
 
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */

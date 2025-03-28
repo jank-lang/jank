@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jtl/ref.hpp>
+#include <jtl/ptr.hpp>
 
 #include <jank/runtime/object.hpp>
 
@@ -27,9 +28,33 @@ namespace jank::runtime
     {
     }
 
+    native_box(jtl::ref<T> const data)
+      : data{ data.data }
+    {
+    }
+
+    native_box(jtl::ptr<T> const data)
+      : data{ data.data }
+    {
+    }
+
     template <typename C>
     requires std::is_convertible_v<C *, T *>
     native_box(native_box<C> const data)
+      : data{ data.data }
+    {
+    }
+
+    template <typename C>
+    requires std::is_convertible_v<C *, T *>
+    native_box(jtl::ref<C> const data)
+      : data{ data.data }
+    {
+    }
+
+    template <typename C>
+    requires std::is_convertible_v<C *, T *>
+    native_box(jtl::ptr<C> const data)
       : data{ data.data }
     {
     }

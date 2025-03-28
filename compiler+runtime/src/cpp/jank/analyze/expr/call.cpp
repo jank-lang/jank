@@ -8,9 +8,9 @@ namespace jank::analyze::expr
   call::call(expression_position const position,
              local_frame_ptr const frame,
              native_bool const needs_box,
-             expression_ptr const source,
+             expression_ref const source,
              runtime::obj::persistent_list_ptr const form,
-             native_vector<expression_ptr> &&arg_exprs)
+             native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , source_expr{ source }
     , form{ form }

@@ -320,10 +320,10 @@ namespace jank::error
 
 namespace jank
 {
-  using error_ptr = jtl::ref<error::base>;
+  using error_ref = jtl::ref<error::base>;
 
   template <typename... Args>
-  error_ptr make_error(Args &&...args)
+  error_ref make_error(Args &&...args)
   {
     return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
   }

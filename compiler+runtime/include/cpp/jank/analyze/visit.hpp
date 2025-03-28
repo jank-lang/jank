@@ -25,7 +25,7 @@
 namespace jank::analyze
 {
   template <typename F, typename... Args>
-  auto visit_expr(F const &f, expression_ptr const e, Args &&...args)
+  auto visit_expr(F const &f, expression_ref const e, Args &&...args)
   {
     switch(e->kind)
     {

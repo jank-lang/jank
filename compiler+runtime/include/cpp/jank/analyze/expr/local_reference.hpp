@@ -14,7 +14,7 @@ namespace jank::analyze
 
 namespace jank::analyze::expr
 {
-  using local_reference_ptr = jtl::ref<struct local_reference>;
+  using local_reference_ref = jtl::ref<struct local_reference>;
 
   struct local_reference : expression
   {

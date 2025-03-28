@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using named_recursion_ptr = jtl::ref<struct named_recursion>;
+  using named_recursion_ref = jtl::ref<struct named_recursion>;
 
   struct named_recursion : expression
   {
@@ -20,12 +20,12 @@ namespace jank::analyze::expr
                     native_bool needs_box,
                     recursion_reference &&recursion_ref,
                     runtime::obj::persistent_list_ptr args,
-                    native_vector<expression_ptr> &&arg_exprs);
+                    native_vector<expression_ref> &&arg_exprs);
 
     runtime::object_ptr to_runtime_data() const override;
 
     recursion_reference recursion_ref;
     runtime::obj::persistent_list_ptr args{};
-    native_vector<expression_ptr> arg_exprs;
+    native_vector<expression_ref> arg_exprs;
   };
 }

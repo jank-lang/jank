@@ -14,7 +14,7 @@ namespace jank::runtime
 
 namespace jank::analyze::expr
 {
-  using var_ref_ptr = jtl::ref<struct var_ref>;
+  using var_ref_ref = jtl::ref<struct var_ref>;
 
   struct var_ref : expression
   {

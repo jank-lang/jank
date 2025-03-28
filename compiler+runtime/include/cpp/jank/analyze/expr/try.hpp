@@ -11,7 +11,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using do_ptr = jtl::ref<struct do_>;
+  using do_ref = jtl::ref<struct do_>;
 
   struct catch_
   {
@@ -19,22 +19,22 @@ namespace jank::analyze::expr
     runtime::object_ptr to_runtime_data() const;
 
     runtime::obj::symbol_ptr sym{};
-    do_ptr body;
+    do_ref body;
   };
 
-  using try_ptr = jtl::ref<struct try_>;
+  using try_ref = jtl::ref<struct try_>;
 
   struct try_ : expression
   {
     static constexpr expression_kind expr_kind{ expression_kind::try_ };
 
-    try_(expression_position position, local_frame_ptr frame, native_bool needs_box, do_ptr body);
+    try_(expression_position position, local_frame_ptr frame, native_bool needs_box, do_ref body);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ptr to_runtime_data() const override;
 
-    do_ptr body;
+    do_ref body;
     jtl::option<catch_> catch_body{};
-    jtl::option<do_ptr> finally_body{};
+    jtl::option<do_ref> finally_body{};
   };
 }

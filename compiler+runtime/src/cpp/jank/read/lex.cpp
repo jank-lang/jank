@@ -350,7 +350,7 @@ namespace jank::read::lex
     return { some(token_kind::eof), *this };
   }
 
-  jtl::option<error_ptr> processor::check_whitespace(native_bool const found_space)
+  jtl::option<error_ref> processor::check_whitespace(native_bool const found_space)
   {
     if(require_space && !found_space)
     {
@@ -360,7 +360,7 @@ namespace jank::read::lex
     return none;
   }
 
-  static jtl::result<codepoint, error_ptr>
+  static jtl::result<codepoint, error_ref>
   convert_to_codepoint(native_persistent_string_view const sv, movable_position const &pos)
   {
     std::mbstate_t state{};
@@ -455,7 +455,7 @@ namespace jank::read::lex
     return c >= '0' && c <= '9';
   }
 
-  jtl::result<token, error_ptr> processor::next()
+  jtl::result<token, error_ref> processor::next()
   {
     /* Skip whitespace. */
     native_bool found_space{};
@@ -1270,7 +1270,7 @@ namespace jank::read::lex
     }
   }
 
-  jtl::result<codepoint, error_ptr> processor::peek(size_t const ahead) const
+  jtl::result<codepoint, error_ref> processor::peek(size_t const ahead) const
   {
     auto const peek_pos{ pos + ahead };
     if(peek_pos >= file.size())

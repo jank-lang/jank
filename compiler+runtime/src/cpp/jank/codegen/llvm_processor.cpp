@@ -68,7 +68,7 @@ namespace jank::codegen
     pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
   }
 
-  llvm_processor::llvm_processor(expr::function_ptr const expr,
+  llvm_processor::llvm_processor(expr::function_ref const expr,
                                  jtl::immutable_string const &module_name,
                                  compilation_target const target)
     : target{ target }
@@ -77,7 +77,7 @@ namespace jank::codegen
   {
   }
 
-  llvm_processor::llvm_processor(expr::function_ptr const expr,
+  llvm_processor::llvm_processor(expr::function_ref const expr,
                                  std::unique_ptr<reusable_context> ctx)
     : target{ compilation_target::function }
     , root_fn{ expr }
@@ -233,14 +233,14 @@ namespace jank::codegen
     return ok();
   }
 
-  llvm::Value *llvm_processor::gen(expression_ptr const ex, expr::function_arity const &fn_arity)
+  llvm::Value *llvm_processor::gen(expression_ref const ex, expr::function_arity const &fn_arity)
   {
     llvm::Value *ret{};
     visit_expr([&, this](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(expr::def_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::def_ref const expr, expr::function_arity const &arity)
   {
     auto const ref(gen_var(expr->name));
 
@@ -296,7 +296,7 @@ namespace jank::codegen
   }
 
   /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
-  llvm::Value *llvm_processor::gen(expr::var_deref_ptr const expr, expr::function_arity const &)
+  llvm::Value *llvm_processor::gen(expr::var_deref_ref const expr, expr::function_arity const &)
   {
     auto const ref(gen_var(make_box<obj::symbol>(expr->var->n, expr->var->name)));
     auto const fn_type(
@@ -315,7 +315,7 @@ namespace jank::codegen
   }
 
   /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
-  llvm::Value *llvm_processor::gen(expr::var_ref_ptr const expr, expr::function_arity const &)
+  llvm::Value *llvm_processor::gen(expr::var_ref_ref const expr, expr::function_arity const &)
   {
     auto const var(gen_var(expr->qualified_name));
 
@@ -340,7 +340,7 @@ namespace jank::codegen
     }
   }
 
-  llvm::Value *llvm_processor::gen(expr::call_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::call_ref const expr, expr::function_arity const &arity)
   {
     auto const callee(gen(expr->source_expr, arity));
 
@@ -373,7 +373,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::primitive_literal_ptr const expr, expr::function_arity const &)
+  llvm_processor::gen(expr::primitive_literal_ref const expr, expr::function_arity const &)
   {
     auto const ret(runtime::visit_object(
       [&](auto const typed_o) -> llvm::Value * {
@@ -415,7 +415,7 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(expr::list_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::list_ref const expr, expr::function_arity const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -441,7 +441,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::vector_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::vector_ref const expr, expr::function_arity const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -467,7 +467,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::map_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::map_ref const expr, expr::function_arity const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -494,7 +494,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::set_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::set_ref const expr, expr::function_arity const &arity)
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
@@ -521,7 +521,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::local_reference_ptr const expr, expr::function_arity const &)
+  llvm_processor::gen(expr::local_reference_ref const expr, expr::function_arity const &)
   {
     auto const ret(locals[expr->binding->name]);
     jank_debug_assert(ret);
@@ -535,7 +535,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::function_ptr const expr, expr::function_arity const &fn_arity)
+  llvm_processor::gen(expr::function_ref const expr, expr::function_arity const &fn_arity)
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
@@ -561,7 +561,7 @@ namespace jank::codegen
     return fn_obj;
   }
 
-  llvm::Value *llvm_processor::gen(expr::recur_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::recur_ref const expr, expr::function_arity const &arity)
   {
     /* The codegen for the special recur form is very similar to the named recursion
      * codegen, but it's simpler. The key difference is that named recursion requires
@@ -603,7 +603,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::recursion_reference_ptr const expr, expr::function_arity const &arity)
+  llvm_processor::gen(expr::recursion_reference_ref const expr, expr::function_arity const &arity)
   {
     /* With each recursion reference, we generate a new function instance. This is different
      * from what Clojure does, but is functionally the same so long as one doesn't rely on
@@ -624,7 +624,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::named_recursion_ptr const expr, expr::function_arity const &arity)
+  llvm_processor::gen(expr::named_recursion_ref const expr, expr::function_arity const &arity)
   {
     auto const &fn_expr(*expr->recursion_ref.fn_ctx->fn);
     auto const &captures(fn_expr.captures());
@@ -697,7 +697,7 @@ namespace jank::codegen
                                                  true,
                                                  capture.first,
                                                  capture.second };
-          ctx->builder->CreateStore(gen(expr::local_reference_ptr{ local_ref }, arity), field_ptr);
+          ctx->builder->CreateStore(gen(expr::local_reference_ref{ local_ref }, arity), field_ptr);
         }
         arg_handles.emplace_back(closure_obj);
         arg_types.emplace_back(ctx->builder->getPtrTy());
@@ -740,7 +740,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::let_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::let_ref const expr, expr::function_arity const &arity)
   {
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
@@ -764,7 +764,7 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen(expr::do_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::do_ref const expr, expr::function_arity const &arity)
   {
     llvm::Value *last{};
     for(auto const &form : expr->values)
@@ -794,7 +794,7 @@ namespace jank::codegen
     }
   }
 
-  llvm::Value *llvm_processor::gen(expr::if_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::if_ref const expr, expr::function_arity const &arity)
   {
     /* If we're in return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
@@ -867,7 +867,7 @@ namespace jank::codegen
     return nullptr;
   }
 
-  llvm::Value *llvm_processor::gen(expr::throw_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::throw_ref const expr, expr::function_arity const &arity)
   {
     /* TODO: Generate direct call to __cxa_throw. */
     auto const value(gen(expr->value, arity));
@@ -886,7 +886,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::try_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
     auto const wrapped_body(evaluate::wrap_expression(expr->body, "try_body", {}));
     auto const wrapped_catch(expr->catch_body.map([](auto const &catch_body) {
@@ -921,7 +921,7 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *llvm_processor::gen(expr::case_ptr const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::case_ref const expr, expr::function_arity const &arity)
   {
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
     auto const position{ expr->position };
@@ -1442,7 +1442,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_function_instance(expr::function_ptr const expr,
+  llvm::Value *llvm_processor::gen_function_instance(expr::function_ref const expr,
                                                      expr::function_arity const &fn_arity)
   {
     expr::function_arity const *variadic_arity{};
@@ -1514,7 +1514,7 @@ namespace jank::codegen
                                                true,
                                                capture.first,
                                                capture.second };
-        ctx->builder->CreateStore(gen(expr::local_reference_ptr{ local_ref }, fn_arity), field_ptr);
+        ctx->builder->CreateStore(gen(expr::local_reference_ref{ local_ref }, fn_arity), field_ptr);
       }
 
       auto const create_fn_type(
@@ -1595,8 +1595,7 @@ namespace jank::codegen
     }
   }
 
-  llvm::GlobalVariable *
-  llvm_processor::create_global_var(jtl::immutable_string const &name) const
+  llvm::GlobalVariable *llvm_processor::create_global_var(jtl::immutable_string const &name) const
   {
     return new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
                                      false,

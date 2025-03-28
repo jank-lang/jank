@@ -33,7 +33,7 @@ namespace jank::read::parse
 
   struct processor
   {
-    using object_result = jtl::result<jtl::option<object_source_info>, error_ptr>;
+    using object_result = jtl::result<jtl::option<object_source_info>, error_ref>;
 
     struct shorthand_function_details
     {
@@ -94,9 +94,10 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    jtl::result<runtime::object_ptr, error_ptr> syntax_quote(runtime::object_ptr form);
-    jtl::result<runtime::object_ptr, error_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
-    static jtl::result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    jtl::result<runtime::object_ptr, error_ref> syntax_quote(runtime::object_ptr form);
+    jtl::result<runtime::object_ptr, error_ref> syntax_quote_expand_seq(runtime::object_ptr seq);
+    static jtl::result<runtime::object_ptr, error_ref>
+    syntax_quote_flatten_map(runtime::object_ptr seq);
     static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
 
   public:

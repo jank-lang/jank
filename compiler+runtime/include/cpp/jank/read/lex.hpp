@@ -216,7 +216,7 @@ namespace jank::read::lex
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = jtl::result<token, error_ptr>;
+      using value_type = jtl::result<token, error_ref>;
       using pointer = value_type *;
       using reference = value_type &;
 
@@ -233,9 +233,9 @@ namespace jank::read::lex
     processor(native_persistent_string_view const &f);
     processor(native_persistent_string_view const &f, size_t offset);
 
-    jtl::result<token, error_ptr> next();
-    jtl::result<codepoint, error_ptr> peek(size_t const ahead = 1) const;
-    jtl::option<error_ptr> check_whitespace(native_bool const found_space);
+    jtl::result<token, error_ref> next();
+    jtl::result<codepoint, error_ref> peek(size_t const ahead = 1) const;
+    jtl::option<error_ref> check_whitespace(native_bool const found_space);
 
     iterator begin();
     iterator end();

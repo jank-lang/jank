@@ -8,9 +8,9 @@ namespace jank::analyze::expr
   if_::if_(expression_position const position,
            local_frame_ptr const frame,
            native_bool const needs_box,
-           expression_ptr const condition,
-           expression_ptr const then,
-           jtl::option<expression_ptr> const &else_)
+           expression_ref const condition,
+           expression_ref const then,
+           jtl::option<expression_ref> const &else_)
     : expression{ expr_kind, position, frame, needs_box }
     , condition{ condition }
     , then{ then }

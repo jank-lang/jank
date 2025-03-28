@@ -66,7 +66,7 @@ catch(jtl::immutable_string const &s)
   jank::util::println("Exception: {}", s);
   return 1;
 }
-catch(jank::error_ptr const &e)
+catch(jank::error_ref const &e)
 {
   jank::error::report(e);
   return 1;

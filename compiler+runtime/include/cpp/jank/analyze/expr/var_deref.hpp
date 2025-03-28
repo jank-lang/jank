@@ -14,7 +14,7 @@ namespace jank::runtime
 
 namespace jank::analyze::expr
 {
-  using var_deref_ptr = jtl::ref<struct var_deref>;
+  using var_deref_ref = jtl::ref<struct var_deref>;
 
   struct var_deref : expression
   {

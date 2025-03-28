@@ -106,7 +106,7 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(error_ptr const e)
+  void print_exception(error_ref const e)
   {
     error::report(e);
 

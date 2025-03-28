@@ -125,7 +125,7 @@ namespace jank::analyze
     native_bool needs_box{ true };
   };
 
-  using expression_ptr = jtl::ref<expression>;
+  using expression_ref = jtl::ref<expression>;
 
   /* Captures both expressions and things which inherit from expression. */
   template <typename T>

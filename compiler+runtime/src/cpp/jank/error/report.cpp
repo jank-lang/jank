@@ -77,7 +77,7 @@ namespace jank::error
 
   struct plan
   {
-    plan(error_ptr const e);
+    plan(error_ref const e);
 
     void add(read::source const &body_source, note const &n);
     void add(note const &n);
@@ -87,7 +87,7 @@ namespace jank::error
     native_vector<snippet> snippets;
   };
 
-  plan::plan(error_ptr const e)
+  plan::plan(error_ref const e)
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
@@ -509,7 +509,7 @@ namespace jank::error
     return code_snippet_box(util::relative_path(s.file_path), line_numbers, lines, max_width);
   }
 
-  void report(error_ptr const e)
+  void report(error_ref const e)
   {
     plan const p{ e };
 

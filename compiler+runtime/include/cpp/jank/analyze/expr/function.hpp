@@ -16,7 +16,7 @@ namespace jank::analyze
 
 namespace jank::analyze::expr
 {
-  using function_ptr = jtl::ref<struct function>;
+  using function_ref = jtl::ref<struct function>;
 
   struct function_context : gc
   {
@@ -31,16 +31,16 @@ namespace jank::analyze::expr
     /* TODO: is_pure */
   };
 
-  using function_context_ptr = jtl::ref<function_context>;
+  using function_context_ref = jtl::ref<function_context>;
 
   struct function_arity
   {
     runtime::object_ptr to_runtime_data() const;
 
     native_vector<runtime::obj::symbol_ptr> params;
-    do_ptr body;
+    do_ref body;
     local_frame_ptr frame;
-    function_context_ptr fn_ctx;
+    function_context_ref fn_ctx;
   };
 
   struct arity_key
@@ -50,8 +50,6 @@ namespace jank::analyze::expr
     size_t param_count{};
     native_bool is_variadic{};
   };
-
-  using function_ptr = jtl::ref<struct function>;
 
   struct function : expression
   {

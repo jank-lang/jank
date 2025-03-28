@@ -110,7 +110,7 @@ namespace jank::evaluate
   }
 
   template <typename F>
-  static void walk(expression_ptr const expr, F const &f)
+  static void walk(expression_ref const expr, F const &f)
   {
     visit_expr([&](auto const typed_expr) { walk(*typed_expr, f); }, expr);
   }
@@ -129,7 +129,7 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  static expr::function_ptr wrap_expression(jtl::ref<E> const orig_expr,
+  static expr::function_ref wrap_expression(jtl::ref<E> const orig_expr,
                                             jtl::immutable_string const &name,
                                             native_vector<obj::symbol_ptr> params)
   {
@@ -196,7 +196,7 @@ namespace jank::evaluate
   }
 
   /* TODO: Expression wrapping makes sense in analyze, not eval. We use it all over the place. */
-  expr::function_ptr wrap_expressions(native_vector<expression_ptr> const &exprs,
+  expr::function_ref wrap_expressions(native_vector<expression_ref> const &exprs,
                                       processor const &an_prc,
                                       jtl::immutable_string const &name)
   {
@@ -237,7 +237,7 @@ namespace jank::evaluate
     }
   }
 
-  expr::function_ptr wrap_expression(expression_ptr const expr,
+  expr::function_ref wrap_expression(expression_ref const expr,
                                      jtl::immutable_string const &name,
                                      native_vector<obj::symbol_ptr> params)
   {
@@ -246,7 +246,7 @@ namespace jank::evaluate
       expr);
   }
 
-  object_ptr eval(expression_ptr const ex)
+  object_ptr eval(expression_ref const ex)
   {
     profile::timer const timer{ "eval ast node" };
     object_ptr ret{};
@@ -255,7 +255,7 @@ namespace jank::evaluate
     return ret;
   }
 
-  object_ptr eval(expr::def_ptr const expr)
+  object_ptr eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
     var->meta = expr->name->meta;
@@ -275,19 +275,19 @@ namespace jank::evaluate
     return var;
   }
 
-  object_ptr eval(expr::var_deref_ptr const expr)
+  object_ptr eval(expr::var_deref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
     return var.unwrap()->deref();
   }
 
-  object_ptr eval(expr::var_ref_ptr const expr)
+  object_ptr eval(expr::var_ref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
     return var.unwrap();
   }
 
-  object_ptr eval(expr::call_ptr const expr)
+  object_ptr eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
     if(source->type == object_type::var)
@@ -435,7 +435,7 @@ namespace jank::evaluate
         },
         source);
     }
-    catch(error_ptr const e)
+    catch(error_ref const e)
     {
       /* We keep the original form from the call expression so we can point
        * back to it if an exception is thrown during eval. */
@@ -444,7 +444,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::primitive_literal_ptr const expr)
+  object_ptr eval(expr::primitive_literal_ref const expr)
   {
     if(expr->data->type == object_type::keyword)
     {
@@ -454,7 +454,7 @@ namespace jank::evaluate
     return expr->data;
   }
 
-  object_ptr eval(expr::list_ptr const expr)
+  object_ptr eval(expr::list_ref const expr)
   {
     native_vector<object_ptr> ret;
     for(auto const &e : expr->data_exprs)
@@ -473,7 +473,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::vector_ptr const expr)
+  object_ptr eval(expr::vector_ref const expr)
   {
     runtime::detail::native_transient_vector ret;
     for(auto const &e : expr->data_exprs)
@@ -490,7 +490,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::map_ptr const expr)
+  object_ptr eval(expr::map_ref const expr)
   {
     auto const size(expr->data_exprs.size());
     if(size <= obj::persistent_array_map::max_size)
@@ -536,7 +536,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::set_ptr const expr)
+  object_ptr eval(expr::set_ref const expr)
   {
     runtime::detail::native_transient_hash_set ret;
     for(auto const &e : expr->data_exprs)
@@ -553,13 +553,13 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::local_reference_ptr const)
+  object_ptr eval(expr::local_reference_ref const)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
     throw make_box("unsupported eval: local_reference");
   }
 
-  object_ptr eval(expr::function_ptr const expr)
+  object_ptr eval(expr::function_ref const expr)
   {
     auto const &module(
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
@@ -582,25 +582,25 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::recur_ptr const)
+  object_ptr eval(expr::recur_ref const)
   /* This will always be in a fn or loop, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recur");
   }
 
-  object_ptr eval(expr::recursion_reference_ptr const)
+  object_ptr eval(expr::recursion_reference_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recursion_reference");
   }
 
-  object_ptr eval(expr::named_recursion_ptr const)
+  object_ptr eval(expr::named_recursion_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: named_recursion");
   }
 
-  object_ptr eval(expr::do_ptr const expr)
+  object_ptr eval(expr::do_ref const expr)
   {
     object_ptr ret{ obj::nil::nil_const() };
     for(auto const &form : expr->values)
@@ -610,12 +610,12 @@ namespace jank::evaluate
     return ret;
   }
 
-  object_ptr eval(expr::let_ptr const expr)
+  object_ptr eval(expr::let_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "let", {})));
   }
 
-  object_ptr eval(expr::if_ptr const expr)
+  object_ptr eval(expr::if_ref const expr)
   {
     auto const condition(eval(expr->condition));
     if(truthy(condition))
@@ -629,7 +629,7 @@ namespace jank::evaluate
     return obj::nil::nil_const();
   }
 
-  object_ptr eval(expr::throw_ptr const expr)
+  object_ptr eval(expr::throw_ref const expr)
   {
     /* XXX: Clojure wraps throw expressions. I _suspect_ it does this because
      * clojure.main uses the stack trace to provide source info by stripping out
@@ -638,7 +638,7 @@ namespace jank::evaluate
     throw eval(expr->value);
   }
 
-  object_ptr eval(expr::try_ptr const expr)
+  object_ptr eval(expr::try_ref const expr)
   {
     util::scope_exit const finally{ [=]() {
       if(expr->finally_body)
@@ -664,7 +664,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::case_ptr const expr)
+  object_ptr eval(expr::case_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
   }

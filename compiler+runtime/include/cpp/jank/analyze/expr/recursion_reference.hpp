@@ -4,8 +4,8 @@
 
 namespace jank::analyze::expr
 {
-  using function_context_ptr = jtl::ref<struct function_context>;
-  using recursion_reference_ptr = jtl::ref<struct recursion_reference>;
+  using function_context_ref = jtl::ref<struct function_context>;
+  using recursion_reference_ref = jtl::ref<struct recursion_reference>;
 
   struct recursion_reference : expression
   {
@@ -14,10 +14,10 @@ namespace jank::analyze::expr
     recursion_reference(expression_position position,
                         local_frame_ptr frame,
                         native_bool needs_box,
-                        function_context_ptr fn_ctx);
+                        function_context_ref fn_ctx);
 
     runtime::object_ptr to_runtime_data() const override;
 
-    function_context_ptr fn_ctx;
+    function_context_ref fn_ctx;
   };
 }

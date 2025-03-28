@@ -168,7 +168,7 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     object_ptr ret{ obj::nil::nil_const() };
-    native_vector<analyze::expression_ptr> exprs{};
+    native_vector<analyze::expression_ref> exprs{};
     for(auto const &form : p_prc)
     {
       auto const expr(
@@ -243,14 +243,14 @@ namespace jank::runtime
     return ret;
   }
 
-  native_vector<analyze::expression_ptr>
+  native_vector<analyze::expression_ref>
   context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    native_vector<analyze::expression_ptr> ret{};
+    native_vector<analyze::expression_ref> ret{};
     for(auto const &form : p_prc)
     {
       auto const expr(
@@ -320,7 +320,7 @@ namespace jank::runtime
   }
 
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
-                                            std::unique_ptr<llvm::Module> const &module) const
+                                                 std::unique_ptr<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
@@ -668,7 +668,8 @@ namespace jank::runtime
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
   }
 
-  jtl::string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
+  jtl::string_result<void>
+  context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
     jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };

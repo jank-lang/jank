@@ -4,7 +4,7 @@
 
 namespace jank::analyze::expr
 {
-  using primitive_literal_ptr = jtl::ref<struct primitive_literal>;
+  using primitive_literal_ref = jtl::ref<struct primitive_literal>;
 
   struct primitive_literal : expression
   {
