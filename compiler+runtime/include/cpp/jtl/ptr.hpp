@@ -4,6 +4,8 @@
 
 namespace jtl
 {
+  /* A `ptr` is a non-owning, nullable box. The memory referenced by a `ptr` is
+   * expected to be owned elsewhere or GC allocated. */
   template <typename T>
   struct ptr
   {

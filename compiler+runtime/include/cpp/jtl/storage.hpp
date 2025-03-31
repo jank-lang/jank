@@ -6,6 +6,13 @@
 
 namespace jtl
 {
+  /* This `storage` container allows us to store an instance of T in an in-place buffer.
+   * Using a `storage` makes sense if you want to hold onto a value which may not be
+   * default initialized. A good example of this is `option`.
+   *
+   * The `storage` container doesn't keep track of whether its value is set, so it doesn't
+   * know when to destruct. This is meant to be explicitly controlled by whoever is using
+   * the `storage` instead. See `option` for how this is done. */
   template <typename T>
   struct storage
   {

@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::multi_function };
     static constexpr native_bool pointer_free{ false };
 
-    multi_function() = default;
+    multi_function() = delete;
     multi_function(object_ptr name, object_ptr dispatch, object_ptr default_, object_ptr hierarchy);
 
     /* behavior::object_like */

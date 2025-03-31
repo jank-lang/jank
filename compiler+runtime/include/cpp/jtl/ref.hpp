@@ -9,6 +9,8 @@
 
 namespace jtl
 {
+  /* A `ref` is a non-owning, non-nullable box which must be always be initialized. The
+   * memory referenced by a `ref` is expected to be owned elsewhere or GC allocated. */
   template <typename T>
   struct ref
   {

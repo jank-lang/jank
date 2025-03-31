@@ -211,7 +211,8 @@ namespace jtl
       return jtl::move(fallback);
     }
 
-    constexpr bool operator!=(option<T> const &rhs) const noexcept
+    /* TODO: noexcept when we can. */
+    constexpr bool operator!=(option<T> const &rhs) const
     {
       if(set != rhs.set)
       {
