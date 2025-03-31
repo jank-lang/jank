@@ -12,8 +12,7 @@ namespace jank::util
                    native_vector<jtl::immutable_string> const &includes,
                    native_vector<jtl::immutable_string> const &defines);
 
-  jtl::immutable_string const &
-  binary_version(native_integer const optimization_level,
-                 native_vector<jtl::immutable_string> const &includes,
-                 native_vector<jtl::immutable_string> const &defines);
+  jtl::immutable_string const &binary_version(native_integer const optimization_level,
+                                              native_vector<jtl::immutable_string> const &includes,
+                                              native_vector<jtl::immutable_string> const &defines);
 }

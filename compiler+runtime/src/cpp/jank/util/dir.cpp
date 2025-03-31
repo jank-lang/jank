@@ -85,10 +85,9 @@ namespace jank::util
    * every module. I think this is much safer than trying to reconcile ABI
    * changes more granularly.
    */
-  jtl::immutable_string const &
-  binary_version(native_integer const optimization_level,
-                 native_vector<jtl::immutable_string> const &includes,
-                 native_vector<jtl::immutable_string> const &defines)
+  jtl::immutable_string const &binary_version(native_integer const optimization_level,
+                                              native_vector<jtl::immutable_string> const &includes,
+                                              native_vector<jtl::immutable_string> const &defines)
   {
     static jtl::immutable_string res;
     if(!res.empty())

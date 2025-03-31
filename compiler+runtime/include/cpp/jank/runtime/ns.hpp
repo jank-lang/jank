@@ -28,7 +28,8 @@ namespace jank::runtime
     jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
     jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ptr const &sym);
 
-    jtl::result<void, jtl::immutable_string> add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns);
+    jtl::result<void, jtl::immutable_string>
+    add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns);
     void remove_alias(obj::symbol_ptr const &sym);
     jtl::option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
 

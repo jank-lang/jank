@@ -286,8 +286,8 @@ namespace jank::runtime
   }
 
   jtl::immutable_string munge_extra(jtl::immutable_string const &o,
-                                       jtl::immutable_string const &search,
-                                       char const * const replace)
+                                    jtl::immutable_string const &search,
+                                    char const * const replace)
   {
     native_transient_string const ret{ munge(o) };
     std::regex const search_regex{ search.c_str() };

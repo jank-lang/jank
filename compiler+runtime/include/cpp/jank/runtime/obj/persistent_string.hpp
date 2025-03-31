@@ -49,7 +49,8 @@ namespace jank::runtime::obj
     object_ptr nth(object_ptr const index, object_ptr const fallback) const;
 
     jtl::string_result<persistent_string_ptr> substring(native_integer start) const;
-    jtl::string_result<persistent_string_ptr> substring(native_integer start, native_integer end) const;
+    jtl::string_result<persistent_string_ptr>
+    substring(native_integer start, native_integer end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
