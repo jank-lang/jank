@@ -5,6 +5,8 @@
 #include <jank/type.hpp>
 #include <jank/util/string_builder.hpp>
 
+#include <jtl/ref.hpp>
+
 namespace jank::runtime
 {
   enum class object_type : uint8_t
@@ -240,11 +242,11 @@ namespace jank::runtime::behavior
     /* Returns a string version of the object, generally for printing or displaying. This
      * is distinct from its code representation, which doesn't yet have a corresponding
      * function in this behavior. */
-    { t->to_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_string() } -> std::convertible_to<jtl::immutable_string>;
     { t->to_string(std::declval<util::string_builder &>()) } -> std::same_as<void>;
 
     /* Returns the code representation of the object. */
-    { t->to_code_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_code_string() } -> std::convertible_to<jtl::immutable_string>;
 
     /* Returns a deterministic hash value for the object. For some objects, like functions
      * and transients, the hash is actually just the object's address. For others, it's
@@ -294,5 +296,139 @@ namespace std
   {
     bool operator()(jank::runtime::object_ptr const lhs,
                     jank::runtime::object_ptr const rhs) const noexcept;
+  };
+}
+
+namespace jtl
+{
+  template <>
+  struct ref<jank::runtime::object>
+  {
+    using value_type = jank::runtime::object;
+
+    constexpr ref() = default;
+
+    constexpr ref(nullptr_t) noexcept
+    {
+    }
+
+    constexpr ref(value_type &data) noexcept
+      : data{ &data }
+    {
+    }
+
+    constexpr ref(value_type const &data) noexcept
+      : data{ const_cast<value_type *>(&data) }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr ref(T &typed_data) noexcept
+      : data{ &typed_data.base }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr ref(T const &typed_data) noexcept
+      : data{ const_cast<jank::runtime::object *>(&typed_data.base) }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr ref(ref<T> const typed_data) noexcept
+      : data{ &typed_data->base }
+    {
+    }
+
+    constexpr value_type *operator->() const noexcept
+    {
+      jank_debug_assert(data);
+      return data;
+    }
+
+    constexpr bool operator!() const noexcept
+    {
+      return !data;
+    }
+
+    constexpr value_type &operator*() const noexcept
+    {
+      jank_debug_assert(data);
+      return *data;
+    }
+
+    constexpr bool operator==(nullptr_t) const noexcept
+    {
+      return data == nullptr;
+    }
+
+    constexpr bool operator==(ref const &rhs) const noexcept
+    {
+      return data == rhs.data;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr bool operator==(T const &rhs) const noexcept
+    {
+      return data == &rhs->base;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr bool operator==(ref<T> const &rhs) const noexcept
+    {
+      return data == &rhs->base;
+    }
+
+    constexpr bool operator!=(nullptr_t) const noexcept
+    {
+      return data != nullptr;
+    }
+
+    constexpr bool operator!=(ref const &rhs) const noexcept
+    {
+      return data != rhs.data;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr bool operator!=(T const &rhs) const noexcept
+    {
+      return data != &rhs->base;
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    constexpr bool operator!=(ref<T> const &rhs) const noexcept
+    {
+      return data != &rhs->base;
+    }
+
+    constexpr bool operator<(ref const &rhs) const noexcept
+    {
+      return data < rhs.data;
+    }
+
+    constexpr operator ref<value_type const>() const noexcept
+    {
+      jank_debug_assert(data);
+      return *data;
+    }
+
+    constexpr operator value_type *() const noexcept
+    {
+      return data;
+    }
+
+    constexpr explicit operator bool() const noexcept
+    {
+      return data;
+    }
+
+    value_type *data{};
   };
 }

@@ -2,22 +2,23 @@
 
 #include <variant>
 
-#include <jank/option.hpp>
-#include <jank/util/type_name.hpp>
+#include <jtl/option.hpp>
+#include <jtl/immutable_string.hpp>
+#include <jtl/trait/type_name.hpp>
 
-namespace jank
+namespace jtl
 {
   namespace detail
   {
     template <bool Ok, typename T>
     struct result
     {
-      constexpr result(T const &t)
+      constexpr result(T const &t) noexcept
         : data{ t }
       {
       }
 
-      constexpr result(T &&t)
+      constexpr result(T &&t) noexcept
         : data{ std::move(t) }
       {
       }
@@ -31,18 +32,18 @@ namespace jank
     };
   }
 
-  constexpr detail::result<true, void> ok()
+  constexpr detail::result<true, void> ok() noexcept
   {
     return {};
   }
 
   template <typename R, typename Decayed = std::decay_t<R>>
-  constexpr detail::result<true, Decayed> ok(R &&data)
+  constexpr detail::result<true, Decayed> ok(R &&data) noexcept
   {
     return { std::forward<R>(data) };
   }
   template <typename E, typename Decayed = std::decay_t<E>>
-  constexpr detail::result<false, Decayed> err(E &&data)
+  constexpr detail::result<false, Decayed> err(E &&data) noexcept
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   {
     return { std::forward<E>(data) };
@@ -53,25 +54,27 @@ namespace jank
   {
     static_assert(!std::same_as<R, E>, "Result and error type must be different.");
 
-    constexpr result(detail::result<true, R> &&r)
+    constexpr result(detail::result<true, R> &&r) noexcept
       : data{ R{ std::move(r.data) } }
     {
     }
 
-    constexpr result(detail::result<false, E> &&e)
+    constexpr result(detail::result<false, E> &&e) noexcept
       : data{ E{ std::move(e.data) } }
     {
     }
 
     /* Allow implicit construction of R and E from their ctor args. */
     template <typename T>
-    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
+    requires std::is_constructible_v<R, T>
+    constexpr result(T &&t) noexcept
       : data{ std::forward<T>(t) }
     {
     }
 
     template <typename T>
-    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
+    requires std::is_constructible_v<E, T>
+    constexpr result(T &&t) noexcept
       : data{ std::forward<T>(t) }
     {
     }
@@ -80,24 +83,24 @@ namespace jank
      * things like ok(none) for option<R>. */
     template <typename T>
     constexpr result(detail::result<true, T> const &t,
-                     std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr)
+                     std::enable_if_t<std::is_constructible_v<R, T>> * = nullptr) noexcept
       : data{ R{ t.data } }
     {
     }
 
     template <typename T>
     constexpr result(detail::result<false, T> const &t,
-                     std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
+                     std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr) noexcept
       : data{ E{ t.data } }
     {
     }
 
-    constexpr native_bool is_ok() const
+    constexpr bool is_ok() const noexcept
     {
       return data.index() == 0;
     }
 
-    constexpr native_bool is_err() const
+    constexpr bool is_err() const noexcept
     {
       return data.index() == 1;
     }
@@ -206,22 +209,23 @@ namespace jank
       return std::move(fallback);
     }
 
-    constexpr native_bool operator==(result const &rhs) const
+    constexpr bool operator==(result const &rhs) const noexcept
     {
       return rhs.data == data;
     }
 
-    constexpr native_bool operator!=(result const &rhs) const
+    /* TODO: noexcept when we can. */
+    constexpr bool operator!=(result const &rhs) const
     {
       return rhs.data != data;
     }
 
-    constexpr native_bool operator==(R const &rhs) const
+    constexpr bool operator==(R const &rhs) const noexcept
     {
       return data.index() == 0 && rhs == std::get<R>(data);
     }
 
-    constexpr native_bool operator==(E const &rhs) const
+    constexpr bool operator==(E const &rhs) const noexcept
     {
       return data.index() == 1 && rhs == std::get<E>(data);
     }
@@ -241,19 +245,19 @@ namespace jank
   template <typename E>
   struct [[nodiscard]] result<void, E>
   {
-    constexpr result(detail::result<true, void> &&)
+    constexpr result(detail::result<true, void> &&) noexcept
       : data{ void_t{} }
     {
     }
 
-    constexpr result(detail::result<false, E> &&e)
+    constexpr result(detail::result<false, E> &&e) noexcept
       : data{ std::move(e).data }
     {
     }
 
     /* Allow implicit construction of E from its ctor args. */
     template <typename T>
-    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
+    constexpr result(T &&t, std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr) noexcept
       : data{ std::forward<T>(t) }
     {
     }
@@ -262,17 +266,17 @@ namespace jank
      * things like ok(none) for option<R>. */
     template <typename T>
     constexpr result(detail::result<false, T> const &t,
-                     std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr)
+                     std::enable_if_t<std::is_constructible_v<E, T>> * = nullptr) noexcept
       : data{ t.data }
     {
     }
 
-    constexpr native_bool is_ok() const
+    constexpr bool is_ok() const noexcept
     {
       return data.index() == 0;
     }
 
-    constexpr native_bool is_err() const
+    constexpr bool is_err() const noexcept
     {
       return data.index() == 1;
     }
@@ -321,17 +325,17 @@ namespace jank
       return none;
     }
 
-    constexpr native_bool operator==(result const &rhs) const
+    constexpr bool operator==(result const &rhs) const noexcept
     {
       return rhs.data == data;
     }
 
-    constexpr native_bool operator!=(result const &rhs) const
+    constexpr bool operator!=(result const &rhs) const noexcept
     {
       return rhs.data != data;
     }
 
-    constexpr native_bool operator==(E const &rhs) const
+    constexpr bool operator==(E const &rhs) const
     {
       return data.index() == 1 && rhs == std::get<E>(data);
     }
@@ -358,7 +362,7 @@ namespace jank
       }
       else
       {
-        return os << "ok(" << util::type_name<R>() << ")";
+        return os << "ok(" << type_name<R>() << ")";
       }
     }
 
@@ -368,10 +372,16 @@ namespace jank
     }
     else
     {
-      return os << "err(" << util::type_name<E>() << ")";
+      return os << "err(" << type_name<E>() << ")";
     }
   }
 
   template <typename R>
-  using string_result = result<R, native_persistent_string>;
+  using string_result = result<R, immutable_string>;
+}
+
+namespace jank
+{
+  using jtl::ok;
+  using jtl::err;
 }

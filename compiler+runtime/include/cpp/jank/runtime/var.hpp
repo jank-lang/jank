@@ -4,7 +4,7 @@
 
 #include <folly/Synchronized.h>
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 
@@ -36,8 +36,8 @@ namespace jank::runtime
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_string() const;
+    jtl::immutable_string to_code_string() const;
     void to_string(util::string_builder &buff) const;
     native_hash to_hash() const;
 
@@ -54,7 +54,7 @@ namespace jank::runtime
     object_ptr alter_root(object_ptr f, object_ptr args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
-    string_result<void> set(object_ptr r) const;
+    jtl::string_result<void> set(object_ptr r) const;
 
     var_ptr set_dynamic(native_bool dyn);
 
@@ -71,7 +71,7 @@ namespace jank::runtime
     ns_ptr n{};
     /* Unqualified. */
     obj::symbol_ptr name{};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
 
   private:
@@ -91,9 +91,9 @@ namespace jank::runtime
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     object base{ obj_type };
@@ -115,9 +115,9 @@ namespace jank::runtime
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     object base{ obj_type };

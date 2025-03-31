@@ -9,7 +9,7 @@ namespace jank::analyze::expr
                local_frame_ptr const frame,
                native_bool const needs_box,
                runtime::obj::persistent_list_ptr const args,
-               native_vector<expression_ptr> &&arg_exprs)
+               native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , args{ args }
     , arg_exprs{ std::move(arg_exprs) }

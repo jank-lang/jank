@@ -19,8 +19,8 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  result<native_persistent_string, char_parse_error>
-  parse_character_in_base(native_persistent_string const &char_literal, int const base)
+  jtl::result<jtl::immutable_string, char_parse_error>
+  parse_character_in_base(jtl::immutable_string const &char_literal, int const base)
   {
     try
     {
@@ -46,7 +46,7 @@ namespace jank::read::parse
       /* C++ helpfully deprecated the only standard way of converting Unicode formats.
        * We'll use it while we can. It'll be gone in C++26. */
       std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-      native_persistent_string const converted(converter.to_bytes(codepoint));
+      jtl::immutable_string const converted(converter.to_bytes(codepoint));
 
       if(converter.converted() != 1)
       {
@@ -61,7 +61,7 @@ namespace jank::read::parse
     }
   }
 
-  option<char> get_char_from_literal(native_persistent_string const &s)
+  jtl::option<char> get_char_from_literal(jtl::immutable_string const &s)
   {
     if(s.size() == 2)
     {
@@ -790,7 +790,7 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr; it = next_in_place(next_in_place(it)))
+    for(auto it(list->fresh_seq()); it != nullptr; it = it->next_in_place()->next_in_place())
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -841,7 +841,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote_expand_seq(object_ptr const seq)
+  jtl::result<object_ptr, error_ref> processor::syntax_quote_expand_seq(object_ptr const seq)
   {
     if(!seq)
     {
@@ -849,7 +849,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
+      [this](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
@@ -882,13 +882,13 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> result<object_ptr, error_ptr> {
+      []() -> jtl::result<object_ptr, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
       },
       seq);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote_flatten_map(object_ptr const seq)
+  jtl::result<object_ptr, error_ref> processor::syntax_quote_flatten_map(object_ptr const seq)
   {
     if(!seq)
     {
@@ -896,9 +896,9 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> result<object_ptr, error_ptr> {
+      [](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto item(it->first());
           ret.push_back(first(item));
@@ -907,7 +907,7 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec ?: obj::nil::nil_const();
       },
-      []() -> result<object_ptr, error_ptr> {
+      []() -> jtl::result<object_ptr, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
       },
       seq);
@@ -927,7 +927,7 @@ namespace jank::read::parse
       form);
   }
 
-  result<object_ptr, error_ptr> processor::syntax_quote(object_ptr const form)
+  jtl::result<object_ptr, error_ref> processor::syntax_quote(object_ptr const form)
   {
     object_ptr ret{};
 
@@ -995,7 +995,7 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       auto const res{ visit_seqable(
-        [&](auto const typed_form) -> result<object_ptr, error_ptr> {
+        [&](auto const typed_form) -> jtl::result<object_ptr, error_ref> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -1079,7 +1079,7 @@ namespace jank::read::parse
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> result<object_ptr, error_ptr> {
+        [=]() -> jtl::result<object_ptr, error_ref> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);
@@ -1219,8 +1219,8 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<native_persistent_string_view>(start_token.data));
     auto const slash(sv.find('/'));
-    native_persistent_string ns, name;
-    if(slash != native_persistent_string::npos)
+    jtl::immutable_string ns, name;
+    if(slash != jtl::immutable_string::npos)
     {
       /* If it's only a slash, it's a name. Otherwise, it's a ns/name separator. */
       if(sv.size() == 1)
@@ -1318,8 +1318,8 @@ namespace jank::read::parse
     native_bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
-    native_persistent_string ns, name;
-    if(slash != native_persistent_string::npos)
+    jtl::immutable_string ns, name;
+    if(slash != jtl::immutable_string::npos)
     {
       if(resolved)
       {
@@ -1395,7 +1395,7 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<native_persistent_string_view>(token.data));
     return object_source_info{ make_box<obj::persistent_string>(
-                                 native_persistent_string{ sv.data(), sv.size() }),
+                                 jtl::immutable_string{ sv.data(), sv.size() }),
                                token,
                                token };
   }

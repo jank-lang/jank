@@ -13,7 +13,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::seqable<T>
-  auto seq(native_box<T> const s)
+  auto seq(jtl::ref<T> const s)
   {
     return s->seq();
   }
@@ -22,7 +22,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::seqable<T>
-  auto fresh_seq(native_box<T> const s)
+  auto fresh_seq(jtl::ref<T> const s)
   {
     return s->fresh_seq();
   }
@@ -31,7 +31,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto next(native_box<T> const s)
+  auto next(jtl::ref<T> const s)
   {
     return s->next();
   }
@@ -40,14 +40,14 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable_in_place<T>
-  auto next_in_place(native_box<T> const s)
+  auto next_in_place(jtl::ref<T> const s)
   {
     return s->next_in_place();
   }
 
   template <typename T>
   requires(behavior::sequenceable<T> && !behavior::sequenceable_in_place<T>)
-  auto next_in_place(native_box<T> const s)
+  auto next_in_place(jtl::ref<T> const s)
   {
     /* Not all sequences can be updated in place. For those, just gracefully
      * do a normal next. */
@@ -60,7 +60,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto first(native_box<T> const s)
+  auto first(jtl::ref<T> const s)
   {
     return s->first();
   }
@@ -69,7 +69,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto second(native_box<T> const s)
+  auto second(jtl::ref<T> const s)
   {
     return next(s)->first();
   }
@@ -117,7 +117,7 @@ namespace jank::runtime
   object_ptr pop(object_ptr o);
   object_ptr empty(object_ptr o);
 
-  native_persistent_string str(object_ptr o, object_ptr args);
+  jtl::immutable_string str(object_ptr o, object_ptr args);
 
   obj::persistent_list_ptr list(object_ptr s);
   obj::persistent_vector_ptr vec(object_ptr s);

@@ -207,7 +207,7 @@ namespace jank::runtime::obj
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
         for(auto it(fresh_seq()); it != nullptr;
-            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+            it = it->next_in_place(), seq = seq->next_in_place())
         {
           if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
@@ -225,12 +225,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string range::to_string()
+  jtl::immutable_string range::to_string()
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string range::to_code_string()
+  jtl::immutable_string range::to_code_string()
   {
     return runtime::to_code_string(seq());
   }

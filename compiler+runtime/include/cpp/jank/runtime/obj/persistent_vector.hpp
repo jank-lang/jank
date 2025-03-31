@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(option<object_ptr> const &meta, value_type &&d);
+    persistent_vector(jtl::option<object_ptr> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
@@ -44,9 +44,9 @@ namespace jank::runtime::obj
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::comparable */
@@ -87,7 +87,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     value_type data;
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
     mutable native_hash hash{};
   };
 }

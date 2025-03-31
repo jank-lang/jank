@@ -27,9 +27,9 @@ namespace jank::runtime::obj
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::comparable */
@@ -39,8 +39,8 @@ namespace jank::runtime::obj
     native_integer compare(keyword const &) const;
 
     /* behavior::nameable */
-    native_persistent_string const &get_name() const;
-    native_persistent_string const &get_namespace() const;
+    jtl::immutable_string const &get_name() const;
+    jtl::immutable_string const &get_namespace() const;
 
     /* behavior::callable */
     object_ptr call(object_ptr);

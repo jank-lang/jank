@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s)
     : str{ s }
   {
-    assert(!s->data.empty());
+    jank_debug_assert(!s->data.empty());
   }
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s,
@@ -16,7 +16,7 @@ namespace jank::runtime::obj
     : str{ s }
     , index{ i }
   {
-    assert(!s->data.empty() && i < s->data.size());
+    jank_debug_assert(!s->data.empty() && i < s->data.size());
   }
 
   /* behavior::object_like */
@@ -30,14 +30,14 @@ namespace jank::runtime::obj
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
-  native_persistent_string persistent_string_sequence::to_string() const
+  jtl::immutable_string persistent_string_sequence::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return buff.release();
   }
 
-  native_persistent_string persistent_string_sequence::to_code_string() const
+  jtl::immutable_string persistent_string_sequence::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);

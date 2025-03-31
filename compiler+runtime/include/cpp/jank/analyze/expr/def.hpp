@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -10,7 +11,7 @@ namespace jank::runtime::obj
 
 namespace jank::analyze::expr
 {
-  using def_ptr = runtime::native_box<struct def>;
+  using def_ref = jtl::ref<struct def>;
 
   struct def : expression
   {
@@ -20,11 +21,11 @@ namespace jank::analyze::expr
         local_frame_ptr frame,
         native_bool needs_box,
         runtime::obj::symbol_ptr name,
-        option<expression_ptr> const &value);
+        jtl::option<expression_ref> const &value);
 
     runtime::object_ptr to_runtime_data() const override;
 
     runtime::obj::symbol_ptr name{};
-    option<expression_ptr> value;
+    jtl::option<expression_ref> value;
   };
 }

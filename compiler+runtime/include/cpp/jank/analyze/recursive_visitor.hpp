@@ -1,9 +1,8 @@
 #pragma once
 
-#include <type_traits>
+#include <jtl/option.hpp>
 
-#include <jank/result.hpp>
-#include <jank/option.hpp>
+#include <jtl/result.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze
@@ -47,7 +46,7 @@ namespace jank::analyze
   template <typename R, typename E>
   struct recursive_visitor
   {
-    using result_type = result<R, E>;
+    using result_type = jtl::result<R, E>;
 
     struct context
     {
@@ -59,7 +58,7 @@ namespace jank::analyze
 
     virtual ~recursive_visitor() = default;
 
-    result_type visit(expression_ptr expr);
+    result_type visit(expression_ref expr);
 
     virtual result_type visit(expr::def const &expr);
     virtual result_type visit(expr::var_deref const &expr);

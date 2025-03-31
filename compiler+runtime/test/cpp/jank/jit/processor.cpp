@@ -27,7 +27,7 @@ namespace jank::jit
   struct failure
   {
     std::filesystem::path path;
-    native_persistent_string error;
+    jtl::immutable_string error;
   };
 
   TEST_SUITE("jit")

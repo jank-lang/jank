@@ -3,7 +3,7 @@
 
 namespace jank::runtime
 {
-  native_persistent_string to_string(object const * const o)
+  jtl::immutable_string to_string(object const * const o)
   {
     return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
   }
@@ -18,7 +18,7 @@ namespace jank::runtime
     visit_object([&](auto const typed_o) { typed_o->to_string(buff); }, o);
   }
 
-  native_persistent_string to_code_string(object const * const o)
+  jtl::immutable_string to_code_string(object const * const o)
   {
     return visit_object([](auto const typed_o) { return typed_o->to_code_string(); }, o);
   }

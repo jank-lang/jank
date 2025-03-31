@@ -6,7 +6,7 @@
 
 namespace jank::util
 {
-  native_persistent_string sha256(native_persistent_string const &input)
+  jtl::immutable_string sha256(jtl::immutable_string const &input)
   {
     std::array<unsigned char, SHA256_DIGEST_LENGTH> buf{};
     SHA256(reinterpret_cast<unsigned char const *>(input.c_str()), input.size(), buf.data());

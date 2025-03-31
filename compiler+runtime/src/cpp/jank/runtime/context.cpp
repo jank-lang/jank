@@ -108,7 +108,7 @@ namespace jank::runtime
     return qualified_sym;
   }
 
-  option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
+  jtl::option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
   {
     profile::timer const timer{ "rt find_var" };
     if(!sym->ns.empty())
@@ -133,18 +133,18 @@ namespace jank::runtime
     }
   }
 
-  option<var_ptr>
-  context::find_var(native_persistent_string const &ns, native_persistent_string const &name)
+  jtl::option<var_ptr>
+  context::find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return find_var(make_box<obj::symbol>(ns, name));
   }
 
-  option<object_ptr> context::find_local(obj::symbol_ptr const &)
+  jtl::option<object_ptr> context::find_local(obj::symbol_ptr const &)
   {
     return none;
   }
 
-  object_ptr context::eval_file(native_persistent_string const &path)
+  object_ptr context::eval_file(jtl::immutable_string const &path)
   {
     auto const file(module::loader::read_file(path));
     if(file.is_err())
@@ -168,7 +168,7 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     object_ptr ret{ obj::nil::nil_const() };
-    native_vector<analyze::expression_ptr> exprs{};
+    native_vector<analyze::expression_ref> exprs{};
     for(auto const &form : p_prc)
     {
       auto const expr(
@@ -184,13 +184,13 @@ namespace jank::runtime
           ->to_string());
       /* No matter what's in the fn, we'll return nil. */
       exprs.emplace_back(
-        make_box<analyze::expr::primitive_literal>(analyze::expression_position::tail,
+        make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
                                                    an_prc.root_frame,
                                                    true,
                                                    obj::nil::nil_const()));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
-      auto fn(static_box_cast<analyze::expr::function>(wrapped_exprs));
+      auto fn(static_ref_cast<analyze::expr::function>(wrapped_exprs));
       fn->name = module::module_to_load_function(module);
       fn->unique_name = fn->name;
       codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
@@ -198,7 +198,7 @@ namespace jank::runtime
       write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
-    assert(ret);
+    jank_debug_assert(ret);
     return ret;
   }
 
@@ -243,14 +243,14 @@ namespace jank::runtime
     return ret;
   }
 
-  native_vector<analyze::expression_ptr>
+  native_vector<analyze::expression_ref>
   context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    native_vector<analyze::expression_ptr> ret{};
+    native_vector<analyze::expression_ref> ret{};
     for(auto const &form : p_prc)
     {
       auto const expr(
@@ -269,12 +269,12 @@ namespace jank::runtime
     return ret;
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, jtl::immutable_string>
   context::load_module(native_persistent_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
-    native_persistent_string absolute_module;
+    jtl::immutable_string absolute_module;
     if(module.starts_with('/'))
     {
       absolute_module = module.substr(1);
@@ -300,7 +300,7 @@ namespace jank::runtime
     }
   }
 
-  result<void, native_persistent_string>
+  jtl::result<void, jtl::immutable_string>
   context::compile_module(native_persistent_string_view const &module)
   {
     module_dependencies.clear();
@@ -319,8 +319,8 @@ namespace jank::runtime
     return evaluate::eval(expr.expect_ok());
   }
 
-  string_result<void> context::write_module(native_persistent_string const &module_name,
-                                            std::unique_ptr<llvm::Module> const &module) const
+  jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
+                                                 std::unique_ptr<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
@@ -366,14 +366,14 @@ namespace jank::runtime
     return ok();
   }
 
-  native_persistent_string context::unique_string()
+  jtl::immutable_string context::unique_string()
   {
     return unique_string("G_");
   }
 
-  native_persistent_string context::unique_string(native_persistent_string_view const &prefix)
+  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix)
   {
-    static native_persistent_string const dot{ "\\." };
+    static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
     return util::format("{}-{}-{}",
                         runtime::munge_extra(ns->name->get_name(), dot, "_"),
@@ -414,7 +414,7 @@ namespace jank::runtime
     }
   }
 
-  ns_ptr context::intern_ns(native_persistent_string const &name)
+  ns_ptr context::intern_ns(jtl::immutable_string const &name)
   {
     return intern_ns(make_box<obj::symbol>(name));
   }
@@ -437,7 +437,7 @@ namespace jank::runtime
     return result.first->second;
   }
 
-  option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
+  jtl::option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
   {
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
@@ -450,7 +450,7 @@ namespace jank::runtime
     return none;
   }
 
-  option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
+  jtl::option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
   {
     auto locked_namespaces(namespaces.rlock());
     auto const found(locked_namespaces->find(sym));
@@ -461,7 +461,7 @@ namespace jank::runtime
     return none;
   }
 
-  option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
+  jtl::option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
   {
     auto const ns(current_ns());
     auto const alias(ns->find_alias(target));
@@ -479,13 +479,13 @@ namespace jank::runtime
     return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref());
   }
 
-  result<var_ptr, native_persistent_string>
-  context::intern_var(native_persistent_string const &ns, native_persistent_string const &name)
+  jtl::result<var_ptr, jtl::immutable_string>
+  context::intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_var(make_box<obj::symbol>(ns, name));
   }
 
-  result<var_ptr, native_persistent_string>
+  jtl::result<var_ptr, jtl::immutable_string>
   context::intern_var(obj::symbol_ptr const &qualified_sym)
   {
     profile::timer const timer{ "intern_var" };
@@ -505,12 +505,12 @@ namespace jank::runtime
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
-  result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string const &ns,
-                          native_persistent_string const &name,
+  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  context::intern_keyword(jtl::immutable_string const &ns,
+                          jtl::immutable_string const &name,
                           bool const resolved)
   {
-    native_persistent_string resolved_ns{ ns };
+    jtl::immutable_string resolved_ns{ ns };
     if(!resolved)
     {
       /* The ns will be an ns alias. */
@@ -532,8 +532,8 @@ namespace jank::runtime
     return intern_keyword(resolved_ns.empty() ? name : util::format("{}/{}", resolved_ns, name));
   }
 
-  result<obj::keyword_ptr, native_persistent_string>
-  context::intern_keyword(native_persistent_string const &s)
+  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  context::intern_keyword(jtl::immutable_string const &s)
   {
     profile::timer const timer{ "rt intern_keyword" };
 
@@ -634,12 +634,11 @@ namespace jank::runtime
     }
     catch(...)
     {
-      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg): I need to log without exceptions. */
-      std::printf("Exception caught while destructing binding_scope");
+      util::println("Exception caught while destructing binding_scope");
     }
   }
 
-  string_result<void> context::push_thread_bindings()
+  jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
     auto &tbfs(thread_binding_frames[this]);
@@ -653,13 +652,13 @@ namespace jank::runtime
       return ok();
     }
 
-    assert(bindings);
+    jank_debug_assert(bindings);
     return push_thread_bindings(bindings);
   }
 
-  string_result<void> context::push_thread_bindings(object_ptr const bindings)
+  jtl::string_result<void> context::push_thread_bindings(object_ptr const bindings)
   {
-    assert(bindings);
+    jank_debug_assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
@@ -669,9 +668,10 @@ namespace jank::runtime
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
   }
 
-  string_result<void> context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
+  jtl::string_result<void>
+  context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
   {
-    assert(bindings);
+    jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
@@ -681,7 +681,7 @@ namespace jank::runtime
 
     auto const thread_id(std::this_thread::get_id());
 
-    for(auto it(bindings->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+    for(auto it(bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));
@@ -708,12 +708,12 @@ namespace jank::runtime
       }
     }
 
-    assert(frame.bindings);
+    jank_debug_assert(frame.bindings);
     tbfs.push_front(std::move(frame));
     return ok();
   }
 
-  string_result<void> context::pop_thread_bindings()
+  jtl::string_result<void> context::pop_thread_bindings()
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())
@@ -736,7 +736,7 @@ namespace jank::runtime
     return tbfs.front().bindings;
   }
 
-  option<thread_binding_frame> context::current_thread_binding_frame()
+  jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
     auto &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())

@@ -425,7 +425,7 @@ namespace jank::runtime
             return obj::nil::nil_const();
           }
 
-          return next_in_place(ret) ?: obj::nil::nil_const();
+          return ret->next_in_place() ?: obj::nil::nil_const();
         }
         else
         {
@@ -780,7 +780,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
           {
             if(i == index)
             {
@@ -816,7 +816,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           native_integer i{};
-          for(auto it(typed_o->fresh_seq()); it != nullptr; it = next_in_place(it), ++i)
+          for(auto it(typed_o->fresh_seq()); it != nullptr; it = it->next_in_place(), ++i)
           {
             if(i == index)
             {
@@ -897,7 +897,7 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string str(object_ptr const o, object_ptr const args)
+  jtl::immutable_string str(object_ptr const o, object_ptr const args)
   {
     util::string_builder buff;
     buff.reserve(16);
@@ -906,7 +906,7 @@ namespace jank::runtime
       runtime::to_string(o, buff);
     }
     return visit_seqable(
-      [](auto const typed_args, util::string_builder &buff) -> native_persistent_string {
+      [](auto const typed_args, util::string_builder &buff) -> jtl::immutable_string {
         for(auto it(typed_args->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           auto const fst(it->first());
@@ -967,7 +967,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T>)
         {
           size_t length{ 0 };
-          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nullptr && length < max; i = i->next_in_place())
           {
             ++length;
           }

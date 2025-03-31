@@ -18,14 +18,14 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::multi_function };
     static constexpr native_bool pointer_free{ false };
 
-    multi_function() = default;
+    multi_function() = delete;
     multi_function(object_ptr name, object_ptr dispatch, object_ptr default_, object_ptr hierarchy);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
-    native_persistent_string to_string();
+    jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
-    native_persistent_string to_code_string();
+    jtl::immutable_string to_code_string();
     native_hash to_hash() const;
 
     /* behavior::callable */

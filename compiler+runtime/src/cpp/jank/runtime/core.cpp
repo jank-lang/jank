@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  native_persistent_string type(object_ptr const o)
+  jtl::immutable_string type(object_ptr const o)
   {
     return object_type_str(o->type);
   }
@@ -67,7 +67,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -98,7 +98,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -126,7 +126,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
-          for(auto it(next_in_place(typed_args)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);
@@ -157,7 +157,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
-          for(auto it(next_in_place(typed_more)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);
@@ -236,10 +236,10 @@ namespace jank::runtime
       o);
   }
 
-  native_persistent_string name(object_ptr const o)
+  jtl::immutable_string name(object_ptr const o)
   {
     return visit_object(
-      [](auto const typed_o) -> native_persistent_string {
+      [](auto const typed_o) -> jtl::immutable_string {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_string>)

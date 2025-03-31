@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -23,8 +24,8 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     native_bool equal(object const &) const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_string() const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::metadatable */
@@ -49,6 +50,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     object_ptr head{};
     object_ptr tail{};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
   };
 }

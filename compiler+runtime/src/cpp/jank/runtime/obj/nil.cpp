@@ -15,13 +15,13 @@ namespace jank::runtime::obj
     return &o == &base;
   }
 
-  native_persistent_string const &nil::to_string() const
+  jtl::immutable_string const &nil::to_string() const
   {
-    static native_persistent_string const s{ "nil" };
+    static jtl::immutable_string const s{ "nil" };
     return s;
   }
 
-  native_persistent_string const &nil::to_code_string() const
+  jtl::immutable_string const &nil::to_code_string() const
   {
     return to_string();
   }

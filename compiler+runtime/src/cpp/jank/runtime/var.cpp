@@ -65,7 +65,7 @@ namespace jank::runtime
   {
     to_string_impl(n, name, buff);
   }
-  native_persistent_string var::to_string() const
+  jtl::immutable_string var::to_string() const
   /* TODO: Maybe cache this. */
   {
     util::string_builder buff;
@@ -73,7 +73,7 @@ namespace jank::runtime
     return buff.release();
   }
 
-  native_persistent_string var::to_code_string() const
+  jtl::immutable_string var::to_code_string() const
   {
     return to_string();
   }
@@ -119,7 +119,7 @@ namespace jank::runtime
     return *locked_root;
   }
 
-  string_result<void> var::set(object_ptr const r) const
+  jtl::string_result<void> var::set(object_ptr const r) const
   {
     profile::timer const timer{ "var set" };
 
@@ -151,14 +151,14 @@ namespace jank::runtime
       return nullptr;
     }
 
-    assert(n);
+    jank_debug_assert(n);
     auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
     if(tbfs.empty())
     {
       return nullptr;
     }
 
-    assert(tbfs.front().bindings);
+    jank_debug_assert(tbfs.front().bindings);
     auto const found(tbfs.front().bindings->get_entry(this));
     if(found == obj::nil::nil_const())
     {
@@ -166,7 +166,7 @@ namespace jank::runtime
     }
 
     auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
-    assert(ret);
+    jank_debug_assert(ret);
     return expect_object<var_thread_binding>(ret);
   }
 
@@ -175,7 +175,7 @@ namespace jank::runtime
     auto const binding(get_thread_binding());
     if(binding)
     {
-      assert(binding->value);
+      jank_debug_assert(binding->value);
       return binding->value;
     }
     return *root.rlock();
@@ -197,12 +197,12 @@ namespace jank::runtime
     return &base == &o;
   }
 
-  native_persistent_string var_thread_binding::to_string() const
+  jtl::immutable_string var_thread_binding::to_string() const
   {
     return runtime::to_string(value);
   }
 
-  native_persistent_string var_thread_binding::to_code_string() const
+  jtl::immutable_string var_thread_binding::to_code_string() const
   {
     return var_thread_binding::to_string();
   }
@@ -227,7 +227,7 @@ namespace jank::runtime
     return &base == &o;
   }
 
-  native_persistent_string var_unbound_root::to_string() const
+  jtl::immutable_string var_unbound_root::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -239,7 +239,7 @@ namespace jank::runtime
     util::format_to(buff, "unbound@{} for var {}", &base, var->to_string());
   }
 
-  native_persistent_string var_unbound_root::to_code_string() const
+  jtl::immutable_string var_unbound_root::to_code_string() const
   {
     return var_unbound_root::to_string();
   }

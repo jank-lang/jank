@@ -40,14 +40,14 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string boolean::to_string() const
+  jtl::immutable_string boolean::to_string() const
   {
     util::string_builder buff;
     buff(data);
     return buff.release();
   }
 
-  native_persistent_string boolean::to_code_string() const
+  jtl::immutable_string boolean::to_code_string() const
   {
     return to_string();
   }
@@ -91,7 +91,7 @@ namespace jank::runtime::obj
     return data == i->data;
   }
 
-  native_persistent_string integer::to_string() const
+  jtl::immutable_string integer::to_string() const
   {
     util::string_builder sb;
     return sb(data).release();
@@ -102,7 +102,7 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string integer::to_code_string() const
+  jtl::immutable_string integer::to_code_string() const
   {
     return to_string();
   }
@@ -157,7 +157,7 @@ namespace jank::runtime::obj
     return hasher(data) == hasher(r->data);
   }
 
-  native_persistent_string real::to_string() const
+  jtl::immutable_string real::to_string() const
   {
     util::string_builder sb;
     to_string(sb);
@@ -187,7 +187,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_persistent_string real::to_code_string() const
+  jtl::immutable_string real::to_code_string() const
   {
     return to_string();
   }

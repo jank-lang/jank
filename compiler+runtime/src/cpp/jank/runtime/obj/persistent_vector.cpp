@@ -19,7 +19,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_vector::persistent_vector(option<object_ptr> const &meta, value_type &&d)
+  persistent_vector::persistent_vector(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = runtime::next_in_place(i))
+          for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
           {
             v.push_back(i->first());
           }
@@ -113,14 +113,14 @@ namespace jank::runtime::obj
     runtime::to_string(data.begin(), data.end(), "[", ']', buff);
   }
 
-  native_persistent_string persistent_vector::to_string() const
+  jtl::immutable_string persistent_vector::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "[", ']', buff);
     return buff.release();
   }
 
-  native_persistent_string persistent_vector::to_code_string() const
+  jtl::immutable_string persistent_vector::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "[", ']', buff);

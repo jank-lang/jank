@@ -78,7 +78,7 @@ namespace jank::runtime
 
   /* Native strings. */
   template <typename Output>
-  requires(same_as_any<Output, native_persistent_string, std::string>)
+  requires(same_as_any<Output, jtl::immutable_string, std::string>)
   struct convert<object_ptr, Output>
   {
     static Output call(object_ptr const &o)

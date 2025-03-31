@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
-  persistent_sorted_map::persistent_sorted_map(option<object_ptr> const &meta, value_type &&d)
+  persistent_sorted_map::persistent_sorted_map(jtl::option<object_ptr> const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
@@ -44,10 +44,10 @@ namespace jank::runtime::obj
         if constexpr(behavior::seqable<T>)
         {
           runtime::detail::native_transient_sorted_map transient;
-          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             auto const key(it->first());
-            it = runtime::next_in_place(it);
+            it = it->next_in_place();
             if(!it)
             {
               throw std::runtime_error{ util::format("Odd number of elements: {}",

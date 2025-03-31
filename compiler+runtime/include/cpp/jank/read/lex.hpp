@@ -2,8 +2,9 @@
 
 #include <variant>
 
-#include <jank/result.hpp>
-#include <jank/option.hpp>
+#include <jtl/option.hpp>
+
+#include <jtl/result.hpp>
 #include <jank/error.hpp>
 
 namespace jank::read::lex
@@ -215,7 +216,7 @@ namespace jank::read::lex
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = result<token, error_ptr>;
+      using value_type = jtl::result<token, error_ref>;
       using pointer = value_type *;
       using reference = value_type &;
 
@@ -225,16 +226,16 @@ namespace jank::read::lex
       native_bool operator==(iterator const &rhs) const;
       native_bool operator!=(iterator const &rhs) const;
 
-      option<value_type> latest;
+      jtl::option<value_type> latest;
       processor &p;
     };
 
     processor(native_persistent_string_view const &f);
     processor(native_persistent_string_view const &f, size_t offset);
 
-    result<token, error_ptr> next();
-    result<codepoint, error_ptr> peek(size_t const ahead = 1) const;
-    option<error_ptr> check_whitespace(native_bool const found_space);
+    jtl::result<token, error_ref> next();
+    jtl::result<codepoint, error_ref> peek(size_t const ahead = 1) const;
+    jtl::option<error_ref> check_whitespace(native_bool const found_space);
 
     iterator begin();
     iterator end();

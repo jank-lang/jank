@@ -11,7 +11,7 @@ namespace jank::runtime::obj
     : head{ head }
     , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
-    assert(head);
+    jank_debug_assert(head);
   }
 
   chunked_cons::chunked_cons(object_ptr const meta, object_ptr const head, object_ptr const tail)
@@ -19,8 +19,8 @@ namespace jank::runtime::obj
     , tail{ tail == nil::nil_const() ? nullptr : tail }
     , meta{ meta }
   {
-    assert(head);
-    assert(meta);
+    jank_debug_assert(head);
+    jank_debug_assert(meta);
   }
 
   chunked_cons_ptr chunked_cons::seq() const
@@ -158,7 +158,7 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         for(auto it(fresh_seq()); it != nullptr;
-            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+            it = it->next_in_place(), seq = seq->next_in_place())
         {
           if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
@@ -176,12 +176,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string chunked_cons::to_string() const
+  jtl::immutable_string chunked_cons::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string chunked_cons::to_code_string() const
+  jtl::immutable_string chunked_cons::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
