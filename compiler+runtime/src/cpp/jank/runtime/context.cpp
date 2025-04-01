@@ -1,5 +1,7 @@
 #include <exception>
 
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Target/TargetMachine.h>

@@ -575,10 +575,9 @@ namespace jank::evaluate
                                        std::move(cg_prc.ctx->llvm_ctx));
 
       auto const fn(
-        __rt_ctx->jit_prc
-          .find_symbol<object *(*)()>(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
+        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
           .expect_ok());
-      return fn();
+      return reinterpret_cast<object *(*)()>(fn)();
     }
   }
 

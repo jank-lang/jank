@@ -670,10 +670,10 @@ namespace jank::runtime::module
      * */
     auto const load_function_name{ module_to_load_function(module) };
 
-    auto const existing_load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name) };
+    auto const existing_load{ rt_ctx.jit_prc.find_symbol(load_function_name) };
     if(existing_load.is_ok())
     {
-      existing_load.expect_ok()();
+      reinterpret_cast<object *(*)()>(existing_load.expect_ok())();
       return ok();
     }
 
@@ -686,8 +686,8 @@ namespace jank::runtime::module
       rt_ctx.jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
-    load();
+    auto const load{ rt_ctx.jit_prc.find_symbol(load_function_name).expect_ok() };
+    reinterpret_cast<object *(*)()>(load)();
 
     return ok();
   }
@@ -716,8 +716,8 @@ namespace jank::runtime::module
      * What if load function is defined in another module?
      * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
     auto const load_function_name{ module_to_load_function(module) };
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
-    load();
+    auto const load{ rt_ctx.jit_prc.find_symbol(load_function_name).expect_ok() };
+    reinterpret_cast<object *(*)()>(load)();
 
     return ok();
   }

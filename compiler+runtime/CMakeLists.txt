@@ -83,15 +83,10 @@ set(
 )
 
 set(
-  jank_jit_compiler_flags
-  # We don't actually want to see any warnings for JIT compiled code.
-  -w
-)
-
-set(
   jank_common_compiler_flags
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
+  -DCPPINTEROP_USE_REPL
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
 )
@@ -144,6 +139,16 @@ function(jank_hook_llvm target)
   target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
 endfunction()
 # ---- Clang/LLVM ----
+
+set(
+  jank_jit_compiler_flags
+  # We don't actually want to see any warnings for JIT compiled code.
+  -w
+  # TODO: Loop around all to add -I
+  -I${LLVM_INCLUDE_DIRS}
+  -I${CLANG_INCLUDE_DIRS}
+  ${LLVM_DEFINITIONS_LIST}
+)
 
 # ---- libjank.a ----
 # The sources for jank are used for both the compiler and its tests, so
@@ -290,6 +295,7 @@ include(FetchContent)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
+include(cmake/dependency/cppinterop.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -313,6 +319,8 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
@@ -321,9 +329,8 @@ target_link_libraries(
   ${BDWGC_LIBRARIES}
   libzippp::libzippp
   cpptrace::cpptrace
-  clang
-  clang-cpp
   LLVM
+  clangCppInterOp
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )

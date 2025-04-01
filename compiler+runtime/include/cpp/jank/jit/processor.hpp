@@ -3,8 +3,6 @@
 #include <filesystem>
 #include <memory>
 
-#include <clang/Interpreter/Interpreter.h>
-
 #include <jtl/result.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/string_builder.hpp>
@@ -15,7 +13,7 @@ namespace llvm
   class LLVMContext;
 }
 
-namespace clang
+namespace Cpp
 {
   class Interpreter;
 }
@@ -37,25 +35,13 @@ namespace jank::jit
                       native_persistent_string_view const &bitcode) const;
 
     jtl::string_result<void> remove_symbol(jtl::immutable_string const &name) const;
-
-    template <typename T>
-    jtl::string_result<T> find_symbol(jtl::immutable_string const &name) const
-    {
-      if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
-      {
-        return symbol.get().toPtr<T>();
-      }
-
-      util::string_builder sb;
-      sb("Failed for find symbol: '")(name)("'");
-      return err(sb.release());
-    }
+    jtl::string_result<void *> find_symbol(jtl::immutable_string const &name) const;
 
     jtl::result<void, jtl::immutable_string>
     load_dynamic_libs(native_vector<jtl::immutable_string> const &libs) const;
     jtl::option<jtl::immutable_string> find_dynamic_lib(jtl::immutable_string const &lib) const;
 
-    std::unique_ptr<clang::Interpreter> interpreter;
+    std::unique_ptr<Cpp::Interpreter> interpreter;
     native_integer optimization_level{};
     native_vector<std::filesystem::path> library_dirs;
   };

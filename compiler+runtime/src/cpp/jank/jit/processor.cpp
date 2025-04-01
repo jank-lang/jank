@@ -5,6 +5,8 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/Signals.h>
@@ -14,7 +16,7 @@
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
 
@@ -31,6 +33,7 @@ namespace jank::jit
   }
 #endif
 
+  [[maybe_unused]]
   static void handle_fatal_llvm_error(void * const user_data,
                                       char const *message,
                                       native_bool const gen_crash_diag)
@@ -105,17 +108,47 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
+    /* TODO: Pass in clang binary name as macro define. */
+    auto const resource_dir{ Cpp::DetectResourceDir("clang++") };
+    args.emplace_back("-resource-dir");
+    args.emplace_back(strdup(resource_dir.c_str()));
+
+    std::vector<std::string> sys_includes;
+    Cpp::DetectSystemCompilerIncludePaths(sys_includes, "clang++");
+    for(auto const &i : sys_includes)
+    {
+      args.emplace_back(strdup(util::format("-I{}", i).c_str()));
+    }
+
     //util::println("jit flags {}", args);
 
-    clang::IncrementalCompilerBuilder compiler_builder;
-    compiler_builder.SetCompilerArgs(args);
-    auto compiler_instance(llvm::cantFail(compiler_builder.CreateCpp()));
-    llvm::install_fatal_error_handler(handle_fatal_llvm_error,
-                                      static_cast<void *>(&compiler_instance->getDiagnostics()));
+    //{
+    //  clang::IncrementalCompilerBuilder compiler_builder;
+    //  compiler_builder.SetCompilerArgs(args);
+    //  auto compiler_instance(llvm::cantFail(compiler_builder.CreateCpp()));
+    //  llvm::install_fatal_error_handler(handle_fatal_llvm_error,
+    //                                    static_cast<void *>(&compiler_instance->getDiagnostics()));
 
-    compiler_instance->LoadRequestedPlugins();
+    //  compiler_instance->LoadRequestedPlugins();
 
-    interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+    //  interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+
+    //  auto const *Clang = interpreter->getCompilerInstance();
+    //  if(!Clang->getFrontendOpts().LLVMArgs.empty())
+    //  {
+    //    unsigned NumArgs = Clang->getFrontendOpts().LLVMArgs.size();
+    //    auto Args = std::make_unique<char const *[]>(NumArgs + 2);
+    //    Args[0] = "clang (LLVM option parsing)";
+    //    for(unsigned i = 0; i != NumArgs; ++i)
+    //    {
+    //      Args[i + 1] = Clang->getFrontendOpts().LLVMArgs[i].c_str();
+    //    }
+    //    Args[NumArgs + 1] = nullptr;
+    //    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
+    //  }
+    //}
+
+    interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args)));
 
     auto const &load_result{ load_dynamic_libs(opts.libs) };
     if(load_result.is_err())
@@ -139,7 +172,7 @@ namespace jank::jit
 
   void processor::load_object(native_persistent_string_view const &path) const
   {
-    auto &ee{ interpreter->getExecutionEngine().get() };
+    auto const ee{ interpreter->getExecutionEngine() };
     auto file{ llvm::MemoryBuffer::getFile(path) };
     if(!file)
     {
@@ -148,7 +181,7 @@ namespace jank::jit
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
     /* TODO: Return result on failure. */
-    llvm::cantFail(ee.addObjectFile(std::move(file.get())));
+    llvm::cantFail(ee->addObjectFile(std::move(file.get())));
   }
 
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
@@ -167,10 +200,10 @@ namespace jank::jit
     }
 #endif
 
-    auto &ee(interpreter->getExecutionEngine().get());
+    auto const ee(interpreter->getExecutionEngine());
     llvm::cantFail(
-      ee.addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
-    llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
+      ee->addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
+    llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
   }
 
   void processor::load_bitcode(jtl::immutable_string const &module,
@@ -194,16 +227,26 @@ namespace jank::jit
 
   jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
   {
-    auto &ee{ interpreter->getExecutionEngine().get() };
+    auto const ee{ interpreter->getExecutionEngine() };
     llvm::orc::SymbolNameSet to_remove{};
-    to_remove.insert(ee.mangleAndIntern(name.c_str()));
-    auto const error{ ee.getMainJITDylib().remove(to_remove) };
+    to_remove.insert(ee->mangleAndIntern(name.c_str()));
+    auto const error{ ee->getMainJITDylib().remove(to_remove) };
 
     if(error.isA<llvm::orc::SymbolsCouldNotBeRemoved>())
     {
       return err(util::format("Failed to remove the symbol: '{}'", name));
     }
     return ok();
+  }
+
+  jtl::string_result<void *> processor::find_symbol(jtl::immutable_string const &name) const
+  {
+    if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
+    {
+      return symbol.get().toPtr<void *>();
+    }
+
+    return err(util::format("Failed to find symbol: '{}'", name));
   }
 
   jtl::option<jtl::immutable_string>
@@ -258,6 +301,6 @@ namespace jank::jit
 
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
-    llvm::cantFail(interpreter->LoadDynamicLibrary(path.data()));
+    llvm::cantFail(static_cast<clang::Interpreter &>(*interpreter).LoadDynamicLibrary(path.data()));
   }
 }

@@ -8,6 +8,9 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -248,13 +251,13 @@ int main(int const argc, char const **argv)
     using namespace jank::runtime;
 
     /* To handle UTF-8 Text , we set the locale to the current environment locale
-   * Usage of the local locale allows better localization.
-   * Notably this might make text encoding become more platform dependent.
-   */
+     * Usage of the local locale allows better localization.
+     * Notably this might make text encoding become more platform dependent.
+     */
     std::locale::global(std::locale(""));
 
     /* The GC needs to enabled even before arg parsing, since our native types,
-   * like strings, use the GC for allocations. It can still be configured later. */
+     * like strings, use the GC for allocations. It can still be configured later. */
     GC_set_all_interior_pointers(1);
     GC_enable();
 
@@ -285,6 +288,13 @@ int main(int const argc, char const **argv)
     jank_load_clojure_string_native();
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
+
+    Cpp::EnableDebugOutput(true);
+    auto const resource_dir{ Cpp::GetResourceDir() };
+    util::println("resource_dir {}", resource_dir);
+
+    //return 0;
+
 
     switch(opts.command)
     {

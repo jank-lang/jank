@@ -1,3 +1,5 @@
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
@@ -44,8 +46,7 @@ namespace jank::codegen
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
-    module->setDataLayout(
-      __rt_ctx->jit_prc.interpreter->getExecutionEngine().get().getDataLayout());
+    module->setDataLayout(__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getDataLayout());
 
     /* TODO: Configure these passes based on the CLI optimization flag. */
 

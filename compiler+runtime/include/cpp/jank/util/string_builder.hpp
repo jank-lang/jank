@@ -36,6 +36,24 @@ namespace jank::util
     string_builder &operator()(native_transient_string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
 
+    template <template <typename> typename V, typename T>
+    requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, native_vector<T>>)
+    string_builder &operator()(V<T> const &d) &
+    {
+      (*this)("[ ");
+      for(size_t i{}; i < d.size(); ++i)
+      {
+        (*this)(d[i]);
+        if(i + 1 != d.size())
+        {
+          (*this)(',');
+        }
+        (*this)(' ');
+      }
+      (*this)(']');
+      return *this;
+    }
+
     void push_back(native_bool d) &;
     void push_back(float d) &;
     void push_back(double d) &;
