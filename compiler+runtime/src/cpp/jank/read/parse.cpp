@@ -854,10 +854,12 @@ namespace jank::read::parse
       [this](auto const typed_seq) {
         for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
-          if(syntax_quote_is_unquote(it->first(), true))
+          auto const item(it->first());
+          // TODO "and if item is non-trivially spliceable"
+          if(syntax_quote_is_unquote(item, true))
           {
             syntax_quote_spliced = true;
-            break;
+            return;
           }
         }
       },
@@ -1050,17 +1052,28 @@ namespace jank::read::parse
                 ctor);
             }
 
+            auto old_syntax_quote_spliced(syntax_quote_spliced);
+            syntax_quote_spliced = false;
             auto expanded(syntax_quote_expand_seq(seq));
+            auto const spliced(syntax_quote_spliced);
+            syntax_quote_spliced = old_syntax_quote_spliced;
             if(expanded.is_err())
             {
               return expanded;
             }
 
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              ctor,
-              cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
+            if(spliced)
+            {
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "apply*"),
+                ctor,
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
+            }
+            else
+            {
+              assert(false); //TODO pour directly in vector/set
+            }
           }
           if constexpr(behavior::map_like<T>)
           {
