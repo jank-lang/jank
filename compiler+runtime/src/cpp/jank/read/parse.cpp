@@ -998,14 +998,23 @@ namespace jank::read::parse
         [&](auto const typed_form) -> result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
-          if constexpr(std::same_as<T, obj::persistent_vector>)
+          if constexpr(std::same_as<T, obj::persistent_vector> || behavior::set_like<T>)
           {
             auto const seq(typed_form->seq());
+            obj::symbol_ptr ctor{};
+            if constexpr(std::same_as<T, obj::persistent_vector>)
+            {
+              ctor = make_box<obj::symbol>("clojure.core", "vector");
+            }
+            else if constexpr(behavior::set_like<T>)
+            {
+              ctor = make_box<obj::symbol>("clojure.core", "hash-set");
+            }
             if(!seq)
             {
               return make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core", "vector"));
+                ctor);
             }
 
             auto expanded(syntax_quote_expand_seq(seq));
@@ -1017,11 +1026,8 @@ namespace jank::read::parse
             return make_box<obj::persistent_list>(
               std::in_place,
               make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "vector"),
-              make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+              ctor,
+              cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
           }
           if constexpr(behavior::map_like<T>)
           {

@@ -1,0 +1,7 @@
+(let [[op v :as all] '`{}
+      v (if (= 'clojure.core/with-meta op) v all)]
+  (assert (= '(clojure.core/apply* clojure.core/hash-map (clojure.core/seq (clojure.core/concat*)))
+             v)
+          v))
+
+:success
