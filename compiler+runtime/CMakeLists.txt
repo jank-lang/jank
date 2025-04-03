@@ -372,7 +372,7 @@ target_include_directories(
 set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
 
 target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -frtti)
 target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
