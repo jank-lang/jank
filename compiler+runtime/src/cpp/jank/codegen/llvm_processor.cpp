@@ -1462,16 +1462,16 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(
-                                llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string_c", create_fn_type));
       llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(runtime::to_code_string(o)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)
-        {
-            return call;
-        }
+      {
+        return call;
+      }
     }
 
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
