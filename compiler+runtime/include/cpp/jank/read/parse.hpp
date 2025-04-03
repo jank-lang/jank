@@ -95,7 +95,8 @@ namespace jank::read::parse
   private:
     result<runtime::object_ptr, error_ptr> syntax_quote(runtime::object_ptr form);
     result<runtime::object_ptr, error_ptr> syntax_quote_expand_seq(runtime::object_ptr seq);
-    static result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    result<runtime::object_ptr, error_ptr> syntax_quote_flatten_map(runtime::object_ptr seq);
+    native_bool syntax_quote_spliced{};
     static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
 
   public:
