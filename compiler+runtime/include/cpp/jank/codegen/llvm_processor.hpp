@@ -86,13 +86,13 @@ namespace jank::codegen
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
-    std::unique_ptr<llvm::FunctionPassManager> fpm;
     std::unique_ptr<llvm::LoopAnalysisManager> lam;
     std::unique_ptr<llvm::FunctionAnalysisManager> fam;
     std::unique_ptr<llvm::CGSCCAnalysisManager> cgam;
     std::unique_ptr<llvm::ModuleAnalysisManager> mam;
     std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
     std::unique_ptr<llvm::StandardInstrumentations> si;
+    llvm::ModulePassManager mpm;
   };
 
   struct llvm_processor
@@ -155,6 +155,8 @@ namespace jank::codegen
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
+
+    void optimize() const;
 
     compilation_target target{};
     analyze::expr::function_ref root_fn;

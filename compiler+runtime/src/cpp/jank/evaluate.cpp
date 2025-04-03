@@ -568,6 +568,7 @@ namespace jank::evaluate
     auto const wrapped_expr(evaluate::wrap_expression(expr, "repl_fn", {}));
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
     cg_prc.gen().expect_ok();
+    cg_prc.optimize();
 
     {
       profile::timer const timer{ util::format("ir jit compile {}", expr->name) };

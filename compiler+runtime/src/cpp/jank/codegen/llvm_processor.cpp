@@ -34,7 +34,6 @@ namespace jank::codegen
                                              *llvm_ctx) }
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
     , global_ctor_block{ llvm::BasicBlock::Create(*llvm_ctx, "entry") }
-    , fpm{ std::make_unique<llvm::FunctionPassManager>() }
     , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
     , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
     , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
@@ -54,19 +53,13 @@ namespace jank::codegen
 
     si->registerCallbacks(*pic, mam.get());
 
-    /* Do simple "peephole" optimizations and bit-twiddling optzns. */
-    fpm->addPass(llvm::InstCombinePass());
-    /* Reassociate expressions. */
-    fpm->addPass(llvm::ReassociatePass());
-    /* Eliminate Common SubExpressions. */
-    fpm->addPass(llvm::GVNPass());
-    /* Simplify the control flow graph (deleting unreachable blocks, etc). */
-    fpm->addPass(llvm::SimplifyCFGPass());
-
     llvm::PassBuilder pb;
     pb.registerModuleAnalyses(*mam);
+    pb.registerCGSCCAnalyses(*cgam);
     pb.registerFunctionAnalyses(*fam);
+    pb.registerLoopAnalyses(*lam);
     pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
+    mpm = pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
   }
 
   llvm_processor::llvm_processor(expr::function_ref const expr,
@@ -209,9 +202,6 @@ namespace jank::codegen
     {
       //to_string();
     }
-
-    /* Run our optimization passes on the function, mutating it. */
-    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -1624,5 +1614,10 @@ namespace jank::codegen
   {
     ctx->module->print(llvm::outs(), nullptr);
     return "";
+  }
+
+  void llvm_processor::optimize() const
+  {
+    ctx->mpm.run(*ctx->module, *ctx->mam);
   }
 }
