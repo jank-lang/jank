@@ -96,7 +96,14 @@ namespace jank::util
 
   void print_exception(runtime::object_ptr const e)
   {
-    util::println("Uncaught exception: {}", runtime::to_code_string(e));
+    if(e->type == runtime::object_type::persistent_string)
+    {
+      util::println("Uncaught exception: {}", runtime::to_string(e));
+    }
+    else
+    {
+      util::println("Uncaught exception: {}", runtime::to_code_string(e));
+    }
     print_exception_stack_trace();
   }
 
