@@ -148,6 +148,7 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::keyword_ptr k) const;
     llvm::Value *gen_global(runtime::obj::character_ptr c) const;
     llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
+    llvm::Value *gen_global_from_read_string_c(runtime::object_ptr o);
     llvm::Value *gen_function_instance(analyze::expr::function_ptr expr,
                                        analyze::expr::function_arity const &fn_arity);
 

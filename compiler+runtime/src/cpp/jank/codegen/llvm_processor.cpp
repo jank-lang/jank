@@ -268,7 +268,7 @@ namespace jank::codegen
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
       auto const meta(
-        gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
+        gen_global_from_read_string_c(strip_source_from_meta(expr->name->meta.unwrap())));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta });
     }
 
@@ -1290,7 +1290,7 @@ namespace jank::codegen
 
         /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
          * Otherwise, we need this info for macro expansion errors. i.e. `(foo ~'bar) */
-        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
+        auto const meta(gen_global_from_read_string_c(s->meta.unwrap()));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
@@ -1424,7 +1424,7 @@ namespace jank::codegen
 
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
               auto const meta(
-                gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
+                gen_global_from_read_string_c(strip_source_from_meta(typed_o->meta.unwrap())));
               auto const meta_name(util::format("{}_meta", name));
               meta->setName(meta_name.c_str());
               ctx->builder->CreateCall(set_meta_fn, { call, meta });
@@ -1437,6 +1437,41 @@ namespace jank::codegen
       {
         return call;
       }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::gen_global_from_read_string_c(object_ptr const o)
+  {
+    auto const found(ctx->literal_globals.find(o));
+    if(found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[o]);
+    auto const name(util::format("data_{}", to_hash(o)));
+    auto const var(create_global_var(name));
+    ctx->module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+                                llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string_c", create_fn_type));
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(runtime::to_code_string(o)) };
+      auto const call(ctx->builder->CreateCall(create_fn, args));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+        {
+            return call;
+        }
     }
 
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
@@ -1559,7 +1594,7 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(ctx->module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(gen_global_from_read_string(strip_source_from_meta(expr->meta)));
+      auto const meta(gen_global_from_read_string_c(strip_source_from_meta(expr->meta)));
       ctx->builder->CreateCall(set_meta_fn, { fn_obj, meta });
     }
 
