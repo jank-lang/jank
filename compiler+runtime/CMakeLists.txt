@@ -285,7 +285,6 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
-include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
 
@@ -308,7 +307,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
@@ -322,7 +320,6 @@ target_link_libraries(
   clang
   clang-cpp
   LLVM
-  ftxui::screen ftxui::dom
   OpenSSL::Crypto
 )
 
