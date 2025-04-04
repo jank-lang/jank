@@ -22,9 +22,8 @@ extern "C"
   typedef uint8_t jank_arity_flags;
 
   jank_object_ptr jank_eval(jank_object_ptr s);
-  /* TODO: Add jank_read_c_string to avoid boxing so much. */
   jank_object_ptr jank_read_string(jank_object_ptr s);
-  jank_object_ptr jank_read_string_c(char const *s);
+  jank_object_ptr jank_read_string_c(char const * const s);
 
   void jank_ns_set_symbol_counter(char const * const ns, uint64_t const count);
 
