@@ -28,11 +28,6 @@ namespace jank::runtime
     {
     }
 
-    native_box(jtl::ref<T> const data)
-      : data{ data.data }
-    {
-    }
-
     native_box(jtl::ptr<T> const data)
       : data{ data.data }
     {
@@ -116,7 +111,9 @@ namespace jank::runtime
       return &data->base;
     }
 
-    operator jtl::ref<value_type>() const
+    template <typename C>
+    requires std::is_convertible_v<C *, T *>
+    operator jtl::ref<C>() const
     {
       jank_debug_assert(data);
       return *data;

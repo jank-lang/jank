@@ -92,14 +92,16 @@ namespace jtl
       return value;
     }
 
+    template <typename R = T>
     [[nodiscard]]
-    constexpr T *ptr() noexcept
+    constexpr R *ptr() noexcept
     {
-      return jtl::launder(reinterpret_cast<T *>(value));
+      return jtl::launder(reinterpret_cast<R *>(value));
     }
 
+    template <typename R = T>
     [[nodiscard]]
-    constexpr T const *ptr() const noexcept
+    constexpr R const *ptr() const noexcept
     {
       return jtl::launder(reinterpret_cast<T const *>(value));
     }

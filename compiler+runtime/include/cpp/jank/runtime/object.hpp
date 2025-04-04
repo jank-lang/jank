@@ -6,6 +6,7 @@
 #include <jank/util/string_builder.hpp>
 
 #include <jtl/ref.hpp>
+#include <jtl/storage.hpp>
 
 namespace jank::runtime
 {
@@ -301,6 +302,9 @@ namespace std
 
 namespace jtl
 {
+  /* This specialization of ref is for type-erased objects.
+   *
+   * It cannot be null, but it can be nil. */
   template <>
   struct ref<jank::runtime::object>
   {
@@ -426,9 +430,123 @@ namespace jtl
 
     constexpr explicit operator bool() const noexcept
     {
-      return data;
+      jank_debug_assert(data);
+      return data->type != jank::runtime::object_type::nil;
     }
 
     value_type *data{};
+  };
+
+  /* This specialization of ref is for fully-typed objects like nil,
+   * persistent_list, persistent_array_map, etc.
+   *
+   * It cannot be null, but it can be nil. */
+  template <typename T>
+  requires jank::runtime::behavior::object_like<T>
+  struct ref<T>
+  {
+    using value_type = T;
+
+    constexpr ref() = delete;
+    constexpr ref(nullptr_t) = delete;
+
+    constexpr ref(remove_const_t<value_type> &data) noexcept
+      : data{ &data }
+    {
+      jank_debug_assert(*this->data.data());
+    }
+
+    constexpr ref(value_type const &data) noexcept
+      : data{ const_cast<value_type *>(&data) }
+    {
+      jank_debug_assert(*this->data.data());
+    }
+
+    template <typename C>
+    requires is_convertible<C *, T *>
+    constexpr ref(ref<C> const data) noexcept
+      : data{ data.data }
+    {
+      jank_debug_assert(*this->data.data());
+    }
+
+    template <typename C>
+    requires (T::obj_type == jank::runtime::object_type::nil)
+    constexpr ref(ref<C> const data) noexcept
+      : data{ data.data }
+    {
+      jank_debug_assert(*this->data.data());
+    }
+
+    constexpr value_type *operator->() const noexcept
+    {
+      jank_debug_assert(*this->data.data());
+      return data;
+    }
+
+    constexpr value_type &operator*() const noexcept
+    {
+      jank_debug_assert(*this->data.data());
+      return *data->ptr();
+    }
+
+    constexpr bool operator==(ref const &rhs) const noexcept
+    {
+      return *data->ptr() == *rhs.data->ptr();
+    }
+
+    constexpr bool operator!=(ref const &rhs) const noexcept
+    {
+      return *data->ptr() != *rhs.data->ptr();
+    }
+
+    constexpr bool operator<(ref const &rhs) const noexcept
+    {
+      return *data->ptr() < *rhs.data->ptr();
+    }
+
+    template <typename C>
+    requires jank::runtime::behavior::object_like<C>
+    constexpr bool operator==(ref<C> const &rhs) const noexcept
+    {
+      return data->ptr()->equal((*rhs.data->ptr())->base);
+    }
+
+    template <typename C>
+    requires jank::runtime::behavior::object_like<C>
+    constexpr bool operator!=(ref<C> const &rhs) const noexcept
+    {
+      return !data->ptr()->equal((*rhs.data->ptr())->base);
+    }
+
+    template <typename C>
+    requires (T::obj_type == jank::runtime::object_type::nil)
+    constexpr ref& operator=(ref const &rhs) noexcept
+    {
+      data = rhs.data;
+      jank_debug_assert(*this->data.data());
+    }
+
+    constexpr operator ref<value_type const>() const noexcept
+    {
+      return *data->ptr();
+    }
+
+    constexpr operator ref<jank::runtime::object>() const noexcept
+    {
+      return (*data->ptr())->base;
+    }
+
+    constexpr operator jank::runtime::object *() const noexcept
+    {
+      return &(*data->ptr())->base;
+    }
+
+    constexpr explicit operator bool() const
+    {
+      return (*data->ptr())->type == jank::runtime::object_type::nil;
+    }
+
+    storage<value_type *> data{};
   };
 }

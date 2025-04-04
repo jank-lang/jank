@@ -10,7 +10,17 @@
 namespace jtl
 {
   /* A `ref` is a non-owning, non-nullable box which must be always be initialized. The
-   * memory referenced by a `ref` is expected to be owned elsewhere or GC allocated. */
+   * memory referenced by a `ref` is expected to be owned elsewhere or GC allocated.
+   *
+   * This particular implementation of ref is only used for non-objects. There are two
+   * noteworthy specializations of ref in `object.hpp`:
+   *
+   * 1. ref<object>, which is a type-erased box which supports conversions from typed
+   *    boxes
+   * 2. ref<T> where T is object_like, which is a fully typed box
+   *
+   * Both of these above specializations support a nil state, where the internal pointer
+   * points at the nil constant. This can be done regardless of the ref type. */
   template <typename T>
   struct ref
   {
