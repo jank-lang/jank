@@ -27,6 +27,12 @@ project(
     # https://stackoverflow.com/questions/71740678/cmake-error-in-findterminfo-with-clang-15-on-macos
     LANGUAGES C CXX
 )
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON) # To enable GNU extensions, equivalent to gnu++20
+set(CMAKE_C_STANDARD 11) # Or C17, C99 - C11 is a safe default
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON) # If you need GNU C extensions
 
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
@@ -90,8 +96,7 @@ set(
 
 set(
   jank_common_compiler_flags
-  -std=gnu++20
-  -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
+  -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1 -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
 )
@@ -435,6 +440,17 @@ set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
 target_link_libraries(
   folly_lib PUBLIC
 )
+
+# ---- Folly Stubs ----
+# Provide stub implementations for jemalloc/tcmalloc symbols
+# that might still be referenced by Folly code even when disabled
+# via preprocessor flags, preventing linker errors.
+add_library(
+  folly_stubs STATIC
+  src/cpp/jank/folly_stubs.c
+)
+set_property(TARGET folly_stubs PROPERTY OUTPUT_NAME folly_stubs)
+
 # ---- libfolly.a ----
 
 # ---- jank executable ----
@@ -458,6 +474,7 @@ target_link_libraries(
   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
   folly_lib
+  folly_stubs
 )
 
 jank_hook_llvm(jank_exe)
@@ -507,6 +524,7 @@ if(jank_tests)
     ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
     ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
     folly_lib
+    folly_stubs
     doctest::doctest
   )
 
