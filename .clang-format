@@ -74,7 +74,6 @@ InsertNewlineAtEOF: 'true'
 #  Hex: -1
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
 LambdaBodyIndentation: Signature
-Language: Cpp
 LineEnding: LF
 MaxEmptyLinesToKeep: '2'
 NamespaceIndentation: All
