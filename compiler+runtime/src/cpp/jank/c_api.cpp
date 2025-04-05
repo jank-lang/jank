@@ -95,6 +95,14 @@ extern "C"
     return erase(__rt_ctx->intern_var(ns_obj->data, name_obj->data).expect_ok());
   }
 
+  jank_object_ptr jank_var_intern_c(char const * const ns, char const * const name)
+  {
+    auto const ns_string{ native_persistent_string(ns) };
+    __rt_ctx->intern_ns(ns_string);
+    auto const name_string{ native_persistent_string(name) };
+    return erase(__rt_ctx->intern_var(ns_string, name_string).expect_ok());
+  }
+
   jank_object_ptr jank_var_bind_root(jank_object_ptr const var, jank_object_ptr const val)
   {
     auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
