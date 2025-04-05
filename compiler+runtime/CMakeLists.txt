@@ -30,9 +30,9 @@ project(
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON) # To enable GNU extensions, equivalent to gnu++20
-set(CMAKE_C_STANDARD 11) # Or C17, C99 - C11 is a safe default
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON) # If you need GNU C extensions
+set(CMAKE_C_EXTENSIONS ON)
 
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
