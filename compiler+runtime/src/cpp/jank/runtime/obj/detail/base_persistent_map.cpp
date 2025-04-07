@@ -6,7 +6,7 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(option<object_ptr> const &meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ptr> const &meta)
     : meta{ meta }
   {
   }
@@ -91,7 +91,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_persistent_string base_persistent_map<PT, ST, V>::to_string() const
+  jtl::immutable_string base_persistent_map<PT, ST, V>::to_string() const
   {
     util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
@@ -102,7 +102,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_persistent_string base_persistent_map<PT, ST, V>::to_code_string() const
+  jtl::immutable_string base_persistent_map<PT, ST, V>::to_code_string() const
   {
     util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),

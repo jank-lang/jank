@@ -6,7 +6,7 @@ namespace jank::runtime::obj
   reduced::reduced(object_ptr const o)
     : val{ o }
   {
-    assert(val);
+    jank_debug_assert(val);
   }
 
   native_bool reduced::equal(object const &o) const
@@ -14,7 +14,7 @@ namespace jank::runtime::obj
     return &o == &base;
   }
 
-  native_persistent_string reduced::to_string() const
+  jtl::immutable_string reduced::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string reduced::to_code_string() const
+  jtl::immutable_string reduced::to_code_string() const
   {
     return to_string();
   }

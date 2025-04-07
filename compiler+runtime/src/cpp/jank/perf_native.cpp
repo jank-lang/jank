@@ -15,7 +15,7 @@ jank_object_ptr jank_load_jank_perf_native()
 
   auto const ns(__rt_ctx->intern_ns("jank.perf-native"));
 
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(

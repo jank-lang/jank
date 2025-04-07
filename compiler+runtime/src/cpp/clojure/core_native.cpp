@@ -309,17 +309,17 @@ jank_object_ptr jank_load_clojure_core_native()
 
   auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
 
-  auto const intern_val([=](native_persistent_string const &name, auto const val) {
+  auto const intern_val([=](jtl::immutable_string const &name, auto const val) {
     ns->intern_var(name)->bind_root(convert<decltype(val), object_ptr>::call(val));
   });
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
           __rt_ctx->intern_keyword("name").expect_ok(),
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
-  auto const intern_fn_obj([=](native_persistent_string const &name, object_ptr const fn) {
+  auto const intern_fn_obj([=](jtl::immutable_string const &name, object_ptr const fn) {
     ns->intern_var(name)->bind_root(with_meta(
       fn,
       obj::persistent_hash_map::create_unique(std::make_pair(
@@ -355,11 +355,11 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("map?", &is_map);
   intern_fn("associative?", &is_associative);
   intern_fn("assoc", &assoc);
-  intern_fn("pr-str", static_cast<native_persistent_string (*)(object const *)>(&to_code_string));
+  intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object const *)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);
-  intern_fn("to-string", static_cast<native_persistent_string (*)(object const *)>(&to_string));
-  intern_fn("str", static_cast<native_persistent_string (*)(object_ptr, object_ptr)>(&str));
+  intern_fn("to-string", static_cast<jtl::immutable_string (*)(object const *)>(&to_string));
+  intern_fn("str", static_cast<jtl::immutable_string (*)(object_ptr, object_ptr)>(&str));
   intern_fn("symbol?", &is_symbol);
   intern_fn("true?", &is_true);
   intern_fn("false?", &is_false);

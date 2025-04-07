@@ -7,6 +7,8 @@
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
 
+#include <jtl/ptr.hpp>
+
 #include <jank/analyze/processor.hpp>
 
 namespace jank::runtime::obj
@@ -23,30 +25,30 @@ namespace jank::runtime::obj
 
 namespace jank::analyze
 {
-  using expression_ptr = runtime::native_box<struct expression>;
+  using expression_ref = jtl::ref<struct expression>;
 
   namespace expr
   {
-    using def_ptr = runtime::native_box<struct def>;
-    using var_deref_ptr = runtime::native_box<struct var_deref>;
-    using var_ref_ptr = runtime::native_box<struct var_ref>;
-    using call_ptr = runtime::native_box<struct call>;
-    using primitive_literal_ptr = runtime::native_box<struct primitive_literal>;
-    using list_ptr = runtime::native_box<struct list>;
-    using vector_ptr = runtime::native_box<struct vector>;
-    using map_ptr = runtime::native_box<struct map>;
-    using set_ptr = runtime::native_box<struct set>;
-    using local_reference_ptr = runtime::native_box<struct local_reference>;
-    using function_ptr = runtime::native_box<struct function>;
-    using recur_ptr = runtime::native_box<struct recur>;
-    using recursion_reference_ptr = runtime::native_box<struct recursion_reference>;
-    using named_recursion_ptr = runtime::native_box<struct named_recursion>;
-    using let_ptr = runtime::native_box<struct let>;
-    using do_ptr = runtime::native_box<struct do_>;
-    using if_ptr = runtime::native_box<struct if_>;
-    using throw_ptr = runtime::native_box<struct throw_>;
-    using try_ptr = runtime::native_box<struct try_>;
-    using case_ptr = runtime::native_box<struct case_>;
+    using def_ref = jtl::ref<struct def>;
+    using var_deref_ref = jtl::ref<struct var_deref>;
+    using var_ref_ref = jtl::ref<struct var_ref>;
+    using call_ref = jtl::ref<struct call>;
+    using primitive_literal_ref = jtl::ref<struct primitive_literal>;
+    using list_ref = jtl::ref<struct list>;
+    using vector_ref = jtl::ref<struct vector>;
+    using map_ref = jtl::ref<struct map>;
+    using set_ref = jtl::ref<struct set>;
+    using local_reference_ref = jtl::ref<struct local_reference>;
+    using function_ref = jtl::ref<struct function>;
+    using recur_ref = jtl::ref<struct recur>;
+    using recursion_reference_ref = jtl::ref<struct recursion_reference>;
+    using named_recursion_ref = jtl::ref<struct named_recursion>;
+    using let_ref = jtl::ref<struct let>;
+    using do_ref = jtl::ref<struct do_>;
+    using if_ref = jtl::ref<struct if_>;
+    using throw_ref = jtl::ref<struct throw_>;
+    using try_ref = jtl::ref<struct try_>;
+    using case_ref = jtl::ref<struct case_>;
   }
 }
 
@@ -63,10 +65,10 @@ namespace jank::codegen
 
   struct reusable_context
   {
-    reusable_context(native_persistent_string const &module_name);
+    reusable_context(jtl::immutable_string const &module_name);
 
-    native_persistent_string module_name;
-    native_persistent_string ctor_name;
+    jtl::immutable_string module_name;
+    jtl::immutable_string ctor_name;
 
     std::unique_ptr<llvm::LLVMContext> llvm_ctx;
     std::unique_ptr<llvm::Module> module;
@@ -81,7 +83,7 @@ namespace jank::codegen
                          very_equal_to>
       literal_globals;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
-    native_unordered_map<native_persistent_string, llvm::Value *> c_string_globals;
+    native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
     std::unique_ptr<llvm::FunctionPassManager> fpm;
@@ -96,47 +98,47 @@ namespace jank::codegen
   struct llvm_processor
   {
     llvm_processor() = delete;
-    llvm_processor(analyze::expr::function_ptr const expr,
-                   native_persistent_string const &module,
+    llvm_processor(analyze::expr::function_ref const expr,
+                   jtl::immutable_string const &module,
                    compilation_target target);
     /* For this ctor, we're inheriting the context from another function, which means
      * we're building a nested function. */
-    llvm_processor(analyze::expr::function_ptr expr, std::unique_ptr<reusable_context> ctx);
+    llvm_processor(analyze::expr::function_ref expr, std::unique_ptr<reusable_context> ctx);
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
 
-    string_result<void> gen();
-    llvm::Value *gen(analyze::expression_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::def_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::var_deref_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::var_ref_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::call_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::primitive_literal_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::list_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::vector_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::map_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::set_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::local_reference_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::function_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::recur_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::recursion_reference_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::named_recursion_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::let_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::do_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::if_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::throw_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::try_ptr, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::case_ptr, analyze::expr::function_arity const &);
+    jtl::string_result<void> gen();
+    llvm::Value *gen(analyze::expression_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::def_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::var_deref_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::var_ref_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::primitive_literal_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::list_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::vector_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::map_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::set_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::local_reference_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::function_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::recur_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::recursion_reference_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::named_recursion_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::let_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::do_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::if_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::throw_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::try_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
-    llvm::Value *gen_c_string(native_persistent_string const &s) const;
+    llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
     void create_function();
     void create_function(analyze::expr::function_arity const &arity);
     void create_global_ctor() const;
-    llvm::GlobalVariable *create_global_var(native_persistent_string const &name) const;
+    llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
     llvm::Value *gen_global(runtime::obj::nil_ptr) const;
     llvm::Value *gen_global(runtime::obj::boolean_ptr b) const;
@@ -148,15 +150,15 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::keyword_ptr k) const;
     llvm::Value *gen_global(runtime::obj::character_ptr c) const;
     llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
-    llvm::Value *gen_function_instance(analyze::expr::function_ptr expr,
+    llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
 
     compilation_target target{};
-    analyze::expr::function_ptr root_fn{};
-    llvm::Function *fn{};
+    analyze::expr::function_ref root_fn;
+    jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
   };

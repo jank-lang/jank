@@ -4,7 +4,7 @@
 
 namespace jank::util
 {
-  native_persistent_string format(char const * const fmt);
+  jtl::immutable_string format(char const * const fmt);
   void format(string_builder &sb, char const * const fmt);
 
   /* TODO: We can extern template all common usages here, if they show up in the trace. */
@@ -24,7 +24,7 @@ namespace jank::util
   }
 
   template <typename... Args>
-  native_persistent_string format(char const *fmt, Args &&...args)
+  jtl::immutable_string format(char const *fmt, Args &&...args)
   {
     string_builder sb;
     [[maybe_unused]]

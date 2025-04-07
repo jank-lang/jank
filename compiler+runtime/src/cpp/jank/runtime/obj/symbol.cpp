@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   static void separate(symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
-    if(found != native_persistent_string::npos && s.size() > 1)
+    if(found != jtl::immutable_string::npos && s.size() > 1)
     {
       sym.ns = s.substr(0, found);
       sym.name = s.substr(found + 1);
@@ -19,31 +19,31 @@ namespace jank::runtime::obj
     }
   }
 
-  symbol::symbol(native_persistent_string const &d)
+  symbol::symbol(jtl::immutable_string const &d)
   {
     separate(*this, d);
   }
 
-  symbol::symbol(native_persistent_string &&d)
+  symbol::symbol(jtl::immutable_string &&d)
   {
     separate(*this, std::move(d));
   }
 
-  symbol::symbol(native_persistent_string const &ns, native_persistent_string const &n)
+  symbol::symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n)
     : ns{ ns }
     , name{ n }
   {
   }
 
-  symbol::symbol(native_persistent_string &&ns, native_persistent_string &&n)
+  symbol::symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n)
     : ns{ std::move(ns) }
     , name{ std::move(n) }
   {
   }
 
   symbol::symbol(object_ptr const meta,
-                 native_persistent_string const &ns,
-                 native_persistent_string const &n)
+                 jtl::immutable_string const &ns,
+                 jtl::immutable_string const &n)
     : ns{ ns }
     , name{ n }
     , meta{ meta }
@@ -103,8 +103,8 @@ namespace jank::runtime::obj
     return name.compare(s.name);
   }
 
-  static void to_string_impl(native_persistent_string const &ns,
-                             native_persistent_string const &name,
+  static void to_string_impl(jtl::immutable_string const &ns,
+                             jtl::immutable_string const &name,
                              util::string_builder &buff)
   {
     if(!ns.empty())
@@ -122,14 +122,14 @@ namespace jank::runtime::obj
     to_string_impl(ns, name, buff);
   }
 
-  native_persistent_string symbol::to_string() const
+  jtl::immutable_string symbol::to_string() const
   {
     util::string_builder buff;
     to_string_impl(ns, name, buff);
     return buff.release();
   }
 
-  native_persistent_string symbol::to_code_string() const
+  jtl::immutable_string symbol::to_code_string() const
   {
     return to_string();
   }
@@ -152,12 +152,12 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  native_persistent_string const &symbol::get_name() const
+  jtl::immutable_string const &symbol::get_name() const
   {
     return name;
   }
 
-  native_persistent_string const &symbol::get_namespace() const
+  jtl::immutable_string const &symbol::get_namespace() const
   {
     return ns;
   }
@@ -172,13 +172,13 @@ namespace jank::runtime::obj
     return to_hash() < rhs.to_hash();
   }
 
-  void symbol::set_ns(native_persistent_string const &s)
+  void symbol::set_ns(jtl::immutable_string const &s)
   {
     ns = s;
     hash = 0;
   }
 
-  void symbol::set_name(native_persistent_string const &s)
+  void symbol::set_name(jtl::immutable_string const &s)
   {
     name = s;
     hash = 0;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::util::cli
 {
@@ -22,10 +22,10 @@ namespace jank::util::cli
     native_bool gc_incremental{};
 
     /* Native dependencies. */
-    native_vector<native_persistent_string> include_dirs;
-    native_vector<native_persistent_string> library_dirs;
-    native_vector<native_persistent_string> define_macros;
-    native_vector<native_persistent_string> libs;
+    native_vector<jtl::immutable_string> include_dirs;
+    native_vector<jtl::immutable_string> library_dirs;
+    native_vector<jtl::immutable_string> define_macros;
+    native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
     native_integer optimization_level{};
@@ -51,5 +51,5 @@ namespace jank::util::cli
     command command{ command::repl };
   };
 
-  result<options, int> parse(int const argc, char const **argv);
+  jtl::result<options, int> parse(int const argc, char const **argv);
 }

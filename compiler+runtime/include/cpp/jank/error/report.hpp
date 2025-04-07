@@ -4,5 +4,5 @@
 
 namespace jank::error
 {
-  void report(error_ptr e);
+  void report(error_ref e);
 }

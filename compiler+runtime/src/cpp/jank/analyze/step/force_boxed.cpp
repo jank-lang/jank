@@ -7,7 +7,7 @@ namespace jank::analyze::step
   /* TODO: This is more a walk_tail. A general walk would apply to all nodes. */
   /* TODO: This needs to be recursive to work properly. */
   template <typename F>
-  static void walk(expression_ptr const expr, F const &f)
+  static void walk(expression_ref const expr, F const &f)
   {
     visit_expr(
       [&](auto const typed_expr) {
@@ -56,7 +56,7 @@ namespace jank::analyze::step
   }
 
   /* Mutated in place. */
-  void force_boxed(expr::do_ptr const do_)
+  void force_boxed(expr::do_ref const do_)
   {
     if(do_->needs_box)
     {

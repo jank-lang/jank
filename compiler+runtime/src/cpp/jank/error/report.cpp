@@ -58,7 +58,7 @@ namespace jank::error
     /* Zero means no number. */
     size_t number{};
     /* Only set when kind == note. */
-    option<note> note;
+    jtl::option<note> note;
   };
 
   struct snippet
@@ -68,7 +68,7 @@ namespace jank::error
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
 
-    native_persistent_string file_path;
+    jtl::immutable_string file_path;
     /* Zero means we have no lines yet. */
     size_t line_start{};
     size_t line_end{};
@@ -77,17 +77,17 @@ namespace jank::error
 
   struct plan
   {
-    plan(error_ptr const e);
+    plan(error_ref const e);
 
     void add(read::source const &body_source, note const &n);
     void add(note const &n);
 
-    native_persistent_string kind;
-    native_persistent_string message;
+    jtl::immutable_string kind;
+    jtl::immutable_string message;
     native_vector<snippet> snippets;
   };
 
-  plan::plan(error_ptr const e)
+  plan::plan(error_ref const e)
     : kind{ kind_str(e->kind) }
     , message{ e->message }
   {
@@ -101,7 +101,7 @@ namespace jank::error
 
   native_bool snippet::can_fit_without_ellipsis(note const &n) const
   {
-    assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.file_path == file_path);
 
     if(line_end == 0)
     {
@@ -150,7 +150,7 @@ namespace jank::error
   /* TODO: Handle multiple notes on one line by building bridges. */
   void snippet::add(read::source const &body_source, note const &n)
   {
-    assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.file_path == file_path);
 
     /* Adding a note follows some rules to determine how it will fit.
      *
@@ -509,7 +509,7 @@ namespace jank::error
     return code_snippet_box(util::relative_path(s.file_path), line_numbers, lines, max_width);
   }
 
-  void report(error_ptr const e)
+  void report(error_ref const e)
   {
     plan const p{ e };
 
@@ -556,7 +556,7 @@ namespace jank::error
 
     if(e->cause)
     {
-      report(e->cause);
+      report(*e->cause);
     }
   }
 }

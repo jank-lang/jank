@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include <jtl/ptr.hpp>
+
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/core/make_box.hpp>
@@ -35,7 +37,21 @@ namespace jank::detail
     return make_box(sb("box(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
-  inline object_ptr to_runtime_data(native_persistent_string const &d)
+  template <typename T>
+  object_ptr to_runtime_data(jtl::ref<T> const &d)
+  {
+    util::string_builder sb;
+    return make_box(sb("ref(")(reinterpret_cast<void const *>(d.data))(")").release());
+  }
+
+  template <typename T>
+  object_ptr to_runtime_data(jtl::ptr<T> const &d)
+  {
+    util::string_builder sb;
+    return make_box(sb("ptr(")(reinterpret_cast<void const *>(d.data))(")").release());
+  }
+
+  inline object_ptr to_runtime_data(jtl::immutable_string const &d)
   {
     return make_box(d);
   }
@@ -62,7 +78,7 @@ namespace jank::detail
   }
 
   template <typename T>
-  object_ptr to_runtime_data(option<T> const &m)
+  object_ptr to_runtime_data(jtl::option<T> const &m)
   {
     return obj::persistent_array_map::create_unique(
       make_box("__type"),

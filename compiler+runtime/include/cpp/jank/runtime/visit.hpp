@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/assert.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -72,7 +74,7 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
   {
-    assert(const_erased);
+    jank_debug_assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
     switch(erased->type)
@@ -393,7 +395,7 @@ namespace jank::runtime
   constexpr auto
   visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
-    assert(const_erased);
+    jank_debug_assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
 #pragma clang diagnostic push
@@ -567,7 +569,7 @@ namespace jank::runtime
   constexpr auto
   visit_map_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
-    assert(const_erased);
+    jank_debug_assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
 #pragma clang diagnostic push
@@ -616,7 +618,7 @@ namespace jank::runtime
   constexpr auto
   visit_set_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
   {
-    assert(const_erased);
+    jank_debug_assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
 #pragma clang diagnostic push
@@ -662,7 +664,7 @@ namespace jank::runtime
                                    object const * const const_erased,
                                    Args &&...args)
   {
-    assert(const_erased);
+    jank_debug_assert(const_erased);
     auto * const erased(const_cast<object *>(const_erased));
 
 #pragma clang diagnostic push

@@ -41,7 +41,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> isa(object const * const o)
   {
-    assert(o);
+    jank_debug_assert(o);
     return o->type == T::obj_type;
   }
 
@@ -50,7 +50,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> dyn_cast(object const * const o)
   {
-    assert(o);
+    jank_debug_assert(o);
     if(o->type != T::obj_type)
     {
       return nullptr;
@@ -64,7 +64,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   native_box<T> try_object(object const * const o)
   {
-    assert(o);
+    jank_debug_assert(o);
     if(o->type != T::obj_type)
     {
       util::string_builder sb;
@@ -87,8 +87,8 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object_ptr const o)
   {
-    assert(o);
-    assert(o->type == T::obj_type);
+    jank_debug_assert(o);
+    jank_debug_assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
   }
 
@@ -97,8 +97,8 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr native_box<T> expect_object(object const * const o)
   {
-    assert(o);
-    assert(o->type == T::obj_type);
+    jank_debug_assert(o);
+    jank_debug_assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(const_cast<object *>(o))
                                  - offsetof(T, base));
   }

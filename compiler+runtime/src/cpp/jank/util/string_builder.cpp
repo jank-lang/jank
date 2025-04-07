@@ -1,9 +1,8 @@
 #include <bit>
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <codecvt>
 #include <locale>
-#pragma clang diagnostic pop
+
+#include <jtl/assert.hpp>
 
 #include <jank/util/string_builder.hpp>
 
@@ -18,6 +17,7 @@ namespace jank::util
   static void realloc(string_builder &sb, size_t const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
+    /* TODO: Pointer-free GC alloc. */
     auto const new_data{ allocator_traits::allocate(allocator, new_capacity) };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
     allocator_traits::deallocate(allocator, sb.buffer, sb.pos);
@@ -223,7 +223,7 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_persistent_string const &d) &
+  string_builder &string_builder::operator()(jtl::immutable_string const &d) &
   {
     auto const required{ d.size() };
     maybe_realloc(*this, required);
@@ -303,7 +303,7 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(native_persistent_string const &d) &
+  void string_builder::push_back(jtl::immutable_string const &d) &
   {
     (*this)(d);
   }
@@ -326,12 +326,12 @@ namespace jank::util
     return pos;
   }
 
-  native_persistent_string string_builder::release()
+  jtl::immutable_string string_builder::release()
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
 
-    native_persistent_string ret;
-    if(pos <= native_persistent_string::max_small_size)
+    jtl::immutable_string ret;
+    if(pos <= jtl::immutable_string::max_small_size)
     {
       ret.init_small(buffer, pos);
     }
@@ -348,14 +348,14 @@ namespace jank::util
 
   native_transient_string string_builder::str() const
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
     buffer[pos] = 0;
     return { buffer, pos };
   }
 
   native_persistent_string_view string_builder::view() const &
   {
-    assert(pos < capacity);
+    jank_debug_assert(pos < capacity);
     buffer[pos] = 0;
     return { buffer, pos };
   }

@@ -154,13 +154,13 @@ namespace jank::hash
 
   uint32_t visit(runtime::object const * const o)
   {
-    assert(o);
+    jank_debug_assert(o);
     return runtime::visit_object([](auto const typed_o) { return typed_o->to_hash(); }, o);
   }
 
   uint32_t ordered(runtime::object const * const sequence)
   {
-    assert(sequence);
+    jank_debug_assert(sequence);
     return runtime::visit_object(
       [](auto const typed_sequence) -> uint32_t {
         using T = typename decltype(typed_sequence)::value_type;
@@ -168,7 +168,7 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_sequence->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             hash = 31 * hash + visit(it->first());
             ++n;
@@ -186,7 +186,7 @@ namespace jank::hash
 
   uint32_t unordered(runtime::object const * const sequence)
   {
-    assert(sequence);
+    jank_debug_assert(sequence);
     return runtime::visit_object(
       [](auto const typed_sequence) -> uint32_t {
         using T = typename decltype(typed_sequence)::value_type;
@@ -194,7 +194,7 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          for(auto it(typed_sequence->fresh_seq()); it != nullptr; it = it->next_in_place())
           {
             hash += visit(it->first());
             ++n;

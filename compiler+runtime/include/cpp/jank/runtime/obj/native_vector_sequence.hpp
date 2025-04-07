@@ -1,7 +1,8 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::obj
 {
@@ -19,14 +20,14 @@ namespace jank::runtime::obj
     native_vector_sequence(native_vector_sequence const &) = default;
     native_vector_sequence(native_vector<object_ptr> const &data, size_t index);
     native_vector_sequence(native_vector<object_ptr> &&data);
-    native_vector_sequence(option<object_ptr> const &meta, native_vector<object_ptr> &&data);
+    native_vector_sequence(jtl::option<object_ptr> const &meta, native_vector<object_ptr> &&data);
     native_vector_sequence(native_vector<object_ptr> &&data, size_t index);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_string() const;
-    native_persistent_string to_code_string() const;
+    jtl::immutable_string to_string() const;
+    jtl::immutable_string to_code_string() const;
     native_hash to_hash();
 
     /* behavior::seqable */
@@ -50,6 +51,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     native_vector<object_ptr> data{};
     size_t index{};
-    option<object_ptr> meta;
+    jtl::option<object_ptr> meta;
   };
 }

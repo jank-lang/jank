@@ -9,7 +9,7 @@ namespace jank::analyze::expr
   try_::try_(expression_position const position,
              local_frame_ptr const frame,
              native_bool const needs_box,
-             do_ptr const body)
+             do_ref const body)
     : expression{ expr_kind, position, frame, needs_box }
     , body{ body }
   {

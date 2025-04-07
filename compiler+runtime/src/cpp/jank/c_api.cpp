@@ -387,7 +387,7 @@ extern "C"
 
   jank_object_ptr jank_string_create(char const *s)
   {
-    assert(s);
+    jank_debug_assert(s);
     return erase(make_box(s));
   }
 
@@ -400,7 +400,7 @@ extern "C"
 
   jank_object_ptr jank_character_create(char const *s)
   {
-    assert(s);
+    jank_debug_assert(s);
     return erase(make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap()));
   }
 

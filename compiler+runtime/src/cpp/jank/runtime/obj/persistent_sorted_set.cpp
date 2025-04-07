@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set::persistent_sorted_set(option<object_ptr> const &meta, value_type &&d)
+  persistent_sorted_set::persistent_sorted_set(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_sorted_set::value_type {
         runtime::detail::native_transient_sorted_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           transient.insert_v(it->first());
         }
@@ -80,14 +80,14 @@ namespace jank::runtime::obj
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
-  native_persistent_string persistent_sorted_set::to_string() const
+  jtl::immutable_string persistent_sorted_set::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
     return buff.release();
   }
 
-  native_persistent_string persistent_sorted_set::to_code_string() const
+  jtl::immutable_string persistent_sorted_set::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "#{", '}', buff);

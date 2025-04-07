@@ -14,7 +14,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_set::persistent_hash_set(option<object_ptr> const &meta, value_type &&d)
+  persistent_hash_set::persistent_hash_set(jtl::option<object_ptr> const &meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_set::value_type {
         runtime::detail::native_transient_hash_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = runtime::next_in_place(it))
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
         {
           transient.insert(it->first());
         }
@@ -73,14 +73,14 @@ namespace jank::runtime::obj
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
   }
 
-  native_persistent_string persistent_hash_set::to_string() const
+  jtl::immutable_string persistent_hash_set::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "#{", '}', buff);
     return buff.release();
   }
 
-  native_persistent_string persistent_hash_set::to_code_string() const
+  jtl::immutable_string persistent_hash_set::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "#{", '}', buff);

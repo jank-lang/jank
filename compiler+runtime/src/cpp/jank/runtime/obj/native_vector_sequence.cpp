@@ -9,23 +9,23 @@ namespace jank::runtime::obj
     : data{ data }
     , index{ index }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data)
     : data{ std::move(data) }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data, size_t index)
     : data{ std::move(data) }
     , index{ index }
   {
-    assert(!this->data.empty());
+    jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(option<object_ptr> const &meta,
+  native_vector_sequence::native_vector_sequence(jtl::option<object_ptr> const &meta,
                                                  native_vector<object_ptr> &&data)
     : data{ std::move(data) }
     , meta{ meta }
@@ -43,14 +43,14 @@ namespace jank::runtime::obj
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
   }
 
-  native_persistent_string native_vector_sequence::to_string() const
+  jtl::immutable_string native_vector_sequence::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
     return buff.release();
   }
 
-  native_persistent_string native_vector_sequence::to_code_string() const
+  jtl::immutable_string native_vector_sequence::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "(", ')', buff);
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
   /* behavior::sequence */
   object_ptr native_vector_sequence::first() const
   {
-    assert(index < data.size());
+    jank_debug_assert(index < data.size());
     return data[index];
   }
 

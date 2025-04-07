@@ -68,14 +68,14 @@ namespace jank::runtime::obj
     buff(data.numerator)('/')(data.denominator);
   }
 
-  native_persistent_string ratio::to_string() const
+  jtl::immutable_string ratio::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  native_persistent_string ratio::to_code_string() const
+  jtl::immutable_string ratio::to_code_string() const
   {
     return to_string();
   }

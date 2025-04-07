@@ -8,9 +8,13 @@ namespace ftxui
   using Element = std::shared_ptr<struct Node>;
 }
 
+namespace jtl
+{
+  struct immutable_string;
+}
+
 namespace jank
 {
-  struct native_persistent_string;
 
   namespace runtime::module
   {

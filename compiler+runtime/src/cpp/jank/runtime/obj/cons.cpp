@@ -9,7 +9,7 @@ namespace jank::runtime::obj
     : head{ head }
     , tail{ tail == nil::nil_const() ? nullptr : tail }
   {
-    assert(head);
+    jank_debug_assert(head);
   }
 
   cons_ptr cons::seq() const
@@ -73,7 +73,7 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         for(auto it(fresh_seq()); it != nullptr;
-            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
+            it = it->next_in_place(), seq = seq->next_in_place())
         {
           if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
           {
@@ -91,12 +91,12 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string cons::to_string() const
+  jtl::immutable_string cons::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string cons::to_code_string() const
+  jtl::immutable_string cons::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
