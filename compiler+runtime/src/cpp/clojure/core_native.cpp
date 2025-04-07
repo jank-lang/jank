@@ -105,7 +105,7 @@ namespace clojure::core_native
 
   static object_ptr is_var_thread_bound(object_ptr const o)
   {
-    return make_box(try_object<runtime::var>(o)->get_thread_binding() != nullptr);
+    return make_box(static_cast<bool>(try_object<runtime::var>(o)->get_thread_binding()));
   }
 
   static object_ptr delay(object_ptr const fn)
@@ -196,20 +196,17 @@ namespace clojure::core_native
 
   static object_ptr find_ns(object_ptr const sym)
   {
-    return __rt_ctx->find_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->find_ns(try_object<obj::symbol>(sym));
   }
 
   static object_ptr find_var(object_ptr const sym)
   {
-    return __rt_ctx->find_var(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->find_var(try_object<obj::symbol>(sym));
   }
 
   static object_ptr remove_ns(object_ptr const sym)
   {
-    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym));
   }
 
   static object_ptr is_ns(object_ptr const ns_or_sym)
@@ -236,11 +233,7 @@ namespace clojure::core_native
   {
     auto const n(try_object<runtime::ns>(ns));
     auto const found(n->find_var(try_object<obj::symbol>(sym)));
-    if(found.is_some())
-    {
-      return found.unwrap();
-    }
-    return obj::nil::nil_const();
+    return found;
   }
 
   static object_ptr
@@ -548,7 +541,7 @@ jank_object_ptr jank_load_clojure_core_native()
 
       return visit_seqable(
         [](auto const typed_rest, object_ptr const l) {
-          for(auto it(typed_rest->fresh_seq()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_rest->fresh_seq()); it; it = it->next_in_place())
           {
             if(!equal(l, it->first()))
             {

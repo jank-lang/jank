@@ -5,8 +5,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using iterator_ptr = native_box<struct iterator>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using iterator_ref = jtl::object_ref<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
   struct iterator : gc
@@ -28,22 +28,22 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    iterator_ptr seq();
-    iterator_ptr fresh_seq() const;
+    iterator_ref seq();
+    iterator_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    iterator_ptr next() const;
-    obj::cons_ptr conj(object_ptr head) const;
+    iterator_ref next() const;
+    obj::cons_ref conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    iterator_ptr next_in_place();
+    iterator_ref next_in_place();
 
     object base{ obj_type };
     /* TODO: Support chunking. */
     object_ptr fn{};
     object_ptr current{};
     object_ptr previous{};
-    mutable iterator_ptr cached_next{};
+    mutable iterator_ref cached_next{};
   };
 }

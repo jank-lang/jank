@@ -27,8 +27,8 @@ namespace jank::runtime
   object_ptr pr(object_ptr args);
   object_ptr prn(object_ptr args);
 
-  obj::persistent_string_ptr subs(object_ptr s, object_ptr start);
-  obj::persistent_string_ptr subs(object_ptr s, object_ptr start, object_ptr end);
+  obj::persistent_string_ref subs(object_ptr s, object_ptr start);
+  obj::persistent_string_ref subs(object_ptr s, object_ptr start, object_ptr end);
   native_integer first_index_of(object_ptr s, object_ptr m);
   native_integer last_index_of(object_ptr s, object_ptr m);
 

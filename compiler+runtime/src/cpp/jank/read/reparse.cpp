@@ -52,7 +52,7 @@ namespace jank::read::parse
     return source{ file_path, res.start.start, res.end.end, macro_expansion };
   }
 
-  source reparse_nth(obj::persistent_list_ptr const o, size_t const n)
+  source reparse_nth(obj::persistent_list_ref const o, size_t const n)
   {
     auto source(object_source(o));
     if(source == source::unknown)
@@ -65,7 +65,7 @@ namespace jank::read::parse
       .unwrap_move();
   }
 
-  source reparse_nth(runtime::obj::persistent_vector_ptr const o, size_t const n)
+  source reparse_nth(runtime::obj::persistent_vector_ref const o, size_t const n)
   {
     auto source(object_source(o));
     if(source == source::unknown)

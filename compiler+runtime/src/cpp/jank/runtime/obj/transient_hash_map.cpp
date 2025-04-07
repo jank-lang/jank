@@ -33,7 +33,7 @@ namespace jank::runtime::obj
     }
   }
 
-  transient_hash_map_ptr transient_hash_map::empty()
+  transient_hash_map_ref transient_hash_map::empty()
   {
     return make_box<transient_hash_map>();
   }
@@ -112,7 +112,7 @@ namespace jank::runtime::obj
     return data.find(key);
   }
 
-  transient_hash_map_ptr
+  transient_hash_map_ref
   transient_hash_map::assoc_in_place(object_ptr const key, object_ptr const val)
   {
     assert_active();
@@ -120,14 +120,14 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_hash_map_ptr transient_hash_map::dissoc_in_place(object_ptr const key)
+  transient_hash_map_ref transient_hash_map::dissoc_in_place(object_ptr const key)
   {
     assert_active();
     data.erase(key);
     return this;
   }
 
-  transient_hash_map_ptr transient_hash_map::conj_in_place(object_ptr const head)
+  transient_hash_map_ref transient_hash_map::conj_in_place(object_ptr const head)
   {
     assert_active();
 
@@ -152,7 +152,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_hash_map::persistent_type_ptr transient_hash_map::to_persistent()
+  transient_hash_map::persistent_type_ref transient_hash_map::to_persistent()
   {
     assert_active();
     active = false;

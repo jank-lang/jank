@@ -63,14 +63,14 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  native_vector_sequence_ptr native_vector_sequence::seq()
+  native_vector_sequence_ref native_vector_sequence::seq()
   {
-    return data.empty() ? nullptr : this;
+    return data.empty() ? native_vector_sequence_ref{} : this;
   }
 
-  native_vector_sequence_ptr native_vector_sequence::fresh_seq() const
+  native_vector_sequence_ref native_vector_sequence::fresh_seq() const
   {
-    return data.empty() ? nullptr : make_box<native_vector_sequence>(data, index);
+    return data.empty() ? native_vector_sequence_ref{} : make_box<native_vector_sequence>(data, index);
   }
 
   /* behavior::countable */
@@ -86,37 +86,37 @@ namespace jank::runtime::obj
     return data[index];
   }
 
-  native_vector_sequence_ptr native_vector_sequence::next() const
+  native_vector_sequence_ref native_vector_sequence::next() const
   {
     auto n(index);
     ++n;
 
     if(n == data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<native_vector_sequence>(data, n);
   }
 
-  native_vector_sequence_ptr native_vector_sequence::next_in_place()
+  native_vector_sequence_ref native_vector_sequence::next_in_place()
   {
     ++index;
 
     if(index == data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return this;
   }
 
-  cons_ptr native_vector_sequence::conj(object_ptr const head)
+  cons_ref native_vector_sequence::conj(object_ptr const head)
   {
     return make_box<cons>(head, data.empty() ? nullptr : this);
   }
 
-  native_vector_sequence_ptr native_vector_sequence::with_meta(object_ptr const m) const
+  native_vector_sequence_ref native_vector_sequence::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

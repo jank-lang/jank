@@ -5,9 +5,9 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
-  using symbol_ptr = native_box<struct symbol>;
-  using keyword_ptr = native_box<struct keyword>;
+  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
+  using keyword_ref = jtl::object_ref<struct keyword>;
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
   struct keyword : gc
@@ -49,16 +49,17 @@ namespace jank::runtime::obj
     native_bool operator==(keyword const &rhs) const;
 
     object base{ obj_type };
-    symbol_ptr sym;
+    symbol_ref sym;
   };
 }
 
+/* TODO: Move to .cpp */
 namespace std
 {
   template <>
-  struct hash<jank::runtime::obj::keyword_ptr>
+  struct hash<jank::runtime::obj::keyword_ref>
   {
-    size_t operator()(jank::runtime::obj::keyword_ptr const o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword_ref const o) const noexcept
     {
       return o->to_hash();
     }
@@ -69,16 +70,16 @@ namespace std
   {
     size_t operator()(jank::runtime::obj::keyword const &o) const noexcept
     {
-      static auto hasher(std::hash<jank::runtime::obj::keyword_ptr>{});
+      static auto hasher(std::hash<jank::runtime::obj::keyword_ref>{});
       return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
     }
   };
 
   template <>
-  struct equal_to<jank::runtime::obj::keyword_ptr>
+  struct equal_to<jank::runtime::obj::keyword_ref>
   {
-    bool operator()(jank::runtime::obj::keyword_ptr const &lhs,
-                    jank::runtime::obj::keyword_ptr const &rhs) const noexcept
+    bool operator()(jank::runtime::obj::keyword_ref const &lhs,
+                    jank::runtime::obj::keyword_ref const &rhs) const noexcept
     {
       return lhs == rhs;
     }

@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
-  using transient_hash_map_ptr = native_box<struct transient_hash_map>;
+  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
+  using transient_hash_map_ref = jtl::object_ref<struct transient_hash_map>;
 
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
       this->meta = meta;
     }
 
-    static persistent_array_map_ptr empty()
+    static persistent_array_map_ref empty()
     {
       static auto const ret(make_box<persistent_array_map>());
       return ret;
@@ -52,7 +52,7 @@ namespace jank::runtime::obj
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
-    static persistent_array_map_ptr create_unique(Args &&...args)
+    static persistent_array_map_ref create_unique(Args &&...args)
     {
       return make_box<persistent_array_map>(runtime::detail::in_place_unique{},
                                             make_array_box<object_ptr>(std::forward<Args>(args)...),
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    static persistent_array_map_ptr create_unique_with_meta(object_ptr const meta, Args &&...args)
+    static persistent_array_map_ref create_unique_with_meta(object_ptr const meta, Args &&...args)
     {
       return make_box<persistent_array_map>(meta,
                                             runtime::detail::in_place_unique{},
@@ -76,7 +76,7 @@ namespace jank::runtime::obj
 
     /* behavior::associatively_writable */
     object_ptr assoc(object_ptr key, object_ptr val) const;
-    persistent_array_map_ptr dissoc(object_ptr key) const;
+    persistent_array_map_ref dissoc(object_ptr key) const;
 
     /* behavior::conjable */
     object_ptr conj(object_ptr head) const;
@@ -86,7 +86,7 @@ namespace jank::runtime::obj
     object_ptr call(object_ptr, object_ptr) const;
 
     /* behavior::transientable */
-    transient_hash_map_ptr to_transient() const;
+    transient_hash_map_ref to_transient() const;
 
     value_type data{};
   };

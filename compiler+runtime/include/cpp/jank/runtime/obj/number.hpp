@@ -4,15 +4,15 @@
 
 namespace jank::runtime::obj
 {
-  using boolean_ptr = native_box<struct boolean>;
+  using boolean_ref = jtl::object_ref<struct boolean>;
 
   struct boolean : gc
   {
     static constexpr object_type obj_type{ object_type::boolean };
     static constexpr native_bool pointer_free{ true };
 
-    static boolean_ptr true_const();
-    static boolean_ptr false_const();
+    static boolean_ref true_const();
+    static boolean_ref false_const();
 
     boolean() = default;
     boolean(boolean &&) noexcept = default;
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     native_bool data{};
   };
 
-  using integer_ptr = native_box<struct integer>;
+  using integer_ref = jtl::object_ref<struct integer>;
 
   struct integer : gc
   {
@@ -68,6 +68,8 @@ namespace jank::runtime::obj
     native_integer data{};
     object base{ obj_type };
   };
+
+  using real_ref = jtl::object_ref<struct real>;
 
   struct real : gc
   {

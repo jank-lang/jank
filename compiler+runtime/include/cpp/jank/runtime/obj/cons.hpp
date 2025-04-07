@@ -6,7 +6,7 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
+  using cons_ref = jtl::object_ref<struct cons>;
 
   struct cons : gc
   {
@@ -27,21 +27,21 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    cons_ptr with_meta(object_ptr m) const;
+    cons_ref with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    cons_ptr seq() const;
-    cons_ptr fresh_seq() const;
+    cons_ref seq() const;
+    cons_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
     object_ptr next() const;
 
     /* behavior::sequenceable_in_place */
-    cons_ptr next_in_place();
+    cons_ref next_in_place();
 
     /* behavior::conjable */
-    cons_ptr conj(object_ptr head) const;
+    cons_ref conj(object_ptr head) const;
 
     object base{ obj_type };
     object_ptr head{};

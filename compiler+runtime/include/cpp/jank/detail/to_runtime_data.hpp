@@ -45,6 +45,13 @@ namespace jank::detail
   }
 
   template <typename T>
+  object_ptr to_runtime_data(jtl::object_ref<T> const &d)
+  {
+    util::string_builder sb;
+    return make_box(sb("ref(")(d.data)(")").release());
+  }
+
+  template <typename T>
   object_ptr to_runtime_data(jtl::ptr<T> const &d)
   {
     util::string_builder sb;
@@ -90,6 +97,13 @@ namespace jank::detail
   template <typename T>
   requires behavior::object_like<T>
   object_ptr to_runtime_data(native_box<T> const &m)
+  {
+    return m;
+  }
+
+  template <typename T>
+  requires behavior::object_like<T>
+  object_ptr to_runtime_data(jtl::object_ref<T> const &m)
   {
     return m;
   }

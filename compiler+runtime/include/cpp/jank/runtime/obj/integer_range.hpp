@@ -6,9 +6,9 @@
 
 namespace jank::runtime::obj
 {
-  using integer_ptr = native_box<struct integer>;
-  using cons_ptr = native_box<struct cons>;
-  using integer_range_ptr = native_box<struct integer_range>;
+  using integer_ref = jtl::object_ref<struct integer>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using integer_range_ref = jtl::object_ref<struct integer_range>;
 
   /* An integer range from X to Y, exclusive, incrementing by S. */
   /* For non-integer values, use the range object */
@@ -18,18 +18,18 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
 
-    using bounds_check_t = native_bool (*)(integer_ptr, integer_ptr);
+    using bounds_check_t = native_bool (*)(integer_ref, integer_ref);
 
     /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
     integer_range() = default;
     integer_range(integer_range &&) noexcept = default;
     integer_range(integer_range const &) = default;
-    integer_range(integer_ptr end);
-    integer_range(integer_ptr start, obj::integer_ptr end);
-    integer_range(integer_ptr start, obj::integer_ptr end, obj::integer_ptr step);
-    integer_range(integer_ptr start,
-                  integer_ptr end,
-                  integer_ptr step,
+    integer_range(integer_ref end);
+    integer_range(integer_ref start, obj::integer_ref end);
+    integer_range(integer_ref start, obj::integer_ref end, obj::integer_ref step);
+    integer_range(integer_ref start,
+                  integer_ref end,
+                  integer_ref step,
                   bounds_check_t bounds_check);
     //integer_range(integer_ptr start,
     //              integer_ptr end,
@@ -38,9 +38,9 @@ namespace jank::runtime::obj
     //              array_chunk_ptr chunk,
     //              integer_range_ptr chunk_next);
 
-    static object_ptr create(integer_ptr end);
-    static object_ptr create(integer_ptr start, obj::integer_ptr end);
-    static object_ptr create(integer_ptr start, obj::integer_ptr end, obj::integer_ptr step);
+    static object_ptr create(integer_ref end);
+    static object_ptr create(integer_ref start, obj::integer_ref end);
+    static object_ptr create(integer_ref start, obj::integer_ref end, obj::integer_ref step);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -50,15 +50,15 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    integer_range_ptr seq() const;
-    integer_range_ptr fresh_seq() const;
+    integer_range_ref seq() const;
+    integer_range_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    integer_ptr first() const;
-    integer_range_ptr next() const;
+    integer_ref first() const;
+    integer_range_ref next() const;
 
     /* behavior::sequenceable_in_place */
-    integer_range_ptr next_in_place();
+    integer_range_ref next_in_place();
 
     /* TODO: behavior::chunkable */
     /* array_chunk_ptr chunked_first() const; */
@@ -66,18 +66,18 @@ namespace jank::runtime::obj
     /* void force_chunk() const; */
 
     /* behavior::conjable */
-    cons_ptr conj(object_ptr head) const;
+    cons_ref conj(object_ptr head) const;
 
     /* behavior::metadatable */
-    integer_range_ptr with_meta(object_ptr m) const;
+    integer_range_ref with_meta(object_ptr m) const;
 
     /* behavior::countable */
     size_t count() const;
 
     object base{ object_type::integer_range };
-    integer_ptr start{};
-    integer_ptr end{};
-    integer_ptr step{};
+    integer_ref start{};
+    integer_ref end{};
+    integer_ref step{};
     bounds_check_t bounds_check{};
 
     /* TODO: behavior::chunkable */

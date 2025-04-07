@@ -5,13 +5,13 @@
 
 namespace jank::runtime::obj
 {
-  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v)
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v)
     : vec{ v }
   {
     jank_debug_assert(!v->data.empty());
   }
 
-  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ptr const v,
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v,
                                                          size_t const i)
     : vec{ v }
     , index{ i }
@@ -77,12 +77,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  persistent_vector_sequence_ptr persistent_vector_sequence::seq()
+  persistent_vector_sequence_ref persistent_vector_sequence::seq()
   {
     return this;
   }
 
-  persistent_vector_sequence_ptr persistent_vector_sequence::fresh_seq() const
+  persistent_vector_sequence_ref persistent_vector_sequence::fresh_seq() const
   {
     return make_box<persistent_vector_sequence>(vec, index);
   }
@@ -93,32 +93,32 @@ namespace jank::runtime::obj
     return vec->data[index];
   }
 
-  persistent_vector_sequence_ptr persistent_vector_sequence::next() const
+  persistent_vector_sequence_ref persistent_vector_sequence::next() const
   {
     auto n(index);
     ++n;
 
     if(n == vec->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<persistent_vector_sequence>(vec, n);
   }
 
-  persistent_vector_sequence_ptr persistent_vector_sequence::next_in_place()
+  persistent_vector_sequence_ref persistent_vector_sequence::next_in_place()
   {
     ++index;
 
     if(index == vec->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return this;
   }
 
-  cons_ptr persistent_vector_sequence::conj(object_ptr const head)
+  cons_ref persistent_vector_sequence::conj(object_ptr const head)
   {
     return make_box<cons>(head, this);
   }

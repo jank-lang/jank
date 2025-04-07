@@ -29,13 +29,13 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_map_ptr persistent_sorted_map::empty()
+  persistent_sorted_map_ref persistent_sorted_map::empty()
   {
     static auto const ret(make_box<persistent_sorted_map>());
     return ret;
   }
 
-  persistent_sorted_map_ptr persistent_sorted_map::create_from_seq(object_ptr const seq)
+  persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_map>(visit_object(
       [](auto const typed_seq) -> persistent_sorted_map::value_type {
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
         if constexpr(behavior::seqable<T>)
         {
           runtime::detail::native_transient_sorted_map transient;
-          for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
           {
             auto const key(it->first());
             it = it->next_in_place();
@@ -101,20 +101,20 @@ namespace jank::runtime::obj
     return data.find(key) != data.end();
   }
 
-  persistent_sorted_map_ptr
+  persistent_sorted_map_ref
   persistent_sorted_map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.insert_or_assign(key, val));
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
-  persistent_sorted_map_ptr persistent_sorted_map::dissoc(object_ptr const key) const
+  persistent_sorted_map_ref persistent_sorted_map::dissoc(object_ptr const key) const
   {
     auto copy(data.erase_key(key));
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
-  persistent_sorted_map_ptr persistent_sorted_map::conj(object_ptr const head) const
+  persistent_sorted_map_ref persistent_sorted_map::conj(object_ptr const head) const
   {
     if(head->type == object_type::persistent_array_map
        || head->type == object_type::persistent_sorted_map)
@@ -147,7 +147,7 @@ namespace jank::runtime::obj
     return get(o, fallback);
   }
 
-  transient_sorted_map_ptr persistent_sorted_map::to_transient() const
+  transient_sorted_map_ref persistent_sorted_map::to_transient() const
   {
     return make_box<transient_sorted_map>(data);
   }

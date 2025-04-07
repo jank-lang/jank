@@ -20,18 +20,18 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_set_ptr persistent_hash_set::empty()
+  persistent_hash_set_ref persistent_hash_set::empty()
   {
     static auto const ret(make_box<persistent_hash_set>());
     return ret;
   }
 
-  persistent_hash_set_ptr persistent_hash_set::create_from_seq(object_ptr const seq)
+  persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_hash_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_set::value_type {
         runtime::detail::native_transient_hash_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
           transient.insert(it->first());
         }
@@ -93,16 +93,16 @@ namespace jank::runtime::obj
     return hash::unordered(data.begin(), data.end());
   }
 
-  persistent_hash_set_sequence_ptr persistent_hash_set::seq() const
+  persistent_hash_set_sequence_ref persistent_hash_set::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_hash_set_sequence_ptr persistent_hash_set::fresh_seq() const
+  persistent_hash_set_sequence_ref persistent_hash_set::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<persistent_hash_set_sequence>(this, data.begin(), data.end(), data.size());
   }
@@ -112,7 +112,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_hash_set_ptr persistent_hash_set::with_meta(object_ptr const m) const
+  persistent_hash_set_ref persistent_hash_set::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_hash_set>(data));
@@ -120,7 +120,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_hash_set_ptr persistent_hash_set::conj(object_ptr const head) const
+  persistent_hash_set_ref persistent_hash_set::conj(object_ptr const head) const
   {
     auto set(data.insert(head));
     auto ret(make_box<persistent_hash_set>(meta, std::move(set)));
@@ -137,7 +137,7 @@ namespace jank::runtime::obj
     return *found;
   }
 
-  transient_hash_set_ptr persistent_hash_set::to_transient() const
+  transient_hash_set_ref persistent_hash_set::to_transient() const
   {
     return make_box<transient_hash_set>(data);
   }
@@ -147,7 +147,7 @@ namespace jank::runtime::obj
     return data.find(o);
   }
 
-  persistent_hash_set_ptr persistent_hash_set::disj(object_ptr const o) const
+  persistent_hash_set_ref persistent_hash_set::disj(object_ptr const o) const
   {
     auto set(data.erase(o));
     auto ret(make_box<persistent_hash_set>(meta, std::move(set)));

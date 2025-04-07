@@ -24,7 +24,7 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_sorted_map_ptr transient_sorted_map::empty()
+  transient_sorted_map_ref transient_sorted_map::empty()
   {
     return make_box<transient_sorted_map>();
   }
@@ -103,7 +103,7 @@ namespace jank::runtime::obj
     return data.find(key) != data.end();
   }
 
-  transient_sorted_map_ptr
+  transient_sorted_map_ref
   transient_sorted_map::assoc_in_place(object_ptr const key, object_ptr const val)
   {
     assert_active();
@@ -111,14 +111,14 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_sorted_map_ptr transient_sorted_map::dissoc_in_place(object_ptr const key)
+  transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ptr const key)
   {
     assert_active();
     data.erase_key(key);
     return this;
   }
 
-  transient_sorted_map_ptr transient_sorted_map::conj_in_place(object_ptr const head)
+  transient_sorted_map_ref transient_sorted_map::conj_in_place(object_ptr const head)
   {
     assert_active();
 
@@ -143,7 +143,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_sorted_map::persistent_type_ptr transient_sorted_map::to_persistent()
+  transient_sorted_map::persistent_type_ref transient_sorted_map::to_persistent()
   {
     assert_active();
     active = false;

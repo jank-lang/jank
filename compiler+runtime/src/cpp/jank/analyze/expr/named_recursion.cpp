@@ -9,7 +9,7 @@ namespace jank::analyze::expr
                                    local_frame_ptr const frame,
                                    native_bool const needs_box,
                                    recursion_reference &&recursion_ref,
-                                   runtime::obj::persistent_list_ptr const args,
+                                   runtime::obj::persistent_list_ref const args,
                                    native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , recursion_ref{ std::move(recursion_ref) }

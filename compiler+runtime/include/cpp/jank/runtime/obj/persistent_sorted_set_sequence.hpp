@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
-  using persistent_sorted_set_sequence_ptr = native_box<struct persistent_sorted_set_sequence>;
+  using persistent_sorted_set_ref = jtl::object_ref<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ref = jtl::object_ref<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set_sequence
     : gc

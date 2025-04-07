@@ -5,13 +5,13 @@
 
 namespace jank::runtime::obj
 {
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s)
     : str{ s }
   {
     jank_debug_assert(!s->data.empty());
   }
 
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s,
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
                                                          size_t const i)
     : str{ s }
     , index{ i }
@@ -56,12 +56,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  persistent_string_sequence_ptr persistent_string_sequence::seq()
+  persistent_string_sequence_ref persistent_string_sequence::seq()
   {
     return this;
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::fresh_seq() const
+  persistent_string_sequence_ref persistent_string_sequence::fresh_seq() const
   {
     return make_box<persistent_string_sequence>(str, index);
   }
@@ -72,32 +72,32 @@ namespace jank::runtime::obj
     return make_box(str->data[index]);
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::next() const
+  persistent_string_sequence_ref persistent_string_sequence::next() const
   {
     auto n(index);
     ++n;
 
     if(n == str->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<persistent_string_sequence>(str, n);
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::next_in_place()
+  persistent_string_sequence_ref persistent_string_sequence::next_in_place()
   {
     ++index;
 
     if(index == str->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return this;
   }
 
-  cons_ptr persistent_string_sequence::conj(object_ptr const head)
+  cons_ref persistent_string_sequence::conj(object_ptr const head)
   {
     return make_box<cons>(head, this);
   }

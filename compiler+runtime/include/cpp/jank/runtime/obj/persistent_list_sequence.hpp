@@ -8,8 +8,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_list_ptr = native_box<struct persistent_list>;
-  using persistent_list_sequence_ptr = native_box<struct persistent_list_sequence>;
+  using persistent_list_ref = jtl::object_ref<struct persistent_list>;
+  using persistent_list_sequence_ref = jtl::object_ref<struct persistent_list_sequence>;
 
   /* TODO: We need to get rid of this. In Clojure, a list *is* a sequence. */
   struct persistent_list_sequence
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
       runtime::detail::native_persistent_list::iterator>::iterator_sequence;
 
     /* behavior::metadatable */
-    native_box<persistent_list_sequence> with_meta(object_ptr const m) const
+    persistent_list_sequence_ref with_meta(object_ptr const m) const
     {
       auto const meta(behavior::detail::validate_meta(m));
       auto ret(make_box<persistent_list_sequence>(coll, begin, end, size));

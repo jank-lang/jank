@@ -97,9 +97,9 @@ namespace jank::runtime
     thread_binding_frames.erase(this);
   }
 
-  obj::symbol_ptr context::qualify_symbol(obj::symbol_ptr const &sym) const
+  obj::symbol_ref context::qualify_symbol(obj::symbol_ref const &sym) const
   {
-    obj::symbol_ptr qualified_sym{ sym };
+    obj::symbol_ref qualified_sym{ sym };
     if(qualified_sym->ns.empty())
     {
       auto const current_ns(expect_object<ns>(current_ns_var->deref()));
@@ -108,18 +108,18 @@ namespace jank::runtime
     return qualified_sym;
   }
 
-  jtl::option<var_ptr> context::find_var(obj::symbol_ptr const &sym)
+  var_ref context::find_var(obj::symbol_ref const &sym)
   {
     profile::timer const timer{ "rt find_var" };
     if(!sym->ns.empty())
     {
-      ns_ptr ns{};
+      ns_ref ns{};
       {
         auto const locked_namespaces(namespaces.rlock());
         auto const found(locked_namespaces->find(make_box<obj::symbol>("", sym->ns)));
         if(found == locked_namespaces->end())
         {
-          return none;
+          return {};
         }
         ns = found->second;
       }
@@ -133,13 +133,13 @@ namespace jank::runtime
     }
   }
 
-  jtl::option<var_ptr>
+  var_ref
   context::find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return find_var(make_box<obj::symbol>(ns, name));
   }
 
-  jtl::option<object_ptr> context::find_local(obj::symbol_ptr const &)
+  jtl::option<object_ptr> context::find_local(obj::symbol_ref const &)
   {
     return none;
   }
@@ -414,12 +414,12 @@ namespace jank::runtime
     }
   }
 
-  ns_ptr context::intern_ns(jtl::immutable_string const &name)
+  ns_ref context::intern_ns(jtl::immutable_string const &name)
   {
     return intern_ns(make_box<obj::symbol>(name));
   }
 
-  ns_ptr context::intern_ns(obj::symbol_ptr const &sym)
+  ns_ref context::intern_ns(obj::symbol_ref const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -437,7 +437,7 @@ namespace jank::runtime
     return result.first->second;
   }
 
-  jtl::option<ns_ptr> context::remove_ns(obj::symbol_ptr const &sym)
+  ns_ref context::remove_ns(obj::symbol_ref const &sym)
   {
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
@@ -447,10 +447,10 @@ namespace jank::runtime
       locked_namespaces->erase(found);
       return ret;
     }
-    return none;
+    return {};
   }
 
-  jtl::option<ns_ptr> context::find_ns(obj::symbol_ptr const &sym)
+  ns_ref context::find_ns(obj::symbol_ref const &sym)
   {
     auto locked_namespaces(namespaces.rlock());
     auto const found(locked_namespaces->find(sym));
@@ -458,35 +458,35 @@ namespace jank::runtime
     {
       return found->second;
     }
-    return none;
+    return {};
   }
 
-  jtl::option<ns_ptr> context::resolve_ns(obj::symbol_ptr const &target)
+  ns_ref context::resolve_ns(obj::symbol_ref const &target)
   {
     auto const ns(current_ns());
     auto const alias(ns->find_alias(target));
-    if(alias.is_some())
+    if(alias)
     {
-      return alias.unwrap();
+      return alias;
     }
 
     return find_ns(target);
   }
 
   /* TODO: Cache this var. */
-  ns_ptr context::current_ns()
+  ns_ref context::current_ns()
   {
-    return expect_object<ns>(find_var("clojure.core", "*ns*").unwrap()->deref());
+    return expect_object<ns>(find_var("clojure.core", "*ns*")->deref());
   }
 
-  jtl::result<var_ptr, jtl::immutable_string>
+  jtl::result<var_ref, jtl::immutable_string>
   context::intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_var(make_box<obj::symbol>(ns, name));
   }
 
-  jtl::result<var_ptr, jtl::immutable_string>
-  context::intern_var(obj::symbol_ptr const &qualified_sym)
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_var(obj::symbol_ref const &qualified_sym)
   {
     profile::timer const timer{ "intern_var" };
     if(qualified_sym->ns.empty())
@@ -505,7 +505,7 @@ namespace jank::runtime
     return ok(found_ns->second->intern_var(qualified_sym));
   }
 
-  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  jtl::result<obj::keyword_ref, jtl::immutable_string>
   context::intern_keyword(jtl::immutable_string const &ns,
                           jtl::immutable_string const &name,
                           bool const resolved)
@@ -517,11 +517,11 @@ namespace jank::runtime
       if(!ns.empty())
       {
         auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
-        if(resolved.is_none())
+        if(!resolved)
         {
           return err(util::format("Unable to resolve namespace alias '{}'", ns));
         }
-        resolved_ns = resolved.unwrap()->name->name;
+        resolved_ns = resolved->name->name;
       }
       else
       {
@@ -532,7 +532,7 @@ namespace jank::runtime
     return intern_keyword(resolved_ns.empty() ? name : util::format("{}/{}", resolved_ns, name));
   }
 
-  jtl::result<obj::keyword_ptr, jtl::immutable_string>
+  jtl::result<obj::keyword_ref, jtl::immutable_string>
   context::intern_keyword(jtl::immutable_string const &s)
   {
     profile::timer const timer{ "rt intern_keyword" };
@@ -568,14 +568,14 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const var(find_var(first_sym_obj));
+          auto const var(find_var(first_sym_obj.data));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
-          if(var.is_none() || var.unwrap()->meta.is_none())
+          if(!var || var->meta.is_none())
           {
             return typed_o;
           }
 
-          auto const meta(var.unwrap()->meta.unwrap());
+          auto const meta(var->meta.unwrap());
           auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
           if(!found_macro || !truthy(found_macro))
           {
@@ -584,7 +584,7 @@ namespace jank::runtime
 
           /* TODO: Provide &env. */
           auto const args(cons(cons(rest(typed_o), obj::nil::nil_const()), typed_o));
-          return apply_to(var.unwrap()->deref(), args);
+          return apply_to(var->deref(), args);
         }
       },
       [=]() { return o; },
@@ -620,7 +620,7 @@ namespace jank::runtime
   }
 
   context::binding_scope::binding_scope(context &rt_ctx,
-                                        obj::persistent_hash_map_ptr const bindings)
+                                        obj::persistent_hash_map_ref const bindings)
     : rt_ctx{ rt_ctx }
   {
     rt_ctx.push_thread_bindings(bindings).expect_ok();
@@ -669,7 +669,7 @@ namespace jank::runtime
   }
 
   jtl::string_result<void>
-  context::push_thread_bindings(obj::persistent_hash_map_ptr const bindings)
+  context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
@@ -681,7 +681,7 @@ namespace jank::runtime
 
     auto const thread_id(std::this_thread::get_id());
 
-    for(auto it(bindings->fresh_seq()); it != nullptr; it = it->next_in_place())
+    for(auto it(bindings->fresh_seq()); it; it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));
@@ -726,7 +726,7 @@ namespace jank::runtime
     return ok();
   }
 
-  obj::persistent_hash_map_ptr context::get_thread_bindings() const
+  obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
     auto const &tbfs(thread_binding_frames[this]);
     if(tbfs.empty())

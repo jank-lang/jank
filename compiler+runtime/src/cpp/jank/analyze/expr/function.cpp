@@ -17,7 +17,7 @@ namespace jank::analyze::expr
                      jtl::immutable_string const &name,
                      jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
-                     runtime::obj::persistent_hash_map_ptr const meta)
+                     runtime::obj::persistent_hash_map_ref const meta)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
     , unique_name{ unique_name }
@@ -49,14 +49,14 @@ namespace jank::analyze::expr
     return param_count == rhs.param_count && is_variadic == rhs.is_variadic;
   }
 
-  native_unordered_map<obj::symbol_ptr, analyze::local_binding_ptr> function::captures() const
+  native_unordered_map<obj::symbol_ref, analyze::local_binding_ptr> function::captures() const
   {
-    native_unordered_map<obj::symbol_ptr, analyze::local_binding_ptr> ret;
+    native_unordered_map<obj::symbol_ref, analyze::local_binding_ptr> ret;
     for(auto const &arity : arities)
     {
       for(auto const &capture : arity.frame->captures)
       {
-        ret.emplace(capture.first, capture.second);
+        ret.emplace(capture.first, &capture.second);
       }
     }
     return ret;

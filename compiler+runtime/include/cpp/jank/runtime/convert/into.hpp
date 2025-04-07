@@ -33,6 +33,16 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::object_like<T>
+  struct convert<jtl::object_ref<T>, object_ptr>
+  {
+    static object_ptr call(jtl::object_ref<T> const o)
+    {
+      return o;
+    }
+  };
+
+  template <typename T>
+  requires behavior::object_like<T>
   struct convert<T *, object_ptr>
   {
     static object_ptr call(T * const o)

@@ -192,7 +192,7 @@ namespace jank::runtime::obj
     return &this->base;
   }
 
-  multi_function_ptr multi_function::reset()
+  multi_function_ref multi_function::reset()
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
     cached_hierarchy = nullptr;
@@ -200,7 +200,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  persistent_hash_map_ptr multi_function::reset_cache()
+  persistent_hash_map_ref multi_function::reset_cache()
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
     cached_hierarchy = hierarchy;
@@ -208,7 +208,7 @@ namespace jank::runtime::obj
     return method_cache;
   }
 
-  multi_function_ptr
+  multi_function_ref
   multi_function::add_method(object_ptr const dispatch_val, object_ptr const method)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
@@ -218,7 +218,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  multi_function_ptr multi_function::remove_method(object_ptr const dispatch_val)
+  multi_function_ref multi_function::remove_method(object_ptr const dispatch_val)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
     method_table = method_table->dissoc(dispatch_val);
@@ -226,7 +226,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  multi_function_ptr multi_function::prefer_method(object_ptr const x, object_ptr const y)
+  multi_function_ref multi_function::prefer_method(object_ptr const x, object_ptr const y)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
 
@@ -330,16 +330,16 @@ namespace jank::runtime::obj
     /* TODO: Clojure uses a RW lock here for better parallelism. */
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
     object_ptr best_value{ nil::nil_const() };
-    persistent_vector_sequence_ptr best_entry{};
+    persistent_vector_sequence_ref best_entry{};
 
-    for(auto it(method_table->fresh_seq()); it != nullptr; it = it->next_in_place())
+    for(auto it(method_table->fresh_seq()); it; it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const entry_key(entry->seq()->first());
 
       if(is_a(cached_hierarchy, dispatch_val, entry_key))
       {
-        if(best_entry == nullptr || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
+        if(!best_entry || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
         {
           best_entry = entry->seq();
         }

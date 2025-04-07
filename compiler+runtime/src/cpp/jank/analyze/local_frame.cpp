@@ -79,7 +79,7 @@ namespace jank::analyze
   }
 
   static jtl::option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
-                                                               obj::symbol_ptr sym,
+                                                               obj::symbol_ref sym,
                                                                native_bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
@@ -119,7 +119,7 @@ namespace jank::analyze
   }
 
   jtl::option<local_frame::find_result>
-  local_frame::find_local_or_capture(obj::symbol_ptr const sym)
+  local_frame::find_local_or_capture(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, true);
   }
@@ -138,20 +138,20 @@ namespace jank::analyze
   }
 
   jtl::option<local_frame::find_result>
-  local_frame::find_originating_local(obj::symbol_ptr const sym)
+  local_frame::find_originating_local(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, false);
   }
 
   jtl::option<expr::function_context_ref>
-  local_frame::find_named_recursion(obj::symbol_ptr const sym)
+  local_frame::find_named_recursion(obj::symbol_ref const sym)
   {
     auto const sym_str(sym->to_string());
     for(local_frame_ptr it{ this }; it != nullptr;)
     {
       if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
       {
-        return *it->fn_ctx;
+        return it->fn_ctx;
       }
 
       if(it->parent.is_some())
@@ -193,7 +193,7 @@ namespace jank::analyze
     return &find_closest_fn_frame(*l) == &find_closest_fn_frame(*r);
   }
 
-  obj::symbol_ptr local_frame::lift_var(obj::symbol_ptr const &sym)
+  obj::symbol_ref local_frame::lift_var(obj::symbol_ref const &sym)
   {
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
@@ -202,7 +202,7 @@ namespace jank::analyze
       return found->first;
     }
 
-    obj::symbol_ptr qualified_sym{};
+    obj::symbol_ref qualified_sym{};
     if(sym->ns.empty())
     {
       qualified_sym
@@ -221,7 +221,7 @@ namespace jank::analyze
   }
 
   jtl::option<std::reference_wrapper<lifted_var const>>
-  local_frame::find_lifted_var(obj::symbol_ptr const &sym) const
+  local_frame::find_lifted_var(obj::symbol_ref const &sym) const
   {
     jank_debug_assert(sym);
     auto const &closest_fn(find_closest_fn_frame(*this));

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using delay_ptr = native_box<struct delay>;
+  using delay_ref = jtl::object_ref<struct delay>;
 
   struct delay : gc
   {

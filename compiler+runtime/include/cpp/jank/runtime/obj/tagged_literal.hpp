@@ -4,6 +4,8 @@
 
 namespace jank::runtime::obj
 {
+  using tagged_literal_ref = jtl::object_ref<struct tagged_literal>;
+
   struct tagged_literal : gc
   {
     static constexpr object_type obj_type{ object_type::tagged_literal };

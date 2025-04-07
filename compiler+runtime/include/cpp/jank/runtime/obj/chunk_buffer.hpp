@@ -4,8 +4,8 @@
 
 namespace jank::runtime::obj
 {
-  using array_chunk_ptr = native_box<struct array_chunk>;
-  using chunk_buffer_ptr = native_box<struct chunk_buffer>;
+  using array_chunk_ref = jtl::object_ref<struct array_chunk>;
+  using chunk_buffer_ref = jtl::object_ref<struct chunk_buffer>;
 
   struct chunk_buffer : gc
   {
@@ -27,7 +27,7 @@ namespace jank::runtime::obj
     size_t count() const;
 
     void append(object_ptr o);
-    obj::array_chunk_ptr chunk();
+    obj::array_chunk_ref chunk();
 
     object base{ obj_type };
     native_vector<object_ptr> buffer;

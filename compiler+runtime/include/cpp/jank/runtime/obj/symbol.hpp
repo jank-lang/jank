@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
-  using symbol_ptr = native_box<struct symbol>;
+  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
 
   struct symbol : gc
   {
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     native_integer compare(symbol const &) const;
 
     /* behavior::metadatable */
-    symbol_ptr with_meta(object_ptr m) const;
+    symbol_ref with_meta(object_ptr m) const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -76,15 +76,15 @@ namespace std
   };
 
   template <>
-  struct hash<jank::runtime::obj::symbol_ptr>
+  struct hash<jank::runtime::obj::symbol_ref>
   {
-    size_t operator()(jank::runtime::obj::symbol_ptr const &o) const noexcept;
+    size_t operator()(jank::runtime::obj::symbol_ref const &o) const noexcept;
   };
 
   template <>
-  struct equal_to<jank::runtime::obj::symbol_ptr>
+  struct equal_to<jank::runtime::obj::symbol_ref>
   {
-    bool operator()(jank::runtime::obj::symbol_ptr const &lhs,
-                    jank::runtime::obj::symbol_ptr const &rhs) const noexcept;
+    bool operator()(jank::runtime::obj::symbol_ref const &lhs,
+                    jank::runtime::obj::symbol_ref const &rhs) const noexcept;
   };
 }

@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     buffer.emplace_back(o);
   }
 
-  array_chunk_ptr chunk_buffer::chunk()
+  array_chunk_ref chunk_buffer::chunk()
   {
     auto const ret(make_box<array_chunk>(std::move(buffer)));
     buffer.clear();

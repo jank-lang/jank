@@ -37,12 +37,12 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  repeat_ptr repeat::seq()
+  repeat_ref repeat::seq()
   {
     return this;
   }
 
-  repeat_ptr repeat::fresh_seq() const
+  repeat_ref repeat::fresh_seq() const
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     return value;
   }
 
-  repeat_ptr repeat::next() const
+  repeat_ref repeat::next() const
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -64,12 +64,12 @@ namespace jank::runtime::obj
     }
     if(lte(count, make_box(1)))
     {
-      return nullptr;
+      return {};
     }
     return make_box<repeat>(make_box(add(count, make_box(-1))), value);
   }
 
-  repeat_ptr repeat::next_in_place()
+  repeat_ref repeat::next_in_place()
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -77,13 +77,13 @@ namespace jank::runtime::obj
     }
     if(lte(count, make_box(1)))
     {
-      return nullptr;
+      return {};
     }
     count = add(count, make_box(-1));
     return this;
   }
 
-  cons_ptr repeat::conj(object_ptr const head) const
+  cons_ref repeat::conj(object_ptr const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -94,15 +94,15 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          if(!seq || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  repeat_ptr repeat::with_meta(object_ptr const m) const
+  repeat_ref repeat::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

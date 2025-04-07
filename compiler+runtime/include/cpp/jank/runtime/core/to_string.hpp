@@ -38,7 +38,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  void to_string(native_box<T> const s, util::string_builder &buff)
+  void to_string(jtl::object_ref<T> const s, util::string_builder &buff)
   {
     if(!s)
     {
@@ -48,7 +48,7 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i; i = i->next_in_place())
     {
       if(needs_space)
       {
@@ -62,7 +62,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  jtl::immutable_string to_string(native_box<T> const s)
+  jtl::immutable_string to_string(jtl::object_ref<T> const s)
   {
     util::string_builder buff;
     runtime::to_string(s, buff);
@@ -94,7 +94,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  void to_code_string(native_box<T> const s, util::string_builder &buff)
+  void to_code_string(jtl::object_ref<T> const s, util::string_builder &buff)
   {
     if(!s)
     {
@@ -104,7 +104,7 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i != nullptr; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i; i = i->next_in_place())
     {
       if(needs_space)
       {
@@ -118,7 +118,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  jtl::immutable_string to_code_string(native_box<T> const s)
+  jtl::immutable_string to_code_string(jtl::object_ref<T> const s)
   {
     util::string_builder buff;
     runtime::to_code_string(s, buff);

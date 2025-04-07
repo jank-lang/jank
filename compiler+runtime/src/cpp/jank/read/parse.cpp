@@ -781,7 +781,7 @@ namespace jank::read::parse
     auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
     auto const list_end(list_result.expect_ok().unwrap().end);
 
-    if(list.data->count() % 2 == 1)
+    if(list->count() % 2 == 1)
     {
       return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
                                                      "#? expects an even number of forms.");
@@ -790,7 +790,7 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr; it = it->next_in_place()->next_in_place())
+    for(auto it(list->fresh_seq()); it; it = it->next_in_place()->next_in_place())
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -817,7 +817,7 @@ namespace jank::read::parse
               auto const first(seq->first());
 
               auto const front(pending_forms.begin());
-              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+              for(auto it(seq->next_in_place()); it; it = it->next_in_place())
               {
                 pending_forms.insert(front, it->first());
               }
@@ -851,7 +851,7 @@ namespace jank::read::parse
     return visit_seqable(
       [this](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
           auto const item(it->first());
 
@@ -880,7 +880,7 @@ namespace jank::read::parse
           }
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: obj::nil::nil_const();
+        return vec;
       },
       []() -> jtl::result<object_ptr, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
@@ -898,14 +898,14 @@ namespace jank::read::parse
     return visit_seqable(
       [](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
           auto item(it->first());
           ret.push_back(first(item));
           ret.push_back(second(item));
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: obj::nil::nil_const();
+        return vec;
       },
       []() -> jtl::result<object_ptr, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
@@ -918,7 +918,7 @@ namespace jank::read::parse
     return visit_seqable(
       [splice](auto const typed_form) {
         auto const s(typed_form->seq());
-        object_ptr const item{ s ? s->first() : obj::nil::nil_const() };
+        object_ptr const item{ s ? s->first() : s };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);
@@ -961,13 +961,13 @@ namespace jank::read::parse
       else if(sym->ns.empty() && sym->name != "&")
       {
         auto var(__rt_ctx->find_var(sym));
-        if(var.is_none())
+        if(!var)
         {
           sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
         }
         else
         {
-          sym = make_box<obj::symbol>(var.unwrap()->n->name->name, sym->name);
+          sym = make_box<obj::symbol>(var->n->name->name, sym->name);
         }
       }
 
@@ -1239,13 +1239,13 @@ namespace jank::read::parse
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
-          if(resolved_ns.is_none())
+          if(!resolved_ns)
           {
             ns = ns_portion;
           }
           else
           {
-            ns = resolved_ns.unwrap()->name->name;
+            ns = resolved_ns->name->name;
           }
         }
         name = sv.substr(slash + 1);

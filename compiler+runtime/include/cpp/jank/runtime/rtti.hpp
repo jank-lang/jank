@@ -17,7 +17,23 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr object_ptr erase(jtl::object_ref<T> const o)
+  {
+    return &o->base;
+  }
+
+  template <typename T>
+  requires behavior::object_like<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr object_ptr erase(native_box<T const> const o)
+  {
+    return const_cast<object_ptr>(&o->base);
+  }
+
+  template <typename T>
+  requires behavior::object_like<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  constexpr object_ptr erase(jtl::object_ref<T const> const o)
   {
     return const_cast<object_ptr>(&o->base);
   }
@@ -39,12 +55,13 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> isa(object const * const o)
+  constexpr bool isa(object const * const o)
   {
     jank_debug_assert(o);
     return o->type == T::obj_type;
   }
 
+  /* TODO: Option or ptr? */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -62,7 +79,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  native_box<T> try_object(object const * const o)
+  jtl::object_ref<T> try_object(object const * const o)
   {
     jank_debug_assert(o);
     if(o->type != T::obj_type)
@@ -85,7 +102,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> expect_object(object_ptr const o)
+  constexpr jtl::object_ref<T> expect_object(object_ptr const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);
@@ -95,7 +112,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr native_box<T> expect_object(object const * const o)
+  constexpr jtl::object_ref<T> expect_object(object const * const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);

@@ -5,9 +5,9 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_set_ptr = native_box<struct transient_sorted_set>;
-  using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
-  using persistent_sorted_set_sequence_ptr = native_box<struct persistent_sorted_set_sequence>;
+  using transient_sorted_set_ref = jtl::object_ref<struct transient_sorted_set>;
+  using persistent_sorted_set_ref = jtl::object_ref<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ref = jtl::object_ref<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set : gc
   {
@@ -38,8 +38,8 @@ namespace jank::runtime::obj
     {
     }
 
-    static persistent_sorted_set_ptr empty();
-    static persistent_sorted_set_ptr create_from_seq(object_ptr const seq);
+    static persistent_sorted_set_ref empty();
+    static persistent_sorted_set_ref create_from_seq(object_ptr const seq);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -49,26 +49,26 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    persistent_sorted_set_ptr with_meta(object_ptr m) const;
+    persistent_sorted_set_ref with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    persistent_sorted_set_sequence_ptr seq() const;
-    persistent_sorted_set_sequence_ptr fresh_seq() const;
+    persistent_sorted_set_sequence_ref seq() const;
+    persistent_sorted_set_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
 
     /* behavior::conjable */
-    persistent_sorted_set_ptr conj(object_ptr head) const;
+    persistent_sorted_set_ref conj(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr);
 
     /* behavior::transientable */
-    obj::transient_sorted_set_ptr to_transient() const;
+    obj::transient_sorted_set_ref to_transient() const;
 
     native_bool contains(object_ptr o) const;
-    persistent_sorted_set_ptr disj(object_ptr o) const;
+    persistent_sorted_set_ref disj(object_ptr o) const;
 
     object base{ obj_type };
     value_type data;
@@ -78,8 +78,8 @@ namespace jank::runtime::obj
 
 namespace jank::runtime
 {
-  extern template obj::persistent_sorted_set_ptr
+  extern template obj::persistent_sorted_set_ref
   make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type &&);
-  extern template obj::persistent_sorted_set_ptr
+  extern template obj::persistent_sorted_set_ref
   make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type const &);
 }

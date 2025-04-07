@@ -4,8 +4,8 @@
 
 namespace jank::runtime::obj
 {
-  using native_array_sequence_ptr = native_box<struct native_array_sequence>;
-  using cons_ptr = native_box<struct cons>;
+  using native_array_sequence_ref = jtl::object_ref<struct native_array_sequence>;
+  using cons_ref = jtl::object_ref<struct cons>;
 
   struct native_array_sequence : gc
   {
@@ -34,22 +34,22 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_array_sequence_ptr seq();
-    native_array_sequence_ptr fresh_seq();
+    native_array_sequence_ref seq();
+    native_array_sequence_ref fresh_seq();
 
     /* behavior::countable */
     size_t count() const;
 
     /* behavior::sequence */
     object_ptr first() const;
-    native_array_sequence_ptr next() const;
-    obj::cons_ptr conj(object_ptr head);
+    native_array_sequence_ref next() const;
+    obj::cons_ref conj(object_ptr head);
 
     /* behavior::sequenceable_in_place */
-    native_array_sequence_ptr next_in_place();
+    native_array_sequence_ref next_in_place();
 
     object base{ obj_type };
-    object_ptr *arr{};
+    jtl::ptr<object_ptr> arr{};
     size_t index{};
     size_t size{};
   };

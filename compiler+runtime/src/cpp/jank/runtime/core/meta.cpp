@@ -129,13 +129,13 @@ namespace jank::runtime
     return meta_source(meta);
   }
 
-  obj::persistent_hash_map_ptr
+  obj::persistent_hash_map_ref
   source_to_meta(read::source_position const &start, read::source_position const &end)
   {
     return source_to_meta(__rt_ctx->intern_keyword("jank/source").expect_ok(), start, end);
   }
 
-  obj::persistent_hash_map_ptr source_to_meta(object_ptr const key,
+  obj::persistent_hash_map_ref source_to_meta(object_ptr const key,
                                               read::source_position const &start,
                                               read::source_position const &end)
   {

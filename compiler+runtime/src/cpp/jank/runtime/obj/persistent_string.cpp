@@ -122,12 +122,12 @@ namespace jank::runtime::obj
     return get(index, fallback);
   }
 
-  jtl::string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
+  jtl::string_result<persistent_string_ref> persistent_string::substring(native_integer start) const
   {
     return substring(start, static_cast<native_integer>(data.size()));
   }
 
-  jtl::string_result<persistent_string_ptr>
+  jtl::string_result<persistent_string_ref>
   persistent_string::substring(native_integer const start, native_integer const end) const
   {
     if(start < 0)
@@ -173,16 +173,16 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_string_sequence_ptr persistent_string::seq() const
+  persistent_string_sequence_ref persistent_string::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_string_sequence_ptr persistent_string::fresh_seq() const
+  persistent_string_sequence_ref persistent_string::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
   }

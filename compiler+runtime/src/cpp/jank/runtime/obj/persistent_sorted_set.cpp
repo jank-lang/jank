@@ -27,18 +27,18 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set_ptr persistent_sorted_set::empty()
+  persistent_sorted_set_ref persistent_sorted_set::empty()
   {
     static auto const ret(make_box<persistent_sorted_set>());
     return ret;
   }
 
-  persistent_sorted_set_ptr persistent_sorted_set::create_from_seq(object_ptr const seq)
+  persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_sorted_set>(visit_seqable(
       [](auto const typed_seq) -> persistent_sorted_set::value_type {
         runtime::detail::native_transient_sorted_set transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
           transient.insert_v(it->first());
         }
@@ -100,16 +100,16 @@ namespace jank::runtime::obj
     return hash::unordered(data.begin(), data.end());
   }
 
-  persistent_sorted_set_sequence_ptr persistent_sorted_set::seq() const
+  persistent_sorted_set_sequence_ref persistent_sorted_set::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_sorted_set_sequence_ptr persistent_sorted_set::fresh_seq() const
+  persistent_sorted_set_sequence_ref persistent_sorted_set::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<persistent_sorted_set_sequence>(this, data.begin(), data.end(), data.size());
   }
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_sorted_set_ptr persistent_sorted_set::with_meta(object_ptr const m) const
+  persistent_sorted_set_ref persistent_sorted_set::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_sorted_set>(data));
@@ -127,7 +127,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_sorted_set_ptr persistent_sorted_set::conj(object_ptr const head) const
+  persistent_sorted_set_ref persistent_sorted_set::conj(object_ptr const head) const
   {
     auto set(data.insert_v(head));
     auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
@@ -144,7 +144,7 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  transient_sorted_set_ptr persistent_sorted_set::to_transient() const
+  transient_sorted_set_ref persistent_sorted_set::to_transient() const
   {
     return make_box<transient_sorted_set>(data);
   }
@@ -154,7 +154,7 @@ namespace jank::runtime::obj
     return data.find(o) != data.end();
   }
 
-  persistent_sorted_set_ptr persistent_sorted_set::disj(object_ptr const o) const
+  persistent_sorted_set_ref persistent_sorted_set::disj(object_ptr const o) const
   {
     auto set(data.erase_key(o));
     auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
@@ -164,8 +164,8 @@ namespace jank::runtime::obj
 
 namespace jank::runtime
 {
-  template obj::persistent_sorted_set_ptr
+  template obj::persistent_sorted_set_ref
   make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type &&);
-  template obj::persistent_sorted_set_ptr
+  template obj::persistent_sorted_set_ref
   make_box<obj::persistent_sorted_set>(obj::persistent_sorted_set::value_type const &);
 }

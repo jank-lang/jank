@@ -27,12 +27,12 @@ namespace jank::runtime
     return truthy(o.data);
   }
 
-  native_bool truthy(obj::nil_ptr)
+  native_bool truthy(obj::nil_ref)
   {
     return false;
   }
 
-  native_bool truthy(obj::boolean_ptr const o)
+  native_bool truthy(obj::boolean_ref const o)
   {
     return o && o->data;
   }

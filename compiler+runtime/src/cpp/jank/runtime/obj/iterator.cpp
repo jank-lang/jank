@@ -11,12 +11,12 @@ namespace jank::runtime::obj
   {
   }
 
-  iterator_ptr iterator::seq()
+  iterator_ref iterator::seq()
   {
     return this;
   }
 
-  iterator_ptr iterator::fresh_seq() const
+  iterator_ref iterator::fresh_seq() const
   {
     return make_box<iterator>(fn, current);
   }
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     return current;
   }
 
-  iterator_ptr iterator::next() const
+  iterator_ref iterator::next() const
   {
     if(cached_next)
     {
@@ -40,12 +40,12 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  iterator_ptr iterator::next_in_place()
+  iterator_ref iterator::next_in_place()
   {
     if(cached_next)
     {
       current = cached_next->first();
-      cached_next = nullptr;
+      cached_next = obj::nil::nil_const();
     }
     else
     {
@@ -61,15 +61,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          if(!seq || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  cons_ptr iterator::conj(object_ptr const head) const
+  cons_ref iterator::conj(object_ptr const head) const
   {
     return make_box<cons>(head, this);
   }

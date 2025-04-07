@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using native_vector_sequence_ptr = native_box<struct native_vector_sequence>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using native_vector_sequence_ref = jtl::object_ref<struct native_vector_sequence>;
 
   struct native_vector_sequence : gc
   {
@@ -31,22 +31,22 @@ namespace jank::runtime::obj
     native_hash to_hash();
 
     /* behavior::seqable */
-    native_vector_sequence_ptr seq();
-    native_vector_sequence_ptr fresh_seq() const;
+    native_vector_sequence_ref seq();
+    native_vector_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
 
     /* behavior::sequence */
     object_ptr first() const;
-    native_vector_sequence_ptr next() const;
-    obj::cons_ptr conj(object_ptr head);
+    native_vector_sequence_ref next() const;
+    obj::cons_ref conj(object_ptr head);
 
     /* behavior::sequenceable_in_place */
-    native_vector_sequence_ptr next_in_place();
+    native_vector_sequence_ref next_in_place();
 
     /* behavior::metadatable */
-    native_vector_sequence_ptr with_meta(object_ptr const m) const;
+    native_vector_sequence_ref with_meta(object_ptr const m) const;
 
     object base{ obj_type };
     native_vector<object_ptr> data{};

@@ -5,8 +5,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_string_ptr = native_box<struct persistent_string>;
-  using persistent_string_sequence_ptr = native_box<struct persistent_string_sequence>;
+  using persistent_string_ref = jtl::object_ref<struct persistent_string>;
+  using persistent_string_sequence_ref = jtl::object_ref<struct persistent_string_sequence>;
 
   struct persistent_string : gc
   {
@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     persistent_string(jtl::immutable_string const &d);
     persistent_string(jtl::immutable_string &&d);
 
-    static persistent_string_ptr empty()
+    static persistent_string_ref empty()
     {
       static auto const ret(make_box<persistent_string>());
       return ret;
@@ -48,8 +48,8 @@ namespace jank::runtime::obj
     object_ptr nth(object_ptr const index) const;
     object_ptr nth(object_ptr const index, object_ptr const fallback) const;
 
-    jtl::string_result<persistent_string_ptr> substring(native_integer start) const;
-    jtl::string_result<persistent_string_ptr>
+    jtl::string_result<persistent_string_ref> substring(native_integer start) const;
+    jtl::string_result<persistent_string_ref>
     substring(native_integer start, native_integer end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
@@ -61,8 +61,8 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::seqable */
-    obj::persistent_string_sequence_ptr seq() const;
-    obj::persistent_string_sequence_ptr fresh_seq() const;
+    obj::persistent_string_sequence_ref seq() const;
+    obj::persistent_string_sequence_ref fresh_seq() const;
 
     object base{ obj_type };
     jtl::immutable_string data;

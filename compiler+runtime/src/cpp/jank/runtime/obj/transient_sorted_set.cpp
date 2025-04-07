@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_sorted_set_ptr transient_sorted_set::empty()
+  transient_sorted_set_ref transient_sorted_set::empty()
   {
     return make_box<transient_sorted_set>();
   }
@@ -61,14 +61,14 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  transient_sorted_set_ptr transient_sorted_set::conj_in_place(object_ptr const elem)
+  transient_sorted_set_ref transient_sorted_set::conj_in_place(object_ptr const elem)
   {
     assert_active();
     data.insert_v(elem);
     return this;
   }
 
-  transient_sorted_set::persistent_type_ptr transient_sorted_set::to_persistent()
+  transient_sorted_set::persistent_type_ref transient_sorted_set::to_persistent()
   {
     assert_active();
     active = false;
@@ -125,7 +125,7 @@ namespace jank::runtime::obj
     return data.find(elem) != data.end();
   }
 
-  transient_sorted_set_ptr transient_sorted_set::disjoin_in_place(object_ptr const elem)
+  transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ptr const elem)
   {
     assert_active();
     data.erase_key(elem);

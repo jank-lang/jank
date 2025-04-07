@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using chunked_cons_ptr = native_box<struct chunked_cons>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using chunked_cons_ref = jtl::object_ref<struct chunked_cons>;
 
   struct chunked_cons : gc
   {
@@ -29,19 +29,19 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    chunked_cons_ptr with_meta(object_ptr m) const;
+    chunked_cons_ref with_meta(object_ptr m) const;
 
     /* behavior::seqable */
-    chunked_cons_ptr seq() const;
-    chunked_cons_ptr fresh_seq() const;
+    chunked_cons_ref seq() const;
+    chunked_cons_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
     object_ptr next() const;
-    obj::cons_ptr conj(object_ptr head) const;
+    obj::cons_ref conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    chunked_cons_ptr next_in_place();
+    chunked_cons_ref next_in_place();
 
     /* behavior::chunkable */
     object_ptr chunked_first() const;

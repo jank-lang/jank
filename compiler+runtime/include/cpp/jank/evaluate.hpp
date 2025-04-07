@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
 }
 
 namespace jank::analyze
@@ -42,7 +42,7 @@ namespace jank::evaluate
 {
   analyze::expr::function_ref wrap_expression(analyze::expression_ref const expr,
                                               jtl::immutable_string const &name,
-                                              native_vector<runtime::obj::symbol_ptr> params);
+                                              native_vector<runtime::obj::symbol_ref> params);
   analyze::expr::function_ref wrap_expressions(native_vector<analyze::expression_ref> const &exprs,
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);

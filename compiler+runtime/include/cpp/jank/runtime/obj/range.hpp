@@ -6,9 +6,9 @@
 
 namespace jank::runtime::obj
 {
-  using array_chunk_ptr = native_box<struct array_chunk>;
-  using cons_ptr = native_box<struct cons>;
-  using range_ptr = native_box<struct range>;
+  using array_chunk_ref = jtl::object_ref<struct array_chunk>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using range_ptr = jtl::object_ref<struct range>;
 
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
    * For integer values, use integer_range. This is not countable in constant time, due
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
           object_ptr end,
           object_ptr step,
           bounds_check_t bounds_check,
-          obj::array_chunk_ptr chunk,
+          obj::array_chunk_ref chunk,
           range_ptr chunk_next);
 
     static object_ptr create(object_ptr end);
@@ -60,12 +60,12 @@ namespace jank::runtime::obj
     range_ptr next_in_place();
 
     /* behavior::chunkable */
-    obj::array_chunk_ptr chunked_first() const;
+    obj::array_chunk_ref chunked_first() const;
     range_ptr chunked_next() const;
     void force_chunk() const;
 
     /* behavior::conjable */
-    obj::cons_ptr conj(object_ptr head) const;
+    obj::cons_ref conj(object_ptr head) const;
 
     /* behavior::metadatable */
     range_ptr with_meta(object_ptr m) const;
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     object_ptr end{};
     object_ptr step{};
     bounds_check_t bounds_check{};
-    mutable obj::array_chunk_ptr chunk{};
+    mutable obj::array_chunk_ref chunk{};
     mutable range_ptr chunk_next{};
     mutable range_ptr cached_next{};
     jtl::option<object_ptr> meta{};

@@ -10,7 +10,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using cons_ptr = native_box<struct cons>;
+    using cons_ref = jtl::object_ref<struct cons>;
   }
 }
 
@@ -39,18 +39,18 @@ namespace jank::runtime::obj::detail
     size_t count() const;
 
     /* behavior::seqable */
-    native_box<PT> seq();
-    native_box<PT> fresh_seq() const;
+    jtl::object_ref<PT> seq();
+    jtl::object_ref<PT> fresh_seq() const;
 
     /* behavior::sequenceable */
-    obj::persistent_vector_ptr first() const;
-    native_box<PT> next() const;
+    obj::persistent_vector_ref first() const;
+    jtl::object_ref<PT> next() const;
 
     /* behavior::sequenceable_in_place */
-    native_box<PT> next_in_place();
+    jtl::object_ref<PT> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ptr conj(object_ptr const head);
+    obj::cons_ref conj(object_ptr const head);
 
     object base{ PT::obj_type };
     object_ptr coll{};

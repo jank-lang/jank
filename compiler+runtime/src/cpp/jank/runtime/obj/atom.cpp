@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     return o;
   }
 
-  persistent_vector_ptr atom::reset_vals(object_ptr const o)
+  persistent_vector_ref atom::reset_vals(object_ptr const o)
   {
     while(true)
     {
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ptr atom::swap_vals(object_ptr const fn)
+  persistent_vector_ref atom::swap_vals(object_ptr const fn)
   {
     while(true)
     {
@@ -132,7 +132,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ptr atom::swap_vals(object_ptr fn, object_ptr a1)
+  persistent_vector_ref atom::swap_vals(object_ptr fn, object_ptr a1)
   {
     while(true)
     {
@@ -145,7 +145,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ptr atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2)
+  persistent_vector_ref atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2)
   {
     while(true)
     {
@@ -158,7 +158,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ptr
+  persistent_vector_ref
   atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
   {
     while(true)

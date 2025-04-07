@@ -10,10 +10,10 @@ namespace jank::runtime
 
   namespace obj
   {
-    using symbol_ptr = native_box<struct symbol>;
+    using symbol_ref = jtl::object_ref<struct symbol>;
   }
 
-  using ns_ptr = native_box<struct ns>;
+  using ns_ref = jtl::object_ref<struct ns>;
 
   struct ns : gc
   {
@@ -21,21 +21,21 @@ namespace jank::runtime
     static constexpr native_bool pointer_free{ false };
 
     ns() = delete;
-    ns(obj::symbol_ptr const &name, context &c);
+    ns(obj::symbol_ref const &name, context &c);
 
-    var_ptr intern_var(native_persistent_string_view const &);
-    var_ptr intern_var(obj::symbol_ptr const &);
-    jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
-    jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ptr const &sym);
+    var_ref intern_var(native_persistent_string_view const &);
+    var_ref intern_var(obj::symbol_ref const &);
+    var_ref find_var(obj::symbol_ref const &);
+    jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ref const &sym);
 
     jtl::result<void, jtl::immutable_string>
-    add_alias(obj::symbol_ptr const &sym, ns_ptr const &ns);
-    void remove_alias(obj::symbol_ptr const &sym);
-    jtl::option<ns_ptr> find_alias(obj::symbol_ptr const &sym) const;
+    add_alias(obj::symbol_ref const &sym, ns_ref const &ns);
+    void remove_alias(obj::symbol_ref const &sym);
+    ns_ref find_alias(obj::symbol_ref const &sym) const;
 
-    jtl::result<void, jtl::immutable_string> refer(obj::symbol_ptr const sym, var_ptr const var);
+    jtl::result<void, jtl::immutable_string> refer(obj::symbol_ref const sym, var_ref const var);
 
-    obj::persistent_hash_map_ptr get_mappings() const;
+    obj::persistent_hash_map_ref get_mappings() const;
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -46,13 +46,13 @@ namespace jank::runtime
 
     native_bool operator==(ns const &rhs) const;
 
-    ns_ptr clone(context &rt_ctx) const;
+    ns_ref clone(context &rt_ctx) const;
 
     object base{ obj_type };
-    obj::symbol_ptr name{};
+    obj::symbol_ref name{};
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
-    folly::Synchronized<obj::persistent_hash_map_ptr> vars;
-    folly::Synchronized<obj::persistent_hash_map_ptr> aliases;
+    folly::Synchronized<obj::persistent_hash_map_ref> vars;
+    folly::Synchronized<obj::persistent_hash_map_ref> aliases;
 
     std::atomic_uint64_t symbol_counter{};
     context &rt_ctx;

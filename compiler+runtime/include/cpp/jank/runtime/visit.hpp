@@ -67,7 +67,7 @@ namespace jank::runtime
   }
 
   template <typename F, typename... Args>
-  concept visitable = requires(F f) { f(obj::nil_ptr{}, std::declval<Args>()...); };
+  concept visitable = requires(F f) { f(obj::nil_ref{}, std::declval<Args>()...); };
 
   template <typename F, typename... Args>
   requires visitable<F, Args...>
@@ -556,7 +556,7 @@ namespace jank::runtime
   {
     return visit_seqable(
       fn,
-      [=]() -> decltype(fn(obj::cons_ptr{}, std::forward<Args>(args)...)) {
+      [=]() -> decltype(fn(obj::cons_ref{}, std::forward<Args>(args)...)) {
         throw std::runtime_error{ "not seqable: " + to_code_string(const_erased) };
       },
       const_erased,
@@ -605,7 +605,7 @@ namespace jank::runtime
   {
     return visit_map_like(
       fn,
-      [=]() -> decltype(fn(obj::persistent_hash_map_ptr{}, std::forward<Args>(args)...)) {
+      [=]() -> decltype(fn(obj::persistent_hash_map_ref{}, std::forward<Args>(args)...)) {
         throw std::runtime_error{ "not map-like: " + to_code_string(const_erased) };
       },
       const_erased,
@@ -649,7 +649,7 @@ namespace jank::runtime
   {
     return visit_set_like(
       fn,
-      [=]() -> decltype(fn(obj::persistent_hash_set_ptr{}, std::forward<Args>(args)...)) {
+      [=]() -> decltype(fn(obj::persistent_hash_set_ref{}, std::forward<Args>(args)...)) {
         throw std::runtime_error{ "not set-like: " + to_code_string(const_erased) };
       },
       const_erased,
@@ -699,7 +699,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       fn,
-      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
+      [=]() -> decltype(fn(obj::integer_ref{}, std::forward<Args>(args)...)) {
         throw std::runtime_error{ "not a number: " + to_code_string(const_erased) };
       },
       const_erased,

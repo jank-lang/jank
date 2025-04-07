@@ -45,14 +45,14 @@ namespace jank::runtime::obj::detail
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<ST> seq() const;
-    native_box<ST> fresh_seq() const;
+    jtl::object_ref<ST> seq() const;
+    jtl::object_ref<ST> fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
 
     /* behavior::metadatable */
-    native_box<PT> with_meta(object_ptr const m) const;
+    jtl::object_ref<PT> with_meta(object_ptr const m) const;
 
     object base{ PT::obj_type };
     jtl::option<object_ptr> meta;

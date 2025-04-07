@@ -705,7 +705,7 @@ namespace jank::runtime
                           object_ptr const a8,
                           object_ptr const a9,
                           object_ptr const a10,
-                          obj::persistent_list_ptr const rest)
+                          obj::persistent_list_ref const rest)
   {
     /* TODO: Move call fns into var so we can remove these checks. */
     if(source->type == object_type::var)

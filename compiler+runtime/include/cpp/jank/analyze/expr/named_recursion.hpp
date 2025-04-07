@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_list_ptr = native_box<struct persistent_list>;
+  using persistent_list_ref = jtl::object_ref<struct persistent_list>;
 }
 
 namespace jank::analyze::expr
@@ -19,13 +19,13 @@ namespace jank::analyze::expr
                     local_frame_ptr frame,
                     native_bool needs_box,
                     recursion_reference &&recursion_ref,
-                    runtime::obj::persistent_list_ptr args,
+                    runtime::obj::persistent_list_ref args,
                     native_vector<expression_ref> &&arg_exprs);
 
     runtime::object_ptr to_runtime_data() const override;
 
     recursion_reference recursion_ref;
-    runtime::obj::persistent_list_ptr args{};
+    runtime::obj::persistent_list_ref args{};
     native_vector<expression_ref> arg_exprs;
   };
 }

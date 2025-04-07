@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_map_ptr = native_box<struct transient_sorted_map>;
-  using persistent_sorted_map_ptr = native_box<struct persistent_sorted_map>;
+  using transient_sorted_map_ref = jtl::object_ref<struct transient_sorted_map>;
+  using persistent_sorted_map_ref = jtl::object_ref<struct persistent_sorted_map>;
 
   struct persistent_sorted_map
     : obj::detail::base_persistent_map<persistent_sorted_map,
@@ -44,26 +44,26 @@ namespace jank::runtime::obj
       this->meta = meta;
     }
 
-    static persistent_sorted_map_ptr empty();
+    static persistent_sorted_map_ref empty();
 
     using base_persistent_map::base_persistent_map;
 
     template <typename... Args>
-    static persistent_sorted_map_ptr create_unique(Args &&...pairs)
+    static persistent_sorted_map_ref create_unique(Args &&...pairs)
     {
       return make_box<persistent_sorted_map>(runtime::detail::in_place_unique{},
                                              std::forward<Args>(pairs)...);
     }
 
     template <typename... Args>
-    static persistent_sorted_map_ptr create_unique_with_meta(object_ptr const meta, Args &&...pairs)
+    static persistent_sorted_map_ref create_unique_with_meta(object_ptr const meta, Args &&...pairs)
     {
       return make_box<persistent_sorted_map>(meta,
                                              runtime::detail::in_place_unique{},
                                              std::forward<Args>(pairs)...);
     }
 
-    static persistent_sorted_map_ptr create_from_seq(object_ptr const seq);
+    static persistent_sorted_map_ref create_from_seq(object_ptr const seq);
 
     /* behavior::associatively_readable */
     object_ptr get(object_ptr const key) const;
@@ -72,18 +72,18 @@ namespace jank::runtime::obj
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable */
-    persistent_sorted_map_ptr assoc(object_ptr key, object_ptr val) const;
-    persistent_sorted_map_ptr dissoc(object_ptr key) const;
+    persistent_sorted_map_ref assoc(object_ptr key, object_ptr val) const;
+    persistent_sorted_map_ref dissoc(object_ptr key) const;
 
     /* behavior::conjable */
-    persistent_sorted_map_ptr conj(object_ptr head) const;
+    persistent_sorted_map_ref conj(object_ptr head) const;
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;
     object_ptr call(object_ptr, object_ptr) const;
 
     /* behavior::transientable */
-    obj::transient_sorted_map_ptr to_transient() const;
+    obj::transient_sorted_map_ref to_transient() const;
 
     value_type data{};
   };

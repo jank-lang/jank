@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_hash_set_ptr = native_box<struct transient_hash_set>;
+  using transient_hash_set_ref = jtl::object_ref<struct transient_hash_set>;
 
   struct transient_hash_set : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_set;
-    using persistent_type_ptr = native_box<struct persistent_hash_set>;
+    using persistent_type_ref = jtl::object_ref<struct persistent_hash_set>;
 
     transient_hash_set() = default;
     transient_hash_set(transient_hash_set &&) noexcept = default;
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     transient_hash_set(runtime::detail::native_persistent_hash_set &&d);
     transient_hash_set(value_type &&d);
 
-    static transient_hash_set_ptr empty();
+    static transient_hash_set_ref empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -35,10 +35,10 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    transient_hash_set_ptr conj_in_place(object_ptr elem);
+    transient_hash_set_ref conj_in_place(object_ptr elem);
 
     /* behavior::persistentable */
-    persistent_type_ptr to_persistent();
+    persistent_type_ref to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr const) const;
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
     object_ptr get_entry(object_ptr const elem) const;
     native_bool contains(object_ptr const elem) const;
 
-    transient_hash_set_ptr disjoin_in_place(object_ptr const elem);
+    transient_hash_set_ref disjoin_in_place(object_ptr const elem);
 
     void assert_active() const;
 

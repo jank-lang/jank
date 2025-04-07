@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using repeat_ptr = native_box<struct repeat>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using repeat_ref = jtl::object_ref<struct repeat>;
 
   struct repeat : gc
   {
@@ -31,21 +31,21 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    repeat_ptr seq();
-    repeat_ptr fresh_seq() const;
+    repeat_ref seq();
+    repeat_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    repeat_ptr next() const;
+    repeat_ref next() const;
 
     /* behavior::sequenceable_in_place */
-    repeat_ptr next_in_place();
+    repeat_ref next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ptr conj(object_ptr head) const;
+    obj::cons_ref conj(object_ptr head) const;
 
     /* behavior::metadatable */
-    repeat_ptr with_meta(object_ptr m) const;
+    repeat_ref with_meta(object_ptr m) const;
 
     object base{ obj_type };
     object_ptr value{};

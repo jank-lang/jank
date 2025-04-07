@@ -144,7 +144,7 @@ namespace jank::runtime::obj
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  symbol_ptr symbol::with_meta(object_ptr const m) const
+  symbol_ref symbol::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<symbol>(ns, name));
@@ -193,15 +193,15 @@ namespace std
     return o.to_hash();
   }
 
-  size_t hash<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &o) const noexcept
+  size_t hash<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &o) const noexcept
   {
     return o->to_hash();
   }
 
-  bool equal_to<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &lhs,
-    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
+  bool equal_to<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &lhs,
+    jank::runtime::obj::symbol_ref const &rhs) const noexcept
   {
     if(!lhs)
     {

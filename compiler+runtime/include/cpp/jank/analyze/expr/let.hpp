@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
 }
 
 namespace jank::analyze::expr
@@ -13,7 +13,7 @@ namespace jank::analyze::expr
 
   struct let : expression
   {
-    using pair_type = std::pair<runtime::obj::symbol_ptr, expression_ref>;
+    using pair_type = std::pair<runtime::obj::symbol_ref, expression_ref>;
 
     static constexpr expression_kind expr_kind{ expression_kind::let };
 

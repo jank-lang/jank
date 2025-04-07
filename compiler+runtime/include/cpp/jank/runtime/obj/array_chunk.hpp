@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using array_chunk_ptr = native_box<struct array_chunk>;
+  using array_chunk_ref = jtl::object_ref<struct array_chunk>;
 
   struct array_chunk : gc
   {
@@ -24,8 +24,8 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::chunk_like */
-    array_chunk_ptr chunk_next() const;
-    array_chunk_ptr chunk_next_in_place();
+    array_chunk_ref chunk_next() const;
+    array_chunk_ref chunk_next_in_place();
     size_t count() const;
     object_ptr nth(object_ptr index) const;
     object_ptr nth(object_ptr index, object_ptr fallback) const;

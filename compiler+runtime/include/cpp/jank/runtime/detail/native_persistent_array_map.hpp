@@ -25,8 +25,8 @@ namespace jank::runtime::detail
     native_persistent_array_map(native_persistent_array_map &&s) noexcept = default;
 
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    native_persistent_array_map(in_place_unique, object_ptr * const kvs, L const l)
-      : data{ std::move(kvs) }
+    native_persistent_array_map(in_place_unique, jtl::ref<object_ptr> const kvs, L const l)
+      : data{ std::move(kvs.data) }
       , length{ static_cast<decltype(length)>(l) }
     {
     }

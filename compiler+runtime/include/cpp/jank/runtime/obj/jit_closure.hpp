@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using jit_closure_ptr = native_box<struct jit_closure>;
+  using jit_closure_ref = jtl::object_ref<struct jit_closure>;
 
   struct jit_closure
     : gc
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    jit_closure_ptr with_meta(object_ptr m);
+    jit_closure_ref with_meta(object_ptr m);
 
     /* behavior::callable */
     object_ptr call() final;

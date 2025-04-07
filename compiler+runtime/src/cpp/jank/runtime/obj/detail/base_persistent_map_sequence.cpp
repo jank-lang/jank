@@ -20,15 +20,15 @@ namespace jank::runtime::obj::detail
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          if(!seq || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);
@@ -104,19 +104,19 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  native_box<PT> base_persistent_map_sequence<PT, IT>::seq()
+  jtl::object_ref<PT> base_persistent_map_sequence<PT, IT>::seq()
   {
     return static_cast<PT *>(this);
   }
 
   template <typename PT, typename IT>
-  native_box<PT> base_persistent_map_sequence<PT, IT>::fresh_seq() const
+  jtl::object_ref<PT> base_persistent_map_sequence<PT, IT>::fresh_seq() const
   {
     return make_box<PT>(coll, begin, end);
   }
 
   template <typename PT, typename IT>
-  obj::persistent_vector_ptr base_persistent_map_sequence<PT, IT>::first() const
+  obj::persistent_vector_ref base_persistent_map_sequence<PT, IT>::first() const
   {
     auto const pair(*begin);
     return make_box<obj::persistent_vector>(
@@ -124,34 +124,34 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  native_box<PT> base_persistent_map_sequence<PT, IT>::next() const
+  jtl::object_ref<PT> base_persistent_map_sequence<PT, IT>::next() const
   {
     auto n(begin);
     ++n;
 
     if(n == end)
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<PT>(coll, n, end);
   }
 
   template <typename PT, typename IT>
-  native_box<PT> base_persistent_map_sequence<PT, IT>::next_in_place()
+  jtl::object_ref<PT> base_persistent_map_sequence<PT, IT>::next_in_place()
   {
     ++begin;
 
     if(begin == end)
     {
-      return nullptr;
+      return {};
     }
 
     return static_cast<PT *>(this);
   }
 
   template <typename PT, typename IT>
-  obj::cons_ptr base_persistent_map_sequence<PT, IT>::conj(object_ptr const head)
+  obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ptr const head)
   {
     return make_box<obj::cons>(head, static_cast<PT *>(this));
   }

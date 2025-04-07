@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using character_ptr = native_box<struct character>;
+  using character_ref = jtl::object_ref<struct character>;
 
   struct character : gc
   {

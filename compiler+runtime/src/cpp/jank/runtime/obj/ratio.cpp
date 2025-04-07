@@ -126,22 +126,22 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ptr operator+(integer_ptr const l, ratio_data const &r)
+  ratio_ref operator+(integer_ref const l, ratio_data const &r)
   {
     return l->data + r;
   }
 
-  ratio_ptr operator+(ratio_data const &l, integer_ptr const r)
+  ratio_ref operator+(ratio_data const &l, integer_ref const r)
   {
     return r + l;
   }
 
-  native_real operator+(real_ptr const l, ratio_data const &r)
+  native_real operator+(real_ref const l, ratio_data const &r)
   {
     return l->data + r.to_real();
   }
 
-  native_real operator+(ratio_data const &l, real_ptr const r)
+  native_real operator+(ratio_data const &l, real_ref const r)
   {
     return l.to_real() + r->data;
   }
@@ -156,12 +156,12 @@ namespace jank::runtime::obj
     return l + r.to_real();
   }
 
-  ratio_ptr operator+(ratio_data const &l, native_integer const r)
+  ratio_ref operator+(ratio_data const &l, native_integer const r)
   {
     return make_box<ratio>(ratio_data(l.numerator + (r * l.denominator), l.denominator));
   }
 
-  ratio_ptr operator+(native_integer const l, ratio_data const &r)
+  ratio_ref operator+(native_integer const l, ratio_data const &r)
   {
     return r + l;
   }
@@ -173,22 +173,22 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ptr operator-(integer_ptr const l, ratio_data const &r)
+  ratio_ref operator-(integer_ref const l, ratio_data const &r)
   {
     return l->data - r;
   }
 
-  ratio_ptr operator-(ratio_data const &l, integer_ptr const r)
+  ratio_ref operator-(ratio_data const &l, integer_ref const r)
   {
     return l - r->data;
   }
 
-  native_real operator-(real_ptr const l, ratio_data const &r)
+  native_real operator-(real_ref const l, ratio_data const &r)
   {
     return l->data - r.to_real();
   }
 
-  native_real operator-(ratio_data const &l, real_ptr const r)
+  native_real operator-(ratio_data const &l, real_ref const r)
   {
     return l.to_real() - r->data;
   }
@@ -203,12 +203,12 @@ namespace jank::runtime::obj
     return l - r.to_real();
   }
 
-  ratio_ptr operator-(ratio_data const &l, native_integer const r)
+  ratio_ref operator-(ratio_data const &l, native_integer const r)
   {
     return make_box<ratio>(ratio_data(l.numerator - (r * l.denominator), l.denominator));
   }
 
-  ratio_ptr operator-(native_integer const l, ratio_data const &r)
+  ratio_ref operator-(native_integer const l, ratio_data const &r)
   {
     return make_box<ratio>(ratio_data((l * r.denominator) - r.numerator, r.denominator));
   }
@@ -218,22 +218,22 @@ namespace jank::runtime::obj
     return ratio::create(l.numerator * r.numerator, l.denominator * r.denominator);
   }
 
-  object_ptr operator*(integer_ptr const l, ratio_data const &r)
+  object_ptr operator*(integer_ref const l, ratio_data const &r)
   {
     return ratio_data(l->data, 1ll) * r;
   }
 
-  object_ptr operator*(ratio_data const &l, integer_ptr const r)
+  object_ptr operator*(ratio_data const &l, integer_ref const r)
   {
     return l * ratio_data(r->data, 1ll);
   }
 
-  native_real operator*(real_ptr const l, ratio_data const &r)
+  native_real operator*(real_ref const l, ratio_data const &r)
   {
     return l->data * r.to_real();
   }
 
-  native_real operator*(ratio_data const &l, real_ptr const r)
+  native_real operator*(ratio_data const &l, real_ref const r)
   {
     return l.to_real() * r->data;
   }
@@ -263,22 +263,22 @@ namespace jank::runtime::obj
     return ratio::create(l.numerator * r.denominator, l.denominator * r.numerator);
   }
 
-  object_ptr operator/(integer_ptr const l, ratio_data const &r)
+  object_ptr operator/(integer_ref const l, ratio_data const &r)
   {
     return ratio_data(l->data, 1ll) / r;
   }
 
-  ratio_ptr operator/(ratio_data const &l, integer_ptr const r)
+  ratio_ref operator/(ratio_data const &l, integer_ref const r)
   {
     return l / r->data;
   }
 
-  native_real operator/(real_ptr const l, ratio_data const &r)
+  native_real operator/(real_ref const l, ratio_data const &r)
   {
     return l->data / r.to_real();
   }
 
-  native_real operator/(ratio_data const &l, real_ptr const r)
+  native_real operator/(ratio_data const &l, real_ref const r)
   {
     return l.to_real() / r->data;
   }
@@ -293,7 +293,7 @@ namespace jank::runtime::obj
     return l / r.to_real();
   }
 
-  ratio_ptr operator/(ratio_data const &l, native_integer const r)
+  ratio_ref operator/(ratio_data const &l, native_integer const r)
   {
     return make_box<ratio>(ratio_data(l.numerator, l.denominator * r));
   }
@@ -308,22 +308,22 @@ namespace jank::runtime::obj
     return l.numerator == r.numerator && l.denominator == r.denominator;
   }
 
-  native_bool operator==(integer_ptr const l, ratio_data const &r)
+  native_bool operator==(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator == r.numerator;
   }
 
-  native_bool operator==(ratio_data const &l, integer_ptr const r)
+  native_bool operator==(ratio_data const &l, integer_ref const r)
   {
     return l.numerator == r->data * l.denominator;
   }
 
-  native_bool operator==(real_ptr const l, ratio_data const &r)
+  native_bool operator==(real_ref const l, ratio_data const &r)
   {
     return std::fabs(l->data - r) < epsilon;
   }
 
-  native_bool operator==(ratio_data const &l, real_ptr const r)
+  native_bool operator==(ratio_data const &l, real_ref const r)
   {
     return r == l;
   }
@@ -358,42 +358,42 @@ namespace jank::runtime::obj
     return l.numerator * r.denominator <= r.numerator * l.denominator;
   }
 
-  native_bool operator<(integer_ptr const l, ratio_data const &r)
+  native_bool operator<(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator < r.numerator;
   }
 
-  native_bool operator<(ratio_data const &l, integer_ptr const r)
+  native_bool operator<(ratio_data const &l, integer_ref const r)
   {
     return l.numerator < r->data * l.denominator;
   }
 
-  native_bool operator<=(integer_ptr const l, ratio_data const &r)
+  native_bool operator<=(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator <= r.numerator;
   }
 
-  native_bool operator<=(ratio_data const &l, integer_ptr const r)
+  native_bool operator<=(ratio_data const &l, integer_ref const r)
   {
     return l.numerator <= r->data * l.denominator;
   }
 
-  native_bool operator<(real_ptr const l, ratio_data const &r)
+  native_bool operator<(real_ref const l, ratio_data const &r)
   {
     return l->data < r.to_real();
   }
 
-  native_bool operator<(ratio_data const &l, real_ptr const r)
+  native_bool operator<(ratio_data const &l, real_ref const r)
   {
     return l.to_real() < r->data;
   }
 
-  native_bool operator<=(real_ptr const l, ratio_data const &r)
+  native_bool operator<=(real_ref const l, ratio_data const &r)
   {
     return l->data <= r.to_real();
   }
 
-  native_bool operator<=(ratio_data const &l, real_ptr const r)
+  native_bool operator<=(ratio_data const &l, real_ref const r)
   {
     return l.to_real() <= r->data;
   }
@@ -443,22 +443,22 @@ namespace jank::runtime::obj
     return l.numerator * r.denominator > r.numerator * l.denominator;
   }
 
-  native_bool operator>(integer_ptr const l, ratio_data const &r)
+  native_bool operator>(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator > r.numerator;
   }
 
-  native_bool operator>(ratio_data const &l, integer_ptr const r)
+  native_bool operator>(ratio_data const &l, integer_ref const r)
   {
     return l.numerator > r->data * l.denominator;
   }
 
-  native_bool operator>(real_ptr const l, ratio_data const &r)
+  native_bool operator>(real_ref const l, ratio_data const &r)
   {
     return l->data > r.to_real();
   }
 
-  native_bool operator>(ratio_data const &l, real_ptr const r)
+  native_bool operator>(ratio_data const &l, real_ref const r)
   {
     return l.to_real() > r->data;
   }
@@ -488,22 +488,22 @@ namespace jank::runtime::obj
     return l.numerator * r.denominator >= r.numerator * l.denominator;
   }
 
-  native_bool operator>=(integer_ptr const l, ratio_data const &r)
+  native_bool operator>=(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator >= r.numerator;
   }
 
-  native_bool operator>=(ratio_data const &l, integer_ptr const r)
+  native_bool operator>=(ratio_data const &l, integer_ref const r)
   {
     return l.numerator >= r->data * l.denominator;
   }
 
-  native_bool operator>=(real_ptr const l, ratio_data const &r)
+  native_bool operator>=(real_ref const l, ratio_data const &r)
   {
     return l->data >= r.to_real();
   }
 
-  native_bool operator>=(ratio_data const &l, real_ptr const r)
+  native_bool operator>=(ratio_data const &l, real_ref const r)
   {
     return l.to_real() >= r->data;
   }

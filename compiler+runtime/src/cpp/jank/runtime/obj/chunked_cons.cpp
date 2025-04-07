@@ -23,12 +23,12 @@ namespace jank::runtime::obj
     jank_debug_assert(meta);
   }
 
-  chunked_cons_ptr chunked_cons::seq() const
+  chunked_cons_ref chunked_cons::seq() const
   {
     return const_cast<chunked_cons *>(this);
   }
 
-  chunked_cons_ptr chunked_cons::fresh_seq() const
+  chunked_cons_ref chunked_cons::fresh_seq() const
   {
     return make_box<chunked_cons>(head, tail);
   }
@@ -75,15 +75,15 @@ namespace jank::runtime::obj
       head);
   }
 
-  static chunked_cons_ptr next_in_place_non_chunked(chunked_cons_ptr const o)
+  static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
     if(!o->tail)
     {
-      return nullptr;
+      return {};
     }
 
     return visit_object(
-      [&](auto const typed_tail) -> chunked_cons_ptr {
+      [&](auto const typed_tail) -> chunked_cons_ref {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -104,10 +104,10 @@ namespace jank::runtime::obj
       o->tail);
   }
 
-  chunked_cons_ptr chunked_cons::next_in_place()
+  chunked_cons_ref chunked_cons::next_in_place()
   {
     return visit_object(
-      [&](auto const typed_head) -> chunked_cons_ptr {
+      [&](auto const typed_head) -> chunked_cons_ref {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -157,15 +157,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          if(!seq || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);
@@ -191,12 +191,12 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  cons_ptr chunked_cons::conj(object_ptr const head) const
+  cons_ref chunked_cons::conj(object_ptr const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  chunked_cons_ptr chunked_cons::with_meta(object_ptr const m) const
+  chunked_cons_ref chunked_cons::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using lazy_sequence_ptr = native_box<struct lazy_sequence>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using lazy_sequence_ref = jtl::object_ref<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
   struct lazy_sequence : gc
@@ -31,19 +31,19 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    lazy_sequence_ptr seq() const;
-    lazy_sequence_ptr fresh_seq() const;
+    lazy_sequence_ref seq() const;
+    lazy_sequence_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    lazy_sequence_ptr next() const;
-    obj::cons_ptr conj(object_ptr head) const;
+    lazy_sequence_ref next() const;
+    obj::cons_ref conj(object_ptr head) const;
 
     /* behavior::sequenceable_in_place */
-    lazy_sequence_ptr next_in_place();
+    lazy_sequence_ref next_in_place();
 
     /* behavior::metadatable */
-    lazy_sequence_ptr with_meta(object_ptr m) const;
+    lazy_sequence_ref with_meta(object_ptr m) const;
 
   private:
     object_ptr resolve_fn() const;

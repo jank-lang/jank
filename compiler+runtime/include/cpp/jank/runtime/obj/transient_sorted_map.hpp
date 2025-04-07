@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_map_ptr = native_box<struct transient_sorted_map>;
+  using transient_sorted_map_ref = jtl::object_ref<struct transient_sorted_map>;
 
   struct transient_sorted_map : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_map;
-    using persistent_type_ptr = native_box<struct persistent_sorted_map>;
+    using persistent_type_ref = jtl::object_ref<struct persistent_sorted_map>;
 
     transient_sorted_map() = default;
     transient_sorted_map(transient_sorted_map &&) noexcept = default;
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d);
     transient_sorted_map(value_type &&d);
 
-    static transient_sorted_map_ptr empty();
+    static transient_sorted_map_ref empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -41,14 +41,14 @@ namespace jank::runtime::obj
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable_in_place */
-    transient_sorted_map_ptr assoc_in_place(object_ptr const key, object_ptr const val);
-    transient_sorted_map_ptr dissoc_in_place(object_ptr const key);
+    transient_sorted_map_ref assoc_in_place(object_ptr const key, object_ptr const val);
+    transient_sorted_map_ref dissoc_in_place(object_ptr const key);
 
     /* behavior::conjable_in_place */
-    transient_sorted_map_ptr conj_in_place(object_ptr head);
+    transient_sorted_map_ref conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
-    persistent_type_ptr to_persistent();
+    persistent_type_ref to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;

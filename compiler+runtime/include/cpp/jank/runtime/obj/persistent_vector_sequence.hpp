@@ -4,9 +4,9 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using persistent_vector_ptr = native_box<struct persistent_vector>;
-  using persistent_vector_sequence_ptr = native_box<struct persistent_vector_sequence>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using persistent_vector_ref = jtl::object_ref<struct persistent_vector>;
+  using persistent_vector_sequence_ref = jtl::object_ref<struct persistent_vector_sequence>;
 
   struct persistent_vector_sequence : gc
   {
@@ -17,8 +17,8 @@ namespace jank::runtime::obj
     persistent_vector_sequence() = default;
     persistent_vector_sequence(persistent_vector_sequence &&) noexcept = default;
     persistent_vector_sequence(persistent_vector_sequence const &) = default;
-    persistent_vector_sequence(obj::persistent_vector_ptr v);
-    persistent_vector_sequence(obj::persistent_vector_ptr v, size_t i);
+    persistent_vector_sequence(obj::persistent_vector_ref v);
+    persistent_vector_sequence(obj::persistent_vector_ref v, size_t i);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -31,19 +31,19 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::seqable */
-    persistent_vector_sequence_ptr seq();
-    persistent_vector_sequence_ptr fresh_seq() const;
+    persistent_vector_sequence_ref seq();
+    persistent_vector_sequence_ref fresh_seq() const;
 
     /* behavior::sequenceable */
     object_ptr first() const;
-    persistent_vector_sequence_ptr next() const;
-    obj::cons_ptr conj(object_ptr head);
+    persistent_vector_sequence_ref next() const;
+    obj::cons_ref conj(object_ptr head);
 
     /* behavior::sequenceable_in_place */
-    persistent_vector_sequence_ptr next_in_place();
+    persistent_vector_sequence_ref next_in_place();
 
     object base{ obj_type };
-    obj::persistent_vector_ptr vec{};
+    obj::persistent_vector_ref vec{};
     size_t index{};
   };
 }

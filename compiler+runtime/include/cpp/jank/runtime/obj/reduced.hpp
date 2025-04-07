@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using reduced_ptr = native_box<struct reduced>;
+  using reduced_ref = jtl::object_ref<struct reduced>;
 
   struct reduced : gc
   {

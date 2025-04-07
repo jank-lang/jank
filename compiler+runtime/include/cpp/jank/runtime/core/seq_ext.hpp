@@ -26,12 +26,12 @@ namespace jank::runtime
           auto it(begin);
           for(; it != end; ++it, seq = seq->next_in_place())
           {
-            if(seq == nullptr || !runtime::equal(*it, seq->first()))
+            if(!seq || !runtime::equal(*it, seq->first()))
             {
               return false;
             }
           }
-          return seq == nullptr && it == end;
+          return !seq && it == end;
         }
       },
       []() { return false; },
@@ -49,7 +49,7 @@ namespace jank::runtime
       return obj::persistent_list::empty();
     }
     auto const ret(seq->next());
-    if(ret == nullptr)
+    if(!ret)
     {
       return obj::persistent_list::empty();
     }

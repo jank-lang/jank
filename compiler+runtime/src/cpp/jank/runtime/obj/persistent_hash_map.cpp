@@ -39,12 +39,12 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_map_ptr persistent_hash_map::create_from_seq(object_ptr const seq)
+  persistent_hash_map_ref persistent_hash_map::create_from_seq(object_ptr const seq)
   {
     return make_box<persistent_hash_map>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_map::value_type {
         runtime::detail::native_transient_hash_map transient;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
           auto const key(it->first());
           it = it->next_in_place();
@@ -99,20 +99,20 @@ namespace jank::runtime::obj
     return data.find(key);
   }
 
-  persistent_hash_map_ptr
+  persistent_hash_map_ref
   persistent_hash_map::assoc(object_ptr const key, object_ptr const val) const
   {
     auto copy(data.set(key, val));
     return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
-  persistent_hash_map_ptr persistent_hash_map::dissoc(object_ptr const key) const
+  persistent_hash_map_ref persistent_hash_map::dissoc(object_ptr const key) const
   {
     auto copy(data.erase(key));
     return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
-  persistent_hash_map_ptr persistent_hash_map::conj(object_ptr const head) const
+  persistent_hash_map_ref persistent_hash_map::conj(object_ptr const head) const
   {
     if(head->type == object_type::persistent_array_map
        || head->type == object_type::persistent_hash_map)
@@ -145,7 +145,7 @@ namespace jank::runtime::obj
     return get(o, fallback);
   }
 
-  transient_hash_map_ptr persistent_hash_map::to_transient() const
+  transient_hash_map_ref persistent_hash_map::to_transient() const
   {
     return make_box<transient_hash_map>(data);
   }

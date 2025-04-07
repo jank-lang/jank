@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_array_map_ptr persistent_array_map::dissoc(object_ptr const key) const
+  persistent_array_map_ref persistent_array_map::dissoc(object_ptr const key) const
   {
     auto copy(data.clone());
     copy.erase(key);
@@ -140,7 +140,7 @@ namespace jank::runtime::obj
     return found;
   }
 
-  transient_hash_map_ptr persistent_array_map::to_transient() const
+  transient_hash_map_ref persistent_array_map::to_transient() const
   {
     /* TODO: Use a transient_array_map. */
     return make_box<transient_hash_map>(data);

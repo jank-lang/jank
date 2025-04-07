@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
+  using cons_ref = jtl::object_ref<struct cons>;
 }
 
 namespace jank::runtime::obj::detail
@@ -26,8 +26,8 @@ namespace jank::runtime::obj::detail
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    native_box<Derived> seq();
-    native_box<Derived> fresh_seq() const;
+    jtl::object_ref<Derived> seq();
+    jtl::object_ref<Derived> fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
@@ -35,13 +35,13 @@ namespace jank::runtime::obj::detail
     /* behavior::sequenceable */
     object_ptr first() const;
 
-    native_box<Derived> next() const;
+    jtl::object_ref<Derived> next() const;
 
     /* behavior::sequenceable_in_place */
-    native_box<Derived> next_in_place();
+    jtl::object_ref<Derived> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ptr conj(object_ptr const head);
+    obj::cons_ref conj(object_ptr const head);
 
     object_ptr coll{};
     /* Not default constructible. */

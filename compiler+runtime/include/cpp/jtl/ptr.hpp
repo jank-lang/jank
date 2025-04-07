@@ -91,12 +91,12 @@ namespace jtl
       return data;
     }
 
-    //operator object *() const
-    //{
-    //  return &data->base;
-    //}
-
     constexpr explicit operator bool() const
+    {
+      return data;
+    }
+
+    constexpr ref<value_type> as_ref() const
     {
       return data;
     }

@@ -63,8 +63,7 @@ namespace jank::runtime
 
   namespace obj
   {
-
-    using native_function_wrapper_ptr = native_box<struct native_function_wrapper>;
+    using native_function_wrapper_ref = jtl::object_ref<struct native_function_wrapper>;
 
     struct native_function_wrapper
       : gc
@@ -128,7 +127,7 @@ namespace jank::runtime
       object_ptr this_object_ptr() final;
 
       /* behavior::metadatable */
-      native_function_wrapper_ptr with_meta(object_ptr m) const;
+      native_function_wrapper_ref with_meta(object_ptr m) const;
 
       object base{ obj_type };
       obj::detail::function_type data{};

@@ -37,7 +37,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr add(obj::integer_ptr const l, object_ptr const r)
+  object_ptr add(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -47,7 +47,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr add(object_ptr const l, obj::integer_ptr const r)
+  object_ptr add(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -57,17 +57,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer add(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer add(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data + r->data;
   }
 
-  native_real add(obj::real_ptr const l, obj::real_ptr const r)
+  native_real add(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data + r->data;
   }
 
-  native_real add(obj::real_ptr const l, object_ptr const r)
+  native_real add(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real { return typed_l + typed_r->data; },
@@ -75,7 +75,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real add(object_ptr const l, obj::real_ptr const r)
+  native_real add(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real { return typed_l->data + typed_r; },
@@ -83,12 +83,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real add(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real add(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data + static_cast<native_real>(r->data);
   }
 
-  native_real add(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real add(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) + r->data;
   }
@@ -164,7 +164,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr sub(obj::integer_ptr const l, object_ptr const r)
+  object_ptr sub(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -174,7 +174,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr sub(object_ptr const l, obj::integer_ptr const r)
+  object_ptr sub(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -184,17 +184,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer sub(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer sub(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data - r->data;
   }
 
-  native_real sub(obj::real_ptr const l, obj::real_ptr const r)
+  native_real sub(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data - r->data;
   }
 
-  native_real sub(obj::real_ptr const l, object_ptr const r)
+  native_real sub(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real { return typed_l - typed_r->data; },
@@ -202,7 +202,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real sub(object_ptr const l, obj::real_ptr const r)
+  native_real sub(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real { return typed_l->data - typed_r; },
@@ -210,12 +210,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real sub(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real sub(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data - static_cast<native_real>(r->data);
   }
 
-  native_real sub(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real sub(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) - r->data;
   }
@@ -291,7 +291,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr div(obj::integer_ptr const l, object_ptr const r)
+  object_ptr div(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -301,7 +301,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr div(object_ptr const l, obj::integer_ptr const r)
+  object_ptr div(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -311,17 +311,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer div(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer div(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data / r->data;
   }
 
-  native_real div(obj::real_ptr const l, obj::real_ptr const r)
+  native_real div(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data / r->data;
   }
 
-  native_real div(obj::real_ptr const l, object_ptr const r)
+  native_real div(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real { return typed_l / typed_r->data; },
@@ -329,7 +329,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real div(object_ptr const l, obj::real_ptr const r)
+  native_real div(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real { return typed_l->data / typed_r; },
@@ -337,12 +337,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real div(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real div(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data / static_cast<native_real>(r->data);
   }
 
-  native_real div(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real div(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) / r->data;
   }
@@ -418,7 +418,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr mul(obj::integer_ptr const l, object_ptr const r)
+  object_ptr mul(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -428,7 +428,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr mul(object_ptr const l, obj::integer_ptr const r)
+  object_ptr mul(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -438,17 +438,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer mul(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer mul(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data * r->data;
   }
 
-  native_real mul(obj::real_ptr const l, obj::real_ptr const r)
+  native_real mul(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data * r->data;
   }
 
-  native_real mul(obj::real_ptr const l, object_ptr const r)
+  native_real mul(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real { return typed_l * typed_r->data; },
@@ -456,7 +456,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real mul(object_ptr const l, obj::real_ptr const r)
+  native_real mul(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real { return typed_l->data * typed_r; },
@@ -464,12 +464,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real mul(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real mul(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data * static_cast<native_real>(r->data);
   }
 
-  native_real mul(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real mul(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) * r->data;
   }
@@ -861,7 +861,7 @@ namespace jank::runtime
       r);
   }
 
-  native_bool lt(obj::integer_ptr const l, object_ptr const r)
+  native_bool lt(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
@@ -869,7 +869,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_bool lt(object_ptr const l, obj::integer_ptr const r)
+  native_bool lt(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
@@ -877,17 +877,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_bool lt(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_bool lt(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data < r->data;
   }
 
-  native_bool lt(obj::real_ptr const l, obj::real_ptr const r)
+  native_bool lt(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data < r->data;
   }
 
-  native_bool lt(obj::real_ptr const l, object_ptr const r)
+  native_bool lt(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
@@ -895,7 +895,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_bool lt(object_ptr const l, obj::real_ptr const r)
+  native_bool lt(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
@@ -903,12 +903,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_bool lt(obj::real_ptr const l, obj::integer_ptr const r)
+  native_bool lt(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data < static_cast<native_real>(r->data);
   }
 
-  native_bool lt(obj::integer_ptr const l, obj::real_ptr const r)
+  native_bool lt(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) < r->data;
   }
@@ -980,7 +980,7 @@ namespace jank::runtime
       r);
   }
 
-  native_bool lte(obj::integer_ptr const l, object_ptr const r)
+  native_bool lte(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_bool {
@@ -990,7 +990,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_bool lte(object_ptr const l, obj::integer_ptr const r)
+  native_bool lte(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_bool {
@@ -1000,17 +1000,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_bool lte(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_bool lte(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data <= r->data;
   }
 
-  native_bool lte(obj::real_ptr const l, obj::real_ptr const r)
+  native_bool lte(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data <= r->data;
   }
 
-  native_bool lte(obj::real_ptr const l, object_ptr const r)
+  native_bool lte(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_bool {
@@ -1020,7 +1020,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_bool lte(object_ptr const l, obj::real_ptr const r)
+  native_bool lte(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_bool {
@@ -1030,12 +1030,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_bool lte(obj::real_ptr const l, obj::integer_ptr const r)
+  native_bool lte(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data <= static_cast<native_real>(r->data);
   }
 
-  native_bool lte(obj::integer_ptr const l, obj::real_ptr const r)
+  native_bool lte(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<native_real>(l->data) <= r->data;
   }
@@ -1115,7 +1115,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr min(obj::integer_ptr const l, object_ptr const r)
+  object_ptr min(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -1125,7 +1125,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr min(object_ptr const l, obj::integer_ptr const r)
+  object_ptr min(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -1135,17 +1135,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer min(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer min(obj::integer_ref const l, obj::integer_ref const r)
   {
     return std::min(l->data, r->data);
   }
 
-  native_real min(obj::real_ptr const l, obj::real_ptr const r)
+  native_real min(obj::real_ref const l, obj::real_ref const r)
   {
     return std::min(l->data, r->data);
   }
 
-  native_real min(obj::real_ptr const l, object_ptr const r)
+  native_real min(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
@@ -1157,7 +1157,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real min(object_ptr const l, obj::real_ptr const r)
+  native_real min(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
@@ -1169,12 +1169,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real min(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real min(obj::real_ref const l, obj::integer_ref const r)
   {
     return std::min(l->data, static_cast<native_real>(r->data));
   }
 
-  native_real min(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real min(obj::integer_ref const l, obj::real_ref const r)
   {
     return std::min(static_cast<native_real>(l->data), r->data);
   }
@@ -1258,7 +1258,7 @@ namespace jank::runtime
       r);
   }
 
-  object_ptr max(obj::integer_ptr const l, object_ptr const r)
+  object_ptr max(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ptr {
@@ -1268,7 +1268,7 @@ namespace jank::runtime
       l->data);
   }
 
-  object_ptr max(object_ptr const l, obj::integer_ptr const r)
+  object_ptr max(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ptr {
@@ -1278,17 +1278,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_integer max(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_integer max(obj::integer_ref const l, obj::integer_ref const r)
   {
     return std::max(l->data, r->data);
   }
 
-  native_real max(obj::real_ptr const l, obj::real_ptr const r)
+  native_real max(obj::real_ref const l, obj::real_ref const r)
   {
     return std::max(l->data, r->data);
   }
 
-  native_real max(obj::real_ptr const l, object_ptr const r)
+  native_real max(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
@@ -1300,7 +1300,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real max(object_ptr const l, obj::real_ptr const r)
+  native_real max(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
@@ -1312,12 +1312,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real max(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real max(obj::real_ref const l, obj::integer_ref const r)
   {
     return std::max(l->data, static_cast<native_real>(r->data));
   }
 
-  native_real max(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real max(obj::integer_ref const l, obj::real_ref const r)
   {
     return std::max(static_cast<native_real>(l->data), r->data);
   }
@@ -1395,12 +1395,12 @@ namespace jank::runtime
       l);
   }
 
-  native_integer abs(obj::integer_ptr const l)
+  native_integer abs(obj::integer_ref const l)
   {
     return std::abs(l->data);
   }
 
-  native_real abs(obj::real_ptr const l)
+  native_real abs(obj::real_ref const l)
   {
     return std::fabs(l->data);
   }
@@ -1429,12 +1429,12 @@ namespace jank::runtime
       l);
   }
 
-  native_real sqrt(obj::integer_ptr const l)
+  native_real sqrt(obj::integer_ref const l)
   {
     return std::sqrt(l->data);
   }
 
-  native_real sqrt(obj::real_ptr const l)
+  native_real sqrt(obj::real_ref const l)
   {
     return std::sqrt(l->data);
   }
@@ -1467,7 +1467,7 @@ namespace jank::runtime
       r);
   }
 
-  native_real pow(obj::integer_ptr const l, object_ptr const r)
+  native_real pow(obj::integer_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
@@ -1480,7 +1480,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real pow(object_ptr const l, obj::integer_ptr const r)
+  native_real pow(object_ptr const l, obj::integer_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
@@ -1492,17 +1492,17 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real pow(obj::integer_ptr const l, obj::integer_ptr const r)
+  native_real pow(obj::integer_ref const l, obj::integer_ref const r)
   {
     return std::pow(l->data, r->data);
   }
 
-  native_real pow(obj::real_ptr const l, obj::real_ptr const r)
+  native_real pow(obj::real_ref const l, obj::real_ref const r)
   {
     return std::pow(l->data, r->data);
   }
 
-  native_real pow(obj::real_ptr const l, object_ptr const r)
+  native_real pow(obj::real_ref const l, object_ptr const r)
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
@@ -1514,7 +1514,7 @@ namespace jank::runtime
       l->data);
   }
 
-  native_real pow(object_ptr const l, obj::real_ptr const r)
+  native_real pow(object_ptr const l, obj::real_ref const r)
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
@@ -1526,12 +1526,12 @@ namespace jank::runtime
       r->data);
   }
 
-  native_real pow(obj::real_ptr const l, obj::integer_ptr const r)
+  native_real pow(obj::real_ref const l, obj::integer_ref const r)
   {
     return std::pow(l->data, static_cast<native_real>(r->data));
   }
 
-  native_real pow(obj::integer_ptr const l, obj::real_ptr const r)
+  native_real pow(obj::integer_ref const l, obj::real_ref const r)
   {
     return std::pow(static_cast<native_real>(l->data), r->data);
   }
@@ -1621,12 +1621,12 @@ namespace jank::runtime
       l);
   }
 
-  native_integer to_int(obj::integer_ptr const l)
+  native_integer to_int(obj::integer_ref const l)
   {
     return l->data;
   }
 
-  native_integer to_int(obj::real_ptr const l)
+  native_integer to_int(obj::real_ref const l)
   {
     return static_cast<native_integer>(l->data);
   }

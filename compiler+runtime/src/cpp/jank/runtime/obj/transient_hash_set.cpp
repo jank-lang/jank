@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_hash_set_ptr transient_hash_set::empty()
+  transient_hash_set_ref transient_hash_set::empty()
   {
     return make_box<transient_hash_set>();
   }
@@ -61,14 +61,14 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  transient_hash_set_ptr transient_hash_set::conj_in_place(object_ptr const elem)
+  transient_hash_set_ref transient_hash_set::conj_in_place(object_ptr const elem)
   {
     assert_active();
     data.insert(elem);
     return this;
   }
 
-  transient_hash_set::persistent_type_ptr transient_hash_set::to_persistent()
+  transient_hash_set::persistent_type_ref transient_hash_set::to_persistent()
   {
     assert_active();
     active = false;
@@ -125,7 +125,7 @@ namespace jank::runtime::obj
     return data.find(elem);
   }
 
-  transient_hash_set_ptr transient_hash_set::disjoin_in_place(object_ptr const elem)
+  transient_hash_set_ref transient_hash_set::disjoin_in_place(object_ptr const elem)
   {
     assert_active();
     data.erase(elem);

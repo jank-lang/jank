@@ -50,7 +50,7 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  array_chunk_ptr array_chunk::chunk_next() const
+  array_chunk_ref array_chunk::chunk_next() const
   {
     if(offset == buffer.size())
     {
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
     return make_box<array_chunk>(buffer, offset + 1);
   }
 
-  array_chunk_ptr array_chunk::chunk_next_in_place()
+  array_chunk_ref array_chunk::chunk_next_in_place()
   {
     if(offset == buffer.size())
     {

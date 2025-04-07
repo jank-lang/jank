@@ -156,7 +156,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_def(runtime::obj::persistent_list_ptr const l,
+  processor::analyze_def(runtime::obj::persistent_list_ref const l,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -254,7 +254,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_case(obj::persistent_list_ptr const o,
+  processor::analyze_case(obj::persistent_list_ref const o,
                           local_frame_ptr const f,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fc,
@@ -345,7 +345,7 @@ namespace jank::analyze
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj->seq() }; seq != nullptr; seq = seq->next())
+        for(auto seq{ typed_imap_obj->seq() }; seq; seq = seq->next())
         {
           auto const e{ seq->first() };
           auto const k_obj{ runtime::nth(e, make_box(0)) };
@@ -391,7 +391,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_symbol(runtime::obj::symbol_ptr const sym,
+  processor::analyze_symbol(runtime::obj::symbol_ref const sym,
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &,
@@ -458,7 +458,7 @@ namespace jank::analyze
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
     auto const var(rt_ctx.find_var(qualified_sym));
-    if(var.is_none())
+    if(!var)
     {
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
@@ -467,10 +467,9 @@ namespace jank::analyze
     }
 
     /* Macros aren't lifted, since they're not used during runtime. */
-    auto const unwrapped_var(var.unwrap());
     auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
-    if(unwrapped_var->meta.is_none()
-       || get(unwrapped_var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const())
+    if(var->meta.is_none()
+       || get(var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const())
     {
       current_frame->lift_var(qualified_sym);
     }
@@ -478,11 +477,11 @@ namespace jank::analyze
                                           current_frame,
                                           true,
                                           qualified_sym,
-                                          unwrapped_var);
+                                          var);
   }
 
   jtl::result<expr::function_arity, error_ref>
-  processor::analyze_fn_arity(runtime::obj::persistent_list_ptr const list,
+  processor::analyze_fn_arity(runtime::obj::persistent_list_ref const list,
                               jtl::immutable_string const &name,
                               local_frame_ptr const current_frame)
   {
@@ -501,7 +500,7 @@ namespace jank::analyze
       jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
     };
 
-    native_vector<runtime::obj::symbol_ptr> param_symbols;
+    native_vector<runtime::obj::symbol_ref> param_symbols;
     param_symbols.reserve(params->data.size());
     std::set<runtime::obj::symbol> unique_param_symbols;
 
@@ -616,7 +615,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_fn(runtime::obj::persistent_list_ptr const full_list,
+  processor::analyze_fn(runtime::obj::persistent_list_ref const full_list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &,
@@ -682,7 +681,7 @@ namespace jank::analyze
             {
               auto arity_list(runtime::obj::persistent_list::create(typed_arity_list));
 
-              auto result(analyze_fn_arity(arity_list.data, name, current_frame));
+              auto result(analyze_fn_arity(arity_list, name, current_frame));
               if(result.is_err())
               {
                 return result.expect_err_move();
@@ -789,7 +788,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_recur(runtime::obj::persistent_list_ptr const list,
+  processor::analyze_recur(runtime::obj::persistent_list_ref const list,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -855,7 +854,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_do(runtime::obj::persistent_list_ptr const list,
+  processor::analyze_do(runtime::obj::persistent_list_ref const list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -892,7 +891,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_let(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_let(runtime::obj::persistent_list_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -990,7 +989,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_loop(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_loop(runtime::obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1110,7 +1109,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_if(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_if(runtime::obj::persistent_list_ref const o,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1179,7 +1178,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_quote(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_quote(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1202,7 +1201,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_var_call(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_var_call(runtime::obj::persistent_list_ref const o,
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               jtl::option<expr::function_context_ref> const &,
@@ -1230,7 +1229,7 @@ namespace jank::analyze
 
     auto const qualified_sym(current_frame->lift_var(arg_sym));
     auto const found_var(rt_ctx.find_var(qualified_sym));
-    if(found_var.is_none())
+    if(!found_var)
     {
       return error::analyze_unresolved_var(
         util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
@@ -1242,11 +1241,11 @@ namespace jank::analyze
                                         current_frame,
                                         true,
                                         qualified_sym,
-                                        found_var.unwrap());
+                                        found_var);
   }
 
   processor::expression_result
-  processor::analyze_var_val(runtime::var_ptr const o,
+  processor::analyze_var_val(runtime::var_ref const o,
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &,
@@ -1260,7 +1259,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_throw(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_throw(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1286,7 +1285,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_try(runtime::obj::persistent_list_ptr const list,
+  processor::analyze_try(runtime::obj::persistent_list_ref const list,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1324,7 +1323,7 @@ namespace jank::analyze
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
     native_bool has_catch{}, has_finally{};
 
-    for(auto it(list->fresh_seq()->next_in_place()); it != nullptr; it = it->next_in_place())
+    for(auto it(list->fresh_seq()->next_in_place()); it; it = it->next_in_place())
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
@@ -1367,7 +1366,7 @@ namespace jank::analyze
                 latest_expansion(macro_expansions));
             }
 
-            auto const is_last(it->next() == nullptr);
+            auto const is_last(!it->next());
             auto const form_type(is_last ? position : expression_position::statement);
             auto form(analyze(item, try_frame, form_type, fn_ctx, is_last));
             if(form.is_err())
@@ -1504,7 +1503,7 @@ namespace jank::analyze
 
   /* TODO: Test for this. */
   processor::expression_result
-  processor::analyze_vector(runtime::obj::persistent_vector_ptr const o,
+  processor::analyze_vector(runtime::obj::persistent_vector_ref const o,
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1515,7 +1514,7 @@ namespace jank::analyze
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d != nullptr; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d; d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
       if(res.is_err())
@@ -1616,7 +1615,7 @@ namespace jank::analyze
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
         native_bool literal{ true };
-        for(auto d = typed_o->fresh_seq(); d != nullptr; d = d->next_in_place())
+        for(auto d = typed_o->fresh_seq(); d; d = d->next_in_place())
         {
           auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
           if(res.is_err())
@@ -1656,7 +1655,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_call(runtime::obj::persistent_list_ptr const o,
+  processor::analyze_call(runtime::obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1710,7 +1709,7 @@ namespace jank::analyze
                                                        object_source(o),
                                                        latest_expansion(macro_expansions));
         },
-        return *expansion_error)
+        return expansion_error.as_ref())
 
       if(expanded != o)
       {
@@ -1837,7 +1836,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::call>(position,
                                        current_frame,
                                        needs_ret_box,
-                                       *source,
+                                       source.as_ref(),
                                        o,
                                        std::move(arg_exprs));
     }

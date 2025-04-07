@@ -4,16 +4,16 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ptr = native_box<struct persistent_array_map>;
-  using cons_ptr = native_box<struct cons>;
-  using nil_ptr = native_box<struct nil>;
+  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
+  using cons_ref = jtl::object_ref<struct cons>;
+  using nil_ref = jtl::object_ref<struct nil>;
 
   struct nil : gc
   {
     static constexpr object_type obj_type{ object_type::nil };
     static constexpr native_bool pointer_free{ true };
 
-    static nil_ptr nil_const();
+    static nil_ref nil_const();
 
     nil() = default;
 
@@ -37,19 +37,19 @@ namespace jank::runtime::obj
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable */
-    obj::persistent_array_map_ptr assoc(object_ptr key, object_ptr val) const;
-    nil_ptr dissoc(object_ptr key) const;
+    obj::persistent_array_map_ref assoc(object_ptr key, object_ptr val) const;
+    nil_ref dissoc(object_ptr key) const;
 
     /* behavior::seqable */
-    nil_ptr seq();
-    nil_ptr fresh_seq() const;
+    nil_ref seq();
+    nil_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    nil_ptr first() const;
-    nil_ptr next() const;
+    nil_ref first() const;
+    nil_ref next() const;
 
     /* behavior::sequenceable_in_place */
-    nil_ptr next_in_place();
+    nil_ref next_in_place();
 
     object base{ obj_type };
   };

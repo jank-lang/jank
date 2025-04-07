@@ -23,7 +23,7 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_vector_ptr transient_vector::empty()
+  transient_vector_ref transient_vector::empty()
   {
     return make_box<transient_vector>();
   }
@@ -63,14 +63,14 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  transient_vector_ptr transient_vector::conj_in_place(object_ptr const head)
+  transient_vector_ref transient_vector::conj_in_place(object_ptr const head)
   {
     assert_active();
     data.push_back(head);
     return this;
   }
 
-  transient_vector::persistent_type_ptr transient_vector::to_persistent()
+  transient_vector::persistent_type_ref transient_vector::to_persistent()
   {
     assert_active();
     active = false;
@@ -171,7 +171,7 @@ namespace jank::runtime::obj
     }
   }
 
-  transient_vector_ptr transient_vector::pop_in_place()
+  transient_vector_ref transient_vector::pop_in_place()
   {
     assert_active();
     if(data.empty())

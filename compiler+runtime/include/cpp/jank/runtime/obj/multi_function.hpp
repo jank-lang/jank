@@ -7,9 +7,9 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
-  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
-  using multi_function_ptr = native_box<struct multi_function>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
+  using persistent_hash_map_ref = jtl::object_ref<struct persistent_hash_map>;
+  using multi_function_ref = jtl::object_ref<struct multi_function>;
 
   struct multi_function
     : gc
@@ -69,11 +69,11 @@ namespace jank::runtime::obj
                     object_ptr) override;
     object_ptr this_object_ptr() final;
 
-    multi_function_ptr reset();
-    persistent_hash_map_ptr reset_cache();
-    multi_function_ptr add_method(object_ptr dispatch_val, object_ptr method);
-    multi_function_ptr remove_method(object_ptr dispatch_val);
-    multi_function_ptr prefer_method(object_ptr x, object_ptr y);
+    multi_function_ref reset();
+    persistent_hash_map_ref reset_cache();
+    multi_function_ref add_method(object_ptr dispatch_val, object_ptr method);
+    multi_function_ref remove_method(object_ptr dispatch_val);
+    multi_function_ref prefer_method(object_ptr x, object_ptr y);
     native_bool is_preferred(object_ptr hierarchy, object_ptr x, object_ptr y) const;
 
     static native_bool is_a(object_ptr hierarchy, object_ptr x, object_ptr y);
@@ -88,10 +88,10 @@ namespace jank::runtime::obj
     object_ptr default_dispatch_value{};
     object_ptr hierarchy{};
     mutable object_ptr cached_hierarchy{};
-    persistent_hash_map_ptr method_table{};
-    mutable persistent_hash_map_ptr method_cache{};
-    persistent_hash_map_ptr prefer_table{};
-    symbol_ptr name{};
+    persistent_hash_map_ref method_table{};
+    mutable persistent_hash_map_ref method_cache{};
+    persistent_hash_map_ref prefer_table{};
+    symbol_ref name{};
     std::recursive_mutex data_lock;
   };
 }

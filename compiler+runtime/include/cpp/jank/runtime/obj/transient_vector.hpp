@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_vector_ptr = native_box<struct transient_vector>;
+  using transient_vector_ref = jtl::object_ref<struct transient_vector>;
 
   struct transient_vector : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_vector;
-    using persistent_type_ptr = native_box<struct persistent_vector>;
+    using persistent_type_ref = jtl::object_ref<struct persistent_vector>;
 
     transient_vector() = default;
     transient_vector(transient_vector &&) noexcept = default;
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     transient_vector(runtime::detail::native_persistent_vector &&d);
     transient_vector(value_type &&d);
 
-    static transient_vector_ptr empty();
+    static transient_vector_ref empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -35,10 +35,10 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    transient_vector_ptr conj_in_place(object_ptr head);
+    transient_vector_ref conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
-    persistent_type_ptr to_persistent();
+    persistent_type_ref to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr const) const;
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     object_ptr get_entry(object_ptr const idx) const;
     native_bool contains(object_ptr const elem) const;
 
-    transient_vector_ptr pop_in_place();
+    transient_vector_ref pop_in_place();
 
     void assert_active() const;
 

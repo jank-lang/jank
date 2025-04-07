@@ -5,7 +5,6 @@
 #include <jank/type.hpp>
 #include <jank/util/string_builder.hpp>
 
-#include <jtl/ref.hpp>
 #include <jtl/storage.hpp>
 
 namespace jank::runtime
@@ -263,6 +262,12 @@ namespace jank::runtime::behavior
   };
 }
 
+namespace jtl
+{
+  template <typename T>
+  struct object_ref;
+}
+
 #include <jank/runtime/native_box.hpp>
 
 namespace jank::runtime
@@ -276,6 +281,11 @@ namespace jank::runtime
   {
     bool operator()(object_ptr const lhs, object_ptr const rhs) const noexcept;
   };
+
+  namespace detail
+  {
+    constexpr object nil_const{ object_type::nil };
+  }
 }
 
 namespace std
@@ -300,135 +310,146 @@ namespace std
   };
 }
 
+extern jank::runtime::object* jank_nil_const;
+
 namespace jtl
 {
-  /* This specialization of ref is for type-erased objects.
+#define JANK_CONSTEXPR
+  /* This variation of ref is for type-erased objects.
    *
    * It cannot be null, but it can be nil. */
-  template <>
-  struct ref<jank::runtime::object>
+  template <typename O>
+  requires (std::same_as<std::decay_t<O>, jank::runtime::object>)
+  struct object_ref<O>
   {
     using value_type = jank::runtime::object;
 
-    constexpr ref() = default;
-
-    constexpr ref(nullptr_t) noexcept
+    JANK_CONSTEXPR object_ref()
+      : data{ std::bit_cast<jank::runtime::object*>(jank_nil_const) }
     {
     }
 
-    constexpr ref(value_type &data) noexcept
-      : data{ &data }
+    JANK_CONSTEXPR object_ref(nullptr_t) noexcept
     {
     }
 
-    constexpr ref(value_type const &data) noexcept
-      : data{ const_cast<value_type *>(&data) }
+    JANK_CONSTEXPR object_ref(value_type * const data) noexcept
+      : data{ data }
     {
     }
 
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr ref(T &typed_data) noexcept
-      : data{ &typed_data.base }
+    JANK_CONSTEXPR object_ref(value_type const * const data) noexcept
+      : data{ const_cast<value_type *>(data) }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr ref(T const &typed_data) noexcept
-      : data{ const_cast<jank::runtime::object *>(&typed_data.base) }
+    JANK_CONSTEXPR object_ref(T * const typed_data) noexcept
+      : data{ typed_data->base }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr ref(ref<T> const typed_data) noexcept
+    JANK_CONSTEXPR object_ref(T const * const typed_data) noexcept
+      : data{ const_cast<jank::runtime::object *>(&typed_data->base) }
+    {
+    }
+
+    template <typename T>
+    requires jank::runtime::behavior::object_like<T>
+    JANK_CONSTEXPR object_ref(object_ref<T> const typed_data) noexcept
       : data{ &typed_data->base }
     {
     }
 
-    constexpr value_type *operator->() const noexcept
+    JANK_CONSTEXPR value_type *operator->() const noexcept
     {
       jank_debug_assert(data);
       return data;
     }
 
-    constexpr bool operator!() const noexcept
+    JANK_CONSTEXPR bool operator!() const noexcept
     {
       return !data;
     }
 
-    constexpr value_type &operator*() const noexcept
+    JANK_CONSTEXPR value_type &operator*() const noexcept
     {
       jank_debug_assert(data);
       return *data;
     }
 
-    constexpr bool operator==(nullptr_t) const noexcept
+    JANK_CONSTEXPR bool operator==(nullptr_t) const noexcept
     {
       return data == nullptr;
     }
 
-    constexpr bool operator==(ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(object_ref const &rhs) const noexcept
     {
       return data == rhs.data;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator==(T const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(T const &rhs) const noexcept
     {
       return data == &rhs->base;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator==(ref<T> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(object_ref<T> const &rhs) const noexcept
     {
       return data == &rhs->base;
     }
 
-    constexpr bool operator!=(nullptr_t) const noexcept
+    JANK_CONSTEXPR bool operator!=(nullptr_t) const noexcept
     {
       return data != nullptr;
     }
 
-    constexpr bool operator!=(ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(object_ref const &rhs) const noexcept
     {
       return data != rhs.data;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator!=(T const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(T const &rhs) const noexcept
     {
       return data != &rhs->base;
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator!=(ref<T> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(object_ref<T> const &rhs) const noexcept
     {
       return data != &rhs->base;
     }
 
-    constexpr bool operator<(ref const &rhs) const noexcept
+    JANK_CONSTEXPR object_ref& operator=(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
+
+    JANK_CONSTEXPR bool operator<(object_ref const &rhs) const noexcept
     {
       return data < rhs.data;
     }
 
-    constexpr operator ref<value_type const>() const noexcept
+    JANK_CONSTEXPR operator object_ref<value_type const>() const noexcept
     {
       jank_debug_assert(data);
-      return *data;
+      return data;
     }
 
-    constexpr operator value_type *() const noexcept
+    JANK_CONSTEXPR operator value_type *() const noexcept
     {
       return data;
     }
 
-    constexpr explicit operator bool() const noexcept
+    JANK_CONSTEXPR explicit operator bool() const noexcept
     {
       jank_debug_assert(data);
       return data->type != jank::runtime::object_type::nil;
@@ -437,116 +458,171 @@ namespace jtl
     value_type *data{};
   };
 
-  /* This specialization of ref is for fully-typed objects like nil,
+  /* This specialization of object_ref is for fully-typed objects like nil,
    * persistent_list, persistent_array_map, etc.
    *
    * It cannot be null, but it can be nil. */
   template <typename T>
-  requires jank::runtime::behavior::object_like<T>
-  struct ref<T>
+  struct object_ref
   {
     using value_type = T;
 
-    constexpr ref() = delete;
-    constexpr ref(nullptr_t) = delete;
-
-    constexpr ref(remove_const_t<value_type> &data) noexcept
-      : data{ &data }
+    JANK_CONSTEXPR object_ref()
+      : data{ std::bit_cast<void*>(jank_nil_const) }
     {
-      jank_debug_assert(*this->data.data());
     }
 
-    constexpr ref(value_type const &data) noexcept
-      : data{ const_cast<value_type *>(&data) }
+    JANK_CONSTEXPR object_ref(nullptr_t) = delete;
+
+    JANK_CONSTEXPR object_ref(remove_const_t<T> * const data) noexcept
+      : data{ data }
     {
-      jank_debug_assert(*this->data.data());
+      jank_debug_assert(this->data);
+    }
+
+    JANK_CONSTEXPR object_ref(T const * const data) noexcept
+      : data{ const_cast<T *>(data) }
+    {
+      jank_debug_assert(this->data);
     }
 
     template <typename C>
     requires is_convertible<C *, T *>
-    constexpr ref(ref<C> const data) noexcept
+    JANK_CONSTEXPR object_ref(object_ref<C> const data) noexcept
       : data{ data.data }
     {
-      jank_debug_assert(*this->data.data());
+      jank_debug_assert(this->data);
     }
 
     template <typename C>
     requires (T::obj_type == jank::runtime::object_type::nil)
-    constexpr ref(ref<C> const data) noexcept
+    JANK_CONSTEXPR object_ref(object_ref<C> const data) noexcept
       : data{ data.data }
     {
-      jank_debug_assert(*this->data.data());
+      jank_debug_assert(this->data);
     }
 
-    constexpr value_type *operator->() const noexcept
+    JANK_CONSTEXPR T *operator->() const noexcept
     {
-      jank_debug_assert(*this->data.data());
-      return data;
+      jank_debug_assert(data);
+      return reinterpret_cast<T*>(data);
     }
 
-    constexpr value_type &operator*() const noexcept
+    JANK_CONSTEXPR T &operator*() const noexcept
     {
-      jank_debug_assert(*this->data.data());
-      return *data->ptr();
+      jank_debug_assert(data);
+      return *reinterpret_cast<T*>(data);
     }
 
-    constexpr bool operator==(ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(object_ref const &rhs) const noexcept
     {
-      return *data->ptr() == *rhs.data->ptr();
+      return !(*this != rhs);
     }
 
-    constexpr bool operator!=(ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(object_ref const &rhs) const noexcept
     {
-      return *data->ptr() != *rhs.data->ptr();
+      if(!*this)
+      {
+        return rhs;
+      }
+      if(!rhs)
+      {
+        return false;
+      }
+      return !reinterpret_cast<T*>(data)->equal(rhs->base);
     }
 
-    constexpr bool operator<(ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator<(object_ref const &rhs) const noexcept
     {
-      return *data->ptr() < *rhs.data->ptr();
+      return data < rhs.data;
     }
 
     template <typename C>
     requires jank::runtime::behavior::object_like<C>
-    constexpr bool operator==(ref<C> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(object_ref<C> const &rhs) const noexcept
     {
-      return data->ptr()->equal((*rhs.data->ptr())->base);
+      return !(*this != rhs);
     }
 
     template <typename C>
     requires jank::runtime::behavior::object_like<C>
-    constexpr bool operator!=(ref<C> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(object_ref<C> const &rhs) const noexcept
     {
-      return !data->ptr()->equal((*rhs.data->ptr())->base);
+      if(!*this)
+      {
+        return C::obj_type != jank::runtime::object_type::nil;
+      }
+      if(!rhs)
+      {
+        return true;
+      }
+      return !reinterpret_cast<T*>(data)->equal(rhs->base);
+    }
+
+    JANK_CONSTEXPR object_ref& operator=(std::remove_cv_t<std::decay_t<T>> * const rhs) noexcept
+    {
+      data = rhs;
+      jank_debug_assert(data);
+      return *this;
+    }
+
+    JANK_CONSTEXPR object_ref& operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs) noexcept
+    {
+      data = const_cast<T*>(rhs);
+      jank_debug_assert(data);
+      return *this;
     }
 
     template <typename C>
-    requires (T::obj_type == jank::runtime::object_type::nil)
-    constexpr ref& operator=(ref const &rhs) noexcept
+    requires (C::obj_type == jank::runtime::object_type::nil)
+    JANK_CONSTEXPR object_ref& operator=(object_ref<C> const &) noexcept
     {
-      data = rhs.data;
-      jank_debug_assert(*this->data.data());
+      data = std::bit_cast<void*>(jank_nil_const);
+      jank_debug_assert(data);
+      return *this;
     }
 
-    constexpr operator ref<value_type const>() const noexcept
+    JANK_CONSTEXPR object_ref& operator=(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
+
+    JANK_CONSTEXPR operator object_ref<T const>() const noexcept
     {
-      return *data->ptr();
+      return *reinterpret_cast<T*>(data);
     }
 
-    constexpr operator ref<jank::runtime::object>() const noexcept
+    JANK_CONSTEXPR operator object_ref<jank::runtime::object>() const noexcept
     {
-      return (*data->ptr())->base;
+      if(!*this)
+      {
+        return std::bit_cast<jank::runtime::object*>(jank_nil_const);
+      }
+      return reinterpret_cast<T*>(data)->base;
     }
 
-    constexpr operator jank::runtime::object *() const noexcept
+    JANK_CONSTEXPR operator jank::runtime::native_box<jank::runtime::object>() const noexcept
     {
-      return &(*data->ptr())->base;
+      if(!*this)
+      {
+        return std::bit_cast<jank::runtime::object*>(jank_nil_const);
+      }
+      return &reinterpret_cast<T*>(data)->base;
     }
 
-    constexpr explicit operator bool() const
+    JANK_CONSTEXPR operator jank::runtime::object *() const noexcept
     {
-      return (*data->ptr())->type == jank::runtime::object_type::nil;
+      if(!*this)
+      {
+        return std::bit_cast<jank::runtime::object*>(jank_nil_const);
+      }
+      return &reinterpret_cast<T*>(data)->base;
     }
 
-    storage<value_type *> data{};
+    JANK_CONSTEXPR explicit operator bool() const
+    {
+      return data != std::bit_cast<void*>(jank_nil_const);
+    }
+
+    void *data{};
   };
 }

@@ -349,7 +349,7 @@ namespace jank::error
   {
     if(usage_source == read::source::unknown || usage_source.overlaps(source))
     {
-      return *this;
+      return this;
     }
     else if(source == read::source::unknown)
     {
@@ -360,7 +360,7 @@ namespace jank::error
     {
       notes.emplace_back("Used here.", usage_source, note::kind::info);
     }
-    return *this;
+    return this;
   }
 
   std::ostream &operator<<(std::ostream &os, base const &e)

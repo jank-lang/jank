@@ -57,7 +57,7 @@ namespace jank::runtime::obj
                object_ptr const end,
                object_ptr const step,
                range::bounds_check_t const bounds_check,
-               array_chunk_ptr const chunk,
+               array_chunk_ref const chunk,
                range_ptr const chunk_next)
     : start{ start }
     , end{ end }
@@ -179,7 +179,7 @@ namespace jank::runtime::obj
     return chunk_next;
   }
 
-  array_chunk_ptr range::chunked_first() const
+  array_chunk_ref range::chunked_first() const
   {
     force_chunk();
     return chunk;
@@ -190,12 +190,12 @@ namespace jank::runtime::obj
     force_chunk();
     if(!chunk_next)
     {
-      return nullptr;
+      return {};
     }
     return chunk_next;
   }
 
-  cons_ptr range::conj(object_ptr const head) const
+  cons_ref range::conj(object_ptr const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -206,15 +206,15 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
+        for(auto it(fresh_seq()); it;
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
+          if(!seq || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);

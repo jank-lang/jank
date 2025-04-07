@@ -10,7 +10,7 @@ namespace jank::runtime::detail
 
 namespace jank::runtime::obj
 {
-  using transient_hash_map_ptr = native_box<struct transient_hash_map>;
+  using transient_hash_map_ref = jtl::object_ref<struct transient_hash_map>;
 
   struct transient_hash_map : gc
   {
@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_map;
-    using persistent_type_ptr = native_box<struct persistent_hash_map>;
+    using persistent_type_ref = jtl::object_ref<struct persistent_hash_map>;
 
     transient_hash_map() = default;
     transient_hash_map(transient_hash_map &&) noexcept = default;
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     transient_hash_map(runtime::detail::native_persistent_array_map const &m);
     transient_hash_map(value_type &&d);
 
-    static transient_hash_map_ptr empty();
+    static transient_hash_map_ref empty();
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -47,14 +47,14 @@ namespace jank::runtime::obj
     native_bool contains(object_ptr key) const;
 
     /* behavior::associatively_writable_in_place */
-    transient_hash_map_ptr assoc_in_place(object_ptr const key, object_ptr const val);
-    transient_hash_map_ptr dissoc_in_place(object_ptr const key);
+    transient_hash_map_ref assoc_in_place(object_ptr const key, object_ptr const val);
+    transient_hash_map_ref dissoc_in_place(object_ptr const key);
 
     /* behavior::conjable_in_place */
-    transient_hash_map_ptr conj_in_place(object_ptr head);
+    transient_hash_map_ref conj_in_place(object_ptr head);
 
     /* behavior::persistentable */
-    persistent_type_ptr to_persistent();
+    persistent_type_ref to_persistent();
 
     /* behavior::callable */
     object_ptr call(object_ptr) const;

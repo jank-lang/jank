@@ -10,14 +10,14 @@
 
 namespace jank::runtime
 {
-  using ns_ptr = native_box<struct ns>;
-  using var_ptr = native_box<struct var>;
-  using var_thread_binding_ptr = native_box<struct var_thread_binding>;
-  using var_unbound_root_ptr = native_box<struct var_unbound_root>;
+  using ns_ref = jtl::object_ref<struct ns>;
+  using var_ref = jtl::object_ref<struct var>;
+  using var_thread_binding_ref = jtl::object_ref<struct var_thread_binding>;
+  using var_unbound_root_ref = jtl::object_ref<struct var_unbound_root>;
 
   namespace obj
   {
-    using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
+    using persistent_hash_map_ref = jtl::object_ref<struct persistent_hash_map>;
   }
 
   struct var : gc
@@ -26,10 +26,10 @@ namespace jank::runtime
     static constexpr native_bool pointer_free{ false };
 
     var() = delete;
-    var(ns_ptr const &n, obj::symbol_ptr const &name);
-    var(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr root);
-    var(ns_ptr const &n,
-        obj::symbol_ptr const &name,
+    var(ns_ref const &n, obj::symbol_ref const &name);
+    var(ns_ref const &n, obj::symbol_ref const &name, object_ptr root);
+    var(ns_ref const &n,
+        obj::symbol_ref const &name,
         object_ptr const root,
         native_bool dynamic,
         native_bool thread_bound);
@@ -45,32 +45,32 @@ namespace jank::runtime
     native_bool equal(var const &) const;
 
     /* behavior::metadatable */
-    var_ptr with_meta(object_ptr m);
+    var_ref with_meta(object_ptr m);
 
     native_bool is_bound() const;
     object_ptr get_root() const;
     /* Binding a root changes it for all threads. */
-    var_ptr bind_root(object_ptr r);
+    var_ref bind_root(object_ptr r);
     object_ptr alter_root(object_ptr f, object_ptr args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
     jtl::string_result<void> set(object_ptr r) const;
 
-    var_ptr set_dynamic(native_bool dyn);
+    var_ref set_dynamic(native_bool dyn);
 
-    var_thread_binding_ptr get_thread_binding() const;
+    var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::derefable */
     object_ptr deref() const;
 
     native_bool operator==(var const &rhs) const;
 
-    var_ptr clone() const;
+    var_ref clone() const;
 
     object base{ obj_type };
-    ns_ptr n{};
+    ns_ref n;
     /* Unqualified. */
-    obj::symbol_ptr name{};
+    obj::symbol_ref name{};
     jtl::option<object_ptr> meta;
     mutable native_hash hash{};
 
@@ -103,7 +103,7 @@ namespace jank::runtime
 
   struct thread_binding_frame
   {
-    obj::persistent_hash_map_ptr bindings{};
+    obj::persistent_hash_map_ref bindings{};
   };
 
   struct var_unbound_root : gc
@@ -111,7 +111,7 @@ namespace jank::runtime
     static constexpr object_type obj_type{ object_type::var_unbound_root };
     static constexpr native_bool pointer_free{ true };
 
-    var_unbound_root(var_ptr var);
+    var_unbound_root(var_ref var);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -121,10 +121,11 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     object base{ obj_type };
-    var_ptr var{};
+    var_ref var;
   };
 }
 
+/* TODO: Move these to the .cpp */
 namespace std
 {
   template <>
@@ -138,9 +139,9 @@ namespace std
   };
 
   template <>
-  struct hash<jank::runtime::var_ptr>
+  struct hash<jank::runtime::var_ref>
   {
-    size_t operator()(jank::runtime::var_ptr const &o) const noexcept
+    size_t operator()(jank::runtime::var_ref const &o) const noexcept
     {
       static auto hasher(std::hash<jank::runtime::obj::symbol>{});
       return hasher(*o->name);
@@ -148,19 +149,11 @@ namespace std
   };
 
   template <>
-  struct equal_to<jank::runtime::var_ptr>
+  struct equal_to<jank::runtime::var_ref>
   {
     bool
-    operator()(jank::runtime::var_ptr const &lhs, jank::runtime::var_ptr const &rhs) const noexcept
+    operator()(jank::runtime::var_ref const &lhs, jank::runtime::var_ref const &rhs) const noexcept
     {
-      if(!lhs)
-      {
-        return !rhs;
-      }
-      else if(!rhs)
-      {
-        return false;
-      }
       return lhs->equal(*rhs);
     }
   };

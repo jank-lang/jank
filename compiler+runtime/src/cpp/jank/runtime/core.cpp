@@ -67,7 +67,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first(), buff);
-          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_args->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -98,7 +98,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first(), buff);
-          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_more->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_string(it->first(), buff);
@@ -126,7 +126,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first(), buff);
-          for(auto it(typed_args->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_args->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);
@@ -157,7 +157,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_more->first(), buff);
-          for(auto it(typed_more->next_in_place()); it != nullptr; it = it->next_in_place())
+          for(auto it(typed_more->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
             runtime::to_code_string(it->first(), buff);
@@ -185,21 +185,21 @@ namespace jank::runtime
       o);
   }
 
-  obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start)
+  obj::persistent_string_ref subs(object_ptr const s, object_ptr const start)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, native_integer const start) -> obj::persistent_string_ptr {
+      [](auto const typed_s, native_integer const start) -> obj::persistent_string_ref {
         return typed_s->substring(start).expect_ok();
       },
       s,
       to_int(start));
   }
 
-  obj::persistent_string_ptr subs(object_ptr const s, object_ptr const start, object_ptr const end)
+  obj::persistent_string_ref subs(object_ptr const s, object_ptr const start, object_ptr const end)
   {
     return visit_type<obj::persistent_string>(
       [](auto const typed_s, native_integer const start, native_integer const end)
-        -> obj::persistent_string_ptr { return typed_s->substring(start, end).expect_ok(); },
+        -> obj::persistent_string_ref { return typed_s->substring(start, end).expect_ok(); },
       s,
       to_int(start),
       to_int(end));
@@ -267,7 +267,11 @@ namespace jank::runtime
         if constexpr(behavior::nameable<T>)
         {
           auto const ns(typed_o->get_namespace());
-          return (ns.empty() ? obj::nil::nil_const() : make_box<obj::persistent_string>(ns));
+          if(ns.empty())
+          {
+          return obj::nil::nil_const();
+          }
+          return make_box<obj::persistent_string>(ns);
         }
         else
         {

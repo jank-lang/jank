@@ -7,13 +7,13 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  boolean_ptr boolean::true_const()
+  boolean_ref boolean::true_const()
   {
     static boolean r{ true };
     return &r;
   }
 
-  boolean_ptr boolean::false_const()
+  boolean_ref boolean::false_const()
   {
     static boolean r{ false };
     return &r;

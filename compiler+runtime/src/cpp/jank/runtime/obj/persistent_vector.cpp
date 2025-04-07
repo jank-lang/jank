@@ -25,21 +25,21 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_vector_ptr persistent_vector::create(object_ptr const s)
+  persistent_vector_ref persistent_vector::create(object_ptr const s)
   {
-    if(s == nullptr)
+    if(!s)
     {
       return make_box<persistent_vector>();
     }
 
     return visit_object(
-      [](auto const typed_s) -> persistent_vector_ptr {
+      [](auto const typed_s) -> persistent_vector_ref {
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i != nullptr; i = i->next_in_place())
+          for(auto i(typed_s->fresh_seq()); i; i = i->next_in_place())
           {
             v.push_back(i->first());
           }
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
       s);
   }
 
-  persistent_vector_ptr persistent_vector::empty()
+  persistent_vector_ref persistent_vector::empty()
   {
     static auto const ret(make_box<persistent_vector>());
     return ret;
@@ -90,14 +90,14 @@ namespace jank::runtime::obj
           {
             size_t i{};
             auto e(typed_o->fresh_seq());
-            for(; e != nullptr && i < data.size(); e = e->next_in_place(), ++i)
+            for(; e && i < data.size(); e = e->next_in_place(), ++i)
             {
               if(!runtime::equal(data[i], e->first()))
               {
                 return false;
               }
             }
-            return e == nullptr && i == data.size();
+            return !e && i == data.size();
           }
           else
           {
@@ -169,16 +169,16 @@ namespace jank::runtime::obj
     return 0;
   }
 
-  persistent_vector_sequence_ptr persistent_vector::seq() const
+  persistent_vector_sequence_ref persistent_vector::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_vector_sequence_ptr persistent_vector::fresh_seq() const
+  persistent_vector_sequence_ref persistent_vector::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
   }
@@ -188,19 +188,19 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_vector_ptr persistent_vector::conj(object_ptr head) const
+  persistent_vector_ref persistent_vector::conj(object_ptr head) const
   {
     auto vec(data.push_back(head));
     auto ret(make_box<persistent_vector>(meta, std::move(vec)));
     return ret;
   }
 
-  transient_vector_ptr persistent_vector::to_transient() const
+  transient_vector_ref persistent_vector::to_transient() const
   {
     return make_box<transient_vector>(data);
   }
 
-  persistent_vector_ptr persistent_vector::with_meta(object_ptr const m) const
+  persistent_vector_ref persistent_vector::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_vector>(data));
@@ -271,7 +271,7 @@ namespace jank::runtime::obj
     return data[data.size() - 1];
   }
 
-  persistent_vector_ptr persistent_vector::pop() const
+  persistent_vector_ref persistent_vector::pop() const
   {
     if(data.empty())
     {

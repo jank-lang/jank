@@ -6,7 +6,7 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
+  using symbol_ref = jtl::object_ref<struct symbol>;
 }
 
 namespace jank::analyze::expr
@@ -18,7 +18,7 @@ namespace jank::analyze::expr
     void propagate_position(expression_position const pos) const;
     runtime::object_ptr to_runtime_data() const;
 
-    runtime::obj::symbol_ptr sym{};
+    runtime::obj::symbol_ref sym{};
     do_ref body;
   };
 

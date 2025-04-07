@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_list_ptr = native_box<struct persistent_list>;
-    using persistent_vector_ptr = native_box<struct persistent_vector>;
+    using persistent_list_ref = jtl::object_ref<struct persistent_list>;
+    using persistent_vector_ref = jtl::object_ref<struct persistent_vector>;
   }
 
   template <typename T>
@@ -119,8 +119,8 @@ namespace jank::runtime
 
   jtl::immutable_string str(object_ptr o, object_ptr args);
 
-  obj::persistent_list_ptr list(object_ptr s);
-  obj::persistent_vector_ptr vec(object_ptr s);
+  obj::persistent_list_ref list(object_ptr s);
+  obj::persistent_vector_ref vec(object_ptr s);
 
   native_bool sequence_equal(object_ptr l, object_ptr r);
 

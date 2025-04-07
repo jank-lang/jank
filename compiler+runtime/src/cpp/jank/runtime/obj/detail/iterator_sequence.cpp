@@ -34,12 +34,12 @@ namespace jank::runtime::obj::detail
         auto seq(typed_o->fresh_seq());
         for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
         {
-          if(seq == nullptr || !runtime::equal(*it, seq->first()))
+          if(!seq || !runtime::equal(*it, seq->first()))
           {
             return false;
           }
         }
-        return seq == nullptr;
+        return !seq;
       },
       []() { return false; },
       &o);
@@ -74,13 +74,13 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_box<Derived> iterator_sequence<Derived, It>::seq()
+  jtl::object_ref<Derived> iterator_sequence<Derived, It>::seq()
   {
     return static_cast<Derived *>(this);
   }
 
   template <typename Derived, typename It>
-  native_box<Derived> iterator_sequence<Derived, It>::fresh_seq() const
+  jtl::object_ref<Derived> iterator_sequence<Derived, It>::fresh_seq() const
   {
     return make_box<Derived>(coll, begin, end, size);
   }
@@ -98,34 +98,34 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_box<Derived> iterator_sequence<Derived, It>::next() const
+  jtl::object_ref<Derived> iterator_sequence<Derived, It>::next() const
   {
     auto n(begin);
     ++n;
 
     if(n == end)
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<Derived>(coll, n, end, size);
   }
 
   template <typename Derived, typename It>
-  native_box<Derived> iterator_sequence<Derived, It>::next_in_place()
+  jtl::object_ref<Derived> iterator_sequence<Derived, It>::next_in_place()
   {
     ++begin;
 
     if(begin == end)
     {
-      return nullptr;
+      return {};
     }
 
     return static_cast<Derived *>(this);
   }
 
   template <typename Derived, typename It>
-  obj::cons_ptr iterator_sequence<Derived, It>::conj(object_ptr const head)
+  obj::cons_ref iterator_sequence<Derived, It>::conj(object_ptr const head)
   {
     return make_box<obj::cons>(head, static_cast<Derived *>(this));
   }

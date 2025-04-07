@@ -131,7 +131,7 @@ namespace jank::evaluate
   template <typename E>
   static expr::function_ref wrap_expression(jtl::ref<E> const orig_expr,
                                             jtl::immutable_string const &name,
-                                            native_vector<obj::symbol_ptr> params)
+                                            native_vector<obj::symbol_ref> params)
   {
     auto ret{ jtl::make_ref<expr::function>() };
     /* TODO: Deep clone? */
@@ -239,7 +239,7 @@ namespace jank::evaluate
 
   expr::function_ref wrap_expression(expression_ref const expr,
                                      jtl::immutable_string const &name,
-                                     native_vector<obj::symbol_ptr> params)
+                                     native_vector<obj::symbol_ref> params)
   {
     return visit_expr(
       [&](auto const typed_expr) { return wrap_expression(typed_expr, name, std::move(params)); },
@@ -278,13 +278,13 @@ namespace jank::evaluate
   object_ptr eval(expr::var_deref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
-    return var.unwrap()->deref();
+    return var->deref();
   }
 
   object_ptr eval(expr::var_ref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
-    return var.unwrap();
+    return var;
   }
 
   object_ptr eval(expr::call_ref const expr)

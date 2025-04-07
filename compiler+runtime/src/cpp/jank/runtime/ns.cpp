@@ -6,7 +6,7 @@
 
 namespace jank::runtime
 {
-  ns::ns(obj::symbol_ptr const &name, context &c)
+  ns::ns(obj::symbol_ref const &name, context &c)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -14,14 +14,14 @@ namespace jank::runtime
   {
   }
 
-  var_ptr ns::intern_var(native_persistent_string_view const &name)
+  var_ref ns::intern_var(native_persistent_string_view const &name)
   {
     return intern_var(make_box<obj::symbol>(name));
   }
 
-  var_ptr ns::intern_var(obj::symbol_ptr const &sym)
+  var_ref ns::intern_var(obj::symbol_ref const &sym)
   {
-    obj::symbol_ptr unqualified_sym{ sym };
+    obj::symbol_ref unqualified_sym{ sym };
     if(!unqualified_sym->ns.empty())
     {
       unqualified_sym = make_box<obj::symbol>("", sym->name);
@@ -41,7 +41,7 @@ namespace jank::runtime
     return new_var;
   }
 
-  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ptr const &sym)
+  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ref const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -53,7 +53,7 @@ namespace jank::runtime
     return ok();
   }
 
-  jtl::option<var_ptr> ns::find_var(obj::symbol_ptr const &sym)
+  var_ref ns::find_var(obj::symbol_ref const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -64,14 +64,14 @@ namespace jank::runtime
     auto const found((*locked_vars)->data.find(sym));
     if(!found)
     {
-      return none;
+      return {};
     }
 
     return { expect_object<var>(*found) };
   }
 
   jtl::result<void, jtl::immutable_string>
-  ns::add_alias(obj::symbol_ptr const &sym, ns_ptr const &nsp)
+  ns::add_alias(obj::symbol_ref const &sym, ns_ref const &nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -92,13 +92,13 @@ namespace jank::runtime
     return ok();
   }
 
-  void ns::remove_alias(obj::symbol_ptr const &sym)
+  void ns::remove_alias(obj::symbol_ref const &sym)
   {
     auto locked_aliases(aliases.wlock());
     *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
   }
 
-  jtl::option<ns_ptr> ns::find_alias(obj::symbol_ptr const &sym) const
+  ns_ref ns::find_alias(obj::symbol_ref const &sym) const
   {
     auto locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -106,10 +106,10 @@ namespace jank::runtime
     {
       return expect_object<ns>(*found);
     }
-    return none;
+    return {};
   }
 
-  jtl::result<void, jtl::immutable_string> ns::refer(obj::symbol_ptr const sym, var_ptr const var)
+  jtl::result<void, jtl::immutable_string> ns::refer(obj::symbol_ref const sym, var_ref const var)
   {
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))
@@ -117,7 +117,7 @@ namespace jank::runtime
       if(found->data->type == object_type::var)
       {
         auto const found_var(expect_object<runtime::var>(found->data));
-        auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")).unwrap());
+        auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")));
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
           return err(util::format("{} already refers to {} in ns {}",
@@ -131,7 +131,7 @@ namespace jank::runtime
     return ok();
   }
 
-  obj::persistent_hash_map_ptr ns::get_mappings() const
+  obj::persistent_hash_map_ref ns::get_mappings() const
   {
     auto const locked_vars(vars.rlock());
     return *locked_vars;
@@ -173,7 +173,7 @@ namespace jank::runtime
     return name == rhs.name;
   }
 
-  ns_ptr ns::clone(context &new_rt_ctx) const
+  ns_ref ns::clone(context &new_rt_ctx) const
   {
     auto ret(make_box<ns>(name, new_rt_ctx));
     *ret->vars.wlock() = *vars.rlock();

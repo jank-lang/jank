@@ -4,15 +4,17 @@
 
 namespace jank::runtime::obj
 {
-  nil_ptr nil::nil_const()
+  nil_ref nil::nil_const()
   {
-    static nil r{};
-    return &r;
+    //return reinterpret_cast<nil*>(const_cast<object*>(&jank::runtime::detail::nil_const));
+    //return reinterpret_cast<nil*>(const_cast<object*>(jank_nil_const));
+    static nil n;
+    return &n;
   }
 
   native_bool nil::equal(object const &o) const
   {
-    return &o == &base;
+    return o.type == obj_type;
   }
 
   jtl::immutable_string const &nil::to_string() const
@@ -66,38 +68,40 @@ namespace jank::runtime::obj
     return false;
   }
 
-  persistent_array_map_ptr nil::assoc(object_ptr const key, object_ptr const val) const
+  persistent_array_map_ref nil::assoc(object_ptr const key, object_ptr const val) const
   {
     return persistent_array_map::create_unique(key, val);
   }
 
-  nil_ptr nil::dissoc(object_ptr const) const
+  nil_ref nil::dissoc(object_ptr const) const
   {
     return this;
   }
 
-  nil_ptr nil::seq()
-  {
-    return nullptr;
-  }
-
-  nil_ptr nil::fresh_seq() const
-  {
-    return nullptr;
-  }
-
-  nil_ptr nil::first() const
+  nil_ref nil::seq()
   {
     return this;
   }
 
-  nil_ptr nil::next() const
+  nil_ref nil::fresh_seq() const
   {
-    return nullptr;
+    return this;
   }
 
-  nil_ptr nil::next_in_place()
+  nil_ref nil::first() const
   {
-    return nullptr;
+    return this;
+  }
+
+  nil_ref nil::next() const
+  {
+    return this;
+  }
+
+  nil_ref nil::next_in_place()
+  {
+    return this;
   }
 }
+
+jank::runtime::object* jank_nil_const{ jank::runtime::obj::nil::nil_const() };

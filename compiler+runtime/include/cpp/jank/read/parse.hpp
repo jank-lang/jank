@@ -105,7 +105,7 @@ namespace jank::read::parse
     jtl::option<lex::token_kind> expected_closer;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing
      * some other form, such as a list, we'll bind this var to true. */
-    runtime::var_ptr splicing_allowed_var{};
+    runtime::var_ref splicing_allowed_var;
     /* When we've spliced some forms, we'll put them into this list. Before reading the next
      * token, we should check this list to see if there's already a form we should pull out.
      * This is needed because parse iteration works one form at a time and splicing potentially

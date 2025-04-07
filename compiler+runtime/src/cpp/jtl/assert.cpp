@@ -15,7 +15,7 @@ namespace jtl
     }
   }
 
-  void do_debug_assertion(bool const expr)
+  void do_assertion(bool const expr)
   {
     if(!expr)
     {
@@ -23,7 +23,7 @@ namespace jtl
     }
   }
 
-  void do_debug_assertion(bool const expr, char const * const msg)
+  void do_assertion(bool const expr, char const * const msg)
   {
     if(!expr)
     {

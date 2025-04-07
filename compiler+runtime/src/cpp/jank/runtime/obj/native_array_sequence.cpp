@@ -54,12 +54,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  native_array_sequence_ptr native_array_sequence::seq()
+  native_array_sequence_ref native_array_sequence::seq()
   {
     return this;
   }
 
-  native_array_sequence_ptr native_array_sequence::fresh_seq()
+  native_array_sequence_ref native_array_sequence::fresh_seq()
   {
     return make_box<native_array_sequence>(arr, index, size);
   }
@@ -77,32 +77,32 @@ namespace jank::runtime::obj
     return arr[index];
   }
 
-  native_array_sequence_ptr native_array_sequence::next() const
+  native_array_sequence_ref native_array_sequence::next() const
   {
     auto n(index);
     ++n;
 
     if(size <= n)
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<native_array_sequence>(arr, n, size);
   }
 
-  native_array_sequence_ptr native_array_sequence::next_in_place()
+  native_array_sequence_ref native_array_sequence::next_in_place()
   {
     ++index;
 
     if(size <= index)
     {
-      return nullptr;
+      return {};
     }
 
     return this;
   }
 
-  cons_ptr native_array_sequence::conj(object_ptr const head)
+  cons_ref native_array_sequence::conj(object_ptr const head)
   {
     return make_box<cons>(head, this);
   }

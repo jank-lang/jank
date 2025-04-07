@@ -10,7 +10,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using persistent_list_ptr = native_box<struct persistent_list>;
+    using persistent_list_ref = jtl::object_ref<struct persistent_list>;
   }
 
   constexpr size_t const max_params{ 10 };
@@ -86,7 +86,7 @@ namespace jank::runtime
                           object_ptr,
                           object_ptr,
                           object_ptr,
-                          obj::persistent_list_ptr);
+                          obj::persistent_list_ref);
 
   object_ptr apply_to(object_ptr source, object_ptr args);
 
@@ -195,7 +195,7 @@ namespace jank::runtime
       }
     };
 
-    using callable_ptr = native_box<callable>;
+    using callable_ref = jtl::ref<callable>;
 
     /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
     template <typename T>
