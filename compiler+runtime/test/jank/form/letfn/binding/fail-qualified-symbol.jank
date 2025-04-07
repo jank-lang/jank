@@ -1,1 +1,1 @@
-(letfn* [clojure.core/+ (clojure.core/fn clojure.core/+ 1 [])])
+(letfn* [clojure.core/+ (fn* + 1 [])])

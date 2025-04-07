@@ -1,2 +1,3 @@
-(letfn* [a (clojure.core/fn a [& args] (first args))]
+(letfn* [a (fn* a [& args]
+             (first args))]
   (a :success))

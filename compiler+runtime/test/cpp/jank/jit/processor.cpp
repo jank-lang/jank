@@ -69,7 +69,6 @@ namespace jank::jit
         std::stringstream const captured_output;
 
         util::print("testing file {} => ", dir_entry.path().string());
-        std::cerr.flush();
 
         try
         {

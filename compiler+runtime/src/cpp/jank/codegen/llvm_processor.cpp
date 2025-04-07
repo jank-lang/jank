@@ -768,7 +768,7 @@ namespace jank::codegen
   {
     /* We generate bindings left-to-right, so for mutually recursive letfn bindings
      * we must defer some initialization via `deferred_inits`.
-     * 
+     *
      * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
      * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
      *
@@ -804,7 +804,7 @@ namespace jank::codegen
     {
       expr::local_reference const local_ref{ expression_position::value,
                                              deferred_init.expr->frame,
-                                             true,
+                                             deferred_init.expr->needs_box,
                                              deferred_init.name,
                                              deferred_init.binding };
       auto const e(gen(expr::local_reference_ptr{ &local_ref }, arity));
@@ -1568,8 +1568,7 @@ namespace jank::codegen
         auto const name(capture.first);
         if(!locals.contains(name))
         {
-          deferred_init const d{ expr, name, capture.second, field_ptr };
-          deferred_inits.push_back(d);
+          deferred_inits.emplace_back(expr, name, capture.second, field_ptr);
         }
         else
         {

@@ -1,1 +1,2 @@
-(letfn* [] :success)
+(letfn* []
+  :success)

@@ -1,3 +1,5 @@
-(letfn* [a (fn a [] b)
-         b (fn b [])]
-  :success)
+(letfn* [a (fn* a []
+             b)
+         b (fn* b []
+             :success)]
+  ((a)))

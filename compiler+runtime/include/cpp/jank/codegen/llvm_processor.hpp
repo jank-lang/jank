@@ -168,7 +168,7 @@ namespace jank::codegen
 
     compilation_target target{};
     analyze::expr::function_ptr root_fn{};
-    llvm::Function *fn{};
+    native_box<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
     std::list<deferred_init> deferred_inits{};
