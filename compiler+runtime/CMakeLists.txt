@@ -144,6 +144,8 @@ set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
   -w
+  # We always JIT compile for the current machine.
+  -march=native
   # TODO: Loop around all to add -I
   -I${LLVM_INCLUDE_DIRS}
   -I${CLANG_INCLUDE_DIRS}
