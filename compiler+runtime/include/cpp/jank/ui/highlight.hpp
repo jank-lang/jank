@@ -12,9 +12,14 @@ namespace jank
 {
   struct native_persistent_string;
 
+  namespace runtime::module
+  {
+    struct file_view;
+  }
+
   namespace ui
   {
     std::map<size_t, ftxui::Element>
-    highlight(native_persistent_string const &code, size_t line_start, size_t line_end);
+    highlight(runtime::module::file_view const &code, size_t line_start, size_t line_end);
   }
 }

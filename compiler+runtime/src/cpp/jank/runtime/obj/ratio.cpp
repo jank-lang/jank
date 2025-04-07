@@ -15,7 +15,7 @@ namespace jank::runtime::obj
   {
     if(denominator == 0)
     {
-      throw std::invalid_argument("Ratio denominator cannot be zero.");
+      throw std::invalid_argument{ "Ratio denominator cannot be zero." };
     }
     auto const gcd{ std::gcd(numerator, denominator) };
     this->numerator /= gcd;

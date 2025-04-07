@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# This can be invoked with 'generate' to update the tests.
+# Review the diff carefully to ensure updates are correct.
+./bin/jank/test/error_reporting.clj test

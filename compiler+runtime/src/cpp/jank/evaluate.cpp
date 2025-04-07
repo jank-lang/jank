@@ -11,7 +11,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/analyze/visit.hpp>
 
 namespace jank::evaluate
@@ -248,7 +248,6 @@ namespace jank::evaluate
     profile::timer const timer{ "eval ast node" };
     object_ptr ret{};
     visit_expr([&ret](auto const typed_ex) { ret = eval(typed_ex); }, ex);
-
     assert(ret);
     return ret;
   }
@@ -293,90 +292,79 @@ namespace jank::evaluate
       source = deref(source);
     }
 
-    return visit_object(
-      [&](auto const typed_source) -> object_ptr {
-        using T = typename decltype(typed_source)::value_type;
+    try
+    {
+      return visit_object(
+        [&](auto const typed_source) -> object_ptr {
+          using T = typename decltype(typed_source)::value_type;
 
-        if constexpr(std::is_base_of_v<behavior::callable, T>)
-        {
-          native_vector<object_ptr> arg_vals;
-          arg_vals.reserve(expr->arg_exprs.size());
-          for(auto const &arg_expr : expr->arg_exprs)
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
           {
-            arg_vals.emplace_back(eval(arg_expr));
-          }
+            native_vector<object_ptr> arg_vals;
+            arg_vals.reserve(expr->arg_exprs.size());
+            for(auto const &arg_expr : expr->arg_exprs)
+            {
+              arg_vals.emplace_back(eval(arg_expr));
+            }
 
-          switch(arg_vals.size())
-          {
-            case 0:
-              return dynamic_call(source);
-            case 1:
-              return dynamic_call(source, arg_vals[0]);
-            case 2:
-              return dynamic_call(source, arg_vals[0], arg_vals[1]);
-            case 3:
-              return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
-            case 4:
-              return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
-            case 5:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4]);
-            case 6:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4],
-                                  arg_vals[5]);
-            case 7:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4],
-                                  arg_vals[5],
-                                  arg_vals[6]);
-            case 8:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4],
-                                  arg_vals[5],
-                                  arg_vals[6],
-                                  arg_vals[7]);
-            case 9:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4],
-                                  arg_vals[5],
-                                  arg_vals[6],
-                                  arg_vals[7],
-                                  arg_vals[8]);
-            case 10:
-              return dynamic_call(source,
-                                  arg_vals[0],
-                                  arg_vals[1],
-                                  arg_vals[2],
-                                  arg_vals[3],
-                                  arg_vals[4],
-                                  arg_vals[5],
-                                  arg_vals[6],
-                                  arg_vals[7],
-                                  arg_vals[8],
-                                  arg_vals[9]);
-            default:
-              {
+            switch(arg_vals.size())
+            {
+              case 0:
+                return dynamic_call(source);
+              case 1:
+                return dynamic_call(source, arg_vals[0]);
+              case 2:
+                return dynamic_call(source, arg_vals[0], arg_vals[1]);
+              case 3:
+                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
+              case 4:
+                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
+              case 5:
+                return dynamic_call(source,
+                                    arg_vals[0],
+                                    arg_vals[1],
+                                    arg_vals[2],
+                                    arg_vals[3],
+                                    arg_vals[4]);
+              case 6:
+                return dynamic_call(source,
+                                    arg_vals[0],
+                                    arg_vals[1],
+                                    arg_vals[2],
+                                    arg_vals[3],
+                                    arg_vals[4],
+                                    arg_vals[5]);
+              case 7:
+                return dynamic_call(source,
+                                    arg_vals[0],
+                                    arg_vals[1],
+                                    arg_vals[2],
+                                    arg_vals[3],
+                                    arg_vals[4],
+                                    arg_vals[5],
+                                    arg_vals[6]);
+              case 8:
+                return dynamic_call(source,
+                                    arg_vals[0],
+                                    arg_vals[1],
+                                    arg_vals[2],
+                                    arg_vals[3],
+                                    arg_vals[4],
+                                    arg_vals[5],
+                                    arg_vals[6],
+                                    arg_vals[7]);
+              case 9:
+                return dynamic_call(source,
+                                    arg_vals[0],
+                                    arg_vals[1],
+                                    arg_vals[2],
+                                    arg_vals[3],
+                                    arg_vals[4],
+                                    arg_vals[5],
+                                    arg_vals[6],
+                                    arg_vals[7],
+                                    arg_vals[8]);
+              case 10:
                 return dynamic_call(source,
                                     arg_vals[0],
                                     arg_vals[1],
@@ -387,48 +375,70 @@ namespace jank::evaluate
                                     arg_vals[6],
                                     arg_vals[7],
                                     arg_vals[8],
-                                    arg_vals[9],
-                                    try_object<obj::persistent_list>(arg_vals[10]));
-              }
+                                    arg_vals[9]);
+              default:
+                {
+                  return dynamic_call(source,
+                                      arg_vals[0],
+                                      arg_vals[1],
+                                      arg_vals[2],
+                                      arg_vals[3],
+                                      arg_vals[4],
+                                      arg_vals[5],
+                                      arg_vals[6],
+                                      arg_vals[7],
+                                      arg_vals[8],
+                                      arg_vals[9],
+                                      try_object<obj::persistent_list>(arg_vals[10]));
+                }
+            }
           }
-        }
-        else if constexpr(std::same_as<T, obj::persistent_hash_set>
-                          || std::same_as<T, obj::transient_vector>)
-        {
-          auto const s(expr->arg_exprs.size());
-          if(s != 1)
+          else if constexpr(std::same_as<T, obj::persistent_hash_set>
+                            || std::same_as<T, obj::transient_vector>)
           {
-            throw std::runtime_error{
-              util::format("invalid call with {} args to: {}", s, typed_source->to_string())
-            };
-          }
-          return typed_source->call(eval(expr->arg_exprs[0]));
-        }
-        else if constexpr(std::same_as<T, obj::keyword> || std::same_as<T, obj::persistent_hash_map>
-                          || std::same_as<T, obj::persistent_array_map>
-                          || std::same_as<T, obj::transient_hash_set>)
-        {
-          auto const s(expr->arg_exprs.size());
-          switch(s)
-          {
-            case 1:
-              return typed_source->call(eval(expr->arg_exprs[0]));
-            case 2:
-              return typed_source->call(eval(expr->arg_exprs[0]), eval(expr->arg_exprs[1]));
-            default:
+            auto const s(expr->arg_exprs.size());
+            if(s != 1)
+            {
               throw std::runtime_error{
-                util::format("invalid call with {} args to: {}", s, typed_source->to_string())
+                util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
               };
+            }
+            return typed_source->call(eval(expr->arg_exprs[0]));
           }
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid call with 0 args to: {}",
-                                                 expr->arg_exprs.size(),
-                                                 typed_source->to_string()) };
-        }
-      },
-      source);
+          else if constexpr(std::same_as<T, obj::keyword>
+                            || std::same_as<T, obj::persistent_hash_map>
+                            || std::same_as<T, obj::persistent_array_map>
+                            || std::same_as<T, obj::transient_hash_set>)
+          {
+            auto const s(expr->arg_exprs.size());
+            switch(s)
+            {
+              case 1:
+                return typed_source->call(eval(expr->arg_exprs[0]));
+              case 2:
+                return typed_source->call(eval(expr->arg_exprs[0]), eval(expr->arg_exprs[1]));
+              default:
+                throw std::runtime_error{
+                  util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
+                };
+            }
+          }
+          else
+          {
+            throw std::runtime_error{ util::format("Invalid call with 0 args to: {}",
+                                                   expr->arg_exprs.size(),
+                                                   typed_source->to_string()) };
+          }
+        },
+        source);
+    }
+    catch(error_ptr const e)
+    {
+      /* We keep the original form from the call expression so we can point
+       * back to it if an exception is thrown during eval. */
+      e->add_usage(object_source(expr->form));
+      throw e;
+    }
   }
 
   object_ptr eval(expr::primitive_literal_ptr const expr)
@@ -623,6 +633,10 @@ namespace jank::evaluate
 
   object_ptr eval(expr::throw_ptr const expr)
   {
+    /* XXX: Clojure wraps throw expressions. I _suspect_ it does this because
+     * clojure.main uses the stack trace to provide source info by stripping out
+     * Clojure frames until the first non-Clojure frame is found. If we throw
+     * from an eval, maybe that doesn't happen? For now, we support eval, however. */
     throw eval(expr->value);
   }
 

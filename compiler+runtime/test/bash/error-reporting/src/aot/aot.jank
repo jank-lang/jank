@@ -1,0 +1,4 @@
+(ns aot)
+
+(defmacro boop []
+  `(def [1 2 3] :foo))

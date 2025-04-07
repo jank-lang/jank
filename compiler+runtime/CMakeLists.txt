@@ -32,6 +32,7 @@ project(
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
+option(jank_tests "Whether or not to build jank's compilter test suite" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
@@ -74,7 +75,7 @@ set(
   -Wno-deprecated-declarations
   -Wno-c++23-extensions
   -fno-common
-  -fno-rtti
+  -frtti
   -fexceptions
   #-ftime-trace
   $<$<CONFIG:Debug>:-O0>
@@ -106,7 +107,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
 endif()
 
 if(jank_tests)
-  list(APPEND jank_common_compiler_flags -Werror -DJANK_TEST)
+  list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
 
 include(cmake/coverage.cmake)
@@ -157,7 +158,6 @@ add_library(
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/dir.cpp
-  src/cpp/jank/util/mapped_file.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
@@ -165,6 +165,8 @@ add_library(
   src/cpp/jank/util/string.cpp
   src/cpp/jank/util/fmt.cpp
   src/cpp/jank/util/fmt/print.cpp
+  src/cpp/jank/util/path.cpp
+  src/cpp/jank/util/try.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -286,6 +288,7 @@ set(BUILD_SHARED_LIBS OFF)
 include(FetchContent)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
+include(cmake/dependency/cpptrace.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -308,6 +311,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
 )
 
@@ -315,7 +319,7 @@ target_link_libraries(
   jank_lib PRIVATE
   ${BDWGC_LIBRARIES}
   libzippp::libzippp
-  # TODO: How can we force clang/llvm to be shared?
+  cpptrace::cpptrace
   clang
   clang-cpp
   LLVM
@@ -470,6 +474,7 @@ if(jank_tests)
     test/cpp/jank/native_persistent_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
+    test/cpp/jank/util/path.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp

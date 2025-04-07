@@ -88,6 +88,11 @@ namespace jank::runtime
     }
 
     auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
+    if(file == obj::nil::nil_const())
+    {
+      return read::source::unknown;
+    }
+
     auto const start(get(source, __rt_ctx->intern_keyword("start").expect_ok()));
     auto const end(get(source, __rt_ctx->intern_keyword("end").expect_ok()));
 
@@ -100,7 +105,7 @@ namespace jank::runtime
     auto const end_col(get(end, __rt_ctx->intern_keyword("col").expect_ok()));
 
     auto const macro_expansion(
-      get(source, __rt_ctx->intern_keyword("macro-expansion").expect_ok()));
+      get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
     return {
       to_string(file),

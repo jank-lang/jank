@@ -18,7 +18,6 @@
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/util/mapped_file.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
@@ -145,9 +144,9 @@ namespace jank::runtime
     return none;
   }
 
-  object_ptr context::eval_file(native_persistent_string_view const &path)
+  object_ptr context::eval_file(native_persistent_string const &path)
   {
-    auto const file(util::map_file({ path.data(), path.size() }));
+    auto const file(module::loader::read_file(path));
     if(file.is_err())
     {
       throw std::runtime_error{
@@ -159,7 +158,7 @@ namespace jank::runtime
                                   obj::persistent_hash_map::create_unique(
                                     std::make_pair(current_file_var, make_box(path))) };
 
-    return eval_string({ file.expect_ok().head, file.expect_ok().size });
+    return eval_string(file.expect_ok().view());
   }
 
   object_ptr context::eval_string(native_persistent_string_view const &code)
@@ -225,6 +224,13 @@ namespace jank::runtime
   object_ptr context::read_string(native_persistent_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
+
+    /* When reading an arbitrary string, we don't want the last *current-file* to
+     * be set as source file, so we need to bind it to nil. */
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_file_var, obj::nil::nil_const())) };
+
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
@@ -596,15 +602,9 @@ namespace jank::runtime
       if(source != read::source::unknown)
       {
         auto meta{ runtime::meta(expanded) };
-        auto const source_kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
-        auto expanded_source_map{ runtime::get(meta, source_kw) };
-        if(expanded_source_map != obj::nil::nil_const())
-        {
-          auto const macro_kw{ __rt_ctx->intern_keyword("macro-expansion").expect_ok() };
-          expanded_source_map = runtime::assoc(expanded_source_map, macro_kw, o);
-          meta = runtime::assoc(meta, source_kw, expanded_source_map);
-          expanded = with_meta(expanded, meta);
-        }
+        auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };
+        meta = runtime::assoc(meta, macro_kw, o);
+        expanded = with_meta(expanded, meta);
       }
 
       return macroexpand(expanded);

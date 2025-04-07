@@ -1,0 +1,11 @@
+(ns input)
+
+(defmacro my-def [name val]
+  (let []
+    `(let []
+       (def ~name ~val))))
+
+(defn bar []
+  (let [v 2]
+    (when v
+      (my-def input/foo v))))

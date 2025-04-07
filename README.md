@@ -69,15 +69,24 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<!-- mkarp -->
 <p align="center">
   <a href="https://pitch.com/">
     Misha Karpenko
   </a>
 </p>
 
+<!-- stijlist -->
 <p align="center">
   <a href="http://www.somethingdoneright.net/about">
     Bert Muthalaly
+  </a>
+</p>
+
+<!-- modulr-software -->
+<p align="center">
+  <a href="https://github.com/modulr-software">
+    modulr-software
   </a>
 </p>
 

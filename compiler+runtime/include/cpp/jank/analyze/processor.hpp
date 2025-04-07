@@ -168,6 +168,6 @@ namespace jank::analyze
     /* TODO: Remove this. */
     runtime::context &rt_ctx;
     local_frame_ptr root_frame;
-    native_deque<runtime::object_ptr> macro_expansions;
+    native_vector<runtime::object_ptr> macro_expansions;
   };
 }

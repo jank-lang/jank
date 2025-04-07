@@ -1456,10 +1456,9 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string", create_fn_type));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string_c", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> const args{ gen_global(
-        make_box(runtime::to_code_string(o))) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(runtime::to_code_string(o)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 

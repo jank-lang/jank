@@ -4,6 +4,11 @@
 #include <jank/read/source.hpp>
 #include <jank/option.hpp>
 
+namespace cpptrace
+{
+  struct stacktrace;
+}
+
 namespace jank::error
 {
   enum class kind : uint8_t
@@ -50,24 +55,25 @@ namespace jank::error
     parse_invalid_keyword,
     internal_parse_failure,
 
-    analysis_invalid_case,
-    analysis_invalid_def,
-    analysis_invalid_fn,
-    analysis_invalid_fn_parameters,
-    analysis_invalid_recur_position,
-    analysis_invalid_recur_from_try,
-    analysis_invalid_recur_args,
-    analysis_invalid_let,
-    analysis_invalid_letfn,
-    analysis_invalid_loop,
-    analysis_invalid_if,
-    analysis_invalid_quote,
-    analysis_invalid_var_reference,
-    analysis_invalid_throw,
-    analysis_invalid_try,
-    analysis_unresolved_var,
-    analysis_unresolved_symbol,
-    internal_analysis_failure,
+    analyze_invalid_case,
+    analyze_invalid_def,
+    analyze_invalid_fn,
+    analyze_invalid_fn_parameters,
+    analyze_invalid_recur_position,
+    analyze_invalid_recur_from_try,
+    analyze_invalid_recur_args,
+    analyze_invalid_let,
+    analyze_invalid_letfn,
+    analyze_invalid_loop,
+    analyze_invalid_if,
+    analyze_invalid_quote,
+    analyze_invalid_var_reference,
+    analyze_invalid_throw,
+    analyze_invalid_try,
+    analyze_unresolved_var,
+    analyze_unresolved_symbol,
+    analyze_macro_expansion_exception,
+    internal_analyze_failure,
 
     internal_codegen_failure,
 
@@ -160,41 +166,43 @@ namespace jank::error
         return "parse/invalid-keyword";
       case kind::internal_parse_failure:
         return "internal/parse-failure";
-      case kind::analysis_invalid_case:
-        return "analysis/invalid-case";
-      case kind::analysis_invalid_def:
-        return "analysis/invalid-def";
-      case kind::analysis_invalid_fn:
-        return "analysis/invalid-fn";
-      case kind::analysis_invalid_fn_parameters:
-        return "analysis/invalid-fn-parameters";
-      case kind::analysis_invalid_recur_position:
-        return "analysis/invalid-recur-position";
-      case kind::analysis_invalid_recur_from_try:
-        return "analysis/invalid-recur-from-try";
-      case kind::analysis_invalid_recur_args:
-        return "analysis/invalid-recur-args";
-      case kind::analysis_invalid_let:
-        return "analysis/invalid-let";
-      case kind::analysis_invalid_letfn:
-        return "analysis/invalid-letfn";
-      case kind::analysis_invalid_loop:
-        return "analysis/invalid-loop";
-      case kind::analysis_invalid_if:
-        return "analysis/invalid-if";
-      case kind::analysis_invalid_quote:
-        return "analysis/invalid-quote";
-      case kind::analysis_invalid_var_reference:
-        return "analysis/invalid-var-reference";
-      case kind::analysis_invalid_throw:
-        return "analysis/invalid-throw";
-      case kind::analysis_invalid_try:
-        return "analysis/invalid-try";
-      case kind::analysis_unresolved_var:
-        return "analysis/unresolved-var";
-      case kind::analysis_unresolved_symbol:
-        return "analysis/unresolved-symbol";
-      case kind::internal_analysis_failure:
+      case kind::analyze_invalid_case:
+        return "analyze/invalid-case";
+      case kind::analyze_invalid_def:
+        return "analyze/invalid-def";
+      case kind::analyze_invalid_fn:
+        return "analyze/invalid-fn";
+      case kind::analyze_invalid_fn_parameters:
+        return "analyze/invalid-fn-parameters";
+      case kind::analyze_invalid_recur_position:
+        return "analyze/invalid-recur-position";
+      case kind::analyze_invalid_recur_from_try:
+        return "analyze/invalid-recur-from-try";
+      case kind::analyze_invalid_recur_args:
+        return "analyze/invalid-recur-args";
+      case kind::analyze_invalid_let:
+        return "analyze/invalid-let";
+      case kind::analyze_invalid_letfn:
+        return "analyze/invalid-letfn";
+      case kind::analyze_invalid_loop:
+        return "analyze/invalid-loop";
+      case kind::analyze_invalid_if:
+        return "analyze/invalid-if";
+      case kind::analyze_invalid_quote:
+        return "analyze/invalid-quote";
+      case kind::analyze_invalid_var_reference:
+        return "analyze/invalid-var-reference";
+      case kind::analyze_invalid_throw:
+        return "analyze/invalid-throw";
+      case kind::analyze_invalid_try:
+        return "analyze/invalid-try";
+      case kind::analyze_unresolved_var:
+        return "analyze/unresolved-var";
+      case kind::analyze_unresolved_symbol:
+        return "analyze/unresolved-symbol";
+      case kind::analyze_macro_expansion_exception:
+        return "analyze/macro-expansion-exception";
+      case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
         return "internal/codegen-failure";
@@ -215,15 +223,33 @@ namespace jank::error
       error
     };
 
+    static constexpr char const *kind_str(kind const k)
+    {
+      switch(k)
+      {
+        case kind::info:
+          return "info";
+        case kind::warning:
+          return "warning";
+        case kind::error:
+          return "error";
+      }
+      return "unknown";
+    }
+
+    native_persistent_string to_string() const;
+
     native_persistent_string message;
     read::source source;
     kind kind{ kind::error };
   };
 
-  struct base : gc
+  /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
+   * is because cpptrace doesn't use our GC allocator. */
+  struct base : gc_cleanup
   {
     base() = delete;
-    base(base const &) = default;
+    base(base const &) = delete;
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
@@ -231,12 +257,17 @@ namespace jank::error
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
-         native_deque<runtime::object_ptr> const &expansions);
+         runtime::object_ptr expansion);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          native_persistent_string const &note_message,
-         native_deque<runtime::object_ptr> const &expansions);
+         runtime::object_ptr expansion);
     base(kind k, read::source const &source, native_persistent_string const &note_message);
     base(kind k,
          native_persistent_string const &message,
@@ -251,20 +282,35 @@ namespace jank::error
          native_persistent_string const &message,
          read::source const &source,
          note const &note,
-         native_deque<runtime::object_ptr> const &expansions);
+         runtime::object_ptr expansion);
     base(kind k,
          native_persistent_string const &message,
          read::source const &source,
          native_vector<note> const &notes);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         runtime::native_box<base> cause);
+    base(kind k,
+         native_persistent_string const &message,
+         read::source const &source,
+         runtime::object_ptr expansion,
+         runtime::native_box<base> cause,
+         std::unique_ptr<cpptrace::stacktrace> trace);
 
     native_bool operator==(base const &rhs) const;
     native_bool operator!=(base const &rhs) const;
+
+    void sort_notes();
+    runtime::native_box<base> add_usage(read::source const &usage_source);
 
     kind kind{};
     native_persistent_string message;
     read::source source;
     native_vector<note> notes;
-    native_deque<runtime::object_ptr> expansions;
+    runtime::native_box<base> cause;
+    std::unique_ptr<cpptrace::stacktrace> trace;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -276,46 +322,9 @@ namespace jank
 {
   using error_ptr = runtime::native_box<error::base>;
 
-  error_ptr make_error(error::kind const kind, native_persistent_string const &message);
-  error_ptr make_error(error::kind const kind, read::source const &source);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_deque<runtime::object_ptr> const &expansions);
-  error_ptr
-  make_error(error::kind const kind, read::source const &source, error::note const &error_note);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       error::note const &error_note,
-                       native_deque<runtime::object_ptr> const &expansions);
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message);
-  error_ptr make_error(error::kind const kind,
-                       read::source const &source,
-                       native_vector<error::note> const &notes);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source const &source,
-                       native_persistent_string const &error_note_message,
-                       native_deque<runtime::object_ptr> const &expansions);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start);
-  error_ptr make_error(error::kind const kind,
-                       native_persistent_string const &message,
-                       read::source_position const &start,
-                       read::source_position const &end);
+  template <typename... Args>
+  error_ptr make_error(Args &&...args)
+  {
+    return runtime::make_box<error::base>(std::forward<Args>(args)...);
+  }
 }

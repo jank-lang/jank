@@ -1,6 +1,6 @@
 #!/usr/bin/env bb
 
-(ns jank-test-main-exit
+(ns jank.test.main-exit
   (:require [babashka.process :as proc]
             [clojure.string :as str]
             [clojure.test :as t :refer [deftest run-test is]]))

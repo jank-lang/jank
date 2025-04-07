@@ -1,0 +1,3 @@
+(ns input)
+
+(defn foo [] (def there-is-a-long-name-here-which-pushes #(do #(println 2))))

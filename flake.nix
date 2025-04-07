@@ -43,6 +43,7 @@
             llvmPackages.clang-tools
             gdb
             clangbuildanalyzer
+            openjdk
 
             ## Dev libs.
             doctest

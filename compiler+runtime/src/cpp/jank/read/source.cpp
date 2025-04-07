@@ -55,6 +55,22 @@ namespace jank::read
     return !(*this == rhs);
   }
 
+  native_bool source_position::operator<=(source_position const &rhs) const
+  {
+    return offset <= rhs.offset;
+  }
+
+  native_bool source_position::operator>=(source_position const &rhs) const
+  {
+    return offset >= rhs.offset;
+  }
+
+  native_persistent_string source_position::to_string() const
+  {
+    util::string_builder sb;
+    return sb("source_position(")(offset)(", ")(line)(":")(col)(")").release();
+  }
+
   native_bool source::operator==(source const &rhs) const
   {
     return file_path == rhs.file_path && start == rhs.start && end == rhs.end;
@@ -65,13 +81,28 @@ namespace jank::read
     return !(*this == rhs);
   }
 
+  native_bool source::overlaps(source const &rhs) const
+  {
+    if(file_path != rhs.file_path)
+    {
+      return false;
+    }
+    return (rhs.start >= start && rhs.start <= end) || (rhs.end >= start && rhs.end <= end);
+  }
+
+  native_persistent_string source::to_string() const
+  {
+    util::string_builder sb;
+    return sb("source(")(file_path)(" ")(start.to_string())(" -> ")(end.to_string())(")").release();
+  }
+
   std::ostream &operator<<(std::ostream &os, source_position const &p)
   {
-    return os << "source_position(" << p.offset << ", " << p.line << ":" << p.col << ")";
+    return os << p.to_string();
   }
 
   std::ostream &operator<<(std::ostream &os, source const &s)
   {
-    return os << "source(" << s.file_path << " " << s.start << " -> " << s.end << ")";
+    return os << s.to_string();
   }
 }
