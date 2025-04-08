@@ -245,15 +245,16 @@ namespace jank
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
 {
+  /* TODO: We need an init fn in libjank which sets all of this up so we don't
+   * need to duplicate it between here and the tests and so that anyone embedding
+   * jank doesn't need to duplicate it in their setup. */
   JANK_TRY
   {
     using namespace jank;
     using namespace jank::runtime;
 
-    /* To handle UTF-8 Text , we set the locale to the current environment locale
-     * Usage of the local locale allows better localization.
-     * Notably this might make text encoding become more platform dependent.
-     */
+    /* To handle UTF-8 text, we set the locale to the current environment locale.
+     * Without this, some jank Unicode tests may fail. */
     std::locale::global(std::locale(""));
 
     /* The GC needs to enabled even before arg parsing, since our native types,
@@ -290,11 +291,8 @@ int main(int const argc, char const **argv)
     jank_load_jank_perf_native();
 
     Cpp::EnableDebugOutput(true);
-    auto const resource_dir{ Cpp::GetResourceDir() };
-    util::println("resource_dir {}", resource_dir);
 
     //return 0;
-
 
     switch(opts.command)
     {

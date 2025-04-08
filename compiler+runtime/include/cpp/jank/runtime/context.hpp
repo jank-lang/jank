@@ -81,7 +81,7 @@ namespace jank::runtime
 
     object_ptr eval_file(jtl::immutable_string const &path);
     object_ptr eval_string(native_persistent_string_view const &code);
-    void eval_cpp_string(native_persistent_string_view const &code) const;
+    jtl::string_result<void> eval_cpp_string(native_persistent_string_view const &code) const;
     object_ptr read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ref>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);

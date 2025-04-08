@@ -47,6 +47,14 @@ namespace jank::runtime
                                                opts.define_macros) }
     , module_loader{ *this, opts.module_path }
   {
+    auto const cpp(intern_ns(make_box<obj::symbol>("cpp")));
+    auto const cpp_raw{ cpp->intern_var("raw") };
+    cpp_raw->bind_root(make_box<obj::native_function_wrapper>(
+      std::function<object_ptr(object_ptr)>{ [this](object_ptr const src) -> object_ptr {
+        eval_cpp_string(to_string(src)).expect_ok();
+        return obj::nil::nil_const();
+      } }));
+
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 
     auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
@@ -204,13 +212,20 @@ namespace jank::runtime
     return ret;
   }
 
-  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  jtl::string_result<void> context::eval_cpp_string(native_persistent_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
-    /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
-     * is valuable to the user. */
-    auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
+    auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+    if(!parse_res)
+    {
+      /* TODO: Helper to turn an llvm::Error into a string. */
+      jtl::immutable_string res;
+      llvm::handleAllErrors(parse_res.takeError(),
+                            [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
+      return err(res);
+    }
+    auto &partial_tu{ parse_res.get() };
 
     /* Writing the module before executing it because `llvm::Interpreter::Execute`
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
@@ -220,7 +235,15 @@ namespace jank::runtime
       write_module(module_name, partial_tu.TheModule).expect_ok();
     }
 
-    auto err(jit_prc.interpreter->Execute(partial_tu));
+    auto exec_res(jit_prc.interpreter->Execute(partial_tu));
+    if(!exec_res)
+    {
+      jtl::immutable_string res;
+      llvm::handleAllErrors(parse_res.takeError(),
+                            [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
+      return err(res);
+    }
+    return ok();
   }
 
   object_ptr context::read_string(native_persistent_string_view const &code)

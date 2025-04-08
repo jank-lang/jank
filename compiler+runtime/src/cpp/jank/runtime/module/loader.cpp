@@ -697,9 +697,14 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
+      jtl::option<jtl::string_result<void>> res;
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        rt_ctx.eval_cpp_string(zip_entry.readAsText());
+        res = rt_ctx.eval_cpp_string(zip_entry.readAsText());
       });
+      if(res.unwrap().is_err())
+      {
+        return res.unwrap();
+      }
     }
     else
     {
@@ -709,7 +714,11 @@ namespace jank::runtime::module
         return err(
           util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.eval_cpp_string(file.expect_ok().view());
+      auto const res{ rt_ctx.eval_cpp_string(file.expect_ok().view()) };
+      if(res.is_err())
+      {
+        return res;
+      }
     }
 
     /* TODO: What if there is no load function?
