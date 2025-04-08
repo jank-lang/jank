@@ -11,6 +11,8 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IRReader/IRReader.h>
 
+#include <cpptrace/gdb_jit.hpp>
+
 #include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
@@ -46,6 +48,27 @@ namespace jank::jit
        with status 70 to generate crash diagnostics.  For BSD systems this is
        defined as an internal software error. Otherwise, exit with status 1. */
     std::exit(gen_crash_diag ? 70 : 1);
+  }
+
+  /* LLVM will register JIT compiled frames for GDB/LLDB using a standard
+   * interface which is described here:
+   *
+   * https://weliveindetail.github.io/blog/post/2022/11/27/gdb-jit-interface-101.html
+   *
+   * The debuggers implicitly place breakpoints on the `__jit_debug_register_code`
+   * function, which is called as part of LLVM's registration. This is an empty
+   * function, but the breakpoint triggering tells the debugger to update its
+   * entries based on the `__jit_debug_descriptor` linked list.
+   *
+   * Here, we manually trigger the same thing, to have cpptrace update its
+   * view of the available JIT compiler frames. We do this after loading any
+   * new JIT compiled code. */
+  static void register_jit_stack_frames()
+  {
+    if(auto *entry = cpptrace::detail::__jit_debug_descriptor.relevant_entry)
+    {
+      cpptrace::register_jit_object(entry->symfile_addr, entry->symfile_size);
+    }
   }
 
   processor::processor(util::cli::options const &opts)
@@ -149,6 +172,7 @@ namespace jank::jit
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
     /* TODO: Return result on failure. */
     llvm::cantFail(ee.addObjectFile(std::move(file.get())));
+    register_jit_stack_frames();
   }
 
   void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
@@ -171,6 +195,7 @@ namespace jank::jit
     llvm::cantFail(
       ee.addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
     llvm::cantFail(ee.initialize(ee.getMainJITDylib()));
+    register_jit_stack_frames();
   }
 
   void processor::load_bitcode(native_persistent_string const &module,
