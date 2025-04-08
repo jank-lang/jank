@@ -480,11 +480,11 @@ namespace jank::runtime
 
   object_ptr parse_uuid(object_ptr const o)
   {
-    if(auto const typed_o = dyn_cast<obj::persistent_string>(o))
+    if(o->type == object_type::persistent_string)
     {
       try
       {
-        return make_box<obj::uuid>(typed_o->data);
+        return make_box<obj::uuid>(expect_object<obj::persistent_string>(o)->data);
       }
       catch(...)
       {
@@ -493,7 +493,7 @@ namespace jank::runtime
     }
     else
     {
-      throw erase(make_box(fmt::format("Expected string, got {}", object_type_str(o->type))));
+      throw std::runtime_error{ util::format("expected string, got {}", object_type_str(o->type)) };
     }
   }
 

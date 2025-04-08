@@ -743,7 +743,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_tagged()
   {
     auto const token((*token_current).expect_ok());
-    auto const tag(boost::get<native_persistent_string_view>(token.data));
+    auto const tag(std::get<native_persistent_string_view>(token.data));
 
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -758,16 +758,16 @@ namespace jank::read::parse
       }
       else if(str_result.expect_ok().is_none())
       {
-        return err(error{ start_token.pos,
-                          native_persistent_string{ "value after #uuid must be present" } });
+        return error::parse_invalid_reader_symbolic_value("value after #uuid must be present",
+                                                          { start_token.start, latest_token.end });
       }
 
       auto const str_end(str_result.expect_ok().unwrap().end);
 
       if(str_end.kind != lex::token_kind::string)
       {
-        return err(error{ start_token.pos,
-                          native_persistent_string{ "value after #uuid must be a string" } });
+        return error::parse_invalid_reader_symbolic_value("value after #uuid must be a string",
+                                                          { start_token.start, latest_token.end });
       }
 
       auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
@@ -777,7 +777,8 @@ namespace jank::read::parse
       return object_source_info{ wrapped, start_token, str_end };
     }
 
-    return err(error{ start_token.pos, fmt::format("No reader function for tag {}", tag) });
+    return error::parse_invalid_reader_symbolic_value("No reader function for tag",
+                                                      { start_token.start, latest_token.end });
   }
 
   processor::object_result processor::parse_reader_macro_comment()
