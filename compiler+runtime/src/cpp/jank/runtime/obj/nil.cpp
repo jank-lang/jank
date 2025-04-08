@@ -104,4 +104,5 @@ namespace jank::runtime::obj
   }
 }
 
-jank::runtime::object* jank_nil_const{ jank::runtime::obj::nil::nil_const() };
+/* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+jank::runtime::object *jank_nil_const{ jank::runtime::obj::nil::nil_const() };
