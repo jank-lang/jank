@@ -848,6 +848,25 @@ namespace jank::read::parse
       return obj::nil::nil_const();
     }
 
+    /* If an element is spliced, we need to set syntax_quote_spliced and wrap the output of every
+     * unspliced element in a sequence. */
+    visit_seqable(
+      [this](auto const typed_seq) {
+        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        {
+          auto const item(it->first());
+          // TODO "and if item is non-trivially spliceable"
+          if(syntax_quote_is_unquote(item, true))
+          {
+            syntax_quote_spliced = true;
+            return;
+          }
+        }
+      },
+      /* */
+      []() { },
+      seq);
+
     return visit_seqable(
       [this](auto const typed_seq) -> result<object_ptr, error_ptr> {
         runtime::detail::native_transient_vector ret;
@@ -857,13 +876,21 @@ namespace jank::read::parse
 
           if(syntax_quote_is_unquote(item, false))
           {
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             second(item)));
+            if(syntax_quote_spliced)
+            {
+              ret.push_back(
+                make_box<obj::persistent_list>(std::in_place,
+                                               make_box<obj::symbol>("clojure.core", "list"),
+                                               second(item)));
+            }
+            else
+            {
+              ret.push_back(second(item));
+            }
           }
           else if(syntax_quote_is_unquote(item, true))
           {
+            assert(syntax_quote_spliced);
             ret.push_back(second(item));
           }
           else
@@ -873,10 +900,18 @@ namespace jank::read::parse
             {
               return quoted_item;
             }
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             quoted_item.expect_ok()));
+
+            if(syntax_quote_spliced)
+            {
+              ret.push_back(
+                make_box<obj::persistent_list>(std::in_place,
+                                               make_box<obj::symbol>("clojure.core", "list"),
+                                               quoted_item.expect_ok()));
+            }
+            else
+            {
+              ret.push_back(quoted_item.expect_ok());
+            }
           }
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
@@ -998,30 +1033,47 @@ namespace jank::read::parse
         [&](auto const typed_form) -> result<object_ptr, error_ptr> {
           using T = typename decltype(typed_form)::value_type;
 
-          if constexpr(std::same_as<T, obj::persistent_vector>)
+          if constexpr(std::same_as<T, obj::persistent_vector> || behavior::set_like<T>)
           {
             auto const seq(typed_form->seq());
+            obj::symbol_ptr ctor{};
+            if constexpr(std::same_as<T, obj::persistent_vector>)
+            {
+              ctor = make_box<obj::symbol>("clojure.core", "vector");
+            }
+            else if constexpr(behavior::set_like<T>)
+            {
+              ctor = make_box<obj::symbol>("clojure.core", "hash-set");
+            }
             if(!seq)
             {
               return make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core", "vector"));
+                ctor);
             }
 
+            auto old_syntax_quote_spliced(syntax_quote_spliced);
+            syntax_quote_spliced = false;
             auto expanded(syntax_quote_expand_seq(seq));
+            auto const spliced(syntax_quote_spliced);
+            syntax_quote_spliced = old_syntax_quote_spliced;
             if(expanded.is_err())
             {
               return expanded;
             }
 
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "vector"),
-              make_box<obj::persistent_list>(
+            if(spliced)
+            {
+              return make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+                make_box<obj::symbol>("clojure.core", "apply*"),
+                ctor,
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
+            }
+            else
+            {
+              assert(false); //TODO pour directly in vector/set
+            }
           }
           if constexpr(behavior::map_like<T>)
           {
@@ -1031,20 +1083,31 @@ namespace jank::read::parse
               return flattened;
             }
 
+            auto old_syntax_quote_spliced(syntax_quote_spliced);
+            syntax_quote_spliced = false;
             auto expanded(syntax_quote_expand_seq(flattened.expect_ok()));
+            auto const spliced(syntax_quote_spliced);
+            syntax_quote_spliced = old_syntax_quote_spliced;
             if(expanded.is_err())
             {
               return expanded;
             }
 
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "hash-map"),
-              make_box<obj::persistent_list>(
+            if(spliced)
+            {
+              return make_box<obj::persistent_list>(
                 std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+                make_box<obj::symbol>("clojure.core", "apply*"),
+                make_box<obj::symbol>("clojure.core", "hash-map"),
+                make_box<obj::persistent_list>(
+                  std::in_place,
+                  make_box<obj::symbol>("clojure.core", "seq"),
+                  cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+            }
+            else
+            {
+              return runtime::obj::persistent_hash_map::create_from_seq(expanded.expect_ok());
+            }
           }
           if constexpr(behavior::set_like<T>)
           {
