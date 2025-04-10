@@ -290,6 +290,7 @@ include(FetchContent)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
+include(cmake/dependency/boost-multiprecision.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -314,6 +315,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
 )
 
 target_link_libraries(
@@ -326,6 +328,7 @@ target_link_libraries(
   LLVM
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
+  Boost::multiprecision
 )
 
 jank_hook_llvm(jank_lib)
