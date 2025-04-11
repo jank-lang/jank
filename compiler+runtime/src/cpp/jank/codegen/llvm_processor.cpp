@@ -981,6 +981,46 @@ namespace jank::codegen
     return nullptr;
   }
 
+  llvm::Value *llvm_processor::gen(expr::cpp_type_ref const expr, expr::function_arity const &)
+  {
+    /* TODO: Implement */
+    auto const ret{ gen_global(obj::nil::nil_const()) };
+
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(ret);
+    }
+
+    return ret;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
+  {
+    /* TODO: Implement */
+    auto const ret{ gen_global(obj::nil::nil_const()) };
+
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(ret);
+    }
+
+    return ret;
+  }
+
+  llvm::Value *
+  llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &)
+  {
+    /* TODO: Implement */
+    auto const ret{ gen_global(obj::nil::nil_const()) };
+
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(ret);
+    }
+
+    return ret;
+  }
+
   llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));

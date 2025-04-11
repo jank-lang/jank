@@ -35,6 +35,9 @@ namespace jank::analyze
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
     using function_ref = jtl::ref<struct function>;
+    using cpp_type_ref = jtl::ref<struct cpp_type>;
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
   }
 }
 
@@ -68,4 +71,7 @@ namespace jank::evaluate
   runtime::object_ptr eval(analyze::expr::throw_ref);
   runtime::object_ptr eval(analyze::expr::try_ref);
   runtime::object_ptr eval(analyze::expr::case_ref);
+  runtime::object_ptr eval(analyze::expr::cpp_type_ref);
+  runtime::object_ptr eval(analyze::expr::cpp_value_ref);
+  runtime::object_ptr eval(analyze::expr::cpp_constructor_call_ref);
 }

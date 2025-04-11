@@ -1,6 +1,8 @@
 #include <ranges>
 #include <set>
 
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <cpptrace/from_current.hpp>
 
 #include <jank/read/reparse.hpp>
@@ -22,7 +24,6 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
 #include <jank/error/analyze.hpp>
-
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
 #include <jank/analyze/expr/var_ref.hpp>
@@ -43,7 +44,10 @@
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/expr/cpp_type.hpp>
+#include <jank/analyze/expr/cpp_value.hpp>
 #include <jank/analyze/rtti.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::analyze
 {
@@ -394,9 +398,14 @@ namespace jank::analyze
   processor::analyze_symbol(runtime::obj::symbol_ptr const sym,
                             local_frame_ptr const current_frame,
                             expression_position const position,
-                            jtl::option<expr::function_context_ref> const &,
+                            jtl::option<expr::function_context_ref> const &fc,
                             native_bool needs_box)
   {
+    if(sym->ns == "cpp" && sym->name != "raw")
+    {
+      return analyze_cpp_symbol(sym, current_frame, position, fc, needs_box);
+    }
+
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
 
     jank_debug_assert(!sym->to_string().empty());
@@ -1844,6 +1853,127 @@ namespace jank::analyze
   }
 
   processor::expression_result
+  processor::analyze_cpp_symbol(obj::symbol_ptr const sym,
+                                local_frame_ptr const current_frame,
+                                expression_position const position,
+                                jtl::option<expr::function_context_ref> const &,
+                                native_bool const needs_box)
+  {
+    auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
+    jank_debug_assert(sym->ns == "cpp");
+
+    /* TODO: Error if sym ends in . and we're not in a cpp call. */
+
+    bool is_ctor{};
+    auto name{ sym->name };
+    if(name.ends_with('.'))
+    {
+      is_ctor = true;
+      name = name.substr(0, name.size() - 1);
+    }
+
+    if(name.ends_with('.') || name.contains(".."))
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure(
+        "Name must not contain consecutive '.' dots. Each '.' corresponds to a '::' in C++.",
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
+    /* Find a builtin type first. Then we know it's a cpp_type expression. */
+    if(auto const type = cpp_util::resolve_type(name))
+    {
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, type);
+    }
+
+    auto const scope_res{ cpp_util::resolve_scope(name) };
+    if(scope_res.is_err())
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure("Invalid C++ name.",
+                                             latest_expansion(macro_expansions));
+    }
+
+    /* The scope could represent either a type or a value, if it's valid. However, it's
+     * possible that it represents a whole bunch of other things that we need to filter
+     * out. */
+    auto const scope{ scope_res.expect_ok() };
+    auto const type{ Cpp::GetTypeFromScope(scope) };
+
+    if(Cpp::IsNamespace(scope))
+    {
+      return error::internal_analyze_failure("Taking a C++ namespace by value is not permitted.",
+                                             latest_expansion(macro_expansions));
+    }
+    if(Cpp::IsClass(scope) || Cpp::IsEnumType(type))
+    {
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_value>(position,
+                                              current_frame,
+                                              needs_box,
+                                              type,
+                                              scope,
+                                              expr::cpp_value::value_kind::constructor);
+      }
+
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, type);
+    }
+
+    /* We're not a type, but we have a . suffix, so this is an error. */
+    if(is_ctor)
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure(
+        util::format("The '.' suffix for constructors may only be used on types. In this case, "
+                     "'{}' is a value of type '{}'.",
+                     name,
+                     Cpp::GetTypeAsString(type)),
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
+    jtl::option<expr::cpp_value::value_kind> vk;
+    if(Cpp::IsVariable(scope))
+    {
+      vk = expr::cpp_value::value_kind::variable;
+    }
+    else if(Cpp::IsEnumConstant(scope))
+    {
+      vk = expr::cpp_value::value_kind::enum_constant;
+    }
+    else if(Cpp::IsFunction(scope))
+    {
+      vk = expr::cpp_value::value_kind::function;
+    }
+
+    if(vk.is_some())
+    {
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            type,
+                                            scope,
+                                            vk.unwrap());
+    }
+
+    return error::internal_analyze_failure("Unsupported C++ expression.",
+                                           latest_expansion(macro_expansions));
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_call([[maybe_unused]] obj::persistent_list_ptr const o,
+                              [[maybe_unused]] local_frame_ptr const f,
+                              [[maybe_unused]] expression_position const position,
+                              [[maybe_unused]] jtl::option<expr::function_context_ref> const &fc,
+                              [[maybe_unused]] native_bool const needs_box)
+  {
+    return error::internal_analyze_failure("nyi: analyze_cpp_call",
+                                           latest_expansion(macro_expansions));
+  }
+
+  processor::expression_result
   processor::analyze(object_ptr const o, expression_position const position)
   {
     return analyze(o, root_frame, position, none, true);
@@ -1859,7 +1989,6 @@ namespace jank::analyze
     if(o == nullptr)
     {
       return error::internal_analyze_failure("Unexpected nullptr in processor::analyze.",
-                                             read::source::unknown,
                                              latest_expansion(macro_expansions));
     }
 

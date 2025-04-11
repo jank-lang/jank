@@ -49,6 +49,9 @@ namespace jank::analyze
     using throw_ref = jtl::ref<struct throw_>;
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
+    using cpp_type_ref = jtl::ref<struct cpp_type>;
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
   }
 }
 
@@ -129,6 +132,10 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::throw_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::try_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
+    llvm::Value *
+    gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;

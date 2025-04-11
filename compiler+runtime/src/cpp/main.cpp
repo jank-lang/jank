@@ -130,6 +130,10 @@ namespace jank
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
+    dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
+    dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
+                 make_box<obj::symbol>("clojure.core"));
+
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
@@ -291,8 +295,6 @@ int main(int const argc, char const **argv)
     jank_load_jank_perf_native();
 
     Cpp::EnableDebugOutput(true);
-
-    //return 0;
 
     switch(opts.command)
     {

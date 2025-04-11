@@ -21,6 +21,9 @@
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/expr/cpp_type.hpp>
+#include <jank/analyze/expr/cpp_value.hpp>
+#include <jank/analyze/expr/cpp_constructor_call.hpp>
 
 namespace jank::analyze
 {
@@ -69,6 +72,12 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::try_>(e), std::forward<Args>(args)...);
       case expression_kind::case_:
         return f(jtl::static_ref_cast<expr::case_>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_type:
+        return f(jtl::static_ref_cast<expr::cpp_type>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_value:
+        return f(jtl::static_ref_cast<expr::cpp_value>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_constructor_call:
+        return f(jtl::static_ref_cast<expr::cpp_constructor_call>(e), std::forward<Args>(args)...);
 
       case expression_kind::uninitialized:
         break;

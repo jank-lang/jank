@@ -142,12 +142,21 @@ namespace jank::analyze
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   native_bool needs_box);
-
     expression_result analyze_case(runtime::obj::persistent_list_ptr const,
                                    local_frame_ptr,
                                    expression_position,
                                    jtl::option<expr::function_context_ref> const &,
                                    native_bool needs_box);
+    expression_result analyze_cpp_symbol(runtime::obj::symbol_ptr const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         native_bool needs_box);
+    expression_result analyze_cpp_call(runtime::obj::persistent_list_ptr const,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       native_bool needs_box);
 
     /* Returns whether the form is a special symbol. */
     native_bool is_special(runtime::object_ptr form);

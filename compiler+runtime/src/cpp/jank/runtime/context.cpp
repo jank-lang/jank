@@ -50,8 +50,12 @@ namespace jank::runtime
     auto const cpp(intern_ns(make_box<obj::symbol>("cpp")));
     auto const cpp_raw{ cpp->intern_var("raw") };
     cpp_raw->bind_root(make_box<obj::native_function_wrapper>(
-      std::function<object_ptr(object_ptr)>{ [this](object_ptr const src) -> object_ptr {
-        eval_cpp_string(to_string(src)).expect_ok();
+      std::function<object_ptr(object_ptr)>{ [](object_ptr const src) -> object_ptr {
+        auto const str{ to_string(src) };
+        if(Cpp::Declare(str.c_str()))
+        {
+          throw std::runtime_error{ "Unable to compile C++ source" };
+        }
         return obj::nil::nil_const();
       } }));
 
@@ -220,7 +224,7 @@ namespace jank::runtime
     if(!parse_res)
     {
       /* TODO: Helper to turn an llvm::Error into a string. */
-      jtl::immutable_string res;
+      jtl::immutable_string res{ "Unable to compile C++ source" };
       llvm::handleAllErrors(parse_res.takeError(),
                             [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
       return err(res);
@@ -238,7 +242,7 @@ namespace jank::runtime
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
     if(!exec_res)
     {
-      jtl::immutable_string res;
+      jtl::immutable_string res{ "Unable to compile C++ source" };
       llvm::handleAllErrors(parse_res.takeError(),
                             [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
       return err(res);

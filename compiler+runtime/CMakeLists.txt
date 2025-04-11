@@ -272,8 +272,12 @@ add_library(
   src/cpp/jank/analyze/expr/function.cpp
   src/cpp/jank/analyze/expr/try.cpp
   src/cpp/jank/analyze/expr/case.cpp
+  src/cpp/jank/analyze/expr/cpp_type.cpp
+  src/cpp/jank/analyze/expr/cpp_value.cpp
+  src/cpp/jank/analyze/expr/cpp_constructor_call.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
+  src/cpp/jank/analyze/cpp_util.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp

@@ -51,7 +51,10 @@ namespace jank::analyze
     if_,
     throw_,
     try_,
-    case_
+    case_,
+    cpp_type,
+    cpp_value,
+    cpp_constructor_call,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)
@@ -100,6 +103,12 @@ namespace jank::analyze
         return "try_";
       case expression_kind::case_:
         return "case_";
+      case expression_kind::cpp_type:
+        return "cpp_type";
+      case expression_kind::cpp_value:
+        return "cpp_value";
+      case expression_kind::cpp_constructor_call:
+        return "cpp_constructor_call";
     }
     return "unknown";
   }

@@ -1,3 +1,4 @@
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
 #include <jank/runtime/context.hpp>
@@ -556,7 +557,7 @@ namespace jank::evaluate
   object_ptr eval(expr::local_reference_ref const)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
-    throw make_box("unsupported eval: local_reference");
+    throw erase(make_box("unsupported eval: local_reference"));
   }
 
   object_ptr eval(expr::function_ref const expr)
@@ -585,19 +586,19 @@ namespace jank::evaluate
   object_ptr eval(expr::recur_ref const)
   /* This will always be in a fn or loop, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: recur");
+    throw erase(make_box("unsupported eval: recur"));
   }
 
   object_ptr eval(expr::recursion_reference_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: recursion_reference");
+    throw erase(make_box("unsupported eval: recursion_reference"));
   }
 
   object_ptr eval(expr::named_recursion_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: named_recursion");
+    throw erase(make_box("unsupported eval: named_recursion"));
   }
 
   object_ptr eval(expr::do_ref const expr)
@@ -667,5 +668,21 @@ namespace jank::evaluate
   object_ptr eval(expr::case_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
+  }
+
+  object_ptr eval(expr::cpp_type_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_type", {})));
+  }
+
+  object_ptr eval(expr::cpp_value_ref const expr)
+  {
+    //return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
+    return make_box(util::format("C++ value: {}", Cpp::GetQualifiedCompleteName(expr->scope)));
+  }
+
+  object_ptr eval(expr::cpp_constructor_call_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
   }
 }

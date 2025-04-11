@@ -109,11 +109,11 @@ namespace jank::util
   string_builder &string_builder::operator()(void const * const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%p", d) };
+    auto const required{ snprintf(nullptr, 0, "0x%llx", reinterpret_cast<uptr>(d)) };
     maybe_realloc(*this, required);
 
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%p", d);
+    snprintf(buffer + pos, capacity - pos, "0x%llx", reinterpret_cast<uptr>(d));
     pos += required;
 
     return *this;
