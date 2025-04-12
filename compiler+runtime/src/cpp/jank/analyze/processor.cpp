@@ -1,8 +1,6 @@
 #include <ranges>
 #include <set>
 
-#include <clang/Interpreter/CppInterOp.h>
-
 #include <cpptrace/from_current.hpp>
 
 #include <jank/read/reparse.hpp>
@@ -1705,6 +1703,16 @@ namespace jank::analyze
         return sym_result;
       }
 
+      if(sym_result.expect_ok()->kind == expression_kind::cpp_value)
+      {
+        return analyze_cpp_call(o,
+                                *llvm::cast<expr::cpp_value>(sym_result.expect_ok().data),
+                                current_frame,
+                                position,
+                                fn_ctx,
+                                needs_box);
+      }
+
       object_ptr expanded{ o };
       jtl::ptr<error::base> expansion_error{};
       JANK_TRY
@@ -1881,10 +1889,22 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
+    auto const global_type{ cpp_util::resolve_type(name) };
+
     /* Find a builtin type first. Then we know it's a cpp_type expression. */
-    if(auto const type = cpp_util::resolve_type(name))
+    if(global_type && Cpp::IsBuiltin(global_type))
     {
-      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, type);
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_value>(position,
+                                              current_frame,
+                                              needs_box,
+                                              global_type,
+                                              nullptr,
+                                              expr::cpp_value::value_kind::constructor);
+      }
+
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, global_type);
     }
 
     auto const scope_res{ cpp_util::resolve_scope(name) };
@@ -1962,13 +1982,59 @@ namespace jank::analyze
                                            latest_expansion(macro_expansions));
   }
 
-  processor::expression_result
-  processor::analyze_cpp_call([[maybe_unused]] obj::persistent_list_ptr const o,
-                              [[maybe_unused]] local_frame_ptr const f,
-                              [[maybe_unused]] expression_position const position,
-                              [[maybe_unused]] jtl::option<expr::function_context_ref> const &fc,
-                              [[maybe_unused]] native_bool const needs_box)
+  processor::expression_result processor::analyze_cpp_call(
+    [[maybe_unused]] obj::persistent_list_ptr const o,
+    expr::cpp_value_ref const val,
+    [[maybe_unused]] local_frame_ptr const current_frame,
+    [[maybe_unused]] expression_position const position,
+    [[maybe_unused]] jtl::option<expr::function_context_ref> const &fn_ctx,
+    [[maybe_unused]] native_bool const needs_box)
   {
+    auto it(o->data.rest());
+    auto const arg_count(it.size());
+    native_vector<expression_ref> arg_exprs;
+    std::vector<Cpp::TemplateArgInfo> arg_types;
+    for(size_t i{}; i < arg_count; ++i, it = it.rest())
+    {
+      auto arg_expr(
+        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, needs_box));
+      if(arg_expr.is_err())
+      {
+        return arg_expr;
+      }
+      arg_exprs.emplace_back(arg_expr.expect_ok());
+      arg_types.emplace_back(cpp_util::expression_type(arg_exprs.back()));
+      util::println("arg type {}", Cpp::GetTypeAsString(arg_types.back().m_Type));
+    }
+
+    if(val->val_kind == expr::cpp_value::value_kind::constructor)
+    {
+      if(Cpp::IsBuiltin(val->type))
+      {
+        /* TODO: Figure this out. */
+        return error::internal_analyze_failure("nyi: ctors for built-in types",
+                                               latest_expansion(macro_expansions));
+      }
+
+      std::vector<void *> ctors;
+      Cpp::LookupConstructors("foo", val->scope, ctors);
+      util::println("ctors {}", ctors);
+
+      auto match{ Cpp::BestOverloadFunctionMatch(ctors, {}, arg_types) };
+      util::println("match {}", match);
+      if(match)
+      {
+      }
+
+      match = cpp_util::find_best_overload_with_conversions(ctors, arg_types);
+      util::println("match after conversions {}", match);
+      if(match)
+      {
+      }
+    }
+
+    /* TODO: Match overload. */
+
     return error::internal_analyze_failure("nyi: analyze_cpp_call",
                                            latest_expansion(macro_expansions));
   }

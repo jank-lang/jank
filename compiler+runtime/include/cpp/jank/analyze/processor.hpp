@@ -25,6 +25,11 @@ namespace jank::runtime
 
 namespace jank::analyze
 {
+  namespace expr
+  {
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+  }
+
   enum class source_type : uint8_t
   {
     repl,
@@ -153,6 +158,7 @@ namespace jank::analyze
                                          jtl::option<expr::function_context_ref> const &,
                                          native_bool needs_box);
     expression_result analyze_cpp_call(runtime::obj::persistent_list_ptr const,
+                                       expr::cpp_value_ref,
                                        local_frame_ptr,
                                        expression_position,
                                        jtl::option<expr::function_context_ref> const &,

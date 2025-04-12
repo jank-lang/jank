@@ -119,6 +119,11 @@ namespace jank::util
     return *this;
   }
 
+  string_builder &string_builder::operator()(jtl::ptr<void> const d) &
+  {
+    return (*this)(d.data);
+  }
+
   string_builder &string_builder::operator()(int const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */

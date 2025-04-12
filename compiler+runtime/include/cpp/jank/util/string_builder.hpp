@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
 #include <jank/type.hpp>
 
 namespace jank::util
@@ -25,6 +27,7 @@ namespace jank::util
     string_builder &operator()(double d) &;
     string_builder &operator()(native_hash d) &;
     string_builder &operator()(void const *d) &;
+    string_builder &operator()(jtl::ptr<void> d) &;
     string_builder &operator()(int d) &;
     string_builder &operator()(long d) &;
     string_builder &operator()(long long d) &;

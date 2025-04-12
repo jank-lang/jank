@@ -429,7 +429,7 @@ namespace jank::evaluate
           }
           else
           {
-            throw std::runtime_error{ util::format("Invalid call with 0 args to: {}",
+            throw std::runtime_error{ util::format("Invalid call with {} args to: {}",
                                                    expr->arg_exprs.size(),
                                                    typed_source->to_string()) };
           }
