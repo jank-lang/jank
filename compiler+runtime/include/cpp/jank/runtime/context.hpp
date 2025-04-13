@@ -1,5 +1,6 @@
 #pragma once
 
+#include "jtl/immutable_string.hpp"
 #include <list>
 
 #include <folly/Synchronized.h>
@@ -78,7 +79,8 @@ namespace jank::runtime
 
     object_ref eval_file(jtl::immutable_string const &path);
     object_ref eval_string(native_persistent_string_view const &code);
-    void eval_cpp_string(native_persistent_string_view const &code) const;
+    void eval_cpp_string(jtl::immutable_string const &module,
+                         native_persistent_string_view const &code) const;
     object_ref read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ref>
     analyze_string(native_persistent_string_view const &code, bool const eval = true);
@@ -131,6 +133,9 @@ namespace jank::runtime
     jtl::string_result<void> pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();
+
+    bool is_loaded(jtl::immutable_string const &module);
+    void set_is_loaded(jtl::immutable_string const &module);
 
     /* The analyze processor is reused across evaluations so we can keep the semantic information
      * of previous code. This is essential for REPL use. */

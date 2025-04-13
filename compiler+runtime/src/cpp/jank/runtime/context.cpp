@@ -1,3 +1,4 @@
+#include "jtl/immutable_string.hpp"
 #include <exception>
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
@@ -200,7 +201,8 @@ namespace jank::runtime
     return ret;
   }
 
-  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  void context::eval_cpp_string(jtl::immutable_string const &module,
+                                native_persistent_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
@@ -212,8 +214,7 @@ namespace jank::runtime
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
-      auto module_name{ runtime::to_string(current_module_var->deref()) };
-      write_module(module_name, partial_tu.TheModule).expect_ok();
+      write_module(module, partial_tu.TheModule).expect_ok();
     }
 
     auto err(jit_prc.interpreter->Execute(partial_tu));
@@ -716,4 +717,30 @@ namespace jank::runtime
     }
     return tbfs.front();
   }
+
+  bool context::is_loaded(jtl::immutable_string const &module)
+  {
+    auto const atom{
+      runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
+    };
+
+    auto const loaded_libs{ runtime::try_object<runtime::obj::persistent_sorted_set>(atom) };
+    return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
+  }
+
+  void context::set_is_loaded(jtl::immutable_string const &module)
+  {
+    auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
+      __rt_ctx->loaded_libs_var->deref()) };
+
+    auto const swap_fn{ [&](object_ref const curr_val) {
+      return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
+        make_box<obj::symbol>(module));
+    } };
+
+    auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
+      std::function<object_ref(object_ref)>{ swap_fn }) };
+    loaded_libs_atom->swap(swap_fn_wrapper);
+  }
+
 }

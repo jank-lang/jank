@@ -142,9 +142,6 @@ namespace jank::runtime::module
 
     jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
 
-    bool is_loaded(jtl::immutable_string const &module);
-    void set_is_loaded(jtl::immutable_string const &module);
-
     jtl::string_result<void> load(jtl::immutable_string const &module, origin const ori);
     jtl::string_result<void>
     load_o(jtl::immutable_string const &module, file_entry const &entry) const;

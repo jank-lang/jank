@@ -514,31 +514,6 @@ namespace jank::runtime::module
     return err(util::format("No sources for registered module: {}", module));
   }
 
-  bool loader::is_loaded(jtl::immutable_string const &module)
-  {
-    auto const atom{
-      runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
-    };
-
-    auto const loaded_libs{ runtime::try_object<runtime::obj::persistent_sorted_set>(atom) };
-    return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
-  }
-
-  void loader::set_is_loaded(jtl::immutable_string const &module)
-  {
-    auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
-      __rt_ctx->loaded_libs_var->deref()) };
-
-    auto const swap_fn{ [&](object_ref const curr_val) {
-      return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
-        make_box<obj::symbol>(module));
-    } };
-
-    auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
-      std::function<object_ref(object_ref)>{ swap_fn }) };
-    loaded_libs_atom->swap(swap_fn_wrapper);
-  }
-
   [[maybe_unused]]
   static void log_load(jtl::immutable_string const &module,
                        module_type const type,
@@ -613,7 +588,7 @@ namespace jank::runtime::module
 
   jtl::string_result<void> loader::load(jtl::immutable_string const &module, origin const ori)
   {
-    if(ori != origin::source && loader::is_loaded(module))
+    if(ori != origin::source && __rt_ctx->is_loaded(module))
     {
       return ok();
     }
@@ -652,7 +627,7 @@ namespace jank::runtime::module
       return res;
     }
 
-    loader::set_is_loaded(module);
+    __rt_ctx->set_is_loaded(module);
     return ok();
   }
 
@@ -698,7 +673,7 @@ namespace jank::runtime::module
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        rt_ctx.eval_cpp_string(zip_entry.readAsText());
+        rt_ctx.eval_cpp_string(module, zip_entry.readAsText());
       });
     }
     else
@@ -709,7 +684,7 @@ namespace jank::runtime::module
         return err(
           util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.eval_cpp_string(file.expect_ok().view());
+      rt_ctx.eval_cpp_string(module, file.expect_ok().view());
     }
 
     /* TODO: What if there is no load function?
