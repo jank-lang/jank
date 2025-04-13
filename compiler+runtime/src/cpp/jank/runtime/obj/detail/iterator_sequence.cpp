@@ -74,13 +74,13 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  jtl::object_ref<Derived> iterator_sequence<Derived, It>::seq()
+  jtl::oref<Derived> iterator_sequence<Derived, It>::seq()
   {
     return static_cast<Derived *>(this);
   }
 
   template <typename Derived, typename It>
-  jtl::object_ref<Derived> iterator_sequence<Derived, It>::fresh_seq() const
+  jtl::oref<Derived> iterator_sequence<Derived, It>::fresh_seq() const
   {
     return make_box<Derived>(coll, begin, end, size);
   }
@@ -98,7 +98,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  jtl::object_ref<Derived> iterator_sequence<Derived, It>::next() const
+  jtl::oref<Derived> iterator_sequence<Derived, It>::next() const
   {
     auto n(begin);
     ++n;
@@ -112,7 +112,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  jtl::object_ref<Derived> iterator_sequence<Derived, It>::next_in_place()
+  jtl::oref<Derived> iterator_sequence<Derived, It>::next_in_place()
   {
     ++begin;
 

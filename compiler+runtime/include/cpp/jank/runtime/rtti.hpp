@@ -17,7 +17,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(jtl::object_ref<T> const o)
+  constexpr object_ptr erase(jtl::oref<T> const o)
   {
     return &o->base;
   }
@@ -33,7 +33,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr object_ptr erase(jtl::object_ref<T const> const o)
+  constexpr object_ptr erase(jtl::oref<T const> const o)
   {
     return const_cast<object_ptr>(&o->base);
   }
@@ -79,7 +79,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  jtl::object_ref<T> try_object(object const * const o)
+  jtl::oref<T> try_object(object const * const o)
   {
     jank_debug_assert(o);
     if(o->type != T::obj_type)
@@ -102,7 +102,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr jtl::object_ref<T> expect_object(object_ptr const o)
+  constexpr jtl::oref<T> expect_object(object_ptr const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);
@@ -112,7 +112,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr jtl::object_ref<T> expect_object(object const * const o)
+  constexpr jtl::oref<T> expect_object(object const * const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);

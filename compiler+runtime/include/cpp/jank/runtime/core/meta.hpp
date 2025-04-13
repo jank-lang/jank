@@ -9,7 +9,7 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_hash_map_ref = jtl::object_ref<struct persistent_hash_map>;
+    using persistent_hash_map_ref = jtl::oref<struct persistent_hash_map>;
   }
 
   object_ptr meta(object_ptr m);

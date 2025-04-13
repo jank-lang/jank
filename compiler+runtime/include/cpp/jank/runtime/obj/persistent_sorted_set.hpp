@@ -5,9 +5,9 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_set_ref = jtl::object_ref<struct transient_sorted_set>;
-  using persistent_sorted_set_ref = jtl::object_ref<struct persistent_sorted_set>;
-  using persistent_sorted_set_sequence_ref = jtl::object_ref<struct persistent_sorted_set_sequence>;
+  using transient_sorted_set_ref = jtl::oref<struct transient_sorted_set>;
+  using persistent_sorted_set_ref = jtl::oref<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ref = jtl::oref<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set : gc
   {

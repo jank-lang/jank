@@ -7,9 +7,9 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
-  using transient_hash_map_ref = jtl::object_ref<struct transient_hash_map>;
-  using persistent_hash_map_ref = jtl::object_ref<struct persistent_hash_map>;
+  using persistent_array_map_ref = jtl::oref<struct persistent_array_map>;
+  using transient_hash_map_ref = jtl::oref<struct transient_hash_map>;
+  using persistent_hash_map_ref = jtl::oref<struct persistent_hash_map>;
 
   struct persistent_hash_map
     : obj::detail::base_persistent_map<persistent_hash_map,

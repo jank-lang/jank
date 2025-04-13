@@ -4,9 +4,9 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
-  using cons_ref = jtl::object_ref<struct cons>;
-  using nil_ref = jtl::object_ref<struct nil>;
+  using persistent_array_map_ref = jtl::oref<struct persistent_array_map>;
+  using cons_ref = jtl::oref<struct cons>;
+  using nil_ref = jtl::oref<struct nil>;
 
   struct nil : gc
   {

@@ -11,7 +11,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using symbol_ref = jtl::object_ref<struct symbol>;
+    using symbol_ref = jtl::oref<struct symbol>;
   }
 }
 

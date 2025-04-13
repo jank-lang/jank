@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_sequence_ref = jtl::object_ref<struct persistent_array_map_sequence>;
+  using persistent_array_map_sequence_ref = jtl::oref<struct persistent_array_map_sequence>;
 
   struct persistent_array_map_sequence
     : detail::base_persistent_map_sequence<

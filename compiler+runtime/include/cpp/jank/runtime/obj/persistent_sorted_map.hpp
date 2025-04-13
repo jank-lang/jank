@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_map_ref = jtl::object_ref<struct transient_sorted_map>;
-  using persistent_sorted_map_ref = jtl::object_ref<struct persistent_sorted_map>;
+  using transient_sorted_map_ref = jtl::oref<struct transient_sorted_map>;
+  using persistent_sorted_map_ref = jtl::oref<struct persistent_sorted_map>;
 
   struct persistent_sorted_map
     : obj::detail::base_persistent_map<persistent_sorted_map,

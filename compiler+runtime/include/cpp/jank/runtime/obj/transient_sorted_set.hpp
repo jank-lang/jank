@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_set_ref = jtl::object_ref<struct transient_sorted_set>;
+  using transient_sorted_set_ref = jtl::oref<struct transient_sorted_set>;
 
   struct transient_sorted_set : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_set;
-    using persistent_type_ref = jtl::object_ref<struct persistent_sorted_set>;
+    using persistent_type_ref = jtl::oref<struct persistent_sorted_set>;
 
     transient_sorted_set() = default;
     transient_sorted_set(transient_sorted_set &&) noexcept = default;

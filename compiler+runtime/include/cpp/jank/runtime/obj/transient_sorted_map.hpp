@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_map_ref = jtl::object_ref<struct transient_sorted_map>;
+  using transient_sorted_map_ref = jtl::oref<struct transient_sorted_map>;
 
   struct transient_sorted_map : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_map;
-    using persistent_type_ref = jtl::object_ref<struct persistent_sorted_map>;
+    using persistent_type_ref = jtl::oref<struct persistent_sorted_map>;
 
     transient_sorted_map() = default;
     transient_sorted_map(transient_sorted_map &&) noexcept = default;

@@ -125,7 +125,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  jtl::object_ref<ST> base_persistent_map<PT, ST, V>::seq() const
+  jtl::oref<ST> base_persistent_map<PT, ST, V>::seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
@@ -137,7 +137,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  jtl::object_ref<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
+  jtl::oref<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
@@ -155,7 +155,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  jtl::object_ref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ptr const m) const
+  jtl::oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ptr const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_list_ref = jtl::object_ref<struct persistent_list>;
+  using persistent_list_ref = jtl::oref<struct persistent_list>;
 }
 
 namespace jank::analyze::expr

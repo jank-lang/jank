@@ -13,14 +13,14 @@
 
 namespace jank::runtime::obj
 {
-  using nil_ref = jtl::object_ref<struct nil>;
-  using keyword_ref = jtl::object_ref<struct keyword>;
-  using boolean_ref = jtl::object_ref<struct boolean>;
-  using integer_ref = jtl::object_ref<struct integer>;
-  using real_ref = jtl::object_ref<struct real>;
-  using ratio_ref = jtl::object_ref<struct ratio>;
-  using persistent_string_ref = jtl::object_ref<struct persistent_string>;
-  using character_ref = jtl::object_ref<struct character>;
+  using nil_ref = jtl::oref<struct nil>;
+  using keyword_ref = jtl::oref<struct keyword>;
+  using boolean_ref = jtl::oref<struct boolean>;
+  using integer_ref = jtl::oref<struct integer>;
+  using real_ref = jtl::oref<struct real>;
+  using ratio_ref = jtl::oref<struct ratio>;
+  using persistent_string_ref = jtl::oref<struct persistent_string>;
+  using character_ref = jtl::oref<struct character>;
 }
 
 namespace jank::analyze

@@ -265,7 +265,7 @@ namespace jank::runtime::behavior
 namespace jtl
 {
   template <typename T>
-  struct object_ref;
+  struct oref;
 }
 
 #include <jank/runtime/native_box.hpp>
@@ -322,46 +322,46 @@ namespace jtl
    * It cannot be null, but it can be nil. */
   template <typename O>
   requires(std::same_as<std::decay_t<O>, jank::runtime::object>)
-  struct object_ref<O>
+  struct oref<O>
   {
     using value_type = jank::runtime::object;
 
-    JANK_CONSTEXPR object_ref()
+    JANK_CONSTEXPR oref()
       : data{ std::bit_cast<jank::runtime::object *>(jank_nil_const) }
     {
     }
 
-    JANK_CONSTEXPR object_ref(nullptr_t) noexcept
+    JANK_CONSTEXPR oref(nullptr_t) noexcept
     {
     }
 
-    JANK_CONSTEXPR object_ref(value_type * const data) noexcept
+    JANK_CONSTEXPR oref(value_type * const data) noexcept
       : data{ data }
     {
     }
 
-    JANK_CONSTEXPR object_ref(value_type const * const data) noexcept
+    JANK_CONSTEXPR oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    JANK_CONSTEXPR object_ref(T * const typed_data) noexcept
+    JANK_CONSTEXPR oref(T * const typed_data) noexcept
       : data{ typed_data->base }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    JANK_CONSTEXPR object_ref(T const * const typed_data) noexcept
+    JANK_CONSTEXPR oref(T const * const typed_data) noexcept
       : data{ const_cast<jank::runtime::object *>(&typed_data->base) }
     {
     }
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    JANK_CONSTEXPR object_ref(object_ref<T> const typed_data) noexcept
+    JANK_CONSTEXPR oref(oref<T> const typed_data) noexcept
       : data{ &typed_data->base }
     {
     }
@@ -388,7 +388,7 @@ namespace jtl
       return data == nullptr;
     }
 
-    JANK_CONSTEXPR bool operator==(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(oref const &rhs) const noexcept
     {
       return data == rhs.data;
     }
@@ -402,7 +402,7 @@ namespace jtl
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    JANK_CONSTEXPR bool operator==(object_ref<T> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(oref<T> const &rhs) const noexcept
     {
       return data == &rhs->base;
     }
@@ -412,7 +412,7 @@ namespace jtl
       return data != nullptr;
     }
 
-    JANK_CONSTEXPR bool operator!=(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(oref const &rhs) const noexcept
     {
       return data != rhs.data;
     }
@@ -426,21 +426,21 @@ namespace jtl
 
     template <typename T>
     requires jank::runtime::behavior::object_like<T>
-    JANK_CONSTEXPR bool operator!=(object_ref<T> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(oref<T> const &rhs) const noexcept
     {
       return data != &rhs->base;
     }
 
-    JANK_CONSTEXPR object_ref &operator=(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR oref &operator=(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
 
-    JANK_CONSTEXPR bool operator<(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator<(oref const &rhs) const noexcept
     {
       return data < rhs.data;
     }
 
-    JANK_CONSTEXPR operator object_ref<value_type const>() const noexcept
+    JANK_CONSTEXPR operator oref<value_type const>() const noexcept
     {
       jank_debug_assert(data);
       return data;
@@ -460,29 +460,29 @@ namespace jtl
     value_type *data{};
   };
 
-  /* This specialization of object_ref is for fully-typed objects like nil,
+  /* This specialization of oref is for fully-typed objects like nil,
    * persistent_list, persistent_array_map, etc.
    *
    * It cannot be null, but it can be nil. */
   template <typename T>
-  struct object_ref
+  struct oref
   {
     using value_type = T;
 
-    JANK_CONSTEXPR object_ref()
+    JANK_CONSTEXPR oref()
       : data{ std::bit_cast<void *>(jank_nil_const) }
     {
     }
 
-    JANK_CONSTEXPR object_ref(nullptr_t) = delete;
+    JANK_CONSTEXPR oref(nullptr_t) = delete;
 
-    JANK_CONSTEXPR object_ref(remove_const_t<T> * const data) noexcept
+    JANK_CONSTEXPR oref(remove_const_t<T> * const data) noexcept
       : data{ data }
     {
       jank_debug_assert(this->data);
     }
 
-    JANK_CONSTEXPR object_ref(T const * const data) noexcept
+    JANK_CONSTEXPR oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
@@ -490,7 +490,7 @@ namespace jtl
 
     template <typename C>
     requires is_convertible<C *, T *>
-    JANK_CONSTEXPR object_ref(object_ref<C> const data) noexcept
+    JANK_CONSTEXPR oref(oref<C> const data) noexcept
       : data{ data.data }
     {
       jank_debug_assert(this->data);
@@ -498,7 +498,7 @@ namespace jtl
 
     template <typename C>
     requires(T::obj_type == jank::runtime::object_type::nil)
-    JANK_CONSTEXPR object_ref(object_ref<C> const data) noexcept
+    JANK_CONSTEXPR oref(oref<C> const data) noexcept
       : data{ data.data }
     {
       jank_debug_assert(this->data);
@@ -516,12 +516,12 @@ namespace jtl
       return *reinterpret_cast<T *>(data);
     }
 
-    JANK_CONSTEXPR bool operator==(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(oref const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
-    JANK_CONSTEXPR bool operator!=(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(oref const &rhs) const noexcept
     {
       if(!*this)
       {
@@ -534,21 +534,21 @@ namespace jtl
       return !reinterpret_cast<T *>(data)->equal(rhs->base);
     }
 
-    JANK_CONSTEXPR bool operator<(object_ref const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator<(oref const &rhs) const noexcept
     {
       return data < rhs.data;
     }
 
     template <typename C>
     requires jank::runtime::behavior::object_like<C>
-    JANK_CONSTEXPR bool operator==(object_ref<C> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator==(oref<C> const &rhs) const noexcept
     {
       return !(*this != rhs);
     }
 
     template <typename C>
     requires jank::runtime::behavior::object_like<C>
-    JANK_CONSTEXPR bool operator!=(object_ref<C> const &rhs) const noexcept
+    JANK_CONSTEXPR bool operator!=(oref<C> const &rhs) const noexcept
     {
       if(!*this)
       {
@@ -561,15 +561,14 @@ namespace jtl
       return !reinterpret_cast<T *>(data)->equal(rhs->base);
     }
 
-    JANK_CONSTEXPR object_ref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs) noexcept
+    JANK_CONSTEXPR oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs) noexcept
     {
       data = rhs;
       jank_debug_assert(data);
       return *this;
     }
 
-    JANK_CONSTEXPR object_ref &
-    operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs) noexcept
+    JANK_CONSTEXPR oref &operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs) noexcept
     {
       data = const_cast<T *>(rhs);
       jank_debug_assert(data);
@@ -578,23 +577,23 @@ namespace jtl
 
     template <typename C>
     requires(C::obj_type == jank::runtime::object_type::nil)
-    JANK_CONSTEXPR object_ref &operator=(object_ref<C> const &) noexcept
+    JANK_CONSTEXPR oref &operator=(oref<C> const &) noexcept
     {
       data = std::bit_cast<void *>(jank_nil_const);
       jank_debug_assert(data);
       return *this;
     }
 
-    JANK_CONSTEXPR object_ref &operator=(jtl::nullptr_t) noexcept = delete;
+    JANK_CONSTEXPR oref &operator=(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
 
-    JANK_CONSTEXPR operator object_ref<T const>() const noexcept
+    JANK_CONSTEXPR operator oref<T const>() const noexcept
     {
       return *reinterpret_cast<T *>(data);
     }
 
-    JANK_CONSTEXPR operator object_ref<jank::runtime::object>() const noexcept
+    JANK_CONSTEXPR operator oref<jank::runtime::object>() const noexcept
     {
       if(!*this)
       {
@@ -621,7 +620,7 @@ namespace jtl
       return &reinterpret_cast<T *>(data)->base;
     }
 
-    JANK_CONSTEXPR operator bool() const
+    JANK_CONSTEXPR explicit operator bool() const
     {
       return data != std::bit_cast<void *>(jank_nil_const);
     }

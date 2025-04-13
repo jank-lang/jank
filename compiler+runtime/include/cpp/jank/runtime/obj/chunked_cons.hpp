@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::object_ref<struct cons>;
-  using chunked_cons_ref = jtl::object_ref<struct chunked_cons>;
+  using cons_ref = jtl::oref<struct cons>;
+  using chunked_cons_ref = jtl::oref<struct chunked_cons>;
 
   struct chunked_cons : gc
   {

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using reduced_ref = jtl::object_ref<struct reduced>;
+  using reduced_ref = jtl::oref<struct reduced>;
 
   struct reduced : gc
   {

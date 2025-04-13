@@ -16,9 +16,9 @@ namespace jank::runtime::obj
     native_integer denominator{};
   };
 
-  using integer_ref = jtl::object_ref<struct integer>;
-  using real_ref = jtl::object_ref<struct real>;
-  using ratio_ref = jtl::object_ref<struct ratio>;
+  using integer_ref = jtl::oref<struct integer>;
+  using real_ref = jtl::oref<struct real>;
+  using ratio_ref = jtl::oref<struct ratio>;
 
   struct ratio : gc
   {

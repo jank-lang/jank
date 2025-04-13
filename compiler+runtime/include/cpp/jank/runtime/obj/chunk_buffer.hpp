@@ -4,8 +4,8 @@
 
 namespace jank::runtime::obj
 {
-  using array_chunk_ref = jtl::object_ref<struct array_chunk>;
-  using chunk_buffer_ref = jtl::object_ref<struct chunk_buffer>;
+  using array_chunk_ref = jtl::oref<struct array_chunk>;
+  using chunk_buffer_ref = jtl::oref<struct chunk_buffer>;
 
   struct chunk_buffer : gc
   {

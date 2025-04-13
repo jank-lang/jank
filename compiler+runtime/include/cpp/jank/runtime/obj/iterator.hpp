@@ -5,8 +5,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::object_ref<struct cons>;
-  using iterator_ref = jtl::object_ref<struct iterator>;
+  using cons_ref = jtl::oref<struct cons>;
+  using iterator_ref = jtl::oref<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
   struct iterator : gc

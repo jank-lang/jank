@@ -4,8 +4,8 @@
 
 namespace jank::runtime::obj
 {
-  using atom_ref = jtl::object_ref<struct atom>;
-  using persistent_vector_ref = jtl::object_ref<struct persistent_vector>;
+  using atom_ref = jtl::oref<struct atom>;
+  using persistent_vector_ref = jtl::oref<struct persistent_vector>;
 
   struct atom : gc
   {

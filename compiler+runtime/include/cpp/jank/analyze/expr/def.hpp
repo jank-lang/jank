@@ -6,7 +6,7 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ref = jtl::object_ref<struct symbol>;
+  using symbol_ref = jtl::oref<struct symbol>;
 }
 
 namespace jank::analyze::expr

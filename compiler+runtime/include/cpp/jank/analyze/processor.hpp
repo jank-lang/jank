@@ -16,10 +16,10 @@ namespace jank::runtime
 
   namespace obj
   {
-    using symbol_ref = jtl::object_ref<struct symbol>;
-    using persistent_list_ref = jtl::object_ref<struct persistent_list>;
-    using persistent_vector_ref = jtl::object_ref<struct persistent_vector>;
-    using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
+    using symbol_ref = jtl::oref<struct symbol>;
+    using persistent_list_ref = jtl::oref<struct persistent_list>;
+    using persistent_vector_ref = jtl::oref<struct persistent_vector>;
+    using persistent_array_map_ref = jtl::oref<struct persistent_array_map>;
   }
 }
 

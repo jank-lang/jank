@@ -15,9 +15,9 @@ namespace jtl
    * This particular implementation of ref is only used for non-objects. There are two
    * noteworthy variations of ref in `object.hpp`:
    *
-   * 1. object_ref<object>, which is a type-erased box which supports conversions from typed
+   * 1. oref<object>, which is a type-erased box which supports conversions from typed
    *    boxes
-   * 2. object_ref<T> where T is object_like, which is a fully typed box
+   * 2. oref<T> where T is object_like, which is a fully typed box
    *
    * Both of these above support a nil state, where the internal pointer
    * points at the nil constant. This can be done regardless of the ref type. */

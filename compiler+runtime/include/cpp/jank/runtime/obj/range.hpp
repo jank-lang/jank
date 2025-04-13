@@ -6,9 +6,9 @@
 
 namespace jank::runtime::obj
 {
-  using array_chunk_ref = jtl::object_ref<struct array_chunk>;
-  using cons_ref = jtl::object_ref<struct cons>;
-  using range_ptr = jtl::object_ref<struct range>;
+  using array_chunk_ref = jtl::oref<struct array_chunk>;
+  using cons_ref = jtl::oref<struct cons>;
+  using range_ptr = jtl::oref<struct range>;
 
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
    * For integer values, use integer_range. This is not countable in constant time, due

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using volatile_ref = jtl::object_ref<struct volatile_>;
+  using volatile_ref = jtl::oref<struct volatile_>;
 
   struct volatile_ : gc
   {

@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using jit_function_ref = jtl::object_ref<struct jit_function>;
+  using jit_function_ref = jtl::oref<struct jit_function>;
 
   struct jit_function
     : gc

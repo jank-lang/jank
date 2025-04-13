@@ -6,7 +6,7 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::object_ref<struct cons>;
+  using cons_ref = jtl::oref<struct cons>;
 
   struct cons : gc
   {

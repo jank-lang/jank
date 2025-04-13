@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_vector_ref = jtl::object_ref<struct transient_vector>;
+  using transient_vector_ref = jtl::oref<struct transient_vector>;
 
   struct transient_vector : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_vector;
-    using persistent_type_ref = jtl::object_ref<struct persistent_vector>;
+    using persistent_type_ref = jtl::oref<struct persistent_vector>;
 
     transient_vector() = default;
     transient_vector(transient_vector &&) noexcept = default;

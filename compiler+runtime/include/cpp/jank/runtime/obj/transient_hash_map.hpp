@@ -10,7 +10,7 @@ namespace jank::runtime::detail
 
 namespace jank::runtime::obj
 {
-  using transient_hash_map_ref = jtl::object_ref<struct transient_hash_map>;
+  using transient_hash_map_ref = jtl::oref<struct transient_hash_map>;
 
   struct transient_hash_map : gc
   {
@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_map;
-    using persistent_type_ref = jtl::object_ref<struct persistent_hash_map>;
+    using persistent_type_ref = jtl::oref<struct persistent_hash_map>;
 
     transient_hash_map() = default;
     transient_hash_map(transient_hash_map &&) noexcept = default;

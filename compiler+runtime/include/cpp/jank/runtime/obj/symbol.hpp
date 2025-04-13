@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = jtl::object_ref<struct persistent_array_map>;
-  using symbol_ref = jtl::object_ref<struct symbol>;
+  using persistent_array_map_ref = jtl::oref<struct persistent_array_map>;
+  using symbol_ref = jtl::oref<struct symbol>;
 
   struct symbol : gc
   {

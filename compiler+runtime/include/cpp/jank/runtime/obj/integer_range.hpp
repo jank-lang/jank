@@ -6,9 +6,9 @@
 
 namespace jank::runtime::obj
 {
-  using integer_ref = jtl::object_ref<struct integer>;
-  using cons_ref = jtl::object_ref<struct cons>;
-  using integer_range_ref = jtl::object_ref<struct integer_range>;
+  using integer_ref = jtl::oref<struct integer>;
+  using cons_ref = jtl::oref<struct cons>;
+  using integer_range_ref = jtl::oref<struct integer_range>;
 
   /* An integer range from X to Y, exclusive, incrementing by S. */
   /* For non-integer values, use the range object */
