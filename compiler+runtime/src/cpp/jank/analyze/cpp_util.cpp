@@ -95,6 +95,7 @@ namespace jank::analyze::cpp_util
      * The user will need to specify the correct type by using a cast. */
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
+      /* TODO: Is this how types should be compared? */
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
       auto const is_arg_object_ptr{ Cpp::GetTypeAsString(args[arg_idx].m_Type)
