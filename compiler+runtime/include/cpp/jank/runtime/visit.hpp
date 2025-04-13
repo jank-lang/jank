@@ -8,6 +8,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/character.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
@@ -90,6 +91,11 @@ namespace jank::runtime
       case object_type::integer:
         {
           return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+        }
+        break;
+      case object_type::big_integer:
+        {
+          return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
         }
         break;
       case object_type::real:

@@ -206,6 +206,7 @@ add_library(
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/tagged_literal.cpp
   src/cpp/jank/runtime/obj/character.cpp
+  src/cpp/jank/runtime/obj/big_integer.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
