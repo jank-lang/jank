@@ -621,7 +621,7 @@ namespace jtl
       return &reinterpret_cast<T *>(data)->base;
     }
 
-    JANK_CONSTEXPR explicit operator bool() const
+    JANK_CONSTEXPR operator bool() const
     {
       return data != std::bit_cast<void *>(jank_nil_const);
     }

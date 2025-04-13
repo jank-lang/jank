@@ -133,8 +133,7 @@ namespace jank::runtime
     }
   }
 
-  var_ref
-  context::find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
+  var_ref context::find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return find_var(make_box<obj::symbol>(ns, name));
   }
@@ -604,7 +603,7 @@ namespace jank::runtime
         auto meta{ runtime::meta(expanded) };
         auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };
         meta = runtime::assoc(meta, macro_kw, o);
-        expanded = with_meta(expanded, meta);
+        expanded = with_meta_graceful(expanded, meta);
       }
 
       return macroexpand(expanded);

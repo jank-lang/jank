@@ -14,6 +14,7 @@ namespace jank::runtime
 
   object_ptr meta(object_ptr m);
   object_ptr with_meta(object_ptr o, object_ptr m);
+  object_ptr with_meta_graceful(object_ptr o, object_ptr m);
   object_ptr reset_meta(object_ptr o, object_ptr m);
 
   read::source meta_source(jtl::option<object_ptr> const &o);

@@ -53,6 +53,28 @@ namespace jank::runtime
       m);
   }
 
+  /* This is the same as with_meta, but it gracefully handles the target
+   * not supporting metadata. In that case, the target is returned and nothing
+   * is done with the meta. */
+  object_ptr with_meta_graceful(object_ptr const o, object_ptr const m)
+  {
+    return visit_object(
+      [](auto const typed_o, object_ptr const m) -> object_ptr {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return typed_o->with_meta(m);
+        }
+        else
+        {
+          return typed_o;
+        }
+      },
+      o,
+      m);
+  }
+
   object_ptr reset_meta(object_ptr const o, object_ptr const m)
   {
     return visit_object(
