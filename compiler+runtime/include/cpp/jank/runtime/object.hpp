@@ -276,6 +276,7 @@ namespace jtl
 /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
 extern jank::runtime::object *jank_nil_const;
 
+/* TODO: Add to jank/runtime/oref. */
 namespace jtl
 {
 #define JANK_CONSTEXPR
@@ -429,13 +430,15 @@ namespace jtl
     JANK_CONSTEXPR T *operator->() const
     {
       /* TODO: Add type name. */
-      jank_assert_msg_throw(*this, "Null reference");
+      //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_assert_throw(*this);
       return reinterpret_cast<T *>(data);
     }
 
     JANK_CONSTEXPR T &operator*() const
     {
-      jank_assert_msg_throw(*this, "Null reference");
+      //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_assert_throw(*this);
       return *reinterpret_cast<T *>(data);
     }
 

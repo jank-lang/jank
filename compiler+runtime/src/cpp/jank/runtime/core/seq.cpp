@@ -18,7 +18,7 @@
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
-#include <jank/util/fmt/print.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -30,7 +30,6 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          util::println("is_empty nil");
           return true;
         }
         else if constexpr(behavior::seqable<T>)
@@ -39,7 +38,6 @@ namespace jank::runtime
         }
         else if constexpr(behavior::countable<T>)
         {
-          util::println("is_empty countable {}", typed_o->count());
           return typed_o->count() == 0;
         }
         else

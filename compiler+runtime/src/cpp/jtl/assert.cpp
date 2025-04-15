@@ -5,50 +5,15 @@
 
 namespace jtl
 {
-  namespace detail
+  void do_assertion_panic(immutable_string const &msg)
   {
-    static void assertion_failed_panic(char const * const msg)
-    {
-      jank::util::println(stderr, "Assertion failed! {}", msg);
-      cpptrace::generate_trace().print();
-      ::abort();
-    }
-
-    static void assertion_failed_throw(char const * const msg)
-    {
-      throw std::runtime_error{ jank::util::format("Assertion failed! {}", msg) };
-    }
+    jank::util::println(stderr, "{}", msg);
+    cpptrace::generate_trace().print();
+    ::abort();
   }
 
-  void do_assertion_panic(bool const expr)
+  void do_assertion_throw(immutable_string const &msg)
   {
-    if(!expr)
-    {
-      detail::assertion_failed_panic("");
-    }
-  }
-
-  void do_assertion_panic(bool const expr, char const * const msg)
-  {
-    if(!expr)
-    {
-      detail::assertion_failed_panic(msg);
-    }
-  }
-
-  void do_assertion_throw(bool const expr)
-  {
-    if(!expr)
-    {
-      detail::assertion_failed_throw("");
-    }
-  }
-
-  void do_assertion_throw(bool const expr, char const * const msg)
-  {
-    if(!expr)
-    {
-      detail::assertion_failed_throw(msg);
-    }
+    throw std::runtime_error{ msg };
   }
 }

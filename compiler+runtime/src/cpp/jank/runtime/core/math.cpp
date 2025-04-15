@@ -4,7 +4,7 @@
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -577,14 +577,18 @@ namespace jank::runtime
   object_ref inc(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> object_ref { return make_box(typed_l->data + 1LL); },
+      [](auto const typed_l) -> object_ref {
+        auto const ret{ make_box(typed_l->data + 1LL) };
+        object_ref r{ ret };
+        return r;
+      },
       l);
   }
 
   object_ref dec(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1LL); },
+      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1LL).erase(); },
       l);
   }
 
@@ -647,7 +651,7 @@ namespace jank::runtime
   native_bool is_equiv(object_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const r) -> native_bool {
+      [](auto const typed_l, object_ref const r) -> native_bool {
         return visit_number_like(
           [](auto const typed_r, auto const typed_l) -> native_bool {
             auto const data_l{ to_number(typed_l) };

@@ -7,7 +7,7 @@
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/util/fmt/print.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -86,7 +86,6 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
     }
-    util::println("jit_function::call 2 meta {}", runtime::to_code_string(meta.unwrap()));
     return arity_2(a1.data, a2.data);
   }
 

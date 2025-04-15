@@ -3680,40 +3680,40 @@
                 (assoc m test expr)))
             pairs
             (reduce
-             (fn [m [test expr]]
-               (if (seq? test)
-                 (reduce #(assoc-test %1 %2 expr) m test)
-                 (assoc-test m test expr)))
-             {} pairs)
+              (fn [m [test expr]]
+                (if (seq? test)
+                  (reduce #(assoc-test %1 %2 expr) m test)
+                  (assoc-test m test expr)))
+              {} pairs)
             tests
             (keys pairs)
             thens
             (vals pairs)
             mode
             (cond
-             (every? #(and (integer? %) (<= int-min-value % int-max-value))
-                     tests)
-             :ints
+              (every? #(and (integer? %) (<= int-min-value % int-max-value))
+                      tests)
+              :ints
 
-             (every? keyword? tests)
-             :identity
+              (every? keyword? tests)
+              :identity
 
-             :else
-             :hashes)]
+              :else
+              :hashes)]
         (condp = mode
-               :ints
-               (let [[shift mask imap] (prep-ints ge default tests thens)]
-                 `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap)))
-               :hashes
-               (let [[shift mask imap]
-                     (prep-hashes ge default tests thens #{})]
-                 `(let [~ge ~e]
-                   (case* ~ge ~shift ~mask ~default ~imap)))
-               :identity
-               (let [[shift mask imap]
-                     (prep-hashes ge default tests thens #{})]
-                 `(let [~ge ~e]
-                   (case* ~ge ~shift ~mask ~default ~imap))))))))
+          :ints
+          (let [[shift mask imap] (prep-ints ge default tests thens)]
+            `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap)))
+          :hashes
+          (let [[shift mask imap]
+                (prep-hashes ge default tests thens #{})]
+            `(let [~ge ~e]
+               (case* ~ge ~shift ~mask ~default ~imap)))
+          :identity
+          (let [[shift mask imap]
+                (prep-hashes ge default tests thens #{})]
+            `(let [~ge ~e]
+               (case* ~ge ~shift ~mask ~default ~imap))))))))
 
 ;; Miscellaneous.
 ; TODO: jank.core

@@ -73,7 +73,7 @@ namespace jank::runtime
       return *data;
     }
 
-    native_box& operator=(jtl::oref<T> const rhs)
+    native_box &operator=(jtl::oref<T> const rhs)
     {
       data = *rhs.data.ptr();
       return *this;
@@ -190,7 +190,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     native_box(jtl::oref<T> const data)
-      : data{ static_cast<object*>(data) }
+      : data{ static_cast<object *>(data) }
     {
     }
 
@@ -318,6 +318,13 @@ namespace jank::runtime
     return o;
   }
 
+  template <typename T>
+  constexpr jtl::oref<T> make_box(jtl::oref<T> const &o)
+  {
+    static_assert(sizeof(jtl::oref<T>) == sizeof(T *));
+    return o;
+  }
+
   /* TODO: Constexpr these. */
   template <typename T, typename... Args>
   jtl::ref<T> make_box(Args &&...args)
@@ -373,7 +380,8 @@ namespace jank::runtime
     if(!ret)
     {
       /* TODO: Panic. */
-      throw std::runtime_error{ util::format("Unable to allocate box! Received {}", static_cast<void*>(ret.data)) };
+      throw std::runtime_error{ util::format("Unable to allocate box! Received {}",
+                                             static_cast<void *>(ret.data)) };
     }
     return ret;
   }

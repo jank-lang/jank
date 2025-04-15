@@ -83,20 +83,14 @@ namespace jank::jit
           auto const result(__rt_ctx->eval_file(dir_entry.path().string()));
           if(!expect_success)
           {
-            failures.push_back(
-              { dir_entry.path(),
-                util::format("Test failure was expected, but it passed with {}",
-                             (result == nullptr ? "nullptr" : runtime::to_string(result))) });
+            failures.push_back({ dir_entry.path(),
+                                 util::format("Test failure was expected, but it passed with {}",
+                                              runtime::to_code_string(result)) });
             passed = false;
           }
           else
           {
-            if(result == nullptr)
-            {
-              failures.push_back({ dir_entry.path(), "Returned object is nullptr" });
-              passed = false;
-            }
-            else if(!runtime::equal(result, cardinal_result))
+            if(!runtime::equal(result, cardinal_result))
             {
               failures.push_back(
                 { dir_entry.path(),
@@ -130,9 +124,9 @@ namespace jank::jit
             passed = false;
           }
         }
-        catch(runtime::obj::keyword_ptr const e)
+        catch(runtime::obj::keyword_ref const e)
         {
-          if(!expect_throw || !runtime::equal(e, cardinal_result))
+          if(!expect_throw || !runtime::equal(e.erase(), cardinal_result))
           {
             failures.push_back(
               { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });

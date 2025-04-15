@@ -39,7 +39,7 @@ try
   /* TODO: Load latest here.
    * We're loading from source always due to a bug in how we generate symbols which is
    * leading to duplicate symbols being generated. */
-  jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::source)
+  jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::latest)
     .expect_ok();
 
   auto const res(context.run());

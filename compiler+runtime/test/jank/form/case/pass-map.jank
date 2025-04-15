@@ -1,3 +1,7 @@
+(println (macroexpand '(case {:a 1 :b 2}
+            {:a 1 :b 2} :map-match
+            {:a 3 :b 4} :not-matched
+            :default)))
 (assert
  (=
   (case {:a 1 :b 2}

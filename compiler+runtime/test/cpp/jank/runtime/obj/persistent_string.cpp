@@ -66,7 +66,7 @@ namespace jank::runtime::obj
     {
       static auto const s{ make_box("?") };
       static auto const expected{ make_box("\"?\"") };
-      CHECK(equal(make_box(s->to_code_string()), expected));
+      CHECK(equal(make_box(s->to_code_string()).erase(), expected));
     }
   }
 }

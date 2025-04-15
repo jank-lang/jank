@@ -60,9 +60,9 @@ namespace jank::runtime::obj
     return s;
   }
 
-  persistent_list_ref persistent_list::create(nil_ref const s)
+  persistent_list_ref persistent_list::create(nil_ref const)
   {
-    return s;
+    return empty();
   }
 
   native_bool persistent_list::equal(object const &o) const
