@@ -65,7 +65,9 @@ namespace jank::runtime::obj
     {
       return true;
     }
-    if(auto const v = dyn_cast<persistent_vector>(&o))
+
+    auto const v{ dyn_cast<persistent_vector>(&o) };
+    if(v.is_some())
     {
       if(data.size() != v->data.size())
       {

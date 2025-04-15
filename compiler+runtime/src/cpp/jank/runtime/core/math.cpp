@@ -1714,7 +1714,8 @@ namespace jank::runtime
 
   native_integer parse_long(object_ref const o)
   {
-    if(auto const typed_o = dyn_cast<obj::persistent_string>(o))
+    auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
+    if(typed_o.is_some())
     {
       return std::stoll(typed_o->data);
     }
@@ -1726,7 +1727,8 @@ namespace jank::runtime
 
   native_real parse_double(object_ref const o)
   {
-    if(auto const typed_o = dyn_cast<obj::persistent_string>(o))
+    auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
+    if(typed_o.is_some())
     {
       return std::stod(typed_o->data);
     }

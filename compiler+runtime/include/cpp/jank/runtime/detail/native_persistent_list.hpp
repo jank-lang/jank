@@ -6,6 +6,7 @@
 
 namespace jank::runtime::detail
 {
+  /* TODO: No doubt this can be optimized. */
   template <typename T>
   struct list_node
   {
@@ -26,14 +27,14 @@ namespace jank::runtime::detail
     {
     }
 
-    list_node(T const &t, native_box<list_node<T>> const &r, size_t const s)
+    list_node(T const &t, jtl::ptr<list_node<T>> const &r, size_t const s)
       : first{ t }
       , rest{ r }
       , length{ s + 1 }
     {
     }
 
-    list_node(T &&t, native_box<list_node<T>> const &r, size_t const s)
+    list_node(T &&t, jtl::ptr<list_node<T>> const &r, size_t const s)
       : first{ std::move(t) }
       , rest{ r }
       , length{ s + 1 }
@@ -41,9 +42,7 @@ namespace jank::runtime::detail
     }
 
     T first;
-    /* TODO: This should ultimately be able to point to anything which
-     * implements the equivalent of IPersistentList. */
-    native_box<list_node<T>> rest;
+    jtl::ptr<list_node<T>> rest;
     size_t length{};
   };
 
@@ -102,14 +101,14 @@ namespace jank::runtime::detail
         return latest != rhs.latest;
       }
 
-      native_box<native_persistent_list_impl<T>::value_type> latest;
+      jtl::ptr<native_persistent_list_impl<T>::value_type> latest;
     };
 
     native_persistent_list_impl() = default;
     native_persistent_list_impl(native_persistent_list_impl<T> const &) = default;
     native_persistent_list_impl(native_persistent_list_impl<T> &&) noexcept = default;
 
-    native_persistent_list_impl(native_box<value_type> const &d)
+    native_persistent_list_impl(jtl::ptr<value_type> const &d)
       : data{ d }
     {
     }
@@ -193,7 +192,7 @@ namespace jank::runtime::detail
       return data ? native_persistent_list_impl<T>{ data->rest } : native_persistent_list_impl<T>{};
     }
 
-    native_box<value_type> data{};
+    jtl::ptr<value_type> data{};
   };
 
   using native_persistent_list = native_persistent_list_impl<object_ref>;

@@ -3,7 +3,9 @@
 #include <type_traits>
 
 #include <jtl/trait/transform.hpp>
-#include <jtl/trait/predicate.hpp>
+#include <jtl/ref.hpp>
+#include <jtl/ptr.hpp>
+#include <jtl/assert.hpp>
 
 #include <jank/runtime/object.hpp>
 
@@ -371,4 +373,121 @@ namespace jank::runtime
 
     value_type *data{};
   };
+
+  template <typename T>
+  constexpr jtl::ref<T> make_box(jtl::ref<T> const &o)
+  {
+    static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
+    return o;
+  }
+
+  template <typename T>
+  constexpr oref<T> make_box(oref<T> const &o)
+  {
+    static_assert(sizeof(oref<T>) == sizeof(T *));
+    return o;
+  }
+
+  /* TODO: Constexpr these. */
+  template <typename T, typename... Args>
+  jtl::ref<T> make_box(Args &&...args)
+  {
+    static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
+    T *ret{};
+    if constexpr(requires { T::pointer_free; })
+    {
+      if constexpr(T::pointer_free)
+      {
+        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      }
+      else
+      {
+        ret = new(GC) T{ std::forward<Args>(args)... };
+      }
+    }
+    else
+    {
+      ret = new(GC) T{ std::forward<Args>(args)... };
+    }
+
+    if(!ret)
+    {
+      /* TODO: Panic. */
+      throw std::runtime_error{ "unable to allocate box" };
+    }
+    return ret;
+  }
+
+  template <typename T, typename... Args>
+  requires behavior::object_like<T>
+  oref<T> make_box(Args &&...args)
+  {
+    static_assert(sizeof(oref<T>) == sizeof(T *));
+    oref<T> ret;
+    if constexpr(requires { T::pointer_free; })
+    {
+      if constexpr(T::pointer_free)
+      {
+        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      }
+      else
+      {
+        ret = new(GC) T{ std::forward<Args>(args)... };
+      }
+    }
+    else
+    {
+      ret = new(GC) T{ std::forward<Args>(args)... };
+    }
+
+    return ret;
+  }
+
+  /* TODO: This no longer makes sense. */
+  template <typename T>
+  constexpr jtl::ref<T> make_array_box()
+  {
+    return nullptr;
+  }
+
+  template <typename T, size_t N>
+  constexpr jtl::ref<T> make_array_box()
+  {
+    auto const ret(new(GC) T[N]{});
+    if(!ret)
+    {
+      throw std::runtime_error{ "unable to allocate array box" };
+    }
+    return ret;
+  }
+
+  template <typename T>
+  constexpr jtl::ref<T> make_array_box(size_t const length)
+  {
+    auto const ret(new(GC) T[length]{});
+    if(!ret)
+    {
+      throw std::runtime_error{ "Unable to allocate array box" };
+    }
+    return ret;
+  }
+
+  template <typename T, typename... Args>
+  jtl::ref<T> make_array_box(Args &&...args)
+  {
+    /* TODO: pointer_free? */
+    auto const ret(new(GC) T[sizeof...(Args)]{ std::forward<Args>(args)... });
+    if(!ret)
+    {
+      throw std::runtime_error{ "Unable to allocate array box" };
+    }
+    return ret;
+  }
+
+  template <typename D, typename B>
+  jtl::ref<D> static_box_cast(jtl::ref<B> const ptr) noexcept
+  {
+    return static_cast<D *>(ptr.data);
+  }
+
 }

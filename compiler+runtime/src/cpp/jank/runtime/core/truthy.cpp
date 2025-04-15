@@ -14,7 +14,9 @@ namespace jank::runtime
     {
       return false;
     }
-    else if(auto const b = dyn_cast<obj::boolean>(o))
+
+    auto const b{ dyn_cast<obj::boolean>(o) };
+    if(b.is_some())
     {
       return b->data;
     }

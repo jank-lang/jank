@@ -33,8 +33,8 @@ namespace jank::runtime
   template <typename T>
   requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto truthy(native_box<T> const &d)
+  inline auto truthy(oref<T> const &d)
   {
-    return truthy(d.data);
+    return truthy(d.erase());
   }
 }

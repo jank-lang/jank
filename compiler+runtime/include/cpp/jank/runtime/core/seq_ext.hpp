@@ -42,7 +42,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto rest(native_box<T> const seq)
+  auto rest(oref<T> const seq)
   {
     if(seq.is_nil())
     {

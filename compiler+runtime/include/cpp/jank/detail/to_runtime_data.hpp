@@ -31,13 +31,6 @@ namespace jank::detail
   }
 
   template <typename T>
-  object_ref to_runtime_data(native_box<T> const &d)
-  {
-    util::string_builder sb;
-    return make_box(sb("box(")(reinterpret_cast<void const *>(d.data))(")").release());
-  }
-
-  template <typename T>
   object_ref to_runtime_data(jtl::ref<T> const &d)
   {
     util::string_builder sb;
@@ -48,7 +41,7 @@ namespace jank::detail
   object_ref to_runtime_data(oref<T> const &d)
   {
     util::string_builder sb;
-    return make_box(sb("ref(")(d.data)(")").release());
+    return make_box(sb("oref(")(d.data)(")").release());
   }
 
   template <typename T>
@@ -92,13 +85,6 @@ namespace jank::detail
       make_box("option"),
       make_box("data"),
       (m.is_none() ? make_box("none") : to_runtime_data(m.unwrap())));
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  object_ref to_runtime_data(native_box<T> const &m)
-  {
-    return m;
   }
 
   template <typename T>

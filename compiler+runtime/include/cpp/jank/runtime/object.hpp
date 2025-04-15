@@ -312,5 +312,3 @@ namespace std
                     jank::runtime::object_ref const rhs) const noexcept;
   };
 }
-
-#include <jank/runtime/native_box.hpp>

@@ -297,7 +297,8 @@ namespace jank::runtime
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
   object_ref munge(object_ref const o)
   {
-    if(auto const s = dyn_cast<obj::persistent_string>(o))
+    auto const s{ dyn_cast<obj::persistent_string>(o) };
+    if(s.is_some())
     {
       return make_box<obj::persistent_string>(munge(s->data));
     }

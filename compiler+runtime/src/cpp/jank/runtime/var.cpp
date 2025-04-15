@@ -43,7 +43,7 @@ namespace jank::runtime
   native_bool var::equal(object const &o) const
   {
     auto const v(dyn_cast<var>(&o));
-    if(!v)
+    if(v.is_nil())
     {
       return false;
     }

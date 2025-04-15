@@ -13,15 +13,14 @@ namespace jank::runtime
     return o->type == T::obj_type;
   }
 
-  /* TODO: Option or ptr? */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  JANK_CONSTEXPR native_box<T> dyn_cast(object_ref const o)
+  JANK_CONSTEXPR oref<T> dyn_cast(object_ref const o)
   {
     if(o->type != T::obj_type)
     {
-      return nullptr;
+      return {};
     }
     return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
   }

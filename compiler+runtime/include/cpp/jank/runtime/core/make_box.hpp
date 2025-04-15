@@ -110,12 +110,4 @@ namespace jank::runtime
   {
     return d;
   }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_box<T> const &d)
-  {
-    return d;
-  }
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <jank/runtime/object.hpp>
 #include <jtl/result.hpp>
+
+#include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
 {

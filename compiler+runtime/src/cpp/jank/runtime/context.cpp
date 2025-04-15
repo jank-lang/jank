@@ -538,12 +538,12 @@ namespace jank::runtime
         else
         {
           auto const first_sym_obj(dyn_cast<obj::symbol>(first(typed_o)));
-          if(!first_sym_obj)
+          if(first_sym_obj.is_nil())
           {
             return typed_o;
           }
 
-          auto const var(find_var(first_sym_obj.data));
+          auto const var(find_var(first_sym_obj));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
           if(var.is_nil() || var->meta.is_none())
           {

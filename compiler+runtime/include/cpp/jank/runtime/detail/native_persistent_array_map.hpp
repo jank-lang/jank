@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+#include <jtl/ref.hpp>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::detail

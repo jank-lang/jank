@@ -8,9 +8,9 @@ namespace jank::runtime
 {
   template <typename T>
   requires behavior::object_like<T>
-  struct convert<object_ref, native_box<T>>
+  struct convert<object_ref, oref<T>>
   {
-    static native_box<T> call(object_ref const o)
+    static oref<T> call(object_ref const o)
     {
       return try_object<T>(o);
     }
