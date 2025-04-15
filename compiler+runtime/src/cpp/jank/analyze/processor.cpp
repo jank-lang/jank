@@ -345,7 +345,7 @@ namespace jank::analyze
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj->seq() }; seq; seq = seq->next())
+        for(auto seq{ typed_imap_obj->seq() }; seq.is_some(); seq = seq->next())
         {
           auto const e{ seq->first() };
           auto const k_obj{ runtime::nth(e, make_box(0)) };
@@ -458,7 +458,7 @@ namespace jank::analyze
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
     auto const var(rt_ctx.find_var(qualified_sym));
-    if(!var)
+    if(var.is_nil())
     {
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
@@ -1224,7 +1224,7 @@ namespace jank::analyze
 
     auto const qualified_sym(current_frame->lift_var(arg_sym));
     auto const found_var(rt_ctx.find_var(qualified_sym));
-    if(!found_var)
+    if(found_var.is_nil())
     {
       return error::analyze_unresolved_var(
         util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
@@ -1314,7 +1314,7 @@ namespace jank::analyze
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
     native_bool has_catch{}, has_finally{};
 
-    for(auto it(list->fresh_seq()->next_in_place()); it; it = it->next_in_place())
+    for(auto it(list->fresh_seq()->next_in_place()); it.is_some(); it = it->next_in_place())
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
@@ -1357,7 +1357,7 @@ namespace jank::analyze
                 latest_expansion(macro_expansions));
             }
 
-            auto const is_last(!it->next());
+            auto const is_last(it->next().is_nil());
             auto const form_type(is_last ? position : expression_position::statement);
             auto form(analyze(item, try_frame, form_type, fn_ctx, is_last));
             if(form.is_err())
@@ -1505,7 +1505,7 @@ namespace jank::analyze
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
     native_bool literal{ true };
-    for(auto d = o->fresh_seq(); d; d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d.is_some(); d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
       if(res.is_err())
@@ -1606,7 +1606,7 @@ namespace jank::analyze
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
         native_bool literal{ true };
-        for(auto d = typed_o->fresh_seq(); d; d = d->next_in_place())
+        for(auto d = typed_o->fresh_seq(); d.is_some(); d = d->next_in_place())
         {
           auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
           if(res.is_err())

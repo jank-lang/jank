@@ -40,7 +40,7 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
         {
           native_vector<object_ref> v;
-          for(auto i(typed_s->fresh_seq()); i; i = i->next_in_place())
+          for(auto i(typed_s->fresh_seq()); i.is_some(); i = i->next_in_place())
           {
             v.emplace_back(i->first());
           }

@@ -40,7 +40,7 @@ namespace jank::runtime
   requires behavior::sequenceable<T>
   void to_string(oref<T> const s, util::string_builder &buff)
   {
-    if(!s)
+    if(s.is_nil())
     {
       buff("()");
       return;
@@ -48,7 +48,7 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i.is_some(); i = i->next_in_place())
     {
       if(needs_space)
       {
@@ -96,7 +96,7 @@ namespace jank::runtime
   requires behavior::sequenceable<T>
   void to_code_string(oref<T> const s, util::string_builder &buff)
   {
-    if(!s)
+    if(s.is_nil())
     {
       buff("()");
       return;
@@ -104,7 +104,7 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i; i = i->next_in_place())
+    for(auto i(s->fresh_seq()); i.is_some(); i = i->next_in_place())
     {
       if(needs_space)
       {

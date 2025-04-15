@@ -791,7 +791,7 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it; it = it->next_in_place()->next_in_place())
+    for(auto it(list->fresh_seq()); it.is_some(); it = it->next_in_place()->next_in_place())
     {
       auto const kw(it->first());
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
@@ -811,14 +811,14 @@ namespace jank::read::parse
           return visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
               auto const seq(typed_s->fresh_seq());
-              if(!seq)
+              if(seq.is_nil())
               {
                 return ok(none);
               }
               auto const first(seq->first());
 
               auto const front(pending_forms.begin());
-              for(auto it(seq->next_in_place()); it; it = it->next_in_place())
+              for(auto it(seq->next_in_place()); it.is_some(); it = it->next_in_place())
               {
                 pending_forms.insert(front, it->first());
               }
@@ -852,7 +852,7 @@ namespace jank::read::parse
     return visit_seqable(
       [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it.is_some(); it = it->next_in_place())
         {
           auto const item(it->first());
 
@@ -899,7 +899,7 @@ namespace jank::read::parse
     return visit_seqable(
       [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
+        for(auto it(typed_seq->fresh_seq()); it.is_some(); it = it->next_in_place())
         {
           auto item(it->first());
           ret.push_back(first(item));
@@ -919,7 +919,7 @@ namespace jank::read::parse
     return visit_seqable(
       [splice](auto const typed_form) {
         auto const s(typed_form->seq());
-        object_ref const item{ s ? s->first().erase() : s.erase() };
+        object_ref const item{ s.is_some() ? s->first().erase() : s.erase() };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);
@@ -962,7 +962,7 @@ namespace jank::read::parse
       else if(sym->ns.empty() && sym->name != "&")
       {
         auto var(__rt_ctx->find_var(sym));
-        if(!var)
+        if(var.is_nil())
         {
           sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
         }
@@ -1002,7 +1002,7 @@ namespace jank::read::parse
           if constexpr(std::same_as<T, obj::persistent_vector>)
           {
             auto const seq(typed_form->seq());
-            if(!seq)
+            if(seq.is_nil())
             {
               return make_box<obj::persistent_list>(
                 std::in_place,
@@ -1054,7 +1054,7 @@ namespace jank::read::parse
           if constexpr(behavior::sequenceable<T>)
           {
             auto const seq(typed_form->seq());
-            if(!seq)
+            if(seq.is_nil())
             {
               return make_box<obj::persistent_list>(std::in_place,
                                                     make_box<obj::symbol>("clojure.core", "list"));
@@ -1240,7 +1240,7 @@ namespace jank::read::parse
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
-          if(!resolved_ns)
+          if(resolved_ns.is_nil())
           {
             ns = ns_portion;
           }

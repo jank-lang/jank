@@ -28,7 +28,7 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next() const
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       return cached_next;
     }
@@ -42,7 +42,7 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next_in_place()
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       current = cached_next->first();
       cached_next = obj::nil::nil_const();
@@ -61,15 +61,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it;
+        for(auto it(fresh_seq()); it.is_some();
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(!seq || !runtime::equal(it->first(), seq->first()))
+          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return !seq;
+        return seq.is_nil();
       },
       []() { return false; },
       &o);

@@ -81,7 +81,7 @@ namespace jank
       __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
-      if(main_var)
+      if(main_var.is_some())
       {
         /* TODO: Handle the case when `-main` accepts no arg. */
         runtime::detail::native_transient_vector extra_args;

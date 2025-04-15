@@ -114,7 +114,7 @@ namespace jank::runtime::obj
 
   void range::force_chunk() const
   {
-    if(chunk)
+    if(chunk.is_some())
     {
       return;
     }
@@ -147,7 +147,7 @@ namespace jank::runtime::obj
 
   range_ptr range::next() const
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       return cached_next;
     }
@@ -188,7 +188,7 @@ namespace jank::runtime::obj
   range_ptr range::chunked_next() const
   {
     force_chunk();
-    if(!chunk_next)
+    if(chunk_next.is_nil())
     {
       return {};
     }
@@ -206,15 +206,15 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it;
+        for(auto it(fresh_seq()); it.is_some();
             it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(!seq || !runtime::equal(it->first(), seq->first()))
+          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return !seq;
+        return seq.is_nil();
       },
       []() { return false; },
       &o);

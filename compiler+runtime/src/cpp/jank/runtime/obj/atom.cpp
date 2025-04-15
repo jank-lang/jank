@@ -9,7 +9,6 @@ namespace jank::runtime::obj
   atom::atom(object_ref const o)
     : val{ o.data }
   {
-    jank_debug_assert(val);
   }
 
   native_bool atom::equal(object const &o) const
@@ -46,7 +45,7 @@ namespace jank::runtime::obj
 
   object_ref atom::reset(object_ref const o)
   {
-    jank_debug_assert(o);
+    jank_debug_assert(o.is_some());
     val = o.data;
     return o;
   }

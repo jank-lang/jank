@@ -332,14 +332,14 @@ namespace jank::runtime::obj
     object_ref best_value{ nil::nil_const() };
     persistent_vector_sequence_ref best_entry{};
 
-    for(auto it(method_table->fresh_seq()); it; it = it->next_in_place())
+    for(auto it(method_table->fresh_seq()); it.is_some(); it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const entry_key(entry->seq()->first());
 
       if(is_a(cached_hierarchy, dispatch_val, entry_key))
       {
-        if(!best_entry || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
+        if(best_entry.is_nil() || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
         {
           best_entry = entry->seq();
         }
@@ -357,7 +357,7 @@ namespace jank::runtime::obj
       }
     }
 
-    if(best_entry)
+    if(best_entry.is_some())
     {
       best_value = second(best_entry);
     }

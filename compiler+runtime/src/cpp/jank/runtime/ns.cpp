@@ -2,7 +2,8 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/runtime/core/to_string.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -29,8 +30,8 @@ namespace jank::runtime
 
     /* TODO: Read lock, then upgrade as needed? Benchmark. */
     auto locked_vars(vars.wlock());
-    auto const found_var((*locked_vars)->data.find(unqualified_sym));
-    if(found_var)
+    object_ref const * const found_var((*locked_vars)->data.find(unqualified_sym));
+    if(found_var && found_var->is_some())
     {
       return expect_object<var>(*found_var);
     }

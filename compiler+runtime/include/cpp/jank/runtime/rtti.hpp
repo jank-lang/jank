@@ -52,6 +52,10 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   JANK_CONSTEXPR oref<T> expect_object(object_ref const o)
   {
+    if constexpr(T::obj_type != object_type::nil)
+    {
+      jank_debug_assert(o.is_some());
+    }
     jank_debug_assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
   }

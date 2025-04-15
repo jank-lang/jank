@@ -34,12 +34,12 @@ namespace jank::runtime::obj::detail
         auto seq(typed_o->fresh_seq());
         for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
         {
-          if(!seq || !runtime::equal(*it, seq->first()))
+          if(seq.is_nil() || !runtime::equal(*it, seq->first()))
           {
             return false;
           }
         }
-        return !seq;
+        return seq.is_nil();
       },
       []() { return false; },
       &o);

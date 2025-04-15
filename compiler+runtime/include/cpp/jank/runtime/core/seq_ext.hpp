@@ -26,12 +26,12 @@ namespace jank::runtime
           auto it(begin);
           for(; it != end; ++it, seq = seq->next_in_place())
           {
-            if(!seq || !runtime::equal(*it, seq->first()))
+            if(seq.is_nil() || !runtime::equal(*it, seq->first()))
             {
               return false;
             }
           }
-          return !seq && it == end;
+          return seq.is_nil() && it == end;
         }
       },
       []() { return false; },
@@ -44,12 +44,12 @@ namespace jank::runtime
   requires behavior::sequenceable<T>
   auto rest(native_box<T> const seq)
   {
-    if(!seq || seq == obj::nil::nil_const())
+    if(seq.is_nil())
     {
       return obj::persistent_list::empty();
     }
     auto const ret(seq->next());
-    if(!ret)
+    if(ret.is_nil())
     {
       return obj::persistent_list::empty();
     }

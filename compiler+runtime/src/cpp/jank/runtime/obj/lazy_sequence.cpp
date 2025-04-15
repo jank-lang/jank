@@ -13,7 +13,7 @@ namespace jank::runtime::obj
   lazy_sequence::lazy_sequence(object_ref const fn)
     : fn{ fn }
   {
-    jank_debug_assert(fn);
+    jank_debug_assert(fn.is_some());
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
 
   lazy_sequence_ref lazy_sequence::next_in_place()
   {
-    jank_debug_assert(sequence);
+    jank_debug_assert(sequence.is_some());
     auto const n(runtime::next_in_place(sequence));
     if(n == nil::nil_const())
     {
@@ -100,7 +100,7 @@ namespace jank::runtime::obj
   native_hash lazy_sequence::to_hash() const
   {
     auto const s(seq());
-    if(!s)
+    if(s.is_nil())
     {
       return 1;
     }

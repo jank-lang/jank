@@ -124,7 +124,7 @@ namespace jank::runtime
     profile::timer const timer{ "var set" };
 
     auto const binding(get_thread_binding());
-    if(!binding)
+    if(binding.is_nil())
     {
       return err(util::format("Cannot set non-thread-bound var: {}", to_string()));
     }
@@ -170,7 +170,7 @@ namespace jank::runtime
   object_ref var::deref() const
   {
     auto const binding(get_thread_binding());
-    if(binding)
+    if(binding.is_some())
     {
       return binding->value;
     }

@@ -105,7 +105,7 @@ namespace clojure::core_native
 
   static object_ref is_var_thread_bound(object_ref const o)
   {
-    return make_box(static_cast<bool>(try_object<runtime::var>(o)->get_thread_binding()));
+    return make_box(try_object<runtime::var>(o)->get_thread_binding().is_some());
   }
 
   static object_ref delay(object_ref const fn)
@@ -547,7 +547,7 @@ jank_object_ref jank_load_clojure_core_native()
 
       return visit_seqable(
         [](auto const typed_rest, object_ref const l) {
-          for(auto it(typed_rest->fresh_seq()); it; it = it->next_in_place())
+          for(auto it(typed_rest->fresh_seq()); it.is_some(); it = it->next_in_place())
           {
             if(!equal(l, it->first()))
             {

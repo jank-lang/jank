@@ -203,11 +203,11 @@ namespace std
     jank::runtime::obj::symbol_ref const &lhs,
     jank::runtime::obj::symbol_ref const &rhs) const noexcept
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }

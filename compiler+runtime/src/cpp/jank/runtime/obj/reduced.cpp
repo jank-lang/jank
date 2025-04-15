@@ -6,7 +6,7 @@ namespace jank::runtime::obj
   reduced::reduced(object_ref const o)
     : val{ o }
   {
-    jank_debug_assert(val);
+    jank_debug_assert(val.is_some());
   }
 
   native_bool reduced::equal(object const &o) const

@@ -34,7 +34,7 @@ namespace jank::runtime
 
   native_bool truthy(obj::boolean_ref const o)
   {
-    return o && o->data;
+    return o.is_some() && o->data;
   }
 
   native_bool truthy(native_bool const o)

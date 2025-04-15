@@ -174,14 +174,14 @@ namespace jank::runtime
     {
       /* TODO: Add type name. */
       //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert_throw(*this);
+      jank_assert_throw(is_some());
       return reinterpret_cast<T *>(data);
     }
 
     JANK_CONSTEXPR T &operator*() const
     {
       //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert_throw(*this);
+      jank_assert_throw(is_some());
       return *reinterpret_cast<T *>(data);
     }
 
@@ -192,7 +192,7 @@ namespace jank::runtime
 
     JANK_CONSTEXPR bool operator!=(oref<object> const &rhs) const
     {
-      if(!*this)
+      if(is_nil())
       {
         return rhs.is_some();
       }
@@ -214,11 +214,11 @@ namespace jank::runtime
     requires behavior::object_like<C>
     JANK_CONSTEXPR bool operator!=(oref<C> const &rhs) const
     {
-      if(!*this)
+      if(is_nil())
       {
         return C::obj_type != object_type::nil;
       }
-      if(!rhs)
+      if(rhs.is_nil())
       {
         return true;
       }
@@ -251,9 +251,14 @@ namespace jank::runtime
     JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
 
+    JANK_CONSTEXPR object *get() const noexcept
+    {
+      return erase();
+    }
+
     JANK_CONSTEXPR object *erase() const noexcept
     {
-      if(!*this)
+      if(is_nil())
       {
         return std::bit_cast<object *>(jank_nil_const);
       }
@@ -262,17 +267,12 @@ namespace jank::runtime
 
     JANK_CONSTEXPR bool is_some() const noexcept
     {
-      return *this;
+      return data != std::bit_cast<void *>(jank_nil_const);
     }
 
     JANK_CONSTEXPR bool is_nil() const noexcept
     {
-      return !*this;
-    }
-
-    JANK_CONSTEXPR operator bool() const
-    {
-      return data != std::bit_cast<void *>(jank_nil_const);
+      return data == std::bit_cast<void *>(jank_nil_const);
     }
 
     void *data{};
@@ -367,11 +367,6 @@ namespace jank::runtime
     JANK_CONSTEXPR bool is_nil() const noexcept
     {
       return true;
-    }
-
-    JANK_CONSTEXPR operator bool() const
-    {
-      return false;
     }
 
     value_type *data{};

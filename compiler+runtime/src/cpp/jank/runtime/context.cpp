@@ -47,32 +47,32 @@ namespace jank::runtime
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 
-    auto const file_sym(make_box<obj::symbol>("clojure.core/*file*"));
+    auto const file_sym(make_box<obj::symbol>("*file*"));
     current_file_var = core->intern_var(file_sym);
     current_file_var->bind_root(make_box(read::no_source_path));
     current_file_var->dynamic.store(true);
 
-    auto const ns_sym(make_box<obj::symbol>("clojure.core/*ns*"));
+    auto const ns_sym(make_box<obj::symbol>("*ns*"));
     current_ns_var = core->intern_var(ns_sym);
     current_ns_var->bind_root(core);
     current_ns_var->dynamic.store(true);
 
-    auto const compile_files_sym(make_box<obj::symbol>("clojure.core/*compile-files*"));
+    auto const compile_files_sym(make_box<obj::symbol>("*compile-files*"));
     compile_files_var = core->intern_var(compile_files_sym);
     compile_files_var->bind_root(obj::boolean::false_const());
     compile_files_var->dynamic.store(true);
 
-    auto const loaded_libs_sym(make_box<obj::symbol>("clojure.core/*loaded-libs*"));
+    auto const loaded_libs_sym(make_box<obj::symbol>("*loaded-libs*"));
     loaded_libs_var = core->intern_var(loaded_libs_sym);
     loaded_libs_var->bind_root(make_box<obj::atom>(obj::persistent_sorted_set::empty()));
     loaded_libs_var->dynamic.store(true);
 
-    auto const assert_sym(make_box<obj::symbol>("clojure.core/*assert*"));
+    auto const assert_sym(make_box<obj::symbol>("*assert*"));
     assert_var = core->intern_var(assert_sym);
     assert_var->bind_root(obj::boolean::true_const());
     assert_var->dynamic.store(true);
 
-    /* These are not actually interned. */
+    /* These are not actually interned. They're extra private. */
     current_module_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
     no_recur_var
@@ -440,7 +440,7 @@ namespace jank::runtime
   {
     auto const ns(current_ns());
     auto const alias(ns->find_alias(target));
-    if(alias)
+    if(alias.is_some())
     {
       return alias;
     }
@@ -492,7 +492,7 @@ namespace jank::runtime
       if(!ns.empty())
       {
         auto const resolved(current_ns()->find_alias(make_box<obj::symbol>(ns)));
-        if(!resolved)
+        if(resolved.is_nil())
         {
           return err(util::format("Unable to resolve namespace alias '{}'", ns));
         }
@@ -545,7 +545,7 @@ namespace jank::runtime
 
           auto const var(find_var(first_sym_obj.data));
           /* None means it's not a var, so not a macro. No meta means no :macro set. */
-          if(!var || var->meta.is_none())
+          if(var.is_nil() || var->meta.is_none())
           {
             return typed_o;
           }
@@ -653,7 +653,7 @@ namespace jank::runtime
 
     auto const thread_id(std::this_thread::get_id());
 
-    for(auto it(bindings->fresh_seq()); it; it = it->next_in_place())
+    for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
     {
       auto const entry(it->first());
       auto const var(expect_object<var>(entry->data[0]));
@@ -661,7 +661,8 @@ namespace jank::runtime
       {
         return err(util::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
       }
-      /* TODO: Where is this unset? */
+
+      /* XXX: Once this is set to true, here, it's never unset. */
       var->thread_bound.store(true);
 
       /* The binding may already be a thread binding if we're just pushing the previous

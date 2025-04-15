@@ -71,14 +71,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it; it = it->next_in_place(), seq = seq->next_in_place())
+        for(auto it(fresh_seq()); it.is_some();
+            it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(!seq || !runtime::equal(it->first(), seq->first()))
+          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return !seq;
+        return seq.is_nil();
       },
       []() { return false; },
       &o);

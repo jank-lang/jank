@@ -1551,7 +1551,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
     }
 
-    if(expr->meta)
+    if(expr->meta.is_some())
     {
       auto const set_meta_fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),

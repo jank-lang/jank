@@ -39,7 +39,7 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i; i = i->next_in_place())
+          for(auto i(typed_s->fresh_seq()); i.is_some(); i = i->next_in_place())
           {
             v.push_back(i->first());
           }
@@ -90,14 +90,14 @@ namespace jank::runtime::obj
           {
             size_t i{};
             auto e(typed_o->fresh_seq());
-            for(; e && i < data.size(); e = e->next_in_place(), ++i)
+            for(; e.is_some() && i < data.size(); e = e->next_in_place(), ++i)
             {
               if(!runtime::equal(data[i], e->first()))
               {
                 return false;
               }
             }
-            return !e && i == data.size();
+            return e.is_nil() && i == data.size();
           }
           else
           {

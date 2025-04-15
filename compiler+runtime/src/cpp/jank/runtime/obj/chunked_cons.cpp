@@ -11,7 +11,7 @@ namespace jank::runtime::obj
     : head{ head }
     , tail{ tail }
   {
-    jank_debug_assert(head);
+    jank_debug_assert(head.is_some());
   }
 
   chunked_cons::chunked_cons(object_ref const meta, object_ref const head, object_ref const tail)
@@ -19,8 +19,8 @@ namespace jank::runtime::obj
     , tail{ tail }
     , meta{ meta }
   {
-    jank_debug_assert(head);
-    jank_debug_assert(meta);
+    jank_debug_assert(head.is_some());
+    jank_debug_assert(meta.is_some());
   }
 
   chunked_cons_ref chunked_cons::seq() const
@@ -157,14 +157,15 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it; it = it->next_in_place(), seq = seq->next_in_place())
+        for(auto it(fresh_seq()); it.is_some();
+            it = it->next_in_place(), seq = seq->next_in_place())
         {
-          if(!seq || !runtime::equal(it->first(), seq->first()))
+          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
           {
             return false;
           }
         }
-        return !seq;
+        return seq.is_nil();
       },
       []() { return false; },
       &o);

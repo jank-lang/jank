@@ -377,12 +377,6 @@ namespace jank::runtime
       ret = new(GC) T{ std::forward<Args>(args)... };
     }
 
-    if(!ret)
-    {
-      /* TODO: Panic. */
-      throw std::runtime_error{ util::format("Unable to allocate box! Received {}",
-                                             static_cast<void *>(ret.data)) };
-    }
     return ret;
   }
 
