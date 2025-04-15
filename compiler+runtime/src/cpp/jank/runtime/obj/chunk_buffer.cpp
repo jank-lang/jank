@@ -11,7 +11,7 @@ namespace jank::runtime::obj
     buffer.reserve(capacity);
   }
 
-  chunk_buffer::chunk_buffer(object_ptr const capacity)
+  chunk_buffer::chunk_buffer(object_ref const capacity)
   {
     auto const c(to_int(capacity));
     if(c < 0)
@@ -54,7 +54,7 @@ namespace jank::runtime::obj
     return buffer.size();
   }
 
-  void chunk_buffer::append(object_ptr const o)
+  void chunk_buffer::append(object_ref const o)
   {
     if(buffer.size() == capacity)
     {

@@ -27,7 +27,7 @@ namespace jank::read::parse
     native_bool operator==(object_source_info const &rhs) const;
     native_bool operator!=(object_source_info const &rhs) const;
 
-    runtime::object_ptr ptr{};
+    runtime::object_ref ptr{};
     lex::token start, end;
   };
 
@@ -94,11 +94,11 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    jtl::result<runtime::object_ptr, error_ref> syntax_quote(runtime::object_ptr form);
-    jtl::result<runtime::object_ptr, error_ref> syntax_quote_expand_seq(runtime::object_ptr seq);
-    static jtl::result<runtime::object_ptr, error_ref>
-    syntax_quote_flatten_map(runtime::object_ptr seq);
-    static native_bool syntax_quote_is_unquote(runtime::object_ptr form, native_bool splice);
+    jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref form);
+    jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_seq(runtime::object_ref seq);
+    static jtl::result<runtime::object_ref, error_ref>
+    syntax_quote_flatten_map(runtime::object_ref seq);
+    static native_bool syntax_quote_is_unquote(runtime::object_ref form, native_bool splice);
 
   public:
     lex::processor::iterator token_current, token_end;
@@ -110,7 +110,7 @@ namespace jank::read::parse
      * token, we should check this list to see if there's already a form we should pull out.
      * This is needed because parse iteration works one form at a time and splicing potentially
      * turns one form into many. */
-    std::list<runtime::object_ptr> pending_forms;
+    std::list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */

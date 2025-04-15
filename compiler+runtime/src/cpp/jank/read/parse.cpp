@@ -419,11 +419,12 @@ namespace jank::read::parse
                                         "Quote form is missing its value.");
     }
 
-    return object_source_info{ erase(make_box<obj::persistent_list>(
+    return object_source_info{ make_box<obj::persistent_list>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
                                  make_box<obj::symbol>("quote"),
-                                 val_result.expect_ok().unwrap().ptr)),
+                                 val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
                                start_token,
                                latest_token };
   }
@@ -841,7 +842,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote_expand_seq(object_ptr const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const seq)
   {
     if(!seq)
     {
@@ -849,7 +850,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
+      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
@@ -882,13 +883,13 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
-      []() -> jtl::result<object_ptr, error_ref> {
+      []() -> jtl::result<object_ref, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
       },
       seq);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote_flatten_map(object_ptr const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
   {
     if(!seq)
     {
@@ -896,7 +897,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
+      [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto it(typed_seq->fresh_seq()); it; it = it->next_in_place())
         {
@@ -907,18 +908,18 @@ namespace jank::read::parse
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
-      []() -> jtl::result<object_ptr, error_ref> {
+      []() -> jtl::result<object_ref, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
       },
       seq);
   }
 
-  native_bool processor::syntax_quote_is_unquote(object_ptr const form, native_bool const splice)
+  native_bool processor::syntax_quote_is_unquote(object_ref const form, native_bool const splice)
   {
     return visit_seqable(
       [splice](auto const typed_form) {
         auto const s(typed_form->seq());
-        object_ptr const item{ s ? s->first() : s };
+        object_ref const item{ s ? s->first().erase() : s.erase() };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);
@@ -927,9 +928,9 @@ namespace jank::read::parse
       form);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote(object_ptr const form)
+  jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const form)
   {
-    object_ptr ret{};
+    object_ref ret{};
 
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
@@ -995,7 +996,7 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       auto const res{ visit_seqable(
-        [&](auto const typed_form) -> jtl::result<object_ptr, error_ref> {
+        [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -1079,7 +1080,7 @@ namespace jank::read::parse
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> jtl::result<object_ptr, error_ref> {
+        [=]() -> jtl::result<object_ref, error_ref> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);
@@ -1167,14 +1168,14 @@ namespace jank::read::parse
       return error::parse_invalid_syntax_unquote({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{
-      erase(make_box<obj::persistent_list>(
-        std::in_place,
-        make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote")),
-        val_result.expect_ok().unwrap().ptr)),
-      start_token,
-      latest_token
-    };
+    return object_source_info{ make_box<obj::persistent_list>(
+                                 std::in_place,
+                                 make_box<obj::symbol>("clojure.core",
+                                                       (splice ? "unquote-splicing" : "unquote")),
+                                 val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
+                               start_token,
+                               latest_token };
   }
 
   processor::object_result processor::parse_deref()
@@ -1191,10 +1192,10 @@ namespace jank::read::parse
       return error::parse_invalid_reader_deref({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{ erase(make_box<obj::persistent_list>(
-                                 std::in_place,
-                                 make_box<obj::symbol>("deref"),
-                                 val_result.expect_ok().unwrap().ptr)),
+    return object_source_info{ make_box<obj::persistent_list>(std::in_place,
+                                                              make_box<obj::symbol>("deref"),
+                                                              val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
                                start_token,
                                latest_token };
   }

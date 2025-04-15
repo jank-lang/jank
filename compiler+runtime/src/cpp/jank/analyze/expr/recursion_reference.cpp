@@ -14,7 +14,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr recursion_reference::to_runtime_data() const
+  object_ref recursion_reference::to_runtime_data() const
   {
     return merge(
       expression::to_runtime_data(),

@@ -20,7 +20,7 @@ namespace jank::analyze::expr
     body->propagate_position(pos);
   }
 
-  object_ptr catch_::to_runtime_data() const
+  object_ref catch_::to_runtime_data() const
   {
     using namespace runtime::obj;
 
@@ -44,7 +44,7 @@ namespace jank::analyze::expr
     }
   }
 
-  runtime::object_ptr try_::to_runtime_data() const
+  runtime::object_ref try_::to_runtime_data() const
   {
     using namespace runtime::obj;
 

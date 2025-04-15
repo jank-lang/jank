@@ -23,7 +23,7 @@ namespace jank::analyze::expr
           native_vector<expression_ref> &&exprs);
 
     void propagate_position(expression_position const pos) override;
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     expression_ref value_expr;
     native_integer shift{};

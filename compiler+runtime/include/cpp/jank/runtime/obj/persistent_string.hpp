@@ -39,14 +39,14 @@ namespace jank::runtime::obj
     native_integer compare(persistent_string const &) const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const key) const;
-    object_ptr get(object_ptr const key, object_ptr const fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
+    object_ref get(object_ref const key) const;
+    object_ref get(object_ref const key, object_ref const fallback) const;
+    object_ref get_entry(object_ref key) const;
+    native_bool contains(object_ref key) const;
 
     /* behavior::indexable */
-    object_ptr nth(object_ptr const index) const;
-    object_ptr nth(object_ptr const index, object_ptr const fallback) const;
+    object_ref nth(object_ref const index) const;
+    object_ref nth(object_ref const index, object_ref const fallback) const;
 
     jtl::string_result<persistent_string_ref> substring(native_integer start) const;
     jtl::string_result<persistent_string_ref>
@@ -54,8 +54,8 @@ namespace jank::runtime::obj
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
-    native_integer first_index_of(object_ptr const m) const;
-    native_integer last_index_of(object_ptr const m) const;
+    native_integer first_index_of(object_ref const m) const;
+    native_integer last_index_of(object_ref const m) const;
 
     /* behavior::countable */
     size_t count() const;

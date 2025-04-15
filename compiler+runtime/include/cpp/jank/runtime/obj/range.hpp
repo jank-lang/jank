@@ -20,26 +20,26 @@ namespace jank::runtime::obj
     static constexpr native_bool is_sequential{ true };
     static constexpr native_integer chunk_size{ 32 };
 
-    using bounds_check_t = native_bool (*)(object_ptr, object_ptr);
+    using bounds_check_t = native_bool (*)(object_ref, object_ref);
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
     range(range &&) noexcept = default;
     range(range const &) = default;
-    range(object_ptr end);
-    range(object_ptr start, object_ptr end);
-    range(object_ptr start, object_ptr end, object_ptr step);
-    range(object_ptr start, object_ptr end, object_ptr step, bounds_check_t bounds_check);
-    range(object_ptr start,
-          object_ptr end,
-          object_ptr step,
+    range(object_ref end);
+    range(object_ref start, object_ref end);
+    range(object_ref start, object_ref end, object_ref step);
+    range(object_ref start, object_ref end, object_ref step, bounds_check_t bounds_check);
+    range(object_ref start,
+          object_ref end,
+          object_ref step,
           bounds_check_t bounds_check,
           obj::array_chunk_ref chunk,
           range_ptr chunk_next);
 
-    static object_ptr create(object_ptr end);
-    static object_ptr create(object_ptr start, object_ptr end);
-    static object_ptr create(object_ptr start, object_ptr end, object_ptr step);
+    static object_ref create(object_ref end);
+    static object_ref create(object_ref start, object_ref end);
+    static object_ref create(object_ref start, object_ref end, object_ref step);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     range_ptr fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
     range_ptr next() const;
 
     /* behavior::sequenceable_in_place */
@@ -65,19 +65,19 @@ namespace jank::runtime::obj
     void force_chunk() const;
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ptr head) const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::metadatable */
-    range_ptr with_meta(object_ptr m) const;
+    range_ptr with_meta(object_ref m) const;
 
     object base{ obj_type };
-    object_ptr start{};
-    object_ptr end{};
-    object_ptr step{};
+    object_ref start{};
+    object_ref end{};
+    object_ref step{};
     bounds_check_t bounds_check{};
     mutable obj::array_chunk_ref chunk{};
     mutable range_ptr chunk_next{};
     mutable range_ptr cached_next{};
-    jtl::option<object_ptr> meta{};
+    jtl::option<object_ref> meta{};
   };
 }

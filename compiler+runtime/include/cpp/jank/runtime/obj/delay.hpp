@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
 
     delay() = default;
-    delay(object_ptr fn);
+    delay(object_ref fn);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -22,12 +22,12 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::derefable */
-    object_ptr deref();
+    object_ref deref();
 
     object base{ obj_type };
-    object_ptr val{};
-    object_ptr fn{};
-    object_ptr error{};
+    object_ref val{};
+    object_ref fn{};
+    object_ref error{};
     std::mutex mutex;
   };
 }

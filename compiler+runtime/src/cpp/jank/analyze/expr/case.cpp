@@ -35,7 +35,7 @@ namespace jank::analyze::expr
     position = pos;
   }
 
-  object_ptr case_::to_runtime_data() const
+  object_ref case_::to_runtime_data() const
   {
     auto pairs{ make_box<obj::persistent_vector>() };
     for(size_t i{}; i < keys.size(); ++i)

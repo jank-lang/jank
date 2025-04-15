@@ -14,7 +14,7 @@ namespace jank::read::parse
   static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &file_path,
                                                     size_t const offset,
                                                     size_t const n,
-                                                    object_ptr const macro_expansion)
+                                                    object_ref const macro_expansion)
   {
     if(file_path == no_source_path)
     {
@@ -78,7 +78,7 @@ namespace jank::read::parse
       .unwrap_move();
   }
 
-  source reparse_nth(runtime::object_ptr const o, size_t const n)
+  source reparse_nth(runtime::object_ref const o, size_t const n)
   {
     /* When we have an object, but we're not sure of the type, let's just
      * see if it's one of the types we support. If not, we'll error out.

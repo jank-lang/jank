@@ -11,18 +11,18 @@ namespace jank::runtime::behavior
     /* Returns a (potentially shared) seq, which could just be `this`, if we're already a
      * seq. However, must return a nullptr for empty seqs. Returning a non-null pointer to
      * an empty seq is UB. */
-    { t->seq() } -> std::convertible_to<object_ptr>;
+    { t->seq() } -> std::convertible_to<object_ref>;
 
     /* Returns a unique seq which can be updated in place. This is an optimization which allows
      * one allocation for a fresh seq which can then be mutated any number of times to traverse
      * the data. Also must return nullptr when the sequence is empty. */
-    { t->fresh_seq() } -> std::convertible_to<object_ptr>;
+    { t->fresh_seq() } -> std::convertible_to<object_ref>;
   };
 
   /* TODO: Rename to sequence_like. */
   template <typename T>
   concept sequenceable = requires(T * const t) {
-    { t->first() } -> std::convertible_to<object_ptr>;
+    { t->first() } -> std::convertible_to<object_ref>;
 
     /* Steps the sequence forward and returns nullptr if there is no more remaining
      * or a pointer to the remaining sequence.

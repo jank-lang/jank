@@ -6,7 +6,7 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ptr> const &meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ref> const &meta)
     : meta{ meta }
   {
   }
@@ -155,7 +155,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  jtl::oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ptr const m) const
+  jtl::oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));

@@ -4,7 +4,7 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename IT>
-  base_persistent_map_sequence<PT, IT>::base_persistent_map_sequence(object_ptr const c,
+  base_persistent_map_sequence<PT, IT>::base_persistent_map_sequence(object_ref const c,
                                                                      IT const &b,
                                                                      IT const &e)
     : coll{ c }
@@ -151,7 +151,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ptr const head)
+  obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ref const head)
   {
     return make_box<obj::cons>(head, static_cast<PT *>(this));
   }

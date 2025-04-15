@@ -117,7 +117,7 @@ namespace jank::analyze
     virtual ~expression() = default;
 
     virtual void propagate_position(expression_position const pos);
-    virtual runtime::object_ptr to_runtime_data() const;
+    virtual runtime::object_ref to_runtime_data() const;
 
     expression_kind kind{};
     expression_position position{};

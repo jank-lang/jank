@@ -269,7 +269,7 @@ namespace jank::runtime::module
     }
   }
 
-  object_ptr file_entry::to_runtime_data() const
+  object_ref file_entry::to_runtime_data() const
   {
     return runtime::obj::persistent_array_map::create_unique(
       make_box("__type"),
@@ -529,13 +529,13 @@ namespace jank::runtime::module
     auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
       __rt_ctx->loaded_libs_var->deref()) };
 
-    auto const swap_fn{ [&](object_ptr const curr_val) {
+    auto const swap_fn{ [&](object_ref const curr_val) {
       return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
         make_box<obj::symbol>(module));
     } };
 
     auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
-      std::function<object_ptr(object_ptr)>{ swap_fn }) };
+      std::function<object_ref(object_ref)>{ swap_fn }) };
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 
@@ -749,9 +749,9 @@ namespace jank::runtime::module
     return load_jank(entry);
   }
 
-  object_ptr loader::to_runtime_data() const
+  object_ref loader::to_runtime_data() const
   {
-    runtime::object_ptr entry_maps(make_box<runtime::obj::persistent_array_map>());
+    runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : entries)
     {
       entry_maps = runtime::assoc(entry_maps,

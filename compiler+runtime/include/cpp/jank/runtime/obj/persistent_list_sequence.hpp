@@ -29,7 +29,7 @@ namespace jank::runtime::obj
       runtime::detail::native_persistent_list::iterator>::iterator_sequence;
 
     /* behavior::metadatable */
-    persistent_list_sequence_ref with_meta(object_ptr const m) const
+    persistent_list_sequence_ref with_meta(object_ref const m) const
     {
       auto const meta(behavior::detail::validate_meta(m));
       auto ret(make_box<persistent_list_sequence>(coll, begin, end, size));
@@ -38,6 +38,6 @@ namespace jank::runtime::obj
     }
 
     object base{ obj_type };
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
   };
 }

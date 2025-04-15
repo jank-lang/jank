@@ -28,7 +28,7 @@ namespace jank::analyze
     position = pos;
   }
 
-  object_ptr expression::to_runtime_data() const
+  object_ref expression::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("kind"),
                                                     make_box(expression_kind_str(kind)),

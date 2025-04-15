@@ -21,8 +21,8 @@ namespace jank::runtime::obj
     symbol(jtl::immutable_string &&d);
     symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n);
     symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n);
-    symbol(object_ptr meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
-    symbol(object_ptr ns, object_ptr n);
+    symbol(object_ref meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
+    symbol(object_ref ns, object_ref n);
 
     symbol &operator=(symbol const &) = default;
     symbol &operator=(symbol &&) = default;
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     native_integer compare(symbol const &) const;
 
     /* behavior::metadatable */
-    symbol_ref with_meta(object_ptr m) const;
+    symbol_ref with_meta(object_ref m) const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     jtl::immutable_string ns;
     jtl::immutable_string name;
 
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
     mutable native_hash hash{};
   };
 }

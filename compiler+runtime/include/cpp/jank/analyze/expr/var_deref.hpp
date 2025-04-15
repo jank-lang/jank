@@ -26,7 +26,7 @@ namespace jank::analyze::expr
               runtime::obj::symbol_ref qualified_name,
               runtime::var_ref var);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     /* Holds the fully qualified name for the originally resolved var.
      * It will be useful to know that the var deref happened through a

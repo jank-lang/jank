@@ -114,7 +114,7 @@ namespace jank::jit
             passed = false;
           }
         }
-        catch(runtime::object_ptr const e)
+        catch(runtime::object_ref const e)
         {
           if(expect_success || (expect_throw && !runtime::equal(e, cardinal_result)))
           {

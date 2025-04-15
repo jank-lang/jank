@@ -150,7 +150,7 @@ namespace jank::error
       .release();
   }
 
-  static void add_expansion_note(base &e, runtime::object_ptr const expansion)
+  static void add_expansion_note(base &e, runtime::object_ref const expansion)
   {
     auto source{ runtime::object_source(expansion) };
     /* We just want to point at the start of the expansion, not underline the
@@ -183,7 +183,7 @@ namespace jank::error
   {
   }
 
-  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ptr const expansion)
+  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -195,7 +195,7 @@ namespace jank::error
   base::base(enum kind const k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr const expansion,
+         runtime::object_ref const expansion,
          std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }
     , message{ message }
@@ -231,7 +231,7 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              jtl::immutable_string const &note_message,
-             runtime::object_ptr const expansion)
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -263,7 +263,7 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              note const &note,
-             runtime::object_ptr const expansion)
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -286,7 +286,7 @@ namespace jank::error
   base::base(enum kind const k,
              jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
+             runtime::object_ref const expansion,
              jtl::ref<base> const cause)
     : kind{ k }
     , message{ message }
@@ -300,7 +300,7 @@ namespace jank::error
   base::base(enum kind const k,
              jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
+             runtime::object_ref const expansion,
              jtl::ref<base> const cause,
              std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }

@@ -35,22 +35,22 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    transient_sorted_set_ref conj_in_place(object_ptr elem);
+    transient_sorted_set_ref conj_in_place(object_ref elem);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr const);
-    object_ptr call(object_ptr const, object_ptr const fallback);
+    object_ref call(object_ref const);
+    object_ref call(object_ref const, object_ref const fallback);
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const elem);
-    object_ptr get(object_ptr const elem, object_ptr const fallback);
-    object_ptr get_entry(object_ptr const elem);
-    native_bool contains(object_ptr const elem) const;
+    object_ref get(object_ref const elem);
+    object_ref get(object_ref const elem, object_ref const fallback);
+    object_ref get_entry(object_ref const elem);
+    native_bool contains(object_ref const elem) const;
 
-    transient_sorted_set_ref disjoin_in_place(object_ptr const elem);
+    transient_sorted_set_ref disjoin_in_place(object_ref const elem);
 
     void assert_active() const;
 

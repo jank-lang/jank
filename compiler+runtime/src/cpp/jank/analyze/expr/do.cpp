@@ -36,7 +36,7 @@ namespace jank::analyze::expr
     }
   }
 
-  object_ptr do_::to_runtime_data() const
+  object_ref do_::to_runtime_data() const
   {
     auto body_maps{ make_box<obj::persistent_vector>() };
     for(auto const &e : values)

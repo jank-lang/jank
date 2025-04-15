@@ -7,57 +7,57 @@
 
 namespace jank::runtime
 {
-  jtl::immutable_string type(object_ptr const o)
+  jtl::immutable_string type(object_ref const o)
   {
     return object_type_str(o->type);
   }
 
-  native_bool is_nil(object_ptr const o)
+  native_bool is_nil(object_ref const o)
   {
     return o == obj::nil::nil_const();
   }
 
-  native_bool is_true(object_ptr const o)
+  native_bool is_true(object_ref const o)
   {
     return o == obj::boolean::true_const();
   }
 
-  native_bool is_false(object_ptr const o)
+  native_bool is_false(object_ref const o)
   {
     return o == obj::boolean::false_const();
   }
 
-  native_bool is_some(object_ptr const o)
+  native_bool is_some(object_ref const o)
   {
     return o != obj::nil::nil_const();
   }
 
-  native_bool is_string(object_ptr const o)
+  native_bool is_string(object_ref const o)
   {
     return o->type == object_type::persistent_string;
   }
 
-  native_bool is_char(object_ptr const o)
+  native_bool is_char(object_ref const o)
   {
     return o->type == object_type::character;
   }
 
-  native_bool is_symbol(object_ptr const o)
+  native_bool is_symbol(object_ref const o)
   {
     return o->type == object_type::symbol;
   }
 
-  native_bool is_simple_symbol(object_ptr const o)
+  native_bool is_simple_symbol(object_ref const o)
   {
     return o->type == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  native_bool is_qualified_symbol(object_ptr const o)
+  native_bool is_qualified_symbol(object_ref const o)
   {
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  object_ptr print(object_ptr const args)
+  object_ref print(object_ref const args)
   {
     visit_object(
       [](auto const typed_args) {
@@ -66,11 +66,11 @@ namespace jank::runtime
         if constexpr(behavior::sequenceable<T>)
         {
           util::string_builder buff;
-          runtime::to_string(typed_args->first(), buff);
+          runtime::to_string(typed_args->first().erase(), buff);
           for(auto it(typed_args->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
-            runtime::to_string(it->first(), buff);
+            runtime::to_string(it->first().erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
@@ -84,7 +84,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  object_ptr println(object_ptr const args)
+  object_ref println(object_ref const args)
   {
     visit_object(
       [](auto const typed_more) {
@@ -97,11 +97,11 @@ namespace jank::runtime
         else if constexpr(behavior::sequenceable<T>)
         {
           util::string_builder buff;
-          runtime::to_string(typed_more->first(), buff);
+          runtime::to_string(typed_more->first().erase(), buff);
           for(auto it(typed_more->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
-            runtime::to_string(it->first(), buff);
+            runtime::to_string(it->first().erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
           std::putc('\n', stdout);
@@ -116,7 +116,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  object_ptr pr(object_ptr const args)
+  object_ref pr(object_ref const args)
   {
     visit_object(
       [](auto const typed_args) {
@@ -125,11 +125,11 @@ namespace jank::runtime
         if constexpr(behavior::sequenceable<T>)
         {
           util::string_builder buff;
-          runtime::to_code_string(typed_args->first(), buff);
+          runtime::to_code_string(typed_args->first().erase(), buff);
           for(auto it(typed_args->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
-            runtime::to_code_string(it->first(), buff);
+            runtime::to_code_string(it->first().erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
@@ -143,7 +143,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  object_ptr prn(object_ptr const args)
+  object_ref prn(object_ref const args)
   {
     visit_object(
       [](auto const typed_more) {
@@ -156,11 +156,11 @@ namespace jank::runtime
         else if constexpr(behavior::sequenceable<T>)
         {
           util::string_builder buff;
-          runtime::to_code_string(typed_more->first(), buff);
+          runtime::to_code_string(typed_more->first().erase(), buff);
           for(auto it(typed_more->next_in_place()); it; it = it->next_in_place())
           {
             buff(' ');
-            runtime::to_code_string(it->first(), buff);
+            runtime::to_code_string(it->first().erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
           std::putc('\n', stdout);
@@ -175,7 +175,7 @@ namespace jank::runtime
     return obj::nil::nil_const();
   }
 
-  native_real to_real(object_ptr const o)
+  native_real to_real(object_ref const o)
   {
     return visit_number_like(
       [](auto const typed_o) -> native_real { return typed_o->to_real(); },
@@ -185,7 +185,7 @@ namespace jank::runtime
       o);
   }
 
-  obj::persistent_string_ref subs(object_ptr const s, object_ptr const start)
+  obj::persistent_string_ref subs(object_ref const s, object_ref const start)
   {
     return visit_type<obj::persistent_string>(
       [](auto const typed_s, native_integer const start) -> obj::persistent_string_ref {
@@ -195,7 +195,7 @@ namespace jank::runtime
       to_int(start));
   }
 
-  obj::persistent_string_ref subs(object_ptr const s, object_ptr const start, object_ptr const end)
+  obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
     return visit_type<obj::persistent_string>(
       [](auto const typed_s, native_integer const start, native_integer const end)
@@ -205,27 +205,27 @@ namespace jank::runtime
       to_int(end));
   }
 
-  native_integer first_index_of(object_ptr const s, object_ptr const m)
+  native_integer first_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ptr const m) -> native_integer {
+      [](auto const typed_s, object_ref const m) -> native_integer {
         return typed_s->first_index_of(m);
       },
       s,
       m);
   }
 
-  native_integer last_index_of(object_ptr const s, object_ptr const m)
+  native_integer last_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ptr const m) -> native_integer {
+      [](auto const typed_s, object_ref const m) -> native_integer {
         return typed_s->last_index_of(m);
       },
       s,
       m);
   }
 
-  native_bool is_named(object_ptr const o)
+  native_bool is_named(object_ref const o)
   {
     return visit_object(
       [](auto const typed_o) {
@@ -236,7 +236,7 @@ namespace jank::runtime
       o);
   }
 
-  jtl::immutable_string name(object_ptr const o)
+  jtl::immutable_string name(object_ref const o)
   {
     return visit_object(
       [](auto const typed_o) -> jtl::immutable_string {
@@ -258,10 +258,10 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr namespace_(object_ptr const o)
+  object_ref namespace_(object_ref const o)
   {
     return visit_object(
-      [](auto const typed_o) -> object_ptr {
+      [](auto const typed_o) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::nameable<T>)
@@ -269,7 +269,7 @@ namespace jank::runtime
           auto const ns(typed_o->get_namespace());
           if(ns.empty())
           {
-          return obj::nil::nil_const();
+            return obj::nil::nil_const();
           }
           return make_box<obj::persistent_string>(ns);
         }
@@ -281,27 +281,27 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr keyword(object_ptr const ns, object_ptr const name)
+  object_ref keyword(object_ref const ns, object_ref const name)
   {
     return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
-  native_bool is_keyword(object_ptr const o)
+  native_bool is_keyword(object_ref const o)
   {
     return o->type == object_type::keyword;
   }
 
-  native_bool is_simple_keyword(object_ptr const o)
+  native_bool is_simple_keyword(object_ref const o)
   {
     return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  native_bool is_qualified_keyword(object_ptr const o)
+  native_bool is_qualified_keyword(object_ref const o)
   {
     return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  native_bool is_callable(object_ptr const o)
+  native_bool is_callable(object_ref const o)
   {
     return visit_object(
       [=](auto const typed_o) -> native_bool {
@@ -312,101 +312,101 @@ namespace jank::runtime
       o);
   }
 
-  native_hash to_hash(object_ptr const o)
+  native_hash to_hash(object_ref const o)
   {
     return visit_object([=](auto const typed_o) -> native_hash { return typed_o->to_hash(); }, o);
   }
 
-  object_ptr macroexpand1(object_ptr const o)
+  object_ref macroexpand1(object_ref const o)
   {
     return __rt_ctx->macroexpand1(o);
   }
 
-  object_ptr macroexpand(object_ptr const o)
+  object_ref macroexpand(object_ref const o)
   {
     return __rt_ctx->macroexpand(o);
   }
 
-  object_ptr gensym(object_ptr const o)
+  object_ref gensym(object_ref const o)
   {
     return make_box<obj::symbol>(__rt_ctx->unique_symbol(to_string(o)));
   }
 
-  object_ptr atom(object_ptr const o)
+  object_ref atom(object_ref const o)
   {
     return make_box<obj::atom>(o);
   }
 
-  object_ptr swap_atom(object_ptr const atom, object_ptr const fn)
+  object_ref swap_atom(object_ref const atom, object_ref const fn)
   {
     return try_object<obj::atom>(atom)->swap(fn);
   }
 
-  object_ptr swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1);
   }
 
-  object_ptr
-  swap_atom(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  object_ref
+  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2);
   }
 
-  object_ptr swap_atom(object_ptr const atom,
-                       object_ptr const fn,
-                       object_ptr const a1,
-                       object_ptr const a2,
-                       object_ptr const rest)
+  object_ref swap_atom(object_ref const atom,
+                       object_ref const fn,
+                       object_ref const a1,
+                       object_ref const a2,
+                       object_ref const rest)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
   }
 
-  object_ptr swap_vals(object_ptr const atom, object_ptr const fn)
+  object_ref swap_vals(object_ref const atom, object_ref const fn)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn);
   }
 
-  object_ptr swap_vals(object_ptr const atom, object_ptr const fn, object_ptr const a1)
+  object_ref swap_vals(object_ref const atom, object_ref const fn, object_ref const a1)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1);
   }
 
-  object_ptr
-  swap_vals(object_ptr const atom, object_ptr const fn, object_ptr const a1, object_ptr const a2)
+  object_ref
+  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
   }
 
-  object_ptr swap_vals(object_ptr const atom,
-                       object_ptr const fn,
-                       object_ptr const a1,
-                       object_ptr const a2,
-                       object_ptr const rest)
+  object_ref swap_vals(object_ref const atom,
+                       object_ref const fn,
+                       object_ref const a1,
+                       object_ref const a2,
+                       object_ref const rest)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
   }
 
-  object_ptr
-  compare_and_set(object_ptr const atom, object_ptr const old_val, object_ptr const new_val)
+  object_ref
+  compare_and_set(object_ref const atom, object_ref const old_val, object_ref const new_val)
   {
     return try_object<obj::atom>(atom)->compare_and_set(old_val, new_val);
   }
 
-  object_ptr reset(object_ptr const atom, object_ptr const new_val)
+  object_ref reset(object_ref const atom, object_ref const new_val)
   {
     return try_object<obj::atom>(atom)->reset(new_val);
   }
 
-  object_ptr reset_vals(object_ptr const atom, object_ptr const new_val)
+  object_ref reset_vals(object_ref const atom, object_ref const new_val)
   {
     return try_object<obj::atom>(atom)->reset_vals(new_val);
   }
 
-  object_ptr deref(object_ptr const o)
+  object_ref deref(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> object_ptr {
+      [=](auto const typed_o) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::derefable<T>)
@@ -421,34 +421,34 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr volatile_(object_ptr const o)
+  object_ref volatile_(object_ref const o)
   {
     return make_box<obj::volatile_>(o);
   }
 
-  native_bool is_volatile(object_ptr const o)
+  native_bool is_volatile(object_ref const o)
   {
     return o->type == object_type::volatile_;
   }
 
-  object_ptr vswap(object_ptr const v, object_ptr const fn)
+  object_ref vswap(object_ref const v, object_ref const fn)
   {
     auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(dynamic_call(fn, v_obj->deref()));
   }
 
-  object_ptr vswap(object_ptr const v, object_ptr const fn, object_ptr const args)
+  object_ref vswap(object_ref const v, object_ref const fn, object_ref const args)
   {
     auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
   }
 
-  object_ptr vreset(object_ptr const v, object_ptr const new_val)
+  object_ref vreset(object_ref const v, object_ref const new_val)
   {
     return try_object<obj::volatile_>(v)->reset(new_val);
   }
 
-  void push_thread_bindings(object_ptr const o)
+  void push_thread_bindings(object_ref const o)
   {
     __rt_ctx->push_thread_bindings(o).expect_ok();
   }
@@ -458,12 +458,12 @@ namespace jank::runtime
     __rt_ctx->pop_thread_bindings().expect_ok();
   }
 
-  object_ptr get_thread_bindings()
+  object_ref get_thread_bindings()
   {
     return __rt_ctx->get_thread_bindings();
   }
 
-  object_ptr force(object_ptr const o)
+  object_ref force(object_ref const o)
   {
     if(o->type == object_type::delay)
     {
@@ -472,12 +472,12 @@ namespace jank::runtime
     return o;
   }
 
-  object_ptr tagged_literal(object_ptr const tag, object_ptr const form)
+  object_ref tagged_literal(object_ref const tag, object_ref const form)
   {
     return make_box<obj::tagged_literal>(tag, form);
   }
 
-  native_bool is_tagged_literal(object_ptr const o)
+  native_bool is_tagged_literal(object_ref const o)
   {
     return o->type == object_type::tagged_literal;
   }

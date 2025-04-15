@@ -55,7 +55,7 @@ namespace jank::analyze
    * a scope_exit which will do so. Since we don't always push something, we lift this
    * up into a nullable pointer. */
   static std::unique_ptr<util::scope_exit>
-  push_macro_expansions(processor &proc, object_ptr const o)
+  push_macro_expansions(processor &proc, object_ref const o)
   {
     auto const meta(runtime::meta(o));
     auto const expansion(
@@ -71,7 +71,7 @@ namespace jank::analyze
     return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_back(); });
   }
 
-  static object_ptr latest_expansion(native_vector<runtime::object_ptr> const &expansions)
+  static object_ref latest_expansion(native_vector<runtime::object_ref> const &expansions)
   {
     if(expansions.empty())
     {
@@ -468,16 +468,11 @@ namespace jank::analyze
 
     /* Macros aren't lifted, since they're not used during runtime. */
     auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
-    if(var->meta.is_none()
-       || get(var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const())
+    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const())
     {
       current_frame->lift_var(qualified_sym);
     }
-    return jtl::make_ref<expr::var_deref>(position,
-                                          current_frame,
-                                          true,
-                                          qualified_sym,
-                                          var);
+    return jtl::make_ref<expr::var_deref>(position, current_frame, true, qualified_sym, var);
   }
 
   jtl::result<expr::function_arity, error_ref>
@@ -1237,11 +1232,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    return jtl::make_ref<expr::var_ref>(position,
-                                        current_frame,
-                                        true,
-                                        qualified_sym,
-                                        found_var);
+    return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, found_var);
   }
 
   processor::expression_result
@@ -1489,7 +1480,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_primitive_literal(runtime::object_ptr const o,
+  processor::analyze_primitive_literal(runtime::object_ref const o,
                                        local_frame_ptr const current_frame,
                                        expression_position const position,
                                        jtl::option<expr::function_context_ref> const &,
@@ -1545,7 +1536,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_map(object_ptr const o,
+  processor::analyze_map(object_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1565,7 +1556,7 @@ namespace jank::analyze
         {
           /* The two maps (hash and sorted) have slightly different iterators, so we need to
            * pull out the entries differently. */
-          object_ptr first{}, second{};
+          object_ref first{}, second{};
           if constexpr(std::same_as<T, obj::persistent_sorted_map>)
           {
             auto const &entry(kv.get());
@@ -1602,7 +1593,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_set(object_ptr const o,
+  processor::analyze_set(object_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1695,7 +1686,7 @@ namespace jank::analyze
         return sym_result;
       }
 
-      object_ptr expanded{ o };
+      object_ref expanded{ o };
       jtl::ptr<error::base> expansion_error{};
       JANK_TRY
       {
@@ -1843,25 +1834,18 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze(object_ptr const o, expression_position const position)
+  processor::analyze(object_ref const o, expression_position const position)
   {
     return analyze(o, root_frame, position, none, true);
   }
 
   processor::expression_result
-  processor::analyze(object_ptr const o,
+  processor::analyze(object_ref const o,
                      local_frame_ptr const current_frame,
                      expression_position const position,
                      jtl::option<expr::function_context_ref> const &fn_ctx,
                      native_bool const needs_box)
   {
-    if(o == nullptr)
-    {
-      return error::internal_analyze_failure("Unexpected nullptr in processor::analyze.",
-                                             read::source::unknown,
-                                             latest_expansion(macro_expansions));
-    }
-
     return runtime::visit_object(
       [&](auto const typed_o) -> processor::expression_result {
         using T = typename decltype(typed_o)::value_type;
@@ -1921,7 +1905,7 @@ namespace jank::analyze
       o);
   }
 
-  native_bool processor::is_special(runtime::object_ptr const form)
+  native_bool processor::is_special(runtime::object_ref const form)
   {
     if(form->type != runtime::object_type::symbol)
     {

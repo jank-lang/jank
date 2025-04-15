@@ -9,15 +9,15 @@
 
 namespace jank::runtime
 {
-  object_ptr meta(object_ptr const m)
+  object_ref meta(object_ref const m)
   {
-    if(m == nullptr || m == obj::nil::nil_const())
+    if(!m)
     {
-      return obj::nil::nil_const();
+      return m;
     }
 
     return visit_object(
-      [](auto const typed_m) -> object_ptr {
+      [](auto const typed_m) -> object_ref {
         using T = typename decltype(typed_m)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -32,10 +32,10 @@ namespace jank::runtime
       m);
   }
 
-  object_ptr with_meta(object_ptr const o, object_ptr const m)
+  object_ref with_meta(object_ref const o, object_ref const m)
   {
     return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
+      [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -56,10 +56,10 @@ namespace jank::runtime
   /* This is the same as with_meta, but it gracefully handles the target
    * not supporting metadata. In that case, the target is returned and nothing
    * is done with the meta. */
-  object_ptr with_meta_graceful(object_ptr const o, object_ptr const m)
+  object_ref with_meta_graceful(object_ref const o, object_ref const m)
   {
     return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
+      [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -75,10 +75,10 @@ namespace jank::runtime
       m);
   }
 
-  object_ptr reset_meta(object_ptr const o, object_ptr const m)
+  object_ref reset_meta(object_ref const o, object_ref const m)
   {
     return visit_object(
-      [](auto const typed_o, object_ptr const m) -> object_ptr {
+      [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -98,7 +98,7 @@ namespace jank::runtime
       m);
   }
 
-  read::source meta_source(jtl::option<runtime::object_ptr> const &o)
+  read::source meta_source(jtl::option<runtime::object_ref> const &o)
   {
     using namespace jank::runtime;
 
@@ -141,7 +141,7 @@ namespace jank::runtime
     };
   }
 
-  read::source object_source(object_ptr const o)
+  read::source object_source(object_ref const o)
   {
     auto const meta(runtime::meta(o));
     if(meta == obj::nil::nil_const())
@@ -157,7 +157,7 @@ namespace jank::runtime
     return source_to_meta(__rt_ctx->intern_keyword("jank/source").expect_ok(), start, end);
   }
 
-  obj::persistent_hash_map_ref source_to_meta(object_ptr const key,
+  obj::persistent_hash_map_ref source_to_meta(object_ref const key,
                                               read::source_position const &start,
                                               read::source_position const &end)
   {
@@ -186,7 +186,7 @@ namespace jank::runtime
     return obj::persistent_hash_map::create_unique(std::make_pair(key, source->to_persistent()));
   }
 
-  object_ptr strip_source_from_meta(object_ptr const meta)
+  object_ref strip_source_from_meta(object_ref const meta)
   {
     return dissoc(meta, __rt_ctx->intern_keyword("jank/source").expect_ok());
   }

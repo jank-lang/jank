@@ -20,13 +20,13 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_array_map::persistent_array_map(jtl::option<object_ptr> const &meta, value_type &&d)
+  persistent_array_map::persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
   }
 
-  object_ptr persistent_array_map::get(object_ptr const key) const
+  object_ref persistent_array_map::get(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res)
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  object_ptr persistent_array_map::get(object_ptr const key, object_ptr const fallback) const
+  object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
   {
     auto const res(data.find(key));
     if(res)
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr persistent_array_map::get_entry(object_ptr const key) const
+  object_ref persistent_array_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res)
@@ -56,12 +56,12 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  native_bool persistent_array_map::contains(object_ptr const key) const
+  native_bool persistent_array_map::contains(object_ref const key) const
   {
     return data.find(key);
   }
 
-  object_ptr persistent_array_map::assoc(object_ptr const key, object_ptr const val) const
+  object_ref persistent_array_map::assoc(object_ref const key, object_ref const val) const
   {
     /* If we've hit the max array map size, it's time to promote to a hash map.
      *
@@ -82,14 +82,14 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_array_map_ref persistent_array_map::dissoc(object_ptr const key) const
+  persistent_array_map_ref persistent_array_map::dissoc(object_ref const key) const
   {
     auto copy(data.clone());
     copy.erase(key);
     return make_box<persistent_array_map>(meta, std::move(copy));
   }
 
-  object_ptr persistent_array_map::conj(object_ptr const head) const
+  object_ref persistent_array_map::conj(object_ref const head) const
   {
     if(head->type == object_type::persistent_array_map
        || head->type == object_type::persistent_hash_map)
@@ -120,7 +120,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr persistent_array_map::call(object_ptr const o) const
+  object_ref persistent_array_map::call(object_ref const o) const
   {
     auto const found(data.find(o));
     if(!found)
@@ -130,7 +130,7 @@ namespace jank::runtime::obj
     return found;
   }
 
-  object_ptr persistent_array_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ref persistent_array_map::call(object_ref const o, object_ref const fallback) const
   {
     auto const found(data.find(o));
     if(!found)

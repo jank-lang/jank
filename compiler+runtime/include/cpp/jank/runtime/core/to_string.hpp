@@ -5,13 +5,13 @@
 
 namespace jank::runtime
 {
-  jtl::immutable_string to_string(object const *o);
+  jtl::immutable_string to_string(object_ref const o);
   void to_string(char ch, util::string_builder &buff);
-  void to_string(object_ptr o, util::string_builder &buff);
+  void to_string(object_ref o, util::string_builder &buff);
 
-  jtl::immutable_string to_code_string(object const *o);
+  jtl::immutable_string to_code_string(object_ref const o);
   void to_code_string(char ch, util::string_builder &buff);
-  void to_code_string(object_ptr o, util::string_builder &buff);
+  void to_code_string(object_ref o, util::string_builder &buff);
 
   template <typename It>
   void to_string(It const &begin,
@@ -54,7 +54,7 @@ namespace jank::runtime
       {
         buff(' ');
       }
-      runtime::to_string(i->first(), buff);
+      runtime::to_string(i->first().erase(), buff);
       needs_space = true;
     }
     buff(')');
@@ -110,7 +110,7 @@ namespace jank::runtime
       {
         buff(' ');
       }
-      runtime::to_code_string(i->first(), buff);
+      runtime::to_code_string(i->first().erase(), buff);
       needs_space = true;
     }
     buff(')');

@@ -25,7 +25,7 @@ namespace jank::runtime::detail
     native_persistent_array_map(native_persistent_array_map &&s) noexcept = default;
 
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    native_persistent_array_map(in_place_unique, jtl::ref<object_ptr> const kvs, L const l)
+    native_persistent_array_map(in_place_unique, jtl::ref<object_ref> const kvs, L const l)
       : data{ std::move(kvs.data) }
       , length{ static_cast<decltype(length)>(l) }
     {
@@ -33,13 +33,13 @@ namespace jank::runtime::detail
 
     ~native_persistent_array_map() = default;
 
-    void insert_unique(object_ptr const key, object_ptr const val);
+    void insert_unique(object_ref const key, object_ref const val);
 
-    void insert_or_assign(object_ptr const key, object_ptr const val);
+    void insert_or_assign(object_ref const key, object_ref const val);
 
-    void erase(object_ptr const key);
+    void erase(object_ref const key);
 
-    object_ptr find(object_ptr const key) const;
+    object_ref find(object_ref const key) const;
 
     native_hash to_hash() const;
 
@@ -47,11 +47,11 @@ namespace jank::runtime::detail
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = std::pair<object_ptr, object_ptr>;
+      using value_type = std::pair<object_ref, object_ref>;
       using pointer = value_type *;
       using reference = value_type &;
 
-      iterator(object_ptr const *data, size_t index);
+      iterator(object_ref const *data, size_t index);
       iterator(iterator const &) = default;
       iterator(iterator &&) noexcept = default;
 
@@ -65,7 +65,7 @@ namespace jank::runtime::detail
 
       iterator &operator=(iterator const &rhs);
 
-      object_ptr const *data{};
+      object_ref const *data{};
       size_t index{};
     };
 
@@ -80,7 +80,7 @@ namespace jank::runtime::detail
 
     native_persistent_array_map clone() const;
 
-    object_ptr *data{};
+    object_ref *data{};
     size_t length{};
     mutable native_hash hash{};
   };

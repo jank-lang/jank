@@ -22,7 +22,7 @@ namespace jank::runtime
     return true;
   }
 
-  native_bool truthy(object_ptr const o)
+  native_bool truthy(object_ref const o)
   {
     return truthy(o.data);
   }

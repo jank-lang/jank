@@ -13,17 +13,17 @@ namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  object_ptr lifted_var::to_runtime_data() const
+  object_ref lifted_var::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("var_name"), var_name);
   }
 
-  object_ptr lifted_constant::to_runtime_data() const
+  object_ref lifted_constant::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("data"), data);
   }
 
-  object_ptr local_binding::to_runtime_data() const
+  object_ref local_binding::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
       make_box("name"),
@@ -223,7 +223,6 @@ namespace jank::analyze
   jtl::option<std::reference_wrapper<lifted_var const>>
   local_frame::find_lifted_var(obj::symbol_ref const &sym) const
   {
-    jank_debug_assert(sym);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
     if(found != closest_fn.lifted_vars.end())
@@ -233,9 +232,8 @@ namespace jank::analyze
     return none;
   }
 
-  void local_frame::lift_constant(object_ptr const constant)
+  void local_frame::lift_constant(object_ref const constant)
   {
-    jank_debug_assert(constant);
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
@@ -256,9 +254,8 @@ namespace jank::analyze
   }
 
   jtl::option<std::reference_wrapper<lifted_constant const>>
-  local_frame::find_lifted_constant(object_ptr const o) const
+  local_frame::find_lifted_constant(object_ref const o) const
   {
-    jank_debug_assert(o);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));
     if(found != closest_fn.lifted_constants.end())
@@ -268,7 +265,7 @@ namespace jank::analyze
     return none;
   }
 
-  object_ptr local_frame::to_runtime_data() const
+  object_ref local_frame::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
       make_box("type"),

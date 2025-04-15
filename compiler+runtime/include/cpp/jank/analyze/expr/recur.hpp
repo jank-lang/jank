@@ -21,7 +21,7 @@ namespace jank::analyze::expr
           runtime::obj::persistent_list_ref args,
           native_vector<expression_ref> &&arg_exprs);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     runtime::obj::persistent_list_ref args{};
     native_vector<expression_ref> arg_exprs;

@@ -39,10 +39,10 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    {
-      profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
-    }
+    //{
+    //  profile::timer const timer{ "load clojure.core" };
+    //  __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+    //}
 
     {
       profile::timer const timer{ "eval user code" };
@@ -263,7 +263,7 @@ int main(int const argc, char const **argv)
     //r = make_box<obj::symbol>("foo");
     //if(r)
     //{
-    //  object_ptr o;
+    //  object_ref o;
     //  o = erase(r);
     //  util::println("r {}", r->to_code_string());
     //}

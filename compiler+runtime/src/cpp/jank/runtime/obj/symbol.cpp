@@ -41,7 +41,7 @@ namespace jank::runtime::obj
   {
   }
 
-  symbol::symbol(object_ptr const meta,
+  symbol::symbol(object_ref const meta,
                  jtl::immutable_string const &ns,
                  jtl::immutable_string const &n)
     : ns{ ns }
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
   {
   }
 
-  symbol::symbol(object_ptr const ns, object_ptr const n)
+  symbol::symbol(object_ref const ns, object_ref const n)
     : ns{ runtime::to_string(ns) }
     , name{ runtime::to_string(n) }
   {
@@ -144,7 +144,7 @@ namespace jank::runtime::obj
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  symbol_ref symbol::with_meta(object_ptr const m) const
+  symbol_ref symbol::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<symbol>(ns, name));

@@ -64,7 +64,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  object_ptr transient_sorted_map::get(object_ptr const key) const
+  object_ref transient_sorted_map::get(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  object_ptr transient_sorted_map::get(object_ptr const key, object_ptr const fallback) const
+  object_ref transient_sorted_map::get(object_ref const key, object_ref const fallback) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -86,7 +86,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr transient_sorted_map::get_entry(object_ptr const key) const
+  object_ref transient_sorted_map::get_entry(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -97,28 +97,28 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  native_bool transient_sorted_map::contains(object_ptr const key) const
+  native_bool transient_sorted_map::contains(object_ref const key) const
   {
     assert_active();
     return data.find(key) != data.end();
   }
 
   transient_sorted_map_ref
-  transient_sorted_map::assoc_in_place(object_ptr const key, object_ptr const val)
+  transient_sorted_map::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
     data.insert_or_assign(key, val);
     return this;
   }
 
-  transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ptr const key)
+  transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
     data.erase_key(key);
     return this;
   }
 
-  transient_sorted_map_ref transient_sorted_map::conj_in_place(object_ptr const head)
+  transient_sorted_map_ref transient_sorted_map::conj_in_place(object_ref const head)
   {
     assert_active();
 
@@ -150,12 +150,12 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_map>(std::move(data).persistent());
   }
 
-  object_ptr transient_sorted_map::call(object_ptr const o) const
+  object_ref transient_sorted_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ptr transient_sorted_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ref transient_sorted_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

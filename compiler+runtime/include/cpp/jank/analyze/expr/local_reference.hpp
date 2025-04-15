@@ -26,7 +26,7 @@ namespace jank::analyze::expr
                     runtime::obj::symbol_ref name,
                     local_binding_ptr binding);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     runtime::obj::symbol_ref name{};
     local_binding_ptr binding;

@@ -18,8 +18,8 @@ namespace jank::runtime::obj
     chunked_cons() = default;
     chunked_cons(chunked_cons &&) noexcept = default;
     chunked_cons(chunked_cons const &) = default;
-    chunked_cons(object_ptr head, object_ptr tail);
-    chunked_cons(object_ptr meta, object_ptr head, object_ptr tail);
+    chunked_cons(object_ref head, object_ref tail);
+    chunked_cons(object_ref meta, object_ref head, object_ref tail);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -29,27 +29,27 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    chunked_cons_ref with_meta(object_ptr m) const;
+    chunked_cons_ref with_meta(object_ref m) const;
 
     /* behavior::seqable */
     chunked_cons_ref seq() const;
     chunked_cons_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
-    object_ptr next() const;
-    obj::cons_ref conj(object_ptr head) const;
+    object_ref first() const;
+    object_ref next() const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::sequenceable_in_place */
     chunked_cons_ref next_in_place();
 
     /* behavior::chunkable */
-    object_ptr chunked_first() const;
-    object_ptr chunked_next() const;
+    object_ref chunked_first() const;
+    object_ref chunked_next() const;
 
     object base{ obj_type };
-    object_ptr head{};
-    object_ptr tail{};
-    jtl::option<object_ptr> meta;
+    object_ref head{};
+    object_ref tail{};
+    jtl::option<object_ref> meta;
   };
 }

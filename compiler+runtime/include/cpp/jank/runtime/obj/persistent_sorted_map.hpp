@@ -28,8 +28,8 @@ namespace jank::runtime::obj
     persistent_sorted_map(persistent_sorted_map const &) = default;
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
-    persistent_sorted_map(object_ptr meta, value_type &&d);
-    persistent_sorted_map(jtl::option<object_ptr> const &meta, value_type &&d);
+    persistent_sorted_map(object_ref meta, value_type &&d);
+    persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_map(runtime::detail::in_place_unique, Args &&...args)
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_sorted_map(object_ptr const meta, runtime::detail::in_place_unique, Args &&...args)
+    persistent_sorted_map(object_ref const meta, runtime::detail::in_place_unique, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
       this->meta = meta;
@@ -56,31 +56,31 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    static persistent_sorted_map_ref create_unique_with_meta(object_ptr const meta, Args &&...pairs)
+    static persistent_sorted_map_ref create_unique_with_meta(object_ref const meta, Args &&...pairs)
     {
       return make_box<persistent_sorted_map>(meta,
                                              runtime::detail::in_place_unique{},
                                              std::forward<Args>(pairs)...);
     }
 
-    static persistent_sorted_map_ref create_from_seq(object_ptr const seq);
+    static persistent_sorted_map_ref create_from_seq(object_ref const seq);
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const key) const;
-    object_ptr get(object_ptr const key, object_ptr const fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
+    object_ref get(object_ref const key) const;
+    object_ref get(object_ref const key, object_ref const fallback) const;
+    object_ref get_entry(object_ref key) const;
+    native_bool contains(object_ref key) const;
 
     /* behavior::associatively_writable */
-    persistent_sorted_map_ref assoc(object_ptr key, object_ptr val) const;
-    persistent_sorted_map_ref dissoc(object_ptr key) const;
+    persistent_sorted_map_ref assoc(object_ref key, object_ref val) const;
+    persistent_sorted_map_ref dissoc(object_ref key) const;
 
     /* behavior::conjable */
-    persistent_sorted_map_ref conj(object_ptr head) const;
+    persistent_sorted_map_ref conj(object_ref head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr) const;
-    object_ptr call(object_ptr, object_ptr) const;
+    object_ref call(object_ref) const;
+    object_ref call(object_ref, object_ref) const;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

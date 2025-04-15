@@ -48,32 +48,32 @@ namespace jank::runtime::obj
     return 0;
   }
 
-  object_ptr nil::get(object_ptr const)
+  object_ref nil::get(object_ref const)
   {
     return &base;
   }
 
-  object_ptr nil::get(object_ptr const, object_ptr const fallback)
+  object_ref nil::get(object_ref const, object_ref const fallback)
   {
     return fallback;
   }
 
-  object_ptr nil::get_entry(object_ptr)
+  object_ref nil::get_entry(object_ref)
   {
     return &base;
   }
 
-  native_bool nil::contains(object_ptr) const
+  native_bool nil::contains(object_ref) const
   {
     return false;
   }
 
-  persistent_array_map_ref nil::assoc(object_ptr const key, object_ptr const val) const
+  persistent_array_map_ref nil::assoc(object_ref const key, object_ref const val) const
   {
     return persistent_array_map::create_unique(key, val);
   }
 
-  nil_ref nil::dissoc(object_ptr const) const
+  nil_ref nil::dissoc(object_ref const) const
   {
     return this;
   }
@@ -104,5 +104,18 @@ namespace jank::runtime::obj
   }
 }
 
+namespace jank::runtime
+{
+  bool operator==(object * const lhs, obj::nil_ref)
+  {
+    return lhs->type == object_type::nil;
+  }
+
+  bool operator!=(object * const lhs, obj::nil_ref)
+  {
+    return lhs->type != object_type::nil;
+  }
+}
+
 /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-jank::runtime::object *jank_nil_const{ jank::runtime::obj::nil::nil_const() };
+jank::runtime::object *jank_nil_const{ jank::runtime::obj::nil::nil_const().erase() };

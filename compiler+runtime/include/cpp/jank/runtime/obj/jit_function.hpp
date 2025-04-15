@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     jit_function(jit_function &&) noexcept = default;
     jit_function(jit_function const &) = default;
     jit_function(arity_flag_t arity_flags);
-    jit_function(object_ptr meta);
+    jit_function(object_ref meta);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -28,49 +28,49 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    jit_function_ref with_meta(object_ptr m);
+    jit_function_ref with_meta(object_ref m);
 
     /* behavior::callable */
-    object_ptr call() final;
-    object_ptr call(object_ptr) final;
-    object_ptr call(object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) final;
-    object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+    object_ref call() final;
+    object_ref call(object_ref) final;
+    object_ref call(object_ref, object_ref) final;
+    object_ref call(object_ref, object_ref, object_ref) final;
+    object_ref call(object_ref, object_ref, object_ref, object_ref) final;
+    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) final;
+    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) final;
+    object_ref
+      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
         final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) final;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) final;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) final;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) final;
 
     arity_flag_t get_arity_flags() const final;
-    object_ptr this_object_ptr() final;
+    object_ref this_object_ref() final;
 
     object base{ obj_type };
     object *(*arity_0)(){};
@@ -102,7 +102,7 @@ namespace jank::runtime::obj
                         object *,
                         object *,
                         object *){};
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
     arity_flag_t arity_flags{};
   };
 }

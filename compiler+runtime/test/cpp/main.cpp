@@ -56,7 +56,7 @@ catch(std::exception const &e)
   jank::util::println("Exception: {}", e.what());
   return 1;
 }
-catch(jank::runtime::object_ptr const o)
+catch(jank::runtime::object_ref const o)
 {
   jank::util::println("Exception: {}", jank::runtime::to_string(o));
   return 1;

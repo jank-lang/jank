@@ -6,13 +6,13 @@
 
 namespace jank::runtime::obj
 {
-  repeat::repeat(object_ptr const value)
+  repeat::repeat(object_ref const value)
     : value{ value }
     , count{ make_box(infinite) }
   {
   }
 
-  repeat::repeat(object_ptr const count, object_ptr const value)
+  repeat::repeat(object_ref const count, object_ref const value)
     : value{ value }
     , count{ count }
   {
@@ -23,12 +23,12 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr repeat::create(object_ptr const value)
+  object_ref repeat::create(object_ref const value)
   {
     return make_box<repeat>(value);
   }
 
-  object_ptr repeat::create(object_ptr const count, object_ptr const value)
+  object_ref repeat::create(object_ref const count, object_ref const value)
   {
     if(lte(count, make_box(0)))
     {
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  object_ptr repeat::first() const
+  object_ref repeat::first() const
   {
     return value;
   }
@@ -83,7 +83,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref repeat::conj(object_ptr const head) const
+  cons_ref repeat::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  repeat_ref repeat::with_meta(object_ptr const m) const
+  repeat_ref repeat::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

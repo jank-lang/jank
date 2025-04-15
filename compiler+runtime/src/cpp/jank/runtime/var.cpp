@@ -20,7 +20,7 @@ namespace jank::runtime
   {
   }
 
-  var::var(ns_ref const &n, obj::symbol_ref const &name, object_ptr const root)
+  var::var(ns_ref const &n, obj::symbol_ref const &name, object_ref const root)
     : n{ n }
     , name{ name }
     , root{ root }
@@ -29,7 +29,7 @@ namespace jank::runtime
 
   var::var(ns_ref const &n,
            obj::symbol_ref const &name,
-           object_ptr const root,
+           object_ref const root,
            native_bool const dynamic,
            native_bool const thread_bound)
     : n{ n }
@@ -88,7 +88,7 @@ namespace jank::runtime
     return hash = hash::combine(n->to_hash(), name->to_hash());
   }
 
-  var_ref var::with_meta(object_ptr const m)
+  var_ref var::with_meta(object_ref const m)
   {
     meta = behavior::detail::validate_meta(m);
     return this;
@@ -99,27 +99,27 @@ namespace jank::runtime
     return deref()->type != object_type::var_unbound_root;
   }
 
-  object_ptr var::get_root() const
+  object_ref var::get_root() const
   {
     profile::timer const timer{ "var get_root" };
     return *root.rlock();
   }
 
-  var_ref var::bind_root(object_ptr const r)
+  var_ref var::bind_root(object_ref const r)
   {
     profile::timer const timer{ "var bind_root" };
     *root.wlock() = r;
     return this;
   }
 
-  object_ptr var::alter_root(object_ptr const f, object_ptr const args)
+  object_ref var::alter_root(object_ref const f, object_ref const args)
   {
     auto locked_root(root.wlock());
     *locked_root = apply_to(f, cons(*locked_root, args));
     return *locked_root;
   }
 
-  jtl::string_result<void> var::set(object_ptr const r) const
+  jtl::string_result<void> var::set(object_ref const r) const
   {
     profile::timer const timer{ "var set" };
 
@@ -151,14 +151,12 @@ namespace jank::runtime
       return {};
     }
 
-    jank_debug_assert(n);
     auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
     if(tbfs.empty())
     {
       return {};
     }
 
-    jank_debug_assert(tbfs.front().bindings);
     auto const found(tbfs.front().bindings->get_entry(this));
     if(found == obj::nil::nil_const())
     {
@@ -166,16 +164,14 @@ namespace jank::runtime
     }
 
     auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
-    jank_debug_assert(ret);
     return expect_object<var_thread_binding>(ret);
   }
 
-  object_ptr var::deref() const
+  object_ref var::deref() const
   {
     auto const binding(get_thread_binding());
     if(binding)
     {
-      jank_debug_assert(binding->value);
       return binding->value;
     }
     return *root.rlock();
@@ -186,7 +182,7 @@ namespace jank::runtime
     return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load());
   }
 
-  var_thread_binding::var_thread_binding(object_ptr const value, std::thread::id const id)
+  var_thread_binding::var_thread_binding(object_ref const value, std::thread::id const id)
     : value{ value }
     , thread_id{ id }
   {

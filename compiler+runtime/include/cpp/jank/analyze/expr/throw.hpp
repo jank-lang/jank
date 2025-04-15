@@ -15,7 +15,7 @@ namespace jank::analyze::expr
            native_bool needs_box,
            expression_ref value);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     expression_ref value;
   };

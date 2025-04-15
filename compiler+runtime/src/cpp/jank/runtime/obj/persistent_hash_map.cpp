@@ -8,10 +8,10 @@
 
 namespace jank::runtime::obj
 {
-  persistent_hash_map::persistent_hash_map(jtl::option<object_ptr> const &meta,
+  persistent_hash_map::persistent_hash_map(jtl::option<object_ref> const &meta,
                                            runtime::detail::native_persistent_array_map const &m,
-                                           object_ptr const key,
-                                           object_ptr const val)
+                                           object_ref const key,
+                                           object_ref const val)
     : parent_type{ meta }
   {
     runtime::detail::native_transient_hash_map transient;
@@ -33,13 +33,13 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_map::persistent_hash_map(jtl::option<object_ptr> const &meta, value_type &&d)
+  persistent_hash_map::persistent_hash_map(jtl::option<object_ref> const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
   }
 
-  persistent_hash_map_ref persistent_hash_map::create_from_seq(object_ptr const seq)
+  persistent_hash_map_ref persistent_hash_map::create_from_seq(object_ref const seq)
   {
     return make_box<persistent_hash_map>(visit_seqable(
       [](auto const typed_seq) -> persistent_hash_map::value_type {
@@ -64,7 +64,7 @@ namespace jank::runtime::obj
       seq));
   }
 
-  object_ptr persistent_hash_map::get(object_ptr const key) const
+  object_ref persistent_hash_map::get(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res)
@@ -74,7 +74,7 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  object_ptr persistent_hash_map::get(object_ptr const key, object_ptr const fallback) const
+  object_ref persistent_hash_map::get(object_ref const key, object_ref const fallback) const
   {
     auto const res(data.find(key));
     if(res)
@@ -84,7 +84,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr persistent_hash_map::get_entry(object_ptr const key) const
+  object_ref persistent_hash_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res)
@@ -94,25 +94,25 @@ namespace jank::runtime::obj
     return nil::nil_const();
   }
 
-  native_bool persistent_hash_map::contains(object_ptr const key) const
+  native_bool persistent_hash_map::contains(object_ref const key) const
   {
     return data.find(key);
   }
 
   persistent_hash_map_ref
-  persistent_hash_map::assoc(object_ptr const key, object_ptr const val) const
+  persistent_hash_map::assoc(object_ref const key, object_ref const val) const
   {
     auto copy(data.set(key, val));
     return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
-  persistent_hash_map_ref persistent_hash_map::dissoc(object_ptr const key) const
+  persistent_hash_map_ref persistent_hash_map::dissoc(object_ref const key) const
   {
     auto copy(data.erase(key));
     return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
-  persistent_hash_map_ref persistent_hash_map::conj(object_ptr const head) const
+  persistent_hash_map_ref persistent_hash_map::conj(object_ref const head) const
   {
     if(head->type == object_type::persistent_array_map
        || head->type == object_type::persistent_hash_map)
@@ -135,12 +135,12 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
-  object_ptr persistent_hash_map::call(object_ptr const o) const
+  object_ref persistent_hash_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ptr persistent_hash_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ref persistent_hash_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

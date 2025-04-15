@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
 
     reduced() = default;
-    reduced(object_ptr o);
+    reduced(object_ref o);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -22,9 +22,9 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::derefable */
-    object_ptr deref() const;
+    object_ref deref() const;
 
     object base{ obj_type };
-    object_ptr val{};
+    object_ref val{};
   };
 }

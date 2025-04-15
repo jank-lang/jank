@@ -18,65 +18,65 @@ namespace jank::detail
 
   template <typename T>
   requires debuggable<T>
-  object_ptr to_runtime_data(T const &d)
+  object_ref to_runtime_data(T const &d)
   {
     return d.to_runtime_data();
   }
 
   template <typename T>
   requires debuggable<T>
-  object_ptr to_runtime_data(T const * const d)
+  object_ref to_runtime_data(T const * const d)
   {
     return d->to_runtime_data();
   }
 
   template <typename T>
-  object_ptr to_runtime_data(native_box<T> const &d)
+  object_ref to_runtime_data(native_box<T> const &d)
   {
     util::string_builder sb;
     return make_box(sb("box(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
   template <typename T>
-  object_ptr to_runtime_data(jtl::ref<T> const &d)
+  object_ref to_runtime_data(jtl::ref<T> const &d)
   {
     util::string_builder sb;
     return make_box(sb("ref(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
   template <typename T>
-  object_ptr to_runtime_data(jtl::oref<T> const &d)
+  object_ref to_runtime_data(jtl::oref<T> const &d)
   {
     util::string_builder sb;
     return make_box(sb("ref(")(d.data)(")").release());
   }
 
   template <typename T>
-  object_ptr to_runtime_data(jtl::ptr<T> const &d)
+  object_ref to_runtime_data(jtl::ptr<T> const &d)
   {
     util::string_builder sb;
     return make_box(sb("ptr(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
-  inline object_ptr to_runtime_data(jtl::immutable_string const &d)
+  inline object_ref to_runtime_data(jtl::immutable_string const &d)
   {
     return make_box(d);
   }
 
-  inline object_ptr to_runtime_data(obj::symbol const &d)
+  inline object_ref to_runtime_data(obj::symbol const &d)
   {
     return make_box<obj::symbol>(d);
   }
 
-  inline object_ptr to_runtime_data(std::filesystem::path const &p)
+  inline object_ref to_runtime_data(std::filesystem::path const &p)
   {
     return make_box(p.string());
   }
 
   template <typename K, typename V, typename H, typename C>
-  object_ptr to_runtime_data(native_unordered_map<K, V, H, C> const &m)
+  object_ref to_runtime_data(native_unordered_map<K, V, H, C> const &m)
   {
-    object_ptr ret(make_box<obj::persistent_array_map>());
+    object_ref ret(make_box<obj::persistent_array_map>());
     for(auto const &e : m)
     {
       ret = assoc(ret, to_runtime_data(e.first), to_runtime_data(e.second));
@@ -85,7 +85,7 @@ namespace jank::detail
   }
 
   template <typename T>
-  object_ptr to_runtime_data(jtl::option<T> const &m)
+  object_ref to_runtime_data(jtl::option<T> const &m)
   {
     return obj::persistent_array_map::create_unique(
       make_box("__type"),
@@ -96,21 +96,21 @@ namespace jank::detail
 
   template <typename T>
   requires behavior::object_like<T>
-  object_ptr to_runtime_data(native_box<T> const &m)
+  object_ref to_runtime_data(native_box<T> const &m)
   {
     return m;
   }
 
   template <typename T>
   requires behavior::object_like<T>
-  object_ptr to_runtime_data(jtl::oref<T> const &m)
+  object_ref to_runtime_data(jtl::oref<T> const &m)
   {
     return m;
   }
 
   template <typename T>
   requires behavior::object_like<T>
-  object_ptr to_runtime_data(T const * const m)
+  object_ref to_runtime_data(T const * const m)
   {
     return m;
   }

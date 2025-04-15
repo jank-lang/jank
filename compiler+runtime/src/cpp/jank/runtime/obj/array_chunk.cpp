@@ -6,18 +6,18 @@
 
 namespace jank::runtime::obj
 {
-  array_chunk::array_chunk(native_vector<object_ptr> const &buffer)
+  array_chunk::array_chunk(native_vector<object_ref> const &buffer)
     : buffer{ buffer }
   {
   }
 
-  array_chunk::array_chunk(native_vector<object_ptr> const &buffer, size_t const offset)
+  array_chunk::array_chunk(native_vector<object_ref> const &buffer, size_t const offset)
     : buffer{ buffer }
     , offset{ offset }
   {
   }
 
-  array_chunk::array_chunk(native_vector<object_ptr> &&buffer, size_t const offset)
+  array_chunk::array_chunk(native_vector<object_ref> &&buffer, size_t const offset)
     : buffer{ std::move(buffer) }
     , offset{ offset }
   {
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     return buffer.size() - offset;
   }
 
-  object_ptr array_chunk::nth(object_ptr const index) const
+  object_ref array_chunk::nth(object_ref const index) const
   {
     if(index->type == object_type::integer)
     {
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr array_chunk::nth(object_ptr const index, object_ptr const fallback) const
+  object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
     if(index->type == object_type::integer)
     {

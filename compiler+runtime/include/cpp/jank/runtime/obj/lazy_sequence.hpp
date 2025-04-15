@@ -20,8 +20,8 @@ namespace jank::runtime::obj
     lazy_sequence() = default;
     lazy_sequence(lazy_sequence &&) noexcept = default;
     lazy_sequence(lazy_sequence const &) = default;
-    lazy_sequence(object_ptr fn);
-    lazy_sequence(object_ptr fn, object_ptr sequence);
+    lazy_sequence(object_ref fn);
+    lazy_sequence(object_ref fn, object_ref sequence);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -35,26 +35,26 @@ namespace jank::runtime::obj
     lazy_sequence_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
     lazy_sequence_ref next() const;
-    obj::cons_ref conj(object_ptr head) const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::sequenceable_in_place */
     lazy_sequence_ref next_in_place();
 
     /* behavior::metadatable */
-    lazy_sequence_ref with_meta(object_ptr m) const;
+    lazy_sequence_ref with_meta(object_ref m) const;
 
   private:
-    object_ptr resolve_fn() const;
-    object_ptr resolve_seq() const;
+    object_ref resolve_fn() const;
+    object_ref resolve_seq() const;
 
   public:
     /* TODO: Synchronize. */
     object base{ obj_type };
-    mutable object_ptr fn{};
-    mutable object_ptr fn_result{};
-    mutable object_ptr sequence{};
-    jtl::option<object_ptr> meta;
+    mutable object_ref fn{};
+    mutable object_ref fn_result{};
+    mutable object_ref sequence{};
+    jtl::option<object_ref> meta;
   };
 }

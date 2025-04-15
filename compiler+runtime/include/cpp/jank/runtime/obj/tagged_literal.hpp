@@ -11,7 +11,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::tagged_literal };
     static constexpr native_bool pointer_free{ false };
 
-    tagged_literal(object_ptr tag, object_ptr form);
+    tagged_literal(object_ref tag, object_ref form);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -21,15 +21,15 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const key) const;
-    object_ptr get(object_ptr const key, object_ptr const fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
+    object_ref get(object_ref const key) const;
+    object_ref get(object_ref const key, object_ref const fallback) const;
+    object_ref get_entry(object_ref key) const;
+    native_bool contains(object_ref key) const;
 
     object base{ obj_type };
 
-    object_ptr tag{};
-    object_ptr form{};
+    object_ref tag{};
+    object_ref form{};
 
     mutable native_hash hash{};
   };

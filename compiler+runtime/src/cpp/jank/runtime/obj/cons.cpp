@@ -5,11 +5,10 @@
 
 namespace jank::runtime::obj
 {
-  cons::cons(object_ptr const head, object_ptr const tail)
+  cons::cons(object_ref const head, object_ref const tail)
     : head{ head }
-    , tail{ tail == nil::nil_const() ? nullptr : tail }
+    , tail{ tail }
   {
-    jank_debug_assert(head);
   }
 
   cons_ref cons::seq() const
@@ -22,16 +21,16 @@ namespace jank::runtime::obj
     return make_box<cons>(head, tail);
   }
 
-  object_ptr cons::first() const
+  object_ref cons::first() const
   {
     return head;
   }
 
-  object_ptr cons::next() const
+  object_ref cons::next() const
   {
     if(!tail)
     {
-      return nullptr;
+      return {};
     }
 
     return runtime::seq(tail);
@@ -54,7 +53,7 @@ namespace jank::runtime::obj
           tail = typed_tail->next();
           if(tail == nil::nil_const())
           {
-            tail = nullptr;
+            tail = nil::nil_const();
           }
         }
         else
@@ -72,8 +71,7 @@ namespace jank::runtime::obj
     return visit_seqable(
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it;
-            it = it->next_in_place(), seq = seq->next_in_place())
+        for(auto it(fresh_seq()); it; it = it->next_in_place(), seq = seq->next_in_place())
         {
           if(!seq || !runtime::equal(it->first(), seq->first()))
           {
@@ -111,12 +109,12 @@ namespace jank::runtime::obj
     return hash = hash::ordered(&base);
   }
 
-  cons_ref cons::conj(object_ptr const head) const
+  cons_ref cons::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  cons_ref cons::with_meta(object_ptr const m) const
+  cons_ref cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

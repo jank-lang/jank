@@ -48,7 +48,7 @@ namespace jank::runtime::module
 
   struct file_entry
   {
-    object_ptr to_runtime_data() const;
+    object_ref to_runtime_data() const;
     native_bool exists() const;
     std::time_t last_modified_at() const;
 
@@ -153,7 +153,7 @@ namespace jank::runtime::module
     jtl::string_result<void> load_jank(file_entry const &entry) const;
     jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
-    object_ptr to_runtime_data() const;
+    object_ref to_runtime_data() const;
 
     context &rt_ctx;
     jtl::immutable_string paths;

@@ -21,7 +21,7 @@ namespace jank::analyze::expr
     body->propagate_position(pos);
   }
 
-  object_ptr let::to_runtime_data() const
+  object_ref let::to_runtime_data() const
   {
     auto pair_maps(make_box<obj::persistent_vector>());
     for(auto const &e : pairs)

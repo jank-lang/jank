@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     persistent_hash_set(persistent_hash_set const &) = default;
     persistent_hash_set(value_type &&d);
     persistent_hash_set(value_type const &d);
-    persistent_hash_set(jtl::option<object_ptr> const &meta, value_type &&d);
+    persistent_hash_set(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_set(std::in_place_t, Args &&...args)
@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_hash_set(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_hash_set(object_ref const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
 
     static persistent_hash_set_ref empty();
 
-    static persistent_hash_set_ref create_from_seq(object_ptr const seq);
+    static persistent_hash_set_ref create_from_seq(object_ref const seq);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    persistent_hash_set_ref with_meta(object_ptr m) const;
+    persistent_hash_set_ref with_meta(object_ref m) const;
 
     /* behavior::seqable */
     obj::persistent_hash_set_sequence_ref seq() const;
@@ -59,19 +59,19 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::conjable */
-    persistent_hash_set_ref conj(object_ptr head) const;
+    persistent_hash_set_ref conj(object_ref head) const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr) const;
+    object_ref call(object_ref) const;
 
     /* behavior::transientable */
     obj::transient_hash_set_ref to_transient() const;
 
-    native_bool contains(object_ptr o) const;
-    persistent_hash_set_ref disj(object_ptr o) const;
+    native_bool contains(object_ref o) const;
+    persistent_hash_set_ref disj(object_ref o) const;
 
     object base{ obj_type };
     value_type data;
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
   };
 }

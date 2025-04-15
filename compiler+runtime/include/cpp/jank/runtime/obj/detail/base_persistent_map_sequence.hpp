@@ -5,8 +5,8 @@
 
 namespace jank::runtime
 {
-  void to_string(object_ptr o, util::string_builder &buff);
-  void to_code_string(object_ptr o, util::string_builder &buff);
+  void to_string(object_ref o, util::string_builder &buff);
+  void to_code_string(object_ref o, util::string_builder &buff);
 
   namespace obj
   {
@@ -25,7 +25,7 @@ namespace jank::runtime::obj::detail
     base_persistent_map_sequence() = default;
     base_persistent_map_sequence(base_persistent_map_sequence &&) = default;
     base_persistent_map_sequence(base_persistent_map_sequence const &) = default;
-    base_persistent_map_sequence(object_ptr const c, IT const &b, IT const &e);
+    base_persistent_map_sequence(object_ref const c, IT const &b, IT const &e);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -50,10 +50,10 @@ namespace jank::runtime::obj::detail
     jtl::oref<PT> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ptr const head);
+    obj::cons_ref conj(object_ref const head);
 
     object base{ PT::obj_type };
-    object_ptr coll{};
+    object_ref coll{};
     IT begin{}, end{};
   };
 }

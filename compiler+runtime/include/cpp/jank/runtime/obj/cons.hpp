@@ -17,7 +17,7 @@ namespace jank::runtime::obj
     cons() = default;
     cons(cons &&) noexcept = default;
     cons(cons const &) = default;
-    cons(object_ptr const head, object_ptr const tail);
+    cons(object_ref const head, object_ref const tail);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -27,26 +27,26 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::metadatable */
-    cons_ref with_meta(object_ptr m) const;
+    cons_ref with_meta(object_ref m) const;
 
     /* behavior::seqable */
     cons_ref seq() const;
     cons_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
-    object_ptr next() const;
+    object_ref first() const;
+    object_ref next() const;
 
     /* behavior::sequenceable_in_place */
     cons_ref next_in_place();
 
     /* behavior::conjable */
-    cons_ref conj(object_ptr head) const;
+    cons_ref conj(object_ref head) const;
 
     object base{ obj_type };
-    object_ptr head{};
-    object_ptr tail{};
+    object_ref head{};
+    object_ref tail{};
     mutable native_hash hash{};
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
   };
 }

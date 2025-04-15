@@ -45,8 +45,6 @@ namespace jank::runtime
     context(context &&) = delete;
     ~context();
 
-    void dump() const;
-
     ns_ref intern_ns(jtl::immutable_string const &);
     ns_ref intern_ns(obj::symbol_ref const &);
     ns_ref remove_ns(obj::symbol_ref const &);
@@ -60,14 +58,13 @@ namespace jank::runtime
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
     obj::symbol_ref qualify_symbol(obj::symbol_ref const &) const;
-    jtl::option<object_ptr> find_local(obj::symbol_ref const &);
+    jtl::option<object_ref> find_local(obj::symbol_ref const &);
 
     jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
     var_ref find_var(obj::symbol_ref const &);
-    var_ref
-    find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
+    var_ref find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
 
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &ns,
@@ -76,13 +73,13 @@ namespace jank::runtime
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &s);
 
-    object_ptr macroexpand1(object_ptr o);
-    object_ptr macroexpand(object_ptr o);
+    object_ref macroexpand1(object_ref o);
+    object_ref macroexpand(object_ref o);
 
-    object_ptr eval_file(jtl::immutable_string const &path);
-    object_ptr eval_string(native_persistent_string_view const &code);
+    object_ref eval_file(jtl::immutable_string const &path);
+    object_ref eval_string(native_persistent_string_view const &code);
     void eval_cpp_string(native_persistent_string_view const &code) const;
-    object_ptr read_string(native_persistent_string_view const &code);
+    object_ref read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ref>
     analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
 
@@ -104,7 +101,7 @@ namespace jank::runtime
     jtl::result<void, jtl::immutable_string>
     compile_module(native_persistent_string_view const &module);
 
-    object_ptr eval(object_ptr const o);
+    object_ref eval(object_ref const o);
 
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
                                           std::unique_ptr<llvm::Module> const &module) const;
@@ -129,7 +126,7 @@ namespace jank::runtime
     };
 
     jtl::string_result<void> push_thread_bindings();
-    jtl::string_result<void> push_thread_bindings(object_ptr const bindings);
+    jtl::string_result<void> push_thread_bindings(object_ref const bindings);
     jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
     jtl::string_result<void> pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
@@ -156,6 +153,7 @@ namespace jank::runtime
     var_ref no_recur_var;
     var_ref gensym_env_var;
 
+    /* TODO: Remove this map. Just use the list. */
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;
   };

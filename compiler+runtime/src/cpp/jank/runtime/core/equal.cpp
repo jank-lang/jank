@@ -5,7 +5,7 @@
 
 namespace jank::runtime
 {
-  native_bool equal(char const lhs, object_ptr const rhs)
+  native_bool equal(char const lhs, object_ref const rhs)
   {
     if(!rhs || rhs->type != object_type::character)
     {
@@ -16,7 +16,7 @@ namespace jank::runtime
     return typed_rhs->to_hash() == static_cast<native_hash>(lhs);
   }
 
-  native_bool equal(object_ptr const lhs, object_ptr const rhs)
+  native_bool equal(object_ref const lhs, object_ref const rhs)
   {
     if(!lhs)
     {
@@ -30,7 +30,7 @@ namespace jank::runtime
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  native_integer compare(object_ptr const l, object_ptr const r)
+  native_integer compare(object_ref const l, object_ref const r)
   {
     if(l == r)
     {
@@ -63,7 +63,7 @@ namespace jank::runtime
     return -1;
   }
 
-  native_bool is_identical(object_ptr const lhs, object_ptr const rhs)
+  native_bool is_identical(object_ref const lhs, object_ref const rhs)
   {
     return lhs == rhs;
   }

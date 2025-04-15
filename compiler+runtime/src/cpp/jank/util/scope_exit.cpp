@@ -16,7 +16,7 @@ namespace jank::util
     {
       func();
     }
-    catch(runtime::object_ptr const o)
+    catch(runtime::object_ref const o)
     {
       /* TODO: Panic */
       util::println(stderr, "Exception caught in scope_exit: {}", runtime::to_string(o));

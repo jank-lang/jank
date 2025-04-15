@@ -17,7 +17,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr var_ref::to_runtime_data() const
+  object_ref var_ref::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("qualified_name"),

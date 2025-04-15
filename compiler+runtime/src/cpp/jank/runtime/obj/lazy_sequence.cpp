@@ -10,13 +10,13 @@
 
 namespace jank::runtime::obj
 {
-  lazy_sequence::lazy_sequence(object_ptr const fn)
+  lazy_sequence::lazy_sequence(object_ref const fn)
     : fn{ fn }
   {
     jank_debug_assert(fn);
   }
 
-  lazy_sequence::lazy_sequence(object_ptr const fn, object_ptr const sequence)
+  lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
     : fn{ fn }
     , sequence{ sequence }
   {
@@ -37,10 +37,10 @@ namespace jank::runtime::obj
     }
     auto const s(runtime::fresh_seq(sequence));
     jank_debug_assert(s != nil::nil_const());
-    return make_box<lazy_sequence>(nullptr, s);
+    return make_box<lazy_sequence>(nil::nil_const(), s);
   }
 
-  object_ptr lazy_sequence::first() const
+  object_ref lazy_sequence::first() const
   {
     resolve_seq();
     if(sequence)
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
       {
         return {};
       }
-      return make_box<lazy_sequence>(nullptr, n);
+      return make_box<lazy_sequence>(nil::nil_const(), n);
     }
     return {};
   }
@@ -104,25 +104,21 @@ namespace jank::runtime::obj
     {
       return 1;
     }
-    return hash::ordered(s);
+    return hash::ordered(s.erase());
   }
 
-  cons_ref lazy_sequence::conj(object_ptr const head) const
+  cons_ref lazy_sequence::conj(object_ref const head) const
   {
     resolve_seq();
-    return make_box<cons>(head, sequence ? this : nullptr);
+    return make_box<cons>(head, sequence ? object_ref{ this } : nil::nil_const().erase());
   }
 
-  object_ptr lazy_sequence::resolve_fn() const
+  object_ref lazy_sequence::resolve_fn() const
   {
     if(fn)
     {
       fn_result = dynamic_call(fn);
-      fn = nullptr;
-      if(fn_result == nil::nil_const())
-      {
-        fn_result = nullptr;
-      }
+      fn = nil::nil_const();
     }
     if(fn_result)
     {
@@ -131,13 +127,13 @@ namespace jank::runtime::obj
     return sequence;
   }
 
-  object_ptr lazy_sequence::resolve_seq() const
+  object_ref lazy_sequence::resolve_seq() const
   {
     resolve_fn();
     if(fn_result)
     {
-      object_ptr lazy{ fn_result };
-      fn_result = nullptr;
+      object_ref lazy{ fn_result };
+      fn_result = nil::nil_const();
       while(lazy && lazy->type == object_type::lazy_sequence)
       {
         lazy = expect_object<lazy_sequence>(lazy)->resolve_fn();
@@ -145,19 +141,15 @@ namespace jank::runtime::obj
       if(lazy)
       {
         sequence = runtime::seq(lazy);
-        if(sequence == nil::nil_const())
-        {
-          sequence = nullptr;
-        }
       }
     }
     return sequence;
   }
 
-  lazy_sequence_ref lazy_sequence::with_meta(object_ptr const m) const
+  lazy_sequence_ref lazy_sequence::with_meta(object_ref const m) const
   {
     resolve_seq();
-    auto const ret(make_box<lazy_sequence>(nullptr, sequence));
+    auto const ret(make_box<lazy_sequence>(nil::nil_const(), sequence));
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;

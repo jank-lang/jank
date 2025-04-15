@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
 
     multi_function() = delete;
-    multi_function(object_ptr name, object_ptr dispatch, object_ptr default_, object_ptr hierarchy);
+    multi_function(object_ref name, object_ref dispatch, object_ref default_, object_ref hierarchy);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -29,65 +29,65 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::callable */
-    object_ptr call() override;
-    object_ptr call(object_ptr) override;
-    object_ptr call(object_ptr, object_ptr) override;
-    object_ptr call(object_ptr, object_ptr, object_ptr) override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr) override;
-    object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) override;
-    object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr) override;
-    object_ptr
-      call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+    object_ref call() override;
+    object_ref call(object_ref) override;
+    object_ref call(object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) override;
+    object_ref
+      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) override;
+    object_ref
+      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
         override;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) override;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) override;
-    object_ptr call(object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr,
-                    object_ptr) override;
-    object_ptr this_object_ptr() final;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) override;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) override;
+    object_ref call(object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) override;
+    object_ref this_object_ref() final;
 
     multi_function_ref reset();
     persistent_hash_map_ref reset_cache();
-    multi_function_ref add_method(object_ptr dispatch_val, object_ptr method);
-    multi_function_ref remove_method(object_ptr dispatch_val);
-    multi_function_ref prefer_method(object_ptr x, object_ptr y);
-    native_bool is_preferred(object_ptr hierarchy, object_ptr x, object_ptr y) const;
+    multi_function_ref add_method(object_ref dispatch_val, object_ref method);
+    multi_function_ref remove_method(object_ref dispatch_val);
+    multi_function_ref prefer_method(object_ref x, object_ref y);
+    native_bool is_preferred(object_ref hierarchy, object_ref x, object_ref y) const;
 
-    static native_bool is_a(object_ptr hierarchy, object_ptr x, object_ptr y);
-    native_bool is_dominant(object_ptr hierarchy, object_ptr x, object_ptr y) const;
+    static native_bool is_a(object_ref hierarchy, object_ref x, object_ref y);
+    native_bool is_dominant(object_ref hierarchy, object_ref x, object_ref y) const;
 
-    object_ptr get_fn(object_ptr dispatch_val);
-    object_ptr get_method(object_ptr dispatch_val);
-    object_ptr find_and_cache_best_method(object_ptr dispatch_val);
+    object_ref get_fn(object_ref dispatch_val);
+    object_ref get_method(object_ref dispatch_val);
+    object_ref find_and_cache_best_method(object_ref dispatch_val);
 
     object base{ obj_type };
-    object_ptr dispatch{};
-    object_ptr default_dispatch_value{};
-    object_ptr hierarchy{};
-    mutable object_ptr cached_hierarchy{};
+    object_ref dispatch{};
+    object_ref default_dispatch_value{};
+    object_ref hierarchy{};
+    mutable object_ref cached_hierarchy{};
     persistent_hash_map_ref method_table{};
     mutable persistent_hash_map_ref method_cache{};
     persistent_hash_map_ref prefer_table{};

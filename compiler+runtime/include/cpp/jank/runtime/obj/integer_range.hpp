@@ -38,9 +38,9 @@ namespace jank::runtime::obj
     //              array_chunk_ptr chunk,
     //              integer_range_ptr chunk_next);
 
-    static object_ptr create(integer_ref end);
-    static object_ptr create(integer_ref start, obj::integer_ref end);
-    static object_ptr create(integer_ref start, obj::integer_ref end, obj::integer_ref step);
+    static object_ref create(integer_ref end);
+    static object_ref create(integer_ref start, obj::integer_ref end);
+    static object_ref create(integer_ref start, obj::integer_ref end, obj::integer_ref step);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -66,10 +66,10 @@ namespace jank::runtime::obj
     /* void force_chunk() const; */
 
     /* behavior::conjable */
-    cons_ref conj(object_ptr head) const;
+    cons_ref conj(object_ref head) const;
 
     /* behavior::metadatable */
-    integer_range_ref with_meta(object_ptr m) const;
+    integer_range_ref with_meta(object_ref m) const;
 
     /* behavior::countable */
     size_t count() const;
@@ -84,6 +84,6 @@ namespace jank::runtime::obj
     /* mutable array_chunk_ptr chunk{}; */
     /* mutable integer_range_ptr chunk_next{}; */
     /* mutable integer_range_ptr cached_next{}; */
-    jtl::option<object_ptr> meta{};
+    jtl::option<object_ref> meta{};
   };
 }

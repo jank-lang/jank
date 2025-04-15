@@ -10,6 +10,6 @@ namespace jank::runtime::behavior
   template <typename T>
   concept collection_like = requires(T * const t) {
     /* Returns an empty collection of the same type. */
-    { T::empty() } -> std::convertible_to<object_ptr>;
+    { T::empty() } -> std::convertible_to<object_ref>;
   } && seqable<T> && conjable<T>;
 }

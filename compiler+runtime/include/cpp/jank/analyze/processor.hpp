@@ -42,8 +42,8 @@ namespace jank::analyze
 
     expression_result
     analyze(read::parse::processor::iterator, read::parse::processor::iterator const &);
-    expression_result analyze(runtime::object_ptr, expression_position);
-    expression_result analyze(runtime::object_ptr,
+    expression_result analyze(runtime::object_ref, expression_position);
+    expression_result analyze(runtime::object_ref,
                               local_frame_ptr,
                               expression_position,
                               jtl::option<expr::function_context_ref> const &,
@@ -122,7 +122,7 @@ namespace jank::analyze
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   native_bool needs_box);
-    expression_result analyze_primitive_literal(runtime::object_ptr,
+    expression_result analyze_primitive_literal(runtime::object_ref,
                                                 local_frame_ptr,
                                                 expression_position,
                                                 jtl::option<expr::function_context_ref> const &,
@@ -132,12 +132,12 @@ namespace jank::analyze
                                      expression_position,
                                      jtl::option<expr::function_context_ref> const &,
                                      native_bool needs_box);
-    expression_result analyze_map(runtime::object_ptr const,
+    expression_result analyze_map(runtime::object_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   native_bool needs_box);
-    expression_result analyze_set(runtime::object_ptr const,
+    expression_result analyze_set(runtime::object_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
@@ -150,7 +150,7 @@ namespace jank::analyze
                                    native_bool needs_box);
 
     /* Returns whether the form is a special symbol. */
-    native_bool is_special(runtime::object_ptr form);
+    native_bool is_special(runtime::object_ref form);
 
     using special_function_type
       = std::function<expression_result(runtime::obj::persistent_list_ref const,
@@ -164,6 +164,6 @@ namespace jank::analyze
     /* TODO: Remove this. */
     runtime::context &rt_ctx;
     local_frame_ptr root_frame;
-    native_vector<runtime::object_ptr> macro_expansions;
+    native_vector<runtime::object_ref> macro_expansions;
   };
 }

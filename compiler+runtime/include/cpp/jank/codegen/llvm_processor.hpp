@@ -77,9 +77,9 @@ namespace jank::codegen
     llvm::BasicBlock *global_ctor_block{};
 
     /* TODO: Is this needed, given lifted constants? */
-    native_unordered_map<runtime::object_ptr,
+    native_unordered_map<runtime::object_ref,
                          llvm::Value *,
-                         std::hash<runtime::object_ptr>,
+                         std::hash<runtime::object_ref>,
                          very_equal_to>
       literal_globals;
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_globals;
@@ -146,10 +146,10 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::real_ref r) const;
     llvm::Value *gen_global(runtime::obj::ratio_ref r) const;
     llvm::Value *gen_global(runtime::obj::persistent_string_ref s) const;
-    llvm::Value *gen_global(runtime::obj::symbol_ref s);
+    llvm::Value *gen_global(runtime::obj::symbol_ref s) const;
     llvm::Value *gen_global(runtime::obj::keyword_ref k) const;
     llvm::Value *gen_global(runtime::obj::character_ref c) const;
-    llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
+    llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
 

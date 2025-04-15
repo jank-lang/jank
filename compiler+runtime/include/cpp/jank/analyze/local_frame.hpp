@@ -28,16 +28,16 @@ namespace jank::analyze
   {
     runtime::obj::symbol_ref var_name{};
 
-    runtime::object_ptr to_runtime_data() const;
+    runtime::object_ref to_runtime_data() const;
   };
 
   /* TODO: Track constant usages to figure out if boxing is needed at all,
    * rather than just doing both. */
   struct lifted_constant
   {
-    runtime::object_ptr data{};
+    runtime::object_ref data{};
 
-    runtime::object_ptr to_runtime_data() const;
+    runtime::object_ref to_runtime_data() const;
   };
 
   struct local_binding
@@ -51,7 +51,7 @@ namespace jank::analyze
     /* The name of the function itself. */
     native_bool is_named_recur{};
 
-    runtime::object_ptr to_runtime_data() const;
+    runtime::object_ref to_runtime_data() const;
   };
 
   using local_binding_ptr = jtl::ptr<local_binding>;
@@ -123,23 +123,23 @@ namespace jank::analyze
     jtl::option<std::reference_wrapper<lifted_var const>>
     find_lifted_var(runtime::obj::symbol_ref const &) const;
 
-    void lift_constant(runtime::object_ptr);
+    void lift_constant(runtime::object_ref);
     jtl::option<std::reference_wrapper<lifted_constant const>>
-      find_lifted_constant(runtime::object_ptr) const;
+      find_lifted_constant(runtime::object_ref) const;
 
     static local_frame const &find_closest_fn_frame(local_frame const &frame);
     static local_frame &find_closest_fn_frame(local_frame &frame);
 
-    runtime::object_ptr to_runtime_data() const;
+    runtime::object_ref to_runtime_data() const;
 
     frame_type type;
     jtl::option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> captures;
     native_unordered_map<runtime::obj::symbol_ref, lifted_var> lifted_vars;
-    native_unordered_map<runtime::object_ptr,
+    native_unordered_map<runtime::object_ref,
                          lifted_constant,
-                         std::hash<runtime::object_ptr>,
+                         std::hash<runtime::object_ref>,
                          runtime::very_equal_to>
       lifted_constants;
     /* This is only set if the frame type is fn. */

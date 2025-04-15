@@ -35,19 +35,19 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::conjable_in_place */
-    transient_vector_ref conj_in_place(object_ptr head);
+    transient_vector_ref conj_in_place(object_ref head);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr const) const;
+    object_ref call(object_ref const) const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const idx) const;
-    object_ptr get(object_ptr const idx, object_ptr const fallback) const;
-    object_ptr get_entry(object_ptr const idx) const;
-    native_bool contains(object_ptr const elem) const;
+    object_ref get(object_ref const idx) const;
+    object_ref get(object_ref const idx, object_ref const fallback) const;
+    object_ref get_entry(object_ref const idx) const;
+    native_bool contains(object_ref const elem) const;
 
     transient_vector_ref pop_in_place();
 

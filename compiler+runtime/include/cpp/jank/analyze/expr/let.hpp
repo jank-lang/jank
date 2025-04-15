@@ -20,7 +20,7 @@ namespace jank::analyze::expr
     let(expression_position position, local_frame_ptr frame, native_bool needs_box, do_ref body);
 
     void propagate_position(expression_position const pos) override;
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     native_vector<pair_type> pairs;
     do_ref body;

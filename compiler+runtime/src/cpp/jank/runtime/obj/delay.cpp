@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  delay::delay(object_ptr const fn)
+  delay::delay(object_ref const fn)
     : fn{ fn }
   {
   }
@@ -37,15 +37,15 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr delay::deref()
+  object_ref delay::deref()
   {
     std::lock_guard<std::mutex> const lock{ mutex };
-    if(val != nullptr)
+    if(val)
     {
       return val;
     }
 
-    if(error != nullptr)
+    if(error)
     {
       throw error;
     }
@@ -59,7 +59,7 @@ namespace jank::runtime::obj
       error = make_box(e.what());
       throw;
     }
-    catch(object_ptr const e)
+    catch(object_ref const e)
     {
       error = e;
       throw;

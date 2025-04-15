@@ -16,7 +16,7 @@ namespace jank::runtime::obj::detail
     iterator_sequence() = default;
 
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
-    iterator_sequence(object_ptr const &c, It const &b, It const &e, size_t const s);
+    iterator_sequence(object_ref const &c, It const &b, It const &e, size_t const s);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -33,7 +33,7 @@ namespace jank::runtime::obj::detail
     size_t count() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
 
     jtl::oref<Derived> next() const;
 
@@ -41,9 +41,9 @@ namespace jank::runtime::obj::detail
     jtl::oref<Derived> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ptr const head);
+    obj::cons_ref conj(object_ref const head);
 
-    object_ptr coll{};
+    object_ref coll{};
     /* Not default constructible. */
     It begin, end;
     size_t size{};

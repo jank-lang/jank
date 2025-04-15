@@ -3,7 +3,7 @@
 
 namespace jank::runtime::obj
 {
-  reduced::reduced(object_ptr const o)
+  reduced::reduced(object_ref const o)
     : val{ o }
   {
     jank_debug_assert(val);
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr reduced::deref() const
+  object_ref reduced::deref() const
   {
     return val;
   }

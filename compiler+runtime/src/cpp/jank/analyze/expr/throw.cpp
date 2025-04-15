@@ -14,7 +14,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr throw_::to_runtime_data() const
+  object_ref throw_::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("value"),

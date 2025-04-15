@@ -35,9 +35,9 @@ namespace jank::runtime::obj
     persistent_string_sequence_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
     persistent_string_sequence_ref next() const;
-    obj::cons_ref conj(object_ptr head);
+    obj::cons_ref conj(object_ref head);
 
     /* behavior::sequenceable_in_place */
     persistent_string_sequence_ref next_in_place();

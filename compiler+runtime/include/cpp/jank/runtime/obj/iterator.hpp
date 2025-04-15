@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     iterator() = default;
     iterator(iterator &&) noexcept = default;
     iterator(iterator const &) = default;
-    iterator(object_ptr const fn, object_ptr const start);
+    iterator(object_ref const fn, object_ref const start);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -32,18 +32,18 @@ namespace jank::runtime::obj
     iterator_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
     iterator_ref next() const;
-    obj::cons_ref conj(object_ptr head) const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::sequenceable_in_place */
     iterator_ref next_in_place();
 
     object base{ obj_type };
     /* TODO: Support chunking. */
-    object_ptr fn{};
-    object_ptr current{};
-    object_ptr previous{};
+    object_ref fn{};
+    object_ref current{};
+    object_ref previous{};
     mutable iterator_ref cached_next{};
   };
 }

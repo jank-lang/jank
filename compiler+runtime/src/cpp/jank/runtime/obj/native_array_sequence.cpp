@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  native_array_sequence::native_array_sequence(object_ptr * const arr, size_t const size)
+  native_array_sequence::native_array_sequence(object_ref * const arr, size_t const size)
     : arr{ arr }
     , size{ size }
   {
@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     jank_debug_assert(size > 0);
   }
 
-  native_array_sequence::native_array_sequence(object_ptr * const arr,
+  native_array_sequence::native_array_sequence(object_ref * const arr,
                                                size_t const index,
                                                size_t const size)
     : arr{ arr }
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::sequence */
-  object_ptr native_array_sequence::first() const
+  object_ref native_array_sequence::first() const
   {
     jank_debug_assert(index < size);
     return arr[index];
@@ -102,7 +102,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref native_array_sequence::conj(object_ptr const head)
+  cons_ref native_array_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, this);
   }

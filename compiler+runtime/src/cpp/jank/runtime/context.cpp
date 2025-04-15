@@ -138,12 +138,12 @@ namespace jank::runtime
     return find_var(make_box<obj::symbol>(ns, name));
   }
 
-  jtl::option<object_ptr> context::find_local(obj::symbol_ref const &)
+  jtl::option<object_ref> context::find_local(obj::symbol_ref const &)
   {
     return none;
   }
 
-  object_ptr context::eval_file(jtl::immutable_string const &path)
+  object_ref context::eval_file(jtl::immutable_string const &path)
   {
     auto const file(module::loader::read_file(path));
     if(file.is_err())
@@ -160,13 +160,13 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  object_ptr context::eval_string(native_persistent_string_view const &code)
+  object_ref context::eval_string(native_persistent_string_view const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ptr ret{ obj::nil::nil_const() };
+    object_ref ret{ obj::nil::nil_const() };
     native_vector<analyze::expression_ref> exprs{};
     for(auto const &form : p_prc)
     {
@@ -197,7 +197,6 @@ namespace jank::runtime
       write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
-    jank_debug_assert(ret);
     return ret;
   }
 
@@ -220,7 +219,7 @@ namespace jank::runtime
     auto err(jit_prc.interpreter->Execute(partial_tu));
   }
 
-  object_ptr context::read_string(native_persistent_string_view const &code)
+  object_ref context::read_string(native_persistent_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
 
@@ -233,7 +232,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ptr ret{ obj::nil::nil_const() };
+    object_ref ret{ obj::nil::nil_const() };
     for(auto const &form : p_prc)
     {
       ret = form.expect_ok().unwrap().ptr;
@@ -293,7 +292,7 @@ namespace jank::runtime
     {
       return err(e.what());
     }
-    catch(object_ptr const &e)
+    catch(object_ref const &e)
     {
       return err(runtime::to_string(e));
     }
@@ -312,7 +311,7 @@ namespace jank::runtime
     return load_module(util::format("/{}", module), module::origin::latest);
   }
 
-  object_ptr context::eval(object_ptr const o)
+  object_ref context::eval(object_ref const o)
   {
     auto const expr(an_prc.analyze(o, analyze::expression_position::value));
     return evaluate::eval(expr.expect_ok());
@@ -388,29 +387,6 @@ namespace jank::runtime
   obj::symbol context::unique_symbol(native_persistent_string_view const &prefix)
   {
     return { "", unique_string(prefix) };
-  }
-
-  void context::dump() const
-  {
-    std::cout << "context dump\n";
-    auto locked_namespaces(namespaces.rlock());
-    for(auto const &p : *locked_namespaces)
-    {
-      std::cout << "  " << p.second->name->to_string() << "\n";
-      auto locked_vars(p.second->vars.rlock());
-      for(auto const &vp : (*locked_vars)->data)
-      {
-        auto const v(expect_object<var>(vp.second));
-        if(v->deref() == nullptr)
-        {
-          std::cout << "    " << v->to_string() << " = nil\n";
-        }
-        else
-        {
-          std::cout << "    " << v->to_string() << " = " << runtime::to_string(v->deref()) << "\n";
-        }
-      }
-    }
   }
 
   ns_ref context::intern_ns(jtl::immutable_string const &name)
@@ -548,11 +524,11 @@ namespace jank::runtime
     return res.first->second;
   }
 
-  object_ptr context::macroexpand1(object_ptr const o)
+  object_ref context::macroexpand1(object_ref const o)
   {
     profile::timer const timer{ "rt macroexpand1" };
     return visit_seqable(
-      [this](auto const typed_o) -> object_ptr {
+      [this](auto const typed_o) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(!behavior::sequenceable<T>)
@@ -590,7 +566,7 @@ namespace jank::runtime
       o);
   }
 
-  object_ptr context::macroexpand(object_ptr const o)
+  object_ref context::macroexpand(object_ref const o)
   {
     auto expanded(macroexpand1(o));
     if(expanded != o)
@@ -651,13 +627,11 @@ namespace jank::runtime
       return ok();
     }
 
-    jank_debug_assert(bindings);
     return push_thread_bindings(bindings);
   }
 
-  jtl::string_result<void> context::push_thread_bindings(object_ptr const bindings)
+  jtl::string_result<void> context::push_thread_bindings(object_ref const bindings)
   {
-    jank_debug_assert(bindings);
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
@@ -670,7 +644,6 @@ namespace jank::runtime
   jtl::string_result<void>
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
-    jank_debug_assert(bindings);
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames[this]);
     if(!tbfs.empty())
@@ -707,7 +680,6 @@ namespace jank::runtime
       }
     }
 
-    jank_debug_assert(frame.bindings);
     tbfs.push_front(std::move(frame));
     return ok();
   }

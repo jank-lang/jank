@@ -13,9 +13,9 @@ namespace jank::runtime
   concept same_as_any = (std::same_as<T, U> || ...);
 
   template <>
-  struct convert<void, object_ptr>
+  struct convert<void, object_ref>
   {
-    static object_ptr call()
+    static object_ref call()
     {
       return obj::nil::nil_const();
     }
@@ -23,9 +23,9 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::object_like<T>
-  struct convert<native_box<T>, object_ptr>
+  struct convert<native_box<T>, object_ref>
   {
-    static object_ptr call(native_box<T> const o)
+    static object_ref call(native_box<T> const o)
     {
       return o;
     }
@@ -33,9 +33,9 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::object_like<T>
-  struct convert<jtl::oref<T>, object_ptr>
+  struct convert<jtl::oref<T>, object_ref>
   {
-    static object_ptr call(jtl::oref<T> const o)
+    static object_ref call(jtl::oref<T> const o)
     {
       return o;
     }
@@ -43,36 +43,36 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::object_like<T>
-  struct convert<T *, object_ptr>
+  struct convert<T *, object_ref>
   {
-    static object_ptr call(T * const o)
+    static object_ref call(T * const o)
     {
       return o;
     }
   };
 
   template <>
-  struct convert<object *, object_ptr>
+  struct convert<object *, object_ref>
   {
-    static object_ptr call(object * const o)
+    static object_ref call(object * const o)
     {
       return o;
     }
   };
 
   template <>
-  struct convert<object const *, object_ptr>
+  struct convert<object const *, object_ref>
   {
-    static object_ptr call(object const * const o)
+    static object_ref call(object const * const o)
     {
       return const_cast<object *>(o);
     }
   };
 
   template <>
-  struct convert<bool, object_ptr>
+  struct convert<bool, object_ref>
   {
-    static object_ptr call(bool const o)
+    static object_ref call(bool const o)
     {
       return make_box(o);
     }
@@ -82,9 +82,9 @@ namespace jank::runtime
   template <typename Input>
   requires(std::is_integral_v<Input>
            && !same_as_any<bool, char, char8_t, char16_t, char32_t, wchar_t>)
-  struct convert<Input, object_ptr>
+  struct convert<Input, object_ref>
   {
-    static object_ptr call(Input const o)
+    static object_ref call(Input const o)
     {
       return make_box(o);
     }
@@ -93,9 +93,9 @@ namespace jank::runtime
   /* Native floating point primitives. */
   template <typename Input>
   requires(std::is_floating_point_v<Input>)
-  struct convert<Input, object_ptr>
+  struct convert<Input, object_ref>
   {
-    static object_ptr call(Input const o)
+    static object_ref call(Input const o)
     {
       return make_box(o);
     }
@@ -104,14 +104,14 @@ namespace jank::runtime
   /* Native strings. */
   template <typename Input>
   requires(same_as_any<Input, jtl::immutable_string, native_persistent_string_view, std::string>)
-  struct convert<Input, object_ptr>
+  struct convert<Input, object_ref>
   {
-    static object_ptr call(Input const &o)
+    static object_ref call(Input const &o)
     {
       return make_box(o);
     }
 
-    static object_ptr call(Input &&o)
+    static object_ref call(Input &&o)
     {
       return make_box(std::move(o));
     }
@@ -119,16 +119,16 @@ namespace jank::runtime
 
   template <template <typename> typename V, typename Input>
   requires(
-    convertible<Input, object_ptr>
+    convertible<Input, object_ref>
     && (std::same_as<V<Input>, native_vector<Input>> || std::same_as<V<Input>, std::vector<Input>>))
-  struct convert<V<Input>, object_ptr>
+  struct convert<V<Input>, object_ref>
   {
-    static object_ptr call(V<Input> const &o)
+    static object_ref call(V<Input> const &o)
     {
       runtime::detail::native_transient_vector trans;
       for(auto const &e : o)
       {
-        trans.push_back(convert<Input, object_ptr>::call(e));
+        trans.push_back(convert<Input, object_ref>::call(e));
       }
       return make_box<obj::persistent_vector>(trans);
     }

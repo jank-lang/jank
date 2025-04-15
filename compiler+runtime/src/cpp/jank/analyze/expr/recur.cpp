@@ -16,7 +16,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr recur::to_runtime_data() const
+  object_ref recur::to_runtime_data() const
   {
     auto arg_expr_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arg_exprs)

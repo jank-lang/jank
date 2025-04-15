@@ -33,7 +33,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ptr ratio::create(native_integer const numerator, native_integer const denominator)
+  object_ref ratio::create(native_integer const numerator, native_integer const denominator)
   {
     ratio_data const data{ numerator, denominator };
     if(data.denominator == 1)
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     return (data > o.data) - (data < o.data);
   }
 
-  object_ptr operator+(ratio_data const &l, ratio_data const &r)
+  object_ref operator+(ratio_data const &l, ratio_data const &r)
   {
     auto const denom{ l.denominator * r.denominator };
     auto const num{ (l.numerator * r.denominator) + (r.numerator * l.denominator) };
@@ -166,7 +166,7 @@ namespace jank::runtime::obj
     return r + l;
   }
 
-  object_ptr operator-(ratio_data const &l, ratio_data const &r)
+  object_ref operator-(ratio_data const &l, ratio_data const &r)
   {
     auto const denom{ l.denominator * r.denominator };
     auto const num{ (l.numerator * r.denominator) - (r.numerator * l.denominator) };
@@ -213,17 +213,17 @@ namespace jank::runtime::obj
     return make_box<ratio>(ratio_data((l * r.denominator) - r.numerator, r.denominator));
   }
 
-  object_ptr operator*(ratio_data const &l, ratio_data const &r)
+  object_ref operator*(ratio_data const &l, ratio_data const &r)
   {
     return ratio::create(l.numerator * r.numerator, l.denominator * r.denominator);
   }
 
-  object_ptr operator*(integer_ref const l, ratio_data const &r)
+  object_ref operator*(integer_ref const l, ratio_data const &r)
   {
     return ratio_data(l->data, 1ll) * r;
   }
 
-  object_ptr operator*(ratio_data const &l, integer_ref const r)
+  object_ref operator*(ratio_data const &l, integer_ref const r)
   {
     return l * ratio_data(r->data, 1ll);
   }
@@ -248,22 +248,22 @@ namespace jank::runtime::obj
     return l * r.to_real();
   }
 
-  object_ptr operator*(ratio_data const &l, native_integer const r)
+  object_ref operator*(ratio_data const &l, native_integer const r)
   {
     return l * ratio_data(r, 1ll);
   }
 
-  object_ptr operator*(native_integer const l, ratio_data const &r)
+  object_ref operator*(native_integer const l, ratio_data const &r)
   {
     return r * l;
   }
 
-  object_ptr operator/(ratio_data const &l, ratio_data const &r)
+  object_ref operator/(ratio_data const &l, ratio_data const &r)
   {
     return ratio::create(l.numerator * r.denominator, l.denominator * r.numerator);
   }
 
-  object_ptr operator/(integer_ref const l, ratio_data const &r)
+  object_ref operator/(integer_ref const l, ratio_data const &r)
   {
     return ratio_data(l->data, 1ll) / r;
   }
@@ -298,7 +298,7 @@ namespace jank::runtime::obj
     return make_box<ratio>(ratio_data(l.numerator, l.denominator * r));
   }
 
-  object_ptr operator/(native_integer const l, ratio_data const &r)
+  object_ref operator/(native_integer const l, ratio_data const &r)
   {
     return ratio_data(l, 1ll) / r;
   }

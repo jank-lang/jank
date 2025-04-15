@@ -775,7 +775,7 @@ namespace jank::read::parse
           CHECK(equal(r.expect_ok().unwrap().ptr,
                       make_box<obj::persistent_array_map>(
                         runtime::detail::in_place_unique{},
-                        make_array_box<object_ptr>(make_box<obj::integer>(1ll * i),
+                        make_array_box<object_ref>(make_box<obj::integer>(1ll * i),
                                                    make_box<obj::integer>(2ll * i),
                                                    make_box<obj::integer>(3ll * i),
                                                    make_box<obj::integer>(4ll * i)),
@@ -800,7 +800,7 @@ namespace jank::read::parse
         CHECK(equal(r.expect_ok().unwrap().ptr,
                     make_box<obj::persistent_array_map>(
                       runtime::detail::in_place_unique{},
-                      make_array_box<object_ptr>(__rt_ctx->intern_keyword("foo").expect_ok(),
+                      make_array_box<object_ref>(__rt_ctx->intern_keyword("foo").expect_ok(),
                                                  make_box<obj::boolean>(true),
                                                  make_box<obj::integer>(1),
                                                  __rt_ctx->intern_keyword("one").expect_ok(),

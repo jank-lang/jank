@@ -16,61 +16,61 @@
 
 namespace jank::runtime::detail
 {
-  struct object_ptr_compare
+  struct object_ref_compare
   {
-    native_bool operator()(object_ptr const l, object_ptr const r) const;
+    native_bool operator()(object_ref const l, object_ref const r) const;
   };
 }
 
 namespace immer
 {
-  extern template class vector<jank::runtime::object_ptr, jank::memory_policy>;
-  extern template class set<jank::runtime::object_ptr,
-                            std::hash<jank::runtime::object_ptr>,
-                            std::equal_to<jank::runtime::object_ptr>,
+  extern template class vector<jank::runtime::object_ref, jank::memory_policy>;
+  extern template class set<jank::runtime::object_ref,
+                            std::hash<jank::runtime::object_ref>,
+                            std::equal_to<jank::runtime::object_ref>,
                             jank::memory_policy>;
-  extern template class immer::map<jank::runtime::object_ptr,
-                                   jank::runtime::object_ptr,
-                                   std::hash<jank::runtime::object_ptr>,
-                                   std::equal_to<jank::runtime::object_ptr>,
+  extern template class immer::map<jank::runtime::object_ref,
+                                   jank::runtime::object_ref,
+                                   std::hash<jank::runtime::object_ref>,
+                                   std::equal_to<jank::runtime::object_ref>,
                                    jank::memory_policy>;
 }
 
 namespace bpptree::detail
 {
-  extern template struct BppTreeSet<jank::runtime::object_ptr,
-                                    jank::runtime::detail::object_ptr_compare>;
-  extern template struct BppTreeMap<jank::runtime::object_ptr,
-                                    jank::runtime::object_ptr,
-                                    jank::runtime::detail::object_ptr_compare>;
+  extern template struct BppTreeSet<jank::runtime::object_ref,
+                                    jank::runtime::detail::object_ref_compare>;
+  extern template struct BppTreeMap<jank::runtime::object_ref,
+                                    jank::runtime::object_ref,
+                                    jank::runtime::detail::object_ref_compare>;
 }
 
 namespace jank::runtime::detail
 {
-  using native_persistent_vector = immer::vector<object_ptr, memory_policy>;
+  using native_persistent_vector = immer::vector<object_ref, memory_policy>;
   using native_transient_vector = native_persistent_vector::transient_type;
 
   using native_persistent_hash_set = immer::
-    set<object_ptr, std::hash<object_ptr>, std::equal_to<jank::runtime::object_ptr>, memory_policy>;
+    set<object_ref, std::hash<object_ref>, std::equal_to<jank::runtime::object_ref>, memory_policy>;
   using native_transient_hash_set = native_persistent_hash_set::transient_type;
 
   /* TODO: These BppTree types will leak until we get them GC allocated. */
   using native_persistent_sorted_set
-    = bpptree::BppTreeSet<object_ptr, object_ptr_compare>::Persistent;
+    = bpptree::BppTreeSet<object_ref, object_ref_compare>::Persistent;
   using native_transient_sorted_set
-    = bpptree::BppTreeSet<object_ptr, object_ptr_compare>::Transient;
+    = bpptree::BppTreeSet<object_ref, object_ref_compare>::Transient;
 
-  using native_persistent_hash_map = immer::map<object_ptr,
-                                                object_ptr,
-                                                std::hash<object_ptr>,
-                                                std::equal_to<jank::runtime::object_ptr>,
+  using native_persistent_hash_map = immer::map<object_ref,
+                                                object_ref,
+                                                std::hash<object_ref>,
+                                                std::equal_to<jank::runtime::object_ref>,
                                                 jank::memory_policy>;
   using native_transient_hash_map = native_persistent_hash_map::transient_type;
 
   using native_persistent_sorted_map
-    = bpptree::BppTreeMap<object_ptr, object_ptr, object_ptr_compare>::Persistent;
+    = bpptree::BppTreeMap<object_ref, object_ref, object_ref_compare>::Persistent;
   using native_transient_sorted_map
-    = bpptree::BppTreeMap<object_ptr, object_ptr, object_ptr_compare>::Transient;
+    = bpptree::BppTreeMap<object_ref, object_ref, object_ref_compare>::Transient;
 
   /* If an object requires this in its constructor, use your runtime context to intern
    * it instead. */

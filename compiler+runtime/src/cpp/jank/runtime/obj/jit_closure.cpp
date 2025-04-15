@@ -17,7 +17,7 @@ namespace jank::runtime::obj
   {
   }
 
-  jit_closure::jit_closure(object_ptr const meta)
+  jit_closure::jit_closure(object_ref const meta)
     : meta{ meta }
   {
   }
@@ -56,152 +56,171 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  jit_closure_ref jit_closure::with_meta(object_ptr const m)
+  jit_closure_ref jit_closure::with_meta(object_ref const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
     meta = new_meta;
     return this;
   }
 
-  object_ptr jit_closure::call()
+  object_ref jit_closure::call()
   {
     if(!arity_0)
     {
-      throw invalid_arity<0>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
     }
     return arity_0(context);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1)
+  object_ref jit_closure::call(object_ref const a1)
   {
     if(!arity_1)
     {
-      throw invalid_arity<1>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_1(context, a1);
+    return arity_1(context, a1.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1, object_ptr const a2)
+  object_ref jit_closure::call(object_ref const a1, object_ref const a2)
   {
     if(!arity_2)
     {
-      throw invalid_arity<2>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_2(context, a1, a2);
+    return arity_2(context, a1.data, a2.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1, object_ptr const a2, object_ptr const a3)
+  object_ref jit_closure::call(object_ref const a1, object_ref const a2, object_ref const a3)
   {
     if(!arity_3)
     {
-      throw invalid_arity<3>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_3(context, a1, a2, a3);
+    return arity_3(context, a1.data, a2.data, a3.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4)
   {
     if(!arity_4)
     {
-      throw invalid_arity<4>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_4(context, a1, a2, a3, a4);
+    return arity_4(context, a1.data, a2.data, a3.data, a4.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5)
   {
     if(!arity_5)
     {
-      throw invalid_arity<5>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_5(context, a1, a2, a3, a4, a5);
+    return arity_5(context, a1.data, a2.data, a3.data, a4.data, a5.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5,
-                               object_ptr const a6)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6)
   {
     if(!arity_6)
     {
-      throw invalid_arity<6>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_6(context, a1, a2, a3, a4, a5, a6);
+    return arity_6(context, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5,
-                               object_ptr const a6,
-                               object_ptr const a7)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7)
   {
     if(!arity_7)
     {
-      throw invalid_arity<7>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_7(context, a1, a2, a3, a4, a5, a6, a7);
+    return arity_7(context, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5,
-                               object_ptr const a6,
-                               object_ptr const a7,
-                               object_ptr const a8)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8)
   {
     if(!arity_8)
     {
-      throw invalid_arity<8>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_8(context, a1, a2, a3, a4, a5, a6, a7, a8);
+    return arity_8(context, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data, a8.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5,
-                               object_ptr const a6,
-                               object_ptr const a7,
-                               object_ptr const a8,
-                               object_ptr const a9)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8,
+                               object_ref const a9)
   {
     if(!arity_9)
     {
-      throw invalid_arity<9>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_9(context, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    return arity_9(context,
+                   a1.data,
+                   a2.data,
+                   a3.data,
+                   a4.data,
+                   a5.data,
+                   a6.data,
+                   a7.data,
+                   a8.data,
+                   a9.data);
   }
 
-  object_ptr jit_closure::call(object_ptr const a1,
-                               object_ptr const a2,
-                               object_ptr const a3,
-                               object_ptr const a4,
-                               object_ptr const a5,
-                               object_ptr const a6,
-                               object_ptr const a7,
-                               object_ptr const a8,
-                               object_ptr const a9,
-                               object_ptr const a10)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8,
+                               object_ref const a9,
+                               object_ref const a10)
   {
     if(!arity_10)
     {
-      throw invalid_arity<10>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_10(context, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    return arity_10(context,
+                    a1.data,
+                    a2.data,
+                    a3.data,
+                    a4.data,
+                    a5.data,
+                    a6.data,
+                    a7.data,
+                    a8.data,
+                    a9.data,
+                    a10.data);
   }
 
   behavior::callable::arity_flag_t jit_closure::get_arity_flags() const
@@ -209,7 +228,7 @@ namespace jank::runtime::obj
     return arity_flags;
   }
 
-  object_ptr jit_closure::this_object_ptr()
+  object_ref jit_closure::this_object_ref()
   {
     return &this->base;
   }

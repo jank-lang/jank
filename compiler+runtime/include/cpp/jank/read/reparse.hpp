@@ -22,5 +22,5 @@ namespace jank::read::parse
 {
   source reparse_nth(runtime::obj::persistent_list_ref o, size_t n);
   source reparse_nth(runtime::obj::persistent_vector_ref o, size_t n);
-  source reparse_nth(runtime::object_ptr o, size_t n);
+  source reparse_nth(runtime::object_ref o, size_t n);
 }

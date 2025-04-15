@@ -38,8 +38,8 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ lt(static_cast<native_integer>(0), step) ? positive_step_bounds_check
-                                                             : negative_step_bounds_check }
+    , bounds_check{ lt(static_cast<native_integer>(0), step.erase()) ? positive_step_bounds_check
+                                                                     : negative_step_bounds_check }
   {
   }
 
@@ -54,7 +54,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ptr integer_range::create(integer_ref const end)
+  object_ref integer_range::create(integer_ref const end)
   {
     if(is_pos(end))
     {
@@ -66,12 +66,12 @@ namespace jank::runtime::obj
     return persistent_list::empty();
   }
 
-  object_ptr integer_range::create(integer_ref const start, integer_ref const end)
+  object_ref integer_range::create(integer_ref const start, integer_ref const end)
   {
     return create(start, end, make_box<integer>(1));
   }
 
-  object_ptr
+  object_ref
   integer_range::create(integer_ref const start, integer_ref const end, integer_ref const step)
   {
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
@@ -123,7 +123,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref integer_range::conj(object_ptr const head) const
+  cons_ref integer_range::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -134,8 +134,7 @@ namespace jank::runtime::obj
       [this](auto const typed_o) {
         auto seq(typed_o->fresh_seq());
         /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it;
-            it = it->next_in_place(), seq = seq->next_in_place())
+        for(auto it(fresh_seq()); it; it = it->next_in_place(), seq = seq->next_in_place())
         {
           if(!seq || !runtime::equal(it->first(), seq->first()))
           {
@@ -168,7 +167,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  integer_range_ref integer_range::with_meta(object_ptr const m) const
+  integer_range_ref integer_range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto const ret(fresh_seq());

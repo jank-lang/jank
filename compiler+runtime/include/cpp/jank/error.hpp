@@ -257,17 +257,17 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
          jtl::immutable_string const &note_message,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k, read::source const &source, jtl::immutable_string const &note_message);
     base(kind k,
          jtl::immutable_string const &message,
@@ -282,7 +282,7 @@ namespace jank::error
          jtl::immutable_string const &message,
          read::source const &source,
          note const &note,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
@@ -290,12 +290,12 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          jtl::ref<base> cause);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 

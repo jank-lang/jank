@@ -17,11 +17,11 @@ namespace jank::runtime::obj
     static constexpr native_integer infinite{ -1 };
 
     repeat() = default;
-    repeat(object_ptr value);
-    repeat(object_ptr count, object_ptr value);
+    repeat(object_ref value);
+    repeat(object_ref count, object_ref value);
 
-    static object_ptr create(object_ptr value);
-    static object_ptr create(object_ptr count, object_ptr value);
+    static object_ref create(object_ref value);
+    static object_ref create(object_ref count, object_ref value);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -35,21 +35,21 @@ namespace jank::runtime::obj
     repeat_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
     repeat_ref next() const;
 
     /* behavior::sequenceable_in_place */
     repeat_ref next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ptr head) const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::metadatable */
-    repeat_ref with_meta(object_ptr m) const;
+    repeat_ref with_meta(object_ref m) const;
 
     object base{ obj_type };
-    object_ptr value{};
-    object_ptr count{};
-    jtl::option<object_ptr> meta{};
+    object_ref value{};
+    object_ref count{};
+    jtl::option<object_ref> meta{};
   };
 }

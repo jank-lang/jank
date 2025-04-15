@@ -26,9 +26,9 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr function_arity::to_runtime_data() const
+  object_ref function_arity::to_runtime_data() const
   {
-    object_ptr param_maps(make_box<obj::persistent_vector>());
+    object_ref param_maps(make_box<obj::persistent_vector>());
     for(auto const e : params)
     {
       param_maps = conj(param_maps, e);
@@ -62,7 +62,7 @@ namespace jank::analyze::expr
     return ret;
   }
 
-  object_ptr function::to_runtime_data() const
+  object_ref function::to_runtime_data() const
   {
     auto arity_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arities)

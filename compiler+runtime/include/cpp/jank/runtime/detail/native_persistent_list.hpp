@@ -196,5 +196,5 @@ namespace jank::runtime::detail
     native_box<value_type> data{};
   };
 
-  using native_persistent_list = native_persistent_list_impl<object_ptr>;
+  using native_persistent_list = native_persistent_list_impl<object_ref>;
 }

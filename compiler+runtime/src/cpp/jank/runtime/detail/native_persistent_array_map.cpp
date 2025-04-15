@@ -5,37 +5,37 @@
 namespace jank::runtime::detail
 {
   /* TODO: Int sequence to clean this up? */
-  static object_ptr *make_next_array(object_ptr const * const prev,
+  static object_ref *make_next_array(object_ref const * const prev,
                                      size_t const length,
-                                     object_ptr const key,
-                                     object_ptr const value)
+                                     object_ref const key,
+                                     object_ref const value)
   {
     switch(length)
     {
       case 0:
         {
-          auto const ret(new(GC) object_ptr[2]{ key, value });
+          auto const ret(new(GC) object_ref[2]{ key, value });
           return ret;
         }
       case 2:
         {
-          auto const ret(new(GC) object_ptr[4]{ prev[0], prev[1], key, value });
+          auto const ret(new(GC) object_ref[4]{ prev[0], prev[1], key, value });
           return ret;
         }
       case 4:
         {
-          auto const ret(new(GC) object_ptr[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
+          auto const ret(new(GC) object_ref[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
           return ret;
         }
       case 6:
         {
           auto const ret(new(
-            GC) object_ptr[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
+            GC) object_ref[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
           return ret;
         }
       case 8:
         {
-          auto const ret(new(GC) object_ptr[10]{ prev[0],
+          auto const ret(new(GC) object_ref[10]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -49,7 +49,7 @@ namespace jank::runtime::detail
         }
       case 10:
         {
-          auto const ret(new(GC) object_ptr[12]{ prev[0],
+          auto const ret(new(GC) object_ref[12]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -65,7 +65,7 @@ namespace jank::runtime::detail
         }
       case 12:
         {
-          auto const ret(new(GC) object_ptr[14]{ prev[0],
+          auto const ret(new(GC) object_ref[14]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -83,7 +83,7 @@ namespace jank::runtime::detail
         }
       case 14:
         {
-          auto const ret(new(GC) object_ptr[16]{ prev[0],
+          auto const ret(new(GC) object_ref[16]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -107,14 +107,14 @@ namespace jank::runtime::detail
     }
   }
 
-  void native_persistent_array_map::insert_unique(object_ptr const key, object_ptr const val)
+  void native_persistent_array_map::insert_unique(object_ref const key, object_ref const val)
   {
     data = make_next_array(data, length, key, val);
     length += 2;
     hash = 0;
   }
 
-  void native_persistent_array_map::insert_or_assign(object_ptr const key, object_ptr const val)
+  void native_persistent_array_map::insert_or_assign(object_ref const key, object_ref const val)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -143,7 +143,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  object_ptr native_persistent_array_map::find(object_ptr const key) const
+  object_ref native_persistent_array_map::find(object_ref const key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -165,10 +165,10 @@ namespace jank::runtime::detail
         }
       }
     }
-    return nullptr;
+    return {};
   }
 
-  void native_persistent_array_map::erase(object_ptr const key)
+  void native_persistent_array_map::erase(object_ref const key)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -218,7 +218,7 @@ namespace jank::runtime::detail
     return hash = hash::unordered(begin(), end());
   }
 
-  native_persistent_array_map::iterator::iterator(object_ptr const * const data, size_t const index)
+  native_persistent_array_map::iterator::iterator(object_ref const * const data, size_t const index)
     : data{ data }
     , index{ index }
   {
@@ -282,8 +282,8 @@ namespace jank::runtime::detail
   native_persistent_array_map native_persistent_array_map::clone() const
   {
     native_persistent_array_map ret{ *this };
-    ret.data = new(GC) object_ptr[length];
-    memcpy(ret.data, data, length * sizeof(object_ptr));
+    ret.data = new(GC) object_ref[length];
+    memcpy(ret.data, data, length * sizeof(object_ref));
     return ret;
   }
 }

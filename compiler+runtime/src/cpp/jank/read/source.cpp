@@ -37,7 +37,7 @@ namespace jank::read
   source::source(jtl::immutable_string const &file_path,
                  source_position const &start,
                  source_position const &end,
-                 runtime::object_ptr const macro_expansion)
+                 runtime::object_ref const macro_expansion)
     : file_path{ file_path }
     , start{ start }
     , end{ end }

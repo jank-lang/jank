@@ -12,9 +12,9 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
 
     array_chunk() = default;
-    array_chunk(native_vector<object_ptr> const &buffer);
-    array_chunk(native_vector<object_ptr> const &buffer, size_t offset);
-    array_chunk(native_vector<object_ptr> &&buffer, size_t offset);
+    array_chunk(native_vector<object_ref> const &buffer);
+    array_chunk(native_vector<object_ref> const &buffer, size_t offset);
+    array_chunk(native_vector<object_ref> &&buffer, size_t offset);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -27,11 +27,11 @@ namespace jank::runtime::obj
     array_chunk_ref chunk_next() const;
     array_chunk_ref chunk_next_in_place();
     size_t count() const;
-    object_ptr nth(object_ptr index) const;
-    object_ptr nth(object_ptr index, object_ptr fallback) const;
+    object_ref nth(object_ref index) const;
+    object_ref nth(object_ref index, object_ref fallback) const;
 
     object base{ obj_type };
-    native_vector<object_ptr> buffer;
+    native_vector<object_ref> buffer;
     size_t offset{};
   };
 }

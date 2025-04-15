@@ -20,7 +20,7 @@ namespace jank::analyze::expr
         jtl::option<expression_ref> const &else_);
 
     void propagate_position(expression_position const pos) override;
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     expression_ref condition;
     expression_ref then;

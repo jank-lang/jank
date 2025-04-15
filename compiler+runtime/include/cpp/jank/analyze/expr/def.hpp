@@ -23,7 +23,7 @@ namespace jank::analyze::expr
         runtime::obj::symbol_ref name,
         jtl::option<expression_ref> const &value);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     runtime::obj::symbol_ref name{};
     jtl::option<expression_ref> value;

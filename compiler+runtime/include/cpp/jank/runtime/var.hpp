@@ -27,10 +27,10 @@ namespace jank::runtime
 
     var() = delete;
     var(ns_ref const &n, obj::symbol_ref const &name);
-    var(ns_ref const &n, obj::symbol_ref const &name, object_ptr root);
+    var(ns_ref const &n, obj::symbol_ref const &name, object_ref root);
     var(ns_ref const &n,
         obj::symbol_ref const &name,
-        object_ptr const root,
+        object_ref const root,
         native_bool dynamic,
         native_bool thread_bound);
 
@@ -45,23 +45,23 @@ namespace jank::runtime
     native_bool equal(var const &) const;
 
     /* behavior::metadatable */
-    var_ref with_meta(object_ptr m);
+    var_ref with_meta(object_ref m);
 
     native_bool is_bound() const;
-    object_ptr get_root() const;
+    object_ref get_root() const;
     /* Binding a root changes it for all threads. */
-    var_ref bind_root(object_ptr r);
-    object_ptr alter_root(object_ptr f, object_ptr args);
+    var_ref bind_root(object_ref r);
+    object_ref alter_root(object_ref f, object_ref args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
-    jtl::string_result<void> set(object_ptr r) const;
+    jtl::string_result<void> set(object_ref r) const;
 
     var_ref set_dynamic(native_bool dyn);
 
     var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::derefable */
-    object_ptr deref() const;
+    object_ref deref() const;
 
     native_bool operator==(var const &rhs) const;
 
@@ -71,11 +71,11 @@ namespace jank::runtime
     ns_ref n;
     /* Unqualified. */
     obj::symbol_ref name{};
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
     mutable native_hash hash{};
 
   private:
-    folly::Synchronized<object_ptr> root;
+    folly::Synchronized<object_ref> root;
 
   public:
     std::atomic_bool dynamic{ false };
@@ -87,7 +87,7 @@ namespace jank::runtime
     static constexpr object_type obj_type{ object_type::var_thread_binding };
     static constexpr native_bool pointer_free{ false };
 
-    var_thread_binding(object_ptr value, std::thread::id id);
+    var_thread_binding(object_ref value, std::thread::id id);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -97,7 +97,7 @@ namespace jank::runtime
     native_hash to_hash() const;
 
     object base{ obj_type };
-    object_ptr value{};
+    object_ref value{};
     std::thread::id thread_id;
   };
 

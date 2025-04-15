@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  atom::atom(object_ptr const o)
-    : val{ o }
+  atom::atom(object_ref const o)
+    : val{ o.data }
   {
     jank_debug_assert(val);
   }
@@ -39,24 +39,24 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr atom::deref() const
+  object_ref atom::deref() const
   {
     return val.load();
   }
 
-  object_ptr atom::reset(object_ptr const o)
+  object_ref atom::reset(object_ref const o)
   {
     jank_debug_assert(o);
-    val = o;
+    val = o.data;
     return o;
   }
 
-  persistent_vector_ref atom::reset_vals(object_ptr const o)
+  persistent_vector_ref atom::reset_vals(object_ref const o)
   {
     while(true)
     {
       auto v(val.load());
-      if(val.compare_exchange_weak(v, o))
+      if(val.compare_exchange_weak(v, o.data))
       {
         return make_box<persistent_vector>(std::in_place, v, o);
       }
@@ -64,13 +64,13 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr atom::swap(object_ptr const fn)
+  object_ref atom::swap(object_ref const fn)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return next;
       }
@@ -78,13 +78,13 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr atom::swap(object_ptr fn, object_ptr a1)
+  object_ref atom::swap(object_ref const fn, object_ref const a1)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return next;
       }
@@ -92,13 +92,13 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr atom::swap(object_ptr fn, object_ptr a1, object_ptr a2)
+  object_ref atom::swap(object_ref const fn, object_ref const a1, object_ref const a2)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1, a2));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return next;
       }
@@ -106,52 +106,40 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
-  object_ptr atom::swap(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
+  object_ref
+  atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return next;
       }
     }
   }
 
-  persistent_vector_ref atom::swap_vals(object_ptr const fn)
+  persistent_vector_ref atom::swap_vals(object_ref const fn)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  persistent_vector_ref atom::swap_vals(object_ptr fn, object_ptr a1)
+  persistent_vector_ref atom::swap_vals(object_ref const fn, object_ref const a1)
   {
     while(true)
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1));
-      if(val.compare_exchange_weak(v, next))
-      {
-        return make_box<persistent_vector>(std::in_place, v, next);
-      }
-    }
-  }
-
-  persistent_vector_ref atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2)
-  {
-    while(true)
-    {
-      auto v(val.load());
-      auto const next(dynamic_call(fn, v, a1, a2));
-      if(val.compare_exchange_weak(v, next))
+      if(val.compare_exchange_weak(v, next.data))
       {
         return make_box<persistent_vector>(std::in_place, v, next);
       }
@@ -159,22 +147,38 @@ namespace jank::runtime::obj
   }
 
   persistent_vector_ref
-  atom::swap_vals(object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest)
+  atom::swap_vals(object_ref const fn, object_ref const a1, object_ref const a2)
   {
     while(true)
     {
       auto v(val.load());
-      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
-      if(val.compare_exchange_weak(v, next))
+      auto const next(dynamic_call(fn, v, a1, a2));
+      if(val.compare_exchange_weak(v, next.data))
       {
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
   }
 
-  object_ptr atom::compare_and_set(object_ptr old_val, object_ptr new_val)
+  persistent_vector_ref atom::swap_vals(object_ref const fn,
+                                        object_ref const a1,
+                                        object_ref const a2,
+                                        object_ref const rest)
   {
-    object *old{ old_val };
-    return make_box(val.compare_exchange_weak(old, new_val));
+    while(true)
+    {
+      auto v(val.load());
+      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
+      if(val.compare_exchange_weak(v, next.data))
+      {
+        return make_box<persistent_vector>(std::in_place, v, next);
+      }
+    }
+  }
+
+  object_ref atom::compare_and_set(object_ref const old_val, object_ref const new_val)
+  {
+    object *old{ old_val.data };
+    return make_box(val.compare_exchange_weak(old, new_val.data));
   }
 }

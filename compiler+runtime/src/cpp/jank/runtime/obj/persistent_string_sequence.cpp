@@ -67,7 +67,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::sequenceable */
-  object_ptr persistent_string_sequence::first() const
+  object_ref persistent_string_sequence::first() const
   {
     return make_box(str->data[index]);
   }
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref persistent_string_sequence::conj(object_ptr const head)
+  cons_ref persistent_string_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, this);
   }

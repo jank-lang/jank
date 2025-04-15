@@ -43,8 +43,8 @@ namespace jank::runtime::obj
     jtl::immutable_string const &get_namespace() const;
 
     /* behavior::callable */
-    object_ptr call(object_ptr);
-    object_ptr call(object_ptr, object_ptr);
+    object_ref call(object_ref);
+    object_ref call(object_ref, object_ref);
 
     native_bool operator==(keyword const &rhs) const;
 

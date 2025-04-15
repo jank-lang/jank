@@ -94,7 +94,7 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(runtime::object_ptr const e)
+  void print_exception(runtime::object_ref const e)
   {
     util::println("Uncaught exception: {}", runtime::to_code_string(e));
     print_exception_stack_trace();

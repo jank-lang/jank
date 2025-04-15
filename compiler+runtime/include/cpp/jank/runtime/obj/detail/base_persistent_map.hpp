@@ -6,14 +6,14 @@
 
 namespace jank::runtime
 {
-  native_bool is_map(object_ptr o);
-  native_bool equal(object_ptr l, object_ptr r);
-  void to_string(object_ptr o, util::string_builder &buff);
-  void to_code_string(object_ptr o, util::string_builder &buff);
+  native_bool is_map(object_ref o);
+  native_bool equal(object_ref l, object_ref r);
+  void to_string(object_ref o, util::string_builder &buff);
+  void to_code_string(object_ref o, util::string_builder &buff);
 
   namespace behavior::detail
   {
-    object_ptr validate_meta(object_ptr const m);
+    object_ref validate_meta(object_ref const m);
   }
 }
 
@@ -30,7 +30,7 @@ namespace jank::runtime::obj::detail
     using value_type = V;
 
     base_persistent_map() = default;
-    base_persistent_map(jtl::option<object_ptr> const &meta);
+    base_persistent_map(jtl::option<object_ref> const &meta);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -52,10 +52,10 @@ namespace jank::runtime::obj::detail
     size_t count() const;
 
     /* behavior::metadatable */
-    jtl::oref<PT> with_meta(object_ptr const m) const;
+    jtl::oref<PT> with_meta(object_ref const m) const;
 
     object base{ PT::obj_type };
-    jtl::option<object_ptr> meta;
+    jtl::option<object_ref> meta;
     mutable native_hash hash{};
   };
 }

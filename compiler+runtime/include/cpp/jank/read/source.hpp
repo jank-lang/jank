@@ -36,7 +36,7 @@ namespace jank::read
     source(jtl::immutable_string const &file_path,
            source_position const &start,
            source_position const &end,
-           runtime::object_ptr macro_expansion);
+           runtime::object_ref macro_expansion);
 
     source &operator=(source const &rhs) = default;
     source &operator=(source &&rhs) = default;
@@ -54,7 +54,7 @@ namespace jank::read
     /* The form (and its meta) from which the form at this location expanded. Note
      * that this isn't stored within the jank/source key. It has its own key, since
      * it may be attached to synthetic data which has no source info. */
-    runtime::object_ptr macro_expansion{};
+    runtime::object_ref macro_expansion{};
   };
 
   std::ostream &operator<<(std::ostream &os, source_position const &p);

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  native_vector_sequence::native_vector_sequence(native_vector<object_ptr> const &data,
+  native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data,
                                                  size_t index)
     : data{ data }
     , index{ index }
@@ -12,21 +12,21 @@ namespace jank::runtime::obj
     jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data)
+  native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data)
     : data{ std::move(data) }
   {
     jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(native_vector<object_ptr> &&data, size_t index)
+  native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data, size_t index)
     : data{ std::move(data) }
     , index{ index }
   {
     jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(jtl::option<object_ptr> const &meta,
-                                                 native_vector<object_ptr> &&data)
+  native_vector_sequence::native_vector_sequence(jtl::option<object_ref> const &meta,
+                                                 native_vector<object_ref> &&data)
     : data{ std::move(data) }
     , meta{ meta }
   {
@@ -80,7 +80,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::sequence */
-  object_ptr native_vector_sequence::first() const
+  object_ref native_vector_sequence::first() const
   {
     jank_debug_assert(index < data.size());
     return data[index];
@@ -111,12 +111,12 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref native_vector_sequence::conj(object_ptr const head)
+  cons_ref native_vector_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, data.empty() ? nullptr : this);
   }
 
-  native_vector_sequence_ref native_vector_sequence::with_meta(object_ptr const m) const
+  native_vector_sequence_ref native_vector_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

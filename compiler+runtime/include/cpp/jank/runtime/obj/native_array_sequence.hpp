@@ -16,12 +16,12 @@ namespace jank::runtime::obj
     native_array_sequence() = delete;
     native_array_sequence(native_array_sequence &&) noexcept = default;
     native_array_sequence(native_array_sequence const &) = default;
-    native_array_sequence(object_ptr * const arr, size_t const size);
-    native_array_sequence(object_ptr * const arr, size_t const index, size_t const size);
+    native_array_sequence(object_ref * const arr, size_t const size);
+    native_array_sequence(object_ref * const arr, size_t const index, size_t const size);
 
     template <typename... Args>
-    native_array_sequence(object_ptr const first, Args const... rest)
-      : arr{ make_array_box<object_ptr>(first, rest...) }
+    native_array_sequence(object_ref const first, Args const... rest)
+      : arr{ make_array_box<object_ref>(first, rest...) }
       , size{ sizeof...(Args) + 1 }
     {
     }
@@ -41,15 +41,15 @@ namespace jank::runtime::obj
     size_t count() const;
 
     /* behavior::sequence */
-    object_ptr first() const;
+    object_ref first() const;
     native_array_sequence_ref next() const;
-    obj::cons_ref conj(object_ptr head);
+    obj::cons_ref conj(object_ref head);
 
     /* behavior::sequenceable_in_place */
     native_array_sequence_ref next_in_place();
 
     object base{ obj_type };
-    jtl::ptr<object_ptr> arr{};
+    jtl::ptr<object_ref> arr{};
     size_t index{};
     size_t size{};
   };

@@ -31,14 +31,14 @@ namespace jank::runtime::obj
     native_integer compare(nil const &) const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const key);
-    object_ptr get(object_ptr const key, object_ptr const fallback);
-    object_ptr get_entry(object_ptr key);
-    native_bool contains(object_ptr key) const;
+    object_ref get(object_ref const key);
+    object_ref get(object_ref const key, object_ref const fallback);
+    object_ref get_entry(object_ref key);
+    native_bool contains(object_ref key) const;
 
     /* behavior::associatively_writable */
-    obj::persistent_array_map_ref assoc(object_ptr key, object_ptr val) const;
-    nil_ref dissoc(object_ptr key) const;
+    obj::persistent_array_map_ref assoc(object_ref key, object_ref val) const;
+    nil_ref dissoc(object_ref key) const;
 
     /* behavior::seqable */
     nil_ref seq();
@@ -53,4 +53,10 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
   };
+}
+
+namespace jank::runtime
+{
+  bool operator==(object *, obj::nil_ref);
+  bool operator!=(object *, obj::nil_ref);
 }
