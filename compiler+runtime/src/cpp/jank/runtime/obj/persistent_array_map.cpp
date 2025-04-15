@@ -29,17 +29,13 @@ namespace jank::runtime::obj
   object_ref persistent_array_map::get(object_ref const key) const
   {
     auto const res(data.find(key));
-    if(res)
-    {
-      return res;
-    }
-    return nil::nil_const();
+    return res;
   }
 
   object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
   {
     auto const res(data.find(key));
-    if(res)
+    if(res.is_some())
     {
       return res;
     }
@@ -49,7 +45,7 @@ namespace jank::runtime::obj
   object_ref persistent_array_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
-    if(res)
+    if(res.is_some())
     {
       return make_box<persistent_vector>(std::in_place, key, res);
     }
@@ -58,7 +54,7 @@ namespace jank::runtime::obj
 
   native_bool persistent_array_map::contains(object_ref const key) const
   {
-    return data.find(key);
+    return data.find(key).is_some();
   }
 
   object_ref persistent_array_map::assoc(object_ref const key, object_ref const val) const
@@ -123,17 +119,13 @@ namespace jank::runtime::obj
   object_ref persistent_array_map::call(object_ref const o) const
   {
     auto const found(data.find(o));
-    if(!found)
-    {
-      return nil::nil_const();
-    }
     return found;
   }
 
   object_ref persistent_array_map::call(object_ref const o, object_ref const fallback) const
   {
     auto const found(data.find(o));
-    if(!found)
+    if(found.is_nil())
     {
       return fallback;
     }

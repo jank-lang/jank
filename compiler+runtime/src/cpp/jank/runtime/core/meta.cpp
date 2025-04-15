@@ -11,7 +11,7 @@ namespace jank::runtime
 {
   object_ref meta(object_ref const m)
   {
-    if(!m)
+    if(m.is_nil())
     {
       return m;
     }

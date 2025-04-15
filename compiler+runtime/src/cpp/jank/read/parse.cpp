@@ -844,9 +844,9 @@ namespace jank::read::parse
 
   jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const seq)
   {
-    if(!seq)
+    if(seq.is_nil())
     {
-      return obj::nil::nil_const();
+      return seq;
     }
 
     return visit_seqable(
@@ -891,9 +891,9 @@ namespace jank::read::parse
 
   jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
   {
-    if(!seq)
+    if(seq.is_nil())
     {
-      return obj::nil::nil_const();
+      return seq;
     }
 
     return visit_seqable(

@@ -7,7 +7,7 @@ namespace jank::runtime
 {
   native_bool equal(char const lhs, object_ref const rhs)
   {
-    if(!rhs || rhs->type != object_type::character)
+    if(rhs.is_nil() || rhs->type != object_type::character)
     {
       return false;
     }
@@ -18,11 +18,11 @@ namespace jank::runtime
 
   native_bool equal(object_ref const lhs, object_ref const rhs)
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }

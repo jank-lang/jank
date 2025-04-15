@@ -105,14 +105,24 @@ namespace jank::runtime
     JANK_CONSTEXPR bool operator==(jtl::nullptr_t) noexcept = delete;
     JANK_CONSTEXPR bool operator!=(jtl::nullptr_t) noexcept = delete;
 
+    JANK_CONSTEXPR value_type *get() const noexcept
+    {
+      return data;
+    }
+
     JANK_CONSTEXPR value_type *erase() const noexcept
     {
       return data;
     }
 
-    JANK_CONSTEXPR operator bool() const noexcept
+    JANK_CONSTEXPR bool is_some() const noexcept
     {
       return data->type != object_type::nil;
+    }
+
+    JANK_CONSTEXPR bool is_nil() const noexcept
+    {
+      return data->type == object_type::nil;
     }
 
     value_type *data{};
@@ -184,9 +194,9 @@ namespace jank::runtime
     {
       if(!*this)
       {
-        return rhs;
+        return rhs.is_some();
       }
-      if(!rhs)
+      if(rhs.is_nil())
       {
         return false;
       }
@@ -248,6 +258,16 @@ namespace jank::runtime
         return std::bit_cast<object *>(jank_nil_const);
       }
       return &reinterpret_cast<T *>(data)->base;
+    }
+
+    JANK_CONSTEXPR bool is_some() const noexcept
+    {
+      return *this;
+    }
+
+    JANK_CONSTEXPR bool is_nil() const noexcept
+    {
+      return !*this;
     }
 
     JANK_CONSTEXPR operator bool() const
@@ -313,7 +333,7 @@ namespace jank::runtime
 
     JANK_CONSTEXPR bool operator!=(oref<object> const &rhs) const
     {
-      return rhs;
+      return rhs.is_some();
     }
 
     template <typename C>
@@ -337,6 +357,16 @@ namespace jank::runtime
     JANK_CONSTEXPR object *erase() const noexcept
     {
       return reinterpret_cast<object *>(data);
+    }
+
+    JANK_CONSTEXPR bool is_some() const noexcept
+    {
+      return false;
+    }
+
+    JANK_CONSTEXPR bool is_nil() const noexcept
+    {
+      return true;
     }
 
     JANK_CONSTEXPR operator bool() const

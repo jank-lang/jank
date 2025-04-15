@@ -152,16 +152,10 @@ namespace jank::hash
     return static_cast<uint32_t>(ch);
   }
 
-  uint32_t visit(runtime::object * const o)
+  uint32_t visit(runtime::object_ref const o)
   {
-    jank_debug_assert(o);
     return runtime::visit_object([](auto const typed_o) -> uint32_t { return typed_o->to_hash(); },
                                  o);
-  }
-
-  static uint32_t visit(runtime::object_ref const o)
-  {
-    return visit(o.data);
   }
 
   template <typename T>

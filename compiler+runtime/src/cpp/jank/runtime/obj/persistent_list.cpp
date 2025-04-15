@@ -28,7 +28,7 @@ namespace jank::runtime::obj
 
   persistent_list_ref persistent_list::create(object_ref const s)
   {
-    if(!s)
+    if(s.is_nil())
     {
       return make_box<persistent_list>();
     }

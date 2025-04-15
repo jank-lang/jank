@@ -44,11 +44,11 @@ namespace std
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   equal_to<object_ref>::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }

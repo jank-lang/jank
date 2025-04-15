@@ -77,7 +77,7 @@ namespace jank::runtime::obj
 
   static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
-    if(!o->tail)
+    if(o->tail.is_nil())
     {
       return {};
     }

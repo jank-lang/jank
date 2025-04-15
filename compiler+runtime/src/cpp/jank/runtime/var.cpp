@@ -210,7 +210,7 @@ namespace jank::runtime
 
   native_hash var_thread_binding::to_hash() const
   {
-    return hash::visit(value);
+    return hash::visit(value.get());
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)

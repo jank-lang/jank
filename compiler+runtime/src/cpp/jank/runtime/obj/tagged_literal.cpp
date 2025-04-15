@@ -59,7 +59,7 @@ namespace jank::runtime::obj
       return hash;
     }
 
-    return hash = hash::combine(hash::visit(tag), hash::visit(form));
+    return hash = hash::combine(hash::visit(tag.get()), hash::visit(form.get()));
   }
 
   object_ref tagged_literal::get(object_ref const key, object_ref const fallback) const

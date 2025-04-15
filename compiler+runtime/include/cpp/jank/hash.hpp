@@ -7,6 +7,9 @@
 namespace jank::runtime
 {
   struct object;
+
+  template <typename T>
+  struct oref;
 }
 
 namespace jank::hash
@@ -32,7 +35,7 @@ namespace jank::hash
 
   uint32_t string(native_persistent_string_view const &input);
 
-  uint32_t visit(runtime::object * const o);
+  uint32_t visit(runtime::oref<runtime::object> const o);
   uint32_t visit(char const ch);
 
   uint32_t ordered(runtime::object const * const sequence);
@@ -46,7 +49,7 @@ namespace jank::hash
 
     for(auto it(begin); it != end; ++it)
     {
-      hash = 31 * hash + visit(*it);
+      hash = 31 * hash + visit((*it));
       ++n;
     }
 
@@ -70,7 +73,7 @@ namespace jank::hash
       }
       else
       {
-        hash += visit(*it);
+        hash += visit((*it).get());
       }
       ++n;
     }

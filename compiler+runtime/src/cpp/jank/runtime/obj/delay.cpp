@@ -40,12 +40,12 @@ namespace jank::runtime::obj
   object_ref delay::deref()
   {
     std::lock_guard<std::mutex> const lock{ mutex };
-    if(val)
+    if(val.is_some())
     {
       return val;
     }
 
-    if(error)
+    if(error.is_some())
     {
       throw error;
     }

@@ -28,7 +28,7 @@ namespace jank::runtime::obj
 
   object_ref cons::next() const
   {
-    if(!tail)
+    if(tail.is_nil())
     {
       return {};
     }
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
 
   cons_ref cons::next_in_place()
   {
-    if(!tail)
+    if(tail.is_nil())
     {
       return {};
     }

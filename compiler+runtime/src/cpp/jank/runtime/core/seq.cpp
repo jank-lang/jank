@@ -437,7 +437,7 @@ namespace jank::runtime
 
   object_ref rest(object_ref const s)
   {
-    if(!s || s == obj::nil::nil_const())
+    if(s.is_nil())
     {
       return obj::persistent_list::empty();
     }
@@ -449,7 +449,7 @@ namespace jank::runtime
           return obj::persistent_list::empty();
         }
         auto const ret(seq->next());
-        if(!ret)
+        if(ret.is_nil())
         {
           return obj::persistent_list::empty();
         }
@@ -644,7 +644,7 @@ namespace jank::runtime
 
   object_ref find(object_ref const s, object_ref const key)
   {
-    if(!s)
+    if(s.is_nil())
     {
       return s;
     }
@@ -668,7 +668,7 @@ namespace jank::runtime
 
   native_bool contains(object_ref const s, object_ref const key)
   {
-    if(!s)
+    if(s.is_nil())
     {
       return false;
     }
@@ -947,7 +947,7 @@ namespace jank::runtime
 
   size_t sequence_length(object_ref const s, size_t const max)
   {
-    if(!s)
+    if(s.is_nil())
     {
       return 0;
     }

@@ -25,13 +25,13 @@ namespace jank::runtime::obj
   lazy_sequence_ref lazy_sequence::seq() const
   {
     resolve_seq();
-    return sequence ? this : lazy_sequence_ref{};
+    return sequence.is_some() ? this : lazy_sequence_ref{};
   }
 
   lazy_sequence_ref lazy_sequence::fresh_seq() const
   {
     resolve_seq();
-    if(!sequence)
+    if(sequence.is_nil())
     {
       return {};
     }
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
   object_ref lazy_sequence::first() const
   {
     resolve_seq();
-    if(sequence)
+    if(sequence.is_some())
     {
       return runtime::first(sequence);
     }
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
   lazy_sequence_ref lazy_sequence::next() const
   {
     resolve_seq();
-    if(sequence)
+    if(sequence.is_some())
     {
       auto const n(runtime::next(sequence));
       if(n == nil::nil_const())
@@ -110,17 +110,17 @@ namespace jank::runtime::obj
   cons_ref lazy_sequence::conj(object_ref const head) const
   {
     resolve_seq();
-    return make_box<cons>(head, sequence ? object_ref{ this } : nil::nil_const().erase());
+    return make_box<cons>(head, sequence.is_some() ? &base : nil::nil_const().erase());
   }
 
   object_ref lazy_sequence::resolve_fn() const
   {
-    if(fn)
+    if(fn.is_some())
     {
       fn_result = dynamic_call(fn);
       fn = nil::nil_const();
     }
-    if(fn_result)
+    if(fn_result.is_some())
     {
       return fn_result;
     }
@@ -130,15 +130,15 @@ namespace jank::runtime::obj
   object_ref lazy_sequence::resolve_seq() const
   {
     resolve_fn();
-    if(fn_result)
+    if(fn_result.is_some())
     {
       object_ref lazy{ fn_result };
       fn_result = nil::nil_const();
-      while(lazy && lazy->type == object_type::lazy_sequence)
+      while(lazy.is_some() && lazy->type == object_type::lazy_sequence)
       {
         lazy = expect_object<lazy_sequence>(lazy)->resolve_fn();
       }
-      if(lazy)
+      if(lazy.is_some())
       {
         sequence = runtime::seq(lazy);
       }

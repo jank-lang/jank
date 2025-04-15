@@ -27,7 +27,7 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::create(object_ref const s)
   {
-    if(!s)
+    if(s.is_nil())
     {
       return make_box<persistent_vector>();
     }
