@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using native_pointer_wrapper_ref = jtl::oref<struct native_pointer_wrapper>;
+  using native_pointer_wrapper_ref = oref<struct native_pointer_wrapper>;
 
   struct native_pointer_wrapper : gc
   {

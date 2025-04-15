@@ -63,7 +63,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using native_function_wrapper_ref = jtl::oref<struct native_function_wrapper>;
+    using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
     struct native_function_wrapper
       : gc

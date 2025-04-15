@@ -6,9 +6,9 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using integer_ref = jtl::oref<struct integer>;
-    using real_ref = jtl::oref<struct real>;
-    using ratio_ref = jtl::oref<struct ratio>;
+    using integer_ref = oref<struct integer>;
+    using real_ref = oref<struct real>;
+    using ratio_ref = oref<struct ratio>;
   }
 
   object_ref add(object_ref l, object_ref r);

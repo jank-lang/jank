@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using tagged_literal_ref = jtl::oref<struct tagged_literal>;
+  using tagged_literal_ref = oref<struct tagged_literal>;
 
   struct tagged_literal : gc
   {

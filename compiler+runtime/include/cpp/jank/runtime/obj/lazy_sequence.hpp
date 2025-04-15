@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::oref<struct cons>;
-  using lazy_sequence_ref = jtl::oref<struct lazy_sequence>;
+  using cons_ref = oref<struct cons>;
+  using lazy_sequence_ref = oref<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
   struct lazy_sequence : gc

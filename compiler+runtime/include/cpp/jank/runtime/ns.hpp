@@ -10,10 +10,10 @@ namespace jank::runtime
 
   namespace obj
   {
-    using symbol_ref = jtl::oref<struct symbol>;
+    using symbol_ref = oref<struct symbol>;
   }
 
-  using ns_ref = jtl::oref<struct ns>;
+  using ns_ref = oref<struct ns>;
 
   struct ns : gc
   {

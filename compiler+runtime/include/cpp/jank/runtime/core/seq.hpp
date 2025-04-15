@@ -7,8 +7,8 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_list_ref = jtl::oref<struct persistent_list>;
-    using persistent_vector_ref = jtl::oref<struct persistent_vector>;
+    using persistent_list_ref = oref<struct persistent_list>;
+    using persistent_vector_ref = oref<struct persistent_vector>;
   }
 
   template <typename T>

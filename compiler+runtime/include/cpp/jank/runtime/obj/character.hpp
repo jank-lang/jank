@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using character_ref = jtl::oref<struct character>;
+  using character_ref = oref<struct character>;
 
   struct character : gc
   {

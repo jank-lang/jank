@@ -7,9 +7,9 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ref = jtl::oref<struct symbol>;
-  using persistent_hash_map_ref = jtl::oref<struct persistent_hash_map>;
-  using multi_function_ref = jtl::oref<struct multi_function>;
+  using symbol_ref = oref<struct symbol>;
+  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
+  using multi_function_ref = oref<struct multi_function>;
 
   struct multi_function
     : gc

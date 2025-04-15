@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_sorted_map_sequence_ref = jtl::oref<struct persistent_sorted_map_sequence>;
+  using persistent_sorted_map_sequence_ref = oref<struct persistent_sorted_map_sequence>;
 
   struct persistent_sorted_map_sequence
     : detail::base_persistent_map_sequence<

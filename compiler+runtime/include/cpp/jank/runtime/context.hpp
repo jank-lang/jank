@@ -29,7 +29,7 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using keyword_ref = jtl::oref<struct keyword>;
+    using keyword_ref = oref<struct keyword>;
   }
 
   /* This is a singleton, as much as I fought it for actual years. Trying to have multiple

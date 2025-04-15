@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::oref<struct cons>;
-  using native_vector_sequence_ref = jtl::oref<struct native_vector_sequence>;
+  using cons_ref = oref<struct cons>;
+  using native_vector_sequence_ref = oref<struct native_vector_sequence>;
 
   struct native_vector_sequence : gc
   {

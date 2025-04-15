@@ -29,7 +29,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  jtl::oref<T> try_object(object_ref const o)
+  oref<T> try_object(object_ref const o)
   {
     if(o->type != T::obj_type)
     {
@@ -50,7 +50,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  JANK_CONSTEXPR jtl::oref<T> expect_object(object_ref const o)
+  JANK_CONSTEXPR oref<T> expect_object(object_ref const o)
   {
     jank_debug_assert(o->type == T::obj_type);
     return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
@@ -59,7 +59,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  JANK_CONSTEXPR jtl::oref<T> expect_object(object const * const o)
+  JANK_CONSTEXPR oref<T> expect_object(object const * const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);

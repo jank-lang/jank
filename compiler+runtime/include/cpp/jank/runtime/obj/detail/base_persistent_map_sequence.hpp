@@ -10,7 +10,7 @@ namespace jank::runtime
 
   namespace obj
   {
-    using cons_ref = jtl::oref<struct cons>;
+    using cons_ref = oref<struct cons>;
   }
 }
 
@@ -39,15 +39,15 @@ namespace jank::runtime::obj::detail
     size_t count() const;
 
     /* behavior::seqable */
-    jtl::oref<PT> seq();
-    jtl::oref<PT> fresh_seq() const;
+    oref<PT> seq();
+    oref<PT> fresh_seq() const;
 
     /* behavior::sequenceable */
     obj::persistent_vector_ref first() const;
-    jtl::oref<PT> next() const;
+    oref<PT> next() const;
 
     /* behavior::sequenceable_in_place */
-    jtl::oref<PT> next_in_place();
+    oref<PT> next_in_place();
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);

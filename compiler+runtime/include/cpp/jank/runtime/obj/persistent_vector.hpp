@@ -5,9 +5,9 @@
 
 namespace jank::runtime::obj
 {
-  using transient_vector_ref = jtl::oref<struct transient_vector>;
-  using persistent_vector_ref = jtl::oref<struct persistent_vector>;
-  using persistent_vector_sequence_ref = jtl::oref<struct persistent_vector_sequence>;
+  using transient_vector_ref = oref<struct transient_vector>;
+  using persistent_vector_ref = oref<struct persistent_vector>;
+  using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
   struct persistent_vector : gc
   {

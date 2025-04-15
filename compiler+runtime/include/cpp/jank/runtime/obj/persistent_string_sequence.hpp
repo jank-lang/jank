@@ -4,9 +4,9 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::oref<struct cons>;
-  using persistent_string_ref = jtl::oref<struct persistent_string>;
-  using persistent_string_sequence_ref = jtl::oref<struct persistent_string_sequence>;
+  using cons_ref = oref<struct cons>;
+  using persistent_string_ref = oref<struct persistent_string>;
+  using persistent_string_sequence_ref = oref<struct persistent_string_sequence>;
 
   struct persistent_string_sequence : gc
   {

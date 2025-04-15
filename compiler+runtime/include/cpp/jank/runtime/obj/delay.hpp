@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using delay_ref = jtl::oref<struct delay>;
+  using delay_ref = oref<struct delay>;
 
   struct delay : gc
   {

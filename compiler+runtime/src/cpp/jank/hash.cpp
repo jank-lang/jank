@@ -166,7 +166,7 @@ namespace jank::hash
 
   template <typename T>
   requires runtime::behavior::object_like<T>
-  static uint32_t visit(jtl::oref<T> const o)
+  static uint32_t visit(runtime::oref<T> const o)
   {
     return o->to_hash();
   }

@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using jit_closure_ref = jtl::oref<struct jit_closure>;
+  using jit_closure_ref = oref<struct jit_closure>;
 
   struct jit_closure
     : gc

@@ -73,7 +73,7 @@ namespace jank::runtime
       return *data;
     }
 
-    native_box &operator=(jtl::oref<T> const rhs)
+    native_box &operator=(oref<T> const rhs)
     {
       data = *rhs.data.ptr();
       return *this;
@@ -129,7 +129,7 @@ namespace jank::runtime
 
     template <typename C>
     requires std::is_convertible_v<T *, C *>
-    operator jtl::oref<C>() const
+    operator oref<C>() const
     {
       jank_debug_assert(data);
       return *data;
@@ -189,14 +189,14 @@ namespace jank::runtime
 
     template <typename T>
     requires behavior::object_like<T>
-    native_box(jtl::oref<T> const data)
+    native_box(oref<T> const data)
       : data{ static_cast<object *>(data) }
     {
     }
 
     template <typename C>
     requires std::is_convertible_v<C *, value_type *>
-    native_box(jtl::oref<C> const data)
+    native_box(oref<C> const data)
       : data{ data.data }
     {
     }
@@ -319,9 +319,9 @@ namespace jank::runtime
   }
 
   template <typename T>
-  constexpr jtl::oref<T> make_box(jtl::oref<T> const &o)
+  constexpr oref<T> make_box(oref<T> const &o)
   {
-    static_assert(sizeof(jtl::oref<T>) == sizeof(T *));
+    static_assert(sizeof(oref<T>) == sizeof(T *));
     return o;
   }
 
@@ -357,10 +357,10 @@ namespace jank::runtime
 
   template <typename T, typename... Args>
   requires behavior::object_like<T>
-  jtl::oref<T> make_box(Args &&...args)
+  oref<T> make_box(Args &&...args)
   {
-    static_assert(sizeof(jtl::oref<T>) == sizeof(T *));
-    jtl::oref<T> ret;
+    static_assert(sizeof(oref<T>) == sizeof(T *));
+    oref<T> ret;
     if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)

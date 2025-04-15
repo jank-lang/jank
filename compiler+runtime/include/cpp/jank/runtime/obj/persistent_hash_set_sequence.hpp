@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_hash_set_ref = jtl::oref<struct persistent_hash_set>;
-  using persistent_hash_set_sequence_ref = jtl::oref<struct persistent_hash_set_sequence>;
+  using persistent_hash_set_ref = oref<struct persistent_hash_set>;
+  using persistent_hash_set_sequence_ref = oref<struct persistent_hash_set_sequence>;
 
   struct persistent_hash_set_sequence
     : gc

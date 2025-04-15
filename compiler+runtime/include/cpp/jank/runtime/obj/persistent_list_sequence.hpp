@@ -8,8 +8,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_list_ref = jtl::oref<struct persistent_list>;
-  using persistent_list_sequence_ref = jtl::oref<struct persistent_list_sequence>;
+  using persistent_list_ref = oref<struct persistent_list>;
+  using persistent_list_sequence_ref = oref<struct persistent_list_sequence>;
 
   /* TODO: We need to get rid of this. In Clojure, a list *is* a sequence. */
   struct persistent_list_sequence

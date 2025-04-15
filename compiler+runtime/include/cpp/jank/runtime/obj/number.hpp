@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using boolean_ref = jtl::oref<struct boolean>;
+  using boolean_ref = oref<struct boolean>;
 
   struct boolean : gc
   {
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     native_bool data{};
   };
 
-  using integer_ref = jtl::oref<struct integer>;
+  using integer_ref = oref<struct integer>;
 
   struct integer : gc
   {
@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     object base{ obj_type };
   };
 
-  using real_ref = jtl::oref<struct real>;
+  using real_ref = oref<struct real>;
 
   struct real : gc
   {

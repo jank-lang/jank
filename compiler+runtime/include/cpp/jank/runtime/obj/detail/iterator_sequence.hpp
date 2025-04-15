@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::oref<struct cons>;
+  using cons_ref = oref<struct cons>;
 }
 
 namespace jank::runtime::obj::detail
@@ -26,8 +26,8 @@ namespace jank::runtime::obj::detail
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    jtl::oref<Derived> seq();
-    jtl::oref<Derived> fresh_seq() const;
+    oref<Derived> seq();
+    oref<Derived> fresh_seq() const;
 
     /* behavior::countable */
     size_t count() const;
@@ -35,10 +35,10 @@ namespace jank::runtime::obj::detail
     /* behavior::sequenceable */
     object_ref first() const;
 
-    jtl::oref<Derived> next() const;
+    oref<Derived> next() const;
 
     /* behavior::sequenceable_in_place */
-    jtl::oref<Derived> next_in_place();
+    oref<Derived> next_in_place();
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);

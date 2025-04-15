@@ -6,8 +6,8 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ref = jtl::oref<struct cons>;
-  using repeat_ref = jtl::oref<struct repeat>;
+  using cons_ref = oref<struct cons>;
+  using repeat_ref = oref<struct repeat>;
 
   struct repeat : gc
   {

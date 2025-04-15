@@ -45,7 +45,7 @@ namespace jank::detail
   }
 
   template <typename T>
-  object_ref to_runtime_data(jtl::oref<T> const &d)
+  object_ref to_runtime_data(oref<T> const &d)
   {
     util::string_builder sb;
     return make_box(sb("ref(")(d.data)(")").release());
@@ -103,7 +103,7 @@ namespace jank::detail
 
   template <typename T>
   requires behavior::object_like<T>
-  object_ref to_runtime_data(jtl::oref<T> const &m)
+  object_ref to_runtime_data(oref<T> const &m)
   {
     return m;
   }

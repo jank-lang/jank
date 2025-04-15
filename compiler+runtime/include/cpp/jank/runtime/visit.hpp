@@ -61,7 +61,7 @@ namespace jank::runtime
   template <typename T, typename F, typename... Args>
   requires behavior::object_like<T>
   [[gnu::hot]]
-  constexpr auto visit_object(F const &fn, jtl::oref<T const> const not_erased, Args &&...args)
+  constexpr auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
   }

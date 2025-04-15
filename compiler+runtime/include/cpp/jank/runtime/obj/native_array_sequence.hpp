@@ -4,8 +4,8 @@
 
 namespace jank::runtime::obj
 {
-  using native_array_sequence_ref = jtl::oref<struct native_array_sequence>;
-  using cons_ref = jtl::oref<struct cons>;
+  using native_array_sequence_ref = oref<struct native_array_sequence>;
+  using cons_ref = oref<struct cons>;
 
   struct native_array_sequence : gc
   {

@@ -10,14 +10,14 @@
 
 namespace jank::runtime
 {
-  using ns_ref = jtl::oref<struct ns>;
-  using var_ref = jtl::oref<struct var>;
-  using var_thread_binding_ref = jtl::oref<struct var_thread_binding>;
-  using var_unbound_root_ref = jtl::oref<struct var_unbound_root>;
+  using ns_ref = oref<struct ns>;
+  using var_ref = oref<struct var>;
+  using var_thread_binding_ref = oref<struct var_thread_binding>;
+  using var_unbound_root_ref = oref<struct var_unbound_root>;
 
   namespace obj
   {
-    using persistent_hash_map_ref = jtl::oref<struct persistent_hash_map>;
+    using persistent_hash_map_ref = oref<struct persistent_hash_map>;
   }
 
   struct var : gc

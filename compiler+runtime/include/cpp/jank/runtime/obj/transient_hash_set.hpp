@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_hash_set_ref = jtl::oref<struct transient_hash_set>;
+  using transient_hash_set_ref = oref<struct transient_hash_set>;
 
   struct transient_hash_set : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_set;
-    using persistent_type_ref = jtl::oref<struct persistent_hash_set>;
+    using persistent_type_ref = oref<struct persistent_hash_set>;
 
     transient_hash_set() = default;
     transient_hash_set(transient_hash_set &&) noexcept = default;

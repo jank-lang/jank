@@ -5,9 +5,9 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = jtl::oref<struct persistent_array_map>;
-  using symbol_ref = jtl::oref<struct symbol>;
-  using keyword_ref = jtl::oref<struct keyword>;
+  using persistent_array_map_ref = oref<struct persistent_array_map>;
+  using symbol_ref = oref<struct symbol>;
+  using keyword_ref = oref<struct keyword>;
 
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
   struct keyword : gc
