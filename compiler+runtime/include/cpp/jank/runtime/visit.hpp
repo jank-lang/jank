@@ -373,7 +373,7 @@ namespace jank::runtime
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
   [[gnu::hot]]
-  JANK_CONSTEXPR auto visit_type(F const &fn, object_ref const erased, Args &&...args)
+  constexpr auto visit_type(F const &fn, object_ref const erased, Args &&...args)
   {
     if(erased->type == T::obj_type)
     {
@@ -389,7 +389,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  JANK_CONSTEXPR auto
+  constexpr auto
   visit_seqable(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
@@ -546,7 +546,7 @@ namespace jank::runtime
   /* Throws if the object isn't seqable. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  JANK_CONSTEXPR auto visit_seqable(F1 const &fn, object_ref const erased, Args &&...args)
+  constexpr auto visit_seqable(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_seqable(
       fn,
@@ -560,7 +560,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  JANK_CONSTEXPR auto
+  constexpr auto
   visit_map_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
@@ -592,7 +592,7 @@ namespace jank::runtime
   /* Throws if the object isn't map-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  JANK_CONSTEXPR auto visit_map_like(F1 const &fn, object_ref const erased, Args &&...args)
+  constexpr auto visit_map_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_map_like(
       fn,
@@ -606,7 +606,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  JANK_CONSTEXPR auto
+  constexpr auto
   visit_set_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
@@ -633,7 +633,7 @@ namespace jank::runtime
   /* Throws if the object isn't set-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  JANK_CONSTEXPR auto visit_set_like(F1 const &fn, object_ref const erased, Args &&...args)
+  constexpr auto visit_set_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_set_like(
       fn,
@@ -647,7 +647,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  JANK_CONSTEXPR auto
+  constexpr auto
   visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
@@ -678,7 +678,7 @@ namespace jank::runtime
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  JANK_CONSTEXPR auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
+  constexpr auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_number_like(
       fn,

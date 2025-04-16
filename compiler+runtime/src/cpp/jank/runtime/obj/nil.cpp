@@ -6,8 +6,6 @@ namespace jank::runtime::obj
 {
   nil_ref nil::nil_const()
   {
-    //return reinterpret_cast<nil*>(const_cast<object*>(&jank::runtime::detail::nil_const));
-    //return reinterpret_cast<nil*>(const_cast<object*>(jank_nil_const));
     static nil n;
     return &n;
   }
