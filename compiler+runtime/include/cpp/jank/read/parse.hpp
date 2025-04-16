@@ -74,6 +74,7 @@ namespace jank::read::parse
     object_result parse_reader_macro_fn();
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
+    object_result parse_reader_macro_tagged();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(native_bool splice);
     object_result parse_syntax_quote();

@@ -478,4 +478,32 @@ namespace jank::runtime
     return o->type == object_type::tagged_literal;
   }
 
+  object_ptr parse_uuid(object_ptr const o)
+  {
+    if(o->type == object_type::persistent_string)
+    {
+      try
+      {
+        return make_box<obj::uuid>(expect_object<obj::persistent_string>(o)->data);
+      }
+      catch(...)
+      {
+        return obj::nil::nil_const();
+      }
+    }
+    else
+    {
+      throw std::runtime_error{ util::format("expected string, got {}", object_type_str(o->type)) };
+    }
+  }
+
+  native_bool is_uuid(object_ptr const o)
+  {
+    return o->type == object_type::uuid;
+  }
+
+  object_ptr random_uuid()
+  {
+    return make_box<obj::uuid>();
+  }
 }
