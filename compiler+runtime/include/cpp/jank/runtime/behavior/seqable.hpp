@@ -1,11 +1,9 @@
 #pragma once
 
-#include <jank/runtime/native_box.hpp>
 #include <jank/runtime/behavior/conjable.hpp>
 
 namespace jank::runtime::behavior
 {
-  /* TODO: Return ptr to nil on empty seq. */
   template <typename T>
   concept seqable = requires(T * const t) {
     /* Returns a (potentially shared) seq, which could just be `this`, if we're already a

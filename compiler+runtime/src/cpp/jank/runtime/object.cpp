@@ -44,15 +44,6 @@ namespace std
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   equal_to<object_ref>::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
-    if(lhs.is_nil())
-    {
-      return rhs.is_nil();
-    }
-    else if(rhs.is_nil())
-    {
-      return false;
-    }
-
-    return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
+    return equal(lhs, rhs);
   }
 }

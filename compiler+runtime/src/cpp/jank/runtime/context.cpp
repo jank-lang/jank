@@ -448,10 +448,9 @@ namespace jank::runtime
     return find_ns(target);
   }
 
-  /* TODO: Cache this var. */
-  ns_ref context::current_ns()
+  ns_ref context::current_ns() const
   {
-    return expect_object<ns>(find_var("clojure.core", "*ns*")->deref());
+    return expect_object<ns>(current_ns_var->deref());
   }
 
   jtl::result<var_ref, jtl::immutable_string>

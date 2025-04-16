@@ -53,7 +53,7 @@ namespace jank::runtime
     /* Resolves a symbol which could be an alias to its ns, based on the aliases
      * in the current ns. Does not intern. */
     ns_ref resolve_ns(obj::symbol_ref const &);
-    ns_ref current_ns();
+    ns_ref current_ns() const;
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
