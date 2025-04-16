@@ -354,6 +354,11 @@ namespace jank::runtime
     constexpr bool operator==(jtl::nullptr_t) noexcept = delete;
     constexpr bool operator!=(jtl::nullptr_t) noexcept = delete;
 
+    constexpr object *get() const noexcept
+    {
+      return erase();
+    }
+
     constexpr object *erase() const noexcept
     {
       return std::bit_cast<object *>(data);

@@ -462,7 +462,20 @@ namespace jank::runtime
   {
     return visit_seqable(
       [=](auto const typed_tail) -> object_ref {
-        return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
+        using T = typename decltype(typed_tail)::value_type;
+
+        if constexpr(jtl::is_same<T, obj::nil>)
+        {
+          return make_box<obj::persistent_list>(std::in_place, head);
+        }
+        else if constexpr(behavior::sequenceable<T>)
+        {
+          return make_box<jank::runtime::obj::cons>(head, typed_tail);
+        }
+        else
+        {
+          return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
+        }
       },
       [=]() -> object_ref {
         throw std::runtime_error{ util::format("not seqable: {}", runtime::to_code_string(tail)) };
