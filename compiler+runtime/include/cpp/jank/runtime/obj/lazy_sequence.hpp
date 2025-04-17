@@ -36,11 +36,11 @@ namespace jank::runtime::obj
 
     /* behavior::sequenceable */
     object_ref first() const;
-    lazy_sequence_ref next() const;
+    object_ref next() const;
     obj::cons_ref conj(object_ref head) const;
 
     /* behavior::sequenceable_in_place */
-    lazy_sequence_ref next_in_place();
+    //lazy_sequence_ref next_in_place();
 
     /* behavior::metadatable */
     lazy_sequence_ref with_meta(object_ref m) const;
