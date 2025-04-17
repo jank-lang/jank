@@ -1,6 +1,7 @@
 #include <jank/runtime/obj/integer_range.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
@@ -130,22 +131,7 @@ namespace jank::runtime::obj
 
   native_bool integer_range::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it.is_some();
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq.is_nil();
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void integer_range::to_string(util::string_builder &buff) const

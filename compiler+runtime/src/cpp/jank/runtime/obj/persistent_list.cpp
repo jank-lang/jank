@@ -40,9 +40,9 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
         {
           native_vector<object_ref> v;
-          for(auto i(typed_s->fresh_seq()); i.is_some(); i = i->next_in_place())
+          for(auto const e : make_sequence_range(typed_s))
           {
-            v.emplace_back(i->first());
+            v.emplace_back(e);
           }
           return make_box<persistent_list>(
             runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });

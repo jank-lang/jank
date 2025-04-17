@@ -1,5 +1,6 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime
@@ -15,18 +16,22 @@ namespace jank::runtime
         {
           this->data = typed_data->fresh_seq().erase();
         }
+        else
+        {
+          this->data = typed_data->seq().erase();
+        }
       },
       data);
   }
 
   sequence_range::iterator::value_type sequence_range::iterator::operator*() const
   {
-    return data;
+    return runtime::first(data);
   }
 
-  sequence_range::iterator::pointer sequence_range::iterator::operator->()
+  sequence_range::iterator::pointer sequence_range::iterator::operator->() const
   {
-    return &data;
+    return runtime::first(data);
   }
 
   sequence_range::iterator &sequence_range::iterator::operator++()
@@ -67,12 +72,12 @@ namespace jank::runtime
     return data == rhs.data;
   }
 
-  sequence_range::iterator sequence_range::begin()
+  sequence_range::iterator sequence_range::begin() const
   {
     return { s };
   }
 
-  sequence_range::iterator sequence_range::end()
+  sequence_range::iterator sequence_range::end() const
   {
     return { obj::nil::nil_const() };
   }

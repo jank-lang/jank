@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/detail/base_persistent_map_sequence.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj::detail
 {
@@ -17,21 +18,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   native_bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it.is_some();
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq.is_nil();
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(static_cast<PT const *>(this), &o);
   }
 
   template <typename PT, typename IT>

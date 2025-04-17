@@ -5,6 +5,7 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/core/equal.hpp>
 
+/* TODO: Why does this not live in seq.hpp again? Document if you find out. */
 namespace jank::runtime
 {
   template <typename It>
@@ -22,16 +23,17 @@ namespace jank::runtime
         }
         else
         {
-          auto seq(typed_o->fresh_seq());
+          auto const r{ make_sequence_range(typed_o) };
+          auto seq_it(r.begin());
           auto it(begin);
-          for(; it != end; ++it, seq = seq->next_in_place())
+          for(; it != end; ++it, ++seq_it)
           {
-            if(seq.is_nil() || !runtime::equal(*it, seq->first()))
+            if(seq_it == r.end() || !runtime::equal(*it, *seq_it))
             {
               return false;
             }
           }
-          return seq.is_nil() && it == end;
+          return seq_it == r.end() && it == end;
         }
       },
       []() { return false; },

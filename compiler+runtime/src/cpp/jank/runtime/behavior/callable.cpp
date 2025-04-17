@@ -869,95 +869,76 @@ namespace jank::runtime
       [=](auto const typed_args) -> object_ref {
         auto const s(typed_args->fresh_seq());
         auto const length(sequence_length(s, max_params + 1));
+        auto const r{ make_sequence_range(s) };
+        auto it{ r.begin() };
+        /* TODO: It's technically UB to rely on param order evaluation to be left to right. It's
+         * what clang does, but we shouldn't rely on this for better portability. This code
+         * will just end up being a mess when we pull everything out. Can we keep it clean
+         * while being well-defined? */
         switch(length)
         {
           case 0:
             return dynamic_call(source);
           case 1:
-            return dynamic_call(source, s->first());
+            return dynamic_call(source, *it);
           case 2:
-            return dynamic_call(source, s->first(), s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it));
           case 3:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it), *(++it));
           case 4:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it), *(++it), *(++it));
           case 5:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it));
           case 6:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it), *(++it));
           case 7:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it), *(++it), *(++it));
           case 8:
             return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+                                *it,
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it));
           case 9:
             return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+                                *it,
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it));
           case 10:
             return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+                                *it,
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it));
           default:
             return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                obj::persistent_list::create(next_in_place(s)));
+                                *it,
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                *(++it),
+                                obj::persistent_list::create((++it).data));
         }
       },
       args);

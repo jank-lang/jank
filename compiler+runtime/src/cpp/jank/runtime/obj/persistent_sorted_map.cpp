@@ -44,16 +44,17 @@ namespace jank::runtime::obj
         if constexpr(behavior::seqable<T>)
         {
           runtime::detail::native_transient_sorted_map transient;
-          for(auto it(typed_seq->fresh_seq()); it.is_some(); it = it->next_in_place())
+          auto const r{ make_sequence_range(typed_seq) };
+          for(auto it{ r.begin() }; it != r.end(); ++it)
           {
-            auto const key(it->first());
-            it = it->next_in_place();
-            if(it.is_nil())
+            auto const key(*it);
+            ++it;
+            if(it == r.end())
             {
               throw std::runtime_error{ util::format("Odd number of elements: {}",
                                                      typed_seq->to_string()) };
             }
-            auto const val(it->first());
+            auto const val(*it);
             transient.insert_or_assign(key, val);
           }
           return transient.persistent();

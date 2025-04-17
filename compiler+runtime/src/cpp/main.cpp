@@ -39,10 +39,10 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    {
-      profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
-    }
+    //{
+    //  profile::timer const timer{ "load clojure.core" };
+    //  __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+    //}
 
     {
       profile::timer const timer{ "eval user code" };

@@ -11,14 +11,16 @@ namespace jank::runtime
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = object_ref;
-      using pointer = value_type *;
+      using pointer = object_ref;
       using reference = value_type &;
 
       iterator() = delete;
+      iterator(iterator const &) noexcept = default;
+      iterator(iterator &&) noexcept = default;
       iterator(object_ref data);
 
       value_type operator*() const;
-      pointer operator->();
+      pointer operator->() const;
       iterator &operator++();
       bool operator!=(iterator const &rhs) const;
       bool operator==(iterator const &rhs) const;
@@ -27,9 +29,15 @@ namespace jank::runtime
       object_ref data;
     };
 
-    iterator begin();
-    iterator end();
+    iterator begin() const;
+    iterator end() const;
 
     object_ref s;
   };
+
+  template <typename T>
+  sequence_range make_sequence_range(T const s)
+  {
+    return sequence_range{ s.erase() };
+  }
 }

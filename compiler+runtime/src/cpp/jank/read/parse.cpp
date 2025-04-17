@@ -791,9 +791,10 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it.is_some(); it = it->next_in_place()->next_in_place())
+    auto const r{ make_sequence_range(list) };
+    for(auto it(r.begin()); it != r.end(); ++it, ++it)
     {
-      auto const kw(it->first());
+      auto const kw(*it);
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
@@ -807,20 +808,20 @@ namespace jank::read::parse
                                                       "Top-level #?@ usage is not allowed.");
           }
 
-          auto const s(it->next_in_place()->first());
+          auto const s(*(++it));
           return visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
-              auto const seq(typed_s->fresh_seq());
-              if(seq.is_nil())
+              auto const r{ make_sequence_range(typed_s) };
+              if(r.begin() == r.end())
               {
                 return ok(none);
               }
-              auto const first(seq->first());
+              auto const first(*r.begin());
 
               auto const front(pending_forms.begin());
-              for(auto it(seq->next_in_place()); it.is_some(); it = it->next_in_place())
+              for(auto it(++r.begin()); it != r.end(); ++it)
               {
-                pending_forms.insert(front, it->first());
+                pending_forms.insert(front, *it);
               }
 
               return object_source_info{ first, start_token, list_end };
@@ -834,7 +835,7 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ it->next_in_place()->first(), start_token, list_end };
+          return object_source_info{ *(++it), start_token, list_end };
         }
       }
     }
@@ -852,10 +853,8 @@ namespace jank::read::parse
     return visit_seqable(
       [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it.is_some(); it = it->next_in_place())
+        for(auto const item : make_sequence_range(typed_seq))
         {
-          auto const item(it->first());
-
           if(syntax_quote_is_unquote(item, false))
           {
             ret.push_back(
@@ -899,9 +898,8 @@ namespace jank::read::parse
     return visit_seqable(
       [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it.is_some(); it = it->next_in_place())
+        for(auto const item : make_sequence_range(typed_seq))
         {
-          auto item(it->first());
           ret.push_back(first(item));
           ret.push_back(second(item));
         }

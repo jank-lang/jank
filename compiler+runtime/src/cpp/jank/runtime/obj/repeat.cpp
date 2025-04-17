@@ -90,22 +90,7 @@ namespace jank::runtime::obj
 
   native_bool repeat::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it.is_some();
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq.is_nil() || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq.is_nil();
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void repeat::to_string(util::string_builder &buff)

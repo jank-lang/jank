@@ -29,20 +29,7 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   native_bool iterator_sequence<Derived, It>::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        for(auto it(begin); it != end; ++it, seq = seq->next_in_place())
-        {
-          if(seq.is_nil() || !runtime::equal(*it, seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq.is_nil();
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(static_cast<Derived const *>(this), &o);
   }
 
   template <typename Derived, typename It>

@@ -39,9 +39,9 @@ namespace jank::runtime::obj
         if constexpr(behavior::sequenceable<T>)
         {
           runtime::detail::native_transient_vector v;
-          for(auto i(typed_s->fresh_seq()); i.is_some(); i = i->next_in_place())
+          for(auto const e : make_sequence_range(typed_s))
           {
-            v.push_back(i->first());
+            v.push_back(e);
           }
           return make_box<persistent_vector>(v.persistent());
         }
@@ -66,6 +66,7 @@ namespace jank::runtime::obj
       return true;
     }
 
+    /* TODO: Optimize this to use iterators. They're faster for immer vectors. */
     auto const v{ dyn_cast<persistent_vector>(&o) };
     if(v.is_some())
     {
@@ -84,29 +85,7 @@ namespace jank::runtime::obj
     }
     else
     {
-      return visit_object(
-        [&](auto const typed_o) -> native_bool {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(behavior::sequential<T>)
-          {
-            size_t i{};
-            auto e(typed_o->fresh_seq());
-            for(; e.is_some() && i < data.size(); e = e->next_in_place(), ++i)
-            {
-              if(!runtime::equal(data[i], e->first()))
-              {
-                return false;
-              }
-            }
-            return e.is_nil() && i == data.size();
-          }
-          else
-          {
-            return false;
-          }
-        },
-        &o);
+      return runtime::sequence_equal(this, &o);
     }
   }
 

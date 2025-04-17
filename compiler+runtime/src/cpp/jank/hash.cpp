@@ -1,6 +1,7 @@
 #include <jank/hash.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/sequence_range.hpp>
 
 namespace jank::hash
 {
@@ -175,9 +176,9 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(typed_sequence->fresh_seq()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_sequence))
           {
-            hash = 31 * hash + visit(it->first());
+            hash = 31 * hash + visit(e);
             ++n;
           }
 
@@ -201,9 +202,9 @@ namespace jank::hash
         {
           uint32_t n{};
           uint32_t hash{ 1 };
-          for(auto it(typed_sequence->fresh_seq()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_sequence))
           {
-            hash += visit(it->first());
+            hash += visit(e);
             ++n;
           }
 

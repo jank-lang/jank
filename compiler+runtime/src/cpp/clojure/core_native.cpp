@@ -287,7 +287,7 @@ namespace clojure::core_native
     return make_box(hash::unordered(expr.data)).erase();
   }
 
-  // TODO: implement opts for `read-string`
+  /* TODO: implement opts for `read-string` */
   static object_ref read_string(object_ref const /* opts */, object_ref const str)
   {
     return __rt_ctx->read_string(runtime::to_string(str));
@@ -547,9 +547,9 @@ jank_object_ref jank_load_clojure_core_native()
 
       return visit_seqable(
         [](auto const typed_rest, object_ref const l) {
-          for(auto it(typed_rest->fresh_seq()); it.is_some(); it = it->next_in_place())
+        for(auto const e : make_sequence_range(typed_rest))
           {
-            if(!equal(l, it->first()))
+            if(!equal(l, e))
             {
               return obj::boolean::false_const().erase();
             }

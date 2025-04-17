@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/sequence_range.hpp>
 
 namespace jank::runtime
 {
@@ -48,13 +49,13 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i.is_some(); i = i->next_in_place())
+    for(auto const e : make_sequence_range(s))
     {
       if(needs_space)
       {
         buff(' ');
       }
-      runtime::to_string(i->first().erase(), buff);
+      runtime::to_string(e.erase(), buff);
       needs_space = true;
     }
     buff(')');
@@ -104,13 +105,13 @@ namespace jank::runtime
 
     buff('(');
     native_bool needs_space{};
-    for(auto i(s->fresh_seq()); i.is_some(); i = i->next_in_place())
+    for(auto const e : make_sequence_range(s))
     {
       if(needs_space)
       {
         buff(' ');
       }
-      runtime::to_code_string(i->first().erase(), buff);
+      runtime::to_code_string(e.erase(), buff);
       needs_space = true;
     }
     buff(')');

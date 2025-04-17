@@ -67,10 +67,10 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first().erase(), buff);
-          for(auto it(typed_args->next_in_place()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_args))
           {
             buff(' ');
-            runtime::to_string(it->first().erase(), buff);
+            runtime::to_string(e.erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
@@ -98,10 +98,10 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first().erase(), buff);
-          for(auto it(typed_more->next_in_place()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_more))
           {
             buff(' ');
-            runtime::to_string(it->first().erase(), buff);
+            runtime::to_string(e.erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
           std::putc('\n', stdout);
@@ -126,10 +126,10 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
-          for(auto it(typed_args->next_in_place()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_args))
           {
             buff(' ');
-            runtime::to_code_string(it->first().erase(), buff);
+            runtime::to_code_string(e.erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
         }
@@ -157,10 +157,10 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_more->first().erase(), buff);
-          for(auto it(typed_more->next_in_place()); it.is_some(); it = it->next_in_place())
+          for(auto const e : make_sequence_range(typed_more))
           {
             buff(' ');
-            runtime::to_code_string(it->first().erase(), buff);
+            runtime::to_code_string(e.erase(), buff);
           }
           std::fwrite(buff.data(), 1, buff.size(), stdout);
           std::putc('\n', stdout);
