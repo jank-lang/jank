@@ -69,7 +69,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline obj::persistent_string_ref make_box(char const * const s)
   {
-    jank_debug_assert(s);
+    jank_assert(s != nullptr);
     return make_box<obj::persistent_string>(s);
   }
 

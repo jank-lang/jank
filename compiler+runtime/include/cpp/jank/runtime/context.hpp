@@ -108,10 +108,10 @@ namespace jank::runtime
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    jtl::immutable_string unique_string();
-    jtl::immutable_string unique_string(native_persistent_string_view const &prefix);
-    obj::symbol unique_symbol();
-    obj::symbol unique_symbol(native_persistent_string_view const &prefix);
+    jtl::immutable_string unique_string() const;
+    jtl::immutable_string unique_string(native_persistent_string_view const &prefix) const;
+    obj::symbol unique_symbol() const;
+    obj::symbol unique_symbol(native_persistent_string_view const &prefix) const;
 
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;

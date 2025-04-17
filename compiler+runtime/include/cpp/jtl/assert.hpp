@@ -68,7 +68,9 @@ namespace jtl
 {
   struct immutable_string;
 
+  [[noreturn]]
   void do_assertion_panic(immutable_string const &msg);
+  [[noreturn]]
   void do_assertion_throw(immutable_string const &msg);
 }
 

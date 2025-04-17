@@ -364,12 +364,12 @@ namespace jank::runtime
     return ok();
   }
 
-  jtl::immutable_string context::unique_string()
+  jtl::immutable_string context::unique_string() const
   {
     return unique_string("G_");
   }
 
-  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix)
+  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix) const
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
@@ -379,12 +379,12 @@ namespace jank::runtime
                         ++ns->symbol_counter);
   }
 
-  obj::symbol context::unique_symbol()
+  obj::symbol context::unique_symbol() const
   {
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(native_persistent_string_view const &prefix)
+  obj::symbol context::unique_symbol(native_persistent_string_view const &prefix) const
   {
     return { "", unique_string(prefix) };
   }
