@@ -37,9 +37,6 @@ namespace jank::runtime::obj
     object_ref first() const;
     object_ref next() const;
 
-    /* behavior::sequenceable_in_place */
-    cons_ref next_in_place();
-
     /* behavior::conjable */
     cons_ref conj(object_ref head) const;
 

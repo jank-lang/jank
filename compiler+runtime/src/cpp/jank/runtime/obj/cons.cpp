@@ -36,32 +36,6 @@ namespace jank::runtime::obj
     return runtime::seq(tail);
   }
 
-  cons_ref cons::next_in_place()
-  {
-    if(tail.is_nil())
-    {
-      return {};
-    }
-
-    visit_object(
-      [&](auto const typed_tail) {
-        using T = typename decltype(typed_tail)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          head = typed_tail->first();
-          tail = typed_tail->next();
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      tail);
-
-    return this;
-  }
-
   native_bool cons::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
