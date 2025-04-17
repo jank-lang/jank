@@ -67,7 +67,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_args->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_args))
+          for(auto const e : make_sequence_range(typed_args).skip(1))
           {
             buff(' ');
             runtime::to_string(e.erase(), buff);
@@ -98,7 +98,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_string(typed_more->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_more))
+          for(auto const e : make_sequence_range(typed_more).skip(1))
           {
             buff(' ');
             runtime::to_string(e.erase(), buff);
@@ -126,7 +126,7 @@ namespace jank::runtime
         {
           util::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_args))
+          for(auto const e : make_sequence_range(typed_args).skip(1))
           {
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
@@ -146,8 +146,8 @@ namespace jank::runtime
   object_ref prn(object_ref const args)
   {
     visit_object(
-      [](auto const typed_more) {
-        using T = typename decltype(typed_more)::value_type;
+      [](auto const typed_args) {
+        using T = typename decltype(typed_args)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -156,8 +156,8 @@ namespace jank::runtime
         else if constexpr(behavior::sequenceable<T>)
         {
           util::string_builder buff;
-          runtime::to_code_string(typed_more->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_more))
+          runtime::to_code_string(typed_args->first().erase(), buff);
+          for(auto const e : make_sequence_range(typed_args).skip(1))
           {
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
@@ -168,7 +168,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_more->to_string()) };
+                                                 typed_args->to_string()) };
         }
       },
       args);

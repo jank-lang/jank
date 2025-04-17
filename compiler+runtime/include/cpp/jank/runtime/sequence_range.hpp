@@ -32,6 +32,7 @@ namespace jank::runtime
 
     iterator begin() const;
     iterator end() const;
+    sequence_range skip(usize n) const;
 
     object_ref s;
   };

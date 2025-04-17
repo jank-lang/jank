@@ -90,4 +90,16 @@ namespace jank::runtime
   {
     return { obj::nil::nil_const() };
   }
+
+  sequence_range sequence_range::skip(usize const n) const
+  {
+    sequence_range r{ s };
+    auto it{ r.begin() };
+    for(usize i{}; i < n; ++i)
+    {
+      ++it;
+    }
+
+    return { it.data };
+  }
 }
