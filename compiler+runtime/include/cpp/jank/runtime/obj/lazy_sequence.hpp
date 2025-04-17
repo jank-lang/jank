@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::seqable */
-    lazy_sequence_ref seq() const;
+    object_ref seq() const;
     lazy_sequence_ref fresh_seq() const;
 
     /* behavior::sequenceable */
@@ -49,12 +49,18 @@ namespace jank::runtime::obj
     object_ref resolve_fn() const;
     object_ref resolve_seq() const;
 
+    void realize() const;
+    void force() const;
+    void lock_and_force() const;
+    object_ref sval() const;
+    object_ref unwrap(object_ref ls) const;
+
   public:
     /* TODO: Synchronize. */
     object base{ obj_type };
     mutable object_ref fn{};
-    mutable object_ref fn_result{};
-    mutable object_ref sequence{};
+    mutable object_ref sv{};
+    mutable object_ref s{};
     jtl::option<object_ref> meta;
   };
 }

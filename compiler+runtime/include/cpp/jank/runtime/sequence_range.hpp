@@ -27,6 +27,7 @@ namespace jank::runtime
       iterator &operator=(iterator const &) = default;
 
       object_ref data;
+      bool in_place{};
     };
 
     iterator begin() const;

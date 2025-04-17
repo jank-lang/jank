@@ -51,10 +51,6 @@ namespace jank::runtime::obj
         {
           head = typed_tail->first();
           tail = typed_tail->next();
-          if(tail == nil::nil_const())
-          {
-            tail = nil::nil_const();
-          }
         }
         else
         {

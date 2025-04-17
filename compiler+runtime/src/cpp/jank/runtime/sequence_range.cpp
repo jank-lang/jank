@@ -1,7 +1,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -15,6 +15,7 @@ namespace jank::runtime
         if constexpr(requires(T t) { t.fresh_seq(); })
         {
           this->data = typed_data->fresh_seq().erase();
+          in_place = true;
         }
         else
         {
@@ -42,6 +43,14 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
+          /* If we didn't grab a fresh seq to start with, it doesn't matter if the current
+           * object is updatable in place. We don't own it. */
+          if(in_place)
+          {
+            data = typed_data->next();
+            return;
+          }
+
           if constexpr(requires(T t) { t.next_in_place(); })
           {
             data = typed_data->next_in_place();

@@ -19,7 +19,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/sequence_range.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -449,7 +449,7 @@ namespace jank::runtime
         {
           return obj::persistent_list::empty();
         }
-        auto const ret(seq->next());
+        auto const ret(next(seq));
         if(ret.is_nil())
         {
           return obj::persistent_list::empty();

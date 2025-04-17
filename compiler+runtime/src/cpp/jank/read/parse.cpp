@@ -917,7 +917,7 @@ namespace jank::read::parse
     return visit_seqable(
       [splice](auto const typed_form) {
         auto const s(typed_form->seq());
-        object_ref const item{ s.is_some() ? s->first().erase() : s.erase() };
+        object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);

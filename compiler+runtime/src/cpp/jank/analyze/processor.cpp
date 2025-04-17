@@ -1327,7 +1327,7 @@ namespace jank::analyze
           }
           else
           {
-            auto const first(typed_item->seq()->first());
+            auto const first(runtime::first(typed_item->seq()));
             if(runtime::equal(first, &catch_))
             {
               return try_expression_type::catch_;
