@@ -11,6 +11,7 @@ namespace jank::runtime::behavior
      * an empty seq is UB. */
     { t->seq() } -> std::convertible_to<object_ref>;
 
+    /* TODO: Move into sequenceable_in_place */
     /* Returns a unique seq which can be updated in place. This is an optimization which allows
      * one allocation for a fresh seq which can then be mutated any number of times to traverse
      * the data. Also must return nullptr when the sequence is empty. */

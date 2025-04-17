@@ -1019,11 +1019,13 @@ namespace jank::runtime
                 return false;
               }
             }
-            return r_it != r_range.end();
+            return r_it == r_range.end();
           },
+          []() { return false; },
           r,
           typed_l);
       },
+      []() { return false; },
       l,
       r);
   }
