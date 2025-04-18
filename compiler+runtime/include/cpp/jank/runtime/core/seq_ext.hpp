@@ -4,6 +4,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/sequence_range.hpp>
 
 /* TODO: Why does this not live in seq.hpp again? Document if you find out. */
 namespace jank::runtime

@@ -2,6 +2,7 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/fmt.hpp>
 

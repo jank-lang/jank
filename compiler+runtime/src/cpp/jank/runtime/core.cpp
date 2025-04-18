@@ -3,6 +3,7 @@
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime

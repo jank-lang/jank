@@ -3,6 +3,7 @@
 #include <jank/runtime/obj/transient_sorted_map.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj

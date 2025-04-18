@@ -181,7 +181,6 @@ add_library(
   src/cpp/jank/read/parse.cpp
   src/cpp/jank/read/reparse.cpp
   src/cpp/jank/runtime/detail/type.cpp
-  src/cpp/jank/runtime/sequence_range.cpp
   src/cpp/jank/runtime/core.cpp
   src/cpp/jank/runtime/core/equal.cpp
   src/cpp/jank/runtime/core/to_string.cpp

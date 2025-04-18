@@ -192,37 +192,21 @@ namespace jank::runtime
 
     constexpr bool operator!=(oref<object> const &rhs) const
     {
-      if(is_nil())
-      {
-        return rhs.is_some();
-      }
-      if(rhs.is_nil())
-      {
-        return false;
-      }
-      return !reinterpret_cast<T *>(data)->equal(*rhs.data);
+      return erase() == rhs;
     }
 
     template <typename C>
     requires behavior::object_like<C>
     constexpr bool operator==(oref<C> const &rhs) const
     {
-      return !(*this != rhs);
+      return data == rhs.data;
     }
 
     template <typename C>
     requires behavior::object_like<C>
     constexpr bool operator!=(oref<C> const &rhs) const
     {
-      if(is_nil())
-      {
-        return C::obj_type != object_type::nil;
-      }
-      if(rhs.is_nil())
-      {
-        return true;
-      }
-      return !reinterpret_cast<T *>(data)->equal(*rhs.erase());
+      return data != rhs.data;
     }
 
     constexpr oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs)
@@ -328,7 +312,7 @@ namespace jank::runtime
 
     constexpr bool operator==(oref<object> const &rhs) const
     {
-      return !(*this != rhs);
+      return rhs.is_nil();
     }
 
     constexpr bool operator!=(oref<object> const &rhs) const
@@ -340,14 +324,14 @@ namespace jank::runtime
     requires behavior::object_like<C>
     constexpr bool operator==(oref<C> const &rhs) const
     {
-      return !(*this != rhs);
+      return rhs.is_nil();
     }
 
     template <typename C>
     requires behavior::object_like<C>
-    constexpr bool operator!=(oref<C> const &) const
+    constexpr bool operator!=(oref<C> const &rhs) const
     {
-      return C::obj_type != object_type::nil;
+      return rhs.is_some();
     }
 
     constexpr oref &operator=(jtl::nullptr_t) noexcept = delete;
