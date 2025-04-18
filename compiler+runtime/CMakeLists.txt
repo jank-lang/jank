@@ -78,8 +78,9 @@ set(
   -frtti
   -fexceptions
   #-ftime-trace
-  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Debug>:-O0 -g>
   $<$<CONFIG:Release>:-O2>
+  $<$<CONFIG:RelWithDebInfo>:-O2 -g>
 )
 
 set(
