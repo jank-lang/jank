@@ -14,8 +14,8 @@ namespace jank::runtime
 
 namespace jank::hash
 {
-  u32 rotate_left(u32 const x, int8_t const r);
-  u64 rotate_left(u64 const x, int8_t const r);
+  u32 rotate_left(u32 const x, i8 const r);
+  u64 rotate_left(u64 const x, i8 const r);
 
   u32 fmix(u32 h);
   u32 fmix(u32 h1, u32 const length);

@@ -9,12 +9,12 @@ namespace jank::hash
   static constexpr u32 C1{ 0xcc9e2d51 };
   static constexpr u32 C2{ 0x1b873593 };
 
-  u32 rotate_left(u32 const x, int8_t const r)
+  u32 rotate_left(u32 const x, i8 const r)
   {
     return (x << r) | (x >> (32 - r));
   }
 
-  u64 rotate_left(u64 const x, int8_t const r)
+  u64 rotate_left(u64 const x, i8 const r)
   {
     return (x << r) | (x >> (64 - r));
   }

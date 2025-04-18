@@ -852,8 +852,8 @@ extern "C"
       {
         /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
          * case macro. */
-        integer = (integer >= std::numeric_limits<int32_t>::min()
-                   && integer <= std::numeric_limits<int32_t>::max())
+        integer = (integer >= std::numeric_limits<i32>::min()
+                   && integer <= std::numeric_limits<i32>::max())
           ? integer
           : hash::integer(integer);
       }

@@ -488,8 +488,8 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("prefers", &core_native::prefers);
   intern_val("int-min", std::numeric_limits<i64>::min());
   intern_val("int-max", std::numeric_limits<i64>::max());
-  intern_val("int32-min", std::numeric_limits<int32_t>::min());
-  intern_val("int32-max", std::numeric_limits<int32_t>::max());
+  intern_val("int32-min", std::numeric_limits<i32>::min());
+  intern_val("int32-max", std::numeric_limits<i32>::max());
   intern_fn("sleep", &core_native::sleep);
   intern_fn("current-time", &core_native::current_time);
   intern_fn("create-ns", &core_native::intern_ns);
