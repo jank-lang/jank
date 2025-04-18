@@ -872,74 +872,134 @@ namespace jank::runtime
         auto const length(sequence_length(s, max_params + 1));
         auto const r{ make_sequence_range(s) };
         auto it{ r.begin() };
-        /* TODO: It's technically UB to rely on param order evaluation to be left to right. It's
-         * what clang does, but we shouldn't rely on this for better portability. This code
-         * will just end up being a mess when we pull everything out. Can we keep it clean
-         * while being well-defined? */
+
+        /* XXX: It's UB to have multiple *(++it) in one expression, since the order in
+         * which they will run is not defined. This requires us to pull out all of the
+         * args into locals. */
         switch(length)
         {
           case 0:
             return dynamic_call(source);
           case 1:
-            return dynamic_call(source, *it);
+            {
+              auto const a1{ *it };
+              return dynamic_call(source, a1);
+            }
           case 2:
-            return dynamic_call(source, *it, *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              return dynamic_call(source, a1, a2);
+            }
           case 3:
-            return dynamic_call(source, *it, *(++it), *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              return dynamic_call(source, a1, a2, a3);
+            }
           case 4:
-            return dynamic_call(source, *it, *(++it), *(++it), *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4);
+            }
           case 5:
-            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5);
+            }
           case 6:
-            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it), *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6);
+            }
           case 7:
-            return dynamic_call(source, *it, *(++it), *(++it), *(++it), *(++it), *(++it), *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7);
+            }
           case 8:
-            return dynamic_call(source,
-                                *it,
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8);
+            }
           case 9:
-            return dynamic_call(source,
-                                *it,
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+            }
           case 10:
-            return dynamic_call(source,
-                                *it,
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              auto const a10{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+            }
           default:
-            return dynamic_call(source,
-                                *it,
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                *(++it),
-                                obj::persistent_list::create((++it).data));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              auto const a10{ *(++it) };
+              return dynamic_call(source,
+                                  a1,
+                                  a2,
+                                  a3,
+                                  a4,
+                                  a5,
+                                  a6,
+                                  a7,
+                                  a8,
+                                  a9,
+                                  a10,
+                                  obj::persistent_list::create((++it).data));
+            }
         }
       },
       args);
