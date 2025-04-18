@@ -96,7 +96,7 @@ namespace jank::runtime::obj
     return jank_nil;
   }
 
-  native_bool persistent_hash_map::contains(object_ref const key) const
+  bool persistent_hash_map::contains(object_ref const key) const
   {
     return data.find(key);
   }

@@ -592,10 +592,10 @@ namespace jank::runtime
       l);
   }
 
-  native_bool is_zero(object_ref const l)
+  bool is_zero(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> native_bool {
+      [](auto const typed_l) -> bool {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -606,10 +606,10 @@ namespace jank::runtime
       l);
   }
 
-  native_bool is_pos(object_ref const l)
+  bool is_pos(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> native_bool {
+      [](auto const typed_l) -> bool {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -620,10 +620,10 @@ namespace jank::runtime
       l);
   }
 
-  native_bool is_neg(object_ref const l)
+  bool is_neg(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> native_bool {
+      [](auto const typed_l) -> bool {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
@@ -634,26 +634,26 @@ namespace jank::runtime
       l);
   }
 
-  native_bool is_even(object_ref const l)
+  bool is_even(object_ref const l)
   {
     return visit_type<obj::integer>(
-      [=](auto const typed_l) -> native_bool { return typed_l->data % 2 == 0; },
+      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 0; },
       l);
   }
 
-  native_bool is_odd(object_ref const l)
+  bool is_odd(object_ref const l)
   {
     return visit_type<obj::integer>(
-      [=](auto const typed_l) -> native_bool { return typed_l->data % 2 == 1; },
+      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 1; },
       l);
   }
 
-  native_bool is_equiv(object_ref const l, object_ref const r)
+  bool is_equiv(object_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, object_ref const r) -> native_bool {
+      [](auto const typed_l, object_ref const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const typed_l) -> bool {
             auto const data_l{ to_number(typed_l) };
             auto const data_r{ to_number(typed_r->data) };
 
@@ -772,12 +772,12 @@ namespace jank::runtime
       r);
   }
 
-  native_bool bit_test(object_ref const l, object_ref const r)
+  bool bit_test(object_ref const l, object_ref const r)
   {
     return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> native_bool {
+      [](auto const typed_l, auto const r) -> bool {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const typed_l) -> bool {
             return (typed_l >> typed_r->data) & static_cast<i64>(1);
           },
           r,
@@ -836,12 +836,12 @@ namespace jank::runtime
     return dis(gen);
   }
 
-  native_bool lt(object_ref const l, object_ref const r)
+  bool lt(object_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const r) -> native_bool {
+      [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const typed_l) -> bool {
             return typed_l < typed_r->data;
           },
           r,
@@ -851,116 +851,116 @@ namespace jank::runtime
       r);
   }
 
-  native_bool lt(obj::integer_ref const l, object_ref const r)
+  bool lt(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
       r,
       l->data);
   }
 
-  native_bool lt(object_ref const l, obj::integer_ref const r)
+  bool lt(object_ref const l, obj::integer_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
       l,
       r->data);
   }
 
-  native_bool lt(obj::integer_ref const l, obj::integer_ref const r)
+  bool lt(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data < r->data;
   }
 
-  native_bool lt(obj::real_ref const l, obj::real_ref const r)
+  bool lt(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data < r->data;
   }
 
-  native_bool lt(obj::real_ref const l, object_ref const r)
+  bool lt(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
       r,
       l->data);
   }
 
-  native_bool lt(object_ref const l, obj::real_ref const r)
+  bool lt(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
       l,
       r->data);
   }
 
-  native_bool lt(obj::real_ref const l, obj::integer_ref const r)
+  bool lt(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data < static_cast<f64>(r->data);
   }
 
-  native_bool lt(obj::integer_ref const l, obj::real_ref const r)
+  bool lt(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<f64>(l->data) < r->data;
   }
 
-  native_bool lt(object_ref const l, f64 const r)
+  bool lt(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
       l,
       r);
   }
 
-  native_bool lt(f64 const l, object_ref const r)
+  bool lt(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
       r,
       l);
   }
 
-  native_bool lt(f64 const l, f64 const r)
+  bool lt(f64 const l, f64 const r)
   {
     return l < r;
   }
 
-  native_bool lt(i64 const l, f64 const r)
+  bool lt(i64 const l, f64 const r)
   {
     return static_cast<f64>(l) < r;
   }
 
-  native_bool lt(f64 const l, i64 const r)
+  bool lt(f64 const l, i64 const r)
   {
     return l < static_cast<f64>(r);
   }
 
-  native_bool lt(object_ref const l, i64 const r)
+  bool lt(object_ref const l, i64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool { return typed_l->data < typed_r; },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
       l,
       r);
   }
 
-  native_bool lt(i64 const l, object_ref const r)
+  bool lt(i64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool { return typed_l < typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
       r,
       l);
   }
 
-  native_bool lt(i64 const l, i64 const r)
+  bool lt(i64 const l, i64 const r)
   {
     return l < r;
   }
 
-  native_bool lte(object_ref const l, object_ref const r)
+  bool lte(object_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const r) -> native_bool {
+      [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const typed_l) -> bool {
             return typed_l <= typed_r->data;
           },
           r,
@@ -970,122 +970,122 @@ namespace jank::runtime
       r);
   }
 
-  native_bool lte(obj::integer_ref const l, object_ref const r)
+  bool lte(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool {
+      [](auto const typed_r, auto const typed_l) -> bool {
         return typed_l <= typed_r->data;
       },
       r,
       l->data);
   }
 
-  native_bool lte(object_ref const l, obj::integer_ref const r)
+  bool lte(object_ref const l, obj::integer_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool {
+      [](auto const typed_l, auto const typed_r) -> bool {
         return typed_l->data <= typed_r;
       },
       l,
       r->data);
   }
 
-  native_bool lte(obj::integer_ref const l, obj::integer_ref const r)
+  bool lte(obj::integer_ref const l, obj::integer_ref const r)
   {
     return l->data <= r->data;
   }
 
-  native_bool lte(obj::real_ref const l, obj::real_ref const r)
+  bool lte(obj::real_ref const l, obj::real_ref const r)
   {
     return l->data <= r->data;
   }
 
-  native_bool lte(obj::real_ref const l, object_ref const r)
+  bool lte(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool {
+      [](auto const typed_r, auto const typed_l) -> bool {
         return typed_l <= typed_r->data;
       },
       r,
       l->data);
   }
 
-  native_bool lte(object_ref const l, obj::real_ref const r)
+  bool lte(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool {
+      [](auto const typed_l, auto const typed_r) -> bool {
         return typed_l->data <= typed_r;
       },
       l,
       r->data);
   }
 
-  native_bool lte(obj::real_ref const l, obj::integer_ref const r)
+  bool lte(obj::real_ref const l, obj::integer_ref const r)
   {
     return l->data <= static_cast<f64>(r->data);
   }
 
-  native_bool lte(obj::integer_ref const l, obj::real_ref const r)
+  bool lte(obj::integer_ref const l, obj::real_ref const r)
   {
     return static_cast<f64>(l->data) <= r->data;
   }
 
-  native_bool lte(object_ref const l, f64 const r)
+  bool lte(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool {
+      [](auto const typed_l, auto const typed_r) -> bool {
         return typed_l->data <= typed_r;
       },
       l,
       r);
   }
 
-  native_bool lte(f64 const l, object_ref const r)
+  bool lte(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool {
+      [](auto const typed_r, auto const typed_l) -> bool {
         return typed_l <= typed_r->data;
       },
       r,
       l);
   }
 
-  native_bool lte(f64 const l, f64 const r)
+  bool lte(f64 const l, f64 const r)
   {
     return l <= r;
   }
 
-  native_bool lte(i64 const l, f64 const r)
+  bool lte(i64 const l, f64 const r)
   {
     return static_cast<f64>(l) <= r;
   }
 
-  native_bool lte(f64 const l, i64 const r)
+  bool lte(f64 const l, i64 const r)
   {
     return l <= static_cast<f64>(r);
   }
 
-  native_bool lte(object_ref const l, i64 const r)
+  bool lte(object_ref const l, i64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> native_bool {
+      [](auto const typed_l, auto const typed_r) -> bool {
         return typed_l->data <= typed_r;
       },
       l,
       r);
   }
 
-  native_bool lte(i64 const l, object_ref const r)
+  bool lte(i64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> native_bool {
+      [](auto const typed_r, auto const typed_l) -> bool {
         return typed_l <= typed_r->data;
       },
       r,
       l);
   }
 
-  native_bool lte(i64 const l, i64 const r)
+  bool lte(i64 const l, i64 const r)
   {
     return l <= r;
   }
@@ -1631,37 +1631,37 @@ namespace jank::runtime
     return static_cast<i64>(l);
   }
 
-  native_bool is_number(object_ref const o)
+  bool is_number(object_ref const o)
   {
-    return visit_number_like([=](auto const) -> native_bool { return true; },
-                             [=]() -> native_bool { return false; },
+    return visit_number_like([=](auto const) -> bool { return true; },
+                             [=]() -> bool { return false; },
                              o);
   }
 
-  native_bool is_integer(object_ref const o)
+  bool is_integer(object_ref const o)
   {
     return o->type == object_type::integer;
   }
 
-  native_bool is_real(object_ref const o)
+  bool is_real(object_ref const o)
   {
     return o->type == object_type::real;
   }
 
-  native_bool is_ratio(object_ref const o)
+  bool is_ratio(object_ref const o)
   {
     return o->type == object_type::ratio;
   }
 
-  native_bool is_boolean(object_ref const o)
+  bool is_boolean(object_ref const o)
   {
     return o->type == object_type::boolean;
   }
 
-  native_bool is_nan(object_ref const o)
+  bool is_nan(object_ref const o)
   {
     return visit_number_like(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::real>)
@@ -1676,10 +1676,10 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_infinite(object_ref const o)
+  bool is_infinite(object_ref const o)
   {
     return visit_number_like(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::real>)

@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     static transient_vector_ref empty();
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -47,7 +47,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref const idx) const;
     object_ref get(object_ref const idx, object_ref const fallback) const;
     object_ref get_entry(object_ref const idx) const;
-    native_bool contains(object_ref const elem) const;
+    bool contains(object_ref const elem) const;
 
     transient_vector_ref pop_in_place();
 
@@ -56,6 +56,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     value_type data;
     mutable native_hash hash{};
-    native_bool active{ true };
+    bool active{ true };
   };
 }

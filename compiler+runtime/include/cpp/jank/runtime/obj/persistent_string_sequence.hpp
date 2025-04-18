@@ -11,8 +11,8 @@ namespace jank::runtime::obj
   struct persistent_string_sequence : gc
   {
     static constexpr object_type obj_type{ object_type::persistent_string_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_string_sequence() = default;
     persistent_string_sequence(persistent_string_sequence &&) noexcept = default;
@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     persistent_string_sequence(obj::persistent_string_ref const s, usize const i);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;

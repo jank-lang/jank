@@ -19,7 +19,7 @@ namespace jank::runtime::obj::detail
     iterator_sequence(object_ref const &c, It const &b, It const &e, usize const s);
 
     /* behavior::object_like */
-    native_bool equal(object const &o) const;
+    bool equal(object const &o) const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;

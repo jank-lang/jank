@@ -152,7 +152,7 @@ namespace jank::runtime::obj
     return tail;
   }
 
-  native_bool chunked_cons::equal(object const &o) const
+  bool chunked_cons::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
   }

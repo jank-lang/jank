@@ -10,7 +10,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool delay::equal(object const &o) const
+  bool delay::equal(object const &o) const
   {
     return &o == &base;
   }

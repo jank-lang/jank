@@ -8,7 +8,7 @@ namespace jank::util
   jtl::result<jtl::immutable_string, unescape_error> unescape(jtl::immutable_string const &input)
   {
     util::string_builder sb{ input.size() };
-    native_bool escape{};
+    bool escape{};
 
     for(auto const c : input)
     {

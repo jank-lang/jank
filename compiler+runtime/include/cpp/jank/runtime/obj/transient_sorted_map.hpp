@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     static transient_sorted_map_ref empty();
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
     object_ref get_entry(object_ref key) const;
-    native_bool contains(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::associatively_writable_in_place */
     transient_sorted_map_ref assoc_in_place(object_ref const key, object_ref const val);
@@ -59,6 +59,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     value_type data;
     mutable native_hash hash{};
-    native_bool active{ true };
+    bool active{ true };
   };
 }

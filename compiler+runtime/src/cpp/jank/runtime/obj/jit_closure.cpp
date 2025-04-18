@@ -22,7 +22,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool jit_closure::equal(object const &rhs) const
+  bool jit_closure::equal(object const &rhs) const
   {
     return &base == &rhs;
   }

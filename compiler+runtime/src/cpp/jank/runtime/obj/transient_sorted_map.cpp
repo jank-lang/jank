@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     return make_box<transient_sorted_map>();
   }
 
-  native_bool transient_sorted_map::equal(object const &o) const
+  bool transient_sorted_map::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     return jank_nil;
   }
 
-  native_bool transient_sorted_map::contains(object_ref const key) const
+  bool transient_sorted_map::contains(object_ref const key) const
   {
     assert_active();
     return data.find(key) != data.end();

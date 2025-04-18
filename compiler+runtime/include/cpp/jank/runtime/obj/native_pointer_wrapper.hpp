@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct native_pointer_wrapper : gc
   {
     static constexpr object_type obj_type{ object_type::native_pointer_wrapper };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     native_pointer_wrapper() = default;
     native_pointer_wrapper(native_pointer_wrapper &&) noexcept = default;
@@ -17,7 +17,7 @@ namespace jank::runtime::obj
     native_pointer_wrapper(void * const);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

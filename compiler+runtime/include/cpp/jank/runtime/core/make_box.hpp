@@ -19,7 +19,7 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_bool const b)
+  inline auto make_box(bool const b)
   {
     return b ? jank_true : jank_false;
   }

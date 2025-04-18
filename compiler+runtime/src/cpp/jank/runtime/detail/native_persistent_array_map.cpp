@@ -236,12 +236,12 @@ namespace jank::runtime::detail
     return *this;
   }
 
-  native_bool native_persistent_array_map::iterator::operator!=(iterator const &rhs) const
+  bool native_persistent_array_map::iterator::operator!=(iterator const &rhs) const
   {
     return data != rhs.data || index != rhs.index;
   }
 
-  native_bool native_persistent_array_map::iterator::operator==(iterator const &rhs) const
+  bool native_persistent_array_map::iterator::operator==(iterator const &rhs) const
   {
     return !(*this != rhs);
   }
@@ -274,7 +274,7 @@ namespace jank::runtime::detail
     return length / 2;
   }
 
-  native_bool native_persistent_array_map::empty() const
+  bool native_persistent_array_map::empty() const
   {
     return length == 0;
   }

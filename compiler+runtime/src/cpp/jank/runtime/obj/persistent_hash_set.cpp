@@ -41,7 +41,7 @@ namespace jank::runtime::obj
       seq));
   }
 
-  native_bool persistent_hash_set::equal(object const &o) const
+  bool persistent_hash_set::equal(object const &o) const
   {
     if(&o == &base)
     {
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     }
 
     return visit_set_like(
-      [&](auto const typed_o) -> native_bool {
+      [&](auto const typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
@@ -143,7 +143,7 @@ namespace jank::runtime::obj
     return make_box<transient_hash_set>(data);
   }
 
-  native_bool persistent_hash_set::contains(object_ref const o) const
+  bool persistent_hash_set::contains(object_ref const o) const
   {
     return data.find(o);
   }

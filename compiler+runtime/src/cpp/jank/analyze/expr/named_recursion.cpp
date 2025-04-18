@@ -7,7 +7,7 @@ namespace jank::analyze::expr
 
   named_recursion::named_recursion(expression_position const position,
                                    local_frame_ptr const frame,
-                                   native_bool const needs_box,
+                                   bool const needs_box,
                                    recursion_reference &&recursion_ref,
                                    runtime::obj::persistent_list_ref const args,
                                    native_vector<expression_ref> &&arg_exprs)

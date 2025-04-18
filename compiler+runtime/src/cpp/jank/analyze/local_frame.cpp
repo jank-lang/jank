@@ -80,7 +80,7 @@ namespace jank::analyze
 
   static jtl::option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
                                                                obj::symbol_ref sym,
-                                                               native_bool const allow_captures)
+                                                               bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -188,7 +188,7 @@ namespace jank::analyze
     return const_cast<local_frame &>(find_closest_fn_frame(std::as_const(frame)));
   }
 
-  native_bool local_frame::within_same_fn(local_frame_ptr const l, local_frame_ptr const r)
+  bool local_frame::within_same_fn(local_frame_ptr const l, local_frame_ptr const r)
   {
     return &find_closest_fn_frame(*l) == &find_closest_fn_frame(*r);
   }

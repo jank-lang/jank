@@ -13,7 +13,7 @@ namespace jank::analyze::expr
 
   function::function(expression_position const position,
                      local_frame_ptr const frame,
-                     native_bool const needs_box,
+                     bool const needs_box,
                      jtl::immutable_string const &name,
                      jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
@@ -44,7 +44,7 @@ namespace jank::analyze::expr
                                                     jank::detail::to_runtime_data(fn_ctx));
   }
 
-  native_bool arity_key::operator==(arity_key const &rhs) const
+  bool arity_key::operator==(arity_key const &rhs) const
   {
     return param_count == rhs.param_count && is_variadic == rhs.is_variadic;
   }

@@ -12,8 +12,8 @@ namespace jank::runtime::obj
   struct chunked_cons : gc
   {
     static constexpr object_type obj_type{ object_type::chunked_cons };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     chunked_cons() = default;
     chunked_cons(chunked_cons &&) noexcept = default;
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     chunked_cons(object_ref meta, object_ref head, object_ref tail);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;

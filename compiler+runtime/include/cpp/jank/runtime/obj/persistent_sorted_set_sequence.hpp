@@ -16,8 +16,8 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_sorted_set::const_iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_sorted_set_sequence(persistent_sorted_set_sequence &&) noexcept = default;
     persistent_sorted_set_sequence(persistent_sorted_set_sequence const &) = default;

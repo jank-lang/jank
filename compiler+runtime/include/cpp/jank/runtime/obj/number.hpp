@@ -9,15 +9,15 @@ namespace jank::runtime::obj
   struct boolean : gc
   {
     static constexpr object_type obj_type{ object_type::boolean };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
-    boolean(native_bool const d);
+    boolean(bool const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -30,7 +30,7 @@ namespace jank::runtime::obj
     i64 compare(boolean const &) const;
 
     object base{ obj_type };
-    native_bool data{};
+    bool data{};
   };
 
   using integer_ref = oref<struct integer>;
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
   struct integer : gc
   {
     static constexpr object_type obj_type{ object_type::integer };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     integer() = default;
     integer(integer &&) noexcept = default;
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     integer(i64 const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
   struct real : gc
   {
     static constexpr object_type obj_type{ object_type::real };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     real() = default;
     real(real &&) noexcept = default;
@@ -79,7 +79,7 @@ namespace jank::runtime::obj
     real(f64 const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

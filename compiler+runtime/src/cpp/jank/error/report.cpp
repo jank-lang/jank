@@ -63,7 +63,7 @@ namespace jank::error
 
   struct snippet
   {
-    native_bool can_fit_without_ellipsis(note const &n) const;
+    bool can_fit_without_ellipsis(note const &n) const;
     void add(read::source const &body_source, note const &n);
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
@@ -99,7 +99,7 @@ namespace jank::error
     }
   }
 
-  native_bool snippet::can_fit_without_ellipsis(note const &n) const
+  bool snippet::can_fit_without_ellipsis(note const &n) const
   {
     jank_debug_assert(n.source.file_path == file_path);
 
@@ -108,7 +108,7 @@ namespace jank::error
       return true;
     }
 
-    native_bool ret{ true };
+    bool ret{ true };
 
     /* See if it can fit within our existing line coverage. */
     if(n.source.start.line < line_start)
@@ -359,7 +359,7 @@ namespace jank::error
       return;
     }
 
-    native_bool added{ false };
+    bool added{ false };
     for(auto &snippet : snippets)
     {
       if(snippet.file_path == n.source.file_path)

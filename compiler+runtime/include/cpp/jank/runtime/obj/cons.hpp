@@ -11,8 +11,8 @@ namespace jank::runtime::obj
   struct cons : gc
   {
     static constexpr object_type obj_type{ object_type::cons };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     cons() = default;
     cons(cons &&) noexcept = default;
@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     cons(object_ref const head, object_ref const tail);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

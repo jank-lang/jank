@@ -12,7 +12,7 @@ namespace jank::analyze::expr
 
     primitive_literal(expression_position position,
                       local_frame_ptr frame,
-                      native_bool needs_box,
+                      bool needs_box,
                       runtime::object_ref data);
 
     runtime::object_ref to_runtime_data() const override;

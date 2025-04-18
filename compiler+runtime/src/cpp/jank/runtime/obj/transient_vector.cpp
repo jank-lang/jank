@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     return make_box<transient_vector>();
   }
 
-  native_bool transient_vector::equal(object const &o) const
+  bool transient_vector::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
@@ -158,7 +158,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_bool transient_vector::contains(object_ref const elem) const
+  bool transient_vector::contains(object_ref const elem) const
   {
     if(elem->type == object_type::integer)
     {

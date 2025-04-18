@@ -10,14 +10,14 @@ namespace jank::runtime::obj
   struct chunk_buffer : gc
   {
     static constexpr object_type obj_type{ object_type::chunk_buffer };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     chunk_buffer() = default;
     chunk_buffer(usize capacity);
     chunk_buffer(object_ref capacity);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

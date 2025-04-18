@@ -17,9 +17,9 @@ namespace jank::util::cli
   {
     /* Runtime. */
     native_transient_string module_path;
-    native_bool profiler_enabled{};
+    bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
-    native_bool gc_incremental{};
+    bool gc_incremental{};
 
     /* Native dependencies. */
     native_vector<jtl::immutable_string> include_dirs;
@@ -38,7 +38,7 @@ namespace jank::util::cli
     native_transient_string target_runtime{ "dynamic" };
 
     /* REPL command. */
-    native_bool repl_server{};
+    bool repl_server{};
 
     /* Run main command. */
     native_transient_string target_module;

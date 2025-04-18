@@ -16,11 +16,11 @@ namespace jank::runtime::obj
   struct range : gc
   {
     static constexpr object_type obj_type{ object_type::range };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
     static constexpr i64 chunk_size{ 32 };
 
-    using bounds_check_t = native_bool (*)(object_ref, object_ref);
+    using bounds_check_t = bool (*)(object_ref, object_ref);
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
@@ -42,7 +42,7 @@ namespace jank::runtime::obj
     static object_ref create(object_ref start, object_ref end, object_ref step);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();

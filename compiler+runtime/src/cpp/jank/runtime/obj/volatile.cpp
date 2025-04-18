@@ -9,7 +9,7 @@ namespace jank::runtime::obj
     jank_debug_assert(val.is_some());
   }
 
-  native_bool volatile_::equal(object const &o) const
+  bool volatile_::equal(object const &o) const
   {
     return &o == &base;
   }

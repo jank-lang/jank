@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     buffer.reserve(c);
   }
 
-  native_bool chunk_buffer::equal(object const &o) const
+  bool chunk_buffer::equal(object const &o) const
   {
     return &o == &base;
   }

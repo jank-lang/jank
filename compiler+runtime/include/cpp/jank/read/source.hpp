@@ -11,10 +11,10 @@ namespace jank::read
   {
     static source_position const unknown;
 
-    native_bool operator==(source_position const &rhs) const;
-    native_bool operator!=(source_position const &rhs) const;
-    native_bool operator<=(source_position const &rhs) const;
-    native_bool operator>=(source_position const &rhs) const;
+    bool operator==(source_position const &rhs) const;
+    bool operator!=(source_position const &rhs) const;
+    bool operator<=(source_position const &rhs) const;
+    bool operator>=(source_position const &rhs) const;
 
     jtl::immutable_string to_string() const;
 
@@ -41,10 +41,10 @@ namespace jank::read
     source &operator=(source const &rhs) = default;
     source &operator=(source &&rhs) = default;
 
-    native_bool operator==(source const &rhs) const;
-    native_bool operator!=(source const &rhs) const;
+    bool operator==(source const &rhs) const;
+    bool operator!=(source const &rhs) const;
 
-    native_bool overlaps(source const &) const;
+    bool overlaps(source const &) const;
 
     jtl::immutable_string to_string() const;
 

@@ -14,8 +14,8 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_persistent_list;
 
     static constexpr object_type obj_type{ object_type::persistent_list };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     /* Create from a sequence. */
     static persistent_list_ref create(object_ref meta, object_ref s);
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     }
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

@@ -240,7 +240,7 @@ namespace jank::runtime::behavior
      * the current object. Identical means having the same address, the same identity.
      * Equal just means having equal values. Equivalent means having equal values of the
      * same type. :O Here, we're just focused on equality. */
-    { t->equal(std::declval<object const &>()) } -> std::convertible_to<native_bool>;
+    { t->equal(std::declval<object const &>()) } -> std::convertible_to<bool>;
 
     /* Returns a string version of the object, generally for printing or displaying. This
      * is distinct from its code representation, which doesn't yet have a corresponding

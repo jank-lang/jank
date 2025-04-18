@@ -13,7 +13,7 @@ namespace jank::runtime::obj
   struct keyword : gc
   {
     static constexpr object_type obj_type{ object_type::keyword };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr usize hash_magic{ 0x9e3779b9 };
 
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
             native_persistent_string_view const &n);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     object_ref call(object_ref);
     object_ref call(object_ref, object_ref);
 
-    native_bool operator==(keyword const &rhs) const;
+    bool operator==(keyword const &rhs) const;
 
     object base{ obj_type };
     symbol_ref sym;

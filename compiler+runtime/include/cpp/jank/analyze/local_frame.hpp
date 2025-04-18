@@ -45,9 +45,9 @@ namespace jank::analyze
     runtime::obj::symbol_ref name{};
     jtl::option<jtl::ref<expression>> value_expr{};
     jtl::ptr<struct local_frame> originating_frame;
-    native_bool needs_box{ true };
-    native_bool has_boxed_usage{};
-    native_bool has_unboxed_usage{};
+    bool needs_box{ true };
+    bool has_boxed_usage{};
+    bool has_unboxed_usage{};
 
     runtime::object_ref to_runtime_data() const;
   };
@@ -89,7 +89,7 @@ namespace jank::analyze
       return "unknown";
     }
 
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     local_frame() = delete;
     local_frame(local_frame const &) = default;
@@ -118,7 +118,7 @@ namespace jank::analyze
 
     jtl::option<expr::function_context_ref> find_named_recursion(runtime::obj::symbol_ref sym);
 
-    static native_bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
+    static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 
     runtime::obj::symbol_ref lift_var(runtime::obj::symbol_ref const &);
     jtl::option<std::reference_wrapper<lifted_var const>>

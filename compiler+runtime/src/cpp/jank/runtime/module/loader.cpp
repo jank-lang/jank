@@ -75,7 +75,7 @@ namespace jank::runtime::module
   }
 
   /* If it has two or more occurences of $, it's nested. */
-  native_bool is_nested_module(jtl::immutable_string const &module)
+  bool is_nested_module(jtl::immutable_string const &module)
   {
     return module.find('$') != module.rfind('$');
   }
@@ -280,7 +280,7 @@ namespace jank::runtime::module
       make_box(path));
   }
 
-  native_bool file_entry::exists() const
+  bool file_entry::exists() const
   {
     auto const is_archive{ archive_path.is_some() };
     if(is_archive && !std::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
@@ -289,7 +289,7 @@ namespace jank::runtime::module
     }
     else
     {
-      native_bool source_exists{};
+      bool source_exists{};
       if(is_archive)
       {
         visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
@@ -514,7 +514,7 @@ namespace jank::runtime::module
     return err(util::format("No sources for registered module: {}", module));
   }
 
-  native_bool loader::is_loaded(jtl::immutable_string const &module)
+  bool loader::is_loaded(jtl::immutable_string const &module)
   {
     auto const atom{
       runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()

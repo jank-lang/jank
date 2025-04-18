@@ -3,7 +3,7 @@
 
 namespace jank::runtime::detail
 {
-  native_bool object_ref_compare::operator()(object_ref const l, object_ref const r) const
+  bool object_ref_compare::operator()(object_ref const l, object_ref const r) const
   {
     return runtime::compare(l, r) < 0;
   }

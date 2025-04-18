@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     return runtime::seq(tail);
   }
 
-  native_bool cons::equal(object const &o) const
+  bool cons::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
   }

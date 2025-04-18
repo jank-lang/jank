@@ -11,12 +11,12 @@ namespace jank::runtime::obj
   struct nil : gc
   {
     static constexpr object_type obj_type{ object_type::nil };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     nil() = default;
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string const &to_string() const;
     jtl::immutable_string const &to_code_string() const;
     void to_string(util::string_builder &buff) const;
@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref const key);
     object_ref get(object_ref const key, object_ref const fallback);
     object_ref get_entry(object_ref key);
-    native_bool contains(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::associatively_writable */
     obj::persistent_array_map_ref assoc(object_ref key, object_ref val) const;

@@ -43,7 +43,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool character::equal(object const &o) const
+  bool character::equal(object const &o) const
   {
     if(o.type != object_type::character)
     {

@@ -242,7 +242,7 @@ namespace jank::runtime
   }
 
   native_vector<analyze::expression_ref>
-  context::analyze_string(native_persistent_string_view const &code, native_bool const eval)
+  context::analyze_string(native_persistent_string_view const &code, bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };

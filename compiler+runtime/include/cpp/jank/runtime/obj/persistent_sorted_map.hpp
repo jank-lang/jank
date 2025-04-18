@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
     object_ref get_entry(object_ref key) const;
-    native_bool contains(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::associatively_writable */
     persistent_sorted_map_ref assoc(object_ref key, object_ref val) const;

@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct symbol : gc
   {
     static constexpr object_type obj_type{ object_type::symbol };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     symbol() = default;
     symbol(symbol &&) noexcept = default;
@@ -28,14 +28,14 @@ namespace jank::runtime::obj
     symbol &operator=(symbol &&) = default;
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     native_hash to_hash() const;
 
     /* behavior::object_like extended */
-    native_bool equal(symbol const &) const;
+    bool equal(symbol const &) const;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -50,8 +50,8 @@ namespace jank::runtime::obj
     jtl::immutable_string const &get_name() const;
     jtl::immutable_string const &get_namespace() const;
 
-    native_bool operator==(symbol const &rhs) const;
-    native_bool operator<(symbol const &rhs) const;
+    bool operator==(symbol const &rhs) const;
+    bool operator<(symbol const &rhs) const;
 
     void set_ns(jtl::immutable_string const &);
     void set_name(jtl::immutable_string const &);

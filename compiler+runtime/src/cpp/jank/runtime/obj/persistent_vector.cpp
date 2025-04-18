@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  native_bool persistent_vector::equal(object const &o) const
+  bool persistent_vector::equal(object const &o) const
   {
     if(&o == &base)
     {
@@ -229,7 +229,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_bool persistent_vector::contains(object_ref const key) const
+  bool persistent_vector::contains(object_ref const key) const
   {
     if(key->type == object_type::integer)
     {

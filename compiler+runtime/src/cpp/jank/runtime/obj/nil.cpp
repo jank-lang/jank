@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  native_bool nil::equal(object const &o) const
+  bool nil::equal(object const &o) const
   {
     return o.type == obj_type;
   }
@@ -55,7 +55,7 @@ namespace jank::runtime::obj
     return &base;
   }
 
-  native_bool nil::contains(object_ref) const
+  bool nil::contains(object_ref) const
   {
     return false;
   }

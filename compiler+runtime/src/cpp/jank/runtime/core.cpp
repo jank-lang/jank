@@ -13,47 +13,47 @@ namespace jank::runtime
     return object_type_str(o->type);
   }
 
-  native_bool is_nil(object_ref const o)
+  bool is_nil(object_ref const o)
   {
     return o == jank_nil;
   }
 
-  native_bool is_true(object_ref const o)
+  bool is_true(object_ref const o)
   {
     return o == jank_true;
   }
 
-  native_bool is_false(object_ref const o)
+  bool is_false(object_ref const o)
   {
     return o == jank_false;
   }
 
-  native_bool is_some(object_ref const o)
+  bool is_some(object_ref const o)
   {
     return o != jank_nil;
   }
 
-  native_bool is_string(object_ref const o)
+  bool is_string(object_ref const o)
   {
     return o->type == object_type::persistent_string;
   }
 
-  native_bool is_char(object_ref const o)
+  bool is_char(object_ref const o)
   {
     return o->type == object_type::character;
   }
 
-  native_bool is_symbol(object_ref const o)
+  bool is_symbol(object_ref const o)
   {
     return o->type == object_type::symbol;
   }
 
-  native_bool is_simple_symbol(object_ref const o)
+  bool is_simple_symbol(object_ref const o)
   {
     return o->type == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  native_bool is_qualified_symbol(object_ref const o)
+  bool is_qualified_symbol(object_ref const o)
   {
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
@@ -226,7 +226,7 @@ namespace jank::runtime
       m);
   }
 
-  native_bool is_named(object_ref const o)
+  bool is_named(object_ref const o)
   {
     return visit_object(
       [](auto const typed_o) {
@@ -287,25 +287,25 @@ namespace jank::runtime
     return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
-  native_bool is_keyword(object_ref const o)
+  bool is_keyword(object_ref const o)
   {
     return o->type == object_type::keyword;
   }
 
-  native_bool is_simple_keyword(object_ref const o)
+  bool is_simple_keyword(object_ref const o)
   {
     return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  native_bool is_qualified_keyword(object_ref const o)
+  bool is_qualified_keyword(object_ref const o)
   {
     return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  native_bool is_callable(object_ref const o)
+  bool is_callable(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return std::is_base_of_v<behavior::callable, T>;
@@ -427,7 +427,7 @@ namespace jank::runtime
     return make_box<obj::volatile_>(o);
   }
 
-  native_bool is_volatile(object_ref const o)
+  bool is_volatile(object_ref const o)
   {
     return o->type == object_type::volatile_;
   }
@@ -478,7 +478,7 @@ namespace jank::runtime
     return make_box<obj::tagged_literal>(tag, form);
   }
 
-  native_bool is_tagged_literal(object_ref const o)
+  bool is_tagged_literal(object_ref const o)
   {
     return o->type == object_type::tagged_literal;
   }

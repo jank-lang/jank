@@ -56,7 +56,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool symbol::equal(object const &o) const
+  bool symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)
     {
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
     return ns == s->ns && name == s->name;
   }
 
-  native_bool symbol::equal(symbol const &s) const
+  bool symbol::equal(symbol const &s) const
   {
     return ns == s.ns && name == s.name;
   }

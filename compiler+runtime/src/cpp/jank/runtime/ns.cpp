@@ -138,7 +138,7 @@ namespace jank::runtime
     return *locked_vars;
   }
 
-  native_bool ns::equal(object const &o) const
+  bool ns::equal(object const &o) const
   {
     if(o.type != object_type::ns)
     {

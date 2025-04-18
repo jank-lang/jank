@@ -23,7 +23,7 @@ namespace jank::runtime
   struct var : gc
   {
     static constexpr object_type obj_type{ object_type::var };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     var() = delete;
     var(ns_ref const &n, obj::symbol_ref const &name);
@@ -31,23 +31,23 @@ namespace jank::runtime
     var(ns_ref const &n,
         obj::symbol_ref const &name,
         object_ref const root,
-        native_bool dynamic,
-        native_bool thread_bound);
+        bool dynamic,
+        bool thread_bound);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
     void to_string(util::string_builder &buff) const;
     native_hash to_hash() const;
 
     /* behavior::object_like extended */
-    native_bool equal(var const &) const;
+    bool equal(var const &) const;
 
     /* behavior::metadatable */
     var_ref with_meta(object_ref m);
 
-    native_bool is_bound() const;
+    bool is_bound() const;
     object_ref get_root() const;
     /* Binding a root changes it for all threads. */
     var_ref bind_root(object_ref r);
@@ -56,14 +56,14 @@ namespace jank::runtime
      * binding. If there is no thread binding, a var cannot be set. */
     jtl::string_result<void> set(object_ref r) const;
 
-    var_ref set_dynamic(native_bool dyn);
+    var_ref set_dynamic(bool dyn);
 
     var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::derefable */
     object_ref deref() const;
 
-    native_bool operator==(var const &rhs) const;
+    bool operator==(var const &rhs) const;
 
     var_ref clone() const;
 
@@ -85,12 +85,12 @@ namespace jank::runtime
   struct var_thread_binding : gc
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     var_thread_binding(object_ref value, std::thread::id id);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -109,12 +109,12 @@ namespace jank::runtime
   struct var_unbound_root : gc
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     var_unbound_root(var_ref var);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

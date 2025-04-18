@@ -85,7 +85,7 @@ namespace jank::runtime::obj
     return hash::combine(hash::integer(data.numerator), hash::integer(data.denominator));
   }
 
-  native_bool ratio::equal(object const &o) const
+  bool ratio::equal(object const &o) const
   {
     if(o.type == object_type::integer)
     {
@@ -301,247 +301,247 @@ namespace jank::runtime::obj
     return ratio_data(l, 1ll) / r;
   }
 
-  native_bool operator==(ratio_data const &l, ratio_data const &r)
+  bool operator==(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator == r.numerator && l.denominator == r.denominator;
   }
 
-  native_bool operator==(integer_ref const l, ratio_data const &r)
+  bool operator==(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator == r.numerator;
   }
 
-  native_bool operator==(ratio_data const &l, integer_ref const r)
+  bool operator==(ratio_data const &l, integer_ref const r)
   {
     return l.numerator == r->data * l.denominator;
   }
 
-  native_bool operator==(real_ref const l, ratio_data const &r)
+  bool operator==(real_ref const l, ratio_data const &r)
   {
     return std::fabs(l->data - r) < epsilon;
   }
 
-  native_bool operator==(ratio_data const &l, real_ref const r)
+  bool operator==(ratio_data const &l, real_ref const r)
   {
     return r == l;
   }
 
-  native_bool operator==(ratio_data const &l, f64 const r)
+  bool operator==(ratio_data const &l, f64 const r)
   {
     return std::fabs(l - r) < epsilon;
   }
 
-  native_bool operator==(f64 const l, ratio_data const &r)
+  bool operator==(f64 const l, ratio_data const &r)
   {
     return r == l;
   }
 
-  native_bool operator==(ratio_data const &l, i64 const r)
+  bool operator==(ratio_data const &l, i64 const r)
   {
     return l.numerator == r * l.denominator;
   }
 
-  native_bool operator==(i64 const l, ratio_data const &r)
+  bool operator==(i64 const l, ratio_data const &r)
   {
     return l * r.denominator == r.numerator;
   }
 
-  native_bool operator<(ratio_data const &l, ratio_data const &r)
+  bool operator<(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator * r.denominator < r.numerator * l.denominator;
   }
 
-  native_bool operator<=(ratio_data const &l, ratio_data const &r)
+  bool operator<=(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator * r.denominator <= r.numerator * l.denominator;
   }
 
-  native_bool operator<(integer_ref const l, ratio_data const &r)
+  bool operator<(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator < r.numerator;
   }
 
-  native_bool operator<(ratio_data const &l, integer_ref const r)
+  bool operator<(ratio_data const &l, integer_ref const r)
   {
     return l.numerator < r->data * l.denominator;
   }
 
-  native_bool operator<=(integer_ref const l, ratio_data const &r)
+  bool operator<=(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator <= r.numerator;
   }
 
-  native_bool operator<=(ratio_data const &l, integer_ref const r)
+  bool operator<=(ratio_data const &l, integer_ref const r)
   {
     return l.numerator <= r->data * l.denominator;
   }
 
-  native_bool operator<(real_ref const l, ratio_data const &r)
+  bool operator<(real_ref const l, ratio_data const &r)
   {
     return l->data < r.to_real();
   }
 
-  native_bool operator<(ratio_data const &l, real_ref const r)
+  bool operator<(ratio_data const &l, real_ref const r)
   {
     return l.to_real() < r->data;
   }
 
-  native_bool operator<=(real_ref const l, ratio_data const &r)
+  bool operator<=(real_ref const l, ratio_data const &r)
   {
     return l->data <= r.to_real();
   }
 
-  native_bool operator<=(ratio_data const &l, real_ref const r)
+  bool operator<=(ratio_data const &l, real_ref const r)
   {
     return l.to_real() <= r->data;
   }
 
-  native_bool operator<(ratio_data const &l, f64 const r)
+  bool operator<(ratio_data const &l, f64 const r)
   {
     return l.to_real() < r;
   }
 
-  native_bool operator<(f64 const l, ratio_data const &r)
+  bool operator<(f64 const l, ratio_data const &r)
   {
     return l < r.to_real();
   }
 
-  native_bool operator<=(ratio_data const &l, f64 const r)
+  bool operator<=(ratio_data const &l, f64 const r)
   {
     return l.to_real() <= r;
   }
 
-  native_bool operator<=(f64 const l, ratio_data const &r)
+  bool operator<=(f64 const l, ratio_data const &r)
   {
     return l <= r.to_real();
   }
 
-  native_bool operator<(ratio_data const &l, i64 const r)
+  bool operator<(ratio_data const &l, i64 const r)
   {
     return l.numerator < r * l.denominator;
   }
 
-  native_bool operator<(i64 const l, ratio_data const &r)
+  bool operator<(i64 const l, ratio_data const &r)
   {
     return l * r.denominator < r.numerator;
   }
 
-  native_bool operator<=(ratio_data const &l, i64 const r)
+  bool operator<=(ratio_data const &l, i64 const r)
   {
     return l.numerator <= r * l.denominator;
   }
 
-  native_bool operator<=(i64 const l, ratio_data const &r)
+  bool operator<=(i64 const l, ratio_data const &r)
   {
     return l * r.denominator <= r.numerator;
   }
 
-  native_bool operator>(ratio_data const &l, ratio_data const &r)
+  bool operator>(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator * r.denominator > r.numerator * l.denominator;
   }
 
-  native_bool operator>(integer_ref const l, ratio_data const &r)
+  bool operator>(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator > r.numerator;
   }
 
-  native_bool operator>(ratio_data const &l, integer_ref const r)
+  bool operator>(ratio_data const &l, integer_ref const r)
   {
     return l.numerator > r->data * l.denominator;
   }
 
-  native_bool operator>(real_ref const l, ratio_data const &r)
+  bool operator>(real_ref const l, ratio_data const &r)
   {
     return l->data > r.to_real();
   }
 
-  native_bool operator>(ratio_data const &l, real_ref const r)
+  bool operator>(ratio_data const &l, real_ref const r)
   {
     return l.to_real() > r->data;
   }
 
-  native_bool operator>(ratio_data const &l, f64 const r)
+  bool operator>(ratio_data const &l, f64 const r)
   {
     return l.to_real() > r;
   }
 
-  native_bool operator>(f64 const l, ratio_data const &r)
+  bool operator>(f64 const l, ratio_data const &r)
   {
     return l > r.to_real();
   }
 
-  native_bool operator>(ratio_data const &l, i64 const r)
+  bool operator>(ratio_data const &l, i64 const r)
   {
     return l.numerator > r * l.denominator;
   }
 
-  native_bool operator>(i64 const l, ratio_data const &r)
+  bool operator>(i64 const l, ratio_data const &r)
   {
     return l * r.denominator > r.numerator;
   }
 
-  native_bool operator>=(ratio_data const &l, ratio_data const &r)
+  bool operator>=(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator * r.denominator >= r.numerator * l.denominator;
   }
 
-  native_bool operator>=(integer_ref const l, ratio_data const &r)
+  bool operator>=(integer_ref const l, ratio_data const &r)
   {
     return l->data * r.denominator >= r.numerator;
   }
 
-  native_bool operator>=(ratio_data const &l, integer_ref const r)
+  bool operator>=(ratio_data const &l, integer_ref const r)
   {
     return l.numerator >= r->data * l.denominator;
   }
 
-  native_bool operator>=(real_ref const l, ratio_data const &r)
+  bool operator>=(real_ref const l, ratio_data const &r)
   {
     return l->data >= r.to_real();
   }
 
-  native_bool operator>=(ratio_data const &l, real_ref const r)
+  bool operator>=(ratio_data const &l, real_ref const r)
   {
     return l.to_real() >= r->data;
   }
 
-  native_bool operator>=(ratio_data const &l, f64 const r)
+  bool operator>=(ratio_data const &l, f64 const r)
   {
     return l.to_real() >= r;
   }
 
-  native_bool operator>=(f64 const l, ratio_data const &r)
+  bool operator>=(f64 const l, ratio_data const &r)
   {
     return l >= r.to_real();
   }
 
-  native_bool operator>=(ratio_data const &l, i64 const r)
+  bool operator>=(ratio_data const &l, i64 const r)
   {
     return l.numerator >= r * l.denominator;
   }
 
-  native_bool operator>=(i64 const l, ratio_data const &r)
+  bool operator>=(i64 const l, ratio_data const &r)
   {
     return l * r.denominator >= r.numerator;
   }
 
-  native_bool operator>(native_bool l, ratio_data const &r)
+  bool operator>(bool l, ratio_data const &r)
   {
     return (l ? 1ll : 0ll) > r;
   }
 
-  native_bool operator<(native_bool l, ratio_data const &r)
+  bool operator<(bool l, ratio_data const &r)
   {
     return (l ? 1ll : 0ll) < r;
   }
 
-  native_bool operator>(ratio_data const &l, native_bool const r)
+  bool operator>(ratio_data const &l, bool const r)
   {
     return l > (r ? 1ll : 0ll);
   }
 
-  native_bool operator<(ratio_data const &l, native_bool const r)
+  bool operator<(ratio_data const &l, bool const r)
   {
     return l < (r ? 1ll : 0ll);
   }

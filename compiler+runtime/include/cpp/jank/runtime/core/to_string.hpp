@@ -57,7 +57,7 @@ namespace jank::runtime
     }
 
     buff('(');
-    native_bool needs_space{};
+    bool needs_space{};
     if constexpr(behavior::sequenceable_in_place<T>)
     {
       for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())
@@ -135,7 +135,7 @@ namespace jank::runtime
     }
 
     buff('(');
-    native_bool needs_space{};
+    bool needs_space{};
     if constexpr(behavior::sequenceable_in_place<T>)
     {
       for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())

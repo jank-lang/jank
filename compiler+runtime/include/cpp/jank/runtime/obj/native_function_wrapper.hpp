@@ -70,7 +70,7 @@ namespace jank::runtime
       , behavior::callable
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
-      static constexpr native_bool pointer_free{ false };
+      static constexpr bool pointer_free{ false };
 
       native_function_wrapper() = default;
       native_function_wrapper(native_function_wrapper &&) noexcept = default;
@@ -79,7 +79,7 @@ namespace jank::runtime
       native_function_wrapper(obj::detail::function_type const &d);
 
       /* behavior::object_like */
-      native_bool equal(object const &) const;
+      bool equal(object const &) const;
       jtl::immutable_string to_string() const;
       void to_string(util::string_builder &buff) const;
       jtl::immutable_string to_code_string() const;

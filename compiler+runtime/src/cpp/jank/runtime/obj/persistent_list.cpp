@@ -65,7 +65,7 @@ namespace jank::runtime::obj
     return empty();
   }
 
-  native_bool persistent_list::equal(object const &o) const
+  bool persistent_list::equal(object const &o) const
   {
     return runtime::equal(o, data.begin(), data.end());
   }

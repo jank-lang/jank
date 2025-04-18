@@ -7,12 +7,12 @@
 
 namespace jank::runtime::obj
 {
-  static native_bool positive_step_bounds_check(integer_ref const val, integer_ref const end)
+  static bool positive_step_bounds_check(integer_ref const val, integer_ref const end)
   {
     return lte(end, val);
   }
 
-  static native_bool negative_step_bounds_check(integer_ref const val, integer_ref const end)
+  static bool negative_step_bounds_check(integer_ref const val, integer_ref const end)
   {
     return lte(val, end);
   }
@@ -129,7 +129,7 @@ namespace jank::runtime::obj
     return make_box<cons>(head, this);
   }
 
-  native_bool integer_range::equal(object const &o) const
+  bool integer_range::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
   }

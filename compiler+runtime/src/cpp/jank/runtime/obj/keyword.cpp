@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   }
 
   /* Keywords are interned, so we can always count on identity equality. */
-  native_bool keyword::equal(object const &o) const
+  bool keyword::equal(object const &o) const
   {
     return &base == &o;
   }

@@ -12,8 +12,8 @@ namespace jank::runtime::obj
   struct repeat : gc
   {
     static constexpr object_type obj_type{ object_type::repeat };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
     static constexpr i64 infinite{ -1 };
 
     repeat() = default;
@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     static object_ref create(object_ref count, object_ref value);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();

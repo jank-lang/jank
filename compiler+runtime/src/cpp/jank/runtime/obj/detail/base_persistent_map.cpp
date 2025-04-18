@@ -12,7 +12,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_bool base_persistent_map<PT, ST, V>::equal(object const &o) const
+  bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
     if(&o == &base)
     {
@@ -20,7 +20,7 @@ namespace jank::runtime::obj::detail
     }
 
     return visit_map_like(
-      [&](auto const typed_o) -> native_bool {
+      [&](auto const typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
@@ -46,7 +46,7 @@ namespace jank::runtime::obj::detail
   void base_persistent_map<PT, ST, V>::to_string_impl(typename V::const_iterator const &begin,
                                                       typename V::const_iterator const &end,
                                                       util::string_builder &buff,
-                                                      native_bool const to_code)
+                                                      bool const to_code)
   {
     auto inserter(std::back_inserter(buff));
     inserter = '{';

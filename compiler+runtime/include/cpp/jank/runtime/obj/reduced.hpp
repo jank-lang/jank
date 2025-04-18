@@ -9,13 +9,13 @@ namespace jank::runtime::obj
   struct reduced : gc
   {
     static constexpr object_type obj_type{ object_type::reduced };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     reduced() = default;
     reduced(object_ref o);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

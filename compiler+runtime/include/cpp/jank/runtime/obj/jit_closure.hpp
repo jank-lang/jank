@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_closure };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     jit_closure() = default;
     jit_closure(jit_closure &&) noexcept = default;
@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     jit_closure(object_ref meta);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();

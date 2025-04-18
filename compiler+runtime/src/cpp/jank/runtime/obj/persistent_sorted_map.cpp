@@ -98,7 +98,7 @@ namespace jank::runtime::obj
     return jank_nil;
   }
 
-  native_bool persistent_sorted_map::contains(object_ref const key) const
+  bool persistent_sorted_map::contains(object_ref const key) const
   {
     return data.find(key) != data.end();
   }

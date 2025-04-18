@@ -23,10 +23,10 @@
 
 namespace jank::runtime
 {
-  native_bool is_empty(object_ref const o)
+  bool is_empty(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
@@ -50,10 +50,10 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_seq(object_ref const o)
+  bool is_seq(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::sequenceable<T>;
@@ -61,17 +61,17 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_seqable(object_ref const o)
+  bool is_seqable(object_ref const o)
   {
-    return visit_seqable([=](auto const) -> native_bool { return true; },
-                         [=]() -> native_bool { return false; },
+    return visit_seqable([=](auto const) -> bool { return true; },
+                         [=]() -> bool { return false; },
                          o);
   }
 
-  native_bool is_sequential(object_ref const o)
+  bool is_sequential(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::sequential<T>;
@@ -79,10 +79,10 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_collection(object_ref const o)
+  bool is_collection(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::collection_like<T>;
@@ -90,29 +90,29 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_list(object_ref const o)
+  bool is_list(object_ref const o)
   {
     /* TODO: Visit and use a behavior for this check instead.
      * It should apply to conses and others. */
     return o->type == object_type::persistent_list;
   }
 
-  native_bool is_vector(object_ref const o)
+  bool is_vector(object_ref const o)
   {
     return o->type == object_type::persistent_vector;
   }
 
-  native_bool is_map(object_ref const o)
+  bool is_map(object_ref const o)
   {
     return (o->type == object_type::persistent_hash_map
             || o->type == object_type::persistent_array_map
             || o->type == object_type::persistent_sorted_map);
   }
 
-  native_bool is_associative(object_ref const o)
+  bool is_associative(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return (behavior::associatively_readable<T> && behavior::associatively_writable<T>);
@@ -120,16 +120,16 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_set(object_ref const o)
+  bool is_set(object_ref const o)
   {
     return (o->type == object_type::persistent_hash_set
             || o->type == object_type::persistent_sorted_set);
   }
 
-  native_bool is_counter(object_ref const o)
+  bool is_counter(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::countable<T>;
@@ -137,10 +137,10 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_transientable(object_ref const o)
+  bool is_transientable(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::transientable<T>;
@@ -148,7 +148,7 @@ namespace jank::runtime
       o);
   }
 
-  native_bool is_sorted(object_ref const o)
+  bool is_sorted(object_ref const o)
   {
     return o->type == object_type::persistent_sorted_map
       || o->type == object_type::persistent_sorted_set;
@@ -680,7 +680,7 @@ namespace jank::runtime
       key);
   }
 
-  native_bool contains(object_ref const s, object_ref const key)
+  bool contains(object_ref const s, object_ref const key)
   {
     if(s.is_nil())
     {
@@ -688,7 +688,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [&](auto const typed_s) -> native_bool {
+      [&](auto const typed_s) -> bool {
         using S = typename decltype(typed_s)::value_type;
 
         if constexpr(behavior::associatively_readable<S> || behavior::set_like<S>)
@@ -997,7 +997,7 @@ namespace jank::runtime
       s);
   }
 
-  native_bool sequence_equal(object_ref const l, object_ref const r)
+  bool sequence_equal(object_ref const l, object_ref const r)
   {
     if(l == r)
     {
@@ -1006,9 +1006,9 @@ namespace jank::runtime
 
     /* TODO: visit_sequence. */
     return visit_seqable(
-      [](auto const typed_l, object_ref const r) -> native_bool {
+      [](auto const typed_l, object_ref const r) -> bool {
         return visit_seqable(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const typed_l) -> bool {
             auto const l_range{ make_sequence_range(typed_l) };
             auto const r_range{ make_sequence_range(typed_r) };
             auto r_it(r_range.begin());
@@ -1056,7 +1056,7 @@ namespace jank::runtime
     return make_box<obj::reduced>(o);
   }
 
-  native_bool is_reduced(object_ref const o)
+  bool is_reduced(object_ref const o)
   {
     return o->type == object_type::reduced;
   }
@@ -1135,10 +1135,10 @@ namespace jank::runtime
     return make_box<obj::chunked_cons>(chunk, seq(rest));
   }
 
-  native_bool is_chunked_seq(object_ref const o)
+  bool is_chunked_seq(object_ref const o)
   {
     return visit_object(
-      [=](auto const typed_o) -> native_bool {
+      [=](auto const typed_o) -> bool {
         using T = typename decltype(typed_o)::value_type;
 
         return behavior::chunkable<T>;

@@ -6,8 +6,8 @@
 
 namespace jank::runtime
 {
-  native_bool is_map(object_ref o);
-  native_bool equal(object_ref l, object_ref r);
+  bool is_map(object_ref o);
+  bool equal(object_ref l, object_ref r);
   void to_string(object_ref o, util::string_builder &buff);
   void to_code_string(object_ref o, util::string_builder &buff);
 
@@ -24,8 +24,8 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   struct base_persistent_map : gc
   {
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_map_like{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_map_like{ true };
 
     using value_type = V;
 
@@ -33,11 +33,11 @@ namespace jank::runtime::obj::detail
     base_persistent_map(jtl::option<object_ref> const &meta);
 
     /* behavior::object_like */
-    native_bool equal(object const &o) const;
+    bool equal(object const &o) const;
     static void to_string_impl(typename V::const_iterator const &begin,
                                typename V::const_iterator const &end,
                                util::string_builder &buff,
-                               native_bool const to_code);
+                               bool const to_code);
     void to_string(util::string_builder &buff) const;
 
     jtl::immutable_string to_string() const;

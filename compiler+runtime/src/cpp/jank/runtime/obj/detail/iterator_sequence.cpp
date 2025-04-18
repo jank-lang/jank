@@ -5,7 +5,7 @@
 
 namespace jank::runtime
 {
-  native_bool equal(object_ref lhs, object_ref rhs);
+  bool equal(object_ref lhs, object_ref rhs);
 }
 
 namespace jank::runtime::obj::detail
@@ -27,7 +27,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_bool iterator_sequence<Derived, It>::equal(object const &o) const
+  bool iterator_sequence<Derived, It>::equal(object const &o) const
   {
     return runtime::sequence_equal(static_cast<Derived const *>(this), &o);
   }

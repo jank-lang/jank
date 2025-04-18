@@ -23,7 +23,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool array_chunk::equal(object const &o) const
+  bool array_chunk::equal(object const &o) const
   {
     return &o == &base;
   }

@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool native_function_wrapper::equal(object const &o) const
+  bool native_function_wrapper::equal(object const &o) const
   {
     return &base == &o;
   }

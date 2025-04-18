@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool jit_function::equal(object const &rhs) const
+  bool jit_function::equal(object const &rhs) const
   {
     return &base == &rhs;
   }

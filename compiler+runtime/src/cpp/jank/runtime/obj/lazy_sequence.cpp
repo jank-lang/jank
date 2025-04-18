@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     return n;
   }
 
-  native_bool lazy_sequence::equal(object const &o) const
+  bool lazy_sequence::equal(object const &o) const
   {
     return sequence_equal(this, &o);
   }

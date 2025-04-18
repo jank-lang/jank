@@ -18,7 +18,7 @@ namespace jank::runtime
   struct ns : gc
   {
     static constexpr object_type obj_type{ object_type::ns };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     ns() = delete;
     ns(obj::symbol_ref const &name, context &c);
@@ -38,13 +38,13 @@ namespace jank::runtime
     obj::persistent_hash_map_ref get_mappings() const;
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
     void to_string(util::string_builder &buff) const;
     native_hash to_hash() const;
 
-    native_bool operator==(ns const &rhs) const;
+    bool operator==(ns const &rhs) const;
 
     ns_ref clone(context &rt_ctx) const;
 

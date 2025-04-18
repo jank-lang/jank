@@ -45,22 +45,22 @@ namespace jank::read
   {
   }
 
-  native_bool source_position::operator==(source_position const &rhs) const
+  bool source_position::operator==(source_position const &rhs) const
   {
     return offset == rhs.offset && line == rhs.line && col == rhs.col;
   }
 
-  native_bool source_position::operator!=(source_position const &rhs) const
+  bool source_position::operator!=(source_position const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool source_position::operator<=(source_position const &rhs) const
+  bool source_position::operator<=(source_position const &rhs) const
   {
     return offset <= rhs.offset;
   }
 
-  native_bool source_position::operator>=(source_position const &rhs) const
+  bool source_position::operator>=(source_position const &rhs) const
   {
     return offset >= rhs.offset;
   }
@@ -71,17 +71,17 @@ namespace jank::read
     return sb("source_position(")(offset)(", ")(line)(":")(col)(")").release();
   }
 
-  native_bool source::operator==(source const &rhs) const
+  bool source::operator==(source const &rhs) const
   {
     return file_path == rhs.file_path && start == rhs.start && end == rhs.end;
   }
 
-  native_bool source::operator!=(source const &rhs) const
+  bool source::operator!=(source const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool source::overlaps(source const &rhs) const
+  bool source::overlaps(source const &rhs) const
   {
     if(file_path != rhs.file_path)
     {

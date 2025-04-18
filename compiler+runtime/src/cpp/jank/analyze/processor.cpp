@@ -162,7 +162,7 @@ namespace jank::analyze
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
-                         native_bool const)
+                         bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, l) };
 
@@ -210,8 +210,8 @@ namespace jank::analyze
     }
 
     jtl::option<jtl::ref<expression>> value_expr;
-    native_bool const has_value{ 3 <= length };
-    native_bool const has_docstring{ 4 <= length };
+    bool const has_value{ 3 <= length };
+    bool const has_docstring{ 4 <= length };
 
     if(has_value)
     {
@@ -260,7 +260,7 @@ namespace jank::analyze
                           local_frame_ptr const f,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fc,
-                          native_bool const needs_box)
+                          bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -397,7 +397,7 @@ namespace jank::analyze
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &,
-                            native_bool needs_box)
+                            bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
 
@@ -501,7 +501,7 @@ namespace jank::analyze
     param_symbols.reserve(params->data.size());
     std::set<runtime::obj::symbol> unique_param_symbols;
 
-    native_bool is_variadic{};
+    bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
       auto const p(*it);
@@ -616,7 +616,7 @@ namespace jank::analyze
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &,
-                        native_bool const)
+                        bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, full_list) };
 
@@ -789,7 +789,7 @@ namespace jank::analyze
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
-                           native_bool const)
+                           bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
@@ -855,7 +855,7 @@ namespace jank::analyze
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
-                        native_bool const needs_box)
+                        bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
@@ -892,7 +892,7 @@ namespace jank::analyze
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
-                         native_bool const needs_box)
+                         bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -990,7 +990,7 @@ namespace jank::analyze
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
-                           native_bool const needs_box)
+                           bool const needs_box)
   {
     if(o->count() < 2)
     {
@@ -1111,7 +1111,7 @@ namespace jank::analyze
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
-                          native_bool const)
+                          bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1231,7 +1231,7 @@ namespace jank::analyze
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
-                        native_bool needs_box)
+                        bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1300,7 +1300,7 @@ namespace jank::analyze
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
-                           native_bool const needs_box)
+                           bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1323,7 +1323,7 @@ namespace jank::analyze
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               jtl::option<expr::function_context_ref> const &,
-                              native_bool const)
+                              bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1363,7 +1363,7 @@ namespace jank::analyze
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &,
-                             native_bool const)
+                             bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1377,7 +1377,7 @@ namespace jank::analyze
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
-                           native_bool const)
+                           bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1403,7 +1403,7 @@ namespace jank::analyze
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
-                         native_bool const)
+                         bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
@@ -1435,7 +1435,7 @@ namespace jank::analyze
     };
 
     static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
-    native_bool has_catch{}, has_finally{};
+    bool has_catch{}, has_finally{};
 
     for(auto it(list->fresh_seq()->next_in_place()); it.is_some(); it = it->next_in_place())
     {
@@ -1607,7 +1607,7 @@ namespace jank::analyze
                                        local_frame_ptr const current_frame,
                                        expression_position const position,
                                        jtl::option<expr::function_context_ref> const &,
-                                       native_bool const needs_box)
+                                       bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1621,13 +1621,13 @@ namespace jank::analyze
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &fn_ctx,
-                            native_bool const)
+                            bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
-    native_bool literal{ true };
+    bool literal{ true };
     for(auto d = o->fresh_seq(); d.is_some(); d = d->next_in_place())
     {
       auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
@@ -1663,7 +1663,7 @@ namespace jank::analyze
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
-                         native_bool const)
+                         bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1720,7 +1720,7 @@ namespace jank::analyze
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
-                         native_bool const)
+                         bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
@@ -1728,7 +1728,7 @@ namespace jank::analyze
       [&](auto const typed_o) -> processor::expression_result {
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
-        native_bool literal{ true };
+        bool literal{ true };
         for(auto d = typed_o->fresh_seq(); d.is_some(); d = d->next_in_place())
         {
           auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
@@ -1773,7 +1773,7 @@ namespace jank::analyze
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
-                          native_bool const needs_box)
+                          bool const needs_box)
   {
     std::unique_ptr<util::scope_exit> pop_macro_expansions{};
 
@@ -1788,8 +1788,8 @@ namespace jank::analyze
 
     auto const first(o->data.first().unwrap());
     jtl::ptr<expression> source;
-    native_bool needs_ret_box{ true };
-    native_bool needs_arg_box{ true };
+    bool needs_ret_box{ true };
+    bool needs_arg_box{ true };
 
     /* TODO: If this is a recursive call, note that and skip the var lookup. */
     if(first->type == runtime::object_type::symbol)
@@ -1845,9 +1845,9 @@ namespace jank::analyze
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));
 
-        native_bool const supports_unboxed_input(runtime::truthy(
+        bool const supports_unboxed_input(runtime::truthy(
           get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
-        native_bool const supports_unboxed_output(
+        bool const supports_unboxed_output(
           runtime::truthy
           /* TODO: Rename key. */
           (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true).expect_ok())));
@@ -1967,7 +1967,7 @@ namespace jank::analyze
                      local_frame_ptr const current_frame,
                      expression_position const position,
                      jtl::option<expr::function_context_ref> const &fn_ctx,
-                     native_bool const needs_box)
+                     bool const needs_box)
   {
     return runtime::visit_object(
       [&](auto const typed_o) -> processor::expression_result {
@@ -2028,7 +2028,7 @@ namespace jank::analyze
       o);
   }
 
-  native_bool processor::is_special(runtime::object_ref const form)
+  bool processor::is_special(runtime::object_ref const form)
   {
     if(form->type != runtime::object_type::symbol)
     {

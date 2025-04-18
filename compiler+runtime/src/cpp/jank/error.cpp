@@ -315,12 +315,12 @@ namespace jank::error
     add_expansion_note(*this, expansion);
   }
 
-  native_bool base::operator==(base const &rhs) const
+  bool base::operator==(base const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool base::operator!=(base const &rhs) const
+  bool base::operator!=(base const &rhs) const
   {
     return kind != rhs.kind || source != rhs.source || message != rhs.message;
   }

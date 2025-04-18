@@ -12,8 +12,8 @@ namespace jank::runtime::obj
   struct iterator : gc
   {
     static constexpr object_type obj_type{ object_type::iterator };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     iterator() = default;
     iterator(iterator &&) noexcept = default;
@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     iterator(object_ref const fn, object_ref const start);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();

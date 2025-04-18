@@ -332,7 +332,7 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("empty?", &is_empty);
   intern_fn("empty", &empty);
   intern_fn("count", static_cast<usize (*)(object_ref)>(&sequence_length));
-  intern_fn("boolean", static_cast<native_bool (*)(object_ref)>(&truthy));
+  intern_fn("boolean", static_cast<bool (*)(object_ref)>(&truthy));
   intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
   intern_fn("real", static_cast<f64 (*)(object_ref)>(&to_real));
   intern_fn("seq", static_cast<object_ref (*)(object_ref)>(&seq));
@@ -410,8 +410,8 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("bit-shift-left", &bit_shift_left);
   intern_fn("bit-shift-right", &bit_shift_right);
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
-  intern_fn("<", static_cast<native_bool (*)(object_ref, object_ref)>(&lt));
-  intern_fn("<=", static_cast<native_bool (*)(object_ref, object_ref)>(&lte));
+  intern_fn("<", static_cast<bool (*)(object_ref, object_ref)>(&lt));
+  intern_fn("<=", static_cast<bool (*)(object_ref, object_ref)>(&lte));
   intern_fn("compare", &runtime::compare);
   intern_fn("min", static_cast<object_ref (*)(object_ref, object_ref)>(&min));
   intern_fn("max", static_cast<object_ref (*)(object_ref, object_ref)>(&max));

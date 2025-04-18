@@ -79,10 +79,10 @@ namespace jank::ui
     usize last_offset{}, last_line{ 1 };
     std::map<usize, Element> lines;
     std::vector<Element> current_line;
-    native_bool ended_on_error{};
+    bool ended_on_error{};
     static auto const config{ FlexboxConfig().SetGap(0, 0) };
 
-    auto const fill_space([&](native_bool const skip, usize const offset) {
+    auto const fill_space([&](bool const skip, usize const offset) {
       std::string_view const space{ code.data() + last_offset, offset - last_offset };
       usize last_newline{};
       for(auto it(space.find('\n')); it != decltype(space)::npos; it = space.find('\n', it + 1))

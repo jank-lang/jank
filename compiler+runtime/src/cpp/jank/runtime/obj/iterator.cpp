@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  native_bool iterator::equal(object const &o) const
+  bool iterator::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
   }

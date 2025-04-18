@@ -110,13 +110,13 @@ namespace jank::analyze
   /* Common base class for every expression. */
   struct expression : gc
   {
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     expression(expression_kind kind);
     expression(expression_kind kind,
                expression_position position,
                local_frame_ptr frame,
-               native_bool needs_box);
+               bool needs_box);
     virtual ~expression() = default;
 
     virtual void propagate_position(expression_position const pos);
@@ -125,7 +125,7 @@ namespace jank::analyze
     expression_kind kind{};
     expression_position position{};
     local_frame_ptr frame;
-    native_bool needs_box{ true };
+    bool needs_box{ true };
   };
 
   using expression_ref = jtl::ref<expression>;

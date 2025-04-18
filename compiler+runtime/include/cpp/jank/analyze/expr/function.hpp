@@ -20,14 +20,14 @@ namespace jank::analyze::expr
 
   struct function_context : gc
   {
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     jtl::ptr<function> fn;
     jtl::immutable_string name;
     jtl::immutable_string unique_name;
     usize param_count{};
-    native_bool is_variadic{};
-    native_bool is_tail_recursive{};
+    bool is_variadic{};
+    bool is_tail_recursive{};
     /* TODO: is_pure */
   };
 
@@ -45,10 +45,10 @@ namespace jank::analyze::expr
 
   struct arity_key
   {
-    native_bool operator==(arity_key const &rhs) const;
+    bool operator==(arity_key const &rhs) const;
 
     usize param_count{};
-    native_bool is_variadic{};
+    bool is_variadic{};
   };
 
   struct function : expression
@@ -58,7 +58,7 @@ namespace jank::analyze::expr
     function();
     function(expression_position position,
              local_frame_ptr frame,
-             native_bool needs_box,
+             bool needs_box,
              jtl::immutable_string const &name,
              jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,

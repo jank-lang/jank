@@ -100,47 +100,47 @@ namespace jank::runtime
   object_ref mul(i64 l, object_ref r);
   i64 mul(i64 l, i64 r);
 
-  native_bool lt(object_ref l, object_ref r);
-  native_bool lt(obj::integer_ref l, object_ref r);
-  native_bool lt(object_ref l, obj::integer_ref r);
-  native_bool lt(obj::integer_ref const l, obj::integer_ref const r);
-  native_bool lt(obj::real_ref const l, obj::real_ref const r);
-  native_bool lt(obj::real_ref l, object_ref r);
-  native_bool lt(object_ref l, obj::real_ref r);
-  native_bool lt(obj::real_ref l, obj::integer_ref r);
-  native_bool lt(obj::integer_ref l, obj::real_ref r);
+  bool lt(object_ref l, object_ref r);
+  bool lt(obj::integer_ref l, object_ref r);
+  bool lt(object_ref l, obj::integer_ref r);
+  bool lt(obj::integer_ref const l, obj::integer_ref const r);
+  bool lt(obj::real_ref const l, obj::real_ref const r);
+  bool lt(obj::real_ref l, object_ref r);
+  bool lt(object_ref l, obj::real_ref r);
+  bool lt(obj::real_ref l, obj::integer_ref r);
+  bool lt(obj::integer_ref l, obj::real_ref r);
 
-  native_bool lt(object_ref l, f64 r);
-  native_bool lt(f64 l, object_ref r);
-  native_bool lt(f64 l, f64 r);
+  bool lt(object_ref l, f64 r);
+  bool lt(f64 l, object_ref r);
+  bool lt(f64 l, f64 r);
 
-  native_bool lt(i64 l, f64 r);
-  native_bool lt(f64 l, i64 r);
+  bool lt(i64 l, f64 r);
+  bool lt(f64 l, i64 r);
 
-  native_bool lt(object_ref l, i64 r);
-  native_bool lt(i64 l, object_ref r);
-  native_bool lt(i64 l, i64 r);
+  bool lt(object_ref l, i64 r);
+  bool lt(i64 l, object_ref r);
+  bool lt(i64 l, i64 r);
 
-  native_bool lte(object_ref l, object_ref r);
-  native_bool lte(obj::integer_ref l, object_ref r);
-  native_bool lte(object_ref l, obj::integer_ref r);
-  native_bool lte(obj::integer_ref const l, obj::integer_ref const r);
-  native_bool lte(obj::real_ref const l, obj::real_ref const r);
-  native_bool lte(obj::real_ref l, object_ref r);
-  native_bool lte(object_ref l, obj::real_ref r);
-  native_bool lte(obj::real_ref l, obj::integer_ref r);
-  native_bool lte(obj::integer_ref l, obj::real_ref r);
+  bool lte(object_ref l, object_ref r);
+  bool lte(obj::integer_ref l, object_ref r);
+  bool lte(object_ref l, obj::integer_ref r);
+  bool lte(obj::integer_ref const l, obj::integer_ref const r);
+  bool lte(obj::real_ref const l, obj::real_ref const r);
+  bool lte(obj::real_ref l, object_ref r);
+  bool lte(object_ref l, obj::real_ref r);
+  bool lte(obj::real_ref l, obj::integer_ref r);
+  bool lte(obj::integer_ref l, obj::real_ref r);
 
-  native_bool lte(object_ref l, f64 r);
-  native_bool lte(f64 l, object_ref r);
-  native_bool lte(f64 l, f64 r);
+  bool lte(object_ref l, f64 r);
+  bool lte(f64 l, object_ref r);
+  bool lte(f64 l, f64 r);
 
-  native_bool lte(i64 l, f64 r);
-  native_bool lte(f64 l, i64 r);
+  bool lte(i64 l, f64 r);
+  bool lte(f64 l, i64 r);
 
-  native_bool lte(object_ref l, i64 r);
-  native_bool lte(i64 l, object_ref r);
-  native_bool lte(i64 l, i64 r);
+  bool lte(object_ref l, i64 r);
+  bool lte(i64 l, object_ref r);
+  bool lte(i64 l, i64 r);
 
   object_ref min(object_ref l, object_ref r);
   object_ref min(obj::integer_ref l, object_ref r);
@@ -224,13 +224,13 @@ namespace jank::runtime
   object_ref inc(object_ref l);
   object_ref dec(object_ref l);
 
-  native_bool is_zero(object_ref l);
-  native_bool is_pos(object_ref l);
-  native_bool is_neg(object_ref l);
-  native_bool is_even(object_ref l);
-  native_bool is_odd(object_ref l);
+  bool is_zero(object_ref l);
+  bool is_pos(object_ref l);
+  bool is_neg(object_ref l);
+  bool is_even(object_ref l);
+  bool is_odd(object_ref l);
 
-  native_bool is_equiv(object_ref l, object_ref r);
+  bool is_equiv(object_ref l, object_ref r);
 
   i64 bit_not(object_ref l);
   i64 bit_and(object_ref l, object_ref r);
@@ -240,7 +240,7 @@ namespace jank::runtime
   i64 bit_clear(object_ref l, object_ref r);
   i64 bit_set(object_ref l, object_ref r);
   i64 bit_flip(object_ref l, object_ref r);
-  native_bool bit_test(object_ref l, object_ref r);
+  bool bit_test(object_ref l, object_ref r);
   i64 bit_shift_left(object_ref l, object_ref r);
   i64 bit_shift_right(object_ref l, object_ref r);
   i64 bit_unsigned_shift_right(object_ref l, object_ref r);
@@ -258,13 +258,13 @@ namespace jank::runtime
 
   f64 to_real(object_ref o);
 
-  native_bool is_number(object_ref o);
-  native_bool is_integer(object_ref o);
-  native_bool is_real(object_ref o);
-  native_bool is_ratio(object_ref o);
-  native_bool is_boolean(object_ref o);
-  native_bool is_nan(object_ref o);
-  native_bool is_infinite(object_ref o);
+  bool is_number(object_ref o);
+  bool is_integer(object_ref o);
+  bool is_real(object_ref o);
+  bool is_ratio(object_ref o);
+  bool is_boolean(object_ref o);
+  bool is_nan(object_ref o);
+  bool is_infinite(object_ref o);
 
   i64 parse_long(object_ref o);
   f64 parse_double(object_ref o);

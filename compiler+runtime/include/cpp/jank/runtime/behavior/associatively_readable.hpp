@@ -15,6 +15,6 @@ namespace jank::runtime::behavior
     /* Returns a map entry (vector of key and value) or nil. */
     { t->get_entry(object_ref{}) } -> std::convertible_to<object_ref>;
 
-    { t->contains(object_ref{}) } -> std::convertible_to<native_bool>;
+    { t->contains(object_ref{}) } -> std::convertible_to<bool>;
   };
 }

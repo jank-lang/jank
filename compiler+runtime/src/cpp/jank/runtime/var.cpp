@@ -30,8 +30,8 @@ namespace jank::runtime
   var::var(ns_ref const &n,
            obj::symbol_ref const &name,
            object_ref const root,
-           native_bool const dynamic,
-           native_bool const thread_bound)
+           bool const dynamic,
+           bool const thread_bound)
     : n{ n }
     , name{ name }
     , root{ root }
@@ -40,7 +40,7 @@ namespace jank::runtime
   {
   }
 
-  native_bool var::equal(object const &o) const
+  bool var::equal(object const &o) const
   {
     auto const v(dyn_cast<var>(&o));
     if(v.is_nil())
@@ -50,7 +50,7 @@ namespace jank::runtime
     return n == v->n && name == v->name;
   }
 
-  native_bool var::equal(var const &v) const
+  bool var::equal(var const &v) const
   {
     return n == v.n && name == v.name;
   }
@@ -94,7 +94,7 @@ namespace jank::runtime
     return this;
   }
 
-  native_bool var::is_bound() const
+  bool var::is_bound() const
   {
     return deref()->type != object_type::var_unbound_root;
   }
@@ -138,7 +138,7 @@ namespace jank::runtime
     return ok();
   }
 
-  var_ref var::set_dynamic(native_bool const dyn)
+  var_ref var::set_dynamic(bool const dyn)
   {
     dynamic.store(dyn);
     return this;
@@ -188,7 +188,7 @@ namespace jank::runtime
   {
   }
 
-  native_bool var_thread_binding::equal(object const &o) const
+  bool var_thread_binding::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -218,7 +218,7 @@ namespace jank::runtime
   {
   }
 
-  native_bool var_unbound_root::equal(object const &o) const
+  bool var_unbound_root::equal(object const &o) const
   {
     return &base == &o;
   }

@@ -8,7 +8,7 @@ namespace jank::analyze::expr
 
   var_ref::var_ref(expression_position const position,
                    local_frame_ptr const frame,
-                   native_bool const needs_box,
+                   bool const needs_box,
                    runtime::obj::symbol_ref const qualified_name,
                    runtime::var_ref const var)
     : expression{ expr_kind, position, frame, needs_box }

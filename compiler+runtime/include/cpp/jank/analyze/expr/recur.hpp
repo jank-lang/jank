@@ -17,7 +17,7 @@ namespace jank::analyze::expr
 
     recur(expression_position position,
           local_frame_ptr frame,
-          native_bool needs_box,
+          bool needs_box,
           runtime::obj::persistent_list_ref args,
           native_vector<expression_ref> &&arg_exprs);
 

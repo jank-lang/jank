@@ -19,7 +19,7 @@ namespace jank::analyze::expr
 
     def(expression_position position,
         local_frame_ptr frame,
-        native_bool needs_box,
+        bool needs_box,
         runtime::obj::symbol_ref name,
         jtl::option<expression_ref> const &value);
 

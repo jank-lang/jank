@@ -19,8 +19,8 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   struct base_persistent_map_sequence : gc
   {
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     base_persistent_map_sequence() = default;
     base_persistent_map_sequence(base_persistent_map_sequence &&) = default;
@@ -28,8 +28,8 @@ namespace jank::runtime::obj::detail
     base_persistent_map_sequence(object_ref const c, IT const &b, IT const &e);
 
     /* behavior::object_like */
-    native_bool equal(object const &o) const;
-    void to_string_impl(util::string_builder &buff, native_bool const to_code) const;
+    bool equal(object const &o) const;
+    void to_string_impl(util::string_builder &buff, bool const to_code) const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;

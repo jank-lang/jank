@@ -40,7 +40,7 @@ namespace std
     return jank::hash::visit(const_cast<runtime::object *>(&o));
   }
 
-  native_bool
+  bool
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
   equal_to<object_ref>::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {

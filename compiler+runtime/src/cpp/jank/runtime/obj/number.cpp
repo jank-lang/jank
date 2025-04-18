@@ -7,12 +7,12 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  boolean::boolean(native_bool const d)
+  boolean::boolean(bool const d)
     : data{ d }
   {
   }
 
-  native_bool boolean::equal(object const &o) const
+  bool boolean::equal(object const &o) const
   {
     if(o.type != object_type::boolean)
     {
@@ -68,7 +68,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool integer::equal(object const &o) const
+  bool integer::equal(object const &o) const
   {
     if(o.type != object_type::integer)
     {
@@ -133,7 +133,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool real::equal(object const &o) const
+  bool real::equal(object const &o) const
   {
     if(o.type != object_type::real)
     {

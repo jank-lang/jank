@@ -117,8 +117,8 @@ namespace jank::read::lex
 
   struct ratio
   {
-    native_bool operator==(ratio const &rhs) const;
-    native_bool operator!=(ratio const &rhs) const;
+    bool operator==(ratio const &rhs) const;
+    bool operator!=(ratio const &rhs) const;
 
     i64 numerator{};
     i64 denominator{};
@@ -132,8 +132,8 @@ namespace jank::read::lex
     movable_position &operator++();
     movable_position operator++(int);
     movable_position &operator+=(usize count);
-    native_bool operator==(movable_position const &rhs) const;
-    native_bool operator!=(movable_position const &rhs) const;
+    bool operator==(movable_position const &rhs) const;
+    bool operator!=(movable_position const &rhs) const;
     movable_position operator+(usize count) const;
 
     operator size_t() const;
@@ -166,7 +166,7 @@ namespace jank::read::lex
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
-          native_bool const);
+          bool const);
     token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
 
 #ifdef JANK_TEST
@@ -176,17 +176,17 @@ namespace jank::read::lex
     token(usize offset, usize width, token_kind const k, f64 const);
     token(usize offset, usize width, token_kind const k, native_persistent_string_view const);
     token(usize offset, usize width, token_kind const k, char const * const);
-    token(usize offset, usize width, token_kind const k, native_bool const);
+    token(usize offset, usize width, token_kind const k, bool const);
     token(usize offset, usize width, token_kind const k, ratio const);
 #endif
 
-    native_bool operator==(token const &rhs) const;
-    native_bool operator!=(token const &rhs) const;
+    bool operator==(token const &rhs) const;
+    bool operator!=(token const &rhs) const;
 
     struct no_data
     {
-      native_bool operator==(no_data const &rhs) const;
-      native_bool operator!=(no_data const &rhs) const;
+      bool operator==(no_data const &rhs) const;
+      bool operator!=(no_data const &rhs) const;
     };
 
     /* For some values, when comparing tokens, the position doesn't matter.
@@ -198,7 +198,7 @@ namespace jank::read::lex
                  i64,
                  f64,
                  native_persistent_string_view,
-                 native_bool,
+                 bool,
                  ratio>
       data;
   };
@@ -223,8 +223,8 @@ namespace jank::read::lex
       value_type const &operator*() const;
       value_type const *operator->() const;
       iterator &operator++();
-      native_bool operator==(iterator const &rhs) const;
-      native_bool operator!=(iterator const &rhs) const;
+      bool operator==(iterator const &rhs) const;
+      bool operator!=(iterator const &rhs) const;
 
       jtl::option<value_type> latest;
       processor &p;
@@ -235,16 +235,16 @@ namespace jank::read::lex
 
     jtl::result<token, error_ref> next();
     jtl::result<codepoint, error_ref> peek(usize const ahead = 1) const;
-    jtl::option<error_ref> check_whitespace(native_bool const found_space);
+    jtl::option<error_ref> check_whitespace(bool const found_space);
 
     iterator begin();
     iterator end();
 
     movable_position pos;
     /* Whether the previous token requires a space after it. */
-    native_bool require_space{};
+    bool require_space{};
     /* True when seeing a '/' following a number. */
-    native_bool found_slash_after_number{};
+    bool found_slash_after_number{};
     native_persistent_string_view file;
   };
 }

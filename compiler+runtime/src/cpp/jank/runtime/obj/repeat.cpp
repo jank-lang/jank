@@ -88,7 +88,7 @@ namespace jank::runtime::obj
     return make_box<cons>(head, this);
   }
 
-  native_bool repeat::equal(object const &o) const
+  bool repeat::equal(object const &o) const
   {
     return runtime::sequence_equal(this, &o);
   }

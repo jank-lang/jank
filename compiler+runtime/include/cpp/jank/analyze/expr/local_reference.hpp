@@ -22,7 +22,7 @@ namespace jank::analyze::expr
 
     local_reference(expression_position position,
                     local_frame_ptr frame,
-                    native_bool needs_box,
+                    bool needs_box,
                     runtime::obj::symbol_ref name,
                     local_binding_ptr binding);
 

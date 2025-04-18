@@ -15,7 +15,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool tagged_literal::equal(object const &o) const
+  bool tagged_literal::equal(object const &o) const
   {
     if(o.type != object_type::tagged_literal)
     {
@@ -103,7 +103,7 @@ namespace jank::runtime::obj
     return jank_nil;
   }
 
-  native_bool tagged_literal::contains(object_ref const key) const
+  bool tagged_literal::contains(object_ref const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };

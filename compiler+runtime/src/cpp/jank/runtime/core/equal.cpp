@@ -5,7 +5,7 @@
 
 namespace jank::runtime
 {
-  native_bool equal(char const lhs, object_ref const rhs)
+  bool equal(char const lhs, object_ref const rhs)
   {
     if(rhs.is_nil() || rhs->type != object_type::character)
     {
@@ -16,7 +16,7 @@ namespace jank::runtime
     return typed_rhs->to_hash() == static_cast<native_hash>(lhs);
   }
 
-  native_bool equal(object_ref const lhs, object_ref const rhs)
+  bool equal(object_ref const lhs, object_ref const rhs)
   {
     if(lhs.is_nil())
     {
@@ -63,7 +63,7 @@ namespace jank::runtime
     return -1;
   }
 
-  native_bool is_identical(object_ref const lhs, object_ref const rhs)
+  bool is_identical(object_ref const lhs, object_ref const rhs)
   {
     return lhs == rhs;
   }

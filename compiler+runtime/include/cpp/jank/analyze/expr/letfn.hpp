@@ -18,7 +18,7 @@ namespace jank::analyze::expr
 
     static constexpr expression_kind expr_kind{ expression_kind::letfn };
 
-    letfn(expression_position position, local_frame_ptr frame, native_bool needs_box, do_ref body);
+    letfn(expression_position position, local_frame_ptr frame, bool needs_box, do_ref body);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;

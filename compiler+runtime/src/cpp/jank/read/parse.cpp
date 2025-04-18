@@ -96,12 +96,12 @@ namespace jank::read::parse
     return none;
   }
 
-  native_bool object_source_info::operator==(object_source_info const &rhs) const
+  bool object_source_info::operator==(object_source_info const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool object_source_info::operator!=(object_source_info const &rhs) const
+  bool object_source_info::operator!=(object_source_info const &rhs) const
   {
     return ptr != rhs.ptr || start != rhs.start || end != rhs.end;
   }
@@ -122,12 +122,12 @@ namespace jank::read::parse
     return *this;
   }
 
-  native_bool processor::iterator::operator!=(processor::iterator const &rhs) const
+  bool processor::iterator::operator!=(processor::iterator const &rhs) const
   {
     return latest != rhs.latest;
   }
 
-  native_bool processor::iterator::operator==(processor::iterator const &rhs) const
+  bool processor::iterator::operator==(processor::iterator const &rhs) const
   {
     return latest == rhs.latest;
   }
@@ -757,7 +757,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  processor::object_result processor::parse_reader_macro_conditional(native_bool const splice)
+  processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -911,7 +911,7 @@ namespace jank::read::parse
       seq);
   }
 
-  native_bool processor::syntax_quote_is_unquote(object_ref const form, native_bool const splice)
+  bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
   {
     return visit_seqable(
       [splice](auto const typed_form) {
@@ -1151,7 +1151,7 @@ namespace jank::read::parse
     return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
   }
 
-  processor::object_result processor::parse_unquote(native_bool const splice)
+  processor::object_result processor::parse_unquote(bool const splice)
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
@@ -1207,7 +1207,7 @@ namespace jank::read::parse
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const b(std::get<native_bool>(token.data));
+    auto const b(std::get<bool>(token.data));
     return object_source_info{ make_box<obj::boolean>(b), token, token };
   }
 
@@ -1259,7 +1259,7 @@ namespace jank::read::parse
       if(shorthand.is_some() && name.starts_with('%'))
       {
         auto const after_percent(name.substr(1));
-        native_bool all_digits{ true };
+        bool all_digits{ true };
         for(auto const c : after_percent)
         {
           all_digits &= (std::isdigit(c) != 0) && (c != '0');
@@ -1313,7 +1313,7 @@ namespace jank::read::parse
     auto const sv(std::get<native_persistent_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
-    native_bool const resolved{ sv[0] != ':' };
+    bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
     jtl::immutable_string ns, name;

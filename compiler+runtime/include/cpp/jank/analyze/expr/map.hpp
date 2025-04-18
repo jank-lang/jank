@@ -14,7 +14,7 @@ namespace jank::analyze::expr
 
     map(expression_position position,
         local_frame_ptr frame,
-        native_bool needs_box,
+        bool needs_box,
         native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
         jtl::option<runtime::object_ref> const &meta);
 

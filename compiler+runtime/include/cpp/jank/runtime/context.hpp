@@ -69,7 +69,7 @@ namespace jank::runtime
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &ns,
                    jtl::immutable_string const &name,
-                   native_bool resolved = true);
+                   bool resolved = true);
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &s);
 
@@ -81,7 +81,7 @@ namespace jank::runtime
     void eval_cpp_string(native_persistent_string_view const &code) const;
     object_ref read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ref>
-    analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
+    analyze_string(native_persistent_string_view const &code, bool const eval = true);
 
     /* Finds the specified module on the module path and loads it. If
      * the module is already loaded, nothing is done.

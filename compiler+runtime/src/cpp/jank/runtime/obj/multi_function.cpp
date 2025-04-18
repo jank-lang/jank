@@ -23,7 +23,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool multi_function::equal(object const &rhs) const
+  bool multi_function::equal(object const &rhs) const
   {
     return &base == &rhs;
   }
@@ -246,7 +246,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  native_bool multi_function::is_preferred(object_ref const hierarchy,
+  bool multi_function::is_preferred(object_ref const hierarchy,
                                            object_ref const x,
                                            object_ref const y) const
   {
@@ -281,7 +281,7 @@ namespace jank::runtime::obj
     return false;
   }
 
-  native_bool
+  bool
   multi_function::is_a(object_ref const hierarchy, object_ref const x, object_ref const y)
   {
     static object_ref const isa{
@@ -290,7 +290,7 @@ namespace jank::runtime::obj
     return truthy(dynamic_call(isa, deref(hierarchy), x, y));
   }
 
-  native_bool multi_function::is_dominant(object_ref const hierarchy,
+  bool multi_function::is_dominant(object_ref const hierarchy,
                                           object_ref const x,
                                           object_ref const y) const
   {

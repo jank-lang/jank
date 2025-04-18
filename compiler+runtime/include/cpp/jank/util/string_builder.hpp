@@ -20,7 +20,7 @@ namespace jank::util
     string_builder &operator=(string_builder const &) = delete;
     string_builder &operator=(string_builder &&) = delete;
 
-    string_builder &operator()(native_bool d) &;
+    string_builder &operator()(bool d) &;
     string_builder &operator()(float d) &;
     string_builder &operator()(double d) &;
     string_builder &operator()(native_hash d) &;
@@ -36,7 +36,7 @@ namespace jank::util
     string_builder &operator()(native_transient_string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
 
-    void push_back(native_bool d) &;
+    void push_back(bool d) &;
     void push_back(float d) &;
     void push_back(double d) &;
     void push_back(native_hash d) &;

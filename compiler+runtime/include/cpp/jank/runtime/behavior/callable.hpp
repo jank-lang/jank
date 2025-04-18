@@ -180,14 +180,14 @@ namespace jank::runtime
         return (arity_flags & 0b10001111);
       }
 
-      static constexpr native_bool is_variadic_ambiguous(arity_flag_t const arity_flags)
+      static constexpr bool is_variadic_ambiguous(arity_flag_t const arity_flags)
       {
         return (arity_flags & 0b01000000);
       }
 
       static constexpr arity_flag_t build_arity_flags(u8 const highest_fixed_arity,
-                                                      native_bool const is_variadic,
-                                                      native_bool const is_variadic_ambiguous)
+                                                      bool const is_variadic,
+                                                      bool const is_variadic_ambiguous)
       {
         return (is_variadic << 7) | (is_variadic_ambiguous << 6) | highest_fixed_arity;
       }

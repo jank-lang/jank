@@ -7,7 +7,7 @@ namespace jank::analyze::expr
 
   call::call(expression_position const position,
              local_frame_ptr const frame,
-             native_bool const needs_box,
+             bool const needs_box,
              expression_ref const source,
              runtime::obj::persistent_list_ref const form,
              native_vector<expression_ref> &&arg_exprs)

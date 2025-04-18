@@ -302,8 +302,8 @@ namespace jank::error
          jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 
-    native_bool operator==(base const &rhs) const;
-    native_bool operator!=(base const &rhs) const;
+    bool operator==(base const &rhs) const;
+    bool operator!=(base const &rhs) const;
 
     void sort_notes();
     jtl::ref<base> add_usage(read::source const &usage_source);

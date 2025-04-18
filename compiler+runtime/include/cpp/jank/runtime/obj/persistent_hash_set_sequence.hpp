@@ -16,8 +16,8 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_hash_set::iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_set_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_hash_set_sequence(persistent_hash_set_sequence &&) = default;
     persistent_hash_set_sequence(persistent_hash_set_sequence const &) = default;

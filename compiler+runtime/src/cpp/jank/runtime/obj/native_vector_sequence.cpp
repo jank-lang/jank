@@ -33,7 +33,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::object_like */
-  native_bool native_vector_sequence::equal(object const &o) const
+  bool native_vector_sequence::equal(object const &o) const
   {
     return runtime::equal(o, data.begin(), data.end());
   }

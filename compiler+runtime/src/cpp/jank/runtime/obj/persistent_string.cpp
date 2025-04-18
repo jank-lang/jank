@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool persistent_string::equal(object const &o) const
+  bool persistent_string::equal(object const &o) const
   {
     if(o.type != object_type::persistent_string)
     {
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_bool persistent_string::contains(object_ref const key) const
+  bool persistent_string::contains(object_ref const key) const
   {
     if(key->type == object_type::integer)
     {

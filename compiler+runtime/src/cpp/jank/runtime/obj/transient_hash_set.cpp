@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     return make_box<transient_hash_set>();
   }
 
-  native_bool transient_hash_set::equal(object const &o) const
+  bool transient_hash_set::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(std::in_place, found, found);
   }
 
-  native_bool transient_hash_set::contains(object_ref const elem) const
+  bool transient_hash_set::contains(object_ref const elem) const
   {
     assert_active();
     return data.find(elem);

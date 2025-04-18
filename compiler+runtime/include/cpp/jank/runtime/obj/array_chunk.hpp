@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct array_chunk : gc
   {
     static constexpr object_type obj_type{ object_type::array_chunk };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     array_chunk() = default;
     array_chunk(native_vector<object_ref> const &buffer);
@@ -17,7 +17,7 @@ namespace jank::runtime::obj
     array_chunk(native_vector<object_ref> &&buffer, usize offset);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

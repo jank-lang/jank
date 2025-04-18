@@ -20,7 +20,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::object_like */
-  native_bool persistent_string_sequence::equal(object const &o) const
+  bool persistent_string_sequence::equal(object const &o) const
   {
     return runtime::equal(o, str->data.begin() + index, str->data.end());
   }

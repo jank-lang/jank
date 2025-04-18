@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool native_pointer_wrapper::equal(object const &o) const
+  bool native_pointer_wrapper::equal(object const &o) const
   {
     if(o.type != object_type::native_pointer_wrapper)
     {

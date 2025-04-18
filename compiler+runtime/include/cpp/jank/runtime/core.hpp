@@ -11,16 +11,16 @@
 namespace jank::runtime
 {
   jtl::immutable_string type(object_ref o);
-  native_bool is_nil(object_ref o);
-  native_bool is_true(object_ref o);
-  native_bool is_false(object_ref o);
-  native_bool is_some(object_ref o);
-  native_bool is_string(object_ref o);
-  native_bool is_char(object_ref o);
+  bool is_nil(object_ref o);
+  bool is_true(object_ref o);
+  bool is_false(object_ref o);
+  bool is_some(object_ref o);
+  bool is_string(object_ref o);
+  bool is_char(object_ref o);
 
-  native_bool is_symbol(object_ref o);
-  native_bool is_simple_symbol(object_ref o);
-  native_bool is_qualified_symbol(object_ref o);
+  bool is_symbol(object_ref o);
+  bool is_simple_symbol(object_ref o);
+  bool is_qualified_symbol(object_ref o);
 
   object_ref print(object_ref args);
   object_ref println(object_ref args);
@@ -32,16 +32,16 @@ namespace jank::runtime
   i64 first_index_of(object_ref s, object_ref m);
   i64 last_index_of(object_ref s, object_ref m);
 
-  native_bool is_named(object_ref o);
+  bool is_named(object_ref o);
   jtl::immutable_string name(object_ref o);
   object_ref namespace_(object_ref o);
 
   object_ref keyword(object_ref ns, object_ref name);
-  native_bool is_keyword(object_ref o);
-  native_bool is_simple_keyword(object_ref o);
-  native_bool is_qualified_keyword(object_ref o);
+  bool is_keyword(object_ref o);
+  bool is_simple_keyword(object_ref o);
+  bool is_qualified_keyword(object_ref o);
 
-  native_bool is_callable(object_ref o);
+  bool is_callable(object_ref o);
 
   native_hash to_hash(object_ref o);
 
@@ -67,7 +67,7 @@ namespace jank::runtime
   object_ref reset_vals(object_ref atom, object_ref new_val);
 
   object_ref volatile_(object_ref o);
-  native_bool is_volatile(object_ref o);
+  bool is_volatile(object_ref o);
   object_ref vswap(object_ref v, object_ref fn);
   object_ref vswap(object_ref v, object_ref fn, object_ref args);
   object_ref vreset(object_ref v, object_ref new_val);
@@ -79,5 +79,5 @@ namespace jank::runtime
   object_ref force(object_ref o);
 
   object_ref tagged_literal(object_ref tag, object_ref form);
-  native_bool is_tagged_literal(object_ref o);
+  bool is_tagged_literal(object_ref o);
 }

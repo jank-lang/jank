@@ -8,7 +8,7 @@ namespace jank::analyze::expr
 
   let::let(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
+           bool const needs_box,
            do_ref const body)
     : expression{ expr_kind, position, frame, needs_box }
     , body{ body }

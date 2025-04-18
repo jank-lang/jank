@@ -76,19 +76,19 @@ namespace jank::runtime
 
   object_ref second(object_ref s);
 
-  native_bool is_empty(object_ref o);
-  native_bool is_seq(object_ref o);
-  native_bool is_sequential(object_ref o);
-  native_bool is_seqable(object_ref o);
-  native_bool is_collection(object_ref o);
-  native_bool is_list(object_ref o);
-  native_bool is_vector(object_ref o);
-  native_bool is_map(object_ref o);
-  native_bool is_associative(object_ref o);
-  native_bool is_set(object_ref o);
-  native_bool is_counter(object_ref o);
-  native_bool is_transientable(object_ref o);
-  native_bool is_sorted(object_ref o);
+  bool is_empty(object_ref o);
+  bool is_seq(object_ref o);
+  bool is_sequential(object_ref o);
+  bool is_seqable(object_ref o);
+  bool is_collection(object_ref o);
+  bool is_list(object_ref o);
+  bool is_vector(object_ref o);
+  bool is_map(object_ref o);
+  bool is_associative(object_ref o);
+  bool is_set(object_ref o);
+  bool is_counter(object_ref o);
+  bool is_transientable(object_ref o);
+  bool is_sorted(object_ref o);
 
   object_ref transient(object_ref o);
   object_ref persistent(object_ref o);
@@ -108,7 +108,7 @@ namespace jank::runtime
   object_ref get_in(object_ref m, object_ref keys);
   object_ref get_in(object_ref m, object_ref keys, object_ref fallback);
   object_ref find(object_ref s, object_ref key);
-  native_bool contains(object_ref s, object_ref key);
+  bool contains(object_ref s, object_ref key);
   object_ref merge(object_ref m, object_ref other);
   object_ref subvec(object_ref o, i64 start, i64 end);
   object_ref nth(object_ref o, object_ref idx);
@@ -122,14 +122,14 @@ namespace jank::runtime
   obj::persistent_list_ref list(object_ref s);
   obj::persistent_vector_ref vec(object_ref s);
 
-  native_bool sequence_equal(object_ref l, object_ref r);
+  bool sequence_equal(object_ref l, object_ref r);
 
   usize sequence_length(object_ref const s);
   usize sequence_length(object_ref const s, usize const max);
 
   object_ref reduce(object_ref f, object_ref init, object_ref s);
   object_ref reduced(object_ref o);
-  native_bool is_reduced(object_ref o);
+  bool is_reduced(object_ref o);
 
   object_ref chunk_buffer(object_ref capacity);
   object_ref chunk_append(object_ref buff, object_ref val);
@@ -138,7 +138,7 @@ namespace jank::runtime
   object_ref chunk_next(object_ref o);
   object_ref chunk_rest(object_ref o);
   object_ref chunk_cons(object_ref chunk, object_ref rest);
-  native_bool is_chunked_seq(object_ref o);
+  bool is_chunked_seq(object_ref o);
 
   object_ref iterate(object_ref fn, object_ref o);
 

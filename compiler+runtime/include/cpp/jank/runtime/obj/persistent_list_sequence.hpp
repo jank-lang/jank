@@ -18,8 +18,8 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_list::iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_list_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_list_sequence() = default;
     persistent_list_sequence(persistent_list_sequence &&) noexcept = default;

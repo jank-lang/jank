@@ -22,7 +22,7 @@ namespace jank::analyze::expr
 
     var_deref(expression_position position,
               local_frame_ptr frame,
-              native_bool needs_box,
+              bool needs_box,
               runtime::obj::symbol_ref qualified_name,
               runtime::var_ref var);
 

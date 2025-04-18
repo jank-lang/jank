@@ -49,7 +49,7 @@ namespace jank::runtime::module
   struct file_entry
   {
     object_ref to_runtime_data() const;
-    native_bool exists() const;
+    bool exists() const;
     std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
@@ -97,7 +97,7 @@ namespace jank::runtime::module
   nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub);
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
-  native_bool is_nested_module(jtl::immutable_string const &module);
+  bool is_nested_module(jtl::immutable_string const &module);
 
   struct loader
   {
@@ -142,7 +142,7 @@ namespace jank::runtime::module
 
     jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
 
-    native_bool is_loaded(jtl::immutable_string const &module);
+    bool is_loaded(jtl::immutable_string const &module);
     void set_is_loaded(jtl::immutable_string const &module);
 
     jtl::string_result<void> load(jtl::immutable_string const &module, origin const ori);

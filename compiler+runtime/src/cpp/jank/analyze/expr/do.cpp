@@ -13,14 +13,14 @@ namespace jank::analyze::expr
 
   do_::do_(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box)
+           bool const needs_box)
     : expression{ expr_kind, position, frame, needs_box }
   {
   }
 
   do_::do_(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
+           bool const needs_box,
            native_vector<expression_ref> &&values)
     : expression{ expr_kind, position, frame, needs_box }
     , values{ std::move(values) }

@@ -16,13 +16,13 @@ namespace jank::runtime::obj
     , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::multi_function };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     multi_function() = delete;
     multi_function(object_ref name, object_ref dispatch, object_ref default_, object_ref hierarchy);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();
@@ -74,10 +74,10 @@ namespace jank::runtime::obj
     multi_function_ref add_method(object_ref dispatch_val, object_ref method);
     multi_function_ref remove_method(object_ref dispatch_val);
     multi_function_ref prefer_method(object_ref x, object_ref y);
-    native_bool is_preferred(object_ref hierarchy, object_ref x, object_ref y) const;
+    bool is_preferred(object_ref hierarchy, object_ref x, object_ref y) const;
 
-    static native_bool is_a(object_ref hierarchy, object_ref x, object_ref y);
-    native_bool is_dominant(object_ref hierarchy, object_ref x, object_ref y) const;
+    static bool is_a(object_ref hierarchy, object_ref x, object_ref y);
+    bool is_dominant(object_ref hierarchy, object_ref x, object_ref y) const;
 
     object_ref get_fn(object_ref dispatch_val);
     object_ref get_method(object_ref dispatch_val);

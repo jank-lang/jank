@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct persistent_string : gc
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     persistent_string() = default;
     persistent_string(persistent_string &&) noexcept = default;
@@ -27,7 +27,7 @@ namespace jank::runtime::obj
     }
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string const &to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
     object_ref get_entry(object_ref key) const;
-    native_bool contains(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::indexable */
     object_ref nth(object_ref const index) const;

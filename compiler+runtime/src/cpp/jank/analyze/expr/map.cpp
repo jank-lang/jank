@@ -7,7 +7,7 @@ namespace jank::analyze::expr
 
   map::map(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
+           bool const needs_box,
            native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
            jtl::option<runtime::object_ref> const &meta)
     : expression{ expr_kind, position, frame, needs_box }

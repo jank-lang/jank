@@ -56,7 +56,7 @@ namespace jank::util
     allocator_traits::deallocate(allocator, buffer, pos);
   }
 
-  string_builder &string_builder::operator()(native_bool const d) &
+  string_builder &string_builder::operator()(bool const d) &
   {
     if(d)
     {
@@ -233,7 +233,7 @@ namespace jank::util
     return *this;
   }
 
-  void string_builder::push_back(native_bool const d) &
+  void string_builder::push_back(bool const d) &
   {
     (*this)(d);
   }

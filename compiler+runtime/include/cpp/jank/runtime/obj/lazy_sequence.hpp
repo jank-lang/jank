@@ -14,8 +14,8 @@ namespace jank::runtime::obj
   struct lazy_sequence : gc
   {
     static constexpr object_type obj_type{ object_type::lazy_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     lazy_sequence() = default;
     lazy_sequence(lazy_sequence &&) noexcept = default;
@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     lazy_sequence(object_ref fn, object_ref sequence);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;

@@ -11,7 +11,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool atom::equal(object const &o) const
+  bool atom::equal(object const &o) const
   {
     return &o == &base;
   }

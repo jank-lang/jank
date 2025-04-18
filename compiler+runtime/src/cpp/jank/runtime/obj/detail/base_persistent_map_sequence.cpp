@@ -16,14 +16,14 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  native_bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
+  bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
   {
     return runtime::sequence_equal(static_cast<PT const *>(this), &o);
   }
 
   template <typename PT, typename IT>
   void base_persistent_map_sequence<PT, IT>::to_string_impl(util::string_builder &buff,
-                                                            native_bool const to_code) const
+                                                            bool const to_code) const
   {
     buff('(');
     for(auto i(begin); i != end; ++i)

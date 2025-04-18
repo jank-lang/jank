@@ -28,7 +28,6 @@ namespace jank
                                              immer::gc_transience_policy,
                                              false>;
 
-  using native_bool = bool;
   using native_hash = u32;
   using native_persistent_string_view = std::string_view;
 

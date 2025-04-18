@@ -8,7 +8,7 @@ namespace jank::analyze::expr
 
   case_::case_(expression_position const position,
                local_frame_ptr const frame,
-               native_bool const needs_box,
+               bool const needs_box,
                expression_ref const value_expr,
                i64 const shift,
                i64 const mask,

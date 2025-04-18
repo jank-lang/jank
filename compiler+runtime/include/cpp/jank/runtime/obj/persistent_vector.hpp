@@ -12,8 +12,8 @@ namespace jank::runtime::obj
   struct persistent_vector : gc
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     using transient_type = transient_vector;
     using value_type = runtime::detail::native_persistent_vector;
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
     static persistent_vector_ref empty();
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     object_ref get(object_ref key) const;
     object_ref get(object_ref key, object_ref fallback) const;
     object_ref get_entry(object_ref key) const;
-    native_bool contains(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::conjable */
     persistent_vector_ref conj(object_ref head) const;

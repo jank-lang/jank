@@ -61,9 +61,9 @@ namespace jank::runtime::detail
 
       iterator &operator++();
 
-      native_bool operator!=(iterator const &rhs) const;
+      bool operator!=(iterator const &rhs) const;
 
-      native_bool operator==(iterator const &rhs) const;
+      bool operator==(iterator const &rhs) const;
 
       iterator &operator=(iterator const &rhs);
 
@@ -78,7 +78,7 @@ namespace jank::runtime::detail
 
     usize size() const;
 
-    native_bool empty() const;
+    bool empty() const;
 
     native_persistent_array_map clone() const;
 

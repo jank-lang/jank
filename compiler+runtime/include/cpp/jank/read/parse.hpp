@@ -24,8 +24,8 @@ namespace jank::read::parse
 
   struct object_source_info
   {
-    native_bool operator==(object_source_info const &rhs) const;
-    native_bool operator!=(object_source_info const &rhs) const;
+    bool operator==(object_source_info const &rhs) const;
+    bool operator!=(object_source_info const &rhs) const;
 
     runtime::object_ref ptr{};
     lex::token start, end;
@@ -38,7 +38,7 @@ namespace jank::read::parse
     struct shorthand_function_details
     {
       jtl::option<u8> max_fixed_arity{};
-      native_bool variadic{};
+      bool variadic{};
       source source;
     };
 
@@ -53,8 +53,8 @@ namespace jank::read::parse
       value_type operator*() const;
       pointer operator->();
       iterator &operator++();
-      native_bool operator!=(iterator const &rhs) const;
-      native_bool operator==(iterator const &rhs) const;
+      bool operator!=(iterator const &rhs) const;
+      bool operator==(iterator const &rhs) const;
       iterator &operator=(iterator const &);
 
       jtl::option<value_type> latest;
@@ -76,9 +76,9 @@ namespace jank::read::parse
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
     object_result parse_reader_macro_comment();
-    object_result parse_reader_macro_conditional(native_bool splice);
+    object_result parse_reader_macro_conditional(bool splice);
     object_result parse_syntax_quote();
-    object_result parse_unquote(native_bool splice);
+    object_result parse_unquote(bool splice);
     object_result parse_deref();
     object_result parse_symbol();
     object_result parse_nil();
@@ -98,7 +98,7 @@ namespace jank::read::parse
     jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_seq(runtime::object_ref seq);
     static jtl::result<runtime::object_ref, error_ref>
     syntax_quote_flatten_map(runtime::object_ref seq);
-    static native_bool syntax_quote_is_unquote(runtime::object_ref form, native_bool splice);
+    static bool syntax_quote_is_unquote(runtime::object_ref form, bool splice);
 
   public:
     lex::processor::iterator token_current, token_end;
@@ -114,8 +114,8 @@ namespace jank::read::parse
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
-    native_bool quoted{};
+    bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */
-    native_bool syntax_quoted{};
+    bool syntax_quoted{};
   };
 }
