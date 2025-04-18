@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash cons::to_hash() const
+  uhash cons::to_hash() const
   {
     if(hash != 0)
     {

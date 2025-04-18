@@ -39,7 +39,7 @@ namespace jank::runtime
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
     void to_string(util::string_builder &buff) const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::object_like extended */
     bool equal(var const &) const;
@@ -72,7 +72,7 @@ namespace jank::runtime
     /* Unqualified. */
     obj::symbol_ref name{};
     jtl::option<object_ref> meta;
-    mutable native_hash hash{};
+    mutable uhash hash{};
 
   private:
     folly::Synchronized<object_ref> root;
@@ -94,7 +94,7 @@ namespace jank::runtime
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     object base{ obj_type };
     object_ref value{};
@@ -118,7 +118,7 @@ namespace jank::runtime
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     object base{ obj_type };
     var_ref var;

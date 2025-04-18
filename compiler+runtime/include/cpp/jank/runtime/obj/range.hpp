@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
     jtl::immutable_string to_code_string();
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::seqable */
     range_ptr seq();

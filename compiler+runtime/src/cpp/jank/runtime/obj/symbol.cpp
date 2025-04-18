@@ -134,7 +134,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash symbol::to_hash() const
+  uhash symbol::to_hash() const
   {
     if(hash)
     {

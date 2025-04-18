@@ -52,7 +52,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash tagged_literal::to_hash() const
+  uhash tagged_literal::to_hash() const
   {
     if(hash)
     {

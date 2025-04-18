@@ -40,7 +40,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash boolean::to_hash() const
+  uhash boolean::to_hash() const
   {
     return data ? 1231 : 1237;
   }
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash integer::to_hash() const
+  uhash integer::to_hash() const
   {
     return hash::integer(data);
   }
@@ -180,7 +180,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash real::to_hash() const
+  uhash real::to_hash() const
   {
     return hash::real(data);
   }

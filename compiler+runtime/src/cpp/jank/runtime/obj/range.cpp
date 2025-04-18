@@ -220,7 +220,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash range::to_hash() const
+  uhash range::to_hash() const
   {
     return hash::ordered(&base);
   }

@@ -93,7 +93,7 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_hash const d) &
+  string_builder &string_builder::operator()(uhash const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const required{ snprintf(nullptr, 0, "%d", d) };
@@ -248,7 +248,7 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(native_hash const d) &
+  void string_builder::push_back(uhash const d) &
   {
     (*this)(d);
   }

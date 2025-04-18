@@ -108,7 +108,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_hash persistent_vector::to_hash() const
+  uhash persistent_vector::to_hash() const
   {
     if(hash != 0)
     {

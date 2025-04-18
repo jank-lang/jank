@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash lazy_sequence::to_hash() const
+  uhash lazy_sequence::to_hash() const
   {
     auto const s(seq());
     if(s.is_nil())

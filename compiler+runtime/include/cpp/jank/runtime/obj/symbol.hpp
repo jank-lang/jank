@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::object_like extended */
     bool equal(symbol const &) const;
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     jtl::immutable_string name;
 
     jtl::option<object_ref> meta;
-    mutable native_hash hash{};
+    mutable uhash hash{};
   };
 }
 

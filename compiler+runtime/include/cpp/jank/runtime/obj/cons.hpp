@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::metadatable */
     cons_ref with_meta(object_ref m) const;
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
     object base{ obj_type };
     object_ref head{};
     object_ref tail{};
-    mutable native_hash hash{};
+    mutable uhash hash{};
     jtl::option<object_ref> meta;
   };
 }

@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash keyword::to_hash() const
+  uhash keyword::to_hash() const
   {
     return sym->to_hash() + 0x9e3779b9;
   }

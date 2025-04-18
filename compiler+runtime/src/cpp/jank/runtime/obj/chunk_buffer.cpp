@@ -44,9 +44,9 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash chunk_buffer::to_hash() const
+  uhash chunk_buffer::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize chunk_buffer::count() const

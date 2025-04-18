@@ -47,7 +47,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -88,6 +88,6 @@ namespace jank::runtime::obj
     object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;
-    mutable native_hash hash{};
+    mutable uhash hash{};
   };
 }

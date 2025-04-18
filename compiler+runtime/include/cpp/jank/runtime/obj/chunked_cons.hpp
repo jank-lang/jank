@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::metadatable */
     chunked_cons_ref with_meta(object_ref m) const;

@@ -13,7 +13,7 @@ namespace jank::runtime
     }
 
     auto const typed_rhs = expect_object<obj::character>(rhs);
-    return typed_rhs->to_hash() == static_cast<native_hash>(lhs);
+    return typed_rhs->to_hash() == static_cast<uhash>(lhs);
   }
 
   bool equal(object_ref const lhs, object_ref const rhs)

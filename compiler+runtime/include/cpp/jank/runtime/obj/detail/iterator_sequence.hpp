@@ -23,7 +23,7 @@ namespace jank::runtime::obj::detail
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::seqable */
     oref<Derived> seq();

@@ -78,7 +78,7 @@ namespace jank::runtime
     return to_string();
   }
 
-  native_hash var::to_hash() const
+  uhash var::to_hash() const
   {
     if(hash)
     {
@@ -208,7 +208,7 @@ namespace jank::runtime
     runtime::to_string(value, buff);
   }
 
-  native_hash var_thread_binding::to_hash() const
+  uhash var_thread_binding::to_hash() const
   {
     return hash::visit(value.get());
   }
@@ -240,8 +240,8 @@ namespace jank::runtime
     return var_unbound_root::to_string();
   }
 
-  native_hash var_unbound_root::to_hash() const
+  uhash var_unbound_root::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 }

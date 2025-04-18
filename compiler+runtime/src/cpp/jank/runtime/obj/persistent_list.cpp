@@ -90,7 +90,7 @@ namespace jank::runtime::obj
   }
 
   /* TODO: Cache this. */
-  native_hash persistent_list::to_hash() const
+  uhash persistent_list::to_hash() const
   {
     return hash::ordered(data.begin(), data.end());
   }

@@ -52,10 +52,10 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash transient_sorted_map::to_hash() const
+  uhash transient_sorted_map::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_sorted_map::count() const

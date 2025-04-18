@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash iterator::to_hash() const
+  uhash iterator::to_hash() const
   {
     return hash::ordered(&base);
   }

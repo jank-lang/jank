@@ -163,10 +163,10 @@ namespace jank::runtime
   {
     name->to_string(buff);
   }
-  native_hash ns::to_hash() const
+  uhash ns::to_hash() const
   /* TODO: Cache this? */
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   bool ns::operator==(ns const &rhs) const

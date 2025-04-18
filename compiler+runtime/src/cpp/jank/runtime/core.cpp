@@ -313,9 +313,9 @@ namespace jank::runtime
       o);
   }
 
-  native_hash to_hash(object_ref const o)
+  uhash to_hash(object_ref const o)
   {
-    return visit_object([=](auto const typed_o) -> native_hash { return typed_o->to_hash(); }, o);
+    return visit_object([=](auto const typed_o) -> uhash { return typed_o->to_hash(); }, o);
   }
 
   object_ref macroexpand1(object_ref const o)

@@ -57,7 +57,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_hash native_vector_sequence::to_hash()
+  uhash native_vector_sequence::to_hash()
   {
     return hash::ordered(data.begin(), data.end());
   }

@@ -80,7 +80,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash ratio::to_hash() const
+  uhash ratio::to_hash() const
   {
     return hash::combine(hash::integer(data.numerator), hash::integer(data.denominator));
   }

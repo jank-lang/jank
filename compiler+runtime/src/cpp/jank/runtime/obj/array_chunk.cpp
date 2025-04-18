@@ -45,9 +45,9 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash array_chunk::to_hash() const
+  uhash array_chunk::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   array_chunk_ref array_chunk::chunk_next() const

@@ -50,9 +50,9 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash jit_function::to_hash() const
+  uhash jit_function::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   jit_function_ref jit_function::with_meta(object_ref const m)

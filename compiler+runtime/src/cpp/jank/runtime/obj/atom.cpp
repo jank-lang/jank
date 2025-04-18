@@ -33,9 +33,9 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash atom::to_hash() const
+  uhash atom::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref atom::deref() const

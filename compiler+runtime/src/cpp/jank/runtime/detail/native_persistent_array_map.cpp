@@ -208,7 +208,7 @@ namespace jank::runtime::detail
     }
   }
 
-  native_hash native_persistent_array_map::to_hash() const
+  uhash native_persistent_array_map::to_hash() const
   {
     if(hash != 0)
     {

@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     return sb('"')(util::escape(data))('"').release();
   }
 
-  native_hash persistent_string::to_hash() const
+  uhash persistent_string::to_hash() const
   {
     return data.to_hash();
   }

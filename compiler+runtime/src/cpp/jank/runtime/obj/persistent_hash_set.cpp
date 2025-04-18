@@ -89,7 +89,7 @@ namespace jank::runtime::obj
   }
 
   /* TODO: Cache this. */
-  native_hash persistent_hash_set::to_hash() const
+  uhash persistent_hash_set::to_hash() const
   {
     return hash::unordered(data.begin(), data.end());
   }

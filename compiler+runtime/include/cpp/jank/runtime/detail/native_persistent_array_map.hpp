@@ -43,7 +43,7 @@ namespace jank::runtime::detail
 
     object_ref find(object_ref const key) const;
 
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     struct iterator
     {
@@ -84,6 +84,6 @@ namespace jank::runtime::detail
 
     object_ref *data{};
     usize length{};
-    mutable native_hash hash{};
+    mutable uhash hash{};
   };
 }

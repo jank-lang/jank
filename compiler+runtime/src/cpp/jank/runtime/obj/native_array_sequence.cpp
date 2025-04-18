@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_hash native_array_sequence::to_hash() const
+  uhash native_array_sequence::to_hash() const
   {
     return hash::ordered(arr + index, arr + size);
   }

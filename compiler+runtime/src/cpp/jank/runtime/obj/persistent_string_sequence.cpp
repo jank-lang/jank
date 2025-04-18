@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_hash persistent_string_sequence::to_hash() const
+  uhash persistent_string_sequence::to_hash() const
   {
     return hash::ordered(str->data.begin() + index, str->data.end());
   }

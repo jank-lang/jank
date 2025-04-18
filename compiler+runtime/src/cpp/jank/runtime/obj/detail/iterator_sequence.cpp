@@ -55,7 +55,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  native_hash iterator_sequence<Derived, It>::to_hash() const
+  uhash iterator_sequence<Derived, It>::to_hash() const
   {
     return hash::ordered(begin, end);
   }

@@ -43,7 +43,7 @@ namespace jank::runtime
 
   bool is_callable(object_ref o);
 
-  native_hash to_hash(object_ref o);
+  uhash to_hash(object_ref o);
 
   object_ref macroexpand1(object_ref o);
   object_ref macroexpand(object_ref o);

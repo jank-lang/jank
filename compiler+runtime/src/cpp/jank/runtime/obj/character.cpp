@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     return get_literal_from_char_bytes(data);
   }
 
-  native_hash character::to_hash() const
+  uhash character::to_hash() const
   {
     return data.to_hash();
   }

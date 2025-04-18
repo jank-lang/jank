@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     buff("nil");
   }
 
-  native_hash nil::to_hash() const
+  uhash nil::to_hash() const
   {
     return 0;
   }

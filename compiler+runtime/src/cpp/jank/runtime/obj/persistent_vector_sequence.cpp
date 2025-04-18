@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  native_hash persistent_vector_sequence::to_hash() const
+  uhash persistent_vector_sequence::to_hash() const
   {
     return hash::ordered(vec->data.begin()
                            + static_cast<decltype(persistent_vector::data)::difference_type>(index),

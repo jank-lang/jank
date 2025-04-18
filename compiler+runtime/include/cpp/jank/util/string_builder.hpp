@@ -23,7 +23,7 @@ namespace jank::util
     string_builder &operator()(bool d) &;
     string_builder &operator()(float d) &;
     string_builder &operator()(double d) &;
-    string_builder &operator()(native_hash d) &;
+    string_builder &operator()(uhash d) &;
     string_builder &operator()(void const *d) &;
     string_builder &operator()(int d) &;
     string_builder &operator()(long d) &;
@@ -39,7 +39,7 @@ namespace jank::util
     void push_back(bool d) &;
     void push_back(float d) &;
     void push_back(double d) &;
-    void push_back(native_hash d) &;
+    void push_back(uhash d) &;
     void push_back(void const *d) &;
     void push_back(int d) &;
     void push_back(long d) &;

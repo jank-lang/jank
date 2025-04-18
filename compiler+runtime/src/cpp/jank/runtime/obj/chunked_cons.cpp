@@ -172,7 +172,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash chunked_cons::to_hash() const
+  uhash chunked_cons::to_hash() const
   {
     return hash::ordered(&base);
   }

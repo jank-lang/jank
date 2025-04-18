@@ -113,7 +113,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_hash base_persistent_map<PT, ST, V>::to_hash() const
+  uhash base_persistent_map<PT, ST, V>::to_hash() const
   {
     if(hash)
     {

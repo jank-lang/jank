@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::derefable */
     object_ref deref();
