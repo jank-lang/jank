@@ -41,6 +41,9 @@ namespace jank::error
   error_ref analyze_invalid_let(jtl::immutable_string const &message,
                                 read::source const &source,
                                 runtime::object_ref expansion);
+  error_ref analyze_invalid_letfn(jtl::immutable_string const &message,
+                                  read::source const &source,
+                                  runtime::object_ref expansion);
   error_ref analyze_invalid_loop(jtl::immutable_string const &message,
                                  read::source const &source,
                                  runtime::object_ref expansion);

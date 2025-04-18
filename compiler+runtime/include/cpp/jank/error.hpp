@@ -66,6 +66,7 @@ namespace jank::error
     analyze_invalid_recur_from_try,
     analyze_invalid_recur_args,
     analyze_invalid_let,
+    analyze_invalid_letfn,
     analyze_invalid_loop,
     analyze_invalid_if,
     analyze_invalid_quote,
@@ -184,6 +185,8 @@ namespace jank::error
         return "analyze/invalid-recur-args";
       case kind::analyze_invalid_let:
         return "analyze/invalid-let";
+      case kind::analyze_invalid_letfn:
+        return "analyze/invalid-letfn";
       case kind::analyze_invalid_loop:
         return "analyze/invalid-loop";
       case kind::analyze_invalid_if:

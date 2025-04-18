@@ -1,0 +1,6 @@
+(letfn* [a (fn* a
+             ([v]
+              (a v :something))
+             ([v & args]
+              v))]
+  (a :success))

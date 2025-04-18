@@ -119,7 +119,7 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* JIT loaded object files don't support global ctors, so we need to call our manually.
+    /* JIT loaded object files don't support global ctors, so we need to call ours manually.
      * Fortunately, we have our load function which we can hook into. So, if we're compiling
      * a module and we've just created the load function fo that module, the first thing
      * we want to do is call our global ctor. */
@@ -764,6 +764,62 @@ namespace jank::codegen
     return ret;
   }
 
+  llvm::Value *llvm_processor::gen(expr::letfn_ref const expr, expr::function_arity const &arity)
+  {
+    /* We generate bindings left-to-right, so for mutually recursive letfn bindings
+     * we must defer some initialization via `deferred_inits`.
+     *
+     * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
+     * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
+     *
+     *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
+     *   =>
+     *   1 | %1 = call ptr @GC_malloc(i64 8)
+     *   2 | ...                                                     // %b not in scope. store moved to line 8
+     *   3 | %a = call ptr @jank_closure_create(..., ptr %1)
+     *   4 | ...
+     *   5 | %4 = call ptr @GC_malloc(i64 8)
+     *   6 | store ptr %a, ptr %4, align 8                           // %a is in scope, ok to store
+     *   7 | %b = call ptr @jank_closure_create(..., ptr nonnull %4)
+     *   8 | store ptr %b, ptr %1, align 8                           // deferred initialization of %a since %b is in scope
+     * */
+    auto old_deferred_inits(deferred_inits);
+    deferred_inits = {};
+
+    auto old_locals(locals);
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      if(local.is_none())
+      {
+        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
+                                               pair.first->to_string()) };
+      }
+
+      locals[pair.first] = gen(pair.second, arity);
+      locals[pair.first]->setName(pair.first->to_string().c_str());
+    }
+
+    for(auto const &deferred_init : deferred_inits)
+    {
+      expr::local_reference const local_ref{ expression_position::value,
+                                             deferred_init.expr->frame,
+                                             deferred_init.expr->needs_box,
+                                             deferred_init.name,
+                                             deferred_init.binding };
+      auto const e(gen(expr::local_reference_ref{ &local_ref }, arity));
+      ctx->builder->CreateStore(e, deferred_init.field_ptr);
+    }
+
+    auto const ret(gen(expr->body, arity));
+    locals = std::move(old_locals);
+    deferred_inits = std::move(old_deferred_inits);
+
+    /* XXX: No return creation, since we rely on the body to do that. */
+
+    return ret;
+  }
+
   llvm::Value *llvm_processor::gen(expr::do_ref const expr, expr::function_arity const &arity)
   {
     llvm::Value *last{};
@@ -1400,10 +1456,9 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string", create_fn_type));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string_c", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> const args{ gen_global(
-        make_box(runtime::to_code_string(o))) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(runtime::to_code_string(o)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1509,13 +1564,21 @@ namespace jank::codegen
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
-        expr::local_reference const local_ref{ expression_position::value,
-                                               expr->frame,
-                                               true,
-                                               capture.first,
-                                               capture.second };
-        ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, fn_arity),
-                                  field_ptr);
+        auto const name(capture.first);
+        if(!locals.contains(name))
+        {
+          deferred_inits.emplace_back(expr, name, capture.second, field_ptr);
+        }
+        else
+        {
+          expr::local_reference const local_ref{ expression_position::value,
+                                                 expr->frame,
+                                                 true,
+                                                 name,
+                                                 capture.second };
+          ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, fn_arity),
+                                    field_ptr);
+        }
       }
 
       auto const create_fn_type(

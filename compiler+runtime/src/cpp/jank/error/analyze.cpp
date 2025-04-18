@@ -91,6 +91,13 @@ namespace jank::error
     return make_error(kind::analyze_invalid_let, message, source, expansion);
   }
 
+  error_ref analyze_invalid_letfn(jtl::immutable_string const &message,
+                                  read::source const &source,
+                                  runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_letfn, message, source, expansion);
+  }
+
   error_ref analyze_invalid_loop(jtl::immutable_string const &message,
                                  read::source const &source,
                                  runtime::object_ref const expansion)

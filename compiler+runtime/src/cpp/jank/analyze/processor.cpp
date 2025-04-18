@@ -38,6 +38,7 @@
 #include <jank/analyze/expr/named_recursion.hpp>
 #include <jank/analyze/expr/local_reference.hpp>
 #include <jank/analyze/expr/let.hpp>
+#include <jank/analyze/expr/letfn.hpp>
 #include <jank/analyze/expr/do.hpp>
 #include <jank/analyze/expr/if.hpp>
 #include <jank/analyze/expr/throw.hpp>
@@ -113,18 +114,19 @@ namespace jank::analyze
       };
     };
     specials = {
-      {   make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
-      {   make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
-      { make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
-      {    make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
-      {  make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
-      { make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
-      {    make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
-      { make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
-      {   make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
-      { make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
-      {   make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
-      { make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
+      {    make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
+      {    make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
+      {  make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
+      {     make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
+      {   make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
+      { make_box<symbol>("letfn*"),    make_fn(&processor::analyze_letfn) },
+      {  make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
+      {     make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
+      {  make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
+      {    make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
+      {  make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
+      {    make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
+      {  make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
     };
   }
 
@@ -425,7 +427,7 @@ namespace jank::analyze
          * again to get the binding within our current function, since the one we have now
          * is the originating binding.
          *
-         * All future lookups for this capatured local, in this function, will skip this branch. */
+         * All future lookups for this captured local, in this function, will skip this branch. */
         found_local = current_frame->find_local_or_capture(sym);
       }
 
@@ -972,6 +974,127 @@ namespace jank::analyze
       }
 
       /* Ultimately, whether or not this let is boxed is up to the last form. */
+      if(is_last)
+      {
+        ret->needs_box = res.expect_ok()->needs_box;
+      }
+
+      ret->body->values.emplace_back(res.expect_ok_move());
+    }
+
+    return ret;
+  }
+
+  processor::expression_result
+  processor::analyze_letfn(runtime::obj::persistent_list_ref const &o,
+                           local_frame_ptr const current_frame,
+                           expression_position const position,
+                           jtl::option<expr::function_context_ref> const &fn_ctx,
+                           native_bool const needs_box)
+  {
+    if(o->count() < 2)
+    {
+      return error::analyze_invalid_letfn("A bindings vector must be provided to 'letfn*'.",
+                                          meta_source(o),
+                                          latest_expansion(macro_expansions));
+    }
+
+    auto const bindings_obj(o->data.rest().first().unwrap());
+    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    {
+      return error::analyze_invalid_letfn("The bindings of a 'letfn*' must be in a vector.",
+                                          meta_source(bindings_obj),
+                                          latest_expansion(macro_expansions));
+    }
+
+    auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
+    auto const binding_parts(bindings->data.size());
+    if(binding_parts % 2 == 1)
+    {
+      return error::analyze_invalid_letfn(
+        "There must be an even number of bindings for a 'letfn*'.",
+        meta_source(bindings_obj),
+        latest_expansion(macro_expansions));
+    }
+
+    auto frame{
+      make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
+    };
+    auto ret{ make_box<expr::letfn>(
+      position,
+      frame,
+      needs_box,
+      make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
+
+    /* All bindings in a letfn appear simultaneously and may be mutually recursive.
+     * This makes creating a letfn locals frame a bit more involved than let, where locals
+     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)]) 
+     * requires the other to be in scope in order to be analyzed.
+     *
+     * We tackle this in two steps. First, we create empty local bindings for all names.
+     * Then, we analyze each value under the created scope and use the result to mutate the
+     * respective local binding value. */
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym_obj(bindings->data[i]);
+
+      if(sym_obj->type != runtime::object_type::symbol)
+      {
+        return error::analyze_invalid_letfn(
+          "The left hand side of a 'letfn*' binding must be a symbol.",
+          meta_source(sym_obj),
+          latest_expansion(macro_expansions));
+      }
+      auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+      if(!sym->ns.empty())
+      {
+        return error::analyze_invalid_letfn("'letfn*' binding symbols must be unqualified.",
+                                            meta_source(sym_obj),
+                                            latest_expansion(macro_expansions));
+      }
+      ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
+    }
+
+    for(size_t i{}; i < binding_parts; i += 2)
+    {
+      auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
+      auto const &val(bindings->data[i + 1]);
+
+      auto res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+      auto maybe_fexpr(res.expect_ok_move());
+      if(maybe_fexpr->kind != expression_kind::function)
+      {
+        return error::analyze_invalid_letfn(
+          "The right hand side of a 'letfn*' binding must be a function.",
+          meta_source(val),
+          latest_expansion(macro_expansions));
+      }
+      auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
+
+      /* Populate the local frame we prepared for sym in the previous loop with its binding. */
+      auto it(ret->pairs.emplace_back(sym, fexpr));
+      auto local(ret->frame->locals.find(sym)->second);
+      local.value_expr = some(it.second);
+      local.needs_box = it.second->needs_box;
+    }
+
+    size_t const form_count{ o->count() - 2 };
+    size_t i{};
+    for(auto const &item : o->data.rest().rest())
+    {
+      auto const is_last(++i == form_count);
+      auto const form_type(is_last ? position : expression_position::statement);
+      auto res(analyze(item, ret->frame, form_type, fn_ctx, needs_box));
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
+
+      /* Ultimately, whether or not this letfn is boxed is up to the last form. */
       if(is_last)
       {
         ret->needs_box = res.expect_ok()->needs_box;

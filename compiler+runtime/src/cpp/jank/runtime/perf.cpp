@@ -19,15 +19,16 @@ namespace jank::runtime::perf
         if constexpr(std::is_base_of_v<behavior::callable, T>)
         {
           ankerl::nanobench::Config config;
-          //config.mTimeUnitName = TODO
           config.mOut = &std::cout;
 
           /* Larger things. */
+          config.mTimeUnitName = "ms";
           config.mTimeUnit = std::chrono::milliseconds{ 1 };
           config.mMinEpochIterations = 20;
           config.mWarmup = 10;
 
           /* Smaller things. */
+          //config.mTimeUnitName = "ns";
           //config.mTimeUnit = std::chrono::nanoseconds{ 1 };
           //config.mMinEpochIterations = 1000000;
           //config.mWarmup = 1000;

@@ -112,6 +112,8 @@ namespace jank::error
         return "The argument arity passed to 'recur' doesn't match the function's arity.";
       case kind::analyze_invalid_let:
         return "Invalid let.";
+      case kind::analyze_invalid_letfn:
+        return "Invalid letfn.";
       case kind::analyze_invalid_loop:
         return "Invalid loop.";
       case kind::analyze_invalid_if:

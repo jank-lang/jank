@@ -169,7 +169,7 @@ namespace jank::runtime::obj
 
   bool symbol::operator<(symbol const &rhs) const
   {
-    return to_hash() < rhs.to_hash();
+    return compare(rhs) < 0;
   }
 
   void symbol::set_ns(jtl::immutable_string const &s)

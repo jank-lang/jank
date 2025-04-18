@@ -47,6 +47,7 @@ namespace jank::analyze
     named_recursion,
     local_reference,
     let,
+    letfn,
     do_,
     if_,
     throw_,
@@ -90,6 +91,8 @@ namespace jank::analyze
         return "local_reference";
       case expression_kind::let:
         return "let";
+      case expression_kind::letfn:
+        return "letfn";
       case expression_kind::do_:
         return "do_";
       case expression_kind::if_:

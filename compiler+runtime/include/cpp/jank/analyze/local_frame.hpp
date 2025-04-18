@@ -48,8 +48,6 @@ namespace jank::analyze
     native_bool needs_box{ true };
     native_bool has_boxed_usage{};
     native_bool has_unboxed_usage{};
-    /* The name of the function itself. */
-    native_bool is_named_recur{};
 
     runtime::object_ref to_runtime_data() const;
   };
@@ -63,6 +61,7 @@ namespace jank::analyze
       root,
       fn,
       let,
+      letfn,
       try_,
       catch_,
       finally
@@ -78,6 +77,8 @@ namespace jank::analyze
           return "fn";
         case frame_type::let:
           return "let";
+        case frame_type::letfn:
+          return "letfn";
         case frame_type::try_:
           return "try_";
         case frame_type::catch_:

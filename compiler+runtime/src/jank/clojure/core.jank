@@ -6599,11 +6599,11 @@ fails, attempts to require sym's namespace and retries."
   bindings of functions to their names. All of the names are available
   in all of the definitions of the functions, as well as the body."
   {:forms '[(letfn [fnspecs*] exprs*)],
-   :special-form true, :url nil}
+   :special-form true}
   [fnspecs & body]
   `(letfn* ~(vec (interleave (map first fnspecs)
                              (map #(cons `fn %) fnspecs)))
-           ~@body))
+     ~@body))
 
 (defn stream-reduce!
   "Works like reduce but takes a java.util.stream.BaseStream as its source.

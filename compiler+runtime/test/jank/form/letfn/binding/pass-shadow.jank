@@ -1,0 +1,5 @@
+(letfn* [a (fn* a []
+             :fail)
+         a (fn* a []
+             :success)]
+  (a))

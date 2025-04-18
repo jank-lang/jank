@@ -1,0 +1,6 @@
+(def a 1)
+
+(letfn [(a [a] a)]
+  (assert (= 1 (a 1))))
+
+:success

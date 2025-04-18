@@ -29,6 +29,7 @@ namespace jank::analyze
     using recursion_reference_ref = jtl::ref<struct recursion_reference>;
     using named_recursion_ref = jtl::ref<struct named_recursion>;
     using let_ref = jtl::ref<struct let>;
+    using letfn_ref = jtl::ref<struct letfn>;
     using do_ref = jtl::ref<struct do_>;
     using if_ref = jtl::ref<struct if_>;
     using throw_ref = jtl::ref<struct throw_>;
@@ -63,6 +64,7 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::recursion_reference_ref);
   runtime::object_ref eval(analyze::expr::named_recursion_ref);
   runtime::object_ref eval(analyze::expr::let_ref);
+  runtime::object_ref eval(analyze::expr::letfn_ref);
   runtime::object_ref eval(analyze::expr::do_ref);
   runtime::object_ref eval(analyze::expr::if_ref);
   runtime::object_ref eval(analyze::expr::throw_ref);

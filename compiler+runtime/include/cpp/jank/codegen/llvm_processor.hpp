@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
@@ -44,6 +46,7 @@ namespace jank::analyze
     using recursion_reference_ref = jtl::ref<struct recursion_reference>;
     using named_recursion_ref = jtl::ref<struct named_recursion>;
     using let_ref = jtl::ref<struct let>;
+    using letfn_ref = jtl::ref<struct letfn>;
     using do_ref = jtl::ref<struct do_>;
     using if_ref = jtl::ref<struct if_>;
     using throw_ref = jtl::ref<struct throw_>;
@@ -95,6 +98,14 @@ namespace jank::codegen
     std::unique_ptr<llvm::StandardInstrumentations> si;
   };
 
+  struct deferred_init
+  {
+    analyze::expr::function_ref expr;
+    obj::symbol_ref name;
+    analyze::local_binding_ptr binding;
+    llvm::Value *field_ptr{};
+  };
+
   struct llvm_processor
   {
     llvm_processor() = delete;
@@ -124,6 +135,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::recursion_reference_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::named_recursion_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::let_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::letfn_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::do_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::if_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::throw_ref, analyze::expr::function_arity const &);
@@ -161,5 +173,7 @@ namespace jank::codegen
     jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ref, llvm::Value *> locals;
+    /* TODO: Use gc allocator to avoid leaks. */
+    std::list<deferred_init> deferred_inits{};
   };
 }

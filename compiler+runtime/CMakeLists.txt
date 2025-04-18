@@ -75,7 +75,7 @@ set(
   -Wno-deprecated-declarations
   -Wno-c++23-extensions
   -fno-common
-  -fno-rtti
+  -frtti
   -fexceptions
   #-ftime-trace
   $<$<CONFIG:Debug>:-O0>
@@ -92,6 +92,7 @@ set(
   jank_common_compiler_flags
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
+  -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
 )
@@ -255,6 +256,7 @@ add_library(
   src/cpp/jank/analyze/expr/local_reference.cpp
   src/cpp/jank/analyze/expr/def.cpp
   src/cpp/jank/analyze/expr/let.cpp
+  src/cpp/jank/analyze/expr/letfn.cpp
   src/cpp/jank/analyze/expr/throw.cpp
   src/cpp/jank/analyze/expr/if.cpp
   src/cpp/jank/analyze/expr/list.cpp
@@ -408,6 +410,7 @@ set(
   third-party/folly/folly/system/ThreadId.cpp
   third-party/folly/folly/system/AtFork.cpp
   third-party/folly/folly/detail/Futex.cpp
+  third-party/folly/folly/memory/folly_stubs.cpp
 )
 
 add_library(folly_lib STATIC ${folly_sources})

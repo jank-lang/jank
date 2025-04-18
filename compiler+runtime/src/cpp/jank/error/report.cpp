@@ -554,7 +554,8 @@ namespace jank::error
     auto document{ vbox(doc_body) };
     auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
     Render(screen, document);
-    std::cout << screen.ToString() << '\0' << '\n';
+    screen.Print();
+    util::print("\n");
 
     if(e->cause)
     {
