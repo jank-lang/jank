@@ -320,7 +320,7 @@ namespace jank::runtime
 
     for(auto const &pair : demunge_chars)
     {
-      size_t pos{};
+      usize pos{};
       auto const pattern_length{ pair.first.length() };
       native_transient_string tmp;
       tmp.reserve(ret.size());

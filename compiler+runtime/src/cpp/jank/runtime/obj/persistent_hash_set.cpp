@@ -108,7 +108,7 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_set_sequence>(this, data.begin(), data.end(), data.size());
   }
 
-  size_t persistent_hash_set::count() const
+  usize persistent_hash_set::count() const
   {
     return data.size();
   }

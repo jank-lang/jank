@@ -16,7 +16,7 @@ namespace jank::runtime::obj::detail
     iterator_sequence() = default;
 
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
-    iterator_sequence(object_ref const &c, It const &b, It const &e, size_t const s);
+    iterator_sequence(object_ref const &c, It const &b, It const &e, usize const s);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -30,7 +30,7 @@ namespace jank::runtime::obj::detail
     oref<Derived> fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::sequenceable */
     object_ref first() const;
@@ -46,6 +46,6 @@ namespace jank::runtime::obj::detail
     object_ref coll{};
     /* Not default constructible. */
     It begin, end;
-    size_t size{};
+    usize size{};
   };
 }

@@ -74,7 +74,7 @@ namespace jank::runtime::obj
       {
         return false;
       }
-      for(size_t i{}; i < data.size(); ++i)
+      for(usize i{}; i < data.size(); ++i)
       {
         if(!runtime::equal(data[i], v->data[i]))
         {
@@ -138,7 +138,7 @@ namespace jank::runtime::obj
       return 1;
     }
 
-    for(size_t i{}; i < size; ++i)
+    for(usize i{}; i < size; ++i)
     {
       auto const res(runtime::compare(data[i], v.data[i]));
       if(res != 0)
@@ -164,7 +164,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
   }
 
-  size_t persistent_vector::count() const
+  usize persistent_vector::count() const
   {
     return data.size();
   }

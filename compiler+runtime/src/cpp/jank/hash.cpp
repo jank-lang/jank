@@ -131,7 +131,7 @@ namespace jank::hash
     auto const length(input.size());
     u32 h1{ seed };
 
-    for(size_t i{ 1 }; i < length; i += 2)
+    for(usize i{ 1 }; i < length; i += 2)
     {
       auto k1(static_cast<u32>(input[i - 1] | (input[i] << 16)));
       k1 = mix_k1(k1);

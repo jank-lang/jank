@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   }
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
-                                                         size_t const i)
+                                                         usize const i)
     : str{ s }
     , index{ i }
   {
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::countable */
-  size_t persistent_string_sequence::count() const
+  usize persistent_string_sequence::count() const
   {
     return str->data.size() - index;
   }

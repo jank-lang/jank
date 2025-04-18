@@ -955,12 +955,12 @@ namespace jank::runtime
       s);
   }
 
-  size_t sequence_length(object_ref const s)
+  usize sequence_length(object_ref const s)
   {
     return sequence_length(s, std::numeric_limits<size_t>::max());
   }
 
-  size_t sequence_length(object_ref const s, size_t const max)
+  usize sequence_length(object_ref const s, usize const max)
   {
     if(s.is_nil())
     {
@@ -968,7 +968,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [&](auto const typed_s) -> size_t {
+      [&](auto const typed_s) -> usize {
         using T = typename decltype(typed_s)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
@@ -981,7 +981,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
-          size_t length{ 0 };
+          usize length{ 0 };
           auto const r{ make_sequence_range(typed_s) };
           for(auto i(r.begin()); i != r.end() && length < max; ++i)
           {

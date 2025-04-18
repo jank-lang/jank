@@ -85,7 +85,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  size_t base_persistent_map_sequence<PT, IT>::count() const
+  usize base_persistent_map_sequence<PT, IT>::count() const
   {
     return std::distance(begin, end);
   }

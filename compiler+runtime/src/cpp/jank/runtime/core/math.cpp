@@ -557,7 +557,7 @@ namespace jank::runtime
             auto const typed_r_data{ to_number(typed_r->data) };
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
-            if(typed_r_data == 0LL)
+            if(typed_r_data == 0ll)
             {
 #pragma clang diagnostic pop
               throw make_box("Illegal divide by zero in 'quot'").erase();
@@ -578,7 +578,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l) -> object_ref {
-        auto const ret{ make_box(typed_l->data + 1LL) };
+        auto const ret{ make_box(typed_l->data + 1ll) };
         object_ref r{ ret };
         return r;
       },
@@ -588,7 +588,7 @@ namespace jank::runtime
   object_ref dec(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1LL).erase(); },
+      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1ll).erase(); },
       l);
   }
 
@@ -599,7 +599,7 @@ namespace jank::runtime
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
-          return typed_l->data == 0LL;
+          return typed_l->data == 0ll;
         }
 #pragma clang diagnostic pop
       },
@@ -613,7 +613,7 @@ namespace jank::runtime
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
-          return typed_l->data > 0LL;
+          return typed_l->data > 0ll;
         }
 #pragma clang diagnostic pop
       },
@@ -627,7 +627,7 @@ namespace jank::runtime
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
         {
-          return typed_l->data < 0LL;
+          return typed_l->data < 0ll;
         }
 #pragma clang diagnostic pop
       },
@@ -672,9 +672,7 @@ namespace jank::runtime
 
   i64 bit_not(object_ref const l)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l) -> i64 { return ~typed_l->data; },
-      l);
+    return visit_type<obj::integer>([](auto const typed_l) -> i64 { return ~typed_l->data; }, l);
   }
 
   i64 bit_and(object_ref const l, object_ref const r)
@@ -682,9 +680,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l & typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & typed_r->data; },
           r,
           typed_l->data);
       },
@@ -697,9 +693,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l | typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l | typed_r->data; },
           r,
           typed_l->data);
       },
@@ -712,9 +706,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l ^ typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l ^ typed_r->data; },
           r,
           typed_l->data);
       },
@@ -727,9 +719,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l & (~typed_r->data);
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & (~typed_r->data); },
           r,
           typed_l->data);
       },
@@ -802,9 +792,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l << typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l << typed_r->data; },
           r,
           typed_l->data);
       },
@@ -817,9 +805,7 @@ namespace jank::runtime
     return visit_type<obj::integer>(
       [](auto const typed_l, auto const r) -> i64 {
         return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l >> typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l >> typed_r->data; },
           r,
           typed_l->data);
       },
@@ -1397,8 +1383,8 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l) -> object_ref {
-        return typed_l->data < 0LL ? make_box(-1LL * typed_l->data).erase()
-                                   : make_box(typed_l->data).erase();
+        return typed_l->data < 0ll ? make_box(-1ll * typed_l->data).erase()
+                                  : make_box(typed_l->data).erase();
       },
       l);
   }
@@ -1425,9 +1411,7 @@ namespace jank::runtime
 
   f64 tan(object_ref const l)
   {
-    return visit_number_like(
-      [](auto const typed_l) -> f64 { return tanf(typed_l->to_real()); },
-      l);
+    return visit_number_like([](auto const typed_l) -> f64 { return tanf(typed_l->to_real()); }, l);
   }
 
   f64 sqrt(object_ref const l)
@@ -1624,9 +1608,7 @@ namespace jank::runtime
 
   i64 to_int(object_ref const l)
   {
-    return visit_number_like(
-      [](auto const typed_l) -> i64 { return typed_l->to_integer(); },
-      l);
+    return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
   }
 
   i64 to_int(obj::integer_ref const l)

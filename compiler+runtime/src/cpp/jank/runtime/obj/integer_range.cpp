@@ -162,7 +162,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  size_t integer_range::count() const
+  usize integer_range::count() const
   {
     auto const s{ step->data };
     if(s == 0)

@@ -115,7 +115,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set_sequence>(this, data.begin(), data.end(), data.size());
   }
 
-  size_t persistent_sorted_set::count() const
+  usize persistent_sorted_set::count() const
   {
     return data.size();
   }

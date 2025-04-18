@@ -57,7 +57,7 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t transient_vector::count() const
+  usize transient_vector::count() const
   {
     assert_active();
     return data.size();

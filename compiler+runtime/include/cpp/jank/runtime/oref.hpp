@@ -448,7 +448,7 @@ namespace jank::runtime
     return nullptr;
   }
 
-  template <typename T, size_t N>
+  template <typename T, usize N>
   constexpr jtl::ref<T> make_array_box()
   {
     auto const ret(new(GC) T[N]{});
@@ -460,7 +460,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  constexpr jtl::ref<T> make_array_box(size_t const length)
+  constexpr jtl::ref<T> make_array_box(usize const length)
   {
     auto const ret(new(GC) T[length]{});
     if(!ret)

@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     persistent_vector_sequence(persistent_vector_sequence &&) noexcept = default;
     persistent_vector_sequence(persistent_vector_sequence const &) = default;
     persistent_vector_sequence(obj::persistent_vector_ref v);
-    persistent_vector_sequence(obj::persistent_vector_ref v, size_t i);
+    persistent_vector_sequence(obj::persistent_vector_ref v, usize i);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::seqable */
     persistent_vector_sequence_ref seq();
@@ -44,6 +44,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     obj::persistent_vector_ref vec{};
-    size_t index{};
+    usize index{};
   };
 }

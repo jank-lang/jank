@@ -286,8 +286,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_paren);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, jank_true)))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -324,8 +324,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_square_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, jank_true)))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -360,8 +360,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, jank_true)))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -483,11 +483,9 @@ namespace jank::read::parse
         using T = typename decltype(typed_val)::value_type;
         if constexpr(std::same_as<T, obj::keyword>)
         {
-          return object_source_info{
-            obj::persistent_array_map::create_unique(typed_val, jank_true),
-            start_token,
-            latest_token
-          };
+          return object_source_info{ obj::persistent_array_map::create_unique(typed_val, jank_true),
+                                     start_token,
+                                     latest_token };
         }
         if constexpr(behavior::map_like<T>)
         {
@@ -584,8 +582,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, jank_true)))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -1349,9 +1347,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)),
-                               token,
-                               token };
+    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_ratio()
@@ -1384,9 +1380,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)),
-                               token,
-                               token };
+    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_string()

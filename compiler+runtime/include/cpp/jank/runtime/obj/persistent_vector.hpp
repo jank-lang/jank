@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     persistent_vector_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref key) const;

@@ -153,7 +153,7 @@ namespace jank::codegen
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
-    for(size_t i{}; i < arity.params.size(); ++i)
+    for(usize i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
       auto arg(fn->getArg(i + is_closure));
@@ -169,7 +169,7 @@ namespace jank::codegen
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
-      size_t index{};
+      usize index{};
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
@@ -327,7 +327,7 @@ namespace jank::codegen
     return var;
   }
 
-  static jtl::immutable_string arity_to_call_fn(size_t const arity)
+  static jtl::immutable_string arity_to_call_fn(usize const arity)
   {
     /* Anything max_params + 1 or higher gets packed into a list so we
      * just end up calling max_params + 1 at most. */
@@ -687,7 +687,7 @@ namespace jank::codegen
         auto const closure_obj(
           ctx->builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
 
-        size_t index{};
+        usize index{};
         for(auto const &capture : captures)
         {
           auto const field_ptr(
@@ -1012,7 +1012,7 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::BasicBlock *> case_blocks;
     llvm::SmallVector<llvm::Value *> case_values;
-    for(size_t block_counter{}; block_counter < expr->keys.size(); ++block_counter)
+    for(usize block_counter{}; block_counter < expr->keys.size(); ++block_counter)
     {
       auto const block_name{ util::format("case_{}", block_counter) };
       auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name.c_str(), current_fn) };
@@ -1037,7 +1037,7 @@ namespace jank::codegen
         ctx->builder->CreatePHI(ctx->builder->getPtrTy(), expr->keys.size() + 1, "switch_tmp")
       };
       phi->addIncoming(default_val, default_block_exit);
-      for(size_t i{}; i < case_blocks.size(); ++i)
+      for(usize i{}; i < case_blocks.size(); ++i)
       {
         phi->addIncoming(case_values[i], case_blocks[i]);
       }
@@ -1561,7 +1561,7 @@ namespace jank::codegen
       auto const closure_obj(
         ctx->builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
 
-      size_t index{};
+      usize index{};
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));

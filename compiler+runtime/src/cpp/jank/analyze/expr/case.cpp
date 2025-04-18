@@ -38,7 +38,7 @@ namespace jank::analyze::expr
   object_ref case_::to_runtime_data() const
   {
     auto pairs{ make_box<obj::persistent_vector>() };
-    for(size_t i{}; i < keys.size(); ++i)
+    for(usize i{}; i < keys.size(); ++i)
     {
       pairs = pairs->conj(make_box<obj::persistent_vector>(std::in_place,
                                                            make_box(keys[i]),

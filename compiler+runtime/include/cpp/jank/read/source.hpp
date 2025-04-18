@@ -18,7 +18,7 @@ namespace jank::read
 
     jtl::immutable_string to_string() const;
 
-    size_t offset{}, line{ 1 }, col{ 1 };
+    usize offset{}, line{ 1 }, col{ 1 };
   };
 
   struct source

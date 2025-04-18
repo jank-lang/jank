@@ -35,7 +35,7 @@ namespace jank::jit
     TEST_CASE("files")
     {
       auto const cardinal_result(__rt_ctx->intern_keyword("success").expect_ok());
-      size_t test_count{};
+      usize test_count{};
 
       /* The functionality I want here is too complex for doctest to handle. Output should be
        * swallowed for expected scenarios, including expected failures, but the output should

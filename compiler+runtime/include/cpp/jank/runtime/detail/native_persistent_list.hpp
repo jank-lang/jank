@@ -27,14 +27,14 @@ namespace jank::runtime::detail
     {
     }
 
-    list_node(T const &t, jtl::ptr<list_node<T>> const &r, size_t const s)
+    list_node(T const &t, jtl::ptr<list_node<T>> const &r, usize const s)
       : first{ t }
       , rest{ r }
       , length{ s + 1 }
     {
     }
 
-    list_node(T &&t, jtl::ptr<list_node<T>> const &r, size_t const s)
+    list_node(T &&t, jtl::ptr<list_node<T>> const &r, usize const s)
       : first{ std::move(t) }
       , rest{ r }
       , length{ s + 1 }
@@ -43,7 +43,7 @@ namespace jank::runtime::detail
 
     T first;
     jtl::ptr<list_node<T>> rest;
-    size_t length{};
+    usize length{};
   };
 
   template <typename T>
@@ -122,7 +122,7 @@ namespace jank::runtime::detail
     /* XXX: These must be reverse iterators. */
     native_persistent_list_impl(It const &rb, It const &re)
     {
-      size_t length{};
+      usize length{};
       for(auto it(rb); it != re; ++it)
       {
         data = make_box<value_type>(*it, data, length++);
@@ -168,7 +168,7 @@ namespace jank::runtime::detail
       return head;
     }
 
-    size_t size() const
+    usize size() const
     {
       return data ? data->length : 0;
     }

@@ -108,9 +108,7 @@ namespace jank::runtime::obj
   i64 ratio::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 {
-        return (data > typed_o->data) - (data < typed_o->data);
-      },
+      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
       &o);
   }
 

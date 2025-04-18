@@ -6,13 +6,13 @@ namespace jank::util
 {
   struct string_builder
   {
-    static constexpr size_t initial_capacity{ 32 };
+    static constexpr usize initial_capacity{ 32 };
 
     using value_type = char;
     using traits_type = std::char_traits<value_type>;
 
     string_builder();
-    string_builder(size_t capacity);
+    string_builder(usize capacity);
     string_builder(string_builder const &) = delete;
     string_builder(string_builder &&) = delete;
     ~string_builder();
@@ -52,16 +52,16 @@ namespace jank::util
     void push_back(native_transient_string const &d) &;
     void push_back(jtl::immutable_string const &d) &;
 
-    void reserve(size_t capacity);
+    void reserve(usize capacity);
     value_type *data() const;
-    size_t size() const;
+    usize size() const;
 
     jtl::immutable_string release();
     native_transient_string str() const;
     native_persistent_string_view view() const &;
 
     value_type *buffer{};
-    size_t pos{};
-    size_t capacity{ initial_capacity };
+    usize pos{};
+    usize capacity{ initial_capacity };
   };
 }

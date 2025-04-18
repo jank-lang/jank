@@ -20,7 +20,7 @@ namespace jank::runtime::detail
     /* Array maps are fast only for a small number of keys. Clojure JVM uses a threshold of 8
      * k/v pairs, thus 16 elements. We follow the same. */
     /* TODO: Benchmark difference thresholds. */
-    static constexpr size_t max_size{ 8 };
+    static constexpr usize max_size{ 8 };
 
     native_persistent_array_map() = default;
     native_persistent_array_map(native_persistent_array_map const &s) = default;
@@ -53,7 +53,7 @@ namespace jank::runtime::detail
       using pointer = value_type *;
       using reference = value_type &;
 
-      iterator(object_ref const *data, size_t index);
+      iterator(object_ref const *data, usize index);
       iterator(iterator const &) = default;
       iterator(iterator &&) noexcept = default;
 
@@ -68,7 +68,7 @@ namespace jank::runtime::detail
       iterator &operator=(iterator const &rhs);
 
       object_ref const *data{};
-      size_t index{};
+      usize index{};
     };
 
     using const_iterator = iterator;
@@ -76,14 +76,14 @@ namespace jank::runtime::detail
     const_iterator begin() const;
     const_iterator end() const;
 
-    size_t size() const;
+    usize size() const;
 
     native_bool empty() const;
 
     native_persistent_array_map clone() const;
 
     object_ref *data{};
-    size_t length{};
+    usize length{};
     mutable native_hash hash{};
   };
 }

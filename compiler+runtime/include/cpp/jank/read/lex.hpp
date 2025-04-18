@@ -131,10 +131,10 @@ namespace jank::read::lex
   {
     movable_position &operator++();
     movable_position operator++(int);
-    movable_position &operator+=(size_t count);
+    movable_position &operator+=(usize count);
     native_bool operator==(movable_position const &rhs) const;
     native_bool operator!=(movable_position const &rhs) const;
-    movable_position operator+(size_t count) const;
+    movable_position operator+(usize count) const;
 
     operator size_t() const;
 
@@ -171,13 +171,13 @@ namespace jank::read::lex
 
 #ifdef JANK_TEST
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
-    token(size_t offset, size_t width, token_kind const k);
-    token(size_t offset, size_t width, token_kind const k, i64 const);
-    token(size_t offset, size_t width, token_kind const k, f64 const);
-    token(size_t offset, size_t width, token_kind const k, native_persistent_string_view const);
-    token(size_t offset, size_t width, token_kind const k, char const * const);
-    token(size_t offset, size_t width, token_kind const k, native_bool const);
-    token(size_t offset, size_t width, token_kind const k, ratio const);
+    token(usize offset, usize width, token_kind const k);
+    token(usize offset, usize width, token_kind const k, i64 const);
+    token(usize offset, usize width, token_kind const k, f64 const);
+    token(usize offset, usize width, token_kind const k, native_persistent_string_view const);
+    token(usize offset, usize width, token_kind const k, char const * const);
+    token(usize offset, usize width, token_kind const k, native_bool const);
+    token(usize offset, usize width, token_kind const k, ratio const);
 #endif
 
     native_bool operator==(token const &rhs) const;
@@ -191,7 +191,7 @@ namespace jank::read::lex
 
     /* For some values, when comparing tokens, the position doesn't matter.
      * For example, EOF tokens. In these cases, this cardinal value is used. */
-    static constexpr size_t ignore_pos{ std::numeric_limits<size_t>::max() };
+    static constexpr usize ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
     std::variant<no_data,
@@ -231,10 +231,10 @@ namespace jank::read::lex
     };
 
     processor(native_persistent_string_view const &f);
-    processor(native_persistent_string_view const &f, size_t offset);
+    processor(native_persistent_string_view const &f, usize offset);
 
     jtl::result<token, error_ref> next();
-    jtl::result<codepoint, error_ref> peek(size_t const ahead = 1) const;
+    jtl::result<codepoint, error_ref> peek(usize const ahead = 1) const;
     jtl::option<error_ref> check_whitespace(native_bool const found_space);
 
     iterator begin();

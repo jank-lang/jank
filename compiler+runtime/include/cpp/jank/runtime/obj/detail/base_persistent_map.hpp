@@ -49,7 +49,7 @@ namespace jank::runtime::obj::detail
     oref<ST> fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::metadatable */
     oref<PT> with_meta(object_ref const m) const;

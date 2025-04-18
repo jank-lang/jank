@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  template <size_t N, typename... Args>
+  template <usize N, typename... Args>
   struct build_arity
   {
     using type = typename build_arity<N - 1, Args..., object_ref>::type;
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
   template <typename... Args>
   static object_ref apply_function(native_function_wrapper const &f, Args &&...args)
   {
-    constexpr size_t arg_count{ sizeof...(Args) };
+    constexpr usize arg_count{ sizeof...(Args) };
     using arity = typename build_arity<arg_count>::type;
     using function_type = detail::function_type::value_type<arity>;
 

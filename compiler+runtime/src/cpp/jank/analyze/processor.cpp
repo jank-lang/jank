@@ -583,8 +583,8 @@ namespace jank::analyze
     fn_ctx->param_count = param_symbols.size();
     frame->fn_ctx = fn_ctx;
     auto body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true) };
-    size_t const form_count{ list->count() - 1 };
-    size_t i{};
+    usize const form_count{ list->count() - 1 };
+    usize i{};
     for(auto const &item : list->data.rest())
     {
       auto const position((++i == form_count) ? expression_position::tail
@@ -705,8 +705,8 @@ namespace jank::analyze
     }
 
     /* There can only be one variadic arity. Clojure requires this. */
-    size_t found_variadic{};
-    size_t variadic_arity{};
+    usize found_variadic{};
+    usize variadic_arity{};
     for(auto const &arity : arities)
     {
       found_variadic += static_cast<int>(arity.fn_ctx->is_variadic);
@@ -860,8 +860,8 @@ namespace jank::analyze
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
     expr::do_ ret{ position, current_frame, true, {} };
-    size_t const form_count{ list->count() - 1 };
-    size_t i{};
+    usize const form_count{ list->count() - 1 };
+    usize i{};
     for(auto const &item : list->data.rest())
     {
       auto const is_last(++i == form_count);
@@ -930,7 +930,7 @@ namespace jank::analyze
       frame,
       needs_box,
       jtl::make_ref<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
-    for(size_t i{}; i < binding_parts; i += 2)
+    for(usize i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
       auto const &val(bindings->data[i + 1]);
@@ -961,8 +961,8 @@ namespace jank::analyze
         local_binding{ sym, it.second, current_frame, it.second->needs_box });
     }
 
-    size_t const form_count{ o->count() - 2 };
-    size_t i{};
+    usize const form_count{ o->count() - 2 };
+    usize i{};
     for(auto const &item : o->data.rest().rest())
     {
       auto const is_last(++i == form_count);
@@ -1034,7 +1034,7 @@ namespace jank::analyze
      * We tackle this in two steps. First, we create empty local bindings for all names.
      * Then, we analyze each value under the created scope and use the result to mutate the
      * respective local binding value. */
-    for(size_t i{}; i < binding_parts; i += 2)
+    for(usize i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
 
@@ -1055,7 +1055,7 @@ namespace jank::analyze
       ret->frame->locals.emplace(sym, local_binding{ sym, none, current_frame });
     }
 
-    for(size_t i{}; i < binding_parts; i += 2)
+    for(usize i{}; i < binding_parts; i += 2)
     {
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
       auto const &val(bindings->data[i + 1]);
@@ -1082,8 +1082,8 @@ namespace jank::analyze
       local.needs_box = it.second->needs_box;
     }
 
-    size_t const form_count{ o->count() - 2 };
-    size_t i{};
+    usize const form_count{ o->count() - 2 };
+    usize i{};
     for(auto const &item : o->data.rest().rest())
     {
       auto const is_last(++i == form_count);
@@ -1143,7 +1143,7 @@ namespace jank::analyze
     }
 
     runtime::detail::native_transient_vector binding_syms, binding_vals;
-    for(size_t i{}; i < binding_parts; i += 2)
+    for(usize i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
       auto const &val(bindings->data[i + 1]);
@@ -1891,7 +1891,7 @@ namespace jank::analyze
     arg_exprs.reserve(std::min(arg_count, runtime::max_params + 1));
 
     auto it(o->data.rest());
-    for(size_t i{}; i < runtime::max_params && i < arg_count; ++i, it = it.rest())
+    for(usize i{}; i < runtime::max_params && i < arg_count; ++i, it = it.rest())
     {
       auto arg_expr(analyze(it.first().unwrap(),
                             current_frame,
@@ -1914,7 +1914,7 @@ namespace jank::analyze
     if(runtime::max_params < arg_count)
     {
       native_vector<expression_ref> packed_arg_exprs;
-      for(size_t i{ runtime::max_params }; i < arg_count; ++i, it = it.rest())
+      for(usize i{ runtime::max_params }; i < arg_count; ++i, it = it.rest())
       {
         auto arg_expr(analyze(it.first().unwrap(),
                               current_frame,

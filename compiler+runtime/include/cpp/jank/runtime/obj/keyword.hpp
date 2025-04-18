@@ -15,7 +15,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::keyword };
     static constexpr native_bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
-    static constexpr size_t hash_magic{ 0x9e3779b9 };
+    static constexpr usize hash_magic{ 0x9e3779b9 };
 
     keyword() = default;
     keyword(keyword &&) noexcept = default;

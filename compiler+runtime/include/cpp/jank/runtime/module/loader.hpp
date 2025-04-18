@@ -68,12 +68,12 @@ namespace jank::runtime::module
     file_view() = default;
     file_view(file_view const &) = delete;
     file_view(file_view &&) noexcept;
-    file_view(int const f, char const * const h, size_t const s);
+    file_view(int const f, char const * const h, usize const s);
     file_view(jtl::immutable_string const &buff);
     ~file_view();
 
     char const *data() const;
-    size_t size() const;
+    usize size() const;
 
     native_persistent_string_view view() const;
 
@@ -82,7 +82,7 @@ namespace jank::runtime::module
      * later unmap it. */
     int fd{};
     char const *head{};
-    size_t len{};
+    usize len{};
 
     /* In the case where we're not mapping, such as when we read the file from a JAR,
      * we'll just have the data instead. Checking data.empty() is how we know which

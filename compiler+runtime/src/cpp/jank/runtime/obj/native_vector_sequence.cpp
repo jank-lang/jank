@@ -5,7 +5,7 @@
 namespace jank::runtime::obj
 {
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data,
-                                                 size_t index)
+                                                 usize index)
     : data{ data }
     , index{ index }
   {
@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data, size_t index)
+  native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data, usize index)
     : data{ std::move(data) }
     , index{ index }
   {
@@ -74,7 +74,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::countable */
-  size_t native_vector_sequence::count() const
+  usize native_vector_sequence::count() const
   {
     return data.size() - index;
   }

@@ -137,7 +137,7 @@ namespace jank::read::parse
         lex::processor lp{ R"(\a\1\`\:\#)" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(jtl::immutable_string const ch : { "\\a", "\\1", "\\`", "\\:", "\\#" })
         {
           auto const r(p.next());
@@ -158,7 +158,7 @@ namespace jank::read::parse
         lex::processor lp{ R"(\newline \backspace \return \formfeed \tab \space)" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(jtl::immutable_string const &ch :
             { "\\newline", "\\backspace", "\\return", "\\formfeed", "\\tab", "\\space" })
         {
@@ -181,7 +181,7 @@ namespace jank::read::parse
         lex::processor lp{ R"(\newline\a\tab\`\space)" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(jtl::immutable_string const &ch : { "\\newline", "\\a", "\\tab", "\\`", "\\space" })
         {
           auto const r(p.next());
@@ -203,7 +203,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         /* First two lex tokens are invalid characters i.e. \ne and \apple */
-        for(size_t i{}; i < 2; ++i)
+        for(usize i{}; i < 2; ++i)
         {
           auto const r(p.next());
           CHECK(r.is_err());
@@ -221,7 +221,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\u1234 \u5678 \u90ab \ucdef \uABCD \uEFa0)" };
           processor p{ lp.begin(), lp.end() };
 
-          size_t offset{};
+          usize offset{};
           for(jtl::immutable_string const &ch :
               { "\\u1234", "\\u5678", "\\u90ab", "\\ucdef", "\\uABCD", "\\uEFa0" })
           {
@@ -245,7 +245,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\u123456 \uabcdef \u12abf5)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 3; ++i)
+          for(usize i{}; i < 3; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());
@@ -257,7 +257,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\uabcg \u120x \uza19 \u1Gab)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 4; ++i)
+          for(usize i{}; i < 4; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());
@@ -272,7 +272,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\o012 \o345 \o670)" };
           processor p{ lp.begin(), lp.end() };
 
-          size_t offset{};
+          usize offset{};
           for(jtl::immutable_string const &ch : { "\\o012", "\\o345", "\\o670" })
           {
             auto const r(p.next());
@@ -295,7 +295,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\o12345677 \o23007673323)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 2; ++i)
+          for(usize i{}; i < 2; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());
@@ -307,7 +307,7 @@ namespace jank::read::parse
           lex::processor lp{ R"(\o128 \o962 \oAaa \oxf0)" };
           processor p{ lp.begin(), lp.end() };
 
-          for(size_t i{}; i < 4; ++i)
+          for(usize i{}; i < 4; ++i)
           {
             auto const r(p.next());
             CHECK(r.is_err());
@@ -323,7 +323,7 @@ namespace jank::read::parse
         lex::processor lp{ R"("foo" "bar" "?")" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { "foo", "bar", "?" })
         {
           auto const r(p.next());
@@ -343,7 +343,7 @@ namespace jank::read::parse
       {
         lex::processor lp{ R"("foo\n" "\t\"bar\"" "\r" "\a" "\f" "\b")" };
         processor p{ lp.begin(), lp.end() };
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { "foo\n", "\t\"bar\"", "\r", "\a", "\f", "\b" })
         {
           auto const r(p.next());
@@ -378,7 +378,7 @@ namespace jank::read::parse
         lex::processor lp{ "foo bar spam" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
@@ -411,7 +411,7 @@ namespace jank::read::parse
         __rt_ctx->intern_ns(make_box<obj::symbol>("spam.bar"));
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { std::make_pair("foo", "foo"),
                               std::make_pair("foo.bar", "bar"),
                               std::make_pair("spam.bar", "spam") })
@@ -459,7 +459,7 @@ namespace jank::read::parse
         lex::processor lp{ "'foo 'bar/spam 'foo.bar/bar" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { std::make_pair("", "foo"),
                               std::make_pair("bar", "spam"),
                               std::make_pair("foo.bar", "bar") })
@@ -495,7 +495,7 @@ namespace jank::read::parse
         lex::processor lp{ ":foo :bar :spam" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { "foo", "bar", "spam" })
         {
           auto const r(p.next());
@@ -516,7 +516,7 @@ namespace jank::read::parse
         lex::processor lp{ ":foo/foo :foo.bar/bar :spam.bar/spam" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { std::make_pair("foo", "foo"),
                               std::make_pair("foo.bar", "bar"),
                               std::make_pair("spam.bar", "spam") })
@@ -543,7 +543,7 @@ namespace jank::read::parse
         lex::processor lp{ "::foo ::spam" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(auto const &s : { "foo", "spam" })
         {
           auto const r(p.next());
@@ -591,8 +591,8 @@ namespace jank::read::parse
         lex::processor lp{ "() ( ) (  )" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
-        for(size_t i{}; i < 3; ++i)
+        usize offset{};
+        for(usize i{}; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_list::empty()));
@@ -613,7 +613,7 @@ namespace jank::read::parse
         lex::processor lp{ "(1, 2, 3, 4) ( 2, 4, 6, 8 )" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
@@ -675,8 +675,8 @@ namespace jank::read::parse
         lex::processor lp{ "[] [ ] [  ]" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
-        for(size_t i{}; i < 3; ++i)
+        usize offset{};
+        for(usize i{}; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_vector>()));
@@ -697,7 +697,7 @@ namespace jank::read::parse
         lex::processor lp{ "[1, 2, 3, 4] [ 2, 4, 6, 8 ]" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
@@ -746,8 +746,8 @@ namespace jank::read::parse
         lex::processor lp{ "{} { } {,,}" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
-        for(size_t i{}; i < 3; ++i)
+        usize offset{};
+        for(usize i{}; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
@@ -768,7 +768,7 @@ namespace jank::read::parse
         lex::processor lp{ "{1 2, 3 4} { 2 4, 6 8 }" };
         processor p{ lp.begin(), lp.end() };
 
-        size_t offset{};
+        usize offset{};
         for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());

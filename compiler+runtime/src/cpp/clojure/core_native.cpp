@@ -331,7 +331,7 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("identical?", &is_identical);
   intern_fn("empty?", &is_empty);
   intern_fn("empty", &empty);
-  intern_fn("count", static_cast<size_t (*)(object_ref)>(&sequence_length));
+  intern_fn("count", static_cast<usize (*)(object_ref)>(&sequence_length));
   intern_fn("boolean", static_cast<native_bool (*)(object_ref)>(&truthy));
   intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
   intern_fn("real", static_cast<f64 (*)(object_ref)>(&to_real));

@@ -11,7 +11,7 @@ namespace jank::runtime
     using persistent_list_ref = oref<struct persistent_list>;
   }
 
-  constexpr size_t const max_params{ 10 };
+  constexpr usize const max_params{ 10 };
 
   struct variadic_tag
   {

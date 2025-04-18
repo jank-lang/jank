@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;

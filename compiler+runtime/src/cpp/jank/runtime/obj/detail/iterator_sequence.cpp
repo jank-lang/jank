@@ -14,7 +14,7 @@ namespace jank::runtime::obj::detail
   iterator_sequence<Derived, It>::iterator_sequence(object_ref const &c,
                                                     It const &b,
                                                     It const &e,
-                                                    size_t const s)
+                                                    usize const s)
     : coll{ c }
     , begin{ b }
     , end{ e }
@@ -73,7 +73,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  size_t iterator_sequence<Derived, It>::count() const
+  usize iterator_sequence<Derived, It>::count() const
   {
     return size;
   }

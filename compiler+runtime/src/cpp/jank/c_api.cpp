@@ -16,7 +16,7 @@ using namespace jank::runtime;
 template <typename Is>
 struct make_closure_arity;
 
-template <size_t I>
+template <usize I>
 struct make_closure_arity_arg
 {
   using type = object *;
@@ -34,13 +34,13 @@ struct make_closure_arity<std::index_sequence<>>
   using type = object *(*)(void *);
 };
 
-template <size_t N>
+template <usize N>
 using closure_arity = typename make_closure_arity<std::make_index_sequence<N>>::type;
 
 template <typename Is>
 struct make_function_arity;
 
-template <size_t I>
+template <usize I>
 struct make_function_arity_arg
 {
   using type = object *;
@@ -58,7 +58,7 @@ struct make_function_arity<std::index_sequence<>>
   using type = object *(*)();
 };
 
-template <size_t N>
+template <usize N>
 using function_arity = typename make_function_arity<std::make_index_sequence<N>>::type;
 
 extern "C"

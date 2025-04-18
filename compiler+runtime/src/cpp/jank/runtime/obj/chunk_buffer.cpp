@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  chunk_buffer::chunk_buffer(size_t const capacity)
+  chunk_buffer::chunk_buffer(usize const capacity)
     : capacity{ capacity }
   {
     buffer.reserve(capacity);
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t chunk_buffer::count() const
+  usize chunk_buffer::count() const
   {
     return buffer.size();
   }

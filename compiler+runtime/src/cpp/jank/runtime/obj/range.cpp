@@ -121,7 +121,7 @@ namespace jank::runtime::obj
 
     native_vector<object_ref> arr;
     arr.reserve(chunk_size);
-    size_t n{};
+    usize n{};
     object_ref val{ start };
     while(n < chunk_size)
     {

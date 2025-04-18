@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     persistent_sorted_set_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::conjable */
     persistent_sorted_set_ref conj(object_ref head) const;

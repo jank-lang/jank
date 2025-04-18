@@ -247,8 +247,8 @@ namespace jank::runtime::module
 
     //util::println("module paths: {}", paths);
 
-    size_t start{};
-    size_t i{ paths.find(module_separator, start) };
+    usize start{};
+    usize i{ paths.find(module_separator, start) };
 
     /* Looks like it's either an empty path list or there's only entry. */
     if(i == jtl::immutable_string::npos)
@@ -317,7 +317,7 @@ namespace jank::runtime::module
     mf.head = nullptr;
   }
 
-  file_view::file_view(int const f, char const * const h, size_t const s)
+  file_view::file_view(int const f, char const * const h, usize const s)
     : fd{ f }
     , head{ h }
     , len{ s }
@@ -347,7 +347,7 @@ namespace jank::runtime::module
     return buff.empty() ? head : buff.data();
   }
 
-  size_t file_view::size() const
+  usize file_view::size() const
   {
     return buff.empty() ? len : buff.size();
   }

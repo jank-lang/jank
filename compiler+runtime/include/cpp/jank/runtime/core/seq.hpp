@@ -124,8 +124,8 @@ namespace jank::runtime
 
   native_bool sequence_equal(object_ref l, object_ref r);
 
-  size_t sequence_length(object_ref const s);
-  size_t sequence_length(object_ref const s, size_t const max);
+  usize sequence_length(object_ref const s);
+  usize sequence_length(object_ref const s, usize const max);
 
   object_ref reduce(object_ref f, object_ref init, object_ref s);
   object_ref reduced(object_ref o);

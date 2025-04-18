@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  native_array_sequence::native_array_sequence(object_ref * const arr, size_t const size)
+  native_array_sequence::native_array_sequence(object_ref * const arr, usize const size)
     : arr{ arr }
     , size{ size }
   {
@@ -13,8 +13,8 @@ namespace jank::runtime::obj
   }
 
   native_array_sequence::native_array_sequence(object_ref * const arr,
-                                               size_t const index,
-                                               size_t const size)
+                                               usize const index,
+                                               usize const size)
     : arr{ arr }
     , index{ index }
     , size{ size }
@@ -65,7 +65,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::countable */
-  size_t native_array_sequence::count() const
+  usize native_array_sequence::count() const
   {
     return size - index;
   }

@@ -51,7 +51,7 @@ namespace jank::runtime
     };
   }
 
-  template <size_t Arity>
+  template <usize Arity>
   struct invalid_arity : std::runtime_error
   {
     invalid_arity(jtl::immutable_string const &name)

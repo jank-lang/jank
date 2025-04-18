@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     i64 last_index_of(object_ref const m) const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::seqable */
     obj::persistent_string_sequence_ref seq() const;

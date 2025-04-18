@@ -14,7 +14,7 @@ namespace jank::util
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   static allocator_type allocator;
 
-  static void realloc(string_builder &sb, size_t const required)
+  static void realloc(string_builder &sb, usize const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
     /* TODO: Pointer-free GC alloc. */
@@ -25,7 +25,7 @@ namespace jank::util
     sb.capacity = new_capacity;
   }
 
-  static void maybe_realloc(string_builder &sb, size_t const additional_size)
+  static void maybe_realloc(string_builder &sb, usize const additional_size)
   {
     auto const required_size{ sb.pos + additional_size + 1 };
     if(sb.capacity < required_size)
@@ -34,7 +34,7 @@ namespace jank::util
     }
   }
 
-  static void write(string_builder &sb, char const * const str, size_t const size)
+  static void write(string_builder &sb, char const * const str, usize const size)
   {
     string_builder::traits_type::copy(sb.buffer + sb.pos, str, size);
     sb.pos += size;
@@ -45,7 +45,7 @@ namespace jank::util
     realloc(*this, capacity);
   }
 
-  string_builder::string_builder(size_t const capacity)
+  string_builder::string_builder(usize const capacity)
     : capacity{ capacity }
   {
     realloc(*this, capacity);
@@ -308,7 +308,7 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::reserve(size_t const new_capacity)
+  void string_builder::reserve(usize const new_capacity)
   {
     if(capacity < new_capacity)
     {
@@ -321,7 +321,7 @@ namespace jank::util
     return buffer;
   }
 
-  size_t string_builder::size() const
+  usize string_builder::size() const
   {
     return pos;
   }

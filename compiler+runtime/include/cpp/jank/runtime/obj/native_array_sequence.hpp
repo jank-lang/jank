@@ -16,8 +16,8 @@ namespace jank::runtime::obj
     native_array_sequence() = delete;
     native_array_sequence(native_array_sequence &&) noexcept = default;
     native_array_sequence(native_array_sequence const &) = default;
-    native_array_sequence(object_ref * const arr, size_t const size);
-    native_array_sequence(object_ref * const arr, size_t const index, size_t const size);
+    native_array_sequence(object_ref * const arr, usize const size);
+    native_array_sequence(object_ref * const arr, usize const index, usize const size);
 
     template <typename... Args>
     native_array_sequence(object_ref const first, Args const... rest)
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     native_array_sequence_ref fresh_seq();
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::sequence */
     object_ref first() const;
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     jtl::ptr<object_ref> arr{};
-    size_t index{};
-    size_t size{};
+    usize index{};
+    usize size{};
   };
 }

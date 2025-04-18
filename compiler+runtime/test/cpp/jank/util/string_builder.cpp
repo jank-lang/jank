@@ -5,7 +5,7 @@
 
 namespace jank::util
 {
-  static constexpr size_t initial_capacity{ string_builder::initial_capacity };
+  static constexpr usize initial_capacity{ string_builder::initial_capacity };
 
   TEST_SUITE("string_builder")
   {
@@ -20,7 +20,7 @@ namespace jank::util
       SUBCASE("no resize: more space")
       {
         string_builder sb;
-        for(size_t i{}; i < initial_capacity / 2; ++i)
+        for(usize i{}; i < initial_capacity / 2; ++i)
         {
           sb(' ');
         }

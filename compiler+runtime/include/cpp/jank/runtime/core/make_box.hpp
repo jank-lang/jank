@@ -43,7 +43,7 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(size_t const i)
+  inline auto make_box(usize const i)
   {
     return make_box<obj::integer>(static_cast<i64>(i));
   }

@@ -71,20 +71,20 @@ namespace jank::ui
   /* This function will return a map of line numbers to highlighted lines. It gracefully
    * handles lex errors by not highlighting those tokens and skipping to the next token.
    * The map will at least contain lines within the range specified and maybe some others. */
-  std::map<size_t, Element>
-  highlight(runtime::module::file_view const &code, size_t const line_start, size_t const line_end)
+  std::map<usize, Element>
+  highlight(runtime::module::file_view const &code, usize const line_start, usize const line_end)
   {
     read::lex::processor l_prc{ code.view() };
     auto const end{ l_prc.end() };
-    size_t last_offset{}, last_line{ 1 };
-    std::map<size_t, Element> lines;
+    usize last_offset{}, last_line{ 1 };
+    std::map<usize, Element> lines;
     std::vector<Element> current_line;
     native_bool ended_on_error{};
     static auto const config{ FlexboxConfig().SetGap(0, 0) };
 
-    auto const fill_space([&](native_bool const skip, size_t const offset) {
+    auto const fill_space([&](native_bool const skip, usize const offset) {
       std::string_view const space{ code.data() + last_offset, offset - last_offset };
-      size_t last_newline{};
+      usize last_newline{};
       for(auto it(space.find('\n')); it != decltype(space)::npos; it = space.find('\n', it + 1))
       {
         /* We add a space since this could be an empty line and ftxui will only make it take
@@ -127,7 +127,7 @@ namespace jank::ui
 
       /* TODO: Large tokens can be broken up further, to aid in line wrapping. For example,
        * using `paragraph` for comments. */
-      auto const token_size(std::max(token.end.offset - token.start.offset, 1zu));
+      auto const token_size(std::max(token.end.offset - token.start.offset, 1llu));
       if(!skip)
       {
         current_line.emplace_back(

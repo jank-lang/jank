@@ -119,22 +119,14 @@ namespace jank::read::lex
   }
 
 #ifdef JANK_TEST
-  token::token(size_t const offset, size_t const width, token_kind const k)
+  token::token(usize const offset, usize const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, i64 const d)
-    : start{ offset, 1, offset + 1 }
-    , end{ offset + width, 1, offset + width + 1 }
-    , kind{ k }
-    , data{ d }
-  {
-  }
-
-  token::token(size_t const offset, size_t const width, token_kind const k, f64 const d)
+  token::token(usize const offset, usize const width, token_kind const k, i64 const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -142,8 +134,16 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset,
-               size_t const width,
+  token::token(usize const offset, usize const width, token_kind const k, f64 const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(usize const offset,
+               usize const width,
                token_kind const k,
                native_persistent_string_view const d)
     : start{ offset, 1, offset + 1 }
@@ -153,7 +153,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, char const * const d)
+  token::token(usize const offset, usize const width, token_kind const k, char const * const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -161,7 +161,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, native_bool const d)
+  token::token(usize const offset, usize const width, token_kind const k, native_bool const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -169,7 +169,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, ratio const d)
+  token::token(usize const offset, usize const width, token_kind const k, ratio const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -248,7 +248,7 @@ namespace jank::read::lex
   {
   }
 
-  processor::processor(native_persistent_string_view const &f, size_t const offset)
+  processor::processor(native_persistent_string_view const &f, usize const offset)
     : pos{ .proc = this }
     , file{ f }
   {
@@ -280,9 +280,9 @@ namespace jank::read::lex
     return ret;
   }
 
-  movable_position &movable_position::operator+=(size_t const count)
+  movable_position &movable_position::operator+=(usize const count)
   {
-    for(size_t i{}; i < count; ++i)
+    for(usize i{}; i < count; ++i)
     {
       ++(*this);
     }
@@ -299,10 +299,10 @@ namespace jank::read::lex
     return offset != rhs.offset;
   }
 
-  movable_position movable_position::operator+(size_t const count) const
+  movable_position movable_position::operator+(usize const count) const
   {
     movable_position ret{ *this };
-    for(size_t i{}; i < count; ++i)
+    for(usize i{}; i < count; ++i)
     {
       ++ret;
     }
@@ -540,7 +540,7 @@ namespace jank::read::lex
         }
       case ';':
         {
-          size_t leading_semis{ 1 };
+          usize leading_semis{ 1 };
           native_bool hit_non_semi{};
           while(true)
           {
@@ -761,12 +761,11 @@ namespace jank::read::lex
                                  { denominator.expect_ok().start, denominator.expect_ok().end } });
                 }
                 auto const &denominator_token(denominator.expect_ok());
-                return ok(
-                  token(token_start,
-                        pos,
-                        token_kind::ratio,
-                        { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
-                          .denominator = std::get<i64>(denominator_token.data) }));
+                return ok(token(token_start,
+                                pos,
+                                token_kind::ratio,
+                                { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
+                                  .denominator = std::get<i64>(denominator_token.data) }));
               }
               return denominator.expect_err();
             }
@@ -846,7 +845,7 @@ namespace jank::read::lex
             auto number_start{ token_start.offset };
             if(file[token_start] == '-' || file[token_start] == '+')
             {
-              number_start = token_start + static_cast<size_t>(1);
+              number_start = token_start + 1llu;
               found_beginning_negative = file[token_start] == '-';
             }
             if(found_r)
@@ -865,7 +864,7 @@ namespace jank::read::lex
                     radix),
                   { token_start, pos });
               }
-              number_start = r_pos + static_cast<size_t>(1);
+              number_start = r_pos + 1llu;
             }
             else if(radix == 16)
             {
@@ -906,7 +905,7 @@ namespace jank::read::lex
             {
               static constexpr auto const max(std::numeric_limits<i64>::max());
               /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-              auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
+              auto const max_width{ static_cast<usize>(snprintf(nullptr, 0, "%lld", max)) };
               return error::lex_invalid_number(
                 "Number is too large to be stored.",
                 {
@@ -1080,7 +1079,7 @@ namespace jank::read::lex
                   return error::lex_invalid_string_escape(
                     util::format("Unsupported string escape character '{}'.",
                                  sb(oc.expect_ok().character).view()),
-                    { pos, pos + 2zu });
+                    { pos, pos + 2llu });
               }
               escaped = false;
             }
@@ -1168,7 +1167,7 @@ namespace jank::read::lex
                 }
 
                 ++pos;
-                if(pos == token_start + 2zu)
+                if(pos == token_start + 2llu)
                 {
                   return ok(token{ token_start, pos, token_kind::comment, ""sv });
                 }
@@ -1270,7 +1269,7 @@ namespace jank::read::lex
     }
   }
 
-  jtl::result<codepoint, error_ref> processor::peek(size_t const ahead) const
+  jtl::result<codepoint, error_ref> processor::peek(usize const ahead) const
   {
     auto const peek_pos{ pos + ahead };
     if(peek_pos >= file.size())

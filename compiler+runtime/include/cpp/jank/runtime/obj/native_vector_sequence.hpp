@@ -18,10 +18,10 @@ namespace jank::runtime::obj
     native_vector_sequence() = default;
     native_vector_sequence(native_vector_sequence &&) noexcept = default;
     native_vector_sequence(native_vector_sequence const &) = default;
-    native_vector_sequence(native_vector<object_ref> const &data, size_t index);
+    native_vector_sequence(native_vector<object_ref> const &data, usize index);
     native_vector_sequence(native_vector<object_ref> &&data);
     native_vector_sequence(jtl::option<object_ref> const &meta, native_vector<object_ref> &&data);
-    native_vector_sequence(native_vector<object_ref> &&data, size_t index);
+    native_vector_sequence(native_vector<object_ref> &&data, usize index);
 
     /* behavior::object_like */
     native_bool equal(object const &o) const;
@@ -35,7 +35,7 @@ namespace jank::runtime::obj
     native_vector_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::sequence */
     object_ref first() const;
@@ -50,7 +50,7 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     native_vector<object_ref> data{};
-    size_t index{};
+    usize index{};
     jtl::option<object_ref> meta;
   };
 }

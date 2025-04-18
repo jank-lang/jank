@@ -2,9 +2,9 @@
 #include <locale>
 #include <codecvt>
 #include <cwctype>
+#include <ranges>
 
 #include <jank/util/string.hpp>
-#include <ranges>
 
 namespace jank::util
 {
@@ -50,7 +50,7 @@ namespace jank::util
     s[0] = static_cast<char>(std::toupper(s[0]));
   }
 
-  std::string ordinal_under_100(size_t const n)
+  std::string ordinal_under_100(usize const n)
   {
     static std::array<std::string, 20> const ordinal{
       "zeroth",    "first",     "second",      "third",      "fourth",
@@ -70,18 +70,18 @@ namespace jank::util
     {
       return ordinal[n];
     }
-    size_t const t{ n / 10 }, u{ n % 10 };
+    usize const t{ n / 10 }, u{ n % 10 };
     return (u == 0) ? tens_ordinal[t] : tens[t] + "-" + ordinal[u];
   }
 
-  std::string number_to_ordinal(size_t const n)
+  std::string number_to_ordinal(usize const n)
   {
     if(n > 999)
     {
       throw std::out_of_range("Number is too large");
     }
 
-    size_t const num{ n + 1 };
+    usize const num{ n + 1 };
 
     if(num == 1000)
     {
@@ -98,8 +98,8 @@ namespace jank::util
     }
     else
     {
-      size_t const h{ num / 100 };
-      size_t const rem{ num % 100 };
+      usize const h{ num / 100 };
+      usize const rem{ num % 100 };
       if(rem == 0)
       {
         result = cardinal[h] + " hundredth";
@@ -112,5 +112,4 @@ namespace jank::util
     capitalize(result);
     return result;
   }
-
 }

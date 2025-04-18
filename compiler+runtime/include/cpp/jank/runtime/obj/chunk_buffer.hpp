@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr native_bool pointer_free{ false };
 
     chunk_buffer() = default;
-    chunk_buffer(size_t capacity);
+    chunk_buffer(usize capacity);
     chunk_buffer(object_ref capacity);
 
     /* behavior::object_like */
@@ -24,13 +24,13 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     void append(object_ref o);
     obj::array_chunk_ref chunk();
 
     object base{ obj_type };
     native_vector<object_ref> buffer;
-    size_t capacity{};
+    usize capacity{};
   };
 }

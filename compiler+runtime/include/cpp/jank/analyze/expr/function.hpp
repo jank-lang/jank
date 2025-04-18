@@ -25,7 +25,7 @@ namespace jank::analyze::expr
     jtl::ptr<function> fn;
     jtl::immutable_string name;
     jtl::immutable_string unique_name;
-    size_t param_count{};
+    usize param_count{};
     native_bool is_variadic{};
     native_bool is_tail_recursive{};
     /* TODO: is_pure */
@@ -47,7 +47,7 @@ namespace jank::analyze::expr
   {
     native_bool operator==(arity_key const &rhs) const;
 
-    size_t param_count{};
+    usize param_count{};
     native_bool is_variadic{};
   };
 

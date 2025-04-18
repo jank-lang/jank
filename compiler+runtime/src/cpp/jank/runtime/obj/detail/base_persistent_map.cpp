@@ -149,7 +149,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  size_t base_persistent_map<PT, ST, V>::count() const
+  usize base_persistent_map<PT, ST, V>::count() const
   {
     return static_cast<PT const *>(this)->data.size();
   }

@@ -168,7 +168,7 @@ namespace jank::runtime::obj
     return static_cast<i64>(found);
   }
 
-  size_t persistent_string::count() const
+  usize persistent_string::count() const
   {
     return data.size();
   }

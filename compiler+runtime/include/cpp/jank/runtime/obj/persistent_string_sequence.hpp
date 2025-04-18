@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     persistent_string_sequence(persistent_string_sequence &&) noexcept = default;
     persistent_string_sequence(persistent_string_sequence const &) = default;
     persistent_string_sequence(obj::persistent_string_ref const s);
-    persistent_string_sequence(obj::persistent_string_ref const s, size_t const i);
+    persistent_string_sequence(obj::persistent_string_ref const s, usize const i);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::seqable */
     persistent_string_sequence_ref seq();
@@ -44,6 +44,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     obj::persistent_string_ref str{};
-    size_t index{};
+    usize index{};
   };
 }

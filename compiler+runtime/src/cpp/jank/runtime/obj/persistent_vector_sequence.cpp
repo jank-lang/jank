@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   }
 
   persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v,
-                                                         size_t const i)
+                                                         usize const i)
     : vec{ v }
     , index{ i }
   {
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
   }
 
   /* behavior::countable */
-  size_t persistent_vector_sequence::count() const
+  usize persistent_vector_sequence::count() const
   {
     return vec->data.size() - index;
   }

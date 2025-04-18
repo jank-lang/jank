@@ -72,7 +72,7 @@ namespace jank::runtime::obj
     integer_range_ref with_meta(object_ref m) const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     object base{ object_type::integer_range };
     integer_ref start{};
