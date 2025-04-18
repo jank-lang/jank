@@ -153,7 +153,7 @@ namespace jank::runtime
       }
       SUBCASE("Addition with native real")
       {
-        native_real const r{ 0.5 };
+        f64 const r{ 0.5 };
         auto const result{ ratio + r };
         auto const result2{ r + ratio };
         CHECK_EQ(result, doctest::Approx(1.25));
@@ -193,7 +193,7 @@ namespace jank::runtime
 
       SUBCASE("Multiplication with native real")
       {
-        native_real const r{ 0.5 };
+        f64 const r{ 0.5 };
         auto const result{ ratio * r };
         auto const result2{ r * ratio };
         CHECK_EQ(result, doctest::Approx(0.375));
@@ -213,7 +213,7 @@ namespace jank::runtime
 
       SUBCASE("Division with native real")
       {
-        native_real const r{ 0.5 };
+        f64 const r{ 0.5 };
         auto const result{ ratio / r };
         auto const result2{ r / ratio };
         CHECK_EQ(result, doctest::Approx(1.5));
@@ -240,7 +240,7 @@ namespace jank::runtime
 
       SUBCASE("Comparison with native real")
       {
-        native_real const r{ 0.75 };
+        f64 const r{ 0.75 };
         CHECK_EQ(ratio, r);
         CHECK_EQ(r, ratio);
       }
@@ -250,7 +250,7 @@ namespace jank::runtime
     {
       obj::ratio_data const ratio{ 5, 8 };
       i64 const i{ 3ll };
-      native_real const r{ 0.25 };
+      f64 const r{ 0.25 };
 
       SUBCASE("Complex arithmetic chain")
       {

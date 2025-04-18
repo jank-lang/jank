@@ -122,13 +122,13 @@ namespace jank::runtime::obj
     return data;
   }
 
-  native_real integer::to_real() const
+  f64 integer::to_real() const
   {
-    return static_cast<native_real>(data);
+    return static_cast<f64>(data);
   }
 
   /***** real *****/
-  real::real(native_real const d)
+  real::real(f64 const d)
     : data{ d }
   {
   }
@@ -141,7 +141,7 @@ namespace jank::runtime::obj
     }
 
     auto const r(expect_object<real>(&o));
-    std::hash<native_real> const hasher{};
+    std::hash<f64> const hasher{};
     return hasher(data) == hasher(r->data);
   }
 
@@ -207,7 +207,7 @@ namespace jank::runtime::obj
     return static_cast<i64>(data);
   }
 
-  native_real real::to_real() const
+  f64 real::to_real() const
   {
     return data;
   }

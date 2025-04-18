@@ -334,7 +334,7 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("count", static_cast<size_t (*)(object_ref)>(&sequence_length));
   intern_fn("boolean", static_cast<native_bool (*)(object_ref)>(&truthy));
   intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
-  intern_fn("real", static_cast<native_real (*)(object_ref)>(&to_real));
+  intern_fn("real", static_cast<f64 (*)(object_ref)>(&to_real));
   intern_fn("seq", static_cast<object_ref (*)(object_ref)>(&seq));
   intern_fn("fresh-seq", static_cast<object_ref (*)(object_ref)>(&fresh_seq));
   intern_fn("first", static_cast<object_ref (*)(object_ref)>(&first));
@@ -521,10 +521,10 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("shuffle", &shuffle);
 
   /* TODO: jank.math? */
-  intern_fn("sqrt", static_cast<native_real (*)(object_ref)>(&runtime::sqrt));
-  intern_fn("tan", static_cast<native_real (*)(object_ref)>(&runtime::tan));
+  intern_fn("sqrt", static_cast<f64 (*)(object_ref)>(&runtime::sqrt));
+  intern_fn("tan", static_cast<f64 (*)(object_ref)>(&runtime::tan));
   intern_fn("abs", static_cast<object_ref (*)(object_ref)>(&runtime::abs));
-  intern_fn("pow", static_cast<native_real (*)(object_ref, object_ref)>(&runtime::pow));
+  intern_fn("pow", static_cast<f64 (*)(object_ref, object_ref)>(&runtime::pow));
 
   {
     auto const fn(

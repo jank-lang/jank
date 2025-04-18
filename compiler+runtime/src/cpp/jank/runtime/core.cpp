@@ -176,11 +176,11 @@ namespace jank::runtime
     return jank_nil;
   }
 
-  native_real to_real(object_ref const o)
+  f64 to_real(object_ref const o)
   {
     return visit_number_like(
-      [](auto const typed_o) -> native_real { return typed_o->to_real(); },
-      [=]() -> native_real {
+      [](auto const typed_o) -> f64 { return typed_o->to_real(); },
+      [=]() -> f64 {
         throw std::runtime_error{ util::format("not a number: {}", to_string(o)) };
       },
       o);

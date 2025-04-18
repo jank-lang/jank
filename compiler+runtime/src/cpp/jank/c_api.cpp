@@ -378,7 +378,7 @@ extern "C"
     return make_box(i).erase();
   }
 
-  jank_object_ref jank_real_create(jank_native_real const r)
+  jank_object_ref jank_real_create(jank_f64 const r)
   {
     return make_box(r).erase();
   }

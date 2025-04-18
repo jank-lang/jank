@@ -49,7 +49,7 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_real const r)
+  inline auto make_box(f64 const r)
   {
     return make_box<obj::real>(r);
   }

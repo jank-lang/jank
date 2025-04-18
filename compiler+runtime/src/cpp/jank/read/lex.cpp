@@ -66,7 +66,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_real const d)
+               f64 const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -134,7 +134,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, native_real const d)
+  token::token(size_t const offset, size_t const width, token_kind const k, f64 const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }

@@ -154,7 +154,7 @@ namespace jank::read::lex
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
-          native_real const);
+          f64 const);
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
@@ -173,7 +173,7 @@ namespace jank::read::lex
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
     token(size_t offset, size_t width, token_kind const k);
     token(size_t offset, size_t width, token_kind const k, i64 const);
-    token(size_t offset, size_t width, token_kind const k, native_real const);
+    token(size_t offset, size_t width, token_kind const k, f64 const);
     token(size_t offset, size_t width, token_kind const k, native_persistent_string_view const);
     token(size_t offset, size_t width, token_kind const k, char const * const);
     token(size_t offset, size_t width, token_kind const k, native_bool const);
@@ -196,7 +196,7 @@ namespace jank::read::lex
     token_kind kind{ token_kind::eof };
     std::variant<no_data,
                  i64,
-                 native_real,
+                 f64,
                  native_persistent_string_view,
                  native_bool,
                  ratio>

@@ -113,7 +113,7 @@ namespace jank::hash
     }
   }
 
-  uint32_t real(native_real const input)
+  uint32_t real(f64 const input)
   {
     if constexpr(8 == sizeof(i64))
     {

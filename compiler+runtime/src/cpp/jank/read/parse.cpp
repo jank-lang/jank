@@ -717,18 +717,18 @@ namespace jank::read::parse
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
-    native_real n{};
+    f64 n{};
     if(sym->name == "Inf")
     {
-      n = std::numeric_limits<native_real>::infinity();
+      n = std::numeric_limits<f64>::infinity();
     }
     else if(sym->name == "-Inf")
     {
-      n = -std::numeric_limits<native_real>::infinity();
+      n = -std::numeric_limits<f64>::infinity();
     }
     else if(sym->name == "NaN")
     {
-      n = std::numeric_limits<native_real>::quiet_NaN();
+      n = std::numeric_limits<f64>::quiet_NaN();
     }
     else
     {
@@ -1384,7 +1384,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<native_real>(token.data)),
+    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)),
                                token,
                                token };
   }

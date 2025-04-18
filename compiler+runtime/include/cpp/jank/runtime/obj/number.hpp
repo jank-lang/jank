@@ -60,7 +60,7 @@ namespace jank::runtime::obj
 
     /* behavior::number_like */
     i64 to_integer() const;
-    native_real to_real() const;
+    f64 to_real() const;
 
     i64 data{};
     object base{ obj_type };
@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     real() = default;
     real(real &&) noexcept = default;
     real(real const &) = default;
-    real(native_real const d);
+    real(f64 const d);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -93,9 +93,9 @@ namespace jank::runtime::obj
 
     /* behavior::number_like */
     i64 to_integer() const;
-    native_real to_real() const;
+    f64 to_real() const;
 
-    native_real data{};
+    f64 data{};
     object base{ obj_type };
   };
 }

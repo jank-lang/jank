@@ -31,7 +31,7 @@ namespace jank::hash
   uint32_t integer(uint64_t const input);
   uint32_t integer(i64 const input);
 
-  uint32_t real(native_real const input);
+  uint32_t real(f64 const input);
 
   uint32_t string(native_persistent_string_view const &input);
 

@@ -13,7 +13,7 @@ extern "C"
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef long long jank_i64;
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef double jank_native_real;
+  typedef double jank_f64;
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef char jank_native_bool;
   /* NOLINTNEXTLINE(modernize-use-using) */
@@ -113,7 +113,7 @@ extern "C"
   jank_object_ref jank_const_true();
   jank_object_ref jank_const_false();
   jank_object_ref jank_integer_create(jank_i64 i);
-  jank_object_ref jank_real_create(jank_native_real r);
+  jank_object_ref jank_real_create(jank_f64 r);
   jank_object_ref jank_ratio_create(jank_i64 numerator, jank_i64 denominator);
   jank_object_ref jank_string_create(char const *s);
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
