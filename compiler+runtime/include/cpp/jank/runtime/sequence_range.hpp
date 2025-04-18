@@ -169,11 +169,11 @@ namespace jank::runtime
 
     if constexpr(behavior::sequenceable_in_place<S>)
     {
-      return sequence_range<S>{ s->fresh_seq() };
+      return sequence_range<S>{ s.is_some() ? s->fresh_seq() : oref<S>{} };
     }
     else
     {
-      return sequence_range<S>{ s->seq() };
+      return sequence_range<S>{ s.is_some() ? s->seq() : s };
     }
   }
 }
