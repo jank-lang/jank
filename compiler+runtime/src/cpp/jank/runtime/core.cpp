@@ -20,12 +20,12 @@ namespace jank::runtime
 
   native_bool is_true(object_ref const o)
   {
-    return o == obj::boolean::true_const();
+    return o == jank_true;
   }
 
   native_bool is_false(object_ref const o)
   {
-    return o == obj::boolean::false_const();
+    return o == jank_false;
   }
 
   native_bool is_some(object_ref const o)

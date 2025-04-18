@@ -11,9 +11,6 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::boolean };
     static constexpr native_bool pointer_free{ true };
 
-    static boolean_ref true_const();
-    static boolean_ref false_const();
-
     boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;

@@ -23,7 +23,7 @@ namespace clojure::core_native
   {
     if(runtime::is_nil(o))
     {
-      return obj::boolean::true_const();
+      return jank_true;
     }
     return make_box(runtime::is_false(o));
   }
@@ -536,14 +536,14 @@ jank_object_ref jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
-    fn->arity_1 = [](object *) -> object * { return obj::boolean::true_const().erase(); };
+    fn->arity_1 = [](object *) -> object * { return jank_true.erase(); };
     fn->arity_2 = [](object * const l, object * const r) -> object * {
       return make_box(equal(l, r)).erase();
     };
     fn->arity_3 = [](object * const l, object * const r, object * const rest) -> object * {
       if(!equal(l, r))
       {
-        return obj::boolean::false_const().erase();
+        return jank_false.erase();
       }
 
       return visit_seqable(
@@ -552,11 +552,11 @@ jank_object_ref jank_load_clojure_core_native()
           {
             if(!equal(l, e))
             {
-              return obj::boolean::false_const().erase();
+              return jank_false.erase();
             }
           }
 
-          return obj::boolean::true_const().erase();
+          return jank_true.erase();
         },
         rest,
         l);
@@ -567,25 +567,25 @@ jank_object_ref jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
-    fn->arity_1 = [](object *) -> object * { return obj::boolean::true_const().erase(); };
+    fn->arity_1 = [](object *) -> object * { return jank_true.erase(); };
     fn->arity_2 = [](object * const l, object * const r) -> object * {
       return make_box(is_equiv(l, r)).erase();
     };
     fn->arity_3 = [](object * const l, object * const r, object * const rest) -> object * {
       if(!is_equiv(l, r))
       {
-        return obj::boolean::false_const().erase();
+        return jank_false.erase();
       }
 
       for(auto it(fresh_seq(rest)); it != jank_nil; it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
-          return obj::boolean::false_const().erase();
+          return jank_false.erase();
         }
       }
 
-      return obj::boolean::true_const().erase();
+      return jank_true.erase();
     };
     intern_fn_obj("==", fn);
   }

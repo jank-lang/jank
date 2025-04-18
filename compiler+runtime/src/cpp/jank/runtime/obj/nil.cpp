@@ -4,12 +4,6 @@
 
 namespace jank::runtime::obj
 {
-  nil_ref nil::nil_const()
-  {
-    static nil n;
-    return &n;
-  }
-
   native_bool nil::equal(object const &o) const
   {
     return o.type == obj_type;
@@ -114,12 +108,18 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
+  static obj::nil_ref nil_const()
+  {
+    static obj::nil n;
+    return &n;
+  }
+
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::nil_ref jank_nil{ obj::nil::nil_const() };
+  obj::nil_ref jank_nil{ nil_const() };
 
   namespace detail
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-    obj::nil *jank_nil_ptr{ obj::nil::nil_const().data };
+    obj::nil *jank_nil_ptr{ nil_const().data };
   }
 }

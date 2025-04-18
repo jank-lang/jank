@@ -59,7 +59,7 @@ namespace jank::runtime
 
     auto const compile_files_sym(make_box<obj::symbol>("*compile-files*"));
     compile_files_var = core->intern_var(compile_files_sym);
-    compile_files_var->bind_root(obj::boolean::false_const());
+    compile_files_var->bind_root(jank_false);
     compile_files_var->dynamic.store(true);
 
     auto const loaded_libs_sym(make_box<obj::symbol>("*loaded-libs*"));
@@ -69,7 +69,7 @@ namespace jank::runtime
 
     auto const assert_sym(make_box<obj::symbol>("*assert*"));
     assert_var = core->intern_var(assert_sym);
-    assert_var->bind_root(obj::boolean::true_const());
+    assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
     /* These are not actually interned. They're extra private. */
@@ -305,7 +305,7 @@ namespace jank::runtime
 
     binding_scope const preserve{ *this,
                                   obj::persistent_hash_map::create_unique(
-                                    std::make_pair(compile_files_var, obj::boolean::true_const()),
+                                    std::make_pair(compile_files_var, jank_true),
                                     std::make_pair(current_module_var, make_box(module))) };
 
     return load_module(util::format("/{}", module), module::origin::latest);

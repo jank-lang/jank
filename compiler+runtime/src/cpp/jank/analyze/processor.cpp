@@ -1423,7 +1423,7 @@ namespace jank::analyze
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
     rt_ctx
       .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(rt_ctx.no_recur_var, runtime::obj::boolean::true_const())))
+        std::make_pair(rt_ctx.no_recur_var, runtime::jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 

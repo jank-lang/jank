@@ -18,7 +18,7 @@ namespace clojure::string_native
   {
     if(runtime::is_nil(s))
     {
-      return obj::boolean::true_const();
+      return jank_true;
     }
     auto const s_str(runtime::to_string(s));
     return make_box(s_str.is_blank());

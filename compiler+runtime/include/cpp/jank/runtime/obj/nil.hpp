@@ -13,8 +13,6 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::nil };
     static constexpr native_bool pointer_free{ true };
 
-    static nil_ref nil_const();
-
     nil() = default;
 
     /* behavior::object_like */

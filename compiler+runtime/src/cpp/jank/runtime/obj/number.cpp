@@ -7,18 +7,6 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  boolean_ref boolean::true_const()
-  {
-    static boolean r{ true };
-    return &r;
-  }
-
-  boolean_ref boolean::false_const()
-  {
-    static boolean r{ false };
-    return &r;
-  }
-
   boolean::boolean(native_bool const d)
     : data{ d }
   {
@@ -227,8 +215,20 @@ namespace jank::runtime::obj
 
 namespace jank::runtime
 {
+  static obj::boolean_ref true_const()
+  {
+    static obj::boolean r{ true };
+    return &r;
+  }
+
+  static obj::boolean_ref false_const()
+  {
+    static obj::boolean r{ false };
+    return &r;
+  }
+
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::boolean_ref jank_true{ obj::boolean::true_const() };
+  obj::boolean_ref jank_true{ true_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::boolean_ref jank_false{ obj::boolean::false_const() };
+  obj::boolean_ref jank_false{ false_const() };
 }

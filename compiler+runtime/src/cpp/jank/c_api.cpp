@@ -365,12 +365,12 @@ extern "C"
 
   jank_object_ref jank_const_true()
   {
-    return obj::boolean::true_const().erase();
+    return jank_true.erase();
   }
 
   jank_object_ref jank_const_false()
   {
-    return obj::boolean::false_const().erase();
+    return jank_false.erase();
   }
 
   jank_object_ref jank_integer_create(jank_native_integer const i)

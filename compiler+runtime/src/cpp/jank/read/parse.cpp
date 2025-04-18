@@ -144,7 +144,7 @@ namespace jank::read::parse
     , splicing_allowed_var{ make_box<var>(
                               __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
                               make_box<obj::symbol>("*splicing-allowed?*"),
-                              obj::boolean::false_const())
+                              jank_false)
                               ->set_dynamic(true) }
   {
   }
@@ -287,7 +287,7 @@ namespace jank::read::parse
 
     __rt_ctx
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+        std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -325,7 +325,7 @@ namespace jank::read::parse
 
     __rt_ctx
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+        std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -361,7 +361,7 @@ namespace jank::read::parse
 
     __rt_ctx
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+        std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -484,7 +484,7 @@ namespace jank::read::parse
         if constexpr(std::same_as<T, obj::keyword>)
         {
           return object_source_info{
-            obj::persistent_array_map::create_unique(typed_val, obj::boolean::true_const()),
+            obj::persistent_array_map::create_unique(typed_val, jank_true),
             start_token,
             latest_token
           };
@@ -585,7 +585,7 @@ namespace jank::read::parse
 
     __rt_ctx
       ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+        std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
