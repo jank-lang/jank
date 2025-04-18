@@ -70,7 +70,7 @@ namespace jank::runtime
 
     sequence_range skip(usize const n) const
     {
-      sequence_range r{ s };
+      sequence_range const r{ s };
       auto it{ r.begin() };
       for(usize i{}; i < n; ++i)
       {
@@ -148,7 +148,7 @@ namespace jank::runtime
 
     sequence_range skip(usize const n) const
     {
-      sequence_range r{ s };
+      sequence_range const r{ s };
       auto it{ r.begin() };
       for(usize i{}; i < n; ++i)
       {
