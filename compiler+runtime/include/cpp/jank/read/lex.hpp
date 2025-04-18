@@ -9,7 +9,7 @@
 
 namespace jank::read::lex
 {
-  enum class token_kind : uint8_t
+  enum class token_kind : u8
   {
     open_paren,
     close_paren,

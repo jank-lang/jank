@@ -14,7 +14,7 @@ namespace cpptrace
 
 namespace jank::error
 {
-  enum class kind : uint8_t
+  enum class kind : u8
   {
     lex_unexpected_eof,
     lex_expecting_whitespace,
@@ -219,7 +219,7 @@ namespace jank::error
 
   struct note
   {
-    enum class kind : uint8_t
+    enum class kind : u8
     {
       info,
       warning,

@@ -1,8 +1,5 @@
 #pragma once
 
-/* NOLINTNEXTLINE(modernize-deprecated-headers) */
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -10,22 +7,49 @@ extern "C"
 
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef void *jank_object_ref;
+
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef char jank_bool;
+
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef signed char jank_i8;
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef unsigned char jank_u8;
+
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef short jank_i16;
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef unsigned short jank_u16;
+
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef int jank_i32;
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef unsigned int jank_u32;
+
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef long long jank_i64;
   /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef unsigned long long jank_u64;
+
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef float jank_f32;
+  /* NOLINTNEXTLINE(modernize-use-using) */
   typedef double jank_f64;
+
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef char jank_native_bool;
+  typedef unsigned long long jank_uptr;
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef uint32_t jank_native_hash;
+  typedef jank_uptr jank_usize;
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef uint8_t jank_arity_flags;
+  typedef jank_u32 jank_uhash;
+  /* NOLINTNEXTLINE(modernize-use-using) */
+  typedef jank_u8 jank_arity_flags;
 
   jank_object_ref jank_eval(jank_object_ref s);
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
 
-  void jank_ns_set_symbol_counter(char const * const ns, uint64_t const count);
+  void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count);
 
   jank_object_ref jank_var_intern(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_var_bind_root(jank_object_ref var, jank_object_ref val);
@@ -119,14 +143,14 @@ extern "C"
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_character_create(char const *s);
 
-  jank_object_ref jank_list_create(uint64_t size, ...);
-  jank_object_ref jank_vector_create(uint64_t size, ...);
-  jank_object_ref jank_map_create(uint64_t pairs, ...);
-  jank_object_ref jank_set_create(uint64_t size, ...);
+  jank_object_ref jank_list_create(jank_u64 size, ...);
+  jank_object_ref jank_vector_create(jank_u64 size, ...);
+  jank_object_ref jank_map_create(jank_u64 pairs, ...);
+  jank_object_ref jank_set_create(jank_u64 size, ...);
 
-  jank_arity_flags jank_function_build_arity_flags(uint8_t highest_fixed_arity,
-                                                   jank_native_bool is_variadic,
-                                                   jank_native_bool is_variadic_ambiguous);
+  jank_arity_flags jank_function_build_arity_flags(jank_u8 highest_fixed_arity,
+                                                   jank_bool is_variadic,
+                                                   jank_bool is_variadic_ambiguous);
   jank_object_ref jank_function_create(jank_arity_flags arity_flags);
   void jank_function_set_arity0(jank_object_ref fn, jank_object_ref (*f)());
   void jank_function_set_arity1(jank_object_ref fn, jank_object_ref (*f)(jank_object_ref));
@@ -253,13 +277,11 @@ extern "C"
                                                      jank_object_ref,
                                                      jank_object_ref));
 
-  jank_native_bool jank_truthy(jank_object_ref o);
-  jank_native_bool jank_equal(jank_object_ref l, jank_object_ref r);
-  jank_native_hash jank_to_hash(jank_object_ref o);
+  jank_bool jank_truthy(jank_object_ref o);
+  jank_bool jank_equal(jank_object_ref l, jank_object_ref r);
+  jank_uhash jank_to_hash(jank_object_ref o);
   jank_i64 jank_to_integer(jank_object_ref o);
-  jank_i64 jank_shift_mask_case_integer(jank_object_ref o,
-                                                   jank_i64 shift,
-                                                   jank_i64 mask);
+  jank_i64 jank_shift_mask_case_integer(jank_object_ref o, jank_i64 shift, jank_i64 mask);
 
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
 

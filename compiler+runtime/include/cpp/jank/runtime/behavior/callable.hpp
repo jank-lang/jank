@@ -93,7 +93,7 @@ namespace jank::runtime
     /* TODO: I think we can use CRTP here. */
     struct callable
     {
-      using arity_flag_t = uint8_t;
+      using arity_flag_t = u8;
 
       virtual ~callable() = default;
 
@@ -170,7 +170,7 @@ namespace jank::runtime
        */
       virtual arity_flag_t get_arity_flags() const;
 
-      static constexpr arity_flag_t mask_variadic_arity(uint8_t const pos)
+      static constexpr arity_flag_t mask_variadic_arity(u8 const pos)
       {
         return (0b10000000 | pos);
       }
@@ -185,7 +185,7 @@ namespace jank::runtime
         return (arity_flags & 0b01000000);
       }
 
-      static constexpr arity_flag_t build_arity_flags(uint8_t const highest_fixed_arity,
+      static constexpr arity_flag_t build_arity_flags(u8 const highest_fixed_arity,
                                                       native_bool const is_variadic,
                                                       native_bool const is_variadic_ambiguous)
       {

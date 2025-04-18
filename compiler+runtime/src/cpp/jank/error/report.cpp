@@ -33,7 +33,7 @@ namespace jank::error
 
   struct line
   {
-    enum class kind : uint8_t
+    enum class kind : u8
     {
       file_data,
       note,

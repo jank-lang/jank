@@ -4,7 +4,7 @@
 
 namespace jank::util::cli
 {
-  enum class command : uint8_t
+  enum class command : u8
   {
     run,
     compile,

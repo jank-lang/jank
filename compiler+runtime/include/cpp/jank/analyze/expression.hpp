@@ -8,7 +8,7 @@ namespace jank::analyze
 {
   using local_frame_ptr = jtl::ptr<struct local_frame>;
 
-  enum class expression_position : uint8_t
+  enum class expression_position : u8
   {
     value,
     statement,
@@ -29,7 +29,7 @@ namespace jank::analyze
     return "unknown";
   }
 
-  enum class expression_kind : uint8_t
+  enum class expression_kind : u8
   {
     uninitialized,
     def,

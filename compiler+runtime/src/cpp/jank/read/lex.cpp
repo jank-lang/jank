@@ -181,7 +181,7 @@ namespace jank::read::lex
   struct codepoint
   {
     char32_t character{};
-    uint8_t len{};
+    u8 len{};
   };
 
   native_bool ratio::operator==(ratio const &rhs) const
@@ -375,7 +375,7 @@ namespace jank::read::lex
     {
       return error::lex_invalid_unicode("Invalid Unicode character.", pos);
     }
-    return ok(codepoint{ static_cast<char32_t>(wc), static_cast<uint8_t>(len) });
+    return ok(codepoint{ static_cast<char32_t>(wc), static_cast<u8>(len) });
   }
 
   static native_bool is_utf8_char(char32_t const c)

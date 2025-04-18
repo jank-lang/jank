@@ -56,7 +56,7 @@ namespace jank::analyze
 
   struct local_frame : gc
   {
-    enum class frame_type : uint8_t
+    enum class frame_type : u8
     {
       root,
       fn,

@@ -37,7 +37,7 @@ namespace jank::read::parse
 
     struct shorthand_function_details
     {
-      jtl::option<uint8_t> max_fixed_arity{};
+      jtl::option<u8> max_fixed_arity{};
       native_bool variadic{};
       source source;
     };

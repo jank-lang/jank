@@ -642,7 +642,7 @@ namespace jank::read::parse
     runtime::detail::native_transient_vector arg_trans;
     if(shorthand.unwrap().max_fixed_arity.is_some())
     {
-      for(uint8_t i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
+      for(u8 i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
       {
         arg_trans.push_back(make_box<obj::symbol>(util::format("%{}#", i + 1)));
       }
@@ -1269,7 +1269,7 @@ namespace jank::read::parse
         if(all_digits)
         {
           /* We support just % alone, which means %1. */
-          uint8_t num{ 1 };
+          u8 num{ 1 };
           if(after_percent.empty())
           {
             /* We rename it so that the generated param name matches. */

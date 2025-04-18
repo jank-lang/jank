@@ -12,7 +12,7 @@ namespace jank::runtime
 
 namespace jank::runtime::module
 {
-  enum class origin : uint8_t
+  enum class origin : u8
   {
     /* Regardless of which binaries are present, and how new they are,
      * this will always select the source. */
@@ -22,7 +22,7 @@ namespace jank::runtime::module
     latest,
   };
 
-  enum class module_type : uint8_t
+  enum class module_type : u8
   {
     o,
     cpp,

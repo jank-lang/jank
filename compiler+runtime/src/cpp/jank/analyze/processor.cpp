@@ -1427,7 +1427,7 @@ namespace jank::analyze
       .expect_ok();
     util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
 
-    enum class try_expression_type : uint8_t
+    enum class try_expression_type : u8
     {
       other,
       catch_,

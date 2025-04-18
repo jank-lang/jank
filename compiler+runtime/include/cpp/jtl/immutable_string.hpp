@@ -699,7 +699,7 @@ namespace jtl
   private:
     static constexpr bool is_little_endian{ std::endian::native == std::endian::little };
 
-    enum class category : uint8_t
+    enum class category : u8
     {
       small = 0,
       large_shared = is_little_endian ? 0b10000000 : 0b00000001,
@@ -718,13 +718,13 @@ namespace jtl
       }
     };
 
-    static constexpr uint8_t last_char_index{ sizeof(large_storage) - 1 };
-    static constexpr uint8_t max_small_size{ last_char_index / sizeof(value_type) };
-    static constexpr uint16_t max_shared_difference{ 512 };
+    static constexpr u8 last_char_index{ sizeof(large_storage) - 1 };
+    static constexpr u8 max_small_size{ last_char_index / sizeof(value_type) };
+    static constexpr u16 max_shared_difference{ 512 };
     /* The size is shifted to/from storage, to account for the 2 extra data bits. */
-    static constexpr uint8_t small_shift{ is_little_endian ? 0 : 2 };
-    static constexpr uint8_t category_extraction_mask{ is_little_endian ? 0b11000000 : 0b00000011 };
-    static constexpr uint8_t category_shift{ (sizeof(size_type) - 1) * 8 };
+    static constexpr u8 small_shift{ is_little_endian ? 0 : 2 };
+    static constexpr u8 category_extraction_mask{ is_little_endian ? 0b11000000 : 0b00000011 };
+    static constexpr u8 category_shift{ (sizeof(size_type) - 1) * 8 };
 
     /* Our storage provides three ways of accessing the same data:
      *   1. Direct bytes (used to access the right-most flag byte)
@@ -736,7 +736,7 @@ namespace jtl
     {
       /* TODO: What if we store a max of 22 chars and dedicate a byte for flags with no masking? */
       union {
-        uint8_t bytes[sizeof(large_storage)];
+        u8 bytes[sizeof(large_storage)];
         value_type small[sizeof(large_storage) / sizeof(value_type)];
         large_storage large;
       };
@@ -781,7 +781,7 @@ namespace jtl
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_small(const_pointer_type const data, uint8_t const size) noexcept
+    constexpr void init_small(const_pointer_type const data, u8 const size) noexcept
     {
       /* If `data` is word-aligned, we can do three quick word copies.
        *
@@ -793,8 +793,8 @@ namespace jtl
       if((std::bit_cast<size_type>(data) & (sizeof(size_type) - 1)) == 0)
       {
         auto const aligned_data(std::assume_aligned<sizeof(size_type)>(data));
-        uint8_t const byte_size(size * sizeof(value_type));
-        constexpr uint8_t word_width{ sizeof(size_type) };
+        u8 const byte_size(size * sizeof(value_type));
+        constexpr u8 word_width{ sizeof(size_type) };
         /* NOTE: We're writing in reverse order here, but it uses one less instruction and
          * is marginally faster than duplicating the code each each case to write in order. */
         /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
@@ -821,9 +821,9 @@ namespace jtl
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     constexpr void init_small(const_pointer_type const lhs,
-                              uint8_t const lhs_size,
+                              u8 const lhs_size,
                               const_pointer_type const rhs,
-                              uint8_t const rhs_size) noexcept
+                              u8 const rhs_size) noexcept
     {
       jank_debug_assert(lhs_size + rhs_size <= max_small_size);
       traits_type::copy(store.small, lhs, lhs_size);
@@ -842,7 +842,7 @@ namespace jtl
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_small_fill(value_type const fill, uint8_t const size) noexcept
+    constexpr void init_small_fill(value_type const fill, u8 const size) noexcept
     {
       jank_debug_assert(size <= max_small_size);
       traits_type::assign(store.small, size, fill);
@@ -872,7 +872,7 @@ namespace jtl
     }
 
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
-    constexpr void init_large_fill(value_type const fill, uint8_t const size) noexcept
+    constexpr void init_large_fill(value_type const fill, u8 const size) noexcept
     {
       jank_debug_assert(max_small_size < size);
       store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));

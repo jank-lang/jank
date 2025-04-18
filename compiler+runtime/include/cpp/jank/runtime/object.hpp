@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  enum class object_type : uint8_t
+  enum class object_type : u8
   {
     nil,
 

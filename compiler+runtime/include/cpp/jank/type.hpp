@@ -29,7 +29,7 @@ namespace jank
                                              false>;
 
   using native_bool = bool;
-  using native_hash = uint32_t;
+  using native_hash = u32;
   using native_persistent_string_view = std::string_view;
 
   template <typename T>

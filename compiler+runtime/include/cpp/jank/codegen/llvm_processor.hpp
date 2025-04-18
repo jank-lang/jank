@@ -59,7 +59,7 @@ namespace jank::codegen
 {
   using namespace jank::runtime;
 
-  enum class compilation_target : uint8_t
+  enum class compilation_target : u8
   {
     module,
     function,
