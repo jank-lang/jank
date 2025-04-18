@@ -158,7 +158,7 @@ namespace jank::runtime
     }
 
     auto const found(tbfs.front().bindings->get_entry(this));
-    if(found == obj::nil::nil_const())
+    if(found == jank_nil)
     {
       return {};
     }

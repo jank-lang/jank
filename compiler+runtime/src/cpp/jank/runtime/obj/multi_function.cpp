@@ -195,7 +195,7 @@ namespace jank::runtime::obj
   multi_function_ref multi_function::reset()
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
-    cached_hierarchy = obj::nil::nil_const();
+    cached_hierarchy = jank_nil;
     method_table = prefer_table = method_cache = persistent_hash_map::empty();
     return this;
   }
@@ -251,7 +251,7 @@ namespace jank::runtime::obj
                                            object_ref const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs != nil::nil_const() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
+    if(x_prefs != jank_nil && expect_object<persistent_hash_set>(x_prefs)->contains(y))
     {
       return true;
     }
@@ -260,7 +260,7 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != nil::nil_const();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != jank_nil;
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -269,7 +269,7 @@ namespace jank::runtime::obj
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != nil::nil_const();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != jank_nil;
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
@@ -300,7 +300,7 @@ namespace jank::runtime::obj
   object_ref multi_function::get_fn(object_ref const dispatch_val)
   {
     auto const target(get_method(dispatch_val));
-    if(target == nil::nil_const())
+    if(target == jank_nil)
     {
       throw std::runtime_error{ util::format("No method in multimethod '{}' for dispatch value: {}",
                                              runtime::to_string(name),
@@ -317,7 +317,7 @@ namespace jank::runtime::obj
     }
 
     auto const target(method_cache->get(dispatch_val));
-    if(target != nil::nil_const())
+    if(target != jank_nil)
     {
       return target;
     }
@@ -329,7 +329,7 @@ namespace jank::runtime::obj
   {
     /* TODO: Clojure uses a RW lock here for better parallelism. */
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
-    object_ref best_value{ nil::nil_const() };
+    object_ref best_value{ jank_nil };
     persistent_vector_sequence_ref best_entry{};
 
     for(auto it(method_table->fresh_seq()); it.is_some(); it = it->next_in_place())
@@ -364,7 +364,7 @@ namespace jank::runtime::obj
     else
     {
       best_value = method_table->get(default_dispatch_value);
-      if(best_value == nil::nil_const())
+      if(best_value == jank_nil)
       {
         return best_value;
       }

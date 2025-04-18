@@ -28,7 +28,7 @@ namespace jank::runtime
           switch(arity_flags)
           {
             case callable::mask_variadic_arity(0):
-              return typed_source->call(obj::nil::nil_const());
+              return typed_source->call(jank_nil);
             default:
               return typed_source->call();
           }
@@ -65,7 +65,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(1):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, obj::nil::nil_const());
+                return typed_source->call(a1, jank_nil);
               }
             default:
               return typed_source->call(a1);
@@ -114,7 +114,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(2):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, obj::nil::nil_const());
+                return typed_source->call(a1, a2, jank_nil);
               }
             default:
               return typed_source->call(a1, a2);
@@ -164,7 +164,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(3):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3);
@@ -212,7 +212,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(4):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4);
@@ -263,7 +263,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(5):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5);
@@ -329,7 +329,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(6):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6);
@@ -400,7 +400,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(7):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7);
@@ -476,7 +476,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(8):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8);
@@ -555,7 +555,7 @@ namespace jank::runtime
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
                 return typed_source
-                  ->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, obj::nil::nil_const());
+                  ->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);

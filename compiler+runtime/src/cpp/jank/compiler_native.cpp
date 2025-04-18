@@ -31,7 +31,7 @@ namespace jank::compiler_native
 
     /* TODO: Return a string, don't print it. */
     cg_prc.ctx->module->print(llvm::outs(), nullptr);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 }
 
@@ -51,5 +51,5 @@ jank_object_ref jank_load_jank_compiler_native()
   });
   intern_fn("native-source", &compiler_native::native_source);
 
-  return obj::nil::nil_const().erase();
+  return jank_nil.erase();
 }

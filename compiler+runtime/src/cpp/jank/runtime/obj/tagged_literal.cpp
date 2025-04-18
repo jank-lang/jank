@@ -82,7 +82,7 @@ namespace jank::runtime::obj
 
   object_ref tagged_literal::get(object_ref const key) const
   {
-    return get(key, obj::nil::nil_const());
+    return get(key, jank_nil);
   }
 
   object_ref tagged_literal::get_entry(object_ref const key) const
@@ -100,7 +100,7 @@ namespace jank::runtime::obj
       return make_box<persistent_vector>(std::in_place, form_kw, form);
     }
 
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   native_bool tagged_literal::contains(object_ref const key) const

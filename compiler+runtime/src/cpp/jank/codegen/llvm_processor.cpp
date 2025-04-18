@@ -200,7 +200,7 @@ namespace jank::codegen
       /* If we have an empty function, ensure we're still returning nil. */
       if(arity.body->values.empty())
       {
-        ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
+        ctx->builder->CreateRet(gen_global(jank_nil));
       }
     }
 
@@ -280,7 +280,7 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(obj::nil::nil_const()),
+    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil),
                                    __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
@@ -839,7 +839,7 @@ namespace jank::codegen
         {
           if(expr->values.empty())
           {
-            return ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
+            return ctx->builder->CreateRet(gen_global(jank_nil));
           }
           else
           {
@@ -892,7 +892,7 @@ namespace jank::codegen
     }
     else
     {
-      else_ = gen_global(obj::nil::nil_const());
+      else_ = gen_global(jank_nil);
       if(expr->position == expression_position::tail)
       {
         else_ = ctx->builder->CreateRet(else_);
@@ -965,8 +965,8 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::Value *, 3> const args{
       body,
-      catch_.unwrap_or(gen_global(obj::nil::nil_const())),
-      finally.unwrap_or(gen_global(obj::nil::nil_const()))
+      catch_.unwrap_or(gen_global(jank_nil)),
+      finally.unwrap_or(gen_global(jank_nil))
     };
     auto const call(ctx->builder->CreateCall(fn, args));
 
@@ -1114,7 +1114,7 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const create_fn(ctx->module->getOrInsertFunction("jank_nil", create_fn_type));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_const_nil", create_fn_type));
       auto const call(ctx->builder->CreateCall(create_fn));
       ctx->builder->CreateStore(call, global);
 
@@ -1147,7 +1147,8 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const fn_name{ util::format("jank_{}", name) };
+      /* We turn the literal value into jank_const_true / jank_const_false. */
+      auto const fn_name{ util::format("jank_const_{}", name) };
       auto const create_fn(ctx->module->getOrInsertFunction(fn_name.c_str(), create_fn_type));
       auto const call(ctx->builder->CreateCall(create_fn));
       ctx->builder->CreateStore(call, global);

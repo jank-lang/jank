@@ -166,7 +166,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ref ret{ obj::nil::nil_const() };
+    object_ref ret{ jank_nil };
     native_vector<analyze::expression_ref> exprs{};
     for(auto const &form : p_prc)
     {
@@ -186,7 +186,7 @@ namespace jank::runtime
         make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
                                                    an_prc.root_frame,
                                                    true,
-                                                   obj::nil::nil_const()));
+                                                   jank_nil));
       /* TODO: Pass in module_to_load_function result */
       auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
       auto fn(static_ref_cast<analyze::expr::function>(wrapped_exprs));
@@ -227,12 +227,12 @@ namespace jank::runtime
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ *this,
                                   obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_file_var, obj::nil::nil_const())) };
+                                    std::make_pair(current_file_var, jank_nil)) };
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ref ret{ obj::nil::nil_const() };
+    object_ref ret{ jank_nil };
     for(auto const &form : p_prc)
     {
       ret = form.expect_ok().unwrap().ptr;
@@ -557,7 +557,7 @@ namespace jank::runtime
           }
 
           /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), obj::nil::nil_const()), typed_o));
+          auto const args(cons(cons(rest(typed_o), jank_nil), typed_o));
           return apply_to(var->deref(), args);
         }
       },

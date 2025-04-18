@@ -107,7 +107,7 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return nil::nil_const();
+        return jank_nil;
       }
 
       return data[i];
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return nil::nil_const();
+        return jank_nil;
       }
       /* TODO: Map entry type? */
       return make_box<persistent_vector>(std::in_place, idx, data[i]);

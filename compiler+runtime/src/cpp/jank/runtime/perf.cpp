@@ -45,6 +45,6 @@ namespace jank::runtime::perf
       },
       f,
       label_str);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 }

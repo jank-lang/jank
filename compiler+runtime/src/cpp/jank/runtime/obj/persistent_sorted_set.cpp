@@ -142,7 +142,7 @@ namespace jank::runtime::obj
     {
       return found.get();
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
   transient_sorted_set_ref persistent_sorted_set::to_transient() const

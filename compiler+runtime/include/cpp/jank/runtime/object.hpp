@@ -265,9 +265,6 @@ namespace jank::runtime::behavior
   };
 }
 
-/* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-extern jank::runtime::object *jank_nil_const;
-
 #include <jank/runtime/oref.hpp>
 
 namespace jank::runtime
@@ -282,13 +279,8 @@ namespace jank::runtime
     bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
 
-  bool operator==(object *, object_ref);
-  bool operator!=(object *, object_ref);
-
-  namespace detail
-  {
-    constexpr object nil_const{ object_type::nil };
-  }
+  bool operator==(object const *, object_ref);
+  bool operator!=(object const *, object_ref);
 }
 
 namespace std

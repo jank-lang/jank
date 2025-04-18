@@ -37,9 +37,9 @@ namespace jank::runtime
       return 0;
     }
 
-    if(l != obj::nil::nil_const())
+    if(l != jank_nil)
     {
-      if(r == obj::nil::nil_const())
+      if(r == jank_nil)
       {
         return 1;
       }

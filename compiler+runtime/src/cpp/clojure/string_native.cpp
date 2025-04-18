@@ -88,5 +88,5 @@ jank_object_ref jank_load_clojure_string_native()
   intern_fn("starts-with?", &string_native::starts_with);
   intern_fn("upper-case", &string_native::upper_case);
 
-  return obj::nil::nil_const().erase();
+  return jank_nil.erase();
 }

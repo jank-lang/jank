@@ -11,6 +11,17 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    struct nil;
+  }
+
+  namespace detail
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+    extern obj::nil *jank_nil_ptr;
+  }
+
   template <typename T>
   struct oref;
 
@@ -24,7 +35,7 @@ namespace jank::runtime
     using value_type = object;
 
     constexpr oref()
-      : data{ std::bit_cast<object *>(jank_nil_const) }
+      : data{ std::bit_cast<object *>(detail::jank_nil_ptr) }
     {
     }
 
@@ -138,7 +149,7 @@ namespace jank::runtime
     using value_type = T;
 
     constexpr oref()
-      : data{ std::bit_cast<void *>(jank_nil_const) }
+      : data{ std::bit_cast<void *>(detail::jank_nil_ptr) }
     {
     }
 
@@ -227,7 +238,7 @@ namespace jank::runtime
     requires(C::obj_type == object_type::nil)
     constexpr oref &operator=(oref<C> const &) noexcept
     {
-      data = std::bit_cast<void *>(jank_nil_const);
+      data = std::bit_cast<void *>(detail::jank_nil_ptr);
       return *this;
     }
 
@@ -244,19 +255,19 @@ namespace jank::runtime
     {
       if(is_nil())
       {
-        return std::bit_cast<object *>(jank_nil_const);
+        return std::bit_cast<object *>(detail::jank_nil_ptr);
       }
       return &reinterpret_cast<T *>(data)->base;
     }
 
     constexpr bool is_some() const noexcept
     {
-      return data != std::bit_cast<void *>(jank_nil_const);
+      return data != std::bit_cast<void *>(detail::jank_nil_ptr);
     }
 
     constexpr bool is_nil() const noexcept
     {
-      return data == std::bit_cast<void *>(jank_nil_const);
+      return data == std::bit_cast<void *>(detail::jank_nil_ptr);
     }
 
     void *data{};
@@ -268,7 +279,7 @@ namespace jank::runtime
     using value_type = obj::nil;
 
     constexpr oref()
-      : data{ std::bit_cast<value_type *>(jank_nil_const) }
+      : data{ std::bit_cast<value_type *>(detail::jank_nil_ptr) }
     {
     }
 

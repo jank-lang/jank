@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
   object_ref persistent_sorted_map::get(object_ref const key, object_ref const fallback) const
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
   native_bool persistent_sorted_map::contains(object_ref const key) const

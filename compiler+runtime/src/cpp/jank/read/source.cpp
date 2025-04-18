@@ -18,7 +18,7 @@ namespace jank::read
   source::source(source_position const &start, source_position const &end)
     : start{ start }
     , end{ end }
-    , macro_expansion{ runtime::obj::nil::nil_const() }
+    , macro_expansion{ runtime::jank_nil }
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
     file_path = runtime::to_string(file);
@@ -30,7 +30,7 @@ namespace jank::read
     : file_path{ file_path }
     , start{ start }
     , end{ end }
-    , macro_expansion{ runtime::obj::nil::nil_const() }
+    , macro_expansion{ runtime::jank_nil }
   {
   }
 

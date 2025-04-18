@@ -83,7 +83,7 @@ namespace jank::runtime::obj
     {
       return found.get();
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
   object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
@@ -110,7 +110,7 @@ namespace jank::runtime::obj
   object_ref transient_sorted_set::get_entry(object_ref const elem)
   {
     auto const found = call(elem);
-    auto const nil(nil::nil_const());
+    auto const nil(jank_nil);
     if(found == nil)
     {
       return nil;

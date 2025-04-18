@@ -12,9 +12,9 @@ namespace jank::runtime::core
   {
     TEST_CASE("sequence_equal")
     {
-      CHECK(sequence_equal(obj::nil::nil_const(), make_box<obj::persistent_vector>()));
-      CHECK(sequence_equal(make_box<obj::persistent_vector>(), obj::nil::nil_const()));
-      CHECK(sequence_equal(make_box<obj::persistent_vector>(), obj::nil::nil_const()));
+      CHECK(sequence_equal(jank_nil, make_box<obj::persistent_vector>()));
+      CHECK(sequence_equal(make_box<obj::persistent_vector>(), jank_nil));
+      CHECK(sequence_equal(make_box<obj::persistent_vector>(), jank_nil));
       CHECK(sequence_equal(make_box<obj::persistent_vector>(std::in_place, make_box('f')),
                            make_box<obj::persistent_list>(std::in_place, make_box('f'))));
       CHECK(!sequence_equal(make_box<obj::persistent_vector>(std::in_place, make_box('f')),

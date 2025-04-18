@@ -113,7 +113,13 @@ namespace jank::runtime
   {
     return lhs->type != object_type::nil;
   }
-}
 
-/* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-jank::runtime::object *jank_nil_const{ jank::runtime::obj::nil::nil_const().erase() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::nil_ref jank_nil{ obj::nil::nil_const() };
+
+  namespace detail
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+    obj::nil *jank_nil_ptr{ obj::nil::nil_const().data };
+  }
+}

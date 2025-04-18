@@ -72,7 +72,7 @@ namespace jank::runtime::obj
       {
         auto const name_kw(__rt_ctx->intern_keyword("name").expect_ok());
         auto const name_meta(runtime::get(f.meta.unwrap(), name_kw));
-        if(name_meta != nil::nil_const())
+        if(name_meta != jank_nil)
         {
           name = to_string(name_meta);
         }

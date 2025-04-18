@@ -573,7 +573,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return jank_nil;
         }
       },
       m);
@@ -618,7 +618,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return jank_nil;
         }
       },
       m);
@@ -640,7 +640,7 @@ namespace jank::runtime
                 ret = get(ret, e);
               }
 
-              if(ret == obj::nil::nil_const())
+              if(ret == jank_nil)
               {
                 return fallback;
               }
@@ -650,7 +650,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return jank_nil;
         }
       },
       m);
@@ -673,7 +673,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return jank_nil;
         }
       },
       s,
@@ -778,7 +778,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
-    else if(o == obj::nil::nil_const())
+    else if(o == jank_nil)
     {
       return o;
     }
@@ -815,7 +815,7 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx, object_ref const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0 || o == obj::nil::nil_const())
+    if(index < 0 || o == jank_nil)
     {
       return fallback;
     }
@@ -851,7 +851,7 @@ namespace jank::runtime
 
   object_ref peek(object_ref const o)
   {
-    if(o == obj::nil::nil_const())
+    if(o == jank_nil)
     {
       return o;
     }
@@ -874,7 +874,7 @@ namespace jank::runtime
 
   object_ref pop(object_ref const o)
   {
-    if(o == obj::nil::nil_const())
+    if(o == jank_nil)
     {
       return o;
     }
@@ -907,7 +907,7 @@ namespace jank::runtime
         }
         else
         {
-          return obj::nil::nil_const();
+          return jank_nil;
         }
       },
       o);
@@ -1070,7 +1070,7 @@ namespace jank::runtime
   {
     auto const buffer(try_object<obj::chunk_buffer>(buff));
     buffer->append(val);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   object_ref chunk(object_ref const buff)

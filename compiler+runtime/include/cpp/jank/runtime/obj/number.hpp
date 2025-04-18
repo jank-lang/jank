@@ -102,3 +102,11 @@ namespace jank::runtime::obj
     object base{ obj_type };
   };
 }
+
+namespace jank::runtime
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern obj::boolean_ref jank_true;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern obj::boolean_ref jank_false;
+}

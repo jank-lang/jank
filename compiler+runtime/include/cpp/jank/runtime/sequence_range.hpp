@@ -65,7 +65,7 @@ namespace jank::runtime
 
     iterator end() const
     {
-      return { obj::nil::nil_const() };
+      return { jank_nil };
     }
 
     sequence_range skip(usize const n) const
@@ -143,7 +143,7 @@ namespace jank::runtime
 
     iterator end() const
     {
-      return { obj::nil::nil_const() };
+      return { jank_nil };
     }
 
     sequence_range skip(usize const n) const

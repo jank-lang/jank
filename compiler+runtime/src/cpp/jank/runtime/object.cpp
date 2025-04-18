@@ -14,14 +14,14 @@ namespace jank::runtime
     return equal(lhs, rhs);
   }
 
-  bool operator==(object * const lhs, object_ref const rhs)
+  bool operator==(object const * const lhs, object_ref const rhs)
   {
-    return equal(lhs, rhs);
+    return lhs == rhs.data;
   }
 
-  bool operator!=(object * const lhs, object_ref const rhs)
+  bool operator!=(object const * const lhs, object_ref const rhs)
   {
-    return !equal(lhs, rhs);
+    return lhs != rhs.data;
   }
 }
 

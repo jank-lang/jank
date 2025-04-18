@@ -1093,7 +1093,7 @@ namespace jank::read::parse
     }
 
     auto const meta{ runtime::meta(form) };
-    if(meta != obj::nil::nil_const())
+    if(meta != jank_nil)
     {
       /* We quote the meta as well, to ensure it doesn't get evaluated.
        * Note that Clojure removes the source info from the meta here. We're keeping it
@@ -1202,7 +1202,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ obj::nil::nil_const(), latest_token, latest_token };
+    return object_source_info{ jank_nil, latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()

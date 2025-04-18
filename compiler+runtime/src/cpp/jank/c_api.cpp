@@ -358,17 +358,17 @@ extern "C"
       .erase();
   }
 
-  jank_object_ref jank_nil()
+  jank_object_ref jank_const_nil()
   {
-    return obj::nil::nil_const().erase();
+    return jank_nil.erase();
   }
 
-  jank_object_ref jank_true()
+  jank_object_ref jank_const_true()
   {
     return obj::boolean::true_const().erase();
   }
 
-  jank_object_ref jank_false()
+  jank_object_ref jank_const_false()
   {
     return obj::boolean::false_const().erase();
   }
@@ -891,7 +891,7 @@ extern "C"
   {
     util::scope_exit const finally{ [=]() {
       auto const finally_fn_obj(reinterpret_cast<object *>(finally_fn));
-      if(finally_fn_obj != obj::nil::nil_const())
+      if(finally_fn_obj != jank_nil)
       {
         dynamic_call(finally_fn_obj);
       }
@@ -899,7 +899,7 @@ extern "C"
 
     auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
     auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
-    if(catch_fn_obj == obj::nil::nil_const())
+    if(catch_fn_obj == jank_nil)
     {
       return dynamic_call(try_fn_obj).erase();
     }

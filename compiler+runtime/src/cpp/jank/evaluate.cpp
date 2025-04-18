@@ -205,7 +205,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
-                                                                    obj::nil::nil_const()),
+                                                                    jank_nil),
                              name,
                              {});
     }
@@ -259,7 +259,7 @@ namespace jank::evaluate
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
     var->meta = expr->name->meta;
 
-    auto const meta(var->meta.unwrap_or(obj::nil::nil_const()));
+    auto const meta(var->meta.unwrap_or(jank_nil));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
     var->set_dynamic(truthy(dynamic));
 
@@ -601,7 +601,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::do_ref const expr)
   {
-    object_ref ret{ obj::nil::nil_const() };
+    object_ref ret{ jank_nil };
     for(auto const &form : expr->values)
     {
       ret = eval(form);
@@ -630,7 +630,7 @@ namespace jank::evaluate
     {
       return eval(expr->else_.unwrap());
     }
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   object_ref eval(expr::throw_ref const expr)

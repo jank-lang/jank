@@ -15,7 +15,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(std::nullptr_t const &)
   {
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]

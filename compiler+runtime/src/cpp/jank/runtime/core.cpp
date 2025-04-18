@@ -15,7 +15,7 @@ namespace jank::runtime
 
   native_bool is_nil(object_ref const o)
   {
-    return o == obj::nil::nil_const();
+    return o == jank_nil;
   }
 
   native_bool is_true(object_ref const o)
@@ -30,7 +30,7 @@ namespace jank::runtime
 
   native_bool is_some(object_ref const o)
   {
-    return o != obj::nil::nil_const();
+    return o != jank_nil;
   }
 
   native_bool is_string(object_ref const o)
@@ -82,7 +82,7 @@ namespace jank::runtime
         }
       },
       args);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   object_ref println(object_ref const args)
@@ -114,7 +114,7 @@ namespace jank::runtime
         }
       },
       args);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   object_ref pr(object_ref const args)
@@ -141,7 +141,7 @@ namespace jank::runtime
         }
       },
       args);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   object_ref prn(object_ref const args)
@@ -173,7 +173,7 @@ namespace jank::runtime
         }
       },
       args);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   native_real to_real(object_ref const o)
@@ -270,7 +270,7 @@ namespace jank::runtime
           auto const ns(typed_o->get_namespace());
           if(ns.empty())
           {
-            return obj::nil::nil_const();
+            return jank_nil;
           }
           return make_box<obj::persistent_string>(ns);
         }

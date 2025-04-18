@@ -18,7 +18,6 @@ namespace jank::runtime::obj
     static auto const max_char{ make_box('r') };
     static auto const over{ make_box(7) };
     static auto const under{ make_box(-1) };
-    static auto const nil{ nil::nil_const() };
     static auto const non_int{ make_box('z') };
 
     TEST_CASE("get")
@@ -26,9 +25,9 @@ namespace jank::runtime::obj
       CHECK(equal(s.get(min), min_char));
       CHECK(equal(s.get(mid), mid_char));
       CHECK(equal(s.get(max), max_char));
-      CHECK(equal(s.get(over), nil));
-      CHECK(equal(s.get(under), nil));
-      CHECK(equal(s.get(non_int), nil));
+      CHECK(equal(s.get(over), jank_nil));
+      CHECK(equal(s.get(under), jank_nil));
+      CHECK(equal(s.get(non_int), jank_nil));
     }
     TEST_CASE("get with fallback")
     {

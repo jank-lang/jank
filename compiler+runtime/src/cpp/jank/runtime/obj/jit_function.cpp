@@ -36,7 +36,7 @@ namespace jank::runtime::obj
   void jit_function::to_string(util::string_builder &buff)
   {
     auto const name(
-      get(meta.unwrap_or(nil::nil_const()), __rt_ctx->intern_keyword("name").expect_ok()));
+      get(meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "{} ({}@{})",

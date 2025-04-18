@@ -8,7 +8,7 @@ namespace jank::runtime::behavior::detail
 {
   object_ref validate_meta(object_ref const m)
   {
-    if(!is_map(m) && m != obj::nil::nil_const())
+    if(!is_map(m) && m != jank_nil)
     {
       throw std::runtime_error{ util::format("invalid meta: {}", runtime::to_string(m)) };
     }

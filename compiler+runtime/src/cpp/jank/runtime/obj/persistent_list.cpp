@@ -126,7 +126,7 @@ namespace jank::runtime::obj
     auto const first(data.first());
     if(first.is_none())
     {
-      return nil::nil_const();
+      return jank_nil;
     }
     return first.unwrap();
   }
@@ -157,7 +157,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_list::peek() const
   {
-    return data.first().unwrap_or(nil::nil_const());
+    return data.first().unwrap_or(jank_nil);
   }
 
   persistent_list_ref persistent_list::pop() const

@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res);
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
   native_bool persistent_array_map::contains(object_ref const key) const

@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     auto const found(data.find(elem));
     if(!found)
     {
-      return nil::nil_const();
+      return jank_nil;
     }
     return *found;
   }
@@ -110,7 +110,7 @@ namespace jank::runtime::obj
   object_ref transient_hash_set::get_entry(object_ref const elem) const
   {
     auto const found = call(elem);
-    auto const nil(nil::nil_const());
+    auto const nil(jank_nil);
     if(found == nil)
     {
       return nil;

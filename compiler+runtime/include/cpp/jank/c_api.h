@@ -109,9 +109,9 @@ extern "C"
                               jank_object_ref a10,
                               jank_object_ref rest);
 
-  jank_object_ref jank_nil();
-  jank_object_ref jank_true();
-  jank_object_ref jank_false();
+  jank_object_ref jank_const_nil();
+  jank_object_ref jank_const_true();
+  jank_object_ref jank_const_false();
   jank_object_ref jank_integer_create(jank_native_integer i);
   jank_object_ref jank_real_create(jank_native_real r);
   jank_object_ref jank_ratio_create(jank_native_integer numerator, jank_native_integer denominator);

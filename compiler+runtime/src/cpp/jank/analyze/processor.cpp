@@ -62,7 +62,7 @@ namespace jank::analyze
     auto const expansion(
       runtime::get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-    if(expansion == obj::nil::nil_const())
+    if(expansion == jank_nil)
     {
       return nullptr;
     }
@@ -76,7 +76,7 @@ namespace jank::analyze
   {
     if(expansions.empty())
     {
-      return obj::nil::nil_const();
+      return jank_nil;
     }
 
     /* Try to find an expansion which specifically has the `jank/macro-expansion` key
@@ -87,7 +87,7 @@ namespace jank::analyze
       auto const expansion(
         runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-      if(expansion != obj::nil::nil_const())
+      if(expansion != jank_nil)
       {
         return expansion;
       }
@@ -239,7 +239,7 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
       auto const meta_with_doc(
-        runtime::assoc(qualified_sym->meta.unwrap_or(runtime::obj::nil::nil_const()),
+        runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil),
                        rt_ctx.intern_keyword("doc").expect_ok(),
                        docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
@@ -470,7 +470,7 @@ namespace jank::analyze
 
     /* Macros aren't lifted, since they're not used during runtime. */
     auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
-    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw) == runtime::obj::nil::nil_const())
+    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw) == runtime::jank_nil)
     {
       current_frame->lift_var(qualified_sym);
     }

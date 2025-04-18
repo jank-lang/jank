@@ -224,3 +224,11 @@ namespace jank::runtime::obj
     return data;
   }
 }
+
+namespace jank::runtime
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::boolean_ref jank_true{ obj::boolean::true_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::boolean_ref jank_false{ obj::boolean::false_const() };
+}

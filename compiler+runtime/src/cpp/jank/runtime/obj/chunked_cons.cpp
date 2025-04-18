@@ -90,9 +90,9 @@ namespace jank::runtime::obj
         {
           o->head = typed_tail->first();
           o->tail = typed_tail->next();
-          if(o->tail == nil::nil_const())
+          if(o->tail == jank_nil)
           {
-            o->tail = nil::nil_const();
+            o->tail = jank_nil;
           }
           return o;
         }

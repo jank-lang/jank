@@ -17,7 +17,7 @@ namespace jank::runtime
   {
     static object_ref call()
     {
-      return obj::nil::nil_const();
+      return jank_nil;
     }
   };
 

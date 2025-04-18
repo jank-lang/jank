@@ -38,7 +38,7 @@ namespace jank::read::parse
       lex::processor lp{ "nil" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(equal(r.expect_ok().unwrap().ptr, obj::nil::nil_const()));
+      CHECK(equal(r.expect_ok().unwrap().ptr, jank_nil));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::nil });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
