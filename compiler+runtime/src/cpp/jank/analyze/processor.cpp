@@ -340,7 +340,7 @@ namespace jank::analyze
 
     struct keys_and_exprs
     {
-      native_vector<native_integer> keys{};
+      native_vector<i64> keys{};
       native_vector<expression_ref> exprs{};
     };
 

@@ -29,8 +29,8 @@ namespace jank::runtime
 
   obj::persistent_string_ref subs(object_ref s, object_ref start);
   obj::persistent_string_ref subs(object_ref s, object_ref start, object_ref end);
-  native_integer first_index_of(object_ref s, object_ref m);
-  native_integer last_index_of(object_ref s, object_ref m);
+  i64 first_index_of(object_ref s, object_ref m);
+  i64 last_index_of(object_ref s, object_ref m);
 
   native_bool is_named(object_ref o);
   jtl::immutable_string name(object_ref o);

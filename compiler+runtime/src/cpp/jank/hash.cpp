@@ -101,9 +101,9 @@ namespace jank::hash
     return fmix(h1, 8);
   }
 
-  uint32_t integer(native_integer const input)
+  uint32_t integer(i64 const input)
   {
-    if constexpr(sizeof(uint64_t) == sizeof(native_integer))
+    if constexpr(sizeof(uint64_t) == sizeof(i64))
     {
       return integer(static_cast<uint64_t>(input));
     }
@@ -115,7 +115,7 @@ namespace jank::hash
 
   uint32_t real(native_real const input)
   {
-    if constexpr(8 == sizeof(native_integer))
+    if constexpr(8 == sizeof(i64))
     {
       auto const v(*reinterpret_cast<uint64_t const *>(&input));
       return v ^ (v >> 32);

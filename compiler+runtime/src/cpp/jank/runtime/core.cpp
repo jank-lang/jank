@@ -189,7 +189,7 @@ namespace jank::runtime
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, native_integer const start) -> obj::persistent_string_ref {
+      [](auto const typed_s, i64 const start) -> obj::persistent_string_ref {
         return typed_s->substring(start).expect_ok();
       },
       s,
@@ -199,27 +199,27 @@ namespace jank::runtime
   obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, native_integer const start, native_integer const end)
+      [](auto const typed_s, i64 const start, i64 const end)
         -> obj::persistent_string_ref { return typed_s->substring(start, end).expect_ok(); },
       s,
       to_int(start),
       to_int(end));
   }
 
-  native_integer first_index_of(object_ref const s, object_ref const m)
+  i64 first_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> native_integer {
+      [](auto const typed_s, object_ref const m) -> i64 {
         return typed_s->first_index_of(m);
       },
       s,
       m);
   }
 
-  native_integer last_index_of(object_ref const s, object_ref const m)
+  i64 last_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> native_integer {
+      [](auto const typed_s, object_ref const m) -> i64 {
         return typed_s->last_index_of(m);
       },
       s,

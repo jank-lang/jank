@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::range };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
-    static constexpr native_integer chunk_size{ 32 };
+    static constexpr i64 chunk_size{ 32 };
 
     using bounds_check_t = native_bool (*)(object_ref, object_ref);
 

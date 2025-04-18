@@ -51,12 +51,12 @@ namespace jank::runtime::obj
     return sym->to_hash() + 0x9e3779b9;
   }
 
-  native_integer keyword::compare(object const &o) const
+  i64 keyword::compare(object const &o) const
   {
     return compare(*expect_object<keyword>(&o));
   }
 
-  native_integer keyword::compare(keyword const &s) const
+  i64 keyword::compare(keyword const &s) const
   {
     return sym->compare(*s.sym);
   }

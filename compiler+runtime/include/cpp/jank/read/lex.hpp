@@ -120,8 +120,8 @@ namespace jank::read::lex
     native_bool operator==(ratio const &rhs) const;
     native_bool operator!=(ratio const &rhs) const;
 
-    native_integer numerator{};
-    native_integer denominator{};
+    i64 numerator{};
+    i64 denominator{};
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to
@@ -150,7 +150,7 @@ namespace jank::read::lex
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
-          native_integer const);
+          i64 const);
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
@@ -172,7 +172,7 @@ namespace jank::read::lex
 #ifdef JANK_TEST
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
     token(size_t offset, size_t width, token_kind const k);
-    token(size_t offset, size_t width, token_kind const k, native_integer const);
+    token(size_t offset, size_t width, token_kind const k, i64 const);
     token(size_t offset, size_t width, token_kind const k, native_real const);
     token(size_t offset, size_t width, token_kind const k, native_persistent_string_view const);
     token(size_t offset, size_t width, token_kind const k, char const * const);
@@ -195,7 +195,7 @@ namespace jank::read::lex
     source_position start, end;
     token_kind kind{ token_kind::eof };
     std::variant<no_data,
-                 native_integer,
+                 i64,
                  native_real,
                  native_persistent_string_view,
                  native_bool,

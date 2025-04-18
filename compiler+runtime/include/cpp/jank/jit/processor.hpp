@@ -56,7 +56,7 @@ namespace jank::jit
     jtl::option<jtl::immutable_string> find_dynamic_lib(jtl::immutable_string const &lib) const;
 
     std::unique_ptr<clang::Interpreter> interpreter;
-    native_integer optimization_level{};
+    i64 optimization_level{};
     native_vector<std::filesystem::path> library_dirs;
   };
 }

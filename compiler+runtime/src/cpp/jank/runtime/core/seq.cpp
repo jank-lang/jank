@@ -750,7 +750,7 @@ namespace jank::runtime
       m);
   }
 
-  object_ref subvec(object_ref const o, native_integer const start, native_integer const end)
+  object_ref subvec(object_ref const o, i64 const start, i64 const end)
   {
     if(o->type != object_type::persistent_vector)
     {
@@ -793,7 +793,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
-          native_integer i{};
+          i64 i{};
           for(auto const e : make_sequence_range(typed_o))
           {
             if(i == index)
@@ -830,7 +830,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
-          native_integer i{};
+          i64 i{};
           for(auto const e : make_sequence_range(typed_o))
           {
             if(i == index)

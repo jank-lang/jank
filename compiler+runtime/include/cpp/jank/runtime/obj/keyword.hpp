@@ -33,10 +33,10 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(keyword const &) const;
+    i64 compare(keyword const &) const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;

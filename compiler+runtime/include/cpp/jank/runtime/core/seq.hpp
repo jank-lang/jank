@@ -110,7 +110,7 @@ namespace jank::runtime
   object_ref find(object_ref s, object_ref key);
   native_bool contains(object_ref s, object_ref key);
   object_ref merge(object_ref m, object_ref other);
-  object_ref subvec(object_ref o, native_integer start, native_integer end);
+  object_ref subvec(object_ref o, i64 start, i64 end);
   object_ref nth(object_ref o, object_ref idx);
   object_ref nth(object_ref o, object_ref idx, object_ref fallback);
   object_ref peek(object_ref o);

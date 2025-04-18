@@ -10,10 +10,10 @@ namespace jank::analyze::expr
                local_frame_ptr const frame,
                native_bool const needs_box,
                expression_ref const value_expr,
-               native_integer const shift,
-               native_integer const mask,
+               i64 const shift,
+               i64 const mask,
                expression_ref const default_expr,
-               native_vector<native_integer> &&keys,
+               native_vector<i64> &&keys,
                native_vector<expression_ref> &&exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , value_expr{ value_expr }

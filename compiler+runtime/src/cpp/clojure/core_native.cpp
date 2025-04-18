@@ -333,7 +333,7 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("empty", &empty);
   intern_fn("count", static_cast<size_t (*)(object_ref)>(&sequence_length));
   intern_fn("boolean", static_cast<native_bool (*)(object_ref)>(&truthy));
-  intern_fn("integer", static_cast<native_integer (*)(object_ref)>(&to_int));
+  intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
   intern_fn("real", static_cast<native_real (*)(object_ref)>(&to_real));
   intern_fn("seq", static_cast<object_ref (*)(object_ref)>(&seq));
   intern_fn("fresh-seq", static_cast<object_ref (*)(object_ref)>(&fresh_seq));
@@ -486,8 +486,8 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("methods", &core_native::methods);
   intern_fn("get-method", &core_native::get_method);
   intern_fn("prefers", &core_native::prefers);
-  intern_val("int-min", std::numeric_limits<native_integer>::min());
-  intern_val("int-max", std::numeric_limits<native_integer>::max());
+  intern_val("int-min", std::numeric_limits<i64>::min());
+  intern_val("int-max", std::numeric_limits<i64>::max());
   intern_val("int32-min", std::numeric_limits<int32_t>::min());
   intern_val("int32-max", std::numeric_limits<int32_t>::max());
   intern_fn("sleep", &core_native::sleep);

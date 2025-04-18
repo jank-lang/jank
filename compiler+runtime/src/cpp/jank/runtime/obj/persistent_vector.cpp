@@ -118,13 +118,13 @@ namespace jank::runtime::obj
     return hash = hash::ordered(data.begin(), data.end());
   }
 
-  native_integer persistent_vector::compare(object const &o) const
+  i64 persistent_vector::compare(object const &o) const
   {
     return visit_type<persistent_vector>([this](auto const typed_o) { return compare(*typed_o); },
                                          &o);
   }
 
-  native_integer persistent_vector::compare(persistent_vector const &v) const
+  i64 persistent_vector::compare(persistent_vector const &v) const
   {
     auto const size(data.size());
     auto const v_size(v.data.size());

@@ -27,11 +27,11 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(int const i)
   {
-    return make_box<obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<i64>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_integer const i)
+  inline auto make_box(i64 const i)
   {
     return make_box<obj::integer>(i);
   }
@@ -45,7 +45,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(size_t const i)
   {
-    return make_box<obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<i64>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]

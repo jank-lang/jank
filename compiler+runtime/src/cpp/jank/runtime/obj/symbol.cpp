@@ -72,12 +72,12 @@ namespace jank::runtime::obj
     return ns == s.ns && name == s.name;
   }
 
-  native_integer symbol::compare(object const &o) const
+  i64 symbol::compare(object const &o) const
   {
     return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
   }
 
-  native_integer symbol::compare(symbol const &s) const
+  i64 symbol::compare(symbol const &s) const
   {
     if(equal(s))
     {

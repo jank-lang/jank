@@ -614,7 +614,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_integer i{ 1 }; i < 3; ++i)
+        for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
@@ -698,7 +698,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_integer i{ 1 }; i < 3; ++i)
+        for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
@@ -769,7 +769,7 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
 
         size_t offset{};
-        for(native_integer i{ 1 }; i < 3; ++i)
+        for(i64 i{ 1 }; i < 3; ++i)
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,

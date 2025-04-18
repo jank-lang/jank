@@ -55,7 +55,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_integer const d)
+               i64 const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -126,7 +126,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, native_integer const d)
+  token::token(size_t const offset, size_t const width, token_kind const k, i64 const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -430,7 +430,7 @@ namespace jank::read::lex
     return is_lower_letter(c) || is_upper_letter(c);
   }
 
-  static native_bool is_valid_num_char(char32_t const c, native_integer const radix)
+  static native_bool is_valid_num_char(char32_t const c, i64 const radix)
   {
     if(c == '-' || c == '+' || c == '.')
     {
@@ -766,7 +766,7 @@ namespace jank::read::lex
                         pos,
                         token_kind::ratio,
                         { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
-                          .denominator = std::get<native_integer>(denominator_token.data) }));
+                          .denominator = std::get<i64>(denominator_token.data) }));
               }
               return denominator.expect_err();
             }
@@ -904,7 +904,7 @@ namespace jank::read::lex
                                    * (found_beginning_negative ? -1 : 1) };
             if(errno == ERANGE)
             {
-              static constexpr auto const max(std::numeric_limits<native_integer>::max());
+              static constexpr auto const max(std::numeric_limits<i64>::max());
               /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
               auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
               return error::lex_invalid_number(

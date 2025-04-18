@@ -50,12 +50,12 @@ namespace jank::runtime::obj
     return data.to_hash();
   }
 
-  native_integer persistent_string::compare(object const &o) const
+  i64 persistent_string::compare(object const &o) const
   {
     return compare(*try_object<persistent_string>(&o));
   }
 
-  native_integer persistent_string::compare(persistent_string const &s) const
+  i64 persistent_string::compare(persistent_string const &s) const
   {
     return data.compare(s.data);
   }
@@ -122,13 +122,13 @@ namespace jank::runtime::obj
     return get(index, fallback);
   }
 
-  jtl::string_result<persistent_string_ref> persistent_string::substring(native_integer start) const
+  jtl::string_result<persistent_string_ref> persistent_string::substring(i64 start) const
   {
-    return substring(start, static_cast<native_integer>(data.size()));
+    return substring(start, static_cast<i64>(data.size()));
   }
 
   jtl::string_result<persistent_string_ref>
-  persistent_string::substring(native_integer const start, native_integer const end) const
+  persistent_string::substring(i64 const start, i64 const end) const
   {
     if(start < 0)
     {
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
     return ok(make_box(data.substr(start, end - start)));
   }
 
-  native_integer persistent_string::first_index_of(object_ref const m) const
+  i64 persistent_string::first_index_of(object_ref const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.find(s));
@@ -154,10 +154,10 @@ namespace jank::runtime::obj
     {
       return -1;
     }
-    return static_cast<native_integer>(found);
+    return static_cast<i64>(found);
   }
 
-  native_integer persistent_string::last_index_of(object_ref const m) const
+  i64 persistent_string::last_index_of(object_ref const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));
@@ -165,7 +165,7 @@ namespace jank::runtime::obj
     {
       return -1;
     }
-    return static_cast<native_integer>(found);
+    return static_cast<i64>(found);
   }
 
   size_t persistent_string::count() const

@@ -30,12 +30,12 @@ namespace jank::runtime::obj
     return 0;
   }
 
-  native_integer nil::compare(object const &o) const
+  i64 nil::compare(object const &o) const
   {
     return (o.type == object_type::nil ? 0 : -1);
   }
 
-  native_integer nil::compare(nil const &) const
+  i64 nil::compare(nil const &) const
   {
     return 0;
   }

@@ -24,10 +24,10 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(boolean const &) const;
+    i64 compare(boolean const &) const;
 
     object base{ obj_type };
     native_bool data{};
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
     integer() = default;
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
-    integer(native_integer const d);
+    integer(i64 const d);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -53,16 +53,16 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(integer const &) const;
+    i64 compare(integer const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
+    i64 to_integer() const;
     native_real to_real() const;
 
-    native_integer data{};
+    i64 data{};
     object base{ obj_type };
   };
 
@@ -86,13 +86,13 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(real const &) const;
+    i64 compare(real const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
+    i64 to_integer() const;
     native_real to_real() const;
 
     native_real data{};

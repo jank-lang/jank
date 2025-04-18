@@ -29,7 +29,7 @@ namespace jank::hash
 
   uint32_t integer(uint32_t const input);
   uint32_t integer(uint64_t const input);
-  uint32_t integer(native_integer const input);
+  uint32_t integer(i64 const input);
 
   uint32_t real(native_real const input);
 

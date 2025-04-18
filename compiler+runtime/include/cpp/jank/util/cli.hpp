@@ -28,7 +28,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    native_integer optimization_level{};
+    i64 optimization_level{};
 
     /* Run command. */
     native_transient_string target_file;

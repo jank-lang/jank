@@ -373,7 +373,7 @@ extern "C"
     return jank_false.erase();
   }
 
-  jank_object_ref jank_integer_create(jank_native_integer const i)
+  jank_object_ref jank_integer_create(jank_i64 const i)
   {
     return make_box(i).erase();
   }
@@ -384,7 +384,7 @@ extern "C"
   }
 
   jank_object_ref
-  jank_ratio_create(jank_native_integer const numerator, jank_native_integer const denominator)
+  jank_ratio_create(jank_i64 const numerator, jank_i64 const denominator)
   {
     return make_box(runtime::obj::ratio_data(numerator, denominator)).erase();
   }
@@ -826,7 +826,7 @@ extern "C"
     return to_hash(o_obj);
   }
 
-  static native_integer to_integer_or_hash(object const *o)
+  static i64 to_integer_or_hash(object const *o)
   {
     if(o->type == object_type::integer)
     {
@@ -836,15 +836,15 @@ extern "C"
     return to_hash(o);
   }
 
-  jank_native_integer jank_to_integer(jank_object_ref const o)
+  jank_i64 jank_to_integer(jank_object_ref const o)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
     return to_integer_or_hash(o_obj);
   }
 
-  jank_native_integer jank_shift_mask_case_integer(jank_object_ref const o,
-                                                   jank_native_integer const shift,
-                                                   jank_native_integer const mask)
+  jank_i64 jank_shift_mask_case_integer(jank_object_ref const o,
+                                                   jank_i64 const shift,
+                                                   jank_i64 const mask)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
     auto integer{ to_integer_or_hash(o_obj) };

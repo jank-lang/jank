@@ -255,7 +255,7 @@ namespace jank::runtime::behavior
      * and transients, the hash is actually just the object's address. For others, it's
      * based on the value, or values, within the object. There are a set of hash functions
      * which should be used for this in hash.hpp. */
-    { t->to_hash() } -> std::convertible_to<native_integer>;
+    { t->to_hash() } -> std::convertible_to<i64>;
 
     /* Every object needs to have this base field, which is the actual object field.
      * When we pass around object pointers, we pass around pointers to this field within

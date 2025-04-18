@@ -23,10 +23,10 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(nil const &) const;
+    i64 compare(nil const &) const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref const key);

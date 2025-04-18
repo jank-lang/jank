@@ -14,6 +14,6 @@ namespace jank::runtime::behavior
        *
        * For sequences, all values need to be considered for comparison.
        */
-    { t->compare(std::declval<object const &>()) } -> std::convertible_to<native_integer>;
+    { t->compare(std::declval<object const &>()) } -> std::convertible_to<i64>;
   };
 }

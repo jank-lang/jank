@@ -6,14 +6,14 @@ namespace jank::runtime::obj
 {
   struct ratio_data
   {
-    ratio_data(native_integer const, native_integer const);
+    ratio_data(i64 const, i64 const);
     ratio_data(ratio_data const &) = default;
 
     native_real to_real() const;
-    native_integer to_integer() const;
+    i64 to_integer() const;
 
-    native_integer numerator{};
-    native_integer denominator{};
+    i64 numerator{};
+    i64 denominator{};
   };
 
   using integer_ref = oref<struct integer>;
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     ratio(ratio const &) = default;
     ratio(ratio_data const &);
 
-    static object_ref create(native_integer const, native_integer const);
+    static object_ref create(i64 const, i64 const);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -39,13 +39,13 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(ratio const &) const;
+    i64 compare(ratio const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
+    i64 to_integer() const;
     native_real to_real() const;
 
     object base{ obj_type };
@@ -59,8 +59,8 @@ namespace jank::runtime::obj
   native_real operator+(ratio_data const &l, real_ref r);
   native_real operator+(ratio_data const &l, native_real r);
   native_real operator+(native_real l, ratio_data const &r);
-  ratio_ref operator+(ratio_data const &l, native_integer r);
-  ratio_ref operator+(native_integer l, ratio_data const &r);
+  ratio_ref operator+(ratio_data const &l, i64 r);
+  ratio_ref operator+(i64 l, ratio_data const &r);
   object_ref operator-(ratio_data const &l, ratio_data const &r);
   ratio_ref operator-(integer_ref l, ratio_data const &r);
   ratio_ref operator-(ratio_data const &l, integer_ref r);
@@ -68,8 +68,8 @@ namespace jank::runtime::obj
   native_real operator-(ratio_data const &l, real_ref r);
   native_real operator-(ratio_data const &l, native_real r);
   native_real operator-(native_real l, ratio_data const &r);
-  ratio_ref operator-(ratio_data const &l, native_integer r);
-  ratio_ref operator-(native_integer l, ratio_data const &r);
+  ratio_ref operator-(ratio_data const &l, i64 r);
+  ratio_ref operator-(i64 l, ratio_data const &r);
   object_ref operator*(ratio_data const &l, ratio_data const &r);
   object_ref operator*(integer_ref l, ratio_data const &r);
   object_ref operator*(ratio_data const &l, integer_ref r);
@@ -77,8 +77,8 @@ namespace jank::runtime::obj
   native_real operator*(ratio_data const &l, real_ref r);
   native_real operator*(ratio_data const &l, native_real r);
   native_real operator*(native_real l, ratio_data const &r);
-  object_ref operator*(ratio_data const &l, native_integer r);
-  object_ref operator*(native_integer l, ratio_data const &r);
+  object_ref operator*(ratio_data const &l, i64 r);
+  object_ref operator*(i64 l, ratio_data const &r);
   object_ref operator/(ratio_data const &l, ratio_data const &r);
   object_ref operator/(integer_ref l, ratio_data const &r);
   ratio_ref operator/(ratio_data const &l, integer_ref r);
@@ -86,8 +86,8 @@ namespace jank::runtime::obj
   native_real operator/(ratio_data const &l, real_ref r);
   native_real operator/(ratio_data const &l, native_real r);
   native_real operator/(native_real l, ratio_data const &r);
-  ratio_ref operator/(ratio_data const &l, native_integer r);
-  object_ref operator/(native_integer l, ratio_data const &r);
+  ratio_ref operator/(ratio_data const &l, i64 r);
+  object_ref operator/(i64 l, ratio_data const &r);
   native_bool operator==(ratio_data const &l, ratio_data const &r);
   native_bool operator==(integer_ref l, ratio_data const &r);
   native_bool operator==(ratio_data const &l, integer_ref r);
@@ -95,8 +95,8 @@ namespace jank::runtime::obj
   native_bool operator==(ratio_data const &l, real_ref r);
   native_bool operator==(ratio_data const &l, native_real r);
   native_bool operator==(native_real l, ratio_data const &r);
-  native_bool operator==(ratio_data const &l, native_integer r);
-  native_bool operator==(native_integer l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, i64 r);
+  native_bool operator==(i64 l, ratio_data const &r);
   native_bool operator<(ratio_data const &l, ratio_data const &r);
   native_bool operator<(integer_ref l, ratio_data const &r);
   native_bool operator<(ratio_data const &l, integer_ref r);
@@ -104,8 +104,8 @@ namespace jank::runtime::obj
   native_bool operator<(ratio_data const &l, real_ref r);
   native_bool operator<(ratio_data const &l, native_real r);
   native_bool operator<(native_real l, ratio_data const &r);
-  native_bool operator<(ratio_data const &l, native_integer r);
-  native_bool operator<(native_integer l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, i64 r);
+  native_bool operator<(i64 l, ratio_data const &r);
   native_bool operator<(native_bool l, ratio_data const &r);
   native_bool operator<(ratio_data const &l, native_bool r);
   native_bool operator<=(ratio_data const &l, ratio_data const &r);
@@ -115,8 +115,8 @@ namespace jank::runtime::obj
   native_bool operator<=(ratio_data const &l, real_ref r);
   native_bool operator<=(ratio_data const &l, native_real r);
   native_bool operator<=(native_real l, ratio_data const &r);
-  native_bool operator<=(ratio_data const &l, native_integer r);
-  native_bool operator<=(native_integer l, ratio_data const &r);
+  native_bool operator<=(ratio_data const &l, i64 r);
+  native_bool operator<=(i64 l, ratio_data const &r);
   native_bool operator>(ratio_data const &l, ratio_data const &r);
   native_bool operator>(integer_ref l, ratio_data const &r);
   native_bool operator>(ratio_data const &l, integer_ref r);
@@ -124,8 +124,8 @@ namespace jank::runtime::obj
   native_bool operator>(ratio_data const &l, real_ref r);
   native_bool operator>(ratio_data const &l, native_real r);
   native_bool operator>(native_real l, ratio_data const &r);
-  native_bool operator>(ratio_data const &l, native_integer r);
-  native_bool operator>(native_integer l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, i64 r);
+  native_bool operator>(i64 l, ratio_data const &r);
   native_bool operator>(native_bool l, ratio_data const &r);
   native_bool operator>(ratio_data const &l, native_bool r);
   native_bool operator>=(ratio_data const &l, ratio_data const &r);
@@ -135,6 +135,6 @@ namespace jank::runtime::obj
   native_bool operator>=(ratio_data const &l, real_ref r);
   native_bool operator>=(ratio_data const &l, native_real r);
   native_bool operator>=(native_real l, ratio_data const &r);
-  native_bool operator>=(ratio_data const &l, native_integer r);
-  native_bool operator>=(native_integer l, ratio_data const &r);
+  native_bool operator>=(ratio_data const &l, i64 r);
+  native_bool operator>=(i64 l, ratio_data const &r);
 }

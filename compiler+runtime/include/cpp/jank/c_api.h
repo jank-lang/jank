@@ -11,7 +11,7 @@ extern "C"
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef void *jank_object_ref;
   /* NOLINTNEXTLINE(modernize-use-using) */
-  typedef long long jank_native_integer;
+  typedef long long jank_i64;
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef double jank_native_real;
   /* NOLINTNEXTLINE(modernize-use-using) */
@@ -112,9 +112,9 @@ extern "C"
   jank_object_ref jank_const_nil();
   jank_object_ref jank_const_true();
   jank_object_ref jank_const_false();
-  jank_object_ref jank_integer_create(jank_native_integer i);
+  jank_object_ref jank_integer_create(jank_i64 i);
   jank_object_ref jank_real_create(jank_native_real r);
-  jank_object_ref jank_ratio_create(jank_native_integer numerator, jank_native_integer denominator);
+  jank_object_ref jank_ratio_create(jank_i64 numerator, jank_i64 denominator);
   jank_object_ref jank_string_create(char const *s);
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_character_create(char const *s);
@@ -256,10 +256,10 @@ extern "C"
   jank_native_bool jank_truthy(jank_object_ref o);
   jank_native_bool jank_equal(jank_object_ref l, jank_object_ref r);
   jank_native_hash jank_to_hash(jank_object_ref o);
-  jank_native_integer jank_to_integer(jank_object_ref o);
-  jank_native_integer jank_shift_mask_case_integer(jank_object_ref o,
-                                                   jank_native_integer shift,
-                                                   jank_native_integer mask);
+  jank_i64 jank_to_integer(jank_object_ref o);
+  jank_i64 jank_shift_mask_case_integer(jank_object_ref o,
+                                                   jank_i64 shift,
+                                                   jank_i64 mask);
 
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
 

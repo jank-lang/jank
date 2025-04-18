@@ -30,7 +30,7 @@ namespace jank::runtime
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  native_integer compare(object_ref const l, object_ref const r)
+  i64 compare(object_ref const l, object_ref const r)
   {
     if(l == r)
     {
@@ -45,7 +45,7 @@ namespace jank::runtime
       }
 
       return visit_object(
-        [](auto const typed_l, auto const r) -> native_integer {
+        [](auto const typed_l, auto const r) -> i64 {
           using L = typename decltype(typed_l)::value_type;
           if constexpr(behavior::comparable<L>)
           {

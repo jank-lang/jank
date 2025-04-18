@@ -38,10 +38,10 @@ namespace jank::runtime::obj
     native_bool equal(symbol const &) const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(symbol const &) const;
+    i64 compare(symbol const &) const;
 
     /* behavior::metadatable */
     symbol_ref with_meta(object_ref m) const;

@@ -39,7 +39,7 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ lt(static_cast<native_integer>(0), step.erase()) ? positive_step_bounds_check
+    , bounds_check{ lt(static_cast<i64>(0), step.erase()) ? positive_step_bounds_check
                                                                      : negative_step_bounds_check }
   {
   }
@@ -173,8 +173,8 @@ namespace jank::runtime::obj
     auto const diff{ sub(end, start) };
     auto const offset{ s > 0 ? -1 : 1 };
 
-    if((s > 0 && diff > std::numeric_limits<native_integer>::max() - s + offset)
-       || (s < 0 && diff < std::numeric_limits<native_integer>::min() - s + offset))
+    if((s > 0 && diff > std::numeric_limits<i64>::max() - s + offset)
+       || (s < 0 && diff < std::numeric_limits<i64>::min() - s + offset))
     {
       throw std::runtime_error("[Integer-Range] Overflow occurred in arithmetic");
     }

@@ -34,10 +34,10 @@ namespace jank::runtime::obj
     native_hash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(persistent_string const &) const;
+    i64 compare(persistent_string const &) const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
@@ -49,14 +49,14 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index) const;
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
-    jtl::string_result<persistent_string_ref> substring(native_integer start) const;
+    jtl::string_result<persistent_string_ref> substring(i64 start) const;
     jtl::string_result<persistent_string_ref>
-    substring(native_integer start, native_integer end) const;
+    substring(i64 start, i64 end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */
-    native_integer first_index_of(object_ref const m) const;
-    native_integer last_index_of(object_ref const m) const;
+    i64 first_index_of(object_ref const m) const;
+    i64 last_index_of(object_ref const m) const;
 
     /* behavior::countable */
     size_t count() const;

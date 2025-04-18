@@ -143,7 +143,7 @@ namespace jank::runtime
 
       SUBCASE("Addition with native integer")
       {
-        native_integer const i{ 2ll };
+        i64 const i{ 2ll };
         auto const result{ *(ratio + i) };
         auto const result2{ *(i + ratio) };
         CHECK_EQ(result.data.numerator, 11);
@@ -202,7 +202,7 @@ namespace jank::runtime
 
       SUBCASE("Division with native integer")
       {
-        native_integer const i{ 2ll };
+        i64 const i{ 2ll };
         auto const result{ ratio / i };
         auto const result2{ expect_object<obj::ratio>(i / ratio) };
         CHECK_EQ(result->data.numerator, 3);
@@ -231,7 +231,7 @@ namespace jank::runtime
 
       SUBCASE("Comparison with native int")
       {
-        native_integer const i{ 1ll };
+        i64 const i{ 1ll };
         CHECK_LT(ratio, i);
         CHECK_NE(ratio, i);
         CHECK_GT(i, ratio);
@@ -249,7 +249,7 @@ namespace jank::runtime
     TEST_CASE("Ratio mixed arithmetic and comparisons")
     {
       obj::ratio_data const ratio{ 5, 8 };
-      native_integer const i{ 3ll };
+      i64 const i{ 3ll };
       native_real const r{ 0.25 };
 
       SUBCASE("Complex arithmetic chain")

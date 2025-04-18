@@ -14,7 +14,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::repeat };
     static constexpr native_bool pointer_free{ false };
     static constexpr native_bool is_sequential{ true };
-    static constexpr native_integer infinite{ -1 };
+    static constexpr i64 infinite{ -1 };
 
     repeat() = default;
     repeat(object_ref value);
