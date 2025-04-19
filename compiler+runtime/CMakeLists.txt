@@ -33,6 +33,7 @@ option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" 
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
 option(jank_test "Enable jank's test suite" OFF)
+option(jank_profile "Enable Tracy profiling" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
@@ -115,6 +116,7 @@ endif()
 include(cmake/coverage.cmake)
 include(cmake/analyze.cmake)
 include(cmake/sanitization.cmake)
+include(cmake/profile.cmake)
 
 # Enable easier tooling during development.
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
@@ -329,6 +331,7 @@ target_link_libraries(
   LLVM
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
+  ${jank_link_whole_start} Tracy::TracyClient ${jank_link_whole_end}
 )
 
 jank_hook_llvm(jank_lib)

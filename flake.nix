@@ -45,6 +45,19 @@
             clangbuildanalyzer
             openjdk
 
+            # Tracy deps.
+            dbus
+            capstone
+            freetype
+            tbb
+            glfw # Only for X build.
+            wayland-scanner
+            libglvnd
+            libxkbcommon
+            wayland
+            wayland-protocols
+            cage
+
             ## Dev libs.
             doctest
           ];
