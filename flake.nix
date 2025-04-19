@@ -51,6 +51,8 @@
 
           shellHook =
           ''
+          export CC=clang
+          export CXX=clang++
           export ASAN_OPTIONS=detect_leaks=0
           '';
 
