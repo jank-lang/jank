@@ -32,7 +32,7 @@ project(
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
-option(jank_test "Whether or not to build jank's compilter test suite" OFF)
+option(jank_test "Enable jank's test suite" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
