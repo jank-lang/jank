@@ -347,11 +347,11 @@ namespace jank::analyze
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj->seq() }; seq.is_some(); seq = seq->next())
+        for(auto seq{ typed_imap_obj->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
         {
           auto const e{ seq->first() };
-          auto const k_obj{ runtime::nth(e, make_box(0)) };
-          auto const v_obj{ runtime::nth(e, make_box(1)) };
+          auto const k_obj{ e->data[0] };
+          auto const v_obj{ e->data[1] };
           if(k_obj.data->type != object_type::integer)
           {
             return err("Map key for case* is expected to be an integer.");

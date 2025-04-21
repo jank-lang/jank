@@ -1068,10 +1068,10 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
-      auto const fn(ctx->module->getOrInsertFunction("jank_var_intern", fn_type));
+      auto const fn(ctx->module->getOrInsertFunction("jank_var_intern_c", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(qualified_name->ns)),
-                                                      gen_global(make_box(qualified_name->name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_c_string(qualified_name->ns),
+                                                      gen_c_string(qualified_name->name) };
       auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
 

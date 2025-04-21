@@ -85,37 +85,6 @@ namespace jank::runtime::obj
     return make_box<persistent_array_map>(meta, std::move(copy));
   }
 
-  object_ref persistent_array_map::conj(object_ref const head) const
-  {
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_hash_map)
-    {
-      return runtime::merge(this, head);
-    }
-
-    if(head->type != object_type::persistent_vector)
-    {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    auto const vec(expect_object<persistent_vector>(head));
-    if(vec->count() != 2)
-    {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    if(data.size() == runtime::detail::native_persistent_array_map::max_size)
-    {
-      return make_box<persistent_hash_map>(meta, data, vec->data[0], vec->data[1]);
-    }
-    else
-    {
-      auto copy(data.clone());
-      copy.insert_or_assign(vec->data[0], vec->data[1]);
-      return make_box<persistent_array_map>(meta, std::move(copy));
-    }
-  }
-
   object_ref persistent_array_map::call(object_ref const o) const
   {
     auto const found(data.find(o));

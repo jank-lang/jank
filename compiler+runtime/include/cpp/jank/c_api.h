@@ -52,6 +52,7 @@ extern "C"
   void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count);
 
   jank_object_ref jank_var_intern(jank_object_ref ns, jank_object_ref name);
+  jank_object_ref jank_var_intern_c(char const * const ns, char const * const name);
   jank_object_ref jank_var_bind_root(jank_object_ref var, jank_object_ref val);
   jank_object_ref jank_var_set_dynamic(jank_object_ref var, jank_object_ref dynamic);
 

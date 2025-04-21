@@ -706,48 +706,72 @@ namespace jank::runtime
   object_ref merge(object_ref const m, object_ref const other)
   {
     return visit_object(
-      [&](auto const typed_m) -> object_ref {
+      [](auto const typed_m, object_ref const other) -> object_ref {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::associatively_writable<T>)
+        if constexpr(jtl::is_same<T, obj::nil>)
         {
-          return visit_object(
-            [&](auto const typed_other) -> object_ref {
-              using O = typename decltype(typed_other)::value_type;
-
-              if constexpr(std::same_as<O, obj::persistent_hash_map>
-                           || std::same_as<O, obj::persistent_array_map>
-                           || std::same_as<O, obj::transient_hash_map>
-                           //|| std::same_as<O, obj::transient_array_map>
-              )
+          return typed_m;
+        }
+        else if constexpr(behavior::associatively_writable<T>)
+        {
+          return visit_map_like(
+            [](auto const typed_other, auto const typed_m) -> object_ref {
+              /* TODO: Check for persistent_array_map and only use an object_ref in
+               * that case. Otherwise, use full type info. */
+              object_ref ret{ typed_m };
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
-                object_ref ret{ typed_m };
-                for(auto const &pair : typed_other->data)
-                {
-                  ret = assoc(ret, pair.first, pair.second);
-                }
-                return ret;
+                auto const e(seq->first());
+                ret = assoc(ret, e->data[0], e->data[1]);
               }
-              else if(std::same_as<O, obj::nil>)
-              {
-                return typed_m;
-              }
-              else
-              {
-                throw std::runtime_error{ util::format("not associatively readable: {} [{}]",
-                                                       typed_other->to_code_string(),
-                                                       object_type_str(typed_other->base.type)) };
-              }
+              return ret;
             },
-            other);
+            other,
+            typed_m);
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m->to_code_string()) };
+          throw std::runtime_error{ util::format("not associatively_writable: {}",
+                                                 typed_m->to_string()) };
         }
       },
-      m);
+      m,
+      other);
+  }
+
+  object_ref merge_in_place(object_ref const m, object_ref const other)
+  {
+    if(other.is_nil())
+    {
+      return m;
+    }
+    return visit_object(
+      [](auto const typed_m, auto const other) -> object_ref {
+        using T = typename decltype(typed_m)::value_type;
+        if constexpr(behavior::associatively_writable_in_place<T>)
+        {
+          return visit_map_like(
+            [](auto const typed_other, auto const typed_m) -> object_ref {
+              auto ret(typed_m);
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+              {
+                auto const e(seq->first());
+                ret = ret->assoc_in_place(e->data[0], e->data[1]);
+              }
+              return ret;
+            },
+            other,
+            typed_m);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
+                                                 typed_m->to_string()) };
+        }
+      },
+      m,
+      other);
   }
 
   object_ref subvec(object_ref const o, i64 const start, i64 const end)

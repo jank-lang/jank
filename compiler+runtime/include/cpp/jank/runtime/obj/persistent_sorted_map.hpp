@@ -75,9 +75,6 @@ namespace jank::runtime::obj
     persistent_sorted_map_ref assoc(object_ref key, object_ref val) const;
     persistent_sorted_map_ref dissoc(object_ref key) const;
 
-    /* behavior::conjable */
-    persistent_sorted_map_ref conj(object_ref head) const;
-
     /* behavior::callable */
     object_ref call(object_ref) const;
     object_ref call(object_ref, object_ref) const;

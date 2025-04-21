@@ -54,6 +54,9 @@ namespace jank::runtime::obj::detail
     /* behavior::metadatable */
     oref<PT> with_meta(object_ref const m) const;
 
+    /* behavior::conjable */
+    object_ref conj(object_ref const head) const;
+
     object base{ PT::obj_type };
     jtl::option<object_ref> meta;
     mutable uhash hash{};

@@ -353,7 +353,7 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
   intern_fn("associative?", &is_associative);
-  intern_fn("assoc", &assoc);
+  intern_fn("assoc", static_cast<object_ref (*)(object_ref, object_ref, object_ref)>(&assoc));
   intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object_ref)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);

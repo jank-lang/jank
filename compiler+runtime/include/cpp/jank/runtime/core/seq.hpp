@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime
@@ -101,6 +102,14 @@ namespace jank::runtime
   object_ref cons(object_ref head, object_ref tail);
   object_ref conj(object_ref s, object_ref o);
   object_ref disj(object_ref s, object_ref o);
+
+  template <typename T>
+  requires behavior::associatively_writable<T>
+  auto assoc(oref<T> const m, object_ref const k, object_ref const v)
+  {
+    return m->assoc(k, v);
+  }
+
   object_ref assoc(object_ref m, object_ref k, object_ref v);
   object_ref dissoc(object_ref m, object_ref k);
   object_ref get(object_ref m, object_ref key);
@@ -110,6 +119,7 @@ namespace jank::runtime
   object_ref find(object_ref s, object_ref key);
   bool contains(object_ref s, object_ref key);
   object_ref merge(object_ref m, object_ref other);
+  object_ref merge_in_place(object_ref m, object_ref other);
   object_ref subvec(object_ref o, i64 start, i64 end);
   object_ref nth(object_ref o, object_ref idx);
   object_ref nth(object_ref o, object_ref idx, object_ref fallback);

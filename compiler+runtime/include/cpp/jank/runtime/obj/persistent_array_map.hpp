@@ -78,9 +78,6 @@ namespace jank::runtime::obj
     object_ref assoc(object_ref key, object_ref val) const;
     persistent_array_map_ref dissoc(object_ref key) const;
 
-    /* behavior::conjable */
-    object_ref conj(object_ref head) const;
-
     /* behavior::callable */
     object_ref call(object_ref) const;
     object_ref call(object_ref, object_ref) const;
