@@ -712,14 +712,15 @@ namespace jank::runtime
       return m;
     }
     return visit_object(
-      [](auto const typed_m, auto const other) -> object_ptr {
+      [](auto const typed_m, object_ptr const other) -> object_ptr {
         using T = typename decltype(typed_m)::value_type;
         if constexpr(behavior::associatively_writable<T>)
         {
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ptr {
-              /* FIXME use auto to use runtime::assoc template */
-              object_ptr ret( typed_m );
+              /* TODO: Check for persistent_array_map and only use an object_ptr in
+               * that case. Otherwise, use full type info. */
+              object_ptr ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
               {
                 auto const e(seq->first());
@@ -753,7 +754,7 @@ namespace jank::runtime
         {
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ptr {
-              auto ret( typed_m );
+              auto ret(typed_m);
               for(auto seq{ typed_other->fresh_seq() }; seq != nullptr; seq = seq->next_in_place())
               {
                 auto const e(seq->first());
