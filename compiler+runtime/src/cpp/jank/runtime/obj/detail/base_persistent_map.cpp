@@ -1,7 +1,12 @@
+#include <fmt/format.h>
+
+#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
 
 namespace jank::runtime::obj::detail
 {
@@ -152,6 +157,34 @@ namespace jank::runtime::obj::detail
   size_t base_persistent_map<PT, ST, V>::count() const
   {
     return static_cast<PT const *>(this)->data.size();
+  }
+
+  template <typename PT, typename ST, typename V>
+  object_ptr base_persistent_map<PT, ST, V>::conj(object_ptr const head) const
+  {
+    auto const ret(static_cast<PT const *>(this));
+    if(head == obj::nil::nil_const())
+    {
+      return ret;
+    }
+
+    if(is_map(head))
+    {
+      return merge(ret, head);
+    }
+
+    if(head->type != object_type::persistent_vector)
+    {
+      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+    }
+
+    auto const vec(expect_object<obj::persistent_vector>(head));
+    if(vec->count() != 2)
+    {
+      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+    }
+
+    return ret->assoc(vec->data[0], vec->data[1]);
   }
 
   template <typename PT, typename ST, typename V>

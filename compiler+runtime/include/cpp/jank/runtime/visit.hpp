@@ -561,8 +561,12 @@ namespace jank::runtime
       std::forward<Args>(args)...);
   }
 
+  template <typename F, typename... Args>
+  concept map_visitable
+    = requires(F f) { f(obj::persistent_hash_map_ptr{}, std::declval<Args>()...); };
+
   template <typename F1, typename F2, typename... Args>
-  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  requires(map_visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
   [[gnu::hot]]
   constexpr auto
   visit_map_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
@@ -633,7 +637,7 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
         }
         break;
-      /* Not map-like. */
+      /* Not set-like. */
       default:
         return else_fn();
     }
