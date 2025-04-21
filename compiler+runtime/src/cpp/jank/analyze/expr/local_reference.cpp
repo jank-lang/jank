@@ -8,8 +8,8 @@ namespace jank::analyze::expr
 
   local_reference::local_reference(expression_position const position,
                                    local_frame_ptr const frame,
-                                   native_bool const needs_box,
-                                   runtime::obj::symbol_ptr const name,
+                                   bool const needs_box,
+                                   runtime::obj::symbol_ref const name,
                                    local_binding_ptr const binding)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
@@ -17,7 +17,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr local_reference::to_runtime_data() const
+  object_ref local_reference::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("name"),

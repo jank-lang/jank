@@ -7,36 +7,36 @@
 
 namespace jank::runtime::obj
 {
-  chunked_cons::chunked_cons(object_ptr const head, object_ptr const tail)
+  chunked_cons::chunked_cons(object_ref const head, object_ref const tail)
     : head{ head }
-    , tail{ tail == nil::nil_const() ? nullptr : tail }
+    , tail{ tail }
   {
-    jank_debug_assert(head);
+    jank_debug_assert(head.is_some());
   }
 
-  chunked_cons::chunked_cons(object_ptr const meta, object_ptr const head, object_ptr const tail)
+  chunked_cons::chunked_cons(object_ref const meta, object_ref const head, object_ref const tail)
     : head{ head }
-    , tail{ tail == nil::nil_const() ? nullptr : tail }
+    , tail{ tail }
     , meta{ meta }
   {
-    jank_debug_assert(head);
-    jank_debug_assert(meta);
+    jank_debug_assert(head.is_some());
+    jank_debug_assert(meta.is_some());
   }
 
-  chunked_cons_ptr chunked_cons::seq() const
+  chunked_cons_ref chunked_cons::seq() const
   {
     return const_cast<chunked_cons *>(this);
   }
 
-  chunked_cons_ptr chunked_cons::fresh_seq() const
+  chunked_cons_ref chunked_cons::fresh_seq() const
   {
     return make_box<chunked_cons>(head, tail);
   }
 
-  object_ptr chunked_cons::first() const
+  object_ref chunked_cons::first() const
   {
     return visit_object(
-      [&](auto const typed_head) -> object_ptr {
+      [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -52,10 +52,10 @@ namespace jank::runtime::obj
       head);
   }
 
-  object_ptr chunked_cons::next() const
+  object_ref chunked_cons::next() const
   {
     return visit_object(
-      [&](auto const typed_head) -> object_ptr {
+      [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -75,24 +75,24 @@ namespace jank::runtime::obj
       head);
   }
 
-  static chunked_cons_ptr next_in_place_non_chunked(chunked_cons_ptr const o)
+  static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
-    if(!o->tail)
+    if(o->tail.is_nil())
     {
-      return nullptr;
+      return {};
     }
 
     return visit_object(
-      [&](auto const typed_tail) -> chunked_cons_ptr {
+      [&](auto const typed_tail) -> chunked_cons_ref {
         using T = typename decltype(typed_tail)::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
           o->head = typed_tail->first();
           o->tail = typed_tail->next();
-          if(o->tail == nil::nil_const())
+          if(o->tail == jank_nil)
           {
-            o->tail = nullptr;
+            o->tail = jank_nil;
           }
           return o;
         }
@@ -104,10 +104,10 @@ namespace jank::runtime::obj
       o->tail);
   }
 
-  chunked_cons_ptr chunked_cons::next_in_place()
+  chunked_cons_ref chunked_cons::next_in_place()
   {
     return visit_object(
-      [&](auto const typed_head) -> chunked_cons_ptr {
+      [&](auto const typed_head) -> chunked_cons_ref {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -127,10 +127,10 @@ namespace jank::runtime::obj
       head);
   }
 
-  object_ptr chunked_cons::chunked_first() const
+  object_ref chunked_cons::chunked_first() const
   {
     return visit_object(
-      [&](auto const typed_head) -> object_ptr {
+      [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
 
         if constexpr(behavior::chunk_like<T>)
@@ -147,28 +147,14 @@ namespace jank::runtime::obj
       head);
   }
 
-  object_ptr chunked_cons::chunked_next() const
+  object_ref chunked_cons::chunked_next() const
   {
     return tail;
   }
 
-  native_bool chunked_cons::equal(object const &o) const
+  bool chunked_cons::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq == nullptr;
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void chunked_cons::to_string(util::string_builder &buff) const
@@ -186,17 +172,17 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash chunked_cons::to_hash() const
+  uhash chunked_cons::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  cons_ptr chunked_cons::conj(object_ptr const head) const
+  cons_ref chunked_cons::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  chunked_cons_ptr chunked_cons::with_meta(object_ptr const m) const
+  chunked_cons_ref chunked_cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

@@ -32,7 +32,7 @@ project(
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
-option(jank_tests "Whether or not to build jank's compilter test suite" OFF)
+option(jank_test "Enable jank's test suite" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
@@ -75,11 +75,12 @@ set(
   -Wno-deprecated-declarations
   -Wno-c++23-extensions
   -fno-common
-  -fno-rtti
+  -frtti
   -fexceptions
   #-ftime-trace
-  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Debug>:-O0 -g>
   $<$<CONFIG:Release>:-O2>
+  $<$<CONFIG:RelWithDebInfo>:-O2 -g>
 )
 
 set(
@@ -87,6 +88,7 @@ set(
   -std=gnu++20
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
+  -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
   #-DLIBASSERT_STATIC_DEFINE=1
   #-stdlib=libc++
 )
@@ -262,6 +264,7 @@ add_library(
   src/cpp/jank/analyze/expr/local_reference.cpp
   src/cpp/jank/analyze/expr/def.cpp
   src/cpp/jank/analyze/expr/let.cpp
+  src/cpp/jank/analyze/expr/letfn.cpp
   src/cpp/jank/analyze/expr/throw.cpp
   src/cpp/jank/analyze/expr/if.cpp
   src/cpp/jank/analyze/expr/list.cpp
@@ -387,7 +390,7 @@ target_include_directories(
 set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
 
 target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -frtti)
+target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 
 #set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
@@ -421,6 +424,7 @@ set(
   third-party/folly/folly/system/ThreadId.cpp
   third-party/folly/folly/system/AtFork.cpp
   third-party/folly/folly/detail/Futex.cpp
+  third-party/folly/folly/memory/folly_stubs.cpp
 )
 
 add_library(folly_lib STATIC ${folly_sources})
@@ -493,7 +497,6 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/behavior/callable.cpp
-    test/cpp/jank/runtime/core/equal.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp

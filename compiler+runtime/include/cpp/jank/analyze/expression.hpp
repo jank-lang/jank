@@ -8,7 +8,7 @@ namespace jank::analyze
 {
   using local_frame_ptr = jtl::ptr<struct local_frame>;
 
-  enum class expression_position : uint8_t
+  enum class expression_position : u8
   {
     value,
     statement,
@@ -29,7 +29,7 @@ namespace jank::analyze
     return "unknown";
   }
 
-  enum class expression_kind : uint8_t
+  enum class expression_kind : u8
   {
     uninitialized,
     def,
@@ -47,6 +47,7 @@ namespace jank::analyze
     named_recursion,
     local_reference,
     let,
+    letfn,
     do_,
     if_,
     throw_,
@@ -93,6 +94,8 @@ namespace jank::analyze
         return "local_reference";
       case expression_kind::let:
         return "let";
+      case expression_kind::letfn:
+        return "letfn";
       case expression_kind::do_:
         return "do_";
       case expression_kind::if_:
@@ -116,22 +119,22 @@ namespace jank::analyze
   /* Common base class for every expression. */
   struct expression : gc
   {
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     expression(expression_kind kind);
     expression(expression_kind kind,
                expression_position position,
                local_frame_ptr frame,
-               native_bool needs_box);
+               bool needs_box);
     virtual ~expression() = default;
 
     virtual void propagate_position(expression_position const pos);
-    virtual runtime::object_ptr to_runtime_data() const;
+    virtual runtime::object_ref to_runtime_data() const;
 
     expression_kind kind{};
     expression_position position{};
     local_frame_ptr frame;
-    native_bool needs_box{ true };
+    bool needs_box{ true };
   };
 
   using expression_ref = jtl::ref<expression>;

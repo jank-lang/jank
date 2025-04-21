@@ -12,9 +12,9 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &file_path,
-                                                    size_t const offset,
-                                                    size_t const n,
-                                                    object_ptr const macro_expansion)
+                                                    usize const offset,
+                                                    usize const n,
+                                                    object_ref const macro_expansion)
   {
     if(file_path == no_source_path)
     {
@@ -32,7 +32,7 @@ namespace jank::read::parse
     parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     auto it{ p_prc.begin() };
-    for(size_t i{}; i < n; ++i, ++it)
+    for(usize i{}; i < n; ++i, ++it)
     {
       if(it->is_err())
       {
@@ -52,7 +52,7 @@ namespace jank::read::parse
     return source{ file_path, res.start.start, res.end.end, macro_expansion };
   }
 
-  source reparse_nth(obj::persistent_list_ptr const o, size_t const n)
+  source reparse_nth(obj::persistent_list_ref const o, usize const n)
   {
     auto source(object_source(o));
     if(source == source::unknown)
@@ -65,7 +65,7 @@ namespace jank::read::parse
       .unwrap_move();
   }
 
-  source reparse_nth(runtime::obj::persistent_vector_ptr const o, size_t const n)
+  source reparse_nth(runtime::obj::persistent_vector_ref const o, usize const n)
   {
     auto source(object_source(o));
     if(source == source::unknown)
@@ -78,14 +78,14 @@ namespace jank::read::parse
       .unwrap_move();
   }
 
-  source reparse_nth(runtime::object_ptr const o, size_t const n)
+  source reparse_nth(runtime::object_ref const o, usize const n)
   {
     /* When we have an object, but we're not sure of the type, let's just
      * see if it's one of the types we support. If not, we'll error out.
      * We can do more here, going forward, by supporting various sequences and such,
      * but this will be fine for now. */
     return visit_seqable(
-      [](auto const typed_o, size_t const n) -> source {
+      [](auto const typed_o, usize const n) -> source {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_list>

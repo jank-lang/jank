@@ -61,7 +61,7 @@ namespace jank::util
   }
 
   jtl::immutable_string const &
-  binary_cache_dir(native_integer const optimization_level,
+  binary_cache_dir(i64 const optimization_level,
                    native_vector<jtl::immutable_string> const &includes,
                    native_vector<jtl::immutable_string> const &defines)
   {
@@ -85,7 +85,7 @@ namespace jank::util
    * every module. I think this is much safer than trying to reconcile ABI
    * changes more granularly.
    */
-  jtl::immutable_string const &binary_version(native_integer const optimization_level,
+  jtl::immutable_string const &binary_version(i64 const optimization_level,
                                               native_vector<jtl::immutable_string> const &includes,
                                               native_vector<jtl::immutable_string> const &defines)
   {

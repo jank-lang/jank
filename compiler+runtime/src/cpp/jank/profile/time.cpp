@@ -7,7 +7,7 @@ namespace jank::profile
 {
   static constexpr native_persistent_string_view tag{ "jank::profile" };
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  static native_bool enabled{};
+  static bool enabled{};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static std::ofstream output;
 
@@ -34,7 +34,7 @@ namespace jank::profile
     }
   }
 
-  native_bool is_enabled()
+  bool is_enabled()
   {
     return enabled;
   }

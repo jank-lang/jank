@@ -5,85 +5,40 @@
 
 namespace jank::runtime::obj
 {
-  cons::cons(object_ptr const head, object_ptr const tail)
+  cons::cons(object_ref const head, object_ref const tail)
     : head{ head }
-    , tail{ tail == nil::nil_const() ? nullptr : tail }
+    , tail{ tail }
   {
-    jank_debug_assert(head);
   }
 
-  cons_ptr cons::seq() const
+  cons_ref cons::seq() const
   {
-    return const_cast<cons *>(this);
+    return this;
   }
 
-  cons_ptr cons::fresh_seq() const
+  cons_ref cons::fresh_seq() const
   {
     return make_box<cons>(head, tail);
   }
 
-  object_ptr cons::first() const
+  object_ref cons::first() const
   {
     return head;
   }
 
-  object_ptr cons::next() const
+  object_ref cons::next() const
   {
-    if(!tail)
+    if(tail.is_nil())
     {
-      return nullptr;
+      return {};
     }
 
     return runtime::seq(tail);
   }
 
-  cons_ptr cons::next_in_place()
+  bool cons::equal(object const &o) const
   {
-    if(!tail)
-    {
-      return nullptr;
-    }
-
-    visit_object(
-      [&](auto const typed_tail) {
-        using T = typename decltype(typed_tail)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          head = typed_tail->first();
-          tail = typed_tail->next();
-          if(tail == nil::nil_const())
-          {
-            tail = nullptr;
-          }
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      tail);
-
-    return this;
-  }
-
-  native_bool cons::equal(object const &o) const
-  {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq == nullptr;
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void cons::to_string(util::string_builder &buff) const
@@ -101,7 +56,7 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash cons::to_hash() const
+  uhash cons::to_hash() const
   {
     if(hash != 0)
     {
@@ -111,12 +66,12 @@ namespace jank::runtime::obj
     return hash = hash::ordered(&base);
   }
 
-  cons_ptr cons::conj(object_ptr const head) const
+  cons_ref cons::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  cons_ptr cons::with_meta(object_ptr const m) const
+  cons_ref cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

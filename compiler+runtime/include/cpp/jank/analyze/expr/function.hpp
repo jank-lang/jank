@@ -4,9 +4,9 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
-  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
-  using persistent_hash_map_ptr = native_box<struct persistent_hash_map>;
+  using symbol_ref = oref<struct symbol>;
+  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
+  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
 }
 
 namespace jank::analyze
@@ -20,14 +20,14 @@ namespace jank::analyze::expr
 
   struct function_context : gc
   {
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     jtl::ptr<function> fn;
     jtl::immutable_string name;
     jtl::immutable_string unique_name;
-    size_t param_count{};
-    native_bool is_variadic{};
-    native_bool is_tail_recursive{};
+    usize param_count{};
+    bool is_variadic{};
+    bool is_tail_recursive{};
     /* TODO: is_pure */
   };
 
@@ -35,9 +35,9 @@ namespace jank::analyze::expr
 
   struct function_arity
   {
-    runtime::object_ptr to_runtime_data() const;
+    runtime::object_ref to_runtime_data() const;
 
-    native_vector<runtime::obj::symbol_ptr> params;
+    native_vector<runtime::obj::symbol_ref> params;
     do_ref body;
     local_frame_ptr frame;
     function_context_ref fn_ctx;
@@ -45,10 +45,10 @@ namespace jank::analyze::expr
 
   struct arity_key
   {
-    native_bool operator==(arity_key const &rhs) const;
+    bool operator==(arity_key const &rhs) const;
 
-    size_t param_count{};
-    native_bool is_variadic{};
+    usize param_count{};
+    bool is_variadic{};
   };
 
   struct function : expression
@@ -58,23 +58,23 @@ namespace jank::analyze::expr
     function();
     function(expression_position position,
              local_frame_ptr frame,
-             native_bool needs_box,
+             bool needs_box,
              jtl::immutable_string const &name,
              jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,
-             runtime::obj::persistent_hash_map_ptr meta);
+             runtime::obj::persistent_hash_map_ref meta);
 
     /* Aggregates all `frame->captures` from each arity so that we can know the overall
      * captures for all arities of this fn. This is necessary for codegen to IR, since we
      * generate a context struct which is shared across all arities, even if one arity
      * doesn't use any captures. */
-    native_unordered_map<runtime::obj::symbol_ptr, local_binding_ptr> captures() const;
-    runtime::object_ptr to_runtime_data() const override;
+    native_unordered_map<runtime::obj::symbol_ref, local_binding_ptr> captures() const;
+    runtime::object_ref to_runtime_data() const override;
 
     jtl::immutable_string name;
     jtl::immutable_string unique_name;
     native_vector<function_arity> arities;
-    runtime::obj::persistent_hash_map_ptr meta{};
+    runtime::obj::persistent_hash_map_ref meta{};
   };
 }
 

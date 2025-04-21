@@ -28,11 +28,11 @@ namespace jank::runtime::obj
         !equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(0), make_box(1))));
 
       CHECK(equal(repeat::create(make_box(0), make_box(0)), persistent_list::empty()));
-      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
+      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), jank_nil));
     }
     TEST_CASE("seq")
     {
-      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), nil::nil_const()));
+      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), jank_nil));
     }
   }
 }

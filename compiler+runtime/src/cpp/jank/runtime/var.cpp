@@ -13,25 +13,25 @@
 
 namespace jank::runtime
 {
-  var::var(ns_ptr const &n, obj::symbol_ptr const &name)
+  var::var(ns_ref const &n, obj::symbol_ref const &name)
     : n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
-  var::var(ns_ptr const &n, obj::symbol_ptr const &name, object_ptr const root)
+  var::var(ns_ref const &n, obj::symbol_ref const &name, object_ref const root)
     : n{ n }
     , name{ name }
     , root{ root }
   {
   }
 
-  var::var(ns_ptr const &n,
-           obj::symbol_ptr const &name,
-           object_ptr const root,
-           native_bool const dynamic,
-           native_bool const thread_bound)
+  var::var(ns_ref const &n,
+           obj::symbol_ref const &name,
+           object_ref const root,
+           bool const dynamic,
+           bool const thread_bound)
     : n{ n }
     , name{ name }
     , root{ root }
@@ -40,23 +40,23 @@ namespace jank::runtime
   {
   }
 
-  native_bool var::equal(object const &o) const
+  bool var::equal(object const &o) const
   {
     auto const v(dyn_cast<var>(&o));
-    if(!v)
+    if(v.is_nil())
     {
       return false;
     }
     return n == v->n && name == v->name;
   }
 
-  native_bool var::equal(var const &v) const
+  bool var::equal(var const &v) const
   {
     return n == v.n && name == v.name;
   }
 
   static void
-  to_string_impl(ns_ptr const n, obj::symbol_ptr const &name, util::string_builder &buff)
+  to_string_impl(ns_ref const n, obj::symbol_ref const &name, util::string_builder &buff)
   {
     buff("#'")(n->name->name)('/')(name->name);
   }
@@ -78,7 +78,7 @@ namespace jank::runtime
     return to_string();
   }
 
-  native_hash var::to_hash() const
+  uhash var::to_hash() const
   {
     if(hash)
     {
@@ -88,43 +88,43 @@ namespace jank::runtime
     return hash = hash::combine(n->to_hash(), name->to_hash());
   }
 
-  var_ptr var::with_meta(object_ptr const m)
+  var_ref var::with_meta(object_ref const m)
   {
     meta = behavior::detail::validate_meta(m);
     return this;
   }
 
-  native_bool var::is_bound() const
+  bool var::is_bound() const
   {
     return deref()->type != object_type::var_unbound_root;
   }
 
-  object_ptr var::get_root() const
+  object_ref var::get_root() const
   {
     profile::timer const timer{ "var get_root" };
     return *root.rlock();
   }
 
-  var_ptr var::bind_root(object_ptr const r)
+  var_ref var::bind_root(object_ref const r)
   {
     profile::timer const timer{ "var bind_root" };
     *root.wlock() = r;
     return this;
   }
 
-  object_ptr var::alter_root(object_ptr const f, object_ptr const args)
+  object_ref var::alter_root(object_ref const f, object_ref const args)
   {
     auto locked_root(root.wlock());
     *locked_root = apply_to(f, cons(*locked_root, args));
     return *locked_root;
   }
 
-  jtl::string_result<void> var::set(object_ptr const r) const
+  jtl::string_result<void> var::set(object_ref const r) const
   {
     profile::timer const timer{ "var set" };
 
     auto const binding(get_thread_binding());
-    if(!binding)
+    if(binding.is_nil())
     {
       return err(util::format("Cannot set non-thread-bound var: {}", to_string()));
     }
@@ -138,61 +138,57 @@ namespace jank::runtime
     return ok();
   }
 
-  var_ptr var::set_dynamic(native_bool const dyn)
+  var_ref var::set_dynamic(bool const dyn)
   {
     dynamic.store(dyn);
     return this;
   }
 
-  var_thread_binding_ptr var::get_thread_binding() const
+  var_thread_binding_ref var::get_thread_binding() const
   {
     if(!thread_bound.load())
     {
-      return nullptr;
+      return {};
     }
 
-    jank_debug_assert(n);
     auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
     if(tbfs.empty())
     {
-      return nullptr;
+      return {};
     }
 
-    jank_debug_assert(tbfs.front().bindings);
     auto const found(tbfs.front().bindings->get_entry(this));
-    if(found == obj::nil::nil_const())
+    if(found == jank_nil)
     {
-      return nullptr;
+      return {};
     }
 
     auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
-    jank_debug_assert(ret);
     return expect_object<var_thread_binding>(ret);
   }
 
-  object_ptr var::deref() const
+  object_ref var::deref() const
   {
     auto const binding(get_thread_binding());
-    if(binding)
+    if(binding.is_some())
     {
-      jank_debug_assert(binding->value);
       return binding->value;
     }
     return *root.rlock();
   }
 
-  var_ptr var::clone() const
+  var_ref var::clone() const
   {
     return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load());
   }
 
-  var_thread_binding::var_thread_binding(object_ptr const value, std::thread::id const id)
+  var_thread_binding::var_thread_binding(object_ref const value, std::thread::id const id)
     : value{ value }
     , thread_id{ id }
   {
   }
 
-  native_bool var_thread_binding::equal(object const &o) const
+  bool var_thread_binding::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -212,17 +208,17 @@ namespace jank::runtime
     runtime::to_string(value, buff);
   }
 
-  native_hash var_thread_binding::to_hash() const
+  uhash var_thread_binding::to_hash() const
   {
-    return hash::visit(value);
+    return hash::visit(value.get());
   }
 
-  var_unbound_root::var_unbound_root(var_ptr const var)
+  var_unbound_root::var_unbound_root(var_ref const var)
     : var{ var }
   {
   }
 
-  native_bool var_unbound_root::equal(object const &o) const
+  bool var_unbound_root::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -244,8 +240,8 @@ namespace jank::runtime
     return var_unbound_root::to_string();
   }
 
-  native_hash var_unbound_root::to_hash() const
+  uhash var_unbound_root::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 }

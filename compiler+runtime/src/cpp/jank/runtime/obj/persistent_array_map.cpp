@@ -20,48 +20,44 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_array_map::persistent_array_map(jtl::option<object_ptr> const &meta, value_type &&d)
+  persistent_array_map::persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
   }
 
-  object_ptr persistent_array_map::get(object_ptr const key) const
+  object_ref persistent_array_map::get(object_ref const key) const
   {
     auto const res(data.find(key));
-    if(res)
-    {
-      return res;
-    }
-    return nil::nil_const();
+    return res;
   }
 
-  object_ptr persistent_array_map::get(object_ptr const key, object_ptr const fallback) const
+  object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
   {
     auto const res(data.find(key));
-    if(res)
+    if(res.is_some())
     {
       return res;
     }
     return fallback;
   }
 
-  object_ptr persistent_array_map::get_entry(object_ptr const key) const
+  object_ref persistent_array_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
-    if(res)
+    if(res.is_some())
     {
       return make_box<persistent_vector>(std::in_place, key, res);
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
-  native_bool persistent_array_map::contains(object_ptr const key) const
+  bool persistent_array_map::contains(object_ref const key) const
   {
-    return data.find(key);
+    return data.find(key).is_some();
   }
 
-  object_ptr persistent_array_map::assoc(object_ptr const key, object_ptr const val) const
+  object_ref persistent_array_map::assoc(object_ref const key, object_ref const val) const
   {
     /* If we've hit the max array map size, it's time to promote to a hash map.
      *
@@ -82,65 +78,30 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_array_map_ptr persistent_array_map::dissoc(object_ptr const key) const
+  persistent_array_map_ref persistent_array_map::dissoc(object_ref const key) const
   {
     auto copy(data.clone());
     copy.erase(key);
     return make_box<persistent_array_map>(meta, std::move(copy));
   }
 
-  object_ptr persistent_array_map::conj(object_ptr const head) const
-  {
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_hash_map)
-    {
-      return runtime::merge(this, head);
-    }
-
-    if(head->type != object_type::persistent_vector)
-    {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    auto const vec(expect_object<persistent_vector>(head));
-    if(vec->count() != 2)
-    {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
-    }
-
-    if(data.size() == runtime::detail::native_persistent_array_map::max_size)
-    {
-      return make_box<persistent_hash_map>(meta, data, vec->data[0], vec->data[1]);
-    }
-    else
-    {
-      auto copy(data.clone());
-      copy.insert_or_assign(vec->data[0], vec->data[1]);
-      return make_box<persistent_array_map>(meta, std::move(copy));
-    }
-  }
-
-  object_ptr persistent_array_map::call(object_ptr const o) const
+  object_ref persistent_array_map::call(object_ref const o) const
   {
     auto const found(data.find(o));
-    if(!found)
-    {
-      return nil::nil_const();
-    }
     return found;
   }
 
-  object_ptr persistent_array_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ref persistent_array_map::call(object_ref const o, object_ref const fallback) const
   {
     auto const found(data.find(o));
-    if(!found)
+    if(found.is_nil())
     {
       return fallback;
     }
     return found;
   }
 
-  transient_hash_map_ptr persistent_array_map::to_transient() const
+  transient_hash_map_ref persistent_array_map::to_transient() const
   {
     /* TODO: Use a transient_array_map. */
     return make_box<transient_hash_map>(data);

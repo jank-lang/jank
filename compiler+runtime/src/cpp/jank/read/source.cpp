@@ -18,7 +18,7 @@ namespace jank::read
   source::source(source_position const &start, source_position const &end)
     : start{ start }
     , end{ end }
-    , macro_expansion{ runtime::obj::nil::nil_const() }
+    , macro_expansion{ runtime::jank_nil }
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
     file_path = runtime::to_string(file);
@@ -30,14 +30,14 @@ namespace jank::read
     : file_path{ file_path }
     , start{ start }
     , end{ end }
-    , macro_expansion{ runtime::obj::nil::nil_const() }
+    , macro_expansion{ runtime::jank_nil }
   {
   }
 
   source::source(jtl::immutable_string const &file_path,
                  source_position const &start,
                  source_position const &end,
-                 runtime::object_ptr const macro_expansion)
+                 runtime::object_ref const macro_expansion)
     : file_path{ file_path }
     , start{ start }
     , end{ end }
@@ -45,22 +45,22 @@ namespace jank::read
   {
   }
 
-  native_bool source_position::operator==(source_position const &rhs) const
+  bool source_position::operator==(source_position const &rhs) const
   {
     return offset == rhs.offset && line == rhs.line && col == rhs.col;
   }
 
-  native_bool source_position::operator!=(source_position const &rhs) const
+  bool source_position::operator!=(source_position const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool source_position::operator<=(source_position const &rhs) const
+  bool source_position::operator<=(source_position const &rhs) const
   {
     return offset <= rhs.offset;
   }
 
-  native_bool source_position::operator>=(source_position const &rhs) const
+  bool source_position::operator>=(source_position const &rhs) const
   {
     return offset >= rhs.offset;
   }
@@ -71,17 +71,17 @@ namespace jank::read
     return sb("source_position(")(offset)(", ")(line)(":")(col)(")").release();
   }
 
-  native_bool source::operator==(source const &rhs) const
+  bool source::operator==(source const &rhs) const
   {
     return file_path == rhs.file_path && start == rhs.start && end == rhs.end;
   }
 
-  native_bool source::operator!=(source const &rhs) const
+  bool source::operator!=(source const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool source::overlaps(source const &rhs) const
+  bool source::overlaps(source const &rhs) const
   {
     if(file_path != rhs.file_path)
     {

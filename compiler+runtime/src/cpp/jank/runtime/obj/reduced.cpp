@@ -3,13 +3,13 @@
 
 namespace jank::runtime::obj
 {
-  reduced::reduced(object_ptr const o)
+  reduced::reduced(object_ref const o)
     : val{ o }
   {
-    jank_debug_assert(val);
+    jank_debug_assert(val.is_some());
   }
 
-  native_bool reduced::equal(object const &o) const
+  bool reduced::equal(object const &o) const
   {
     return &o == &base;
   }
@@ -31,12 +31,12 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash reduced::to_hash() const
+  uhash reduced::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr reduced::deref() const
+  object_ref reduced::deref() const
   {
     return val;
   }

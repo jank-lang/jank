@@ -7,9 +7,9 @@ namespace jank::analyze::expr
 
   named_recursion::named_recursion(expression_position const position,
                                    local_frame_ptr const frame,
-                                   native_bool const needs_box,
+                                   bool const needs_box,
                                    recursion_reference &&recursion_ref,
-                                   runtime::obj::persistent_list_ptr const args,
+                                   runtime::obj::persistent_list_ref const args,
                                    native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , recursion_ref{ std::move(recursion_ref) }
@@ -18,7 +18,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr named_recursion::to_runtime_data() const
+  object_ref named_recursion::to_runtime_data() const
   {
     auto arg_expr_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arg_exprs)

@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
+  using cons_ref = oref<struct cons>;
 }
 
 namespace jank::runtime::obj::detail
@@ -16,36 +16,36 @@ namespace jank::runtime::obj::detail
     iterator_sequence() = default;
 
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
-    iterator_sequence(object_ptr const &c, It const &b, It const &e, size_t const s);
+    iterator_sequence(object_ref const &c, It const &b, It const &e, usize const s);
 
     /* behavior::object_like */
-    native_bool equal(object const &o) const;
+    bool equal(object const &o) const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::seqable */
-    native_box<Derived> seq();
-    native_box<Derived> fresh_seq() const;
+    oref<Derived> seq();
+    oref<Derived> fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
+    object_ref first() const;
 
-    native_box<Derived> next() const;
+    oref<Derived> next() const;
 
     /* behavior::sequenceable_in_place */
-    native_box<Derived> next_in_place();
+    oref<Derived> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ptr conj(object_ptr const head);
+    obj::cons_ref conj(object_ref const head);
 
-    object_ptr coll{};
+    object_ref coll{};
     /* Not default constructible. */
     It begin, end;
-    size_t size{};
+    usize size{};
   };
 }

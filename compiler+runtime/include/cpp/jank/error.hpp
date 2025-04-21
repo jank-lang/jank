@@ -14,7 +14,7 @@ namespace cpptrace
 
 namespace jank::error
 {
-  enum class kind : uint8_t
+  enum class kind : u8
   {
     lex_unexpected_eof,
     lex_expecting_whitespace,
@@ -66,6 +66,7 @@ namespace jank::error
     analyze_invalid_recur_from_try,
     analyze_invalid_recur_args,
     analyze_invalid_let,
+    analyze_invalid_letfn,
     analyze_invalid_loop,
     analyze_invalid_if,
     analyze_invalid_quote,
@@ -184,6 +185,8 @@ namespace jank::error
         return "analyze/invalid-recur-args";
       case kind::analyze_invalid_let:
         return "analyze/invalid-let";
+      case kind::analyze_invalid_letfn:
+        return "analyze/invalid-letfn";
       case kind::analyze_invalid_loop:
         return "analyze/invalid-loop";
       case kind::analyze_invalid_if:
@@ -216,7 +219,7 @@ namespace jank::error
 
   struct note
   {
-    enum class kind : uint8_t
+    enum class kind : u8
     {
       info,
       warning,
@@ -257,17 +260,17 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
          jtl::immutable_string const &note_message,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k, read::source const &source, jtl::immutable_string const &note_message);
     base(kind k,
          jtl::immutable_string const &message,
@@ -282,7 +285,7 @@ namespace jank::error
          jtl::immutable_string const &message,
          read::source const &source,
          note const &note,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
@@ -290,17 +293,17 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          jtl::ref<base> cause);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 
-    native_bool operator==(base const &rhs) const;
-    native_bool operator!=(base const &rhs) const;
+    bool operator==(base const &rhs) const;
+    bool operator!=(base const &rhs) const;
 
     void sort_notes();
     jtl::ref<base> add_usage(read::source const &usage_source);

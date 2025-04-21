@@ -1,0 +1,38 @@
+; Top-level
+(letfn* [a (fn* a []
+             1)
+         b (fn* b []
+             2)]
+  (assert (= [1 2] [(a) (b)])))
+
+; Nested expression.
+(assert (= 1 (letfn* [a (fn* a []
+                          1)
+                      b (fn* b []
+                          (if (= 1 (a))
+                            :bee
+                            :uh-oh))]
+               (assert (= (b) :bee))
+               (a))))
+
+; Within fns.
+(def fn-with-letfn
+  (fn* [n]
+    (letfn* [n+1 (fn* n+1 []
+                   (+ 1 n))
+             n-1 (fn* n-1 []
+                   (+ (n+1) -2))]
+      [(n+1) (n-1)])))
+(assert (= (fn-with-letfn 0) [1 -1]))
+(assert (= (fn-with-letfn 100) [101 99]))
+
+; Nested.
+(letfn* [a (fn* a []
+             5)
+         b (fn* b []
+             (letfn* [c (fn* c []
+                          -2)]
+               (+ (a) (c))))]
+  (assert (= (b) 3)))
+
+:success

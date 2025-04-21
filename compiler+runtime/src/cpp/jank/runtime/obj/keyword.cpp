@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   }
 
   /* Keywords are interned, so we can always count on identity equality. */
-  native_bool keyword::equal(object const &o) const
+  bool keyword::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -46,17 +46,17 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash keyword::to_hash() const
+  uhash keyword::to_hash() const
   {
     return sym->to_hash() + 0x9e3779b9;
   }
 
-  native_integer keyword::compare(object const &o) const
+  i64 keyword::compare(object const &o) const
   {
     return compare(*expect_object<keyword>(&o));
   }
 
-  native_integer keyword::compare(keyword const &s) const
+  i64 keyword::compare(keyword const &s) const
   {
     return sym->compare(*s.sym);
   }
@@ -71,12 +71,12 @@ namespace jank::runtime::obj
     return sym->ns;
   }
 
-  object_ptr keyword::call(object_ptr const m)
+  object_ref keyword::call(object_ref const m)
   {
     return runtime::get(m, this);
   }
 
-  object_ptr keyword::call(object_ptr const m, object_ptr const fallback)
+  object_ref keyword::call(object_ref const m, object_ref const fallback)
   {
     return runtime::get(m, this, fallback);
   }

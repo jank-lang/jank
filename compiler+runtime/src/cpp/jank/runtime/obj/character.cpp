@@ -43,7 +43,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool character::equal(object const &o) const
+  bool character::equal(object const &o) const
   {
     if(o.type != object_type::character)
     {
@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     return get_literal_from_char_bytes(data);
   }
 
-  native_hash character::to_hash() const
+  uhash character::to_hash() const
   {
     return data.to_hash();
   }

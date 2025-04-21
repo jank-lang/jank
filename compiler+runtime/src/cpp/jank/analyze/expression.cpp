@@ -15,7 +15,7 @@ namespace jank::analyze
   expression::expression(expression_kind const kind,
                          expression_position const position,
                          local_frame_ptr const frame,
-                         native_bool const needs_box)
+                         bool const needs_box)
     : kind{ kind }
     , position{ position }
     , frame{ frame }
@@ -28,7 +28,7 @@ namespace jank::analyze
     position = pos;
   }
 
-  object_ptr expression::to_runtime_data() const
+  object_ref expression::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("kind"),
                                                     make_box(expression_kind_str(kind)),

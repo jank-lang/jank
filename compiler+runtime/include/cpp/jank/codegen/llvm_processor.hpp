@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>
@@ -13,14 +15,14 @@
 
 namespace jank::runtime::obj
 {
-  using nil_ptr = native_box<struct nil>;
-  using keyword_ptr = native_box<struct keyword>;
-  using boolean_ptr = native_box<struct boolean>;
-  using integer_ptr = native_box<struct integer>;
-  using real_ptr = native_box<struct real>;
-  using ratio_ptr = native_box<struct ratio>;
-  using persistent_string_ptr = native_box<struct persistent_string>;
-  using character_ptr = native_box<struct character>;
+  using nil_ref = oref<struct nil>;
+  using keyword_ref = oref<struct keyword>;
+  using boolean_ref = oref<struct boolean>;
+  using integer_ref = oref<struct integer>;
+  using real_ref = oref<struct real>;
+  using ratio_ref = oref<struct ratio>;
+  using persistent_string_ref = oref<struct persistent_string>;
+  using character_ref = oref<struct character>;
 }
 
 namespace jank::analyze
@@ -44,6 +46,7 @@ namespace jank::analyze
     using recursion_reference_ref = jtl::ref<struct recursion_reference>;
     using named_recursion_ref = jtl::ref<struct named_recursion>;
     using let_ref = jtl::ref<struct let>;
+    using letfn_ref = jtl::ref<struct letfn>;
     using do_ref = jtl::ref<struct do_>;
     using if_ref = jtl::ref<struct if_>;
     using throw_ref = jtl::ref<struct throw_>;
@@ -59,7 +62,7 @@ namespace jank::codegen
 {
   using namespace jank::runtime;
 
-  enum class compilation_target : uint8_t
+  enum class compilation_target : u8
   {
     module,
     function,
@@ -80,12 +83,12 @@ namespace jank::codegen
     llvm::BasicBlock *global_ctor_block{};
 
     /* TODO: Is this needed, given lifted constants? */
-    native_unordered_map<runtime::object_ptr,
+    native_unordered_map<runtime::object_ref,
                          llvm::Value *,
-                         std::hash<runtime::object_ptr>,
+                         std::hash<runtime::object_ref>,
                          very_equal_to>
       literal_globals;
-    native_unordered_map<obj::symbol_ptr, llvm::Value *> var_globals;
+    native_unordered_map<obj::symbol_ref, llvm::Value *> var_globals;
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
@@ -96,6 +99,14 @@ namespace jank::codegen
     std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
     std::unique_ptr<llvm::StandardInstrumentations> si;
     llvm::ModulePassManager mpm;
+  };
+
+  struct deferred_init
+  {
+    analyze::expr::function_ref expr;
+    obj::symbol_ref name;
+    analyze::local_binding_ptr binding;
+    llvm::Value *field_ptr{};
   };
 
   struct llvm_processor
@@ -127,6 +138,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::recursion_reference_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::named_recursion_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::let_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::letfn_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::do_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::if_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::throw_ref, analyze::expr::function_arity const &);
@@ -137,7 +149,7 @@ namespace jank::codegen
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
 
-    llvm::Value *gen_var(obj::symbol_ptr qualified_name) const;
+    llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;
@@ -147,16 +159,16 @@ namespace jank::codegen
     void create_global_ctor() const;
     llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
-    llvm::Value *gen_global(runtime::obj::nil_ptr) const;
-    llvm::Value *gen_global(runtime::obj::boolean_ptr b) const;
-    llvm::Value *gen_global(runtime::obj::integer_ptr i) const;
-    llvm::Value *gen_global(runtime::obj::real_ptr r) const;
-    llvm::Value *gen_global(runtime::obj::ratio_ptr r) const;
-    llvm::Value *gen_global(runtime::obj::persistent_string_ptr s) const;
-    llvm::Value *gen_global(runtime::obj::symbol_ptr s);
-    llvm::Value *gen_global(runtime::obj::keyword_ptr k) const;
-    llvm::Value *gen_global(runtime::obj::character_ptr c) const;
-    llvm::Value *gen_global_from_read_string(runtime::object_ptr o);
+    llvm::Value *gen_global(runtime::obj::nil_ref) const;
+    llvm::Value *gen_global(runtime::obj::boolean_ref b) const;
+    llvm::Value *gen_global(runtime::obj::integer_ref i) const;
+    llvm::Value *gen_global(runtime::obj::real_ref r) const;
+    llvm::Value *gen_global(runtime::obj::ratio_ref r) const;
+    llvm::Value *gen_global(runtime::obj::persistent_string_ref s) const;
+    llvm::Value *gen_global(runtime::obj::symbol_ref s) const;
+    llvm::Value *gen_global(runtime::obj::keyword_ref k) const;
+    llvm::Value *gen_global(runtime::obj::character_ref c) const;
+    llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
 
@@ -169,6 +181,8 @@ namespace jank::codegen
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
-    native_unordered_map<obj::symbol_ptr, llvm::Value *> locals;
+    native_unordered_map<obj::symbol_ref, llvm::Value *> locals;
+    /* TODO: Use gc allocator to avoid leaks. */
+    std::list<deferred_init> deferred_inits{};
   };
 }

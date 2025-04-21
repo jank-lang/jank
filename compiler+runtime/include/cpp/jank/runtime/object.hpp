@@ -5,11 +5,9 @@
 #include <jank/type.hpp>
 #include <jank/util/string_builder.hpp>
 
-#include <jtl/ref.hpp>
-
 namespace jank::runtime
 {
-  enum class object_type : uint8_t
+  enum class object_type : u8
   {
     nil,
 
@@ -222,6 +220,11 @@ namespace jank::runtime
   {
     object_type type{};
   };
+
+  namespace obj
+  {
+    struct nil;
+  }
 }
 
 namespace jank::runtime::behavior
@@ -237,7 +240,7 @@ namespace jank::runtime::behavior
      * the current object. Identical means having the same address, the same identity.
      * Equal just means having equal values. Equivalent means having equal values of the
      * same type. :O Here, we're just focused on equality. */
-    { t->equal(std::declval<object const &>()) } -> std::convertible_to<native_bool>;
+    { t->equal(std::declval<object const &>()) } -> std::convertible_to<bool>;
 
     /* Returns a string version of the object, generally for printing or displaying. This
      * is distinct from its code representation, which doesn't yet have a corresponding
@@ -252,7 +255,7 @@ namespace jank::runtime::behavior
      * and transients, the hash is actually just the object's address. For others, it's
      * based on the value, or values, within the object. There are a set of hash functions
      * which should be used for this in hash.hpp. */
-    { t->to_hash() } -> std::convertible_to<native_integer>;
+    { t->to_hash() } -> std::convertible_to<i64>;
 
     /* Every object needs to have this base field, which is the actual object field.
      * When we pass around object pointers, we pass around pointers to this field within
@@ -262,27 +265,30 @@ namespace jank::runtime::behavior
   };
 }
 
-#include <jank/runtime/native_box.hpp>
+#include <jank/runtime/oref.hpp>
 
 namespace jank::runtime
 {
-  using object_ptr = native_box<object>;
+  using object_ref = oref<object>;
 
   /* This isn't a great name, but it represents more than just value equality, since it
    * also includes type equality. Otherwise, [] equals '(). This is important when deduping
    * constants during codegen, since we don't want to be lossy in how we generate values. */
   struct very_equal_to
   {
-    bool operator()(object_ptr const lhs, object_ptr const rhs) const noexcept;
+    bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
+
+  bool operator==(object const *, object_ref);
+  bool operator!=(object const *, object_ref);
 }
 
 namespace std
 {
   template <>
-  struct hash<jank::runtime::object_ptr>
+  struct hash<jank::runtime::object_ref>
   {
-    size_t operator()(jank::runtime::object_ptr const o) const noexcept;
+    size_t operator()(jank::runtime::object_ref const o) const noexcept;
   };
 
   template <>
@@ -292,143 +298,9 @@ namespace std
   };
 
   template <>
-  struct equal_to<jank::runtime::object_ptr>
+  struct equal_to<jank::runtime::object_ref>
   {
-    bool operator()(jank::runtime::object_ptr const lhs,
-                    jank::runtime::object_ptr const rhs) const noexcept;
-  };
-}
-
-namespace jtl
-{
-  template <>
-  struct ref<jank::runtime::object>
-  {
-    using value_type = jank::runtime::object;
-
-    constexpr ref() = default;
-
-    constexpr ref(nullptr_t) noexcept
-    {
-    }
-
-    constexpr ref(value_type &data) noexcept
-      : data{ &data }
-    {
-    }
-
-    constexpr ref(value_type const &data) noexcept
-      : data{ const_cast<value_type *>(&data) }
-    {
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr ref(T &typed_data) noexcept
-      : data{ &typed_data.base }
-    {
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr ref(T const &typed_data) noexcept
-      : data{ const_cast<jank::runtime::object *>(&typed_data.base) }
-    {
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr ref(ref<T> const typed_data) noexcept
-      : data{ &typed_data->base }
-    {
-    }
-
-    constexpr value_type *operator->() const noexcept
-    {
-      jank_debug_assert(data);
-      return data;
-    }
-
-    constexpr bool operator!() const noexcept
-    {
-      return !data;
-    }
-
-    constexpr value_type &operator*() const noexcept
-    {
-      jank_debug_assert(data);
-      return *data;
-    }
-
-    constexpr bool operator==(nullptr_t) const noexcept
-    {
-      return data == nullptr;
-    }
-
-    constexpr bool operator==(ref const &rhs) const noexcept
-    {
-      return data == rhs.data;
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator==(T const &rhs) const noexcept
-    {
-      return data == &rhs->base;
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator==(ref<T> const &rhs) const noexcept
-    {
-      return data == &rhs->base;
-    }
-
-    constexpr bool operator!=(nullptr_t) const noexcept
-    {
-      return data != nullptr;
-    }
-
-    constexpr bool operator!=(ref const &rhs) const noexcept
-    {
-      return data != rhs.data;
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator!=(T const &rhs) const noexcept
-    {
-      return data != &rhs->base;
-    }
-
-    template <typename T>
-    requires jank::runtime::behavior::object_like<T>
-    constexpr bool operator!=(ref<T> const &rhs) const noexcept
-    {
-      return data != &rhs->base;
-    }
-
-    constexpr bool operator<(ref const &rhs) const noexcept
-    {
-      return data < rhs.data;
-    }
-
-    constexpr operator ref<value_type const>() const noexcept
-    {
-      jank_debug_assert(data);
-      return *data;
-    }
-
-    constexpr operator value_type *() const noexcept
-    {
-      return data;
-    }
-
-    constexpr explicit operator bool() const noexcept
-    {
-      return data;
-    }
-
-    value_type *data{};
+    bool operator()(jank::runtime::object_ref const lhs,
+                    jank::runtime::object_ref const rhs) const noexcept;
   };
 }

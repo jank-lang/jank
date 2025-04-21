@@ -6,24 +6,24 @@
 
 namespace jank::runtime::obj
 {
-  array_chunk::array_chunk(native_vector<object_ptr> const &buffer)
+  array_chunk::array_chunk(native_vector<object_ref> const &buffer)
     : buffer{ buffer }
   {
   }
 
-  array_chunk::array_chunk(native_vector<object_ptr> const &buffer, size_t const offset)
+  array_chunk::array_chunk(native_vector<object_ref> const &buffer, usize const offset)
     : buffer{ buffer }
     , offset{ offset }
   {
   }
 
-  array_chunk::array_chunk(native_vector<object_ptr> &&buffer, size_t const offset)
+  array_chunk::array_chunk(native_vector<object_ref> &&buffer, usize const offset)
     : buffer{ std::move(buffer) }
     , offset{ offset }
   {
   }
 
-  native_bool array_chunk::equal(object const &o) const
+  bool array_chunk::equal(object const &o) const
   {
     return &o == &base;
   }
@@ -45,12 +45,12 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash array_chunk::to_hash() const
+  uhash array_chunk::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  array_chunk_ptr array_chunk::chunk_next() const
+  array_chunk_ref array_chunk::chunk_next() const
   {
     if(offset == buffer.size())
     {
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
     return make_box<array_chunk>(buffer, offset + 1);
   }
 
-  array_chunk_ptr array_chunk::chunk_next_in_place()
+  array_chunk_ref array_chunk::chunk_next_in_place()
   {
     if(offset == buffer.size())
     {
@@ -70,12 +70,12 @@ namespace jank::runtime::obj
     return this;
   }
 
-  size_t array_chunk::count() const
+  usize array_chunk::count() const
   {
     return buffer.size() - offset;
   }
 
-  object_ptr array_chunk::nth(object_ptr const index) const
+  object_ref array_chunk::nth(object_ref const index) const
   {
     if(index->type == object_type::integer)
     {
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr array_chunk::nth(object_ptr const index, object_ptr const fallback) const
+  object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
     if(index->type == object_type::integer)
     {

@@ -41,7 +41,7 @@ namespace jank::runtime::obj
   {
   }
 
-  symbol::symbol(object_ptr const meta,
+  symbol::symbol(object_ref const meta,
                  jtl::immutable_string const &ns,
                  jtl::immutable_string const &n)
     : ns{ ns }
@@ -50,13 +50,13 @@ namespace jank::runtime::obj
   {
   }
 
-  symbol::symbol(object_ptr const ns, object_ptr const n)
+  symbol::symbol(object_ref const ns, object_ref const n)
     : ns{ runtime::to_string(ns) }
     , name{ runtime::to_string(n) }
   {
   }
 
-  native_bool symbol::equal(object const &o) const
+  bool symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)
     {
@@ -67,17 +67,17 @@ namespace jank::runtime::obj
     return ns == s->ns && name == s->name;
   }
 
-  native_bool symbol::equal(symbol const &s) const
+  bool symbol::equal(symbol const &s) const
   {
     return ns == s.ns && name == s.name;
   }
 
-  native_integer symbol::compare(object const &o) const
+  i64 symbol::compare(object const &o) const
   {
     return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
   }
 
-  native_integer symbol::compare(symbol const &s) const
+  i64 symbol::compare(symbol const &s) const
   {
     if(equal(s))
     {
@@ -134,7 +134,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash symbol::to_hash() const
+  uhash symbol::to_hash() const
   {
     if(hash)
     {
@@ -144,7 +144,7 @@ namespace jank::runtime::obj
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  symbol_ptr symbol::with_meta(object_ptr const m) const
+  symbol_ref symbol::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<symbol>(ns, name));
@@ -169,7 +169,7 @@ namespace jank::runtime::obj
 
   bool symbol::operator<(symbol const &rhs) const
   {
-    return to_hash() < rhs.to_hash();
+    return compare(rhs) < 0;
   }
 
   void symbol::set_ns(jtl::immutable_string const &s)
@@ -193,21 +193,21 @@ namespace std
     return o.to_hash();
   }
 
-  size_t hash<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &o) const noexcept
+  size_t hash<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &o) const noexcept
   {
     return o->to_hash();
   }
 
-  bool equal_to<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &lhs,
-    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
+  bool equal_to<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &lhs,
+    jank::runtime::obj::symbol_ref const &rhs) const noexcept
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }

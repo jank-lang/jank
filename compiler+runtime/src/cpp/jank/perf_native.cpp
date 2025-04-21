@@ -8,7 +8,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
 
-jank_object_ptr jank_load_jank_perf_native()
+jank_object_ref jank_load_jank_perf_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -24,5 +24,5 @@ jank_object_ptr jank_load_jank_perf_native()
   });
   intern_fn("benchmark", &perf::benchmark);
 
-  return erase(obj::nil::nil_const());
+  return jank_nil.erase();
 }

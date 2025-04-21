@@ -6,266 +6,266 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using integer_ptr = native_box<struct integer>;
-    using real_ptr = native_box<struct real>;
-    using ratio_ptr = native_box<struct ratio>;
+    using integer_ref = oref<struct integer>;
+    using real_ref = oref<struct real>;
+    using ratio_ref = oref<struct ratio>;
   }
 
-  object_ptr add(object_ptr l, object_ptr r);
-  object_ptr add(obj::integer_ptr l, object_ptr r);
-  object_ptr add(object_ptr l, obj::integer_ptr r);
-  object_ptr add(object_ptr l, obj::ratio_ptr r);
-  native_integer add(obj::integer_ptr l, obj::integer_ptr r);
-  native_real add(obj::real_ptr l, obj::real_ptr r);
-  native_real add(obj::real_ptr l, object_ptr r);
-  native_real add(object_ptr l, obj::real_ptr r);
-  native_real add(obj::real_ptr l, obj::integer_ptr r);
-  native_real add(obj::integer_ptr l, obj::real_ptr r);
+  object_ref add(object_ref l, object_ref r);
+  object_ref add(obj::integer_ref l, object_ref r);
+  object_ref add(object_ref l, obj::integer_ref r);
+  object_ref add(object_ref l, obj::ratio_ref r);
+  i64 add(obj::integer_ref l, obj::integer_ref r);
+  f64 add(obj::real_ref l, obj::real_ref r);
+  f64 add(obj::real_ref l, object_ref r);
+  f64 add(object_ref l, obj::real_ref r);
+  f64 add(obj::real_ref l, obj::integer_ref r);
+  f64 add(obj::integer_ref l, obj::real_ref r);
 
-  native_real add(object_ptr l, native_real r);
-  native_real add(native_real l, object_ptr r);
-  native_real add(native_real l, native_real r);
+  f64 add(object_ref l, f64 r);
+  f64 add(f64 l, object_ref r);
+  f64 add(f64 l, f64 r);
 
-  native_real add(native_integer l, native_real r);
-  native_real add(native_real l, native_integer r);
+  f64 add(i64 l, f64 r);
+  f64 add(f64 l, i64 r);
 
-  object_ptr add(object_ptr l, native_integer r);
-  object_ptr add(native_integer l, object_ptr r);
-  native_integer add(native_integer l, native_integer r);
+  object_ref add(object_ref l, i64 r);
+  object_ref add(i64 l, object_ref r);
+  i64 add(i64 l, i64 r);
 
-  obj::ratio_ptr add(obj::ratio_ptr l, obj::ratio_ptr r);
-  object_ptr add(obj::ratio_ptr l, obj::integer_ptr r);
-  obj::ratio_ptr add(obj::integer_ptr l, obj::ratio_ptr r);
+  obj::ratio_ref add(obj::ratio_ref l, obj::ratio_ref r);
+  object_ref add(obj::ratio_ref l, obj::integer_ref r);
+  obj::ratio_ref add(obj::integer_ref l, obj::ratio_ref r);
 
-  object_ptr sub(object_ptr l, object_ptr r);
-  object_ptr sub(obj::integer_ptr l, object_ptr r);
-  object_ptr sub(object_ptr l, obj::integer_ptr r);
-  native_integer sub(obj::integer_ptr l, obj::integer_ptr r);
-  native_real sub(obj::real_ptr l, obj::real_ptr r);
-  native_real sub(obj::real_ptr l, object_ptr r);
-  native_real sub(object_ptr l, obj::real_ptr r);
-  native_real sub(obj::real_ptr l, obj::integer_ptr r);
-  native_real sub(obj::integer_ptr l, obj::real_ptr r);
+  object_ref sub(object_ref l, object_ref r);
+  object_ref sub(obj::integer_ref l, object_ref r);
+  object_ref sub(object_ref l, obj::integer_ref r);
+  i64 sub(obj::integer_ref l, obj::integer_ref r);
+  f64 sub(obj::real_ref l, obj::real_ref r);
+  f64 sub(obj::real_ref l, object_ref r);
+  f64 sub(object_ref l, obj::real_ref r);
+  f64 sub(obj::real_ref l, obj::integer_ref r);
+  f64 sub(obj::integer_ref l, obj::real_ref r);
 
-  native_real sub(object_ptr l, native_real r);
-  native_real sub(native_real l, object_ptr r);
-  native_real sub(native_real l, native_real r);
+  f64 sub(object_ref l, f64 r);
+  f64 sub(f64 l, object_ref r);
+  f64 sub(f64 l, f64 r);
 
-  native_real sub(native_integer l, native_real r);
-  native_real sub(native_real l, native_integer r);
+  f64 sub(i64 l, f64 r);
+  f64 sub(f64 l, i64 r);
 
-  object_ptr sub(object_ptr l, native_integer r);
-  object_ptr sub(native_integer l, object_ptr r);
-  native_integer sub(native_integer l, native_integer r);
+  object_ref sub(object_ref l, i64 r);
+  object_ref sub(i64 l, object_ref r);
+  i64 sub(i64 l, i64 r);
 
-  object_ptr div(object_ptr l, object_ptr r);
-  object_ptr div(obj::integer_ptr l, object_ptr r);
-  object_ptr div(object_ptr l, obj::integer_ptr r);
-  native_integer div(obj::integer_ptr l, obj::integer_ptr r);
-  native_real div(obj::real_ptr l, obj::real_ptr r);
-  native_real div(obj::real_ptr l, object_ptr r);
-  native_real div(object_ptr l, obj::real_ptr r);
-  native_real div(obj::real_ptr l, obj::integer_ptr r);
-  native_real div(obj::integer_ptr l, obj::real_ptr r);
+  object_ref div(object_ref l, object_ref r);
+  object_ref div(obj::integer_ref l, object_ref r);
+  object_ref div(object_ref l, obj::integer_ref r);
+  i64 div(obj::integer_ref l, obj::integer_ref r);
+  f64 div(obj::real_ref l, obj::real_ref r);
+  f64 div(obj::real_ref l, object_ref r);
+  f64 div(object_ref l, obj::real_ref r);
+  f64 div(obj::real_ref l, obj::integer_ref r);
+  f64 div(obj::integer_ref l, obj::real_ref r);
 
-  native_real div(object_ptr l, native_real r);
-  native_real div(native_real l, object_ptr r);
-  native_real div(native_real l, native_real r);
+  f64 div(object_ref l, f64 r);
+  f64 div(f64 l, object_ref r);
+  f64 div(f64 l, f64 r);
 
-  native_real div(native_integer l, native_real r);
-  native_real div(native_real l, native_integer r);
+  f64 div(i64 l, f64 r);
+  f64 div(f64 l, i64 r);
 
-  object_ptr div(object_ptr l, native_integer r);
-  object_ptr div(native_integer l, object_ptr r);
-  native_integer div(native_integer l, native_integer r);
+  object_ref div(object_ref l, i64 r);
+  object_ref div(i64 l, object_ref r);
+  i64 div(i64 l, i64 r);
 
-  object_ptr mul(object_ptr l, object_ptr r);
-  object_ptr mul(obj::integer_ptr l, object_ptr r);
-  object_ptr mul(object_ptr l, obj::integer_ptr r);
-  native_integer mul(obj::integer_ptr l, obj::integer_ptr r);
-  native_real mul(obj::real_ptr l, obj::real_ptr r);
-  native_real mul(obj::real_ptr l, object_ptr r);
-  native_real mul(object_ptr l, obj::real_ptr r);
-  native_real mul(obj::real_ptr l, obj::integer_ptr r);
-  native_real mul(obj::integer_ptr l, obj::real_ptr r);
+  object_ref mul(object_ref l, object_ref r);
+  object_ref mul(obj::integer_ref l, object_ref r);
+  object_ref mul(object_ref l, obj::integer_ref r);
+  i64 mul(obj::integer_ref l, obj::integer_ref r);
+  f64 mul(obj::real_ref l, obj::real_ref r);
+  f64 mul(obj::real_ref l, object_ref r);
+  f64 mul(object_ref l, obj::real_ref r);
+  f64 mul(obj::real_ref l, obj::integer_ref r);
+  f64 mul(obj::integer_ref l, obj::real_ref r);
 
-  native_real mul(object_ptr l, native_real r);
-  native_real mul(native_real l, object_ptr r);
-  native_real mul(native_real l, native_real r);
+  f64 mul(object_ref l, f64 r);
+  f64 mul(f64 l, object_ref r);
+  f64 mul(f64 l, f64 r);
 
-  native_real mul(native_integer l, native_real r);
-  native_real mul(native_real l, native_integer r);
+  f64 mul(i64 l, f64 r);
+  f64 mul(f64 l, i64 r);
 
-  object_ptr mul(object_ptr l, native_integer r);
-  object_ptr mul(native_integer l, object_ptr r);
-  native_integer mul(native_integer l, native_integer r);
+  object_ref mul(object_ref l, i64 r);
+  object_ref mul(i64 l, object_ref r);
+  i64 mul(i64 l, i64 r);
 
-  native_bool lt(object_ptr l, object_ptr r);
-  native_bool lt(obj::integer_ptr l, object_ptr r);
-  native_bool lt(object_ptr l, obj::integer_ptr r);
-  native_bool lt(obj::integer_ptr const l, obj::integer_ptr const r);
-  native_bool lt(obj::real_ptr const l, obj::real_ptr const r);
-  native_bool lt(obj::real_ptr l, object_ptr r);
-  native_bool lt(object_ptr l, obj::real_ptr r);
-  native_bool lt(obj::real_ptr l, obj::integer_ptr r);
-  native_bool lt(obj::integer_ptr l, obj::real_ptr r);
+  bool lt(object_ref l, object_ref r);
+  bool lt(obj::integer_ref l, object_ref r);
+  bool lt(object_ref l, obj::integer_ref r);
+  bool lt(obj::integer_ref const l, obj::integer_ref const r);
+  bool lt(obj::real_ref const l, obj::real_ref const r);
+  bool lt(obj::real_ref l, object_ref r);
+  bool lt(object_ref l, obj::real_ref r);
+  bool lt(obj::real_ref l, obj::integer_ref r);
+  bool lt(obj::integer_ref l, obj::real_ref r);
 
-  native_bool lt(object_ptr l, native_real r);
-  native_bool lt(native_real l, object_ptr r);
-  native_bool lt(native_real l, native_real r);
+  bool lt(object_ref l, f64 r);
+  bool lt(f64 l, object_ref r);
+  bool lt(f64 l, f64 r);
 
-  native_bool lt(native_integer l, native_real r);
-  native_bool lt(native_real l, native_integer r);
+  bool lt(i64 l, f64 r);
+  bool lt(f64 l, i64 r);
 
-  native_bool lt(object_ptr l, native_integer r);
-  native_bool lt(native_integer l, object_ptr r);
-  native_bool lt(native_integer l, native_integer r);
+  bool lt(object_ref l, i64 r);
+  bool lt(i64 l, object_ref r);
+  bool lt(i64 l, i64 r);
 
-  native_bool lte(object_ptr l, object_ptr r);
-  native_bool lte(obj::integer_ptr l, object_ptr r);
-  native_bool lte(object_ptr l, obj::integer_ptr r);
-  native_bool lte(obj::integer_ptr const l, obj::integer_ptr const r);
-  native_bool lte(obj::real_ptr const l, obj::real_ptr const r);
-  native_bool lte(obj::real_ptr l, object_ptr r);
-  native_bool lte(object_ptr l, obj::real_ptr r);
-  native_bool lte(obj::real_ptr l, obj::integer_ptr r);
-  native_bool lte(obj::integer_ptr l, obj::real_ptr r);
+  bool lte(object_ref l, object_ref r);
+  bool lte(obj::integer_ref l, object_ref r);
+  bool lte(object_ref l, obj::integer_ref r);
+  bool lte(obj::integer_ref const l, obj::integer_ref const r);
+  bool lte(obj::real_ref const l, obj::real_ref const r);
+  bool lte(obj::real_ref l, object_ref r);
+  bool lte(object_ref l, obj::real_ref r);
+  bool lte(obj::real_ref l, obj::integer_ref r);
+  bool lte(obj::integer_ref l, obj::real_ref r);
 
-  native_bool lte(object_ptr l, native_real r);
-  native_bool lte(native_real l, object_ptr r);
-  native_bool lte(native_real l, native_real r);
+  bool lte(object_ref l, f64 r);
+  bool lte(f64 l, object_ref r);
+  bool lte(f64 l, f64 r);
 
-  native_bool lte(native_integer l, native_real r);
-  native_bool lte(native_real l, native_integer r);
+  bool lte(i64 l, f64 r);
+  bool lte(f64 l, i64 r);
 
-  native_bool lte(object_ptr l, native_integer r);
-  native_bool lte(native_integer l, object_ptr r);
-  native_bool lte(native_integer l, native_integer r);
+  bool lte(object_ref l, i64 r);
+  bool lte(i64 l, object_ref r);
+  bool lte(i64 l, i64 r);
 
-  object_ptr min(object_ptr l, object_ptr r);
-  object_ptr min(obj::integer_ptr l, object_ptr r);
-  object_ptr min(object_ptr l, obj::integer_ptr r);
-  native_integer min(obj::integer_ptr l, obj::integer_ptr r);
-  native_real min(obj::real_ptr l, obj::real_ptr r);
-  native_real min(obj::real_ptr l, object_ptr r);
-  native_real min(object_ptr l, obj::real_ptr r);
-  native_real min(obj::real_ptr l, obj::integer_ptr r);
-  native_real min(obj::integer_ptr l, obj::real_ptr r);
+  object_ref min(object_ref l, object_ref r);
+  object_ref min(obj::integer_ref l, object_ref r);
+  object_ref min(object_ref l, obj::integer_ref r);
+  i64 min(obj::integer_ref l, obj::integer_ref r);
+  f64 min(obj::real_ref l, obj::real_ref r);
+  f64 min(obj::real_ref l, object_ref r);
+  f64 min(object_ref l, obj::real_ref r);
+  f64 min(obj::real_ref l, obj::integer_ref r);
+  f64 min(obj::integer_ref l, obj::real_ref r);
 
-  native_real min(object_ptr l, native_real r);
-  native_real min(native_real l, object_ptr r);
-  native_real min(native_real l, native_real r);
+  f64 min(object_ref l, f64 r);
+  f64 min(f64 l, object_ref r);
+  f64 min(f64 l, f64 r);
 
-  native_real min(native_integer l, native_real r);
-  native_real min(native_real l, native_integer r);
+  f64 min(i64 l, f64 r);
+  f64 min(f64 l, i64 r);
 
-  object_ptr min(object_ptr l, native_integer r);
-  object_ptr min(native_integer l, object_ptr r);
-  native_integer min(native_integer l, native_integer r);
+  object_ref min(object_ref l, i64 r);
+  object_ref min(i64 l, object_ref r);
+  i64 min(i64 l, i64 r);
 
-  object_ptr max(object_ptr l, object_ptr r);
-  object_ptr max(obj::integer_ptr l, object_ptr r);
-  object_ptr max(object_ptr l, obj::integer_ptr r);
-  native_integer max(obj::integer_ptr l, obj::integer_ptr r);
-  native_real max(obj::real_ptr l, obj::real_ptr r);
-  native_real max(obj::real_ptr l, object_ptr r);
-  native_real max(object_ptr l, obj::real_ptr r);
-  native_real max(obj::real_ptr l, obj::integer_ptr r);
-  native_real max(obj::integer_ptr l, obj::real_ptr r);
+  object_ref max(object_ref l, object_ref r);
+  object_ref max(obj::integer_ref l, object_ref r);
+  object_ref max(object_ref l, obj::integer_ref r);
+  i64 max(obj::integer_ref l, obj::integer_ref r);
+  f64 max(obj::real_ref l, obj::real_ref r);
+  f64 max(obj::real_ref l, object_ref r);
+  f64 max(object_ref l, obj::real_ref r);
+  f64 max(obj::real_ref l, obj::integer_ref r);
+  f64 max(obj::integer_ref l, obj::real_ref r);
 
-  native_real max(object_ptr l, native_real r);
-  native_real max(native_real l, object_ptr r);
-  native_real max(native_real l, native_real r);
+  f64 max(object_ref l, f64 r);
+  f64 max(f64 l, object_ref r);
+  f64 max(f64 l, f64 r);
 
-  native_real max(native_integer l, native_real r);
-  native_real max(native_real l, native_integer r);
+  f64 max(i64 l, f64 r);
+  f64 max(f64 l, i64 r);
 
-  object_ptr max(object_ptr l, native_integer r);
-  object_ptr max(native_integer l, object_ptr r);
-  native_integer max(native_integer l, native_integer r);
+  object_ref max(object_ref l, i64 r);
+  object_ref max(i64 l, object_ref r);
+  i64 max(i64 l, i64 r);
 
-  object_ptr abs(object_ptr l);
-  native_integer abs(obj::integer_ptr l);
-  native_real abs(obj::real_ptr l);
-  native_integer abs(native_integer l);
-  native_real abs(native_real l);
+  object_ref abs(object_ref l);
+  i64 abs(obj::integer_ref l);
+  f64 abs(obj::real_ref l);
+  i64 abs(i64 l);
+  f64 abs(f64 l);
 
-  native_real tan(object_ptr l);
+  f64 tan(object_ref l);
 
-  native_real sqrt(object_ptr l);
-  native_real sqrt(obj::integer_ptr l);
-  native_real sqrt(obj::real_ptr l);
-  native_real sqrt(native_integer l);
-  native_real sqrt(native_real l);
+  f64 sqrt(object_ref l);
+  f64 sqrt(obj::integer_ref l);
+  f64 sqrt(obj::real_ref l);
+  f64 sqrt(i64 l);
+  f64 sqrt(f64 l);
 
-  native_real pow(object_ptr l, object_ptr r);
-  native_real pow(obj::integer_ptr l, object_ptr r);
-  native_real pow(object_ptr l, obj::integer_ptr r);
-  native_real pow(obj::integer_ptr l, obj::integer_ptr r);
-  native_real pow(obj::real_ptr l, obj::real_ptr r);
-  native_real pow(obj::real_ptr l, object_ptr r);
-  native_real pow(object_ptr l, obj::real_ptr r);
-  native_real pow(obj::real_ptr l, obj::integer_ptr r);
-  native_real pow(obj::integer_ptr l, obj::real_ptr r);
+  f64 pow(object_ref l, object_ref r);
+  f64 pow(obj::integer_ref l, object_ref r);
+  f64 pow(object_ref l, obj::integer_ref r);
+  f64 pow(obj::integer_ref l, obj::integer_ref r);
+  f64 pow(obj::real_ref l, obj::real_ref r);
+  f64 pow(obj::real_ref l, object_ref r);
+  f64 pow(object_ref l, obj::real_ref r);
+  f64 pow(obj::real_ref l, obj::integer_ref r);
+  f64 pow(obj::integer_ref l, obj::real_ref r);
 
-  native_real pow(object_ptr l, native_real r);
-  native_real pow(native_real l, object_ptr r);
-  native_real pow(native_real l, native_real r);
+  f64 pow(object_ref l, f64 r);
+  f64 pow(f64 l, object_ref r);
+  f64 pow(f64 l, f64 r);
 
-  native_real pow(native_integer l, native_real r);
-  native_real pow(native_real l, native_integer r);
+  f64 pow(i64 l, f64 r);
+  f64 pow(f64 l, i64 r);
 
-  native_real pow(object_ptr l, native_integer r);
-  native_real pow(native_integer l, object_ptr r);
-  native_real pow(native_integer l, native_integer r);
+  f64 pow(object_ref l, i64 r);
+  f64 pow(i64 l, object_ref r);
+  f64 pow(i64 l, i64 r);
 
-  object_ptr rem(object_ptr l, object_ptr r);
-  object_ptr quot(object_ptr l, object_ptr r);
-  object_ptr inc(object_ptr l);
-  object_ptr dec(object_ptr l);
+  object_ref rem(object_ref l, object_ref r);
+  object_ref quot(object_ref l, object_ref r);
+  object_ref inc(object_ref l);
+  object_ref dec(object_ref l);
 
-  native_bool is_zero(object_ptr l);
-  native_bool is_pos(object_ptr l);
-  native_bool is_neg(object_ptr l);
-  native_bool is_even(object_ptr l);
-  native_bool is_odd(object_ptr l);
+  bool is_zero(object_ref l);
+  bool is_pos(object_ref l);
+  bool is_neg(object_ref l);
+  bool is_even(object_ref l);
+  bool is_odd(object_ref l);
 
-  native_bool is_equiv(object_ptr l, object_ptr r);
+  bool is_equiv(object_ref l, object_ref r);
 
-  native_integer bit_not(object_ptr l);
-  native_integer bit_and(object_ptr l, object_ptr r);
-  native_integer bit_or(object_ptr l, object_ptr r);
-  native_integer bit_xor(object_ptr l, object_ptr r);
-  native_integer bit_and_not(object_ptr l, object_ptr r);
-  native_integer bit_clear(object_ptr l, object_ptr r);
-  native_integer bit_set(object_ptr l, object_ptr r);
-  native_integer bit_flip(object_ptr l, object_ptr r);
-  native_bool bit_test(object_ptr l, object_ptr r);
-  native_integer bit_shift_left(object_ptr l, object_ptr r);
-  native_integer bit_shift_right(object_ptr l, object_ptr r);
-  native_integer bit_unsigned_shift_right(object_ptr l, object_ptr r);
+  i64 bit_not(object_ref l);
+  i64 bit_and(object_ref l, object_ref r);
+  i64 bit_or(object_ref l, object_ref r);
+  i64 bit_xor(object_ref l, object_ref r);
+  i64 bit_and_not(object_ref l, object_ref r);
+  i64 bit_clear(object_ref l, object_ref r);
+  i64 bit_set(object_ref l, object_ref r);
+  i64 bit_flip(object_ref l, object_ref r);
+  bool bit_test(object_ref l, object_ref r);
+  i64 bit_shift_left(object_ref l, object_ref r);
+  i64 bit_shift_right(object_ref l, object_ref r);
+  i64 bit_unsigned_shift_right(object_ref l, object_ref r);
 
-  native_real rand();
+  f64 rand();
 
-  native_integer numerator(object_ptr o);
-  native_integer denominator(object_ptr o);
+  i64 numerator(object_ref o);
+  i64 denominator(object_ref o);
 
-  native_integer to_int(object_ptr l);
-  native_integer to_int(obj::integer_ptr l);
-  native_integer to_int(obj::real_ptr l);
-  native_integer to_int(native_integer l);
-  native_integer to_int(native_real l);
+  i64 to_int(object_ref l);
+  i64 to_int(obj::integer_ref l);
+  i64 to_int(obj::real_ref l);
+  i64 to_int(i64 l);
+  i64 to_int(f64 l);
 
-  native_real to_real(object_ptr o);
+  f64 to_real(object_ref o);
 
-  native_bool is_number(object_ptr o);
-  native_bool is_integer(object_ptr o);
-  native_bool is_real(object_ptr o);
-  native_bool is_ratio(object_ptr o);
-  native_bool is_boolean(object_ptr o);
-  native_bool is_nan(object_ptr o);
-  native_bool is_infinite(object_ptr o);
+  bool is_number(object_ref o);
+  bool is_integer(object_ref o);
+  bool is_real(object_ref o);
+  bool is_ratio(object_ref o);
+  bool is_boolean(object_ref o);
+  bool is_nan(object_ref o);
+  bool is_infinite(object_ref o);
 
-  native_integer parse_long(object_ptr o);
-  native_real parse_double(object_ptr o);
+  i64 parse_long(object_ref o);
+  f64 parse_double(object_ref o);
 }

@@ -1,0 +1,6 @@
+(letfn* [a (fn* a []
+             :success)
+         b (fn* b []
+             (a))]
+  (assert (= (b) (a)))
+  (b))

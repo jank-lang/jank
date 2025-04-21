@@ -13,14 +13,14 @@ namespace jank::read::lex
   /* This is just std::to_array, pre-C++20. */
   namespace detail
   {
-    template <class T, std::size_t N, std::size_t... I>
+    template <class T, size_t N, size_t... I>
     static constexpr std::array<std::remove_cv_t<T>, N>
     to_array_impl(T (&a)[N], std::index_sequence<I...>)
     {
       return { { a[I]... } };
     }
 
-    template <class T, std::size_t N>
+    template <class T, size_t N>
     static constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
     {
       return detail::to_array_impl(a, std::make_index_sequence<N>{});
@@ -32,13 +32,13 @@ namespace jank::read::lex
     return {};
   }
 
-  template <size_t N>
+  template <usize N>
   static constexpr std::array<token, N> make_tokens(token const (&arr)[N])
   {
     return detail::to_array(arr);
   }
 
-  template <size_t N>
+  template <usize N>
   static constexpr std::array<jtl::result<token, error_ref>, N>
   make_results(jtl::result<token, error_ref> const (&arr)[N])
   {
@@ -66,7 +66,7 @@ namespace jank::read::lex
       return false;
     }
 
-    for(size_t i{}; i < v.size(); ++i)
+    for(usize i{}; i < v.size(); ++i)
     {
       auto const &lhs(v[i]);
       auto const &rhs(a[i]);
@@ -108,7 +108,7 @@ namespace jank::read::lex
     return os << "]";
   }
 
-  template <typename T, size_t N>
+  template <typename T, usize N>
   static std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
   {
     os << "[ ";
@@ -134,7 +134,7 @@ namespace jank::read::lex
     }
   }
 
-  static error_ref make_error(error::kind const kind, size_t const offset, size_t const width)
+  static error_ref make_error(error::kind const kind, usize const offset, usize const width)
   {
     return runtime::make_box<error::base>(kind,
                                           read::source{

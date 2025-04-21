@@ -15,7 +15,7 @@ namespace jank::util
   inline jtl::option<std::filesystem::path> process_location()
 #if defined(__APPLE__)
   {
-    uint32_t path_length{};
+    u32 path_length{};
     if(_NSGetExecutablePath(nullptr, &path_length) != -1 || path_length <= 1)
     {
       return none;

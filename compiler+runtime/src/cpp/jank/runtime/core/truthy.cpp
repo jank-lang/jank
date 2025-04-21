@@ -3,7 +3,7 @@
 
 namespace jank::runtime
 {
-  native_bool truthy(object const *o)
+  bool truthy(object const *o)
   {
     if(!o)
     {
@@ -14,7 +14,9 @@ namespace jank::runtime
     {
       return false;
     }
-    else if(auto const b = dyn_cast<obj::boolean>(o))
+
+    auto const b{ dyn_cast<obj::boolean>(o) };
+    if(b.is_some())
     {
       return b->data;
     }
@@ -22,22 +24,22 @@ namespace jank::runtime
     return true;
   }
 
-  native_bool truthy(object_ptr const o)
+  bool truthy(object_ref const o)
   {
     return truthy(o.data);
   }
 
-  native_bool truthy(obj::nil_ptr)
+  bool truthy(obj::nil_ref)
   {
     return false;
   }
 
-  native_bool truthy(obj::boolean_ptr const o)
+  bool truthy(obj::boolean_ref const o)
   {
-    return o && o->data;
+    return o.is_some() && o->data;
   }
 
-  native_bool truthy(native_bool const o)
+  bool truthy(bool const o)
   {
     return o;
   }

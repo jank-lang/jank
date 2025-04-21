@@ -1,0 +1,3 @@
+(letfn* [a (fn* a [& args]
+             (first args))]
+  (a :success))

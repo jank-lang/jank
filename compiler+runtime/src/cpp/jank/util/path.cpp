@@ -22,7 +22,7 @@ namespace jank::util
 
   /* Truncates long paths so that `/foo/bar/spam/meow.jank` will become `…/spam/meow.jank`,
    * with specific support for directories so we don't end up with `r/spam/meow.jank`. */
-  std::string compact_path(std::filesystem::path const &path, size_t const max_size)
+  std::string compact_path(std::filesystem::path const &path, usize const max_size)
   {
     if(path.native().size() <= max_size)
     {

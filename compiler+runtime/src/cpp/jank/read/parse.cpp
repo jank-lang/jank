@@ -11,6 +11,7 @@
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -95,12 +96,12 @@ namespace jank::read::parse
     return none;
   }
 
-  native_bool object_source_info::operator==(object_source_info const &rhs) const
+  bool object_source_info::operator==(object_source_info const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool object_source_info::operator!=(object_source_info const &rhs) const
+  bool object_source_info::operator!=(object_source_info const &rhs) const
   {
     return ptr != rhs.ptr || start != rhs.start || end != rhs.end;
   }
@@ -121,12 +122,12 @@ namespace jank::read::parse
     return *this;
   }
 
-  native_bool processor::iterator::operator!=(processor::iterator const &rhs) const
+  bool processor::iterator::operator!=(processor::iterator const &rhs) const
   {
     return latest != rhs.latest;
   }
 
-  native_bool processor::iterator::operator==(processor::iterator const &rhs) const
+  bool processor::iterator::operator==(processor::iterator const &rhs) const
   {
     return latest == rhs.latest;
   }
@@ -143,7 +144,7 @@ namespace jank::read::parse
     , splicing_allowed_var{ make_box<var>(
                               __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
                               make_box<obj::symbol>("*splicing-allowed?*"),
-                              obj::boolean::false_const())
+                              jank_false)
                               ->set_dynamic(true) }
   {
   }
@@ -285,8 +286,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_paren);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -323,8 +324,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_square_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -359,8 +360,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -419,11 +420,12 @@ namespace jank::read::parse
                                         "Quote form is missing its value.");
     }
 
-    return object_source_info{ erase(make_box<obj::persistent_list>(
+    return object_source_info{ make_box<obj::persistent_list>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
                                  make_box<obj::symbol>("quote"),
-                                 val_result.expect_ok().unwrap().ptr)),
+                                 val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
                                start_token,
                                latest_token };
   }
@@ -481,11 +483,9 @@ namespace jank::read::parse
         using T = typename decltype(typed_val)::value_type;
         if constexpr(std::same_as<T, obj::keyword>)
         {
-          return object_source_info{
-            obj::persistent_array_map::create_unique(typed_val, obj::boolean::true_const()),
-            start_token,
-            latest_token
-          };
+          return object_source_info{ obj::persistent_array_map::create_unique(typed_val, jank_true),
+                                     start_token,
+                                     latest_token };
         }
         if constexpr(behavior::map_like<T>)
         {
@@ -582,8 +582,8 @@ namespace jank::read::parse
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
     __rt_ctx
-      ->push_thread_bindings(obj::persistent_hash_map::create_unique(
-        std::make_pair(splicing_allowed_var, obj::boolean::true_const())))
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
@@ -640,7 +640,7 @@ namespace jank::read::parse
     runtime::detail::native_transient_vector arg_trans;
     if(shorthand.unwrap().max_fixed_arity.is_some())
     {
-      for(uint8_t i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
+      for(u8 i{}; i < shorthand.unwrap().max_fixed_arity.unwrap(); ++i)
       {
         arg_trans.push_back(make_box<obj::symbol>(util::format("%{}#", i + 1)));
       }
@@ -715,18 +715,18 @@ namespace jank::read::parse
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
-    native_real n{};
+    f64 n{};
     if(sym->name == "Inf")
     {
-      n = std::numeric_limits<native_real>::infinity();
+      n = std::numeric_limits<f64>::infinity();
     }
     else if(sym->name == "-Inf")
     {
-      n = -std::numeric_limits<native_real>::infinity();
+      n = -std::numeric_limits<f64>::infinity();
     }
     else if(sym->name == "NaN")
     {
-      n = std::numeric_limits<native_real>::quiet_NaN();
+      n = std::numeric_limits<f64>::quiet_NaN();
     }
     else
     {
@@ -757,7 +757,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  processor::object_result processor::parse_reader_macro_conditional(native_bool const splice)
+  processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
@@ -781,7 +781,7 @@ namespace jank::read::parse
     auto const list(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
     auto const list_end(list_result.expect_ok().unwrap().end);
 
-    if(list.data->count() % 2 == 1)
+    if(list->count() % 2 == 1)
     {
       return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
                                                      "#? expects an even number of forms.");
@@ -790,9 +790,10 @@ namespace jank::read::parse
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
-    for(auto it(list->fresh_seq()); it != nullptr; it = it->next_in_place()->next_in_place())
+    auto const r{ make_sequence_range(list) };
+    for(auto it(r.begin()); it != r.end(); ++it, ++it)
     {
-      auto const kw(it->first());
+      auto const kw(*it);
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
@@ -806,20 +807,20 @@ namespace jank::read::parse
                                                       "Top-level #?@ usage is not allowed.");
           }
 
-          auto const s(it->next_in_place()->first());
+          auto const s(*(++it));
           return visit_seqable(
             [&](auto const typed_s) -> processor::object_result {
-              auto const seq(typed_s->fresh_seq());
-              if(!seq)
+              auto const r{ make_sequence_range(typed_s) };
+              if(r.begin() == r.end())
               {
                 return ok(none);
               }
-              auto const first(seq->first());
+              auto const first(*r.begin());
 
               auto const front(pending_forms.begin());
-              for(auto it(seq->next_in_place()); it != nullptr; it = it->next_in_place())
+              for(auto it(++r.begin()); it != r.end(); ++it)
               {
-                pending_forms.insert(front, it->first());
+                pending_forms.insert(front, *it);
               }
 
               return object_source_info{ first, start_token, list_end };
@@ -833,7 +834,7 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ it->next_in_place()->first(), start_token, list_end };
+          return object_source_info{ *(++it), start_token, list_end };
         }
       }
     }
@@ -841,20 +842,18 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote_expand_seq(object_ptr const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const seq)
   {
-    if(!seq)
+    if(seq.is_nil())
     {
-      return obj::nil::nil_const();
+      return seq;
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
+      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto const item : make_sequence_range(typed_seq))
         {
-          auto const item(it->first());
-
           if(syntax_quote_is_unquote(item, false))
           {
             ret.push_back(
@@ -880,45 +879,44 @@ namespace jank::read::parse
           }
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: obj::nil::nil_const();
+        return vec;
       },
-      []() -> jtl::result<object_ptr, error_ref> {
+      []() -> jtl::result<object_ref, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
       },
       seq);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote_flatten_map(object_ptr const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
   {
-    if(!seq)
+    if(seq.is_nil())
     {
-      return obj::nil::nil_const();
+      return seq;
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> jtl::result<object_ptr, error_ref> {
+      [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
-        for(auto it(typed_seq->fresh_seq()); it != nullptr; it = it->next_in_place())
+        for(auto const item : make_sequence_range(typed_seq))
         {
-          auto item(it->first());
           ret.push_back(first(item));
           ret.push_back(second(item));
         }
         auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec ?: obj::nil::nil_const();
+        return vec;
       },
-      []() -> jtl::result<object_ptr, error_ref> {
+      []() -> jtl::result<object_ref, error_ref> {
         return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
       },
       seq);
   }
 
-  native_bool processor::syntax_quote_is_unquote(object_ptr const form, native_bool const splice)
+  bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
   {
     return visit_seqable(
       [splice](auto const typed_form) {
         auto const s(typed_form->seq());
-        object_ptr const item{ s ? s->first() : obj::nil::nil_const() };
+        object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
           ->equal(*item);
@@ -927,9 +925,9 @@ namespace jank::read::parse
       form);
   }
 
-  jtl::result<object_ptr, error_ref> processor::syntax_quote(object_ptr const form)
+  jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const form)
   {
-    object_ptr ret{};
+    object_ref ret{};
 
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
     if(__rt_ctx->an_prc.is_special(form))
@@ -961,13 +959,13 @@ namespace jank::read::parse
       else if(sym->ns.empty() && sym->name != "&")
       {
         auto var(__rt_ctx->find_var(sym));
-        if(var.is_none())
+        if(var.is_nil())
         {
           sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
         }
         else
         {
-          sym = make_box<obj::symbol>(var.unwrap()->n->name->name, sym->name);
+          sym = make_box<obj::symbol>(var->n->name->name, sym->name);
         }
       }
 
@@ -995,13 +993,13 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       auto const res{ visit_seqable(
-        [&](auto const typed_form) -> jtl::result<object_ptr, error_ref> {
+        [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
           using T = typename decltype(typed_form)::value_type;
 
           if constexpr(std::same_as<T, obj::persistent_vector>)
           {
             auto const seq(typed_form->seq());
-            if(!seq)
+            if(seq.is_nil())
             {
               return make_box<obj::persistent_list>(
                 std::in_place,
@@ -1053,7 +1051,7 @@ namespace jank::read::parse
           if constexpr(behavior::sequenceable<T>)
           {
             auto const seq(typed_form->seq());
-            if(!seq)
+            if(seq.is_nil())
             {
               return make_box<obj::persistent_list>(std::in_place,
                                                     make_box<obj::symbol>("clojure.core", "list"));
@@ -1079,7 +1077,7 @@ namespace jank::read::parse
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
-        [=]() -> jtl::result<object_ptr, error_ref> {
+        [=]() -> jtl::result<object_ref, error_ref> {
           return make_box<obj::persistent_list>(std::in_place,
                                                 make_box<obj::symbol>("quote"),
                                                 form);
@@ -1093,7 +1091,7 @@ namespace jank::read::parse
     }
 
     auto const meta{ runtime::meta(form) };
-    if(meta != obj::nil::nil_const())
+    if(meta != jank_nil)
     {
       /* We quote the meta as well, to ensure it doesn't get evaluated.
        * Note that Clojure removes the source info from the meta here. We're keeping it
@@ -1153,7 +1151,7 @@ namespace jank::read::parse
     return object_source_info{ res.expect_ok(), start_token, quoted_form.expect_ok().unwrap().end };
   }
 
-  processor::object_result processor::parse_unquote(native_bool const splice)
+  processor::object_result processor::parse_unquote(bool const splice)
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
@@ -1167,14 +1165,14 @@ namespace jank::read::parse
       return error::parse_invalid_syntax_unquote({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{
-      erase(make_box<obj::persistent_list>(
-        std::in_place,
-        make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote")),
-        val_result.expect_ok().unwrap().ptr)),
-      start_token,
-      latest_token
-    };
+    return object_source_info{ make_box<obj::persistent_list>(
+                                 std::in_place,
+                                 make_box<obj::symbol>("clojure.core",
+                                                       (splice ? "unquote-splicing" : "unquote")),
+                                 val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
+                               start_token,
+                               latest_token };
   }
 
   processor::object_result processor::parse_deref()
@@ -1191,10 +1189,10 @@ namespace jank::read::parse
       return error::parse_invalid_reader_deref({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{ erase(make_box<obj::persistent_list>(
-                                 std::in_place,
-                                 make_box<obj::symbol>("deref"),
-                                 val_result.expect_ok().unwrap().ptr)),
+    return object_source_info{ make_box<obj::persistent_list>(std::in_place,
+                                                              make_box<obj::symbol>("deref"),
+                                                              val_result.expect_ok().unwrap().ptr)
+                                 .erase(),
                                start_token,
                                latest_token };
   }
@@ -1202,14 +1200,14 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ obj::nil::nil_const(), latest_token, latest_token };
+    return object_source_info{ jank_nil, latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()
   {
     auto const token((*token_current).expect_ok());
     ++token_current;
-    auto const b(std::get<native_bool>(token.data));
+    auto const b(std::get<bool>(token.data));
     return object_source_info{ make_box<obj::boolean>(b), token, token };
   }
 
@@ -1239,13 +1237,13 @@ namespace jank::read::parse
         else
         {
           auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
-          if(resolved_ns.is_none())
+          if(resolved_ns.is_nil())
           {
             ns = ns_portion;
           }
           else
           {
-            ns = resolved_ns.unwrap()->name->name;
+            ns = resolved_ns->name->name;
           }
         }
         name = sv.substr(slash + 1);
@@ -1261,7 +1259,7 @@ namespace jank::read::parse
       if(shorthand.is_some() && name.starts_with('%'))
       {
         auto const after_percent(name.substr(1));
-        native_bool all_digits{ true };
+        bool all_digits{ true };
         for(auto const c : after_percent)
         {
           all_digits &= (std::isdigit(c) != 0) && (c != '0');
@@ -1269,7 +1267,7 @@ namespace jank::read::parse
         if(all_digits)
         {
           /* We support just % alone, which means %1. */
-          uint8_t num{ 1 };
+          u8 num{ 1 };
           if(after_percent.empty())
           {
             /* We rename it so that the generated param name matches. */
@@ -1315,7 +1313,7 @@ namespace jank::read::parse
     auto const sv(std::get<native_persistent_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
-    native_bool const resolved{ sv[0] != ':' };
+    bool const resolved{ sv[0] != ':' };
 
     auto const slash(sv.find('/'));
     jtl::immutable_string ns, name;
@@ -1349,9 +1347,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(std::get<native_integer>(token.data)),
-                               token,
-                               token };
+    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_ratio()
@@ -1384,9 +1380,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<native_real>(token.data)),
-                               token,
-                               token };
+    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_string()

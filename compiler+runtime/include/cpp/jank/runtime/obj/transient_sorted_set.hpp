@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using transient_sorted_set_ptr = native_box<struct transient_sorted_set>;
+  using transient_sorted_set_ref = oref<struct transient_sorted_set>;
 
   struct transient_sorted_set : gc
   {
@@ -13,7 +13,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_set;
-    using persistent_type_ptr = native_box<struct persistent_sorted_set>;
+    using persistent_type_ref = oref<struct persistent_sorted_set>;
 
     transient_sorted_set() = default;
     transient_sorted_set(transient_sorted_set &&) noexcept = default;
@@ -22,41 +22,41 @@ namespace jank::runtime::obj
     transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d);
     transient_sorted_set(value_type &&d);
 
-    static transient_sorted_set_ptr empty();
+    static transient_sorted_set_ref empty();
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
+    bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::conjable_in_place */
-    transient_sorted_set_ptr conj_in_place(object_ptr elem);
+    transient_sorted_set_ref conj_in_place(object_ref elem);
 
     /* behavior::persistentable */
-    persistent_type_ptr to_persistent();
+    persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ptr call(object_ptr const);
-    object_ptr call(object_ptr const, object_ptr const fallback);
+    object_ref call(object_ref const);
+    object_ref call(object_ref const, object_ref const fallback);
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr const elem);
-    object_ptr get(object_ptr const elem, object_ptr const fallback);
-    object_ptr get_entry(object_ptr const elem);
-    native_bool contains(object_ptr const elem) const;
+    object_ref get(object_ref const elem);
+    object_ref get(object_ref const elem, object_ref const fallback);
+    object_ref get_entry(object_ref const elem);
+    bool contains(object_ref const elem) const;
 
-    transient_sorted_set_ptr disjoin_in_place(object_ptr const elem);
+    transient_sorted_set_ref disjoin_in_place(object_ref const elem);
 
     void assert_active() const;
 
     object base{ obj_type };
     value_type data;
-    mutable native_hash hash{};
-    native_bool active{ true };
+    mutable uhash hash{};
+    bool active{ true };
   };
 }

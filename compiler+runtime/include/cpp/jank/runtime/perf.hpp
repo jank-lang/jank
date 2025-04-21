@@ -4,5 +4,5 @@
 
 namespace jank::runtime::perf
 {
-  object_ptr benchmark(object_ptr opts, object_ptr f);
+  object_ref benchmark(object_ref opts, object_ref f);
 }

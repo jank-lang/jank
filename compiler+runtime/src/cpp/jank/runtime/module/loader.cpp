@@ -75,7 +75,7 @@ namespace jank::runtime::module
   }
 
   /* If it has two or more occurences of $, it's nested. */
-  native_bool is_nested_module(jtl::immutable_string const &module)
+  bool is_nested_module(jtl::immutable_string const &module)
   {
     return module.find('$') != module.rfind('$');
   }
@@ -247,8 +247,8 @@ namespace jank::runtime::module
 
     //util::println("module paths: {}", paths);
 
-    size_t start{};
-    size_t i{ paths.find(module_separator, start) };
+    usize start{};
+    usize i{ paths.find(module_separator, start) };
 
     /* Looks like it's either an empty path list or there's only entry. */
     if(i == jtl::immutable_string::npos)
@@ -269,7 +269,7 @@ namespace jank::runtime::module
     }
   }
 
-  object_ptr file_entry::to_runtime_data() const
+  object_ref file_entry::to_runtime_data() const
   {
     return runtime::obj::persistent_array_map::create_unique(
       make_box("__type"),
@@ -280,7 +280,7 @@ namespace jank::runtime::module
       make_box(path));
   }
 
-  native_bool file_entry::exists() const
+  bool file_entry::exists() const
   {
     auto const is_archive{ archive_path.is_some() };
     if(is_archive && !std::filesystem::exists(native_transient_string{ archive_path.unwrap() }))
@@ -289,7 +289,7 @@ namespace jank::runtime::module
     }
     else
     {
-      native_bool source_exists{};
+      bool source_exists{};
       if(is_archive)
       {
         visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
@@ -317,7 +317,7 @@ namespace jank::runtime::module
     mf.head = nullptr;
   }
 
-  file_view::file_view(int const f, char const * const h, size_t const s)
+  file_view::file_view(int const f, char const * const h, usize const s)
     : fd{ f }
     , head{ h }
     , len{ s }
@@ -347,7 +347,7 @@ namespace jank::runtime::module
     return buff.empty() ? head : buff.data();
   }
 
-  size_t file_view::size() const
+  usize file_view::size() const
   {
     return buff.empty() ? len : buff.size();
   }
@@ -514,7 +514,7 @@ namespace jank::runtime::module
     return err(util::format("No sources for registered module: {}", module));
   }
 
-  native_bool loader::is_loaded(jtl::immutable_string const &module)
+  bool loader::is_loaded(jtl::immutable_string const &module)
   {
     auto const atom{
       runtime::try_object<runtime::obj::atom>(__rt_ctx->loaded_libs_var->deref())->deref()
@@ -529,13 +529,13 @@ namespace jank::runtime::module
     auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
       __rt_ctx->loaded_libs_var->deref()) };
 
-    auto const swap_fn{ [&](object_ptr const curr_val) {
+    auto const swap_fn{ [&](object_ref const curr_val) {
       return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
         make_box<obj::symbol>(module));
     } };
 
     auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
-      std::function<object_ptr(object_ptr)>{ swap_fn }) };
+      std::function<object_ref(object_ref)>{ swap_fn }) };
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 
@@ -758,9 +758,9 @@ namespace jank::runtime::module
     return load_jank(entry);
   }
 
-  object_ptr loader::to_runtime_data() const
+  object_ref loader::to_runtime_data() const
   {
-    runtime::object_ptr entry_maps(make_box<runtime::obj::persistent_array_map>());
+    runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : entries)
     {
       entry_maps = runtime::assoc(entry_maps,

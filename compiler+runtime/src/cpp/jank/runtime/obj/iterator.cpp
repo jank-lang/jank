@@ -5,30 +5,30 @@
 
 namespace jank::runtime::obj
 {
-  iterator::iterator(object_ptr const fn, object_ptr const start)
+  iterator::iterator(object_ref const fn, object_ref const start)
     : fn{ fn }
     , current{ start }
   {
   }
 
-  iterator_ptr iterator::seq()
+  iterator_ref iterator::seq()
   {
     return this;
   }
 
-  iterator_ptr iterator::fresh_seq() const
+  iterator_ref iterator::fresh_seq() const
   {
     return make_box<iterator>(fn, current);
   }
 
-  object_ptr iterator::first() const
+  object_ref iterator::first() const
   {
     return current;
   }
 
-  iterator_ptr iterator::next() const
+  iterator_ref iterator::next() const
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       return cached_next;
     }
@@ -40,12 +40,12 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  iterator_ptr iterator::next_in_place()
+  iterator_ref iterator::next_in_place()
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       current = cached_next->first();
-      cached_next = nullptr;
+      cached_next = jank_nil;
     }
     else
     {
@@ -56,23 +56,9 @@ namespace jank::runtime::obj
     return this;
   }
 
-  native_bool iterator::equal(object const &o) const
+  bool iterator::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        for(auto it(fresh_seq()); it != nullptr;
-            it = it->next_in_place(), seq = seq->next_in_place())
-        {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq == nullptr;
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void iterator::to_string(util::string_builder &buff)
@@ -90,12 +76,12 @@ namespace jank::runtime::obj
     return runtime::to_code_string(seq());
   }
 
-  native_hash iterator::to_hash() const
+  uhash iterator::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  cons_ptr iterator::conj(object_ptr const head) const
+  cons_ref iterator::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }

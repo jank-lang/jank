@@ -7,8 +7,8 @@ namespace jank::analyze::expr
 
   def::def(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
-           runtime::obj::symbol_ptr const name,
+           bool const needs_box,
+           runtime::obj::symbol_ref const name,
            jtl::option<expression_ref> const &value)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
@@ -16,7 +16,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr def::to_runtime_data() const
+  object_ref def::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("name"),

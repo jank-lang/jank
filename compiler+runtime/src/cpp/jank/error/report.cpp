@@ -25,15 +25,15 @@ namespace jank::error
   using namespace jank::runtime;
   using namespace ftxui;
 
-  static constexpr size_t max_body_lines{ 6 };
-  static constexpr size_t min_body_lines{ 1 };
-  static constexpr size_t max_top_margin_lines{ 2 };
-  static constexpr size_t new_note_leniency_lines{ 2 };
-  static constexpr size_t min_ellipsis_range{ 4 };
+  static constexpr usize max_body_lines{ 6 };
+  static constexpr usize min_body_lines{ 1 };
+  static constexpr usize max_top_margin_lines{ 2 };
+  static constexpr usize new_note_leniency_lines{ 2 };
+  static constexpr usize min_ellipsis_range{ 4 };
 
   struct line
   {
-    enum class kind : uint8_t
+    enum class kind : u8
     {
       file_data,
       note,
@@ -56,22 +56,22 @@ namespace jank::error
 
     kind kind{};
     /* Zero means no number. */
-    size_t number{};
+    usize number{};
     /* Only set when kind == note. */
     jtl::option<note> note;
   };
 
   struct snippet
   {
-    native_bool can_fit_without_ellipsis(note const &n) const;
+    bool can_fit_without_ellipsis(note const &n) const;
     void add(read::source const &body_source, note const &n);
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
 
     jtl::immutable_string file_path;
     /* Zero means we have no lines yet. */
-    size_t line_start{};
-    size_t line_end{};
+    usize line_start{};
+    usize line_end{};
     std::deque<line> lines{};
   };
 
@@ -99,7 +99,7 @@ namespace jank::error
     }
   }
 
-  native_bool snippet::can_fit_without_ellipsis(note const &n) const
+  bool snippet::can_fit_without_ellipsis(note const &n) const
   {
     jank_debug_assert(n.source.file_path == file_path);
 
@@ -108,7 +108,7 @@ namespace jank::error
       return true;
     }
 
-    native_bool ret{ true };
+    bool ret{ true };
 
     /* See if it can fit within our existing line coverage. */
     if(n.source.start.line < line_start)
@@ -188,7 +188,7 @@ namespace jank::error
       line_end = n.source.end.line;
       line_start = line_end - body_range - top_margin;
 
-      for(size_t i{ line_start }; i <= line_end; ++i)
+      for(usize i{ line_start }; i <= line_end; ++i)
       {
         lines.emplace_back(line::kind::file_data, i);
       }
@@ -213,7 +213,7 @@ namespace jank::error
       }
     }
 
-    for(size_t i{}; i < lines.size(); ++i)
+    for(usize i{}; i < lines.size(); ++i)
     {
       if(lines[i].number != n.source.start.line)
       {
@@ -267,8 +267,8 @@ namespace jank::error
        * our lines before it. We also insert our own ellipsis at the start of our lines. By
        * the end of this, we'll have our new lines with an ellipsis on either side. The
        * pass we run at the end to remove unneeded ellipsis will clean those up. */
-      size_t last_ellipsis{}, last_line_number{}, line_number_before_last_ellipsis{};
-      for(size_t i{}; i < lines.size(); ++i)
+      usize last_ellipsis{}, last_line_number{}, line_number_before_last_ellipsis{};
+      for(usize i{}; i < lines.size(); ++i)
       {
         /* First loop until we find a line number larger than our start. We keep track
          * of the lines and ellipsis and we see them. */
@@ -286,8 +286,8 @@ namespace jank::error
           /* Once we've found a number which is beyond the start of our note, we
            * want to look back and find the last ellipsis. We can start inserting *before*
            * that ellipsis. */
-          size_t added_lines{};
-          for(size_t i{}; i < s.lines.size(); ++i)
+          usize added_lines{};
+          for(usize i{}; i < s.lines.size(); ++i)
           {
             /* Skip any duplicate lines which can mess with the ordering. */
             if(s.lines[i].number != 0 && s.lines[i].number <= line_number_before_last_ellipsis)
@@ -308,8 +308,8 @@ namespace jank::error
       }
     }
 
-    size_t last_number{};
-    for(size_t i{}; i < lines.size(); ++i)
+    usize last_number{};
+    for(usize i{}; i < lines.size(); ++i)
     {
       /* Remove ellipsis, if needed. */
       if(lines[i].kind == line::kind::ellipsis)
@@ -322,7 +322,7 @@ namespace jank::error
           /* Fill in the extra lines. */
           lines[i].kind = line::kind::file_data;
           lines[i].number = last_number + 1;
-          for(size_t k{ i + 1 }; k < i + diff - 1; ++k)
+          for(usize k{ i + 1 }; k < i + diff - 1; ++k)
           {
             lines.emplace(lines.begin() + static_cast<ptrdiff_t>(k),
                           line::kind::file_data,
@@ -359,7 +359,7 @@ namespace jank::error
       return;
     }
 
-    native_bool added{ false };
+    bool added{ false };
     for(auto &snippet : snippets)
     {
       if(snippet.file_path == n.source.file_path)
@@ -376,11 +376,11 @@ namespace jank::error
     }
   }
 
-  static Element header(std::string const &title, size_t const max_width)
+  static Element header(std::string const &title, usize const max_width)
   {
     auto const padding_count(max_width - 3 - title.size());
     std::string padding;
-    for(size_t i{}; i < padding_count; ++i)
+    for(usize i{}; i < padding_count; ++i)
     {
       padding.insert(padding.size(), "─");
     }
@@ -397,7 +397,7 @@ namespace jank::error
    * snippet spanning lines 8 through 12 will have two lines (8 - 9) which have a
    * single character width, while (10 - 12) are twice as wide. So, we measure the
    * width of the widest number (the last one) and then pad the others. */
-  static Element line_number(size_t const max_line_number_width, std::string num)
+  static Element line_number(usize const max_line_number_width, std::string num)
   {
     if(num.size() < max_line_number_width)
     {
@@ -410,7 +410,7 @@ namespace jank::error
 
   static Element underline_note(note const &n)
   {
-    auto const width{ std::max(n.source.end.col - n.source.start.col, 1zu) };
+    auto const width{ std::max(n.source.end.col - n.source.start.col, 1llu) };
     std::string underline(n.source.start.col - 1, ' ');
     underline.insert(underline.end(), width, '^');
     underline += ' ';
@@ -432,28 +432,28 @@ namespace jank::error
   static Element code_snippet_box(std::filesystem::path const &path,
                                   std::vector<Element> const &line_numbers,
                                   std::vector<Element> const &line_contents,
-                                  size_t const max_width)
+                                  usize const max_width)
   {
     static constexpr auto margin{ 8 };
     std::string top_line{ "─────┬──" };
-    for(size_t i{ margin }; i < max_width; ++i)
+    for(usize i{ margin }; i < max_width; ++i)
     {
       top_line += "─";
     }
     std::string const pre_title{ "     │ " };
     std::string middle_line{ "─────┼──" };
-    for(size_t i{ margin }; i < max_width; ++i)
+    for(usize i{ margin }; i < max_width; ++i)
     {
       middle_line += "─";
     }
     std::string bottom_line{ "─────┴──" };
-    for(size_t i{ margin }; i < max_width; ++i)
+    for(usize i{ margin }; i < max_width; ++i)
     {
       bottom_line += "─";
     }
 
     std::vector<Element> numbered_lines;
-    for(size_t i{}; i < line_numbers.size(); ++i)
+    for(usize i{}; i < line_numbers.size(); ++i)
     {
       numbered_lines.push_back(hbox(
         { line_numbers[i], separator() | color(Color::GrayDark), text(" "), line_contents[i] }));
@@ -467,7 +467,7 @@ namespace jank::error
                   text(bottom_line) | color(Color::GrayDark) });
   }
 
-  static Element code_snippet(snippet const &s, size_t const max_width)
+  static Element code_snippet(snippet const &s, usize const max_width)
   {
     auto const file(module::loader::read_file(s.file_path));
     if(file.is_err())
@@ -480,7 +480,7 @@ namespace jank::error
 
     std::vector<Element> line_numbers, lines;
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const max_line_number_width{ snprintf(nullptr, 0, "%zu", s.line_end) };
+    auto const max_line_number_width{ snprintf(nullptr, 0, "%llu", s.line_end) };
 
     for(auto const &l : s.lines)
     {
@@ -511,6 +511,8 @@ namespace jank::error
 
   void report(error_ref const e)
   {
+    util::println("reporting error {} at {}", e->message, e->source.to_string());
+
     plan const p{ e };
 
     auto const terminal_width{ Terminal::Size().dimx };
@@ -552,11 +554,12 @@ namespace jank::error
     auto document{ vbox(doc_body) };
     auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
     Render(screen, document);
-    std::cout << screen.ToString() << '\0' << '\n';
+    screen.Print();
+    util::print("\n");
 
     if(e->cause)
     {
-      report(*e->cause);
+      report(e->cause.as_ref());
     }
   }
 }

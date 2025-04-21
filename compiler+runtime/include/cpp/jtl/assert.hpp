@@ -2,28 +2,78 @@
 
 #ifdef JANK_DEBUG
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-  #define jank_debug_assert(expr) jtl::do_debug_assertion(static_cast<bool>(expr));
+  #define jank_debug_assert(expr)                          \
+    if(!static_cast<bool>(expr))                           \
+    {                                                      \
+      jtl::do_assertion_panic("Assertion failed! " #expr); \
+    }
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-  #define jank_debug_assert_msg(expr, msg) jtl::do_debug_assertion(static_cast<bool>(expr), msg);
+  #define jank_debug_assert_fmt(expr, fmt, ...)                        \
+    if(!static_cast<bool>(expr))                                       \
+    {                                                                  \
+      jtl::do_assertion_panic(jank::util::format((fmt), __VA_ARGS__)); \
+    }
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+  #define jank_debug_assert_throw(expr)                    \
+    if(!static_cast<bool>(expr))                           \
+    {                                                      \
+      jtl::do_assertion_throw("Assertion failed! " #expr); \
+    }
+  /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+  #define jank_debug_assert_fmt_throw(expr, msg, ...)                  \
+    if(!static_cast<bool>(expr))                                       \
+    {                                                                  \
+      jtl::do_assertion_throw(jank::util::format((fmt), __VA_ARGS__)); \
+    }
 #else
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
   #define jank_debug_assert(expr) static_cast<void>(0)
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-  #define jank_debug_assert_msg(expr, msg) static_cast<void>(0)
+  #define jank_debug_assert_fmt(expr, fmt, ...) static_cast<void>(0)
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+  #define jank_debug_assert_throw(expr) static_cast<void>(0)
+  /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+  #define jank_debug_assert_fmt_throw(expr, fmt, ...) static_cast<void>(0)
 #endif
 
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-#define jank_assert(expr) jtl::do_release_assertion(static_cast<bool>(expr));
+#define jank_assert(expr)                                \
+  if(!static_cast<bool>(expr))                           \
+  {                                                      \
+    jtl::do_assertion_panic("Assertion failed! " #expr); \
+  }
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-#define jank_assert_msg(expr, msg) jtl::do_release_assertion(static_cast<bool>(expr), msg);
+#define jank_assert_fmt(expr, fmt, ...)                              \
+  if(!static_cast<bool>(expr))                                       \
+  {                                                                  \
+    jtl::do_assertion_panic(jank::util::format((fmt), __VA_ARGS__)); \
+  }
+
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+#define jank_assert_throw(expr)                          \
+  if(!static_cast<bool>(expr))                           \
+  {                                                      \
+    jtl::do_assertion_throw("Assertion failed! " #expr); \
+  }
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+#define jank_assert_fmt_throw(expr, fmt, ...)                        \
+  if(!static_cast<bool>(expr))                                       \
+  {                                                                  \
+    jtl::do_assertion_throw(jank::util::format((fmt), __VA_ARGS__)); \
+  }
 
 namespace jtl
 {
-  namespace detail
-  {
-    void assertion_failed(char const *msg);
-  }
+  struct immutable_string;
 
-  void do_debug_assertion(bool const expr);
-  void do_debug_assertion(bool const expr, char const * const msg);
+  [[noreturn]]
+  void do_assertion_panic(immutable_string const &msg);
+  [[noreturn]]
+  void do_assertion_throw(immutable_string const &msg);
 }
+
+/* Everyone using these assertions also needs immutable_string, but we need to include
+ * it last, since immutable_string also uses these assertions. */
+#include <jtl/immutable_string.hpp>

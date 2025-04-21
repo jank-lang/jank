@@ -16,10 +16,10 @@ namespace jank::runtime
 
   namespace obj
   {
-    using symbol_ptr = native_box<struct symbol>;
-    using persistent_list_ptr = native_box<struct persistent_list>;
-    using persistent_vector_ptr = native_box<struct persistent_vector>;
-    using persistent_array_map_ptr = native_box<struct persistent_array_map>;
+    using symbol_ref = oref<struct symbol>;
+    using persistent_list_ref = oref<struct persistent_list>;
+    using persistent_vector_ref = oref<struct persistent_vector>;
+    using persistent_array_map_ref = oref<struct persistent_array_map>;
   }
 }
 
@@ -30,7 +30,7 @@ namespace jank::analyze
     using cpp_value_ref = jtl::ref<struct cpp_value>;
   }
 
-  enum class source_type : uint8_t
+  enum class source_type : u8
   {
     repl,
     file
@@ -47,138 +47,144 @@ namespace jank::analyze
 
     expression_result
     analyze(read::parse::processor::iterator, read::parse::processor::iterator const &);
-    expression_result analyze(runtime::object_ptr, expression_position);
-    expression_result analyze(runtime::object_ptr,
+    expression_result analyze(runtime::object_ref, expression_position);
+    expression_result analyze(runtime::object_ref,
                               local_frame_ptr,
                               expression_position,
                               jtl::option<expr::function_context_ref> const &,
-                              native_bool needs_box);
-    expression_result analyze_call(runtime::obj::persistent_list_ptr const,
+                              bool needs_box);
+    expression_result analyze_call(runtime::obj::persistent_list_ref const,
                                    local_frame_ptr,
                                    expression_position,
                                    jtl::option<expr::function_context_ref> const &,
-                                   native_bool needs_box);
-    expression_result analyze_def(runtime::obj::persistent_list_ptr const,
+                                   bool needs_box);
+    expression_result analyze_def(runtime::obj::persistent_list_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
-                                  native_bool needs_box);
-    expression_result analyze_symbol(runtime::obj::symbol_ptr const,
+                                  bool needs_box);
+    expression_result analyze_symbol(runtime::obj::symbol_ref const,
                                      local_frame_ptr,
                                      expression_position,
                                      jtl::option<expr::function_context_ref> const &,
-                                     native_bool needs_box);
-    expression_result analyze_fn(runtime::obj::persistent_list_ptr const,
+                                     bool needs_box);
+    expression_result analyze_fn(runtime::obj::persistent_list_ref const,
                                  local_frame_ptr,
                                  expression_position,
                                  jtl::option<expr::function_context_ref> const &,
-                                 native_bool needs_box);
-    expression_result analyze_recur(runtime::obj::persistent_list_ptr const,
+                                 bool needs_box);
+    expression_result analyze_recur(runtime::obj::persistent_list_ref const,
                                     local_frame_ptr,
                                     expression_position,
                                     jtl::option<expr::function_context_ref> const &,
-                                    native_bool needs_box);
-    expression_result analyze_do(runtime::obj::persistent_list_ptr const,
+                                    bool needs_box);
+    expression_result analyze_do(runtime::obj::persistent_list_ref const,
                                  local_frame_ptr,
                                  expression_position,
                                  jtl::option<expr::function_context_ref> const &,
-                                 native_bool needs_box);
+                                 bool needs_box);
     jtl::result<expr::function_arity, error_ref>
-    analyze_fn_arity(runtime::obj::persistent_list_ptr const,
+    analyze_fn_arity(runtime::obj::persistent_list_ref const,
                      jtl::immutable_string const &name,
                      local_frame_ptr);
-    expression_result analyze_let(runtime::obj::persistent_list_ptr const,
+    expression_result analyze_let(runtime::obj::persistent_list_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
-                                  native_bool needs_box);
-    expression_result analyze_loop(runtime::obj::persistent_list_ptr const,
-                                   local_frame_ptr,
-                                   expression_position,
-                                   jtl::option<expr::function_context_ref> const &,
-                                   native_bool needs_box);
-    expression_result analyze_if(runtime::obj::persistent_list_ptr const,
-                                 local_frame_ptr,
-                                 expression_position,
-                                 jtl::option<expr::function_context_ref> const &,
-                                 native_bool needs_box);
-    expression_result analyze_quote(runtime::obj::persistent_list_ptr const,
+                                  bool needs_box);
+    expression_result analyze_letfn(runtime::obj::persistent_list_ref const &,
                                     local_frame_ptr,
                                     expression_position,
                                     jtl::option<expr::function_context_ref> const &,
-                                    native_bool needs_box);
-    expression_result analyze_var_call(runtime::obj::persistent_list_ptr const,
+                                    bool needs_box);
+    expression_result analyze_loop(runtime::obj::persistent_list_ref const,
+                                   local_frame_ptr,
+                                   expression_position,
+                                   jtl::option<expr::function_context_ref> const &,
+                                   bool needs_box);
+    expression_result analyze_if(runtime::obj::persistent_list_ref const,
+                                 local_frame_ptr,
+                                 expression_position,
+                                 jtl::option<expr::function_context_ref> const &,
+                                 bool needs_box);
+    expression_result analyze_quote(runtime::obj::persistent_list_ref const,
+                                    local_frame_ptr,
+                                    expression_position,
+                                    jtl::option<expr::function_context_ref> const &,
+                                    bool needs_box);
+    expression_result analyze_var_call(runtime::obj::persistent_list_ref const,
                                        local_frame_ptr,
                                        expression_position,
                                        jtl::option<expr::function_context_ref> const &,
-                                       native_bool needs_box);
-    expression_result analyze_var_val(runtime::var_ptr const,
+                                       bool needs_box);
+    expression_result analyze_var_val(runtime::var_ref const,
                                       local_frame_ptr,
                                       expression_position,
                                       jtl::option<expr::function_context_ref> const &,
-                                      native_bool needs_box);
-    expression_result analyze_throw(runtime::obj::persistent_list_ptr const,
+                                      bool needs_box);
+    expression_result analyze_throw(runtime::obj::persistent_list_ref const,
                                     local_frame_ptr,
                                     expression_position,
                                     jtl::option<expr::function_context_ref> const &,
-                                    native_bool needs_box);
-    expression_result analyze_try(runtime::obj::persistent_list_ptr const,
+                                    bool needs_box);
+    expression_result analyze_try(runtime::obj::persistent_list_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
-                                  native_bool needs_box);
-    expression_result analyze_primitive_literal(runtime::object_ptr,
+                                  bool needs_box);
+    expression_result analyze_primitive_literal(runtime::object_ref,
                                                 local_frame_ptr,
                                                 expression_position,
                                                 jtl::option<expr::function_context_ref> const &,
-                                                native_bool needs_box);
-    expression_result analyze_vector(runtime::obj::persistent_vector_ptr const,
+                                                bool needs_box);
+    expression_result analyze_vector(runtime::obj::persistent_vector_ref const,
                                      local_frame_ptr,
                                      expression_position,
                                      jtl::option<expr::function_context_ref> const &,
-                                     native_bool needs_box);
-    expression_result analyze_map(runtime::object_ptr const,
+                                     bool needs_box);
+    expression_result analyze_map(runtime::object_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
-                                  native_bool needs_box);
-    expression_result analyze_set(runtime::object_ptr const,
+                                  bool needs_box);
+    expression_result analyze_set(runtime::object_ref const,
                                   local_frame_ptr,
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
-                                  native_bool needs_box);
-    expression_result analyze_case(runtime::obj::persistent_list_ptr const,
+                                  bool needs_box);
+
+    expression_result analyze_case(runtime::obj::persistent_list_ref const,
                                    local_frame_ptr,
                                    expression_position,
                                    jtl::option<expr::function_context_ref> const &,
-                                   native_bool needs_box);
-    expression_result analyze_cpp_symbol(runtime::obj::symbol_ptr const,
+                                   bool needs_box);
+    expression_result analyze_cpp_symbol(runtime::obj::symbol_ref const,
                                          local_frame_ptr,
                                          expression_position,
                                          jtl::option<expr::function_context_ref> const &,
-                                         native_bool needs_box);
-    expression_result analyze_cpp_call(runtime::obj::persistent_list_ptr const,
+                                         bool needs_box);
+    expression_result analyze_cpp_call(runtime::obj::persistent_list_ref const,
                                        expr::cpp_value_ref,
                                        local_frame_ptr,
                                        expression_position,
                                        jtl::option<expr::function_context_ref> const &,
-                                       native_bool needs_box);
+                                       bool needs_box);
 
     /* Returns whether the form is a special symbol. */
-    native_bool is_special(runtime::object_ptr form);
+    bool is_special(runtime::object_ref form);
 
     using special_function_type
-      = std::function<expression_result(runtime::obj::persistent_list_ptr const,
+      = std::function<expression_result(runtime::obj::persistent_list_ref const,
                                         local_frame_ptr,
                                         expression_position,
                                         jtl::option<expr::function_context_ref> const &,
-                                        native_bool)>;
+                                        bool)>;
 
-    native_unordered_map<runtime::obj::symbol_ptr, special_function_type> specials;
-    native_unordered_map<runtime::var_ptr, expression_ref> vars;
+    native_unordered_map<runtime::obj::symbol_ref, special_function_type> specials;
+    native_unordered_map<runtime::var_ref, expression_ref> vars;
     /* TODO: Remove this. */
     runtime::context &rt_ctx;
     local_frame_ptr root_frame;
-    native_vector<runtime::object_ptr> macro_expansions;
+    native_vector<runtime::object_ref> macro_expansions;
   };
 }

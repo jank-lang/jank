@@ -7,46 +7,49 @@
 namespace jank::runtime
 {
   struct object;
+
+  template <typename T>
+  struct oref;
 }
 
 namespace jank::hash
 {
-  uint32_t rotate_left(uint32_t const x, int8_t const r);
-  uint64_t rotate_left(uint64_t const x, int8_t const r);
+  u32 rotate_left(u32 const x, i8 const r);
+  u64 rotate_left(u64 const x, i8 const r);
 
-  uint32_t fmix(uint32_t h);
-  uint32_t fmix(uint32_t h1, uint32_t const length);
+  u32 fmix(u32 h);
+  u32 fmix(u32 h1, u32 const length);
 
-  uint32_t mix_k1(uint32_t k1);
-  uint32_t mix_h1(uint32_t h1, uint32_t k1);
+  u32 mix_k1(u32 k1);
+  u32 mix_h1(u32 h1, u32 k1);
 
-  uint32_t mix_collection_hash(uint32_t const hash, uint32_t const length);
+  u32 mix_collection_hash(u32 const hash, u32 const length);
 
-  uint32_t combine(uint32_t const seed, uint32_t const t);
+  u32 combine(u32 const seed, u32 const t);
 
-  uint32_t integer(uint32_t const input);
-  uint32_t integer(uint64_t const input);
-  uint32_t integer(native_integer const input);
+  u32 integer(u32 const input);
+  u32 integer(u64 const input);
+  u32 integer(i64 const input);
 
-  uint32_t real(native_real const input);
+  u32 real(f64 const input);
 
-  uint32_t string(native_persistent_string_view const &input);
+  u32 string(native_persistent_string_view const &input);
 
-  uint32_t visit(runtime::object const * const o);
-  uint32_t visit(char const ch);
+  u32 visit(runtime::oref<runtime::object> const o);
+  u32 visit(char const ch);
 
-  uint32_t ordered(runtime::object const * const sequence);
-  uint32_t unordered(runtime::object const * const sequence);
+  u32 ordered(runtime::object const * const sequence);
+  u32 unordered(runtime::object const * const sequence);
 
   template <typename It>
-  uint32_t ordered(It const &begin, It const &end)
+  u32 ordered(It const &begin, It const &end)
   {
-    uint32_t n{};
-    uint32_t hash{ 1 };
+    u32 n{};
+    u32 hash{ 1 };
 
     for(auto it(begin); it != end; ++it)
     {
-      hash = 31 * hash + visit(*it);
+      hash = 31 * hash + visit((*it));
       ++n;
     }
 
@@ -54,12 +57,12 @@ namespace jank::hash
   }
 
   template <typename It>
-  uint32_t unordered(It const &begin, It const &end)
+  u32 unordered(It const &begin, It const &end)
   {
     using T = typename std::iterator_traits<It>::value_type;
 
-    uint32_t hash{};
-    uint32_t n{};
+    u32 hash{};
+    u32 n{};
 
     for(auto it(begin); it != end; ++it)
     {
@@ -70,7 +73,7 @@ namespace jank::hash
       }
       else
       {
-        hash += visit(*it);
+        hash += visit((*it).get());
       }
       ++n;
     }

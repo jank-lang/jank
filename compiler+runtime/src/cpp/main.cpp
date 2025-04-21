@@ -1,3 +1,4 @@
+#include "jank/runtime/rtti.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -82,8 +83,8 @@ namespace jank
       profile::timer const timer{ "eval user code" };
       __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
-      auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
-      if(main_var)
+      auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
+      if(main_var.is_some())
       {
         /* TODO: Handle the case when `-main` accepts no arg. */
         runtime::detail::native_transient_vector extra_args;
@@ -252,11 +253,11 @@ int main(int const argc, char const **argv)
   /* TODO: We need an init fn in libjank which sets all of this up so we don't
    * need to duplicate it between here and the tests and so that anyone embedding
    * jank doesn't need to duplicate it in their setup. */
+  using namespace jank;
+  using namespace jank::runtime;
+
   JANK_TRY
   {
-    using namespace jank;
-    using namespace jank::runtime;
-
     /* To handle UTF-8 text, we set the locale to the current environment locale.
      * Without this, some jank Unicode tests may fail. */
     std::locale::global(std::locale(""));

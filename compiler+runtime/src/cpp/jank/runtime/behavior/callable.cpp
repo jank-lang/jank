@@ -2,6 +2,7 @@
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -9,7 +10,7 @@ namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ptr dynamic_call(object_ptr source)
+  object_ref dynamic_call(object_ref source)
   {
     if(source->type == object_type::var)
     {
@@ -17,7 +18,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -27,7 +28,7 @@ namespace jank::runtime
           switch(arity_flags)
           {
             case callable::mask_variadic_arity(0):
-              return typed_source->call(obj::nil::nil_const());
+              return typed_source->call(jank_nil);
             default:
               return typed_source->call();
           }
@@ -41,7 +42,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source, object_ptr const a1)
+  object_ref dynamic_call(object_ref source, object_ref const a1)
   {
     if(source->type == object_type::var)
     {
@@ -49,7 +50,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -64,7 +65,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(1):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, obj::nil::nil_const());
+                return typed_source->call(a1, jank_nil);
               }
             default:
               return typed_source->call(a1);
@@ -88,7 +89,7 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2)
+  object_ref dynamic_call(object_ref source, object_ref const a1, object_ref const a2)
   {
     if(source->type == object_type::var)
     {
@@ -96,7 +97,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -113,7 +114,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(2):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, obj::nil::nil_const());
+                return typed_source->call(a1, a2, jank_nil);
               }
             default:
               return typed_source->call(a1, a2);
@@ -135,8 +136,8 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr
-  dynamic_call(object_ptr source, object_ptr const a1, object_ptr const a2, object_ptr const a3)
+  object_ref
+  dynamic_call(object_ref source, object_ref const a1, object_ref const a2, object_ref const a3)
   {
     if(source->type == object_type::var)
     {
@@ -144,7 +145,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -163,7 +164,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(3):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3);
@@ -178,11 +179,11 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4)
   {
     if(source->type == object_type::var)
     {
@@ -190,7 +191,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -211,7 +212,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(4):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4);
@@ -226,12 +227,12 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5)
   {
     if(source->type == object_type::var)
     {
@@ -239,7 +240,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -262,7 +263,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(5):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5);
@@ -277,13 +278,13 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6)
   {
     if(source->type == object_type::var)
     {
@@ -291,7 +292,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -328,7 +329,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(6):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6);
@@ -343,14 +344,14 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6,
-                          object_ptr const a7)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7)
   {
     if(source->type == object_type::var)
     {
@@ -358,7 +359,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -399,7 +400,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(7):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7);
@@ -414,15 +415,15 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6,
-                          object_ptr const a7,
-                          object_ptr const a8)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8)
   {
     if(source->type == object_type::var)
     {
@@ -430,7 +431,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -475,7 +476,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(8):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, obj::nil::nil_const());
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8);
@@ -490,16 +491,16 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6,
-                          object_ptr const a7,
-                          object_ptr const a8,
-                          object_ptr const a9)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9)
   {
     if(source->type == object_type::var)
     {
@@ -507,7 +508,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -554,7 +555,7 @@ namespace jank::runtime
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
                 return typed_source
-                  ->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, obj::nil::nil_const());
+                  ->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank_nil);
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
@@ -569,17 +570,17 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6,
-                          object_ptr const a7,
-                          object_ptr const a8,
-                          object_ptr const a9,
-                          object_ptr const a10)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9,
+                          object_ref const a10)
   {
     if(source->type == object_type::var)
     {
@@ -587,7 +588,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -694,18 +695,18 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr const a1,
-                          object_ptr const a2,
-                          object_ptr const a3,
-                          object_ptr const a4,
-                          object_ptr const a5,
-                          object_ptr const a6,
-                          object_ptr const a7,
-                          object_ptr const a8,
-                          object_ptr const a9,
-                          object_ptr const a10,
-                          obj::persistent_list_ptr const rest)
+  object_ref dynamic_call(object_ref source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9,
+                          object_ref const a10,
+                          obj::persistent_list_ref const rest)
   {
     /* TODO: Move call fns into var so we can remove these checks. */
     if(source->type == object_type::var)
@@ -714,7 +715,7 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [=](auto const typed_source) -> object_ptr {
+      [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -726,7 +727,7 @@ namespace jank::runtime
             /* TODO: Optimize this with a faster seq? */
             case callable::mask_variadic_arity(0):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(10 + rest->count());
                 packed.insert(packed.end(), { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -734,7 +735,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(1):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(9 + rest->count());
                 packed.insert(packed.end(), { a2, a3, a4, a5, a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -743,7 +744,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(2):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(8 + rest->count());
                 packed.insert(packed.end(), { a3, a4, a5, a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -753,7 +754,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(3):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(7 + rest->count());
                 packed.insert(packed.end(), { a4, a5, a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -764,7 +765,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(4):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(6 + rest->count());
                 packed.insert(packed.end(), { a5, a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -776,7 +777,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(5):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(5 + rest->count());
                 packed.insert(packed.end(), { a6, a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -789,7 +790,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(6):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(4 + rest->count());
                 packed.insert(packed.end(), { a7, a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -803,7 +804,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(7):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(3 + rest->count());
                 packed.insert(packed.end(), { a8, a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -818,7 +819,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(8):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(2 + rest->count());
                 packed.insert(packed.end(), { a9, a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -834,7 +835,7 @@ namespace jank::runtime
               }
             case callable::mask_variadic_arity(9):
               {
-                native_vector<object_ptr> packed;
+                native_vector<object_ref> packed;
                 packed.reserve(1 + rest->count());
                 packed.insert(packed.end(), { a10 });
                 std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
@@ -863,101 +864,142 @@ namespace jank::runtime
       source);
   }
 
-  object_ptr apply_to(object_ptr const source, object_ptr const args)
+  object_ref apply_to(object_ref const source, object_ref const args)
   {
     return visit_seqable(
-      [=](auto const typed_args) -> object_ptr {
+      [=](auto const typed_args) -> object_ref {
         auto const s(typed_args->fresh_seq());
         auto const length(sequence_length(s, max_params + 1));
+        auto const r{ make_sequence_range(s) };
+        auto it{ r.begin() };
+
+        /* XXX: It's UB to have multiple *(++it) in one expression, since the order in
+         * which they will run is not defined. This requires us to pull out all of the
+         * args into locals. */
         switch(length)
         {
           case 0:
             return dynamic_call(source);
           case 1:
-            return dynamic_call(source, s->first());
+            {
+              auto const a1{ *it };
+              return dynamic_call(source, a1);
+            }
           case 2:
-            return dynamic_call(source, s->first(), s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              return dynamic_call(source, a1, a2);
+            }
           case 3:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              return dynamic_call(source, a1, a2, a3);
+            }
           case 4:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4);
+            }
           case 5:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5);
+            }
           case 6:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6);
+            }
           case 7:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7);
+            }
           case 8:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8);
+            }
           case 9:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+            }
           case 10:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first());
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              auto const a10{ *(++it) };
+              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+            }
           default:
-            return dynamic_call(source,
-                                s->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                s->next_in_place()->first(),
-                                obj::persistent_list::create(next_in_place(s)));
+            {
+              auto const a1{ *it };
+              auto const a2{ *(++it) };
+              auto const a3{ *(++it) };
+              auto const a4{ *(++it) };
+              auto const a5{ *(++it) };
+              auto const a6{ *(++it) };
+              auto const a7{ *(++it) };
+              auto const a8{ *(++it) };
+              auto const a9{ *(++it) };
+              auto const a10{ *(++it) };
+              return dynamic_call(source,
+                                  a1,
+                                  a2,
+                                  a3,
+                                  a4,
+                                  a5,
+                                  a6,
+                                  a7,
+                                  a8,
+                                  a9,
+                                  a10,
+                                  obj::persistent_list::create((++it).data));
+            }
         }
       },
       args);
@@ -965,90 +1007,90 @@ namespace jank::runtime
 
   namespace behavior
   {
-    object_ptr callable::call()
+    object_ref callable::call()
     {
-      throw invalid_arity<0>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr)
+    object_ref callable::call(object_ref)
     {
-      throw invalid_arity<1>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr, object_ptr)
+    object_ref callable::call(object_ref, object_ref)
     {
-      throw invalid_arity<2>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr, object_ptr, object_ptr)
+    object_ref callable::call(object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<3>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr)
+    object_ref callable::call(object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<4>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+    object_ref callable::call(object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<5>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr
-    callable::call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr)
+    object_ref
+    callable::call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<6>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr)
+    object_ref callable::call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref)
     {
-      throw invalid_arity<7>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr)
+    object_ref callable::call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref)
     {
-      throw invalid_arity<8>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr)
+    object_ref callable::call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref)
     {
-      throw invalid_arity<9>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
     }
 
-    object_ptr callable::call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr)
+    object_ref callable::call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref)
     {
-      throw invalid_arity<10>{ runtime::to_string(this_object_ptr()) };
+      throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
     }
 
     callable::arity_flag_t callable::get_arity_flags() const

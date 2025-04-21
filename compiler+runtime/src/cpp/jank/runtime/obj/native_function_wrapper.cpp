@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool native_function_wrapper::equal(object const &o) const
+  bool native_function_wrapper::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -40,27 +40,27 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash native_function_wrapper::to_hash() const
+  uhash native_function_wrapper::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  template <size_t N, typename... Args>
+  template <usize N, typename... Args>
   struct build_arity
   {
-    using type = typename build_arity<N - 1, Args..., object_ptr>::type;
+    using type = typename build_arity<N - 1, Args..., object_ref>::type;
   };
 
   template <typename... Args>
   struct build_arity<0, Args...>
   {
-    using type = object_ptr(Args...);
+    using type = object_ref(Args...);
   };
 
   template <typename... Args>
-  static object_ptr apply_function(native_function_wrapper const &f, Args &&...args)
+  static object_ref apply_function(native_function_wrapper const &f, Args &&...args)
   {
-    constexpr size_t arg_count{ sizeof...(Args) };
+    constexpr usize arg_count{ sizeof...(Args) };
     using arity = typename build_arity<arg_count>::type;
     using function_type = detail::function_type::value_type<arity>;
 
@@ -72,7 +72,7 @@ namespace jank::runtime::obj
       {
         auto const name_kw(__rt_ctx->intern_keyword("name").expect_ok());
         auto const name_meta(runtime::get(f.meta.unwrap(), name_kw));
-        if(name_meta != nil::nil_const())
+        if(name_meta != jank_nil)
         {
           name = to_string(name_meta);
         }
@@ -83,102 +83,102 @@ namespace jank::runtime::obj
     return (*func_ptr)(std::forward<Args>(args)...);
   }
 
-  object_ptr native_function_wrapper::call()
+  object_ref native_function_wrapper::call()
   {
     return apply_function(*this);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1)
+  object_ref native_function_wrapper::call(object_ref arg1)
   {
     return apply_function(*this, arg1);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1, object_ptr arg2)
+  object_ref native_function_wrapper::call(object_ref arg1, object_ref arg2)
   {
     return apply_function(*this, arg1, arg2);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1, object_ptr arg2, object_ptr arg3)
+  object_ref native_function_wrapper::call(object_ref arg1, object_ref arg2, object_ref arg3)
   {
     return apply_function(*this, arg1, arg2, arg3);
   }
 
-  object_ptr
-  native_function_wrapper::call(object_ptr arg1, object_ptr arg2, object_ptr arg3, object_ptr arg4)
+  object_ref
+  native_function_wrapper::call(object_ref arg1, object_ref arg2, object_ref arg3, object_ref arg4)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5,
-                                           object_ptr arg6)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5,
+                                           object_ref arg6)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5,
-                                           object_ptr arg6,
-                                           object_ptr arg7)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5,
+                                           object_ref arg6,
+                                           object_ref arg7)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5,
-                                           object_ptr arg6,
-                                           object_ptr arg7,
-                                           object_ptr arg8)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5,
+                                           object_ref arg6,
+                                           object_ref arg7,
+                                           object_ref arg8)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5,
-                                           object_ptr arg6,
-                                           object_ptr arg7,
-                                           object_ptr arg8,
-                                           object_ptr arg9)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5,
+                                           object_ref arg6,
+                                           object_ref arg7,
+                                           object_ref arg8,
+                                           object_ref arg9)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
   }
 
-  object_ptr native_function_wrapper::call(object_ptr arg1,
-                                           object_ptr arg2,
-                                           object_ptr arg3,
-                                           object_ptr arg4,
-                                           object_ptr arg5,
-                                           object_ptr arg6,
-                                           object_ptr arg7,
-                                           object_ptr arg8,
-                                           object_ptr arg9,
-                                           object_ptr arg10)
+  object_ref native_function_wrapper::call(object_ref arg1,
+                                           object_ref arg2,
+                                           object_ref arg3,
+                                           object_ref arg4,
+                                           object_ref arg5,
+                                           object_ref arg6,
+                                           object_ref arg7,
+                                           object_ref arg8,
+                                           object_ref arg9,
+                                           object_ref arg10)
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
   }
 
-  native_function_wrapper_ptr native_function_wrapper::with_meta(object_ptr const m) const
+  native_function_wrapper_ref native_function_wrapper::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<native_function_wrapper>(data));
@@ -186,7 +186,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  object_ptr native_function_wrapper::this_object_ptr()
+  object_ref native_function_wrapper::this_object_ref()
   {
     return &this->base;
   }

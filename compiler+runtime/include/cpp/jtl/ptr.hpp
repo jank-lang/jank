@@ -91,7 +91,7 @@ namespace jtl
       return data;
     }
 
-    constexpr explicit operator bool() const
+    constexpr ref<value_type> as_ref() const
     {
       return data;
     }
@@ -164,11 +164,6 @@ namespace jtl
     }
 
     constexpr operator value_type *() const
-    {
-      return data;
-    }
-
-    constexpr explicit operator bool() const
     {
       return data;
     }

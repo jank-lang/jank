@@ -8,7 +8,7 @@ namespace jank::analyze::expr
 
   let::let(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
+           bool const needs_box,
            do_ref const body)
     : expression{ expr_kind, position, frame, needs_box }
     , body{ body }
@@ -21,7 +21,7 @@ namespace jank::analyze::expr
     body->propagate_position(pos);
   }
 
-  object_ptr let::to_runtime_data() const
+  object_ref let::to_runtime_data() const
   {
     auto pair_maps(make_box<obj::persistent_vector>());
     for(auto const &e : pairs)

@@ -112,6 +112,8 @@ namespace jank::error
         return "The argument arity passed to 'recur' doesn't match the function's arity.";
       case kind::analyze_invalid_let:
         return "Invalid let.";
+      case kind::analyze_invalid_letfn:
+        return "Invalid letfn.";
       case kind::analyze_invalid_loop:
         return "Invalid loop.";
       case kind::analyze_invalid_if:
@@ -150,7 +152,7 @@ namespace jank::error
       .release();
   }
 
-  static void add_expansion_note(base &e, runtime::object_ptr const expansion)
+  static void add_expansion_note(base &e, runtime::object_ref const expansion)
   {
     auto source{ runtime::object_source(expansion) };
     /* We just want to point at the start of the expansion, not underline the
@@ -183,7 +185,7 @@ namespace jank::error
   {
   }
 
-  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ptr const expansion)
+  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -195,7 +197,7 @@ namespace jank::error
   base::base(enum kind const k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr const expansion,
+         runtime::object_ref const expansion,
          std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }
     , message{ message }
@@ -231,7 +233,7 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              jtl::immutable_string const &note_message,
-             runtime::object_ptr const expansion)
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -263,7 +265,7 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              note const &note,
-             runtime::object_ptr const expansion)
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -286,7 +288,7 @@ namespace jank::error
   base::base(enum kind const k,
              jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
+             runtime::object_ref const expansion,
              jtl::ref<base> const cause)
     : kind{ k }
     , message{ message }
@@ -300,7 +302,7 @@ namespace jank::error
   base::base(enum kind const k,
              jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
+             runtime::object_ref const expansion,
              jtl::ref<base> const cause,
              std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }
@@ -313,12 +315,12 @@ namespace jank::error
     add_expansion_note(*this, expansion);
   }
 
-  native_bool base::operator==(base const &rhs) const
+  bool base::operator==(base const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool base::operator!=(base const &rhs) const
+  bool base::operator!=(base const &rhs) const
   {
     return kind != rhs.kind || source != rhs.source || message != rhs.message;
   }
@@ -349,7 +351,7 @@ namespace jank::error
   {
     if(usage_source == read::source::unknown || usage_source.overlaps(source))
     {
-      return *this;
+      return this;
     }
     else if(source == read::source::unknown)
     {
@@ -360,7 +362,7 @@ namespace jank::error
     {
       notes.emplace_back("Used here.", usage_source, note::kind::info);
     }
-    return *this;
+    return this;
   }
 
   std::ostream &operator<<(std::ostream &os, base const &e)

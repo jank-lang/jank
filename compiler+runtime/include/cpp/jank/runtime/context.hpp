@@ -29,7 +29,7 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using keyword_ptr = native_box<struct keyword>;
+    using keyword_ref = oref<struct keyword>;
   }
 
   /* This is a singleton, as much as I fought it for actual years. Trying to have multiple
@@ -45,46 +45,43 @@ namespace jank::runtime
     context(context &&) = delete;
     ~context();
 
-    void dump() const;
-
-    ns_ptr intern_ns(jtl::immutable_string const &);
-    ns_ptr intern_ns(obj::symbol_ptr const &);
-    jtl::option<ns_ptr> remove_ns(obj::symbol_ptr const &);
+    ns_ref intern_ns(jtl::immutable_string const &);
+    ns_ref intern_ns(obj::symbol_ref const &);
+    ns_ref remove_ns(obj::symbol_ref const &);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
-    jtl::option<ns_ptr> find_ns(obj::symbol_ptr const &);
+    ns_ref find_ns(obj::symbol_ref const &);
     /* Resolves a symbol which could be an alias to its ns, based on the aliases
      * in the current ns. Does not intern. */
-    jtl::option<ns_ptr> resolve_ns(obj::symbol_ptr const &);
-    ns_ptr current_ns();
+    ns_ref resolve_ns(obj::symbol_ref const &);
+    ns_ref current_ns() const;
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
-    obj::symbol_ptr qualify_symbol(obj::symbol_ptr const &) const;
-    jtl::option<object_ptr> find_local(obj::symbol_ptr const &);
+    obj::symbol_ref qualify_symbol(obj::symbol_ref const &) const;
+    jtl::option<object_ref> find_local(obj::symbol_ref const &);
 
-    jtl::result<var_ptr, jtl::immutable_string> intern_var(obj::symbol_ptr const &);
-    jtl::result<var_ptr, jtl::immutable_string>
+    jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const &);
+    jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
-    jtl::option<var_ptr> find_var(obj::symbol_ptr const &);
-    jtl::option<var_ptr>
-    find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
+    var_ref find_var(obj::symbol_ref const &);
+    var_ref find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
 
-    jtl::result<obj::keyword_ptr, jtl::immutable_string>
+    jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &ns,
                    jtl::immutable_string const &name,
-                   native_bool resolved = true);
-    jtl::result<obj::keyword_ptr, jtl::immutable_string>
+                   bool resolved = true);
+    jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &s);
 
-    object_ptr macroexpand1(object_ptr o);
-    object_ptr macroexpand(object_ptr o);
+    object_ref macroexpand1(object_ref o);
+    object_ref macroexpand(object_ref o);
 
-    object_ptr eval_file(jtl::immutable_string const &path);
-    object_ptr eval_string(native_persistent_string_view const &code);
+    object_ref eval_file(jtl::immutable_string const &path);
+    object_ref eval_string(native_persistent_string_view const &code);
     jtl::string_result<void> eval_cpp_string(native_persistent_string_view const &code) const;
-    object_ptr read_string(native_persistent_string_view const &code);
+    object_ref read_string(native_persistent_string_view const &code);
     native_vector<analyze::expression_ref>
-    analyze_string(native_persistent_string_view const &code, native_bool const eval = true);
+    analyze_string(native_persistent_string_view const &code, bool const eval = true);
 
     /* Finds the specified module on the module path and loads it. If
      * the module is already loaded, nothing is done.
@@ -104,35 +101,35 @@ namespace jank::runtime
     jtl::result<void, jtl::immutable_string>
     compile_module(native_persistent_string_view const &module);
 
-    object_ptr eval(object_ptr const o);
+    object_ref eval(object_ref const o);
 
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
                                           std::unique_ptr<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
-    jtl::immutable_string unique_string();
-    jtl::immutable_string unique_string(native_persistent_string_view const &prefix);
-    obj::symbol unique_symbol();
-    obj::symbol unique_symbol(native_persistent_string_view const &prefix);
+    jtl::immutable_string unique_string() const;
+    jtl::immutable_string unique_string(native_persistent_string_view const &prefix) const;
+    obj::symbol unique_symbol() const;
+    obj::symbol unique_symbol(native_persistent_string_view const &prefix) const;
 
-    folly::Synchronized<native_unordered_map<obj::symbol_ptr, ns_ptr>> namespaces;
-    folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ptr>> keywords;
+    folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
+    folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
 
     struct binding_scope
     {
       binding_scope(context &rt_ctx);
-      binding_scope(context &rt_ctx, obj::persistent_hash_map_ptr const bindings);
+      binding_scope(context &rt_ctx, obj::persistent_hash_map_ref const bindings);
       ~binding_scope();
 
       context &rt_ctx;
     };
 
     jtl::string_result<void> push_thread_bindings();
-    jtl::string_result<void> push_thread_bindings(object_ptr const bindings);
-    jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ptr const bindings);
+    jtl::string_result<void> push_thread_bindings(object_ref const bindings);
+    jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
     jtl::string_result<void> pop_thread_bindings();
-    obj::persistent_hash_map_ptr get_thread_bindings() const;
+    obj::persistent_hash_map_ref get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();
 
     /* The analyze processor is reused across evaluations so we can keep the semantic information
@@ -146,16 +143,17 @@ namespace jank::runtime
     jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
-    var_ptr current_file_var{};
-    var_ptr current_ns_var{};
-    var_ptr in_ns_var{};
-    var_ptr compile_files_var{};
-    var_ptr loaded_libs_var{};
-    var_ptr current_module_var{};
-    var_ptr assert_var{};
-    var_ptr no_recur_var{};
-    var_ptr gensym_env_var{};
+    var_ref current_file_var;
+    var_ref current_ns_var;
+    var_ref in_ns_var;
+    var_ref compile_files_var;
+    var_ref loaded_libs_var;
+    var_ref current_module_var;
+    var_ref assert_var;
+    var_ref no_recur_var;
+    var_ref gensym_env_var;
 
+    /* TODO: Remove this map. Just use the list. */
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;
   };

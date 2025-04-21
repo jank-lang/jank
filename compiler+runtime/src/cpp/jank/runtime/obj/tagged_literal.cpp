@@ -9,13 +9,13 @@
 
 namespace jank::runtime::obj
 {
-  tagged_literal::tagged_literal(object_ptr const tag, object_ptr const form)
+  tagged_literal::tagged_literal(object_ref const tag, object_ref const form)
     : tag{ tag }
     , form{ form }
   {
   }
 
-  native_bool tagged_literal::equal(object const &o) const
+  bool tagged_literal::equal(object const &o) const
   {
     if(o.type != object_type::tagged_literal)
     {
@@ -27,7 +27,7 @@ namespace jank::runtime::obj
   }
 
   static void
-  to_string_impl(object_ptr const &tag, object_ptr const &form, util::string_builder &buff)
+  to_string_impl(object_ref const &tag, object_ref const &form, util::string_builder &buff)
   {
     buff('#');
     runtime::to_string(tag, buff);
@@ -52,17 +52,17 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash tagged_literal::to_hash() const
+  uhash tagged_literal::to_hash() const
   {
     if(hash)
     {
       return hash;
     }
 
-    return hash = hash::combine(hash::visit(tag), hash::visit(form));
+    return hash = hash::combine(hash::visit(tag.get()), hash::visit(form.get()));
   }
 
-  object_ptr tagged_literal::get(object_ptr const key, object_ptr const fallback) const
+  object_ref tagged_literal::get(object_ref const key, object_ref const fallback) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
@@ -80,12 +80,12 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr tagged_literal::get(object_ptr const key) const
+  object_ref tagged_literal::get(object_ref const key) const
   {
-    return get(key, obj::nil::nil_const());
+    return get(key, jank_nil);
   }
 
-  object_ptr tagged_literal::get_entry(object_ptr const key) const
+  object_ref tagged_literal::get_entry(object_ref const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
@@ -100,10 +100,10 @@ namespace jank::runtime::obj
       return make_box<persistent_vector>(std::in_place, form_kw, form);
     }
 
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  native_bool tagged_literal::contains(object_ptr const key) const
+  bool tagged_literal::contains(object_ref const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
     auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };

@@ -113,7 +113,7 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*ctx->llvm_ctx, "entry", fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* JIT loaded object files don't support global ctors, so we need to call our manually.
+    /* JIT loaded object files don't support global ctors, so we need to call ours manually.
      * Fortunately, we have our load function which we can hook into. So, if we're compiling
      * a module and we've just created the load function fo that module, the first thing
      * we want to do is call our global ctor. */
@@ -147,7 +147,7 @@ namespace jank::codegen
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
-    for(size_t i{}; i < arity.params.size(); ++i)
+    for(usize i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
       auto arg(fn->getArg(i + is_closure));
@@ -163,7 +163,7 @@ namespace jank::codegen
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
-      size_t index{};
+      usize index{};
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
@@ -194,7 +194,7 @@ namespace jank::codegen
       /* If we have an empty function, ensure we're still returning nil. */
       if(arity.body->values.empty())
       {
-        ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
+        ctx->builder->CreateRet(gen_global(jank_nil));
       }
     }
 
@@ -271,8 +271,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(obj::nil::nil_const()),
-                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(
+      get(expr->name->meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -318,7 +318,7 @@ namespace jank::codegen
     return var;
   }
 
-  static jtl::immutable_string arity_to_call_fn(size_t const arity)
+  static jtl::immutable_string arity_to_call_fn(usize const arity)
   {
     /* Anything max_params + 1 or higher gets packed into a list so we
      * just end up calling max_params + 1 at most. */
@@ -604,7 +604,7 @@ namespace jank::codegen
      * inside of a class which has a `this` which can just be used. They're standalone. So,
      * if you want an instance of that fn within the fn itself, we need to make one. For
      * closures, this will copy the current context to the new one. */
-    auto const &fn_obj(gen_function_instance(*expr->fn_ctx->fn, arity));
+    auto const &fn_obj(gen_function_instance(expr->fn_ctx->fn.as_ref(), arity));
 
     if(expr->position == expression_position::tail)
     {
@@ -656,7 +656,7 @@ namespace jank::codegen
 
     if(arity.fn_ctx->is_variadic)
     {
-      arg_handles.emplace_back(gen_function_instance(*arity.fn_ctx->fn, arity));
+      arg_handles.emplace_back(gen_function_instance(arity.fn_ctx->fn.as_ref(), arity));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
     else if(is_closure)
@@ -678,7 +678,7 @@ namespace jank::codegen
         auto const closure_obj(
           ctx->builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
 
-        size_t index{};
+        usize index{};
         for(auto const &capture : captures)
         {
           auto const field_ptr(
@@ -688,7 +688,7 @@ namespace jank::codegen
                                                  true,
                                                  capture.first,
                                                  capture.second };
-          ctx->builder->CreateStore(gen(expr::local_reference_ref{ local_ref }, arity), field_ptr);
+          ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, arity), field_ptr);
         }
         arg_handles.emplace_back(closure_obj);
         arg_types.emplace_back(ctx->builder->getPtrTy());
@@ -755,6 +755,62 @@ namespace jank::codegen
     return ret;
   }
 
+  llvm::Value *llvm_processor::gen(expr::letfn_ref const expr, expr::function_arity const &arity)
+  {
+    /* We generate bindings left-to-right, so for mutually recursive letfn bindings
+     * we must defer some initialization via `deferred_inits`.
+     *
+     * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
+     * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
+     *
+     *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
+     *   =>
+     *   1 | %1 = call ptr @GC_malloc(i64 8)
+     *   2 | ...                                                     // %b not in scope. store moved to line 8
+     *   3 | %a = call ptr @jank_closure_create(..., ptr %1)
+     *   4 | ...
+     *   5 | %4 = call ptr @GC_malloc(i64 8)
+     *   6 | store ptr %a, ptr %4, align 8                           // %a is in scope, ok to store
+     *   7 | %b = call ptr @jank_closure_create(..., ptr nonnull %4)
+     *   8 | store ptr %b, ptr %1, align 8                           // deferred initialization of %a since %b is in scope
+     * */
+    auto old_deferred_inits(deferred_inits);
+    deferred_inits = {};
+
+    auto old_locals(locals);
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      if(local.is_none())
+      {
+        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
+                                               pair.first->to_string()) };
+      }
+
+      locals[pair.first] = gen(pair.second, arity);
+      locals[pair.first]->setName(pair.first->to_string().c_str());
+    }
+
+    for(auto const &deferred_init : deferred_inits)
+    {
+      expr::local_reference const local_ref{ expression_position::value,
+                                             deferred_init.expr->frame,
+                                             deferred_init.expr->needs_box,
+                                             deferred_init.name,
+                                             deferred_init.binding };
+      auto const e(gen(expr::local_reference_ref{ &local_ref }, arity));
+      ctx->builder->CreateStore(e, deferred_init.field_ptr);
+    }
+
+    auto const ret(gen(expr->body, arity));
+    locals = std::move(old_locals);
+    deferred_inits = std::move(old_deferred_inits);
+
+    /* XXX: No return creation, since we rely on the body to do that. */
+
+    return ret;
+  }
+
   llvm::Value *llvm_processor::gen(expr::do_ref const expr, expr::function_arity const &arity)
   {
     llvm::Value *last{};
@@ -774,7 +830,7 @@ namespace jank::codegen
         {
           if(expr->values.empty())
           {
-            return ctx->builder->CreateRet(gen_global(obj::nil::nil_const()));
+            return ctx->builder->CreateRet(gen_global(jank_nil));
           }
           else
           {
@@ -827,7 +883,7 @@ namespace jank::codegen
     }
     else
     {
-      else_ = gen_global(obj::nil::nil_const());
+      else_ = gen_global(jank_nil);
       if(expr->position == expression_position::tail)
       {
         else_ = ctx->builder->CreateRet(else_);
@@ -898,11 +954,9 @@ namespace jank::codegen
       false));
     auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 3> const args{
-      body,
-      catch_.unwrap_or(gen_global(obj::nil::nil_const())),
-      finally.unwrap_or(gen_global(obj::nil::nil_const()))
-    };
+    llvm::SmallVector<llvm::Value *, 3> const args{ body,
+                                                    catch_.unwrap_or(gen_global(jank_nil)),
+                                                    finally.unwrap_or(gen_global(jank_nil)) };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
@@ -947,7 +1001,7 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::BasicBlock *> case_blocks;
     llvm::SmallVector<llvm::Value *> case_values;
-    for(size_t block_counter{}; block_counter < expr->keys.size(); ++block_counter)
+    for(usize block_counter{}; block_counter < expr->keys.size(); ++block_counter)
     {
       auto const block_name{ util::format("case_{}", block_counter) };
       auto const block{ llvm::BasicBlock::Create(*ctx->llvm_ctx, block_name.c_str(), current_fn) };
@@ -972,7 +1026,7 @@ namespace jank::codegen
         ctx->builder->CreatePHI(ctx->builder->getPtrTy(), expr->keys.size() + 1, "switch_tmp")
       };
       phi->addIncoming(default_val, default_block_exit);
-      for(size_t i{}; i < case_blocks.size(); ++i)
+      for(usize i{}; i < case_blocks.size(); ++i)
       {
         phi->addIncoming(case_values[i], case_blocks[i]);
       }
@@ -984,7 +1038,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::cpp_type_ref const expr, expr::function_arity const &)
   {
     /* TODO: Implement */
-    auto const ret{ gen_global(obj::nil::nil_const()) };
+    auto const ret{ gen_global(jank_nil) };
 
     if(expr->position == expression_position::tail)
     {
@@ -997,7 +1051,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
   {
     /* TODO: Implement */
-    auto const ret{ gen_global(obj::nil::nil_const()) };
+    auto const ret{ gen_global(jank_nil) };
 
     if(expr->position == expression_position::tail)
     {
@@ -1011,7 +1065,7 @@ namespace jank::codegen
   llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &)
   {
     /* TODO: Implement */
-    auto const ret{ gen_global(obj::nil::nil_const()) };
+    auto const ret{ gen_global(jank_nil) };
 
     if(expr->position == expression_position::tail)
     {
@@ -1021,7 +1075,7 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::gen_var(obj::symbol_ptr const qualified_name) const
+  llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));
     if(found != ctx->var_globals.end())
@@ -1043,10 +1097,10 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
-      auto const fn(ctx->module->getOrInsertFunction("jank_var_intern", fn_type));
+      auto const fn(ctx->module->getOrInsertFunction("jank_var_intern_c", fn_type));
 
-      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(qualified_name->ns)),
-                                                      gen_global(make_box(qualified_name->name)) };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_c_string(qualified_name->ns),
+                                                      gen_c_string(qualified_name->name) };
       auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1069,7 +1123,7 @@ namespace jank::codegen
     return ctx->c_string_globals[s] = ctx->builder->CreateGlobalStringPtr(s.c_str());
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::nil_ptr const nil) const
+  llvm::Value *llvm_processor::gen_global(obj::nil_ref const nil) const
   {
     auto const found(ctx->literal_globals.find(nil));
     if(found != ctx->literal_globals.end())
@@ -1089,7 +1143,7 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const create_fn(ctx->module->getOrInsertFunction("jank_nil", create_fn_type));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_const_nil", create_fn_type));
       auto const call(ctx->builder->CreateCall(create_fn));
       ctx->builder->CreateStore(call, global);
 
@@ -1102,7 +1156,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::boolean_ptr const b) const
+  llvm::Value *llvm_processor::gen_global(obj::boolean_ref const b) const
   {
     auto const found(ctx->literal_globals.find(b));
     if(found != ctx->literal_globals.end())
@@ -1122,7 +1176,8 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
 
       auto const create_fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const fn_name{ util::format("jank_{}", name) };
+      /* We turn the literal value into jank_const_true / jank_const_false. */
+      auto const fn_name{ util::format("jank_const_{}", name) };
       auto const create_fn(ctx->module->getOrInsertFunction(fn_name.c_str(), create_fn_type));
       auto const call(ctx->builder->CreateCall(create_fn));
       ctx->builder->CreateStore(call, global);
@@ -1136,7 +1191,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::integer_ptr const i) const
+  llvm::Value *llvm_processor::gen_global(obj::integer_ref const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())
@@ -1171,7 +1226,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::real_ptr const r) const
+  llvm::Value *llvm_processor::gen_global(obj::real_ref const r) const
   {
     auto const found(ctx->literal_globals.find(r));
     if(found != ctx->literal_globals.end())
@@ -1206,7 +1261,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::ratio_ptr const r) const
+  llvm::Value *llvm_processor::gen_global(obj::ratio_ref const r) const
   {
     if(auto const found(ctx->literal_globals.find(r)); found != ctx->literal_globals.end())
     {
@@ -1245,7 +1300,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::persistent_string_ptr const s) const
+  llvm::Value *llvm_processor::gen_global(obj::persistent_string_ref const s) const
   {
     auto const found(ctx->literal_globals.find(s));
     if(found != ctx->literal_globals.end())
@@ -1281,7 +1336,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::symbol_ptr const s)
+  llvm::Value *llvm_processor::gen_global(obj::symbol_ref const s) const
   {
     auto const found(ctx->literal_globals.find(s));
     if(found != ctx->literal_globals.end())
@@ -1334,7 +1389,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::keyword_ptr const k) const
+  llvm::Value *llvm_processor::gen_global(obj::keyword_ref const k) const
   {
     auto const found(ctx->literal_globals.find(k));
     if(found != ctx->literal_globals.end())
@@ -1373,7 +1428,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::character_ptr const c) const
+  llvm::Value *llvm_processor::gen_global(obj::character_ref const c) const
   {
     auto const found(ctx->literal_globals.find(c));
     if(found != ctx->literal_globals.end())
@@ -1410,7 +1465,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global_from_read_string(object_ptr const o)
+  llvm::Value *llvm_processor::gen_global_from_read_string(object_ref const o) const
   {
     auto const found(ctx->literal_globals.find(o));
     if(found != ctx->literal_globals.end())
@@ -1431,10 +1486,9 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string", create_fn_type));
+      auto const create_fn(ctx->module->getOrInsertFunction("jank_read_string_c", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> const args{ gen_global(
-        make_box(runtime::to_code_string(o))) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(runtime::to_code_string(o)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
@@ -1536,16 +1590,25 @@ namespace jank::codegen
       auto const closure_obj(
         ctx->builder->CreateCall(malloc_fn, { llvm::ConstantExpr::getSizeOf(closure_ctx_type) }));
 
-      size_t index{};
+      usize index{};
       for(auto const &capture : captures)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, closure_obj, index++));
-        expr::local_reference const local_ref{ expression_position::value,
-                                               expr->frame,
-                                               true,
-                                               capture.first,
-                                               capture.second };
-        ctx->builder->CreateStore(gen(expr::local_reference_ref{ local_ref }, fn_arity), field_ptr);
+        auto const name(capture.first);
+        if(!locals.contains(name))
+        {
+          deferred_inits.emplace_back(expr, name, capture.second, field_ptr);
+        }
+        else
+        {
+          expr::local_reference const local_ref{ expression_position::value,
+                                                 expr->frame,
+                                                 true,
+                                                 name,
+                                                 capture.second };
+          ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, fn_arity),
+                                    field_ptr);
+        }
       }
 
       auto const create_fn_type(
@@ -1581,7 +1644,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(set_arity_fn, { fn_obj, target_fn.getCallee() });
     }
 
-    if(expr->meta)
+    if(expr->meta.is_some())
     {
       auto const set_meta_fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),

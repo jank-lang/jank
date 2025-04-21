@@ -122,7 +122,8 @@ namespace jtl
 
     template <typename D>
     requires(jtl::is_constructible<T, D>)
-    constexpr option &operator=(D &&rhs) noexcept
+    /* NOLINTNEXTLINE(cppcoreguidelines-c-copy-assignment-signature): Makes no sense. */
+    constexpr option<T> &operator=(D &&rhs) noexcept
     {
       reset();
 
@@ -226,7 +227,7 @@ namespace jtl
       return false;
     }
 
-    constexpr bool operator==(option<T> const &rhs) const noexcept
+    constexpr bool operator==(option<T> const &rhs) const
     {
       return !(*this != rhs);
     }

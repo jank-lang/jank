@@ -12,7 +12,7 @@ namespace jank::analyze::expr
 
   cpp_constructor_call::cpp_constructor_call(expression_position const position,
                                              local_frame_ptr const frame,
-                                             native_bool const needs_box,
+                                             bool const needs_box,
                                              jtl::ptr<void> const type,
                                              native_vector<expression_ref> &&args)
     : expression{ expr_kind, position, frame, needs_box }
@@ -26,7 +26,7 @@ namespace jank::analyze::expr
     position = pos;
   }
 
-  object_ptr cpp_constructor_call::to_runtime_data() const
+  object_ref cpp_constructor_call::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
   }

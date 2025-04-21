@@ -7,14 +7,14 @@ namespace jank::analyze::expr
 
   recursion_reference::recursion_reference(expression_position const position,
                                            local_frame_ptr const frame,
-                                           native_bool const needs_box,
+                                           bool const needs_box,
                                            function_context_ref const fn_ctx)
     : expression{ expr_kind, position, frame, needs_box }
     , fn_ctx{ fn_ctx }
   {
   }
 
-  object_ptr recursion_reference::to_runtime_data() const
+  object_ref recursion_reference::to_runtime_data() const
   {
     return merge(
       expression::to_runtime_data(),

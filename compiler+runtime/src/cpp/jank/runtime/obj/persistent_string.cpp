@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool persistent_string::equal(object const &o) const
+  bool persistent_string::equal(object const &o) const
   {
     if(o.type != object_type::persistent_string)
     {
@@ -45,27 +45,27 @@ namespace jank::runtime::obj
     return sb('"')(util::escape(data))('"').release();
   }
 
-  native_hash persistent_string::to_hash() const
+  uhash persistent_string::to_hash() const
   {
     return data.to_hash();
   }
 
-  native_integer persistent_string::compare(object const &o) const
+  i64 persistent_string::compare(object const &o) const
   {
     return compare(*try_object<persistent_string>(&o));
   }
 
-  native_integer persistent_string::compare(persistent_string const &s) const
+  i64 persistent_string::compare(persistent_string const &s) const
   {
     return data.compare(s.data);
   }
 
-  object_ptr persistent_string::get(object_ptr const key) const
+  object_ref persistent_string::get(object_ref const key) const
   {
-    return get(key, nil::nil_const());
+    return get(key, jank_nil);
   }
 
-  object_ptr persistent_string::get(object_ptr const key, object_ptr const fallback) const
+  object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
   {
     if(key->type == object_type::integer)
     {
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_bool persistent_string::contains(object_ptr const key) const
+  bool persistent_string::contains(object_ref const key) const
   {
     if(key->type == object_type::integer)
     {
@@ -92,12 +92,12 @@ namespace jank::runtime::obj
     return false;
   }
 
-  object_ptr persistent_string::get_entry(object_ptr const) const
+  object_ref persistent_string::get_entry(object_ref const) const
   {
     throw std::runtime_error{ util::format("get_entry not supported on string") };
   }
 
-  object_ptr persistent_string::nth(object_ptr const index) const
+  object_ref persistent_string::nth(object_ref const index) const
   {
     if(index->type == object_type::integer)
     {
@@ -117,18 +117,18 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr persistent_string::nth(object_ptr const index, object_ptr const fallback) const
+  object_ref persistent_string::nth(object_ref const index, object_ref const fallback) const
   {
     return get(index, fallback);
   }
 
-  jtl::string_result<persistent_string_ptr> persistent_string::substring(native_integer start) const
+  jtl::string_result<persistent_string_ref> persistent_string::substring(i64 start) const
   {
-    return substring(start, static_cast<native_integer>(data.size()));
+    return substring(start, static_cast<i64>(data.size()));
   }
 
-  jtl::string_result<persistent_string_ptr>
-  persistent_string::substring(native_integer const start, native_integer const end) const
+  jtl::string_result<persistent_string_ref>
+  persistent_string::substring(i64 const start, i64 const end) const
   {
     if(start < 0)
     {
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
     return ok(make_box(data.substr(start, end - start)));
   }
 
-  native_integer persistent_string::first_index_of(object_ptr const m) const
+  i64 persistent_string::first_index_of(object_ref const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.find(s));
@@ -154,10 +154,10 @@ namespace jank::runtime::obj
     {
       return -1;
     }
-    return static_cast<native_integer>(found);
+    return static_cast<i64>(found);
   }
 
-  native_integer persistent_string::last_index_of(object_ptr const m) const
+  i64 persistent_string::last_index_of(object_ref const m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));
@@ -165,24 +165,24 @@ namespace jank::runtime::obj
     {
       return -1;
     }
-    return static_cast<native_integer>(found);
+    return static_cast<i64>(found);
   }
 
-  size_t persistent_string::count() const
+  usize persistent_string::count() const
   {
     return data.size();
   }
 
-  persistent_string_sequence_ptr persistent_string::seq() const
+  persistent_string_sequence_ref persistent_string::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_string_sequence_ptr persistent_string::fresh_seq() const
+  persistent_string_sequence_ref persistent_string::fresh_seq() const
   {
     if(data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
   }

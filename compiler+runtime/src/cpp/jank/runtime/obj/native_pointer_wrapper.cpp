@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   {
   }
 
-  native_bool native_pointer_wrapper::equal(object const &o) const
+  bool native_pointer_wrapper::equal(object const &o) const
   {
     if(o.type != object_type::native_pointer_wrapper)
     {
@@ -37,8 +37,8 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash native_pointer_wrapper::to_hash() const
+  uhash native_pointer_wrapper::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(data));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(data));
   }
 }

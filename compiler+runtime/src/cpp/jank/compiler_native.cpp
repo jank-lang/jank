@@ -15,7 +15,7 @@ namespace jank::compiler_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ptr native_source(object_ptr const form)
+  static object_ref native_source(object_ref const form)
   {
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */
@@ -31,11 +31,11 @@ namespace jank::compiler_native
 
     /* TODO: Return a string, don't print it. */
     cg_prc.ctx->module->print(llvm::outs(), nullptr);
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 }
 
-jank_object_ptr jank_load_jank_compiler_native()
+jank_object_ref jank_load_jank_compiler_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -51,5 +51,5 @@ jank_object_ptr jank_load_jank_compiler_native()
   });
   intern_fn("native-source", &compiler_native::native_source);
 
-  return erase(obj::nil::nil_const());
+  return jank_nil.erase();
 }

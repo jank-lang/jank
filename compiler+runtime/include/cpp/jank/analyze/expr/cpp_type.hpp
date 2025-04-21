@@ -13,11 +13,11 @@ namespace jank::analyze::expr
     cpp_type();
     cpp_type(expression_position position,
              local_frame_ptr frame,
-             native_bool needs_box,
+             bool needs_box,
              jtl::ptr<void> type);
 
     void propagate_position(expression_position const pos) override;
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
     jtl::ptr<void> type{};
   };

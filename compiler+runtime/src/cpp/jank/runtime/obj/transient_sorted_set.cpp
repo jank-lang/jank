@@ -21,12 +21,12 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_sorted_set_ptr transient_sorted_set::empty()
+  transient_sorted_set_ref transient_sorted_set::empty()
   {
     return make_box<transient_sorted_set>();
   }
 
-  native_bool transient_sorted_set::equal(object const &o) const
+  bool transient_sorted_set::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
@@ -49,33 +49,33 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash transient_sorted_set::to_hash() const
+  uhash transient_sorted_set::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t transient_sorted_set::count() const
+  usize transient_sorted_set::count() const
   {
     assert_active();
     return data.size();
   }
 
-  transient_sorted_set_ptr transient_sorted_set::conj_in_place(object_ptr const elem)
+  transient_sorted_set_ref transient_sorted_set::conj_in_place(object_ref const elem)
   {
     assert_active();
     data.insert_v(elem);
     return this;
   }
 
-  transient_sorted_set::persistent_type_ptr transient_sorted_set::to_persistent()
+  transient_sorted_set::persistent_type_ref transient_sorted_set::to_persistent()
   {
     assert_active();
     active = false;
     return make_box<persistent_sorted_set>(data.persistent());
   }
 
-  object_ptr transient_sorted_set::call(object_ptr const elem)
+  object_ref transient_sorted_set::call(object_ref const elem)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -83,10 +83,10 @@ namespace jank::runtime::obj
     {
       return found.get();
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
-  object_ptr transient_sorted_set::call(object_ptr const elem, object_ptr const fallback)
+  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -97,20 +97,20 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr transient_sorted_set::get(object_ptr const elem)
+  object_ref transient_sorted_set::get(object_ref const elem)
   {
     return call(elem);
   }
 
-  object_ptr transient_sorted_set::get(object_ptr const elem, object_ptr const fallback)
+  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback)
   {
     return call(elem, fallback);
   }
 
-  object_ptr transient_sorted_set::get_entry(object_ptr const elem)
+  object_ref transient_sorted_set::get_entry(object_ref const elem)
   {
     auto const found = call(elem);
-    auto const nil(nil::nil_const());
+    auto const nil(jank_nil);
     if(found == nil)
     {
       return nil;
@@ -119,13 +119,13 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(std::in_place, found, found);
   }
 
-  native_bool transient_sorted_set::contains(object_ptr const elem) const
+  bool transient_sorted_set::contains(object_ref const elem) const
   {
     assert_active();
     return data.find(elem) != data.end();
   }
 
-  transient_sorted_set_ptr transient_sorted_set::disjoin_in_place(object_ptr const elem)
+  transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ref const elem)
   {
     assert_active();
     data.erase_key(elem);

@@ -12,7 +12,7 @@ namespace jank::runtime
 
 namespace jank::runtime::module
 {
-  enum class origin : uint8_t
+  enum class origin : u8
   {
     /* Regardless of which binaries are present, and how new they are,
      * this will always select the source. */
@@ -22,7 +22,7 @@ namespace jank::runtime::module
     latest,
   };
 
-  enum class module_type : uint8_t
+  enum class module_type : u8
   {
     o,
     cpp,
@@ -48,8 +48,8 @@ namespace jank::runtime::module
 
   struct file_entry
   {
-    object_ptr to_runtime_data() const;
-    native_bool exists() const;
+    object_ref to_runtime_data() const;
+    bool exists() const;
     std::time_t last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
@@ -68,12 +68,12 @@ namespace jank::runtime::module
     file_view() = default;
     file_view(file_view const &) = delete;
     file_view(file_view &&) noexcept;
-    file_view(int const f, char const * const h, size_t const s);
+    file_view(int const f, char const * const h, usize const s);
     file_view(jtl::immutable_string const &buff);
     ~file_view();
 
     char const *data() const;
-    size_t size() const;
+    usize size() const;
 
     native_persistent_string_view view() const;
 
@@ -82,7 +82,7 @@ namespace jank::runtime::module
      * later unmap it. */
     int fd{};
     char const *head{};
-    size_t len{};
+    usize len{};
 
     /* In the case where we're not mapping, such as when we read the file from a JAR,
      * we'll just have the data instead. Checking data.empty() is how we know which
@@ -97,7 +97,7 @@ namespace jank::runtime::module
   nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub);
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
-  native_bool is_nested_module(jtl::immutable_string const &module);
+  bool is_nested_module(jtl::immutable_string const &module);
 
   struct loader
   {
@@ -142,7 +142,7 @@ namespace jank::runtime::module
 
     jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
 
-    native_bool is_loaded(jtl::immutable_string const &module);
+    bool is_loaded(jtl::immutable_string const &module);
     void set_is_loaded(jtl::immutable_string const &module);
 
     jtl::string_result<void> load(jtl::immutable_string const &module, origin const ori);
@@ -153,7 +153,7 @@ namespace jank::runtime::module
     jtl::string_result<void> load_jank(file_entry const &entry) const;
     jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
-    object_ptr to_runtime_data() const;
+    object_ref to_runtime_data() const;
 
     context &rt_ctx;
     jtl::immutable_string paths;

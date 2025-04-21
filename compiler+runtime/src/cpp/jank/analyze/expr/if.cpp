@@ -7,7 +7,7 @@ namespace jank::analyze::expr
 
   if_::if_(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
+           bool const needs_box,
            expression_ref const condition,
            expression_ref const then,
            jtl::option<expression_ref> const &else_)
@@ -28,7 +28,7 @@ namespace jank::analyze::expr
     }
   }
 
-  object_ptr if_::to_runtime_data() const
+  object_ref if_::to_runtime_data() const
   {
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("condition"),

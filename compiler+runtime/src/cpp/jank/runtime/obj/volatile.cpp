@@ -3,13 +3,13 @@
 
 namespace jank::runtime::obj
 {
-  volatile_::volatile_(object_ptr const o)
+  volatile_::volatile_(object_ref const o)
     : val{ o }
   {
-    jank_debug_assert(val);
+    jank_debug_assert(val.is_some());
   }
 
-  native_bool volatile_::equal(object const &o) const
+  bool volatile_::equal(object const &o) const
   {
     return &o == &base;
   }
@@ -31,20 +31,20 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  native_hash volatile_::to_hash() const
+  uhash volatile_::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  object_ptr volatile_::deref() const
+  object_ref volatile_::deref() const
   {
     return val;
   }
 
-  object_ptr volatile_::reset(object_ptr const o)
+  object_ref volatile_::reset(object_ref const o)
   {
     val = o;
-    jank_debug_assert(val);
+    jank_debug_assert(val.is_some());
     return val;
   }
 }

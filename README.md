@@ -90,6 +90,13 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<!-- multiplyco -->
+<p align="center">
+  <a href="https://multiply.co/">
+    multiply.co
+  </a>
+</p>
+
 ## In the news
 <div align="center">
 

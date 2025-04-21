@@ -16,6 +16,8 @@
 
 #include <folly/FBVector.h>
 
+#include <jtl/primitive.hpp>
+
 namespace jank
 {
   template <typename T>
@@ -26,10 +28,6 @@ namespace jank
                                              immer::gc_transience_policy,
                                              false>;
 
-  using native_integer = long long;
-  using native_real = double;
-  using native_bool = bool;
-  using native_hash = uint32_t;
   using native_persistent_string_view = std::string_view;
 
   template <typename T>

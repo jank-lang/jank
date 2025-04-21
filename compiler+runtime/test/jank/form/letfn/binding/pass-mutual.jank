@@ -1,0 +1,14 @@
+(assert (= 32
+           (letfn* [a (fn* a [i]
+                        (b (c (inc i))))
+                    b (fn* b [i]
+                        (if (< 20 i)
+                          i
+                          (a (inc i))))
+                    c (fn* c [i]
+                        (if (< 30 i)
+                          i
+                          (b (a (inc i)))))]
+             (b 0))))
+
+:success

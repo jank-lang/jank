@@ -8,13 +8,13 @@ namespace jank::util
 {
   struct string_builder
   {
-    static constexpr size_t initial_capacity{ 32 };
+    static constexpr usize initial_capacity{ 32 };
 
     using value_type = char;
     using traits_type = std::char_traits<value_type>;
 
     string_builder();
-    string_builder(size_t capacity);
+    string_builder(usize capacity);
     string_builder(string_builder const &) = delete;
     string_builder(string_builder &&) = delete;
     ~string_builder();
@@ -22,10 +22,10 @@ namespace jank::util
     string_builder &operator=(string_builder const &) = delete;
     string_builder &operator=(string_builder &&) = delete;
 
-    string_builder &operator()(native_bool d) &;
+    string_builder &operator()(bool d) &;
     string_builder &operator()(float d) &;
     string_builder &operator()(double d) &;
-    string_builder &operator()(native_hash d) &;
+    string_builder &operator()(uhash d) &;
     string_builder &operator()(void const *d) &;
     string_builder &operator()(jtl::ptr<void> d) &;
     string_builder &operator()(int d) &;
@@ -57,10 +57,10 @@ namespace jank::util
       return *this;
     }
 
-    void push_back(native_bool d) &;
+    void push_back(bool d) &;
     void push_back(float d) &;
     void push_back(double d) &;
-    void push_back(native_hash d) &;
+    void push_back(uhash d) &;
     void push_back(void const *d) &;
     void push_back(int d) &;
     void push_back(long d) &;
@@ -73,16 +73,16 @@ namespace jank::util
     void push_back(native_transient_string const &d) &;
     void push_back(jtl::immutable_string const &d) &;
 
-    void reserve(size_t capacity);
+    void reserve(usize capacity);
     value_type *data() const;
-    size_t size() const;
+    usize size() const;
 
     jtl::immutable_string release();
     native_transient_string str() const;
     native_persistent_string_view view() const &;
 
     value_type *buffer{};
-    size_t pos{};
-    size_t capacity{ initial_capacity };
+    usize pos{};
+    usize capacity{ initial_capacity };
   };
 }

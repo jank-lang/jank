@@ -4,7 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = native_box<struct symbol>;
+  using symbol_ref = oref<struct symbol>;
 }
 
 namespace jank::analyze
@@ -29,6 +29,7 @@ namespace jank::analyze
     using recursion_reference_ref = jtl::ref<struct recursion_reference>;
     using named_recursion_ref = jtl::ref<struct named_recursion>;
     using let_ref = jtl::ref<struct let>;
+    using letfn_ref = jtl::ref<struct letfn>;
     using do_ref = jtl::ref<struct do_>;
     using if_ref = jtl::ref<struct if_>;
     using throw_ref = jtl::ref<struct throw_>;
@@ -45,33 +46,34 @@ namespace jank::evaluate
 {
   analyze::expr::function_ref wrap_expression(analyze::expression_ref const expr,
                                               jtl::immutable_string const &name,
-                                              native_vector<runtime::obj::symbol_ptr> params);
+                                              native_vector<runtime::obj::symbol_ref> params);
   analyze::expr::function_ref wrap_expressions(native_vector<analyze::expression_ref> const &exprs,
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);
 
-  runtime::object_ptr eval(analyze::expression_ref);
-  runtime::object_ptr eval(analyze::expr::def_ref);
-  runtime::object_ptr eval(analyze::expr::var_deref_ref);
-  runtime::object_ptr eval(analyze::expr::var_ref_ref);
-  runtime::object_ptr eval(analyze::expr::call_ref);
-  runtime::object_ptr eval(analyze::expr::primitive_literal_ref);
-  runtime::object_ptr eval(analyze::expr::list_ref);
-  runtime::object_ptr eval(analyze::expr::vector_ref);
-  runtime::object_ptr eval(analyze::expr::map_ref);
-  runtime::object_ptr eval(analyze::expr::set_ref);
-  runtime::object_ptr eval(analyze::expr::local_reference_ref);
-  runtime::object_ptr eval(analyze::expr::function_ref);
-  runtime::object_ptr eval(analyze::expr::recur_ref);
-  runtime::object_ptr eval(analyze::expr::recursion_reference_ref);
-  runtime::object_ptr eval(analyze::expr::named_recursion_ref);
-  runtime::object_ptr eval(analyze::expr::let_ref);
-  runtime::object_ptr eval(analyze::expr::do_ref);
-  runtime::object_ptr eval(analyze::expr::if_ref);
-  runtime::object_ptr eval(analyze::expr::throw_ref);
-  runtime::object_ptr eval(analyze::expr::try_ref);
-  runtime::object_ptr eval(analyze::expr::case_ref);
-  runtime::object_ptr eval(analyze::expr::cpp_type_ref);
-  runtime::object_ptr eval(analyze::expr::cpp_value_ref);
-  runtime::object_ptr eval(analyze::expr::cpp_constructor_call_ref);
+  runtime::object_ref eval(analyze::expression_ref);
+  runtime::object_ref eval(analyze::expr::def_ref);
+  runtime::object_ref eval(analyze::expr::var_deref_ref);
+  runtime::object_ref eval(analyze::expr::var_ref_ref);
+  runtime::object_ref eval(analyze::expr::call_ref);
+  runtime::object_ref eval(analyze::expr::primitive_literal_ref);
+  runtime::object_ref eval(analyze::expr::list_ref);
+  runtime::object_ref eval(analyze::expr::vector_ref);
+  runtime::object_ref eval(analyze::expr::map_ref);
+  runtime::object_ref eval(analyze::expr::set_ref);
+  runtime::object_ref eval(analyze::expr::local_reference_ref);
+  runtime::object_ref eval(analyze::expr::function_ref);
+  runtime::object_ref eval(analyze::expr::recur_ref);
+  runtime::object_ref eval(analyze::expr::recursion_reference_ref);
+  runtime::object_ref eval(analyze::expr::named_recursion_ref);
+  runtime::object_ref eval(analyze::expr::let_ref);
+  runtime::object_ref eval(analyze::expr::letfn_ref);
+  runtime::object_ref eval(analyze::expr::do_ref);
+  runtime::object_ref eval(analyze::expr::if_ref);
+  runtime::object_ref eval(analyze::expr::throw_ref);
+  runtime::object_ref eval(analyze::expr::try_ref);
+  runtime::object_ref eval(analyze::expr::case_ref);
+  runtime::object_ref eval(analyze::expr::cpp_type_ref);
+  runtime::object_ref eval(analyze::expr::cpp_value_ref);
+  runtime::object_ref eval(analyze::expr::cpp_constructor_call_ref);
 }

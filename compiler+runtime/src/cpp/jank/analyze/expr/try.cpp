@@ -8,7 +8,7 @@ namespace jank::analyze::expr
 
   try_::try_(expression_position const position,
              local_frame_ptr const frame,
-             native_bool const needs_box,
+             bool const needs_box,
              do_ref const body)
     : expression{ expr_kind, position, frame, needs_box }
     , body{ body }
@@ -20,7 +20,7 @@ namespace jank::analyze::expr
     body->propagate_position(pos);
   }
 
-  object_ptr catch_::to_runtime_data() const
+  object_ref catch_::to_runtime_data() const
   {
     using namespace runtime::obj;
 
@@ -44,7 +44,7 @@ namespace jank::analyze::expr
     }
   }
 
-  runtime::object_ptr try_::to_runtime_data() const
+  runtime::object_ref try_::to_runtime_data() const
   {
     using namespace runtime::obj;
 
