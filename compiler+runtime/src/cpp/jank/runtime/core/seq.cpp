@@ -718,8 +718,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively_writable: {}",
-                                                typed_m->to_string()) };
+          throw std::runtime_error{ util::format("not associatively_writable: {}",
+                                                 typed_m->to_string()) };
         }
       },
       m,
@@ -752,8 +752,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ fmt::format("not associatively_writable_in_place: {}",
-                                                typed_m->to_string()) };
+          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
+                                                 typed_m->to_string()) };
         }
       },
       m,

@@ -1,12 +1,10 @@
-#include <fmt/format.h>
-
-#include <jank/native_persistent_string/fmt.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj::detail
 {
@@ -175,13 +173,15 @@ namespace jank::runtime::obj::detail
 
     if(head->type != object_type::persistent_vector)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}",
+                                             runtime::to_code_string(head)) };
     }
 
     auto const vec(expect_object<obj::persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ fmt::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}",
+                                             runtime::to_code_string(head)) };
     }
 
     return ret->assoc(vec->data[0], vec->data[1]);
