@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/runtime/convert/into.hpp>
+#include <jank/runtime/convert/builtin.hpp>
 
 namespace jank::runtime
 {
@@ -21,14 +21,15 @@ namespace jank::runtime
     {
       return std::function<object_ref(typename always_object_ref<Args>::type...)>{
         [fn](Args &&...args) -> object_ref {
-          if constexpr(std::is_void_v<R>)
+          if constexpr(jtl::is_void<R>)
           {
-            fn(convert<Args, object_ref>::call(args)...);
-            return convert<R, object_ref>::call();
+            fn(convert<Args>::into_object(jtl::forward<Args>(args))...);
+            return convert<R>::into_object();
           }
           else
           {
-            return convert<R, object_ref>::call(fn(convert<Args, object_ref>::call(args)...));
+            return convert<R>::into_object(
+              fn(convert<Args>::into_object(jtl::forward<Args>(args))...));
           }
         }
       };
