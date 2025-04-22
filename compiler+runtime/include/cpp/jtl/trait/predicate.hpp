@@ -20,6 +20,9 @@ namespace jtl
   template <typename L, typename R>
   concept is_same = detail::is_same<L, R>::value;
 
+  template <typename T, typename... U>
+  concept is_any_same = (jtl::is_same<T, U> || ...);
+
   template <typename T>
   concept is_void = detail::is_same<T, void>::value;
 

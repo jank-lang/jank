@@ -9,13 +9,10 @@
 
 namespace jank::runtime
 {
-  template <typename T, typename... U>
-  concept same_as_any = (std::same_as<T, U> || ...);
-
   template <>
   struct convert<void, object_ref>
   {
-    static object_ref call()
+    static constexpr object_ref call()
     {
       return jank_nil;
     }
@@ -25,7 +22,7 @@ namespace jank::runtime
   requires behavior::object_like<T>
   struct convert<oref<T>, object_ref>
   {
-    static object_ref call(oref<T> const o)
+    static constexpr object_ref call(oref<T> const o)
     {
       return o;
     }
@@ -44,7 +41,7 @@ namespace jank::runtime
   template <>
   struct convert<object *, object_ref>
   {
-    static object_ref call(object * const o)
+    static constexpr object_ref call(object * const o)
     {
       return o;
     }
@@ -62,7 +59,7 @@ namespace jank::runtime
   template <>
   struct convert<bool, object_ref>
   {
-    static object_ref call(bool const o)
+    static constexpr object_ref call(bool const o)
     {
       return make_box(o);
     }
@@ -71,10 +68,10 @@ namespace jank::runtime
   /* Native integer primitives. */
   template <typename Input>
   requires(std::is_integral_v<Input>
-           && !same_as_any<bool, char, char8_t, char16_t, char32_t, wchar_t>)
+           && !jtl::is_any_same<bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<Input, object_ref>
   {
-    static object_ref call(Input const o)
+    static constexpr object_ref call(Input const o)
     {
       return make_box(o);
     }
@@ -85,7 +82,7 @@ namespace jank::runtime
   requires(std::is_floating_point_v<Input>)
   struct convert<Input, object_ref>
   {
-    static object_ref call(Input const o)
+    static constexpr object_ref call(Input const o)
     {
       return make_box(o);
     }
@@ -93,15 +90,16 @@ namespace jank::runtime
 
   /* Native strings. */
   template <typename Input>
-  requires(same_as_any<Input, jtl::immutable_string, native_persistent_string_view, std::string>)
+  requires(
+    jtl::is_any_same<Input, jtl::immutable_string, native_persistent_string_view, std::string>)
   struct convert<Input, object_ref>
   {
-    static object_ref call(Input const &o)
+    static constexpr object_ref call(Input const &o)
     {
       return make_box(o);
     }
 
-    static object_ref call(Input &&o)
+    static constexpr object_ref call(Input &&o)
     {
       return make_box(std::move(o));
     }
@@ -110,7 +108,7 @@ namespace jank::runtime
   template <template <typename> typename V, typename Input>
   requires(
     convertible<Input, object_ref>
-    && (std::same_as<V<Input>, native_vector<Input>> || std::same_as<V<Input>, std::vector<Input>>))
+    && (jtl::is_same<V<Input>, native_vector<Input>> || jtl::is_same<V<Input>, std::vector<Input>>))
   struct convert<V<Input>, object_ref>
   {
     static object_ref call(V<Input> const &o)
