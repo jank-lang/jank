@@ -117,7 +117,9 @@ namespace jank::analyze::cpp_util
         arg_types.emplace_back(fn_arg_type);
       }
 
-      /* TODO: Check for ambiguity. */
+      /* TODO: Check for possible conversion. If the conversion is possible
+       * in multiple fns, we may have an ambiguity. Need to check arity after that, to
+       * resolve? */
     }
 
     return nullptr;

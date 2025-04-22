@@ -3,6 +3,8 @@
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
 
 namespace jank::runtime
 {
@@ -20,7 +22,7 @@ namespace jank::runtime
   requires behavior::object_like<T>
   struct convert<object_ref, T *>
   {
-    static T *call(object_ref const o)
+    static constexpr T *call(object_ref const o)
     {
       return o;
     }
@@ -29,7 +31,7 @@ namespace jank::runtime
   template <>
   struct convert<object_ref, object *>
   {
-    static object *call(object_ref const o)
+    static constexpr object *call(object_ref const o)
     {
       return o.data;
     }
@@ -38,7 +40,7 @@ namespace jank::runtime
   template <>
   struct convert<object_ref, object const *>
   {
-    static object const *call(object_ref const o)
+    static constexpr object const *call(object_ref const o)
     {
       return o.data;
     }
@@ -56,7 +58,7 @@ namespace jank::runtime
   /* Native integer primitives. */
   template <typename Output>
   requires(std::is_integral_v<Output>
-           && !same_as_any<bool, char, char8_t, char16_t, char32_t, wchar_t>)
+           && !jtl::is_any_same<bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<object_ref, Output>
   {
     static Output call(object_ref const o)
@@ -78,7 +80,7 @@ namespace jank::runtime
 
   /* Native strings. */
   template <typename Output>
-  requires(same_as_any<Output, jtl::immutable_string, std::string>)
+  requires(jtl::is_any_same<Output, jtl::immutable_string, std::string>)
   struct convert<object_ref, Output>
   {
     static Output call(object_ref const &o)
