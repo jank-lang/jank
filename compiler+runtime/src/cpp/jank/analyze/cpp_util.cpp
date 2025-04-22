@@ -12,7 +12,11 @@ namespace jank::analyze::cpp_util
     return Cpp::GetType(sym);
   }
 
-  /* std.string.iterator gives us the iterator in std::string. */
+  /* Resolves the specified dot-separated symbol into its scope.
+   *
+   * For example, `std.string.iterator` gives us the scope for iterator in std::string.
+   *
+   * This doesn't work on built-in types, such as `int`, since they don't have a scope. */
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym)
   {
     jtl::ptr<void> scope{ Cpp::GetGlobalScope() };
@@ -96,6 +100,7 @@ namespace jank::analyze::cpp_util
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
       /* TODO: Is this how types should be compared? */
+
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
       auto const is_arg_object_ptr{ Cpp::GetTypeAsString(args[arg_idx].m_Type)
