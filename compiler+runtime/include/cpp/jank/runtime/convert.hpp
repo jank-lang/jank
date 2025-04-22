@@ -10,8 +10,7 @@ namespace jank::runtime
 
   template <typename Input, typename Output>
   concept convertible = requires(Input const &t) {
-    /* TODO: convertible_to */
-    { convert<Input, Output>::call(t) } -> jtl::is_same<Output>;
+    { convert<Input, Output>::call(t) } -> jtl::is_convertible<Output>;
   };
 
   /* Given any T, getting a T from it requires no conversion. */
