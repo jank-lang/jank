@@ -2,6 +2,7 @@
 #include <clang/Interpreter/CppInterOp.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
+#include <llvm/Transforms/Utils/Cloning.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Passes/PassBuilder.h>
@@ -9,6 +10,7 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
+#include <llvm/Linker/Linker.h>
 
 #include <jank/runtime/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
@@ -1062,17 +1064,66 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &)
+  llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
   {
-    /* TODO: Implement */
-    auto const ret{ gen_global(jank_nil) };
+    jank_debug_assert(expr->fn);
+    auto const ctor_fn_callable{ Cpp::MakeAotCallable(expr->fn) };
+    jank_debug_assert(ctor_fn_callable);
+
+    /* TODO: Fns are reused, so this could cause a linker issue. */
+    llvm::Linker::linkModules(
+      *ctx->module,
+      /* TODO: Will need to share context with interpreter or serialize module to bitcode
+       * in order to avoid context issues. */
+      llvm::CloneModule(*reinterpret_cast<llvm::Module *>(ctor_fn_callable.getModule())));
+
+    jank_debug_assert(expr->type);
+    jank_debug_assert(Cpp::IsComplete(expr->type));
+    auto const size{ Cpp::SizeOfType(expr->type) };
+    jank_debug_assert(size > 0);
+    auto const alignment{ Cpp::AlignmentOfType(expr->type) };
+    jank_debug_assert(alignment > 0);
+    auto const ctor_alloc{ ctx->builder->CreateAlloca(
+      ctx->builder->getInt8Ty(),
+      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
+    ctor_alloc->setAlignment(llvm::Align{ alignment });
+
+    auto const arg_count{ expr->arg_exprs.size() };
+    auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
+    auto const args_array{ ctx->builder->CreateAlloca(args_array_type) };
+
+    for(usize i{}; i < arg_count; ++i)
+    {
+      auto const arg_handle{ gen(expr->arg_exprs[i], arity) };
+      /* TODO: Convert arg, if needed. */
+      llvm::Value * const indices[]{ ctx->builder->getInt32(0), ctx->builder->getInt32(i) };
+      auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(args_array_type, args_array, indices) };
+      ctx->builder->CreateStore(arg_handle, arg_ptr);
+    }
+
+    auto const ctor_fn_type(llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                                    { ctx->builder->getPtrTy(),
+                                                      ctx->builder->getInt32Ty(),
+                                                      ctx->builder->getPtrTy(),
+                                                      ctx->builder->getPtrTy() },
+                                                    false));
+    auto const ctor_fn(ctx->module->getOrInsertFunction(ctor_fn_callable.getName(), ctor_fn_type));
+    llvm::SmallVector<llvm::Value *, 4> const ctor_args{
+      ctor_alloc,
+      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
+      args_array,
+      ctor_alloc
+    };
+    ctx->builder->CreateCall(ctor_fn, ctor_args);
 
     if(expr->position == expression_position::tail)
     {
-      return ctx->builder->CreateRet(ret);
+      /* TODO: Conversion on return. */
+      return ctx->builder->CreateRet(gen_global(jank_nil));
     }
 
-    return ret;
+    return ctor_alloc;
+    //return gen_global(jank_nil);
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const

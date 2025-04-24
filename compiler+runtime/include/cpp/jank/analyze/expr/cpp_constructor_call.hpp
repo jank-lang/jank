@@ -15,12 +15,14 @@ namespace jank::analyze::expr
                          local_frame_ptr frame,
                          bool needs_box,
                          jtl::ptr<void> type,
-                         native_vector<expression_ref> &&args);
+                         jtl::ptr<void> fn,
+                         native_vector<expression_ref> &&arg_exprs);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
 
     jtl::ptr<void> type{};
-    native_vector<expression_ref> args;
+    jtl::ptr<void> fn{};
+    native_vector<expression_ref> arg_exprs;
   };
 }

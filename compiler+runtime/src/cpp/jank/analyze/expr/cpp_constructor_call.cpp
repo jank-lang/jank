@@ -14,10 +14,12 @@ namespace jank::analyze::expr
                                              local_frame_ptr const frame,
                                              bool const needs_box,
                                              jtl::ptr<void> const type,
-                                             native_vector<expression_ref> &&args)
+                                             jtl::ptr<void> const fn,
+                                             native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , type{ type }
-    , args{ jtl::move(args) }
+    , fn{ fn }
+    , arg_exprs{ jtl::move(arg_exprs) }
   {
   }
 

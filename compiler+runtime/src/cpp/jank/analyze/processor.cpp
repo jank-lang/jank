@@ -1,6 +1,8 @@
 #include <ranges>
 #include <set>
 
+#include <Interpreter/Compatibility.h>
+
 #include <cpptrace/from_current.hpp>
 
 #include <jank/read/reparse.hpp>
@@ -45,6 +47,7 @@
 #include <jank/analyze/expr/case.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
+#include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -2094,13 +2097,13 @@ namespace jank::analyze
                                            latest_expansion(macro_expansions));
   }
 
-  processor::expression_result processor::analyze_cpp_call(
-    [[maybe_unused]] obj::persistent_list_ref const o,
-    expr::cpp_value_ref const val,
-    [[maybe_unused]] local_frame_ptr const current_frame,
-    [[maybe_unused]] expression_position const position,
-    [[maybe_unused]] jtl::option<expr::function_context_ref> const &fn_ctx,
-    [[maybe_unused]] bool const needs_box)
+  processor::expression_result
+  processor::analyze_cpp_call(obj::persistent_list_ref const o,
+                              expr::cpp_value_ref const val,
+                              local_frame_ptr const current_frame,
+                              expression_position const position,
+                              jtl::option<expr::function_context_ref> const &fn_ctx,
+                              bool const needs_box)
   {
     auto it(o->data.rest());
     auto const arg_count(it.size());
@@ -2116,7 +2119,6 @@ namespace jank::analyze
       }
       arg_exprs.emplace_back(arg_expr.expect_ok());
       arg_types.emplace_back(cpp_util::expression_type(arg_exprs.back()));
-      util::println("arg type {}", Cpp::GetTypeAsString(arg_types.back().m_Type));
     }
 
     if(val->val_kind == expr::cpp_value::value_kind::constructor)
@@ -2129,23 +2131,42 @@ namespace jank::analyze
       }
 
       std::vector<void *> ctors;
-      Cpp::LookupConstructors("foo", val->scope, ctors);
-      util::println("ctors {}", ctors);
+      Cpp::LookupConstructors("bar", val->scope, ctors);
 
       auto match{ Cpp::BestOverloadFunctionMatch(ctors, {}, arg_types) };
-      util::println("match {}", match);
       if(match)
       {
+        return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                         current_frame,
+                                                         needs_box,
+                                                         val->type,
+                                                         match,
+                                                         jtl::move(arg_exprs));
       }
 
-      match = cpp_util::find_best_overload_with_conversions(ctors, arg_types);
-      util::println("match after conversions {}", match);
+      auto const new_types{ cpp_util::find_best_arg_types_with_conversions(ctors, arg_types) };
+      if(new_types.is_err())
+      {
+        return error::internal_analyze_failure(
+          util::format("Ambiguous call. {}", new_types.expect_err()),
+          latest_expansion(macro_expansions));
+      }
+
+      match = Cpp::BestOverloadFunctionMatch(ctors, {}, new_types.expect_ok());
       if(match)
       {
+        return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                         current_frame,
+                                                         needs_box,
+                                                         val->type,
+                                                         match,
+                                                         jtl::move(arg_exprs));
       }
+
+      return error::internal_analyze_failure(
+        util::format("No matching call to '{}' constructor.", Cpp::GetTypeAsString(val->type)),
+        latest_expansion(macro_expansions));
     }
-
-    /* TODO: Match overload. */
 
     return error::internal_analyze_failure("nyi: analyze_cpp_call",
                                            latest_expansion(macro_expansions));

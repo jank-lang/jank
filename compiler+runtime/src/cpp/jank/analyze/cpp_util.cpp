@@ -1,9 +1,15 @@
-#include <clang/Interpreter/CppInterOp.h>
-
 #include <algorithm>
+
+#include <clang/Interpreter/CppInterOp.h>
+#include <Interpreter/Compatibility.h>
+#include <clang/Basic/Diagnostic.h>
+#include <clang/Sema/Sema.h>
+
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::analyze::cpp_util
 {
@@ -73,8 +79,9 @@ namespace jank::analyze::cpp_util
       expr);
   }
 
-  jtl::ptr<void> find_best_overload_with_conversions(std::vector<void *> const &fns,
-                                                     std::vector<Cpp::TemplateArgInfo> const &args)
+  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
+  find_best_arg_types_with_conversions(std::vector<void *> const &fns,
+                                       std::vector<Cpp::TemplateArgInfo> const &args)
   {
     auto const arg_count{ args.size() };
     usize max_arg_count{};
@@ -95,33 +102,69 @@ namespace jank::analyze::cpp_util
     auto const obj_ptr_type{ object_ptr_type() };
     auto const obj_ptr_type_str{ Cpp::GetTypeAsString(obj_ptr_type) };
 
+    std::vector<Cpp::TemplateArgInfo> converted_args{ args };
+
     /* If any arg can be implicitly converted to multiple functions, we have an ambiguity.
      * The user will need to specify the correct type by using a cast. */
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
       /* TODO: Is this how types should be compared? */
 
+      /* TODO: Check for typed and untyped objects. */
+
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
       auto const is_arg_object_ptr{ Cpp::GetTypeAsString(args[arg_idx].m_Type)
                                     == obj_ptr_type_str };
+      /* TODO: Check the other way, too, if we're calling a fn taking objects. */
       if(!is_arg_object_ptr)
       {
         continue;
       }
 
-      std::vector<void *> arg_types;
-      for(auto const fn : fns)
+      jtl::option<usize> needed_conversion;
+      for(usize fn_idx{}; fn_idx < fns.size(); ++fn_idx)
       {
-        auto const fn_arg_type{ Cpp::GetFunctionArgType(fn, arg_idx) };
-        arg_types.emplace_back(fn_arg_type);
-      }
+        auto const param_type{ Cpp::GetFunctionArgType(fns[fn_idx], arg_idx) };
+        if(!param_type)
+        {
+          continue;
+        }
+        if(Cpp::IsImplicitlyConvertible(args[arg_idx].m_Type, param_type))
+        {
+          continue;
+        }
 
-      /* TODO: Check for possible conversion. If the conversion is possible
-       * in multiple fns, we may have an ambiguity. Need to check arity after that, to
-       * resolve? */
+        if(is_convertible(param_type))
+        {
+          if(needed_conversion.is_some())
+          {
+            return err("");
+          }
+          needed_conversion = fn_idx;
+          converted_args[arg_idx] = param_type;
+        }
+      }
     }
 
-    return nullptr;
+    return ok(std::move(converted_args));
+  }
+
+  bool is_convertible(jtl::ptr<void> const type)
+  {
+    /* TODO: Strip off cv and ref before instantiating. */
+    auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
+    Cpp::TemplateArgInfo arg{ type };
+    clang::Sema::SFINAETrap trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
+    [[maybe_unused]]
+    Cpp::TCppScope_t instantiation{};
+    {
+      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+      instantiation = Cpp::InstantiateTemplate(convert_template, &arg, 1);
+    }
+    return !trap.hasErrorOccurred() && Cpp::IsComplete(instantiation);
   }
 }

@@ -11,6 +11,58 @@
 
 namespace jank::runtime
 {
+  /* Any untyped object can convert to/from itself easily. */
+  template <>
+  struct convert<object_ref>
+  {
+    static constexpr object_ref into_object(object_ref const t)
+    {
+      return t;
+    }
+
+    static constexpr object_ref from_object(object_ref const t)
+    {
+      return t;
+    }
+  };
+
+  /* Any typed object can convert to/from itself easily. */
+  template <typename T>
+  requires typed_object_ref<T>
+  struct convert<T>
+  {
+    static constexpr T into_object(T const t)
+    {
+      return t;
+    }
+
+    static constexpr T from_object(object_ref const t)
+    {
+      return try_object<T::value_type>(t);
+    }
+
+    static constexpr T from_object(T const t)
+    {
+      return t;
+    }
+  };
+
+  /* Any type with conversion members can be convertible. */
+  template <typename T>
+  requires has_conversion_members<T>
+  struct convert<T>
+  {
+    static constexpr auto into_object(T const &t)
+    {
+      return T::into_object(t);
+    }
+
+    static constexpr T from_object(auto const o)
+    {
+      return T::from_object(o);
+    }
+  };
+
   template <>
   struct convert<void>
   {

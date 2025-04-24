@@ -56,36 +56,4 @@ namespace jank::runtime
     { T::into_object(t) } -> any_object_ref;
     { T::from_object(o) } -> jtl::is_convertible<T>;
   };
-
-  /* Any object can convert to/from itself easily. */
-  template <typename T>
-  requires any_object_ref<T>
-  struct convert<T>
-  {
-    static constexpr T into_object(T const t)
-    {
-      return t;
-    }
-
-    static constexpr T from_object(T const t)
-    {
-      return t;
-    }
-  };
-
-  /* Any type with conversion members can be convertible. */
-  template <typename T>
-  requires has_conversion_members<T>
-  struct convert<T>
-  {
-    static constexpr auto into_object(T const &t)
-    {
-      return T::into_object(t);
-    }
-
-    static constexpr T from_object(auto const o)
-    {
-      return T::from_object(o);
-    }
-  };
 }
