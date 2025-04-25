@@ -10,6 +10,7 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 #include <llvm/Linker/Linker.h>
 
 #include <jank/runtime/visit.hpp>
@@ -20,8 +21,9 @@
 #include <jank/evaluate.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/rtti.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -32,6 +34,10 @@ namespace jank::codegen
     : module_name{ module_name }
     , ctor_name{ runtime::munge(__rt_ctx->unique_string("jank_global_init")) }
     , llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
+    //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
+    //              reinterpret_cast<void *>(
+    //                &static_cast<clang::Interpreter &>(*__rt_ctx->jit_prc.interpreter)))
+    //              ->getContext() }
     , module{ std::make_unique<llvm::Module>(__rt_ctx->unique_string(module_name).c_str(),
                                              *llvm_ctx) }
     , builder{ std::make_unique<llvm::IRBuilder<>>(*llvm_ctx) }
@@ -1063,6 +1069,73 @@ namespace jank::codegen
     return ret;
   }
 
+  static llvm::Value *convert_from_object(reusable_context &ctx,
+                                          jtl::ptr<void> const arg_type,
+                                          llvm::Value * const arg,
+                                          jtl::ptr<void> const param_type)
+  {
+    static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
+    Cpp::TemplateArgInfo template_arg{ param_type };
+    auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
+    jank_debug_assert(instantiation);
+    auto const from_object{ Cpp::GetFunctionsUsingName(instantiation, "from_object") };
+    auto const match{ Cpp::BestOverloadFunctionMatch(from_object, {}, { { arg_type } }) };
+    /* TODO: Proper internal error. */
+    jank_assert(match);
+    auto const match_name{ Cpp::GetName(match) };
+    auto const fn_callable{ Cpp::MakeAotCallable(match) };
+
+    /* TODO: Fns are reused, so this could cause a linker issue. */
+    llvm::Linker::linkModules(
+      *ctx.module,
+      /* TODO: Will need to share context with interpreter or serialize module to bitcode
+       * in order to avoid context issues. */
+      llvm::CloneModule(*reinterpret_cast<llvm::Module *>(fn_callable.getModule())));
+
+    auto const arg_ptr{ ctx.builder->CreateAlloca(
+      ctx.builder->getPtrTy(),
+      llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1)) };
+    ctx.builder->CreateStore(arg, arg_ptr);
+
+    auto const fn_type(llvm::FunctionType::get(ctx.builder->getVoidTy(),
+                                               { ctx.builder->getPtrTy(),
+                                                 ctx.builder->getInt32Ty(),
+                                                 ctx.builder->getPtrTy(),
+                                                 ctx.builder->getPtrTy() },
+                                               false));
+    /* TODO: I think we can just use getFunction here. */
+    auto const fn(ctx.module->getOrInsertFunction(fn_callable.getName(), fn_type));
+    auto const args_array_type{ llvm::ArrayType::get(ctx.builder->getPtrTy(), 1) };
+    auto const args_array{ ctx.builder->CreateAlloca(args_array_type,
+                                                     nullptr,
+                                                     util::format("{}.args", match_name).c_str()) };
+    auto const arg_array_0{ ctx.builder->CreateInBoundsGEP(
+      args_array_type,
+      args_array,
+      { ctx.builder->getInt32(0), ctx.builder->getInt32(0) },
+      util::format("{}.args[{}]", match_name, 0).c_str()) };
+    ctx.builder->CreateStore(arg_ptr, arg_array_0);
+
+    auto const ret_size{ Cpp::SizeOfType(param_type) };
+    jank_debug_assert(ret_size > 0);
+    auto const ret_alignment{ Cpp::AlignmentOfType(param_type) };
+    jank_debug_assert(ret_alignment > 0);
+    auto const ret_alloc{ ctx.builder->CreateAlloca(
+      ctx.builder->getInt8Ty(),
+      llvm::ConstantInt::get(ctx.builder->getInt32Ty(), ret_size),
+      util::format("{}.ret", match_name).c_str()) };
+    ret_alloc->setAlignment(llvm::Align{ ret_alignment });
+
+    llvm::SmallVector<llvm::Value *, 4> const args{
+      llvm::ConstantPointerNull::get(ctx.builder->getPtrTy()),
+      llvm::ConstantInt::getSigned(ctx.builder->getInt32Ty(), 0),
+      args_array,
+      ret_alloc
+    };
+    ctx.builder->CreateCall(fn, args);
+    return ret_alloc;
+  }
+
   llvm::Value *
   llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
   {
@@ -1088,16 +1161,34 @@ namespace jank::codegen
       llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
     ctor_alloc->setAlignment(llvm::Align{ alignment });
 
+    auto const type_name{ Cpp::GetTypeAsString(expr->type) };
     auto const arg_count{ expr->arg_exprs.size() };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
-    auto const args_array{ ctx->builder->CreateAlloca(args_array_type) };
+    auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
+                                                      nullptr,
+                                                      util::format("{}.args", type_name).c_str()) };
 
     for(usize i{}; i < arg_count; ++i)
     {
-      auto const arg_handle{ gen(expr->arg_exprs[i], arity) };
-      /* TODO: Convert arg, if needed. */
-      llvm::Value * const indices[]{ ctx->builder->getInt32(0), ctx->builder->getInt32(i) };
-      auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(args_array_type, args_array, indices) };
+      auto arg_handle{ gen(expr->arg_exprs[i], arity) };
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[i]) };
+      util::println("arg_type {}", Cpp::GetTypeAsString(arg_type));
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
+      util::println("is_untyped_obj {}", is_untyped_obj);
+      auto const param_type{ Cpp::GetFunctionArgType(expr->fn, i) };
+      util::println("param_type {}", Cpp::GetTypeAsString(param_type));
+      if(is_untyped_obj && !Cpp::IsImplicitlyConvertible(arg_type, param_type))
+      {
+        arg_handle = convert_from_object(*ctx, arg_type, arg_handle, param_type);
+      }
+      /* TODO: We need to be certain that arg_handle is a pointer. Will it
+       * always be for native values? */
+
+      auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
+        args_array_type,
+        args_array,
+        { ctx->builder->getInt32(0), ctx->builder->getInt32(i) },
+        util::format("{}.args[{}]", type_name, i).c_str()) };
       ctx->builder->CreateStore(arg_handle, arg_ptr);
     }
 
@@ -1123,7 +1214,6 @@ namespace jank::codegen
     }
 
     return ctor_alloc;
-    //return gen_global(jank_nil);
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const

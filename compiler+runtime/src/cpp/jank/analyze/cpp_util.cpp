@@ -61,6 +61,18 @@ namespace jank::analyze::cpp_util
     return obj_ptr_type;
   }
 
+  /* TODO: Also have a predicate for typed objects. */
+  bool is_untyped_object(jtl::ptr<void> const type)
+  {
+    static jtl::ptr<void> const obj_ptr_type{ Cpp::GetCanonicalType(
+      Cpp::GetPointerType(Cpp::GetTypeFromScope(
+        Cpp::GetNamed("object", Cpp::GetNamed("runtime", Cpp::GetNamed("jank")))))) };
+    static jtl::ptr<void> const obj_ref_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("jank::runtime::object_ref"))) };
+    auto const can_type{ Cpp::GetCanonicalType(type) };
+    return can_type == obj_ptr_type || can_type == obj_ref_type;
+  }
+
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(
@@ -99,9 +111,6 @@ namespace jank::analyze::cpp_util
       }
     }
 
-    auto const obj_ptr_type{ object_ptr_type() };
-    auto const obj_ptr_type_str{ Cpp::GetTypeAsString(obj_ptr_type) };
-
     std::vector<Cpp::TemplateArgInfo> converted_args{ args };
 
     /* If any arg can be implicitly converted to multiple functions, we have an ambiguity.
@@ -114,10 +123,9 @@ namespace jank::analyze::cpp_util
 
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
-      auto const is_arg_object_ptr{ Cpp::GetTypeAsString(args[arg_idx].m_Type)
-                                    == obj_ptr_type_str };
+      auto const is_untyped_obj{ is_untyped_object(args[arg_idx].m_Type) };
       /* TODO: Check the other way, too, if we're calling a fn taking objects. */
-      if(!is_arg_object_ptr)
+      if(!is_untyped_obj)
       {
         continue;
       }
@@ -153,10 +161,9 @@ namespace jank::analyze::cpp_util
   bool is_convertible(jtl::ptr<void> const type)
   {
     /* TODO: Strip off cv and ref before instantiating. */
-    auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
+    static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo arg{ type };
     clang::Sema::SFINAETrap trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
-    [[maybe_unused]]
     Cpp::TCppScope_t instantiation{};
     {
       auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };

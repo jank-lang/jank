@@ -19,4 +19,5 @@ namespace jank::analyze::cpp_util
                                        std::vector<Cpp::TemplateArgInfo> const &args);
 
   bool is_convertible(jtl::ptr<void> type);
+  bool is_untyped_object(jtl::ptr<void> type);
 }
