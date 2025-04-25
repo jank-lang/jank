@@ -1,0 +1,3 @@
+(assert (uuid? (random-uuid)))
+
+:success
