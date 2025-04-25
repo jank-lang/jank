@@ -1604,12 +1604,12 @@ namespace jank::runtime
     return std::pow(l, r);
   }
 
-  native_integer numerator(object_ptr const o)
+  native_big_integer numerator(object_ptr const o)
   {
     return try_object<obj::ratio>(o)->data.numerator;
   }
 
-  native_integer denominator(object_ptr const o)
+  native_big_integer denominator(object_ptr const o)
   {
     return try_object<obj::ratio>(o)->data.denominator;
   }

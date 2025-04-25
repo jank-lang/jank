@@ -5,7 +5,6 @@
 
 namespace jank::runtime::obj
 {
-  using native_big_integer = boost::multiprecision::cpp_int;
 
   using big_integer_ptr = native_box<struct big_integer>;
 
@@ -38,7 +37,9 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     native_integer to_integer() const;
     native_real to_real() const;
-
+    static native_big_integer gcd(native_big_integer const &, native_big_integer const &);
+    static native_integer to_native_integer(native_big_integer const &);
+    static native_hash to_hash(native_big_integer const &);
     object base{ obj_type };
     native_big_integer data;
   };

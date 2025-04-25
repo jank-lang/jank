@@ -1,19 +1,23 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime::obj
 {
   struct ratio_data
   {
     ratio_data(native_integer const, native_integer const);
+    ratio_data(native_big_integer const &, native_big_integer const &);
+    ratio_data(big_integer const &, big_integer const &);
+    ratio_data(object_ptr, object_ptr);
     ratio_data(ratio_data const &) = default;
 
     native_real to_real() const;
     native_integer to_integer() const;
 
-    native_integer numerator{};
-    native_integer denominator{};
+    native_big_integer numerator{};
+    native_big_integer denominator{};
   };
 
   using integer_ptr = native_box<struct integer>;
@@ -30,6 +34,7 @@ namespace jank::runtime::obj
     ratio(ratio_data const &);
 
     static object_ptr create(native_integer const, native_integer const);
+    static object_ptr create(native_big_integer const &, native_big_integer const &);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;

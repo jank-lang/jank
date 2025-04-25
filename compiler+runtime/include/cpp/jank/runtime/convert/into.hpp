@@ -2,6 +2,7 @@
 
 #include <jank/runtime/convert.hpp>
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -121,6 +122,15 @@ namespace jank::runtime
         trans.push_back(convert<Input, object_ptr>::call(e));
       }
       return make_box<obj::persistent_vector>(trans);
+    }
+  };
+
+  template <>
+  struct convert<native_big_integer, object_ptr>
+  {
+    static object_ptr call(native_big_integer const o)
+    {
+      return make_box<obj::big_integer>(o);
     }
   };
 }

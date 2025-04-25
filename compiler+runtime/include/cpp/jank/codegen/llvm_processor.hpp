@@ -10,6 +10,7 @@
 #include <llvm/Analysis/CGSCCPassManager.h>
 
 #include <jank/analyze/processor.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime::obj
 {
@@ -153,6 +154,7 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::nil_ptr) const;
     llvm::Value *gen_global(runtime::obj::boolean_ptr b) const;
     llvm::Value *gen_global(runtime::obj::integer_ptr i) const;
+    llvm::Value *gen_global(runtime::obj::big_integer_ptr i) const;
     llvm::Value *gen_global(runtime::obj::real_ptr r) const;
     llvm::Value *gen_global(runtime::obj::ratio_ptr r) const;
     llvm::Value *gen_global(runtime::obj::persistent_string_ptr s) const;

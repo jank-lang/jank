@@ -28,6 +28,7 @@ namespace jank::util
     string_builder &operator()(int d) &;
     string_builder &operator()(long d) &;
     string_builder &operator()(long long d) &;
+    string_builder &operator()(native_big_integer const &d) &;
     string_builder &operator()(unsigned long d) &;
     string_builder &operator()(unsigned long long d) &;
     string_builder &operator()(char d) &;

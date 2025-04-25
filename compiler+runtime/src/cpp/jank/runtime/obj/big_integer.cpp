@@ -1,3 +1,5 @@
+#include <boost/multiprecision/cpp_int.hpp>
+
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/ratio.hpp>
@@ -90,7 +92,7 @@ namespace jank::runtime::obj
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 
-  native_hash big_integer::to_hash() const
+  native_hash big_integer::to_hash(native_big_integer const &data)
   {
     auto const &backend = data.backend();
 
@@ -105,6 +107,11 @@ namespace jank::runtime::obj
     }
 
     return static_cast<native_hash>(seed);
+  }
+
+  native_hash big_integer::to_hash() const
+  {
+    return big_integer::to_hash(data);
   }
 
   native_integer big_integer::compare(object const &o) const
@@ -125,21 +132,76 @@ namespace jank::runtime::obj
     return data.compare(o.data);
   }
 
+  native_big_integer big_integer::gcd(native_big_integer const &l, native_big_integer const &r)
+  {
+    return boost::multiprecision::gcd(l, r);
+  }
+
+  native_integer big_integer::to_native_integer(native_big_integer const &d)
+  {
+    // This implementation extracts the lower bits corresponding to a native_integer,
+    // effectively performing arithmetic modulo 2^N (N=64 typically).
+
+    using LimbType = boost::multiprecision::limb_type;
+    constexpr std::size_t bits_per_limb = sizeof(LimbType) * CHAR_BIT;
+    // Use unsigned long long for bit manipulation, then cast at the end
+    constexpr std::size_t target_bits = sizeof(unsigned long long) * CHAR_BIT;
+
+    auto const &backend = d.backend();
+    auto const *limbs_ptr = backend.limbs();
+    auto const num_limbs = backend.size();
+    auto const sign = backend.sign();
+
+    unsigned long long unsigned_result = 0;
+
+    // Iterate through limbs contributing to the target bit width
+    for(std::size_t i = 0;; ++i)
+    {
+      std::size_t current_limb_start_bit = i * bits_per_limb;
+      if(current_limb_start_bit >= target_bits)
+      {
+        break; // Past target width
+      }
+      if(i >= num_limbs)
+      {
+        break; // Ran out of limbs
+      }
+
+      LimbType current_limb = limbs_ptr[i];
+
+      // Mask if only part of the limb contributes
+      std::size_t bits_to_take = bits_per_limb;
+      if(current_limb_start_bit + bits_to_take > target_bits)
+      {
+        bits_to_take = target_bits - current_limb_start_bit;
+        // Create mask: (1 << bits_to_take) - 1
+        // Avoid shifting by full width or more
+        if(bits_to_take < bits_per_limb)
+        {
+          LimbType mask = (static_cast<LimbType>(1) << bits_to_take) - 1;
+          current_limb &= mask;
+        } // else: no mask needed as we take the whole limb (up to target_bits)
+      }
+
+      // Combine into result
+      unsigned_result |= (static_cast<unsigned long long>(current_limb) << current_limb_start_bit);
+    }
+
+    // Handle sign using two's complement logic for wrapping
+    // Check the boolean sign variable directly
+    if(sign) // If true, the original number was negative
+    {
+      return static_cast<native_integer>(~unsigned_result + 1);
+    }
+    else
+    {
+      return static_cast<long long>(unsigned_result);
+    }
+  }
+
   native_integer big_integer::to_integer() const
   {
-    try
-    {
-      return data.template convert_to<native_integer>();
-    }
-    catch(std::overflow_error const &)
-    {
-      throw std::runtime_error("BigInteger value out of range for native_integer");
-    }
-    catch(std::exception const &e)
-    {
-      throw std::runtime_error(
-        util::format("Error converting BigInteger to native_integer: {}", e.what()));
-    }
+    return big_integer::to_native_integer(data);
   }
 
   native_real big_integer::to_real() const

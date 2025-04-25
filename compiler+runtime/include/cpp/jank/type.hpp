@@ -13,7 +13,7 @@
 #include <immer/heap/gc_heap.hpp>
 #include <immer/heap/heap_policy.hpp>
 #include <immer/memory_policy.hpp>
-
+#include <boost/multiprecision/cpp_int.hpp>
 #include <folly/FBVector.h>
 
 namespace jank
@@ -27,6 +27,7 @@ namespace jank
                                              false>;
 
   using native_integer = long long;
+  using native_big_integer = boost::multiprecision::cpp_int;
   using native_real = double;
   using native_bool = bool;
   using native_hash = uint32_t;

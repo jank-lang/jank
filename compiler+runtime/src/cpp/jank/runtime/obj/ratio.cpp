@@ -3,13 +3,14 @@
 #include <cmath>
 
 #include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/visit.hpp>
 
 namespace jank::runtime::obj
 {
   static constexpr auto epsilon{ std::numeric_limits<native_real>::epsilon() };
 
-  ratio_data::ratio_data(native_integer const numerator, native_integer const denominator)
+  ratio_data::ratio_data(native_big_integer const &numerator, native_big_integer const &denominator)
     : numerator{ numerator }
     , denominator{ denominator }
   {
@@ -17,7 +18,7 @@ namespace jank::runtime::obj
     {
       throw std::invalid_argument{ "Ratio denominator cannot be zero." };
     }
-    auto const gcd{ std::gcd(numerator, denominator) };
+    auto const gcd{ big_integer::gcd(numerator, denominator) };
     this->numerator /= gcd;
     this->denominator /= gcd;
 
@@ -28,19 +29,42 @@ namespace jank::runtime::obj
     }
   }
 
+  ratio_data::ratio_data(big_integer const &numerator, big_integer const &denominator)
+    : numerator{ numerator.data }
+    , denominator{ denominator.data }
+  {
+  }
+
+  ratio_data::ratio_data(native_integer const numerator, native_integer const denominator)
+    : numerator{ native_big_integer(numerator) }
+    , denominator{ native_big_integer(denominator) }
+  {
+  }
+
+  ratio_data::ratio_data(object_ptr numerator, object_ptr denominator)
+  {
+    ratio_data(expect_object<big_integer>(numerator), expect_object<big_integer>(denominator));
+  }
+
   ratio::ratio(ratio_data const &data)
     : data{ data }
   {
   }
 
-  object_ptr ratio::create(native_integer const numerator, native_integer const denominator)
+  object_ptr
+  ratio::create(native_big_integer const &numerator, native_big_integer const &denominator)
   {
     ratio_data const data{ numerator, denominator };
     if(data.denominator == 1)
     {
-      return make_box<integer>(data.numerator);
+      return make_box<integer>(big_integer::to_native_integer(data.numerator));
     }
     return make_box<ratio>(data);
+  }
+
+  object_ptr ratio::create(native_integer const numerator, native_integer const denominator)
+  {
+    return create(native_big_integer(numerator), native_big_integer(denominator));
   }
 
   native_real ratio_data::to_real() const
@@ -50,7 +74,7 @@ namespace jank::runtime::obj
 
   native_integer ratio_data::to_integer() const
   {
-    return numerator / denominator;
+    return big_integer::to_native_integer(numerator / denominator);
   }
 
   native_real ratio::to_real() const
@@ -82,7 +106,8 @@ namespace jank::runtime::obj
 
   native_hash ratio::to_hash() const
   {
-    return hash::combine(hash::integer(data.numerator), hash::integer(data.denominator));
+    return hash::combine(big_integer::to_hash(data.numerator),
+                         big_integer::to_hash(data.denominator));
   }
 
   native_bool ratio::equal(object const &o) const

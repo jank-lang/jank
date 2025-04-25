@@ -374,15 +374,22 @@ extern "C"
     return erase(make_box(i));
   }
 
+  jank_object_ptr jank_big_integer_create(char const *s)
+  {
+    assert(s);
+    return erase(make_box<runtime::obj::big_integer>(jank::native_persistent_string_view{ s }));
+  }
+
   jank_object_ptr jank_real_create(jank_native_real const r)
   {
     return erase(make_box(r));
   }
 
   jank_object_ptr
-  jank_ratio_create(jank_native_integer const numerator, jank_native_integer const denominator)
+  jank_ratio_create(jank_object_ptr const numerator, jank_object_ptr const denominator)
   {
-    return erase(make_box(runtime::obj::ratio_data(numerator, denominator)));
+    return erase(make_box(runtime::obj::ratio_data(reinterpret_cast<object *>(numerator),
+                                                   reinterpret_cast<object *>(denominator))));
   }
 
   jank_object_ptr jank_string_create(char const *s)
