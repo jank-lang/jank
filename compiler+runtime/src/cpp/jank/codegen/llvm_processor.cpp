@@ -1116,9 +1116,9 @@ namespace jank::codegen
       util::format("{}.args[{}]", match_name, 0).c_str()) };
     ctx.builder->CreateStore(arg_ptr, arg_array_0);
 
-    auto const ret_size{ Cpp::SizeOfType(param_type) };
+    auto const ret_size{ Cpp::GetSizeOfType(param_type) };
     jank_debug_assert(ret_size > 0);
-    auto const ret_alignment{ Cpp::AlignmentOfType(param_type) };
+    auto const ret_alignment{ Cpp::GetAlignmentOfType(param_type) };
     jank_debug_assert(ret_alignment > 0);
     auto const ret_alloc{ ctx.builder->CreateAlloca(
       ctx.builder->getInt8Ty(),
@@ -1152,9 +1152,9 @@ namespace jank::codegen
 
     jank_debug_assert(expr->type);
     jank_debug_assert(Cpp::IsComplete(expr->type));
-    auto const size{ Cpp::SizeOfType(expr->type) };
+    auto const size{ Cpp::GetSizeOfType(expr->type) };
     jank_debug_assert(size > 0);
-    auto const alignment{ Cpp::AlignmentOfType(expr->type) };
+    auto const alignment{ Cpp::GetAlignmentOfType(expr->type) };
     jank_debug_assert(alignment > 0);
     auto const ctor_alloc{ ctx->builder->CreateAlloca(
       ctx->builder->getInt8Ty(),
