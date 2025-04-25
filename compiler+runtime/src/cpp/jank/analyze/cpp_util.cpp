@@ -52,25 +52,25 @@ namespace jank::analyze::cpp_util
     return err(util::format("Unable to find scope for symbol '{}'", sym));
   }
 
-  static jtl::ptr<void> object_ptr_type()
+  jtl::ptr<void> untyped_object_ptr_type()
   {
-    static jtl::ptr<void> const obj_ptr_type{ (
-      Cpp::Declare("namespace jank::runtime{ struct object; }"),
-      Cpp::GetPointerType(Cpp::GetTypeFromScope(
-        Cpp::GetNamed("object", Cpp::GetNamed("runtime", Cpp::GetNamed("jank")))))) };
-    return obj_ptr_type;
+    static jtl::ptr<void> const ret{ Cpp::GetPointerType(Cpp::GetTypeFromScope(
+      Cpp::GetNamed("object", Cpp::GetNamed("runtime", Cpp::GetNamed("jank"))))) };
+    return ret;
+  }
+
+  jtl::ptr<void> untyped_object_ref_type()
+  {
+    static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
+      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("jank::runtime::object_ref"))) };
+    return ret;
   }
 
   /* TODO: Also have a predicate for typed objects. */
   bool is_untyped_object(jtl::ptr<void> const type)
   {
-    static jtl::ptr<void> const obj_ptr_type{ Cpp::GetCanonicalType(
-      Cpp::GetPointerType(Cpp::GetTypeFromScope(
-        Cpp::GetNamed("object", Cpp::GetNamed("runtime", Cpp::GetNamed("jank")))))) };
-    static jtl::ptr<void> const obj_ref_type{ Cpp::GetCanonicalType(
-      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("jank::runtime::object_ref"))) };
     auto const can_type{ Cpp::GetCanonicalType(type) };
-    return can_type == obj_ptr_type || can_type == obj_ref_type;
+    return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
   jtl::ptr<void> expression_type(expression_ref const expr)
@@ -85,7 +85,7 @@ namespace jank::analyze::cpp_util
         }
         else
         {
-          return object_ptr_type();
+          return untyped_object_ptr_type();
         }
       },
       expr);

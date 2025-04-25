@@ -20,4 +20,7 @@ namespace jank::analyze::cpp_util
 
   bool is_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
+
+  jtl::ptr<void> untyped_object_ptr_type();
+  jtl::ptr<void> untyped_object_ref_type();
 }
