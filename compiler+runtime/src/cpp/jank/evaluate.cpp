@@ -681,8 +681,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::cpp_value_ref const expr)
   {
-    //return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
-    return make_box(util::format("C++ value: {}", Cpp::GetQualifiedCompleteName(expr->scope)));
+    return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
   }
 
   object_ref eval(expr::cpp_constructor_call_ref const expr)

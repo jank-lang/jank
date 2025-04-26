@@ -103,17 +103,17 @@ namespace jank::runtime
   {
     static constexpr obj::integer_ref into_object(T const o)
     {
-      return make_box(o);
+      return make_box(static_cast<i64>(o));
     }
 
     static constexpr T from_object(object_ref const o)
     {
-      return try_object<obj::integer>(o)->data;
+      return static_cast<T>(try_object<obj::integer>(o)->data);
     }
 
     static constexpr T from_object(obj::integer_ref const o)
     {
-      return o->data;
+      return static_cast<T>(o->data);
     }
   };
 
@@ -124,17 +124,17 @@ namespace jank::runtime
   {
     static constexpr obj::real_ref into_object(T const o)
     {
-      return make_box(o);
+      return make_box(static_cast<f64>(o));
     }
 
     static constexpr T from_object(object_ref const o)
     {
-      return try_object<obj::real>(o)->data;
+      return static_cast<T>(try_object<obj::real>(o)->data);
     }
 
     static constexpr T from_object(obj::real_ref const o)
     {
-      return o->data;
+      return static_cast<T>(o->data);
     }
   };
 

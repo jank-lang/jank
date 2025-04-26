@@ -104,11 +104,11 @@ namespace jank::codegen
                                         jtl::ptr<void> const required_type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo template_arg{ arg_type };
+    Cpp::TemplateArgInfo template_arg{ Cpp::GetTypeWithoutCv(arg_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
     jank_debug_assert(instantiation);
-    auto const conversion_fns{ Cpp::GetFunctionsUsingName(instantiation, "to_object") };
-    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { { arg_type } }) };
+    auto const conversion_fns{ Cpp::GetFunctionsUsingName(instantiation, "into_object") };
+    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { template_arg }) };
     /* TODO: Proper internal error. */
     jank_assert(match);
     auto const match_name{ Cpp::GetName(match) };
@@ -489,7 +489,15 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      auto const arg_type{ cpp_util::expression_type(arg_expr) };
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
+      auto arg_handle{ gen(arg_expr, arity) };
+      if(!is_untyped_obj)
+      {
+        arg_handle
+          = convert_to_object(*ctx, arg_type, arg_handle, cpp_util::untyped_object_ptr_type());
+      }
+      arg_handles.emplace_back(arg_handle);
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
