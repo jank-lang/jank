@@ -2033,7 +2033,7 @@ namespace jank::analyze
     /* The scope could represent either a type or a value, if it's valid. However, it's
      * possible that it represents a whole bunch of other things that we need to filter
      * out. */
-    auto const scope{ scope_res.expect_ok() };
+    auto const scope{ Cpp::GetUnderlyingScope(scope_res.expect_ok()) };
     auto const type{ Cpp::GetTypeFromScope(scope) };
 
     if(Cpp::IsNamespace(scope))
@@ -2041,7 +2041,7 @@ namespace jank::analyze
       return error::internal_analyze_failure("Taking a C++ namespace by value is not permitted.",
                                              latest_expansion(macro_expansions));
     }
-    if(Cpp::IsClass(scope) || Cpp::IsEnumType(type))
+    if(Cpp::IsClass(scope) || Cpp::IsClassTemplateSpecialization(scope) || Cpp::IsEnumType(type))
     {
       if(is_ctor)
       {
@@ -2131,7 +2131,7 @@ namespace jank::analyze
       }
 
       std::vector<void *> ctors;
-      Cpp::LookupConstructors("bar", val->scope, ctors);
+      Cpp::LookupConstructors("", val->scope, ctors);
 
       auto match{ Cpp::BestOverloadFunctionMatch(ctors, {}, arg_types) };
       if(match)

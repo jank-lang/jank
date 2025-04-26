@@ -1281,11 +1281,8 @@ namespace jank::codegen
     {
       auto arg_handle{ gen(expr->arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[i]) };
-      util::println("arg_type {}", Cpp::GetTypeAsString(arg_type));
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      util::println("is_untyped_obj {}", is_untyped_obj);
       auto const param_type{ Cpp::GetFunctionArgType(expr->fn, i) };
-      util::println("param_type {}", Cpp::GetTypeAsString(param_type));
       if(is_untyped_obj && !Cpp::IsImplicitlyConvertible(arg_type, param_type))
       {
         arg_handle = convert_from_object(*ctx, arg_type, arg_handle, param_type);

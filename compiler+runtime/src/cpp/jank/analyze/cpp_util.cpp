@@ -117,8 +117,6 @@ namespace jank::analyze::cpp_util
      * The user will need to specify the correct type by using a cast. */
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
-      /* TODO: Is this how types should be compared? */
-
       /* TODO: Check for typed and untyped objects. */
 
       /* If our input argument here isn't an object ptr, there's no implicit conversion
@@ -160,9 +158,9 @@ namespace jank::analyze::cpp_util
 
   bool is_convertible(jtl::ptr<void> const type)
   {
-    /* TODO: Strip off cv and ref before instantiating. */
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo arg{ type };
+    Cpp::TemplateArgInfo arg{ Cpp::GetTypeWithoutCv(
+      Cpp::GetNonReferenceType(Cpp::GetCanonicalType(type))) };
     clang::Sema::SFINAETrap trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
     Cpp::TCppScope_t instantiation{};
     {
