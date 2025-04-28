@@ -147,14 +147,8 @@ namespace jank::read::lex
     token(token_kind const k);
     token(movable_position const &s, token_kind const k);
     token(movable_position const &s, movable_position const &e, token_kind const k);
-    token(movable_position const &s,
-          movable_position const &e,
-          token_kind const k,
-          i64 const);
-    token(movable_position const &s,
-          movable_position const &e,
-          token_kind const k,
-          f64 const);
+    token(movable_position const &s, movable_position const &e, token_kind const k, i64 const);
+    token(movable_position const &s, movable_position const &e, token_kind const k, f64 const);
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
@@ -163,10 +157,7 @@ namespace jank::read::lex
           movable_position const &e,
           token_kind const k,
           char const * const);
-    token(movable_position const &s,
-          movable_position const &e,
-          token_kind const k,
-          bool const);
+    token(movable_position const &s, movable_position const &e, token_kind const k, bool const);
     token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
 
 #ifdef JANK_TEST
@@ -194,13 +185,7 @@ namespace jank::read::lex
     static constexpr usize ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
-    std::variant<no_data,
-                 i64,
-                 f64,
-                 native_persistent_string_view,
-                 bool,
-                 ratio>
-      data;
+    std::variant<no_data, i64, f64, native_persistent_string_view, bool, ratio> data;
   };
 
   std::ostream &operator<<(std::ostream &os, movable_position const &p);

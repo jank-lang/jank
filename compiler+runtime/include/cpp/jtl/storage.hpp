@@ -108,20 +108,21 @@ namespace jtl
 
     template <typename R = T>
     [[nodiscard]]
-    constexpr R& val() noexcept
+    constexpr R &val() noexcept
     {
       return *ptr();
     }
 
     template <typename R = T>
     [[nodiscard]]
-    constexpr R const& val() const noexcept
+    constexpr R const &val() const noexcept
     {
       return *ptr();
     }
 
-    constexpr storage& operator=(storage const &rhs) noexcept = default;
-    constexpr storage& operator=(T &&rhs) noexcept
+    constexpr storage &operator=(storage const &rhs) noexcept = default;
+
+    constexpr storage &operator=(T &&rhs) noexcept
     {
       *ptr() = jtl::move(rhs);
       return *this;
