@@ -50,8 +50,7 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
     jtl::string_result<persistent_string_ref> substring(i64 start) const;
-    jtl::string_result<persistent_string_ref>
-    substring(i64 start, i64 end) const;
+    jtl::string_result<persistent_string_ref> substring(i64 start, i64 end) const;
 
     /* Returns -1 when not found. Turns the arg into a string, so it accepts anything.
      * Searches for the whole string, not just a char. */

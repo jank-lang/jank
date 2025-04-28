@@ -511,8 +511,6 @@ namespace jank::error
 
   void report(error_ref const e)
   {
-    util::println("reporting error {} at {}", e->message, e->source.to_string());
-
     plan const p{ e };
 
     auto const terminal_width{ Terminal::Size().dimx };

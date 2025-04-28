@@ -40,7 +40,7 @@ namespace jank::runtime::obj
     , end{ end }
     , step{ step }
     , bounds_check{ lt(static_cast<i64>(0), step.erase()) ? positive_step_bounds_check
-                                                                     : negative_step_bounds_check }
+                                                          : negative_step_bounds_check }
   {
   }
 

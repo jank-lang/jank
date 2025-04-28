@@ -180,9 +180,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_o) -> f64 { return typed_o->to_real(); },
-      [=]() -> f64 {
-        throw std::runtime_error{ util::format("not a number: {}", to_string(o)) };
-      },
+      [=]() -> f64 { throw std::runtime_error{ util::format("not a number: {}", to_string(o)) }; },
       o);
   }
 
@@ -199,8 +197,9 @@ namespace jank::runtime
   obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start, i64 const end)
-        -> obj::persistent_string_ref { return typed_s->substring(start, end).expect_ok(); },
+      [](auto const typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
+        return typed_s->substring(start, end).expect_ok();
+      },
       s,
       to_int(start),
       to_int(end));
@@ -209,9 +208,7 @@ namespace jank::runtime
   i64 first_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 {
-        return typed_s->first_index_of(m);
-      },
+      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->first_index_of(m); },
       s,
       m);
   }
@@ -219,9 +216,7 @@ namespace jank::runtime
   i64 last_index_of(object_ref const s, object_ref const m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 {
-        return typed_s->last_index_of(m);
-      },
+      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->last_index_of(m); },
       s,
       m);
   }
