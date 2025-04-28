@@ -279,7 +279,8 @@ namespace jank::runtime
         CHECK_GT(result, 0);
         CHECK_EQ(result, std::numeric_limits<double>::infinity());
 
-        auto const neg_result{ expect_object<obj::ratio>(-1ll * obj::ratio_data(1, 2))->data / 0.0 };
+        auto const neg_result{ expect_object<obj::ratio>(-1ll * obj::ratio_data(1, 2))->data
+                               / 0.0 };
         CHECK(std::isinf(neg_result));
         CHECK_LT(neg_result, 0);
         CHECK_EQ(neg_result, -std::numeric_limits<double>::infinity());

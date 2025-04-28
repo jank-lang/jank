@@ -238,10 +238,9 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
-      auto const meta_with_doc(
-        runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil),
-                       rt_ctx.intern_keyword("doc").expect_ok(),
-                       docstring_obj));
+      auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil),
+                                              rt_ctx.intern_keyword("doc").expect_ok(),
+                                              docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
 

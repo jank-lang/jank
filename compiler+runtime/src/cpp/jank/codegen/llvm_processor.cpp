@@ -280,8 +280,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil),
-                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(
+      get(expr->name->meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -963,11 +963,9 @@ namespace jank::codegen
       false));
     auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 3> const args{
-      body,
-      catch_.unwrap_or(gen_global(jank_nil)),
-      finally.unwrap_or(gen_global(jank_nil))
-    };
+    llvm::SmallVector<llvm::Value *, 3> const args{ body,
+                                                    catch_.unwrap_or(gen_global(jank_nil)),
+                                                    finally.unwrap_or(gen_global(jank_nil)) };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)

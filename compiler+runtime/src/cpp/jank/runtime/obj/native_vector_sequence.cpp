@@ -4,8 +4,7 @@
 
 namespace jank::runtime::obj
 {
-  native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data,
-                                                 usize index)
+  native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data, usize index)
     : data{ data }
     , index{ index }
   {
@@ -70,7 +69,8 @@ namespace jank::runtime::obj
 
   native_vector_sequence_ref native_vector_sequence::fresh_seq() const
   {
-    return data.empty() ? native_vector_sequence_ref{} : make_box<native_vector_sequence>(data, index);
+    return data.empty() ? native_vector_sequence_ref{}
+                        : make_box<native_vector_sequence>(data, index);
   }
 
   /* behavior::countable */

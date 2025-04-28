@@ -841,9 +841,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            return typed_l < typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
           r,
           typed_l->data);
       },
@@ -960,9 +958,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            return typed_l <= typed_r->data;
-          },
+          [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
           r,
           typed_l->data);
       },
@@ -973,9 +969,7 @@ namespace jank::runtime
   bool lte(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool {
-        return typed_l <= typed_r->data;
-      },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
       r,
       l->data);
   }
@@ -983,9 +977,7 @@ namespace jank::runtime
   bool lte(object_ref const l, obj::integer_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool {
-        return typed_l->data <= typed_r;
-      },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
       l,
       r->data);
   }
@@ -1003,9 +995,7 @@ namespace jank::runtime
   bool lte(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool {
-        return typed_l <= typed_r->data;
-      },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
       r,
       l->data);
   }
@@ -1013,9 +1003,7 @@ namespace jank::runtime
   bool lte(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool {
-        return typed_l->data <= typed_r;
-      },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
       l,
       r->data);
   }
@@ -1033,9 +1021,7 @@ namespace jank::runtime
   bool lte(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool {
-        return typed_l->data <= typed_r;
-      },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
       l,
       r);
   }
@@ -1043,9 +1029,7 @@ namespace jank::runtime
   bool lte(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool {
-        return typed_l <= typed_r->data;
-      },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
       r,
       l);
   }
@@ -1068,9 +1052,7 @@ namespace jank::runtime
   bool lte(object_ref const l, i64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool {
-        return typed_l->data <= typed_r;
-      },
+      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
       l,
       r);
   }
@@ -1078,9 +1060,7 @@ namespace jank::runtime
   bool lte(i64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool {
-        return typed_l <= typed_r->data;
-      },
+      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
       r,
       l);
   }
@@ -1384,7 +1364,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l) -> object_ref {
         return typed_l->data < 0ll ? make_box(-1ll * typed_l->data).erase()
-                                  : make_box(typed_l->data).erase();
+                                   : make_box(typed_l->data).erase();
       },
       l);
   }
