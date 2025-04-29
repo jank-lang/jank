@@ -92,6 +92,7 @@ namespace jank::error
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,
                                               runtime::object_ref expansion);
+  error_ref analyze_invalid_conversion(jtl::immutable_string const &message);
   error_ref
   internal_analyze_failure(jtl::immutable_string const &message, runtime::object_ref expansion);
   error_ref internal_analyze_failure(jtl::immutable_string const &message,

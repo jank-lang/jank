@@ -132,6 +132,8 @@ namespace jank::error
         return "Unresolved symbol.";
       case kind::analyze_macro_expansion_exception:
         return "Macro expansion exception.";
+      case kind::analyze_invalid_conversion:
+        return "Invalid conversion.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 

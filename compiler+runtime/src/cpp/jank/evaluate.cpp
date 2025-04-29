@@ -14,6 +14,8 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
+#include <jank/error/analyze.hpp>
 
 namespace jank::evaluate
 {
@@ -674,18 +676,21 @@ namespace jank::evaluate
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
   }
 
-  object_ref eval(expr::cpp_type_ref const expr)
+  object_ref eval(expr::cpp_type_ref const)
   {
-    return dynamic_call(eval(wrap_expression(expr, "cpp_type", {})));
+    throw make_box("unsupported eval: cpp_type").erase();
   }
 
   object_ref eval(expr::cpp_value_ref const expr)
   {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
   }
 
   object_ref eval(expr::cpp_constructor_call_ref const expr)
   {
+    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
   }
 }

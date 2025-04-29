@@ -76,6 +76,7 @@ namespace jank::error
     analyze_unresolved_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
+    analyze_invalid_conversion,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -205,6 +206,8 @@ namespace jank::error
         return "analyze/unresolved-symbol";
       case kind::analyze_macro_expansion_exception:
         return "analyze/macro-expansion-exception";
+      case kind::analyze_invalid_conversion:
+        return "analyze/invalid-conversion";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:

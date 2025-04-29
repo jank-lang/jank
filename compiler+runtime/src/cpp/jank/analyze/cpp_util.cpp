@@ -10,6 +10,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/error/analyze.hpp>
 
 namespace jank::analyze::cpp_util
 {
@@ -66,21 +67,30 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
-  /* TODO: Also have a predicate for typed objects. */
   bool is_untyped_object(jtl::ptr<void> const type)
   {
     auto const can_type{ Cpp::GetCanonicalType(type) };
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
+  static jtl::ptr<void> oref_template()
+  {
+    static jtl::ptr<void> const ret{ Cpp::GetUnderlyingScope(
+      Cpp::GetScopeFromCompleteName("jank::runtime::oref")) };
+    return ret;
+  }
+
   bool is_typed_object(jtl::ptr<void> const type)
   {
-    static jtl::ptr<void> const oref_template{ Cpp::GetUnderlyingScope(
-      Cpp::GetScopeFromCompleteName("jank::runtime::oref")) };
     auto const can_type{ Cpp::GetCanonicalType(type) };
     /* TODO: Need underlying? */
     auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
-    return !is_untyped_object(can_type) && Cpp::IsTemplateSpecializationOf(scope, oref_template);
+    return !is_untyped_object(can_type) && Cpp::IsTemplateSpecializationOf(scope, oref_template());
+  }
+
+  bool is_any_object(jtl::ptr<void> type)
+  {
+    return is_untyped_object(type) || is_typed_object(type);
   }
 
   jtl::ptr<void> expression_type(expression_ref const expr)
@@ -89,7 +99,8 @@ namespace jank::analyze::cpp_util
       [](auto const typed_expr) -> jtl::ptr<void> {
         using T = typename decltype(typed_expr)::value_type;
 
-        if constexpr(std::same_as<T, expr::cpp_type> || std::same_as<T, expr::cpp_value>)
+        if constexpr(jtl::
+                       is_any_same<T, expr::cpp_type, expr::cpp_value, expr::cpp_constructor_call>)
         {
           return typed_expr->type;
         }
@@ -166,6 +177,7 @@ namespace jank::analyze::cpp_util
     return ok(std::move(converted_args));
   }
 
+  /* TODO: Cache result. */
   bool is_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
@@ -195,5 +207,18 @@ namespace jank::analyze::cpp_util
     auto const offset{ Cpp::GetVariableOffset(base, scope) };
     jank_debug_assert(offset);
     return offset;
+  }
+
+  jtl::result<void, error_ref> ensure_convertible(expression_ref const expr)
+  {
+    auto const type{ expression_type(expr) };
+    if(!is_any_object(type) && !is_convertible(type))
+    {
+      return error::analyze_invalid_conversion(
+        util::format("This function is returning a native object of type '{}', which is not "
+                     "convertible to a jank runtime object.",
+                     Cpp::GetTypeAsString(type)));
+    }
+    return ok();
   }
 }

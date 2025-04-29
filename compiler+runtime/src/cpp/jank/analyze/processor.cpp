@@ -614,6 +614,26 @@ namespace jank::analyze
       step::force_boxed(body_do);
     }
 
+    /* Ensure return type is an object. We'll handle automatic erasure from typed objects during
+     * codegen. */
+    if(!body_do->values.empty())
+    {
+      auto const last_expression{ body_do->values.back() };
+      auto const last_expression_type{ cpp_util::expression_type(last_expression) };
+      util::println("last expr type {}", Cpp::GetTypeAsString(last_expression_type));
+      if(!cpp_util::is_any_object(last_expression_type)
+         && !cpp_util::is_convertible(last_expression_type))
+      {
+        /* TODO: Error. */
+        return error::internal_analyze_failure(
+          util::format("This function is returning a native object of type '{}', which is not "
+                       "convertible to a jank runtime object.",
+                       Cpp::GetTypeAsString(last_expression_type)),
+          object_source(list),
+          latest_expansion(macro_expansions));
+      }
+    }
+
     return ok(expr::function_arity{ std::move(param_symbols),
                                     body_do,
                                     std::move(frame),
