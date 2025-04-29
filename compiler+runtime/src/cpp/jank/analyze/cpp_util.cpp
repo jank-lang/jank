@@ -73,6 +73,16 @@ namespace jank::analyze::cpp_util
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
+  bool is_typed_object(jtl::ptr<void> const type)
+  {
+    static jtl::ptr<void> const oref_template{ Cpp::GetUnderlyingScope(
+      Cpp::GetScopeFromCompleteName("jank::runtime::oref")) };
+    auto const can_type{ Cpp::GetCanonicalType(type) };
+    /* TODO: Need underlying? */
+    auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
+    return !is_untyped_object(can_type) && Cpp::IsTemplateSpecializationOf(scope, oref_template);
+  }
+
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(
@@ -171,5 +181,19 @@ namespace jank::analyze::cpp_util
       instantiation = Cpp::InstantiateTemplate(convert_template, &arg, 1);
     }
     return !trap.hasErrorOccurred() && Cpp::IsComplete(instantiation);
+  }
+
+  usize offset_to_typed_object_base(jtl::ptr<void> const type)
+  {
+    jank_debug_assert(is_typed_object(type));
+    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const scope{ Cpp::GetUnderlyingScope(
+      Cpp::GetNamed("value_type", Cpp::GetScopeFromType(can_type))) };
+    jank_debug_assert(scope);
+    auto const base{ Cpp::LookupDatamember("base", scope) };
+    jank_debug_assert(base);
+    auto const offset{ Cpp::GetVariableOffset(base, scope) };
+    jank_debug_assert(offset);
+    return offset;
   }
 }

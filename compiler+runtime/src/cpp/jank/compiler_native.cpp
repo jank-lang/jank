@@ -28,6 +28,7 @@ namespace jank::compiler_native
 
     codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
     cg_prc.gen().expect_ok();
+    cg_prc.optimize();
 
     /* TODO: Return a string, don't print it. */
     cg_prc.ctx->module->print(llvm::outs(), nullptr);

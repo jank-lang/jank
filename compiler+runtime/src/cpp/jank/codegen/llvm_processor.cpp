@@ -53,6 +53,7 @@ namespace jank::codegen
        * in order to avoid context issues. */
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(fn_callable.getModule())));
 
+    /* TODO: If it's an IR intrinsic, use that. */
     auto const arg_ptr{ ctx.builder->CreateAlloca(
       ctx.builder->getPtrTy(),
       llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1)) };
@@ -81,6 +82,7 @@ namespace jank::codegen
     jank_debug_assert(ret_size > 0);
     auto const ret_alignment{ Cpp::GetAlignmentOfType(param_type) };
     jank_debug_assert(ret_alignment > 0);
+    /* TODO: If it's an IR intrinsic, use that. */
     auto const ret_alloc{ ctx.builder->CreateAlloca(
       ctx.builder->getInt8Ty(),
       llvm::ConstantInt::get(ctx.builder->getInt32Ty(), ret_size),
@@ -121,11 +123,6 @@ namespace jank::codegen
        * in order to avoid context issues. */
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(fn_callable.getModule())));
 
-    auto const arg_ptr{ ctx.builder->CreateAlloca(
-      ctx.builder->getPtrTy(),
-      llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1)) };
-    ctx.builder->CreateStore(arg, arg_ptr);
-
     auto const fn_type(llvm::FunctionType::get(ctx.builder->getVoidTy(),
                                                { ctx.builder->getPtrTy(),
                                                  ctx.builder->getInt32Ty(),
@@ -143,16 +140,17 @@ namespace jank::codegen
       args_array,
       { ctx.builder->getInt32(0), ctx.builder->getInt32(0) },
       util::format("{}.args[{}]", match_name, 0).c_str()) };
-    ctx.builder->CreateStore(arg_ptr, arg_array_0);
+    ctx.builder->CreateStore(arg, arg_array_0);
 
     auto const ret_size{ Cpp::GetSizeOfType(required_type) };
     jank_debug_assert(ret_size > 0);
     auto const ret_alignment{ Cpp::GetAlignmentOfType(required_type) };
     jank_debug_assert(ret_alignment > 0);
+    /* TODO: If it's an IR intrinsic, use that. */
     auto const ret_alloc{ ctx.builder->CreateAlloca(
       ctx.builder->getInt8Ty(),
       llvm::ConstantInt::get(ctx.builder->getInt32Ty(), ret_size),
-      util::format("{}.ret", match_name).c_str()) };
+      util::format("{}.ret_alloc", match_name).c_str()) };
     ret_alloc->setAlignment(llvm::Align{ ret_alignment });
 
     llvm::SmallVector<llvm::Value *, 4> const args{
@@ -162,8 +160,23 @@ namespace jank::codegen
       ret_alloc
     };
     ctx.builder->CreateCall(fn, args);
-    /* TODO: If it's a typed object, erase it. */
-    return ret_alloc;
+    auto const load_ret{ ctx.builder->CreateLoad(ctx.builder->getPtrTy(), ret_alloc, "ret") };
+
+    /* If it's a typed object, erase it. */
+    auto const ret_type{ Cpp::GetFunctionReturnType(match) };
+    if(!cpp_util::is_typed_object(ret_type))
+    {
+      return load_ret;
+    }
+
+    /* No need to call a function to erase a typed object. Just find the
+     * offset to its base member and shift our pointer accordingly. */
+    auto const base_offset{ cpp_util::offset_to_typed_object_base(ret_type) };
+    auto const ret_base{ ctx.builder->CreateInBoundsGEP(ctx.builder->getInt8Ty(),
+                                                        load_ret,
+                                                        { ctx.builder->getInt32(base_offset) },
+                                                        "ret_base") };
+    return ret_base;
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name)
@@ -1216,6 +1229,7 @@ namespace jank::codegen
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(expr->type) };
     jank_debug_assert(alignment > 0);
+    /* TODO: If it's an IR intrinsic, use that. */
     auto const alloc{ ctx->builder->CreateAlloca(
       ctx->builder->getInt8Ty(),
       llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
@@ -1273,6 +1287,7 @@ namespace jank::codegen
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(expr->type) };
     jank_debug_assert(alignment > 0);
+    /* TODO: If it's an IR intrinsic, use that. */
     auto const ctor_alloc{ ctx->builder->CreateAlloca(
       ctx->builder->getInt8Ty(),
       llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
@@ -1984,6 +1999,7 @@ namespace jank::codegen
 
   void llvm_processor::optimize() const
   {
+    /* TODO: Run this multiple times when we want thins super fast? */
     ctx->mpm.run(*ctx->module, *ctx->mam);
   }
 }
