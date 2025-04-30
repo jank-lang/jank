@@ -54,6 +54,7 @@ namespace jank::analyze
     using case_ref = jtl::ref<struct case_>;
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_cast_ref = jtl::ref<struct cpp_cast>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
   }
 }
@@ -146,6 +147,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
 

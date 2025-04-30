@@ -99,8 +99,11 @@ namespace jank::analyze::cpp_util
       [](auto const typed_expr) -> jtl::ptr<void> {
         using T = typename decltype(typed_expr)::value_type;
 
-        if constexpr(jtl::
-                       is_any_same<T, expr::cpp_type, expr::cpp_value, expr::cpp_constructor_call>)
+        if constexpr(jtl::is_any_same<T,
+                                      expr::cpp_type,
+                                      expr::cpp_value,
+                                      expr::cpp_cast,
+                                      expr::cpp_constructor_call>)
         {
           return typed_expr->type;
         }

@@ -47,6 +47,7 @@
 #include <jank/analyze/expr/case.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
+#include <jank/analyze/expr/cpp_cast.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -119,19 +120,20 @@ namespace jank::analyze
       };
     };
     specials = {
-      {    make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
-      {    make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
-      {  make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
-      {     make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
-      {   make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
-      { make_box<symbol>("letfn*"),    make_fn(&processor::analyze_letfn) },
-      {  make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
-      {     make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
-      {  make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
-      {    make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
-      {  make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
-      {    make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
-      {  make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
+      {      make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
+      {      make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
+      {    make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
+      {       make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
+      {     make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
+      {   make_box<symbol>("letfn*"),    make_fn(&processor::analyze_letfn) },
+      {    make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
+      {       make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
+      {    make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
+      {      make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
+      {    make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
+      {      make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
+      {    make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
+      { make_box<symbol>("cpp/cast"), make_fn(&processor::analyze_cpp_cast) },
     };
   }
 
@@ -620,7 +622,6 @@ namespace jank::analyze
     {
       auto const last_expression{ body_do->values.back() };
       auto const last_expression_type{ cpp_util::expression_type(last_expression) };
-      util::println("last expr type {}", Cpp::GetTypeAsString(last_expression_type));
       if(!cpp_util::is_any_object(last_expression_type)
          && !cpp_util::is_convertible(last_expression_type))
       {
@@ -1277,13 +1278,13 @@ namespace jank::analyze
     }
     else if(form_count > 4)
     {
-      /* TODO: Suggestion to wrap in a 'do'. */
       return error::analyze_invalid_if(
                "An extra form specified in this 'if'. There may only be a condition, a 'then' "
                "form, and "
                "then optionally an 'else' form.",
                object_source(o->data.rest().rest().rest().rest().first().unwrap()),
-               "Everything starting here is excess.",
+               "Everything starting here is excess. Perhaps you wanted to wrap some of these forms "
+               "in a 'do'?",
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(o, 4));
     }
@@ -2190,6 +2191,94 @@ namespace jank::analyze
 
     return error::internal_analyze_failure("nyi: analyze_cpp_call",
                                            latest_expansion(macro_expansions));
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_cast(obj::persistent_list_ref const l,
+                              local_frame_ptr const current_frame,
+                              expression_position const position,
+                              jtl::option<expr::function_context_ref> const &fn_ctx,
+                              bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count != 3)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure(
+        "A C++ cast must have only a C++ type and a value as arguments.",
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const type_obj(l->data.rest().first().unwrap());
+    /* TODO: Add a type expression_position and only allow types there? */
+    auto type_expr_res(analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(type_expr_res.is_err())
+    {
+      return type_expr_res.expect_err_move();
+    }
+
+    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
+    {
+      return error::internal_analyze_failure(
+               "The first argument to 'cpp/cast' must be a C++ type. You can either use direct "
+               "'cpp/std.string' form or the indirect '(cpp/type \"std::string\")' form.",
+               object_source(type_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    auto const typed_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const value_obj(l->data.rest().rest().first().unwrap());
+    auto value_expr_res(
+      analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(value_expr_res.is_err())
+    {
+      return value_expr_res.expect_err_move();
+    }
+
+    auto const value_expr{ value_expr_res.expect_ok() };
+    auto const value_type{ cpp_util::expression_type(value_expr) };
+    if(Cpp::IsConstructible(typed_expr->type, value_type))
+    {
+      auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
+        position,
+        current_frame,
+        needs_box,
+        typed_expr->type,
+        Cpp::GetScopeFromType(typed_expr->type),
+        expr::cpp_value::value_kind::constructor) };
+      return analyze_cpp_call(l, cpp_value, current_frame, position, fn_ctx, needs_box);
+    }
+    if(cpp_util::is_any_object(typed_expr->type) && cpp_util::is_convertible(value_type))
+    {
+      return jtl::make_ref<expr::cpp_cast>(position,
+                                           current_frame,
+                                           needs_box,
+                                           typed_expr->type,
+                                           value_type,
+                                           conversion_policy::into_object,
+                                           value_expr);
+    }
+    if(cpp_util::is_any_object(value_type) && cpp_util::is_convertible(typed_expr->type))
+    {
+      return jtl::make_ref<expr::cpp_cast>(position,
+                                           current_frame,
+                                           needs_box,
+                                           typed_expr->type,
+                                           typed_expr->type,
+                                           conversion_policy::from_object,
+                                           value_expr);
+    }
+
+    return error::internal_analyze_failure(
+      util::format(
+        "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
+        "and any specializations of 'jank::runtime::convert'.",
+        Cpp::GetTypeAsString(value_type),
+        Cpp::GetTypeAsString(typed_expr->type)),
+      object_source(l),
+      latest_expansion(macro_expansions));
   }
 
   processor::expression_result

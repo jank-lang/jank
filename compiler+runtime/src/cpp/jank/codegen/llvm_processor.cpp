@@ -30,29 +30,26 @@ namespace jank::codegen
 {
   using namespace jank::analyze;
 
-  enum class conversion : u8
-  {
-    into_object,
-    from_object
-  };
-
+  /* Generates the IR to call into jank's conversion trait to convert to/from
+   * an object, based on the `policy`. We need to know the input's type, the
+   * expected output type, as well as the type to use to instantiate the
+   * conversion trait. It's common for these to overlap, but they may be different. */
   static llvm::Value *convert_object(reusable_context &ctx,
-                                     conversion const conv,
-                                     jtl::ptr<void> const arg_type,
-                                     llvm::Value * const arg,
-                                     jtl::ptr<void> const required_type)
+                                     conversion_policy const policy,
+                                     jtl::ptr<void> const input_type,
+                                     jtl::ptr<void> const output_type,
+                                     jtl::ptr<void> const conversion_type,
+                                     llvm::Value * const arg)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo template_arg{ Cpp::GetTypeWithoutCv(
-      conv == conversion::into_object ? arg_type : required_type) };
+    Cpp::TemplateArgInfo template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
     jank_debug_assert(instantiation);
     auto const conversion_fns{ Cpp::GetFunctionsUsingName(
       instantiation,
-      conv == conversion::into_object ? "into_object" : "from_object") };
-    Cpp::TemplateArgInfo conversion_arg{ Cpp::GetTypeWithoutCv(
-      conv == conversion::into_object ? template_arg.m_Type : arg_type.data) };
-    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { conversion_arg }) };
+      policy == conversion_policy::into_object ? "into_object" : "from_object") };
+    Cpp::TemplateArgInfo input_arg{ Cpp::GetTypeWithoutCv(input_type) };
+    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { input_arg }) };
     /* TODO: Proper internal error. */
     jank_assert(match);
     auto const match_name{ Cpp::GetName(match) };
@@ -66,7 +63,7 @@ namespace jank::codegen
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(fn_callable.getModule())));
 
     llvm::Value *arg_alloc{ arg };
-    if(conv == conversion::from_object)
+    if(policy == conversion_policy::from_object)
     {
       arg_alloc = ctx.builder->CreateAlloca(ctx.builder->getPtrTy(),
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
@@ -85,9 +82,9 @@ namespace jank::codegen
       util::format("{}.args[{}]", match_name, 0).c_str()) };
     ctx.builder->CreateStore(arg_alloc, arg_array_0);
 
-    auto const ret_size{ Cpp::GetSizeOfType(required_type) };
+    auto const ret_size{ Cpp::GetSizeOfType(conversion_type) };
     jank_debug_assert(ret_size > 0);
-    auto const ret_alignment{ Cpp::GetAlignmentOfType(required_type) };
+    auto const ret_alignment{ Cpp::GetAlignmentOfType(conversion_type) };
     jank_debug_assert(ret_alignment > 0);
     /* TODO: If it's an IR intrinsic, use that. */
     auto const ret_alloc{ ctx.builder->CreateAlloca(
@@ -103,8 +100,10 @@ namespace jank::codegen
       ret_alloc
     };
     ctx.builder->CreateCall(fn, args);
-    if(conv == conversion::from_object)
+    if(policy == conversion_policy::from_object)
     {
+      /* TODO: Complex types can't just be returned like this. We need a way to keep that data.
+       * Maybe take a ptr to the stack above us and write it there. */
       return ret_alloc;
     }
 
@@ -112,7 +111,7 @@ namespace jank::codegen
 
     /* If it's a typed object, erase it. */
     auto const ret_type{ Cpp::GetFunctionReturnType(match) };
-    if(!cpp_util::is_typed_object(ret_type))
+    if(!cpp_util::is_typed_object(output_type))
     {
       return load_ret;
     }
@@ -456,10 +455,11 @@ namespace jank::codegen
       if(!is_untyped_obj)
       {
         arg_handle = convert_object(*ctx,
-                                    conversion::into_object,
+                                    conversion_policy::into_object,
                                     arg_type,
-                                    arg_handle,
-                                    cpp_util::untyped_object_ptr_type());
+                                    cpp_util::untyped_object_ptr_type(),
+                                    arg_type,
+                                    arg_handle);
       }
       arg_handles.emplace_back(arg_handle);
       arg_types.emplace_back(ctx->builder->getPtrTy());
@@ -1151,17 +1151,9 @@ namespace jank::codegen
     return nullptr;
   }
 
-  llvm::Value *llvm_processor::gen(expr::cpp_type_ref const expr, expr::function_arity const &)
+  llvm::Value *llvm_processor::gen(expr::cpp_type_ref const, expr::function_arity const &)
   {
-    /* TODO: Implement */
-    auto const ret{ gen_global(jank_nil) };
-
-    if(expr->position == expression_position::tail)
-    {
-      return ctx->builder->CreateRet(ret);
-    }
-
-    return ret;
+    throw std::runtime_error{ "cpp_type has no codegen" };
   }
 
   llvm::Value *llvm_processor::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
@@ -1203,14 +1195,44 @@ namespace jank::codegen
         return ctx->builder->CreateRet(alloc);
       }
       auto const converted{ convert_object(*ctx,
-                                           conversion::into_object,
+                                           conversion_policy::into_object,
                                            expr->type,
-                                           alloc,
-                                           cpp_util::untyped_object_ptr_type()) };
+                                           cpp_util::untyped_object_ptr_type(),
+                                           expr->type,
+                                           alloc) };
       return ctx->builder->CreateRet(converted);
     }
 
     return alloc;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::cpp_cast_ref const expr, expr::function_arity const &arity)
+  {
+    auto const value{ gen(expr->value_expr, arity) };
+    auto const converted{ convert_object(*ctx,
+                                         expr->policy,
+                                         cpp_util::expression_type(expr->value_expr),
+                                         expr->type,
+                                         expr->conversion_type,
+                                         value) };
+
+    if(expr->position == expression_position::tail)
+    {
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->type) };
+      if(is_untyped_obj)
+      {
+        return ctx->builder->CreateRet(converted);
+      }
+      auto const untyped_obj{ convert_object(*ctx,
+                                             conversion_policy::into_object,
+                                             expr->type,
+                                             cpp_util::untyped_object_ptr_type(),
+                                             expr->type,
+                                             converted) };
+      return ctx->builder->CreateRet(untyped_obj);
+    }
+
+    return converted;
   }
 
   llvm::Value *
@@ -1254,11 +1276,13 @@ namespace jank::codegen
       auto const param_type{ Cpp::GetFunctionArgType(expr->fn, i) };
       if(is_untyped_obj && !Cpp::IsImplicitlyConvertible(arg_type, param_type))
       {
-        arg_handle
-          = convert_object(*ctx, conversion::from_object, arg_type, arg_handle, param_type);
+        arg_handle = convert_object(*ctx,
+                                    conversion_policy::from_object,
+                                    arg_type,
+                                    param_type,
+                                    param_type,
+                                    arg_handle);
       }
-      /* TODO: We need to be certain that arg_handle is a pointer. Will it
-       * always be for native values? */
 
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
@@ -1285,10 +1309,11 @@ namespace jank::codegen
         return ctx->builder->CreateRet(ctor_alloc);
       }
       auto const converted{ convert_object(*ctx,
-                                           conversion::into_object,
+                                           conversion_policy::into_object,
                                            expr->type,
-                                           ctor_alloc,
-                                           cpp_util::untyped_object_ptr_type()) };
+                                           cpp_util::untyped_object_ptr_type(),
+                                           expr->type,
+                                           ctor_alloc) };
       return ctx->builder->CreateRet(converted);
     }
 
