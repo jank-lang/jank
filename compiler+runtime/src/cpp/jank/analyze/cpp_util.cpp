@@ -80,12 +80,14 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  /* TODO: Support for typed object raw pointers. */
   bool is_typed_object(jtl::ptr<void> const type)
   {
     auto const can_type{ Cpp::GetCanonicalType(type) };
     /* TODO: Need underlying? */
     auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
-    return !is_untyped_object(can_type) && Cpp::IsTemplateSpecializationOf(scope, oref_template());
+    return !is_untyped_object(can_type) && scope
+      && Cpp::IsTemplateSpecializationOf(scope, oref_template());
   }
 
   bool is_any_object(jtl::ptr<void> type)

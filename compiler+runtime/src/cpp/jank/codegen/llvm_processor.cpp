@@ -37,7 +37,8 @@ namespace jank::codegen
   static llvm::Value *convert_object(reusable_context &ctx,
                                      conversion_policy const policy,
                                      jtl::ptr<void> const input_type,
-                                     jtl::ptr<void> const output_type,
+                                     /* TODO: Needed? */
+                                     [[maybe_unused]] jtl::ptr<void> const output_type,
                                      jtl::ptr<void> const conversion_type,
                                      llvm::Value * const arg)
   {
@@ -102,8 +103,6 @@ namespace jank::codegen
     ctx.builder->CreateCall(fn, args);
     if(policy == conversion_policy::from_object)
     {
-      /* TODO: Complex types can't just be returned like this. We need a way to keep that data.
-       * Maybe take a ptr to the stack above us and write it there. */
       return ret_alloc;
     }
 
@@ -111,7 +110,7 @@ namespace jank::codegen
 
     /* If it's a typed object, erase it. */
     auto const ret_type{ Cpp::GetFunctionReturnType(match) };
-    if(!cpp_util::is_typed_object(output_type))
+    if(!cpp_util::is_typed_object(ret_type))
     {
       return load_ret;
     }
@@ -1238,8 +1237,30 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
   {
-    jank_debug_assert(expr->fn);
-    auto const ctor_fn_callable{ Cpp::MakeAotCallable(expr->fn) };
+    auto const is_builtin{ Cpp::IsBuiltin(expr->type) };
+    Cpp::AotCall ctor_fn_callable;
+    if(is_builtin)
+    {
+      if(expr->arg_exprs.empty())
+      {
+        ctor_fn_callable = Cpp::MakeBuiltinConstructorAotCallable(expr->type);
+      }
+      else
+      {
+        jank_debug_assert(expr->arg_exprs.size() == 1);
+        auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+        auto const needs_conversion{ !Cpp::IsConstructible(expr->type, arg_type) };
+
+        ctor_fn_callable
+          = Cpp::MakeBuiltinConstructorAotCallable(expr->type,
+                                                   needs_conversion ? expr->type : arg_type);
+      }
+    }
+    else
+    {
+      jank_debug_assert(expr->fn);
+      ctor_fn_callable = Cpp::MakeAotCallable(expr->fn);
+    }
     jank_debug_assert(ctor_fn_callable);
 
     /* TODO: Fns are reused, so this could cause a linker issue. */
@@ -1273,8 +1294,11 @@ namespace jank::codegen
       auto arg_handle{ gen(expr->arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[i]) };
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      auto const param_type{ Cpp::GetFunctionArgType(expr->fn, i) };
-      if(is_untyped_obj && !Cpp::IsImplicitlyConvertible(arg_type, param_type))
+      /* If we're constructing a builtin type, we don't have a ctor fn. We know the
+       * param type we need though. */
+      auto const param_type{ expr->fn ? Cpp::GetFunctionArgType(expr->fn, i) : expr->type.data };
+      if(is_untyped_obj
+         && (Cpp::IsBuiltin(param_type) || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
       {
         arg_handle = convert_object(*ctx,
                                     conversion_policy::from_object,

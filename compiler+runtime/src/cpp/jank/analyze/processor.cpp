@@ -2146,9 +2146,31 @@ namespace jank::analyze
     {
       if(Cpp::IsBuiltin(val->type))
       {
-        /* TODO: Figure this out. */
-        return error::internal_analyze_failure("nyi: ctors for built-in types",
-                                               latest_expansion(macro_expansions));
+        if(arg_types.size() > 1)
+        {
+          return error::internal_analyze_failure(
+            util::format("A '{}' may only be constructed with one argument.",
+                         Cpp::GetTypeAsString(val->type)),
+            object_source(o),
+            latest_expansion(macro_expansions));
+        }
+        if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
+           && !cpp_util::is_convertible(val->type))
+        {
+          return error::internal_analyze_failure(
+            util::format("A '{}' cannot be constructed from a '{}'.",
+                         Cpp::GetTypeAsString(val->type),
+                         Cpp::GetTypeAsString(arg_types[0].m_Type)),
+            object_source(o),
+            latest_expansion(macro_expansions));
+        }
+
+        return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                         current_frame,
+                                                         needs_box,
+                                                         val->type,
+                                                         nullptr,
+                                                         jtl::move(arg_exprs));
       }
 
       std::vector<void *> ctors;

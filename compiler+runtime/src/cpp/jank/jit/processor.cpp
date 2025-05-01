@@ -130,6 +130,22 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
+    /* TODO: Use the jank path to find this again. Find the old code. */
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/include/cpp");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/nanobench/include");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/folly");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/bpptree/include");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/immer");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cli11/include");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/ftxui/include");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/libzippp/src");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cpptrace/include");
+    args.emplace_back(
+      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/include");
+    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/lib");
+    args.emplace_back(
+      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/boost-preprocessor/include");
+
     /* TODO: Pass in clang binary name as macro define. */
     auto const resource_dir{ Cpp::DetectResourceDir("clang++") };
     args.emplace_back("-resource-dir");
