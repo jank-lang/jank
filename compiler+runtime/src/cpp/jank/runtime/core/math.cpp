@@ -5,15 +5,21 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime
 {
+  native_bool operator>(native_real const &l, native_big_integer const &r);
   template <typename T>
   static auto to_number(T const &t)
   {
     if constexpr(std::same_as<T, obj::ratio_data>)
     {
       return t.to_real();
+    }
+    else if constexpr(std::same_as<T, native_big_integer>)
+    {
+      return t.template convert_to<native_real>();
     }
     else
     {
@@ -530,17 +536,74 @@ namespace jank::runtime
     return l * r;
   }
 
+  template <typename T>
+  native_real to_real(T const &val)
+  {
+    if constexpr(std::is_same_v<T, native_integer>)
+    {
+      return static_cast<native_real>(val);
+    }
+    else if constexpr(std::is_same_v<T, native_big_integer>)
+    {
+      return val.template convert_to<native_real>();
+    }
+    else if constexpr(std::is_same_v<T, native_real>)
+    {
+      return val;
+    }
+    else if constexpr(std::is_same_v<T, obj::ratio_data>)
+    {
+      return val.to_real(); // Assuming ratio_data has a to_real method
+    }
+    else
+    {
+      // Handle error or static assert for unsupported types
+      static_assert(!sizeof(T *), "Unsupported type for to_real conversion");
+      return 0.0; // Should not reach here
+    }
+  }
+
   object_ptr rem(object_ptr const l, object_ptr const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ptr {
+      [](auto const typed_l, auto const r_obj)
+        -> object_ptr { // typed_l is integer_ptr, big_integer_ptr, real_ptr, or ratio_ptr
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
-            auto const typed_l_data{ to_number(typed_l) };
-            auto const typed_r_data{ to_number(typed_r->data) };
-            return make_box(std::fmod(typed_l_data, typed_r_data));
+          [](auto const typed_r, auto const typed_l_data)
+            -> object_ptr { // typed_r is integer_ptr, etc., typed_l_data is the native data type
+            using LeftType = std::decay_t<decltype(typed_l_data)>;
+            using RightType = std::decay_t<decltype(typed_r->data)>;
+
+            constexpr bool left_is_int_like = std::is_same_v<LeftType, native_integer>
+              || std::is_same_v<LeftType, native_big_integer>;
+            constexpr bool right_is_int_like = std::is_same_v<RightType, native_integer>
+              || std::is_same_v<RightType, native_big_integer>;
+
+            if constexpr(left_is_int_like && right_is_int_like)
+            {
+              if constexpr(std::is_same_v<LeftType, native_integer>
+                           && std::is_same_v<RightType, native_big_integer>)
+              {
+                return make_box(native_big_integer(typed_l_data) % typed_r->data);
+              }
+              else if constexpr(std::is_same_v<LeftType, native_big_integer>
+                                && std::is_same_v<RightType, native_integer>)
+              {
+                return make_box(typed_l_data % native_big_integer(typed_r->data));
+              }
+              else
+              {
+                return make_box(typed_l_data % typed_r->data);
+              }
+            }
+            else
+            {
+              native_real l_real = to_real(typed_l_data);
+              native_real r_real = to_real(typed_r->data);
+              return make_box(std::fmod(l_real, r_real));
+            }
           },
-          r,
+          r_obj,
           typed_l->data);
       },
       l,

@@ -572,4 +572,105 @@ namespace jank::runtime::obj
   {
     return l < (r ? 1ll : 0ll);
   }
+
+  ratio_ptr operator+(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator + (r * l.denominator), l.denominator));
+  }
+
+  ratio_ptr operator+(native_big_integer const &l, ratio_data const &r)
+  {
+    return r + l;
+  }
+
+  ratio_ptr operator-(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator - (r * l.denominator), l.denominator));
+  }
+
+  ratio_ptr operator-(native_big_integer const &l, ratio_data const &r)
+  {
+    return make_box<ratio>(ratio_data((l * r.denominator) - r.numerator, r.denominator));
+  }
+
+  object_ptr operator*(ratio_data const &l, native_big_integer const &r)
+  {
+    return l * ratio_data(r, 1ll);
+  }
+
+  object_ptr operator*(native_big_integer const &l, ratio_data const &r)
+  {
+    return r * l;
+  }
+
+  ratio_ptr operator/(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator, l.denominator * r));
+  }
+
+  object_ptr operator/(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) / r;
+  }
+
+  native_bool operator==(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) == r;
+  }
+
+  native_bool operator==(ratio_data const &l, native_big_integer const &r)
+  {
+    return l == ratio_data(r, 1);
+  }
+
+  native_bool operator!=(native_big_integer const &l, ratio_data const &r)
+  {
+    return !(l == r);
+  }
+
+  native_bool operator!=(ratio_data const &l, native_big_integer const &r)
+  {
+    return !(l == r);
+  }
+
+  native_bool operator<(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) < r;
+  }
+
+  native_bool operator<(ratio_data const &l, native_big_integer const &r)
+  {
+    return l < ratio_data(r, 1);
+  }
+
+  native_bool operator<=(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) <= r;
+  }
+
+  native_bool operator<=(ratio_data const &l, native_big_integer const &r)
+  {
+    return l <= ratio_data(r, 1);
+  }
+
+  native_bool operator>(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) > r;
+  }
+
+  native_bool operator>(ratio_data const &l, native_big_integer const &r)
+  {
+    return l > ratio_data(r, 1);
+  }
+
+  native_bool operator>=(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) >= r;
+  }
+
+  native_bool operator>=(ratio_data const &l, native_big_integer const &r)
+  {
+    return l >= ratio_data(r, 1);
+  }
+
 }

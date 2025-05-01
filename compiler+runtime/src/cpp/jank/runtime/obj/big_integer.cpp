@@ -8,6 +8,19 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
 
+namespace jank::runtime
+{
+  native_bool operator>(native_big_integer const &l, native_real const &r)
+  {
+    return obj::big_integer::to_native_real(l) > r;
+  }
+
+  native_bool operator>(native_real const &l, native_big_integer const &r)
+  {
+    return l > obj::big_integer::to_native_real(r);
+  }
+}
+
 namespace jank::runtime::obj
 {
   big_integer::big_integer()
@@ -204,7 +217,7 @@ namespace jank::runtime::obj
     return big_integer::to_native_integer(data);
   }
 
-  native_real big_integer::to_real() const
+  native_real big_integer::to_native_real(native_big_integer const &data)
   {
     try
     {
@@ -221,5 +234,102 @@ namespace jank::runtime::obj
         util::format("Error converting BigInteger to native_real: {}", e.what()));
     }
   }
+
+  native_real big_integer::to_real() const
+  {
+    return big_integer::to_native_real(data);
+  }
+
+  native_real operator+(native_big_integer const &l, native_real const &r)
+  {
+    return big_integer::to_native_real(l) + r;
+  }
+
+  native_real operator+(native_real const &l, native_big_integer const &r)
+  {
+    return l + big_integer::to_native_real(r);
+  }
+
+  native_real operator-(native_big_integer const &l, native_real const &r)
+  {
+    return big_integer::to_native_real(l) - r;
+  }
+
+  native_real operator-(native_real const &l, native_big_integer const &r)
+  {
+    return l - big_integer::to_native_real(r);
+  }
+
+  // native_real operator*(native_big_integer const &l, native_real const &r)
+  // {
+  //   return l * r;
+  // }
+
+  // native_real operator*(native_real const &l, native_big_integer const &r)
+  // {
+  //   return l * r;
+  // }
+
+  // native_real operator/(native_big_integer const &l, native_real const &r)
+  // {
+  //   return l / r;
+  // }
+
+  // native_real operator/(native_real const &l, native_big_integer const &r)
+  // {
+  //   return l / r;
+  // }
+
+  native_bool operator==(native_big_integer const &l, native_real const &r)
+  {
+    constexpr native_real epsilon = std::numeric_limits<native_real>::epsilon();
+    return std::abs(l - r) < epsilon;
+  }
+
+  native_bool operator==(native_real const &l, native_big_integer const &r)
+  {
+    return r == l; // Reuse
+  }
+
+  native_bool operator!=(native_big_integer const &l, native_real const &r)
+  {
+    return !(l == r);
+  }
+
+  native_bool operator!=(native_real const &l, native_big_integer const &r)
+  {
+    return r != l; // Reuse
+  }
+
+  native_bool operator<(native_big_integer const &l, native_real const &r)
+  {
+    return big_integer::to_native_real(l) < r;
+  }
+
+  native_bool operator<(native_real const &l, native_big_integer const &r)
+  {
+    return l < big_integer::to_native_real(r);
+  }
+
+  // native_bool operator<=(native_big_integer const &l, native_real const &r)
+  // {
+  //   return l <= r;
+  // }
+
+  // native_bool operator<=(native_real const &l, native_big_integer const &r)
+  // {
+  //   return l <= r;
+  // }
+
+
+  // native_bool operator>=(native_big_integer const &l, native_real const &r)
+  // {
+  //   return l >= r;
+  // }
+
+  // native_bool operator>=(native_real const &l, native_big_integer const &r)
+  // {
+  //   return l >= r;
+  // }
 
 } // namespace jank::runtime::obj

@@ -3,9 +3,32 @@
 #include <jank/runtime/object.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
+namespace jank::runtime
+{
+  native_real operator+(native_big_integer const &l, native_real const &r);
+  native_real operator+(native_real const &l, native_big_integer const &r);
+  native_real operator-(native_big_integer const &l, native_real const &r);
+  native_real operator-(native_real const &l, native_big_integer const &r);
+  native_real operator*(native_big_integer const &l, native_real const &r);
+  native_real operator*(native_real const &l, native_big_integer const &r);
+  native_real operator/(native_big_integer const &l, native_real const &r);
+  native_real operator/(native_real const &l, native_big_integer const &r);
+  native_bool operator==(native_big_integer const &l, native_real const &r);
+  native_bool operator==(native_real const &l, native_big_integer const &r);
+  native_bool operator!=(native_big_integer const &l, native_real const &r);
+  native_bool operator!=(native_real const &l, native_big_integer const &r);
+  native_bool operator<(native_big_integer const &l, native_real const &r);
+  native_bool operator<(native_real const &l, native_big_integer const &r);
+  native_bool operator<=(native_big_integer const &l, native_real const &r);
+  native_bool operator<=(native_real const &l, native_big_integer const &r);
+  native_bool operator>(native_big_integer const &l, native_real const &r);
+  native_bool operator>(native_real const &l, native_big_integer const &r);
+  native_bool operator>=(native_big_integer const &l, native_real const &r);
+  native_bool operator>=(native_real const &l, native_big_integer const &r);
+}
+
 namespace jank::runtime::obj
 {
-
   using big_integer_ptr = native_box<struct big_integer>;
 
   struct big_integer : gc
@@ -39,12 +62,33 @@ namespace jank::runtime::obj
     native_real to_real() const;
     static native_big_integer gcd(native_big_integer const &, native_big_integer const &);
     static native_integer to_native_integer(native_big_integer const &);
+    static native_real to_native_real(native_big_integer const &);
     static native_hash to_hash(native_big_integer const &);
     object base{ obj_type };
     native_big_integer data;
   };
 
-} // namespace jank::runtime::obj
+  // native_real operator+(native_big_integer const &l, native_real const &r);
+  // native_real operator+(native_real const &l, native_big_integer const &r);
+  // native_real operator-(native_big_integer const &l, native_real const &r);
+  // native_real operator-(native_real const &l, native_big_integer const &r);
+  // native_real operator*(native_big_integer const &l, native_real const &r);
+  // native_real operator*(native_real const &l, native_big_integer const &r);
+  // native_real operator/(native_big_integer const &l, native_real const &r);
+  // native_real operator/(native_real const &l, native_big_integer const &r);
+  // native_bool operator==(native_big_integer const &l, native_real const &r);
+  // native_bool operator==(native_real const &l, native_big_integer const &r);
+  // native_bool operator!=(native_big_integer const &l, native_real const &r);
+  // native_bool operator!=(native_real const &l, native_big_integer const &r);
+  // native_bool operator<(native_big_integer const &l, native_real const &r);
+  // native_bool operator<(native_real const &l, native_big_integer const &r);
+  // native_bool operator<=(native_big_integer const &l, native_real const &r);
+  // native_bool operator<=(native_real const &l, native_big_integer const &r);
+  // // native_bool operator>(native_big_integer const &l, native_real const &r);
+  // // native_bool operator>(native_real const &l, native_big_integer const &r);
+  // native_bool operator>=(native_big_integer const &l, native_real const &r);
+  // native_bool operator>=(native_real const &l, native_big_integer const &r);
+}
 
 namespace std
 {

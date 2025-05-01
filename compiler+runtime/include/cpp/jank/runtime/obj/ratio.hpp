@@ -142,4 +142,25 @@ namespace jank::runtime::obj
   native_bool operator>=(native_real l, ratio_data const &r);
   native_bool operator>=(ratio_data const &l, native_integer r);
   native_bool operator>=(native_integer l, ratio_data const &r);
+  ratio_ptr operator+(native_big_integer const &l, ratio_data const &r);
+  ratio_ptr operator+(ratio_data const &l, native_big_integer const &r);
+  ratio_ptr operator-(native_big_integer const &l, ratio_data const &r);
+  ratio_ptr operator-(ratio_data const &l, native_big_integer const &r);
+  object_ptr operator*(native_big_integer const &l, ratio_data const &r);
+  object_ptr operator*(ratio_data const &l, native_big_integer const &r);
+  object_ptr operator/(native_big_integer const &l, ratio_data const &r);
+  ratio_ptr operator/(ratio_data const &l, native_big_integer const &r);
+  native_bool operator==(native_big_integer const &l, ratio_data const &r);
+  native_bool operator==(ratio_data const &l, native_big_integer const &r);
+  native_bool operator!=(native_big_integer const &l, ratio_data const &r);
+  native_bool operator!=(ratio_data const &l, native_big_integer const &r);
+  native_bool operator<(native_big_integer const &l, ratio_data const &r);
+  native_bool operator<(ratio_data const &l, native_big_integer const &r);
+  native_bool operator<=(native_big_integer const &l, ratio_data const &r);
+  native_bool operator<=(ratio_data const &l, native_big_integer const &r);
+  native_bool operator>(native_big_integer const &l, ratio_data const &r);
+  native_bool operator>(ratio_data const &l, native_big_integer const &r);
+  native_bool operator>=(native_big_integer const &l, ratio_data const &r);
+  native_bool operator>=(ratio_data const &l, native_big_integer const &r);
+
 }

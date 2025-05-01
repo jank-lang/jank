@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/fmt.hpp>
 
