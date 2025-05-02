@@ -30,6 +30,7 @@ namespace jank::runtime
 namespace jank::runtime::obj
 {
   using big_integer_ptr = native_box<struct big_integer>;
+  using native_big_integer = boost::multiprecision::cpp_int;
 
   struct big_integer : gc
   {
@@ -68,26 +69,26 @@ namespace jank::runtime::obj
     native_big_integer data;
   };
 
-  // native_real operator+(native_big_integer const &l, native_real const &r);
-  // native_real operator+(native_real const &l, native_big_integer const &r);
-  // native_real operator-(native_big_integer const &l, native_real const &r);
-  // native_real operator-(native_real const &l, native_big_integer const &r);
-  // native_real operator*(native_big_integer const &l, native_real const &r);
-  // native_real operator*(native_real const &l, native_big_integer const &r);
-  // native_real operator/(native_big_integer const &l, native_real const &r);
-  // native_real operator/(native_real const &l, native_big_integer const &r);
-  // native_bool operator==(native_big_integer const &l, native_real const &r);
-  // native_bool operator==(native_real const &l, native_big_integer const &r);
-  // native_bool operator!=(native_big_integer const &l, native_real const &r);
-  // native_bool operator!=(native_real const &l, native_big_integer const &r);
-  // native_bool operator<(native_big_integer const &l, native_real const &r);
-  // native_bool operator<(native_real const &l, native_big_integer const &r);
-  // native_bool operator<=(native_big_integer const &l, native_real const &r);
-  // native_bool operator<=(native_real const &l, native_big_integer const &r);
-  // // native_bool operator>(native_big_integer const &l, native_real const &r);
-  // // native_bool operator>(native_real const &l, native_big_integer const &r);
-  // native_bool operator>=(native_big_integer const &l, native_real const &r);
-  // native_bool operator>=(native_real const &l, native_big_integer const &r);
+  using jank::runtime::operator+;
+  using jank::runtime::operator+;
+  using jank::runtime::operator-;
+  using jank::runtime::operator-;
+  using jank::runtime::operator*;
+  using jank::runtime::operator*;
+  using jank::runtime::operator/;
+  using jank::runtime::operator/;
+  using jank::runtime::operator==;
+  using jank::runtime::operator==;
+  using jank::runtime::operator!=;
+  using jank::runtime::operator!=;
+  using jank::runtime::operator<;
+  using jank::runtime::operator<;
+  using jank::runtime::operator<=;
+  using jank::runtime::operator<=;
+  using jank::runtime::operator>;
+  using jank::runtime::operator>;
+  using jank::runtime::operator>=;
+  using jank::runtime::operator>=;
 }
 
 namespace std
