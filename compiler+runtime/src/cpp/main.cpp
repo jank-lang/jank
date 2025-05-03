@@ -1,14 +1,11 @@
-#include "jank/runtime/rtti.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 
-#include <llvm-c/Target.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
+#include <jank/aot.hpp>
+#include <jank/init.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -238,6 +235,21 @@ namespace jank
       le.setPrompt("native> ");
     }
   }
+
+  static void compile_main(util::cli::options const &opts)
+  {
+    using namespace jank;
+    using namespace jank::runtime;
+
+    if(opts.target_ns != "clojure.core")
+    {
+      __rt_ctx->compile_module("clojure.core").expect_ok();
+    }
+    __rt_ctx->compile_module(opts.target_module).expect_ok();
+
+    jank::aot_compiler aot{ opts };
+    aot.compile(opts.target_module);
+  }
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
@@ -246,47 +258,13 @@ int main(int const argc, char const **argv)
   using namespace jank;
   using namespace jank::runtime;
 
-  JANK_TRY
-  {
-    /* To handle UTF-8 Text , we set the locale to the current environment locale
-     * Usage of the local locale allows better localization.
-     * Notably this might make text encoding become more platform dependent.
-     */
-    std::locale::global(std::locale(""));
-
-    /* The GC needs to enabled even before arg parsing, since our native types,
-     * like strings, use the GC for allocations. It can still be configured later. */
-    GC_set_all_interior_pointers(1);
-    GC_enable();
-
-    //obj::symbol_ref r;
-    //r = make_box<obj::symbol>("foo");
-    //if(r)
-    //{
-    //  object_ref o;
-    //  o = erase(r);
-    //  util::println("r {}", r->to_code_string());
-    //}
-
-    //return 0;
-
-    llvm::llvm_shutdown_obj const Y{};
-
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-
+  return init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
     auto const parse_result(util::cli::parse(argc, argv));
     if(parse_result.is_err())
     {
-      return parse_result.expect_err();
+      return;
     }
     auto const &opts(parse_result.expect_ok());
-
-    if(opts.gc_incremental)
-    {
-      GC_enable_incremental();
-    }
 
     profile::configure(opts);
     profile::timer const timer{ "main" };
@@ -315,7 +293,9 @@ int main(int const argc, char const **argv)
       case util::cli::command::run_main:
         run_main(opts);
         break;
+      case util::cli::command::compile_main:
+        compile_main(opts);
+        break;
     }
-  }
-  JANK_CATCH_THEN(jank::util::print_exception, return 1)
+  });
 }

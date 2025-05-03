@@ -71,10 +71,19 @@ namespace jank::util::cli
     /* C++ REPL subcommand. */
     auto &cli_cpp_repl(*cli.add_subcommand("cpp-repl", "Start up a terminal C++ REPL."));
 
-    /* Run subcommand. */
+    /* run-main subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main."));
     cli_run_main.fallthrough();
     cli_run_main.add_option("module", opts.target_module, "The entrypoint module.")->required();
+
+    /* compile-main subcommand. */
+    auto &cli_compile_main(
+      *cli.add_subcommand("compile-main",
+                          "Load and compile project with entrypoint module containing -main."));
+    cli_compile_main.fallthrough();
+    cli_compile_main.add_option("-o", opts.output_filename, "Output executable name.")
+      ->default_val("a.out");
+    cli_compile_main.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);
@@ -113,6 +122,10 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_run_main))
     {
       opts.command = command::run_main;
+    }
+    else if(cli.got_subcommand(&cli_compile_main))
+    {
+      opts.command = command::compile_main;
     }
 
     return ok(opts);
