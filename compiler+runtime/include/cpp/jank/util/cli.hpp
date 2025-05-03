@@ -10,7 +10,8 @@ namespace jank::util::cli
     compile,
     repl,
     cpp_repl,
-    run_main
+    run_main,
+    compile_main
   };
 
   struct options
@@ -47,6 +48,8 @@ namespace jank::util::cli
      * TODO: Use a native_persistent_vector instead.
      * */
     std::vector<native_transient_string> extra_opts;
+
+    native_transient_string output_filename;
 
     command command{ command::repl };
   };
