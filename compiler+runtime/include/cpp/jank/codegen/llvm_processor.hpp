@@ -86,6 +86,7 @@ namespace jank::codegen
                          very_equal_to>
       literal_globals;
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_globals;
+    native_unordered_map<obj::symbol_ref, llvm::Value *> var_root_globals;
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
@@ -143,6 +144,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
+    llvm::Value *gen_var_root(obj::symbol_ref qualified_name, llvm::Value *var) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;

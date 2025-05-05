@@ -61,6 +61,8 @@ namespace jank::util::cli
     cli_compile
       .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on module path).")
       ->required();
+    cli_compile
+      .add_flag("--fdirect-linking", opts.direct_linking, "Compile with direct linking.");
 
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server."));

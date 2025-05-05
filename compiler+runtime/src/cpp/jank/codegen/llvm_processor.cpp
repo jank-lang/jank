@@ -280,8 +280,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       ctx->module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil),
-                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(
+      get(expr->name->meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -340,9 +340,70 @@ namespace jank::codegen
     }
   }
 
+  llvm::Value *llvm_processor::gen_var_root(obj::symbol_ref qualified_name, llvm::Value *var) const
+  {
+    auto const found(ctx->var_root_globals.find(qualified_name));
+    if(found != ctx->var_root_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+    auto &global(ctx->var_root_globals[qualified_name]);
+    auto const name(util::format("var_root_{}", munge(qualified_name->to_string())));
+    auto const var_root(create_global_var(name));
+    ctx->module->insertGlobalVariable(var_root);
+    global = var_root;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+      auto const fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                                false));
+      auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
+      llvm::SmallVector<llvm::Value *, 1> const args{ var };
+      auto const call(ctx->builder->CreateCall(fn, args));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
   llvm::Value *llvm_processor::gen(expr::call_ref const expr, expr::function_arity const &arity)
   {
-    auto const callee(gen(expr->source_expr, arity));
+    llvm::Value *callee{};
+    if(expr->source_expr.data->kind == expression_kind::var_deref)
+    {
+      auto var_deref_ref = jtl::static_ref_cast<expr::var_deref>(expr->source_expr);
+      auto var = var_deref_ref.data->var;
+      auto var_root = var->get_root();
+      if(var_root->type == object_type::jit_function)
+      {
+        auto qualified_name(var_deref_ref->qualified_name);
+        llvm::Value *var_ref{};
+        auto const found(ctx->var_globals.find(qualified_name));
+        if(found != ctx->var_globals.end())
+        {
+          var_ref = found->second;
+        }
+        else
+        {
+          var_ref = gen_var(qualified_name);
+        }
+        auto const var_root_ref(gen_var_root(qualified_name, var_ref));
+        callee = var_root_ref;
+      }
+      else
+      {
+        callee = gen(expr->source_expr, arity);
+      }
+    }
 
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
@@ -963,11 +1024,9 @@ namespace jank::codegen
       false));
     auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 3> const args{
-      body,
-      catch_.unwrap_or(gen_global(jank_nil)),
-      finally.unwrap_or(gen_global(jank_nil))
-    };
+    llvm::SmallVector<llvm::Value *, 3> const args{ body,
+                                                    catch_.unwrap_or(gen_global(jank_nil)),
+                                                    finally.unwrap_or(gen_global(jank_nil)) };
     auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
