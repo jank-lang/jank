@@ -54,6 +54,7 @@ namespace jank::ui
       case token_kind::integer:
       case token_kind::real:
       case token_kind::ratio:
+      case token_kind::big_integer:
       case token_kind::boolean:
       case token_kind::character:
         return e | color(Color::MagentaLight);

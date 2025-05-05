@@ -136,7 +136,7 @@ namespace jank::runtime::obj
   {
   }
 
-  big_integer::big_integer(native_persistent_string_view const &s)
+  void big_integer::init(native_persistent_string_view const &s)
   {
     if(s.empty())
     {
@@ -151,6 +151,58 @@ namespace jank::runtime::obj
     {
       throw std::runtime_error(
         util::format("Failed to construct BigInteger from string '{}': {}", s, e.what()));
+    }
+  }
+
+  big_integer::big_integer(native_persistent_string_view const &s)
+  {
+    init(s);
+  }
+
+  big_integer::big_integer(native_persistent_string_view const &s,
+                           native_integer radix,
+                           native_bool is_negative)
+    : big_integer()
+  {
+    /* Radix passed from lexer and it's made sure to be between 2 and 36. */
+    if(radix == 10)
+    {
+      init(s);
+    }
+    else if(radix == 8)
+    {
+      init("0" + std::string(s));
+    }
+    else if(radix == 16)
+    {
+      init("0x" + std::string(s));
+    }
+    else
+    {
+      /* For all other radix, we need to manually parse the number. */
+      native_big_integer temp_val = 0;
+      native_big_integer current_radix_power = 1;
+      for(auto it = s.rbegin(); it != s.rend(); ++it)
+      {
+        int digit_val;
+        char c = std::tolower(*it);
+        if(c >= '0' && c <= '9')
+        {
+          digit_val = c - '0';
+        }
+        else
+        {
+          digit_val = c - 'a' + 10;
+        }
+        temp_val += current_radix_power * digit_val;
+        current_radix_power *= radix;
+      }
+      data = temp_val;
+    }
+
+    if(is_negative)
+    {
+      data *= -1;
     }
   }
 

@@ -118,6 +118,17 @@ namespace jank::read::lex
   {
   }
 
+  token::token(movable_position const &s,
+               movable_position const &e,
+               token_kind const k,
+               big_integer const d)
+    : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
+    , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
 #ifdef JANK_TEST
   token::token(size_t const offset, size_t const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
@@ -240,6 +251,32 @@ namespace jank::read::lex
   std::ostream &operator<<(std::ostream &os, ratio const &r)
   {
     return os << r.numerator << "/" << r.denominator;
+  }
+
+  std::ostream &operator<<(std::ostream &os, big_integer const &r)
+  {
+    if(r.is_negative)
+    {
+      os << "-";
+    }
+
+    if(r.radix == 10)
+    {
+      os << r.number_literal;
+    }
+    else if(r.radix == 8)
+    {
+      os << "0" << r.number_literal;
+    }
+    else if(r.radix == 16)
+    {
+      os << "0x" << r.number_literal;
+    }
+    else
+    {
+      os << r.radix << "r" << r.number_literal;
+    }
+    return os;
   }
 
   processor::processor(native_persistent_string_view const &f)
@@ -904,17 +941,15 @@ namespace jank::read::lex
                                    * (found_beginning_negative ? -1 : 1) };
             if(errno == ERANGE)
             {
-              static constexpr auto const max(std::numeric_limits<native_integer>::max());
-              /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-              auto const max_width{ static_cast<size_t>(snprintf(nullptr, 0, "%lld", max)) };
-              return error::lex_invalid_number(
-                "Number is too large to be stored.",
-                {
-                  token_start,
-                  pos
-              },
-                error::note{ "I can fit about this much.",
-                             { token_start, token_start + max_width } });
+              native_persistent_string_view const number_literal{ file.data() + number_start,
+                                                                  pos - token_start };
+
+              return ok(token{
+                token_start,
+                pos,
+                token_kind::big_integer,
+                big_integer{ number_literal, radix, found_beginning_negative }
+              });
             }
             return ok(token{ token_start, pos, token_kind::integer, parsed_int });
           }

@@ -44,6 +44,9 @@ namespace jank::runtime::obj
     big_integer(native_big_integer &&val);
     big_integer(native_integer val);
     explicit big_integer(native_persistent_string_view const &s);
+    explicit big_integer(native_persistent_string_view const &s,
+                         native_integer radix,
+                         native_bool is_negative);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -65,6 +68,8 @@ namespace jank::runtime::obj
     static native_integer to_native_integer(native_big_integer const &);
     static native_real to_native_real(native_big_integer const &);
     static native_hash to_hash(native_big_integer const &);
+
+    void init(native_persistent_string_view const &s);
     object base{ obj_type };
     native_big_integer data;
   };

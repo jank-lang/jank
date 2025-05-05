@@ -439,5 +439,92 @@ namespace jank::runtime::obj
         CHECK(operator>=(r_10, bi_10)); // Equal case
       }
     }
+
+    TEST_CASE("BigInteger string constructor with radix")
+    {
+      using namespace jank::runtime::obj;
+      using boost::multiprecision::cpp_int; // Use alias for clarity
+
+      SUBCASE("Radix 2 (Binary)")
+      {
+        // Expected values calculated manually or via known conversions
+        CHECK_EQ(big_integer("101010", 2, false).data, cpp_int(42));
+        CHECK_EQ(big_integer("11111111", 2, false).data, cpp_int(255));
+        CHECK_EQ(big_integer("100000000", 2, true).data, cpp_int(-256));
+        CHECK_EQ(big_integer("0", 2, false).data, cpp_int(0));
+        // Large binary
+        cpp_int expected_large_bin = (cpp_int(1) << 64) - 1; // Example: 2^64 - 1
+        CHECK_EQ(
+          big_integer("1111111111111111111111111111111111111111111111111111111111111111", 2, false)
+            .data,
+          expected_large_bin);
+      }
+
+      SUBCASE("Radix 8 (Octal)")
+      {
+        // Use Boost's "0" prefix parsing for octal in expected value
+        CHECK_EQ(big_integer("777", 8, false).data, cpp_int("0777")); // 511
+        CHECK_EQ(big_integer("12345", 8, false).data, cpp_int("012345")); // 5349
+        CHECK_EQ(big_integer("10", 8, true).data, cpp_int("-010")); // -8
+        CHECK_EQ(big_integer("0", 8, false).data, cpp_int(0));
+      }
+
+      SUBCASE("Radix 10 (Decimal)")
+      {
+        // Direct string comparison for decimal
+        CHECK_EQ(big_integer("12345678901234567890", 10, false).data,
+                 cpp_int("12345678901234567890"));
+        CHECK_EQ(big_integer("9876543210", 10, true).data, cpp_int("-9876543210"));
+        CHECK_EQ(big_integer("0", 10, false).data, cpp_int(0));
+      }
+
+      SUBCASE("Radix 16 (Hex)")
+      {
+        // Use Boost's "0x" prefix parsing for hex in expected value
+        CHECK_EQ(big_integer("abcdef", 16, false).data, cpp_int("0xabcdef")); // 11259375
+        CHECK_EQ(big_integer("FFFFFFFF", 16, false).data, cpp_int("0xFFFFFFFF")); // 4294967295
+        CHECK_EQ(big_integer("10", 16, true).data, cpp_int("-0x10")); // -16
+        CHECK_EQ(big_integer("0", 16, false).data, cpp_int(0));
+        CHECK_EQ(big_integer("123456789ABCDEF0", 16, false).data, cpp_int("0x123456789ABCDEF0"));
+      }
+
+      SUBCASE("Radix 36")
+      {
+        // 1bz9 (base 36) = 1*36^3 + 11*36^2 + 35*36^1 + 9*36^0 = 46656 + 14256 + 1260 + 9 = 62181
+        CHECK_EQ(big_integer("1bz9", 36, false).data, cpp_int(62181));
+        // za (base 36) = 35*36^1 + 10*36^0 = 1260 + 10 = 1270
+        CHECK_EQ(big_integer("za", 36, true).data, cpp_int(-1270));
+        CHECK_EQ(big_integer("helloworld", 36, false).data, 1767707668033969);
+        CHECK_EQ(big_integer("0", 36, false).data, cpp_int(0));
+      }
+
+      SUBCASE("Large Numbers (Manual Construction)")
+      {
+        // Construct large expected values directly
+        cpp_int expected_bin_100_ones = (cpp_int(1) << 100) - 1;
+        std::string large_bin(100, '1');
+        CHECK_EQ(big_integer(large_bin, 2, false).data, expected_bin_100_ones);
+
+        cpp_int expected_hex_1_30_zeros = cpp_int(1) << (30 * 4); // 1 * 16^30
+        std::string large_hex = "1";
+        large_hex.append(30, '0');
+        CHECK_EQ(big_integer(large_hex, 16, false).data, expected_hex_1_30_zeros);
+
+        // Calculate large base 36 number 'ghijklmnopqrstuvwxyz'
+        cpp_int expected_large_36 = 0;
+        std::string large_36_str = "ghijklmnopqrstuvwxyz";
+        cpp_int power_36 = 1;
+        for(auto it = large_36_str.rbegin(); it != large_36_str.rend(); ++it)
+        {
+          int digit_val = (*it) - 'a' + 10; // g=16, h=17, ..., z=35
+          expected_large_36 += power_36 * digit_val;
+          if(it + 1 != large_36_str.rend())
+          {
+            power_36 *= 36;
+          }
+        }
+        CHECK_EQ(big_integer(large_36_str, 36, true).data, -expected_large_36);
+      }
+    }
   }
 } // namespace jank::runtime::obj

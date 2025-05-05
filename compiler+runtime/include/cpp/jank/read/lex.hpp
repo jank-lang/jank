@@ -39,6 +39,8 @@ namespace jank::read::lex
     keyword,
     /* Has int data. */
     integer,
+    /* Has big int data. */
+    big_integer,
     /* Has double data. */
     real,
     /* Has two integer data. */
@@ -100,6 +102,8 @@ namespace jank::read::lex
         return "keyword";
       case token_kind::integer:
         return "integer";
+      case token_kind::big_integer:
+        return "big_integer";
       case token_kind::real:
         return "real";
       case token_kind::ratio:
@@ -121,6 +125,24 @@ namespace jank::read::lex
 
     native_integer numerator{};
     native_integer denominator{};
+  };
+
+  struct big_integer
+  {
+    native_persistent_string_view number_literal;
+    native_integer radix;
+    native_bool is_negative;
+
+    native_bool operator==(big_integer const &rhs) const
+    {
+      return number_literal == rhs.number_literal && radix == rhs.radix
+        && is_negative == rhs.is_negative;
+    }
+
+    native_bool operator!=(big_integer const &rhs) const
+    {
+      return !(*this == rhs);
+    }
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to
@@ -167,6 +189,10 @@ namespace jank::read::lex
           token_kind const k,
           native_bool const);
     token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          big_integer const);
 
 #ifdef JANK_TEST
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
@@ -177,6 +203,7 @@ namespace jank::read::lex
     token(size_t offset, size_t width, token_kind const k, char const * const);
     token(size_t offset, size_t width, token_kind const k, native_bool const);
     token(size_t offset, size_t width, token_kind const k, ratio const);
+    token(size_t offset, size_t width, token_kind const k, big_integer const);
 #endif
 
     native_bool operator==(token const &rhs) const;
@@ -198,7 +225,8 @@ namespace jank::read::lex
                  native_real,
                  native_persistent_string_view,
                  native_bool,
-                 ratio>
+                 ratio,
+                 big_integer>
       data;
   };
 
