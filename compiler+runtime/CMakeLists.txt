@@ -488,6 +488,7 @@ if(jank_tests)
     test/cpp/jank/runtime/core/equal.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/obj/big_integer.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp

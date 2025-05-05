@@ -138,13 +138,17 @@ namespace jank::runtime::obj
 
   big_integer::big_integer(native_persistent_string_view const &s)
   {
+    if(s.empty())
+    {
+      throw std::runtime_error(util::format("Failed to construct BigInteger from empty string"));
+    }
+
     try
     {
       data.assign(std::string(s));
     }
     catch(std::exception const &e)
     {
-      // Consider re-throwing a Jank-specific exception or handling more gracefully
       throw std::runtime_error(
         util::format("Failed to construct BigInteger from string '{}': {}", s, e.what()));
     }
@@ -225,7 +229,7 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> native_integer {
         /* Converts to native_integer for now. */
-        return (to_integer() > typed_o->data) - (to_integer() < typed_o->data);
+        return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
@@ -245,64 +249,12 @@ namespace jank::runtime::obj
 
   native_integer big_integer::to_native_integer(native_big_integer const &d)
   {
-    // This implementation extracts the lower bits corresponding to a native_integer,
-    // effectively performing arithmetic modulo 2^N (N=64 typically).
-
-    using LimbType = boost::multiprecision::limb_type;
-    constexpr std::size_t bits_per_limb = sizeof(LimbType) * CHAR_BIT;
-    // Use unsigned long long for bit manipulation, then cast at the end
-    constexpr std::size_t target_bits = sizeof(unsigned long long) * CHAR_BIT;
-
-    auto const &backend = d.backend();
-    auto const *limbs_ptr = backend.limbs();
-    auto const num_limbs = backend.size();
-    auto const sign = backend.sign();
-
-    unsigned long long unsigned_result = 0;
-
-    // Iterate through limbs contributing to the target bit width
-    for(std::size_t i = 0;; ++i)
+    if(d > std::numeric_limits<native_integer>::max()
+       || d < std::numeric_limits<native_integer>::min())
     {
-      std::size_t current_limb_start_bit = i * bits_per_limb;
-      if(current_limb_start_bit >= target_bits)
-      {
-        break; // Past target width
-      }
-      if(i >= num_limbs)
-      {
-        break; // Ran out of limbs
-      }
-
-      LimbType current_limb = limbs_ptr[i];
-
-      // Mask if only part of the limb contributes
-      std::size_t bits_to_take = bits_per_limb;
-      if(current_limb_start_bit + bits_to_take > target_bits)
-      {
-        bits_to_take = target_bits - current_limb_start_bit;
-        // Create mask: (1 << bits_to_take) - 1
-        // Avoid shifting by full width or more
-        if(bits_to_take < bits_per_limb)
-        {
-          LimbType mask = (static_cast<LimbType>(1) << bits_to_take) - 1;
-          current_limb &= mask;
-        } // else: no mask needed as we take the whole limb (up to target_bits)
-      }
-
-      // Combine into result
-      unsigned_result |= (static_cast<unsigned long long>(current_limb) << current_limb_start_bit);
+      throw std::runtime_error{ "Value out of range for integer." };
     }
-
-    // Handle sign using two's complement logic for wrapping
-    // Check the boolean sign variable directly
-    if(sign) // If true, the original number was negative
-    {
-      return static_cast<native_integer>(~unsigned_result + 1);
-    }
-    else
-    {
-      return static_cast<long long>(unsigned_result);
-    }
+    return static_cast<native_integer>(d);
   }
 
   native_integer big_integer::to_integer() const
