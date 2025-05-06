@@ -210,7 +210,6 @@ namespace jank::analyze::cpp_util
     auto const base{ Cpp::LookupDatamember("base", scope) };
     jank_debug_assert(base);
     auto const offset{ Cpp::GetVariableOffset(base, scope) };
-    jank_debug_assert(offset);
     return offset;
   }
 

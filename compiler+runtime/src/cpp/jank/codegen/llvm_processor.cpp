@@ -42,6 +42,10 @@ namespace jank::codegen
                                      jtl::ptr<void> const conversion_type,
                                      llvm::Value * const arg)
   {
+    //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
+    //              Cpp::GetTypeAsString(input_type),
+    //              Cpp::GetTypeAsString(output_type),
+    //              Cpp::GetTypeAsString(conversion_type));
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
@@ -83,10 +87,16 @@ namespace jank::codegen
       util::format("{}.args[{}]", match_name, 0).c_str()) };
     ctx.builder->CreateStore(arg_alloc, arg_array_0);
 
-    auto const ret_size{ Cpp::GetSizeOfType(conversion_type) };
+    auto const ret_size{ Cpp::GetSizeOfType(output_type) };
     jank_debug_assert(ret_size > 0);
-    auto const ret_alignment{ Cpp::GetAlignmentOfType(conversion_type) };
+    auto const ret_alignment{ Cpp::GetAlignmentOfType(output_type) };
     jank_debug_assert(ret_alignment > 0);
+
+    //util::println("convert_object output_type size = {}, alignment = {}",
+    //              Cpp::GetTypeAsString(output_type),
+    //              ret_size,
+    //              ret_alignment);
+
     /* TODO: If it's an IR intrinsic, use that. */
     auto const ret_alloc{ ctx.builder->CreateAlloca(
       ctx.builder->getInt8Ty(),
@@ -114,6 +124,8 @@ namespace jank::codegen
     {
       return load_ret;
     }
+
+    //util::println("convert_object ret_type = {}", Cpp::GetTypeAsString(ret_type));
 
     /* No need to call a function to erase a typed object. Just find the
      * offset to its base member and shift our pointer accordingly. */
@@ -1217,8 +1229,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->type) };
-      if(is_untyped_obj)
+      if(cpp_util::is_untyped_object(expr->type))
       {
         return ctx->builder->CreateRet(converted);
       }
