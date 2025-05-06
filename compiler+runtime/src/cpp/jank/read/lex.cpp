@@ -187,6 +187,14 @@ namespace jank::read::lex
     , data{ d }
   {
   }
+
+  token::token(size_t const offset, size_t const width, token_kind const k, big_integer const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
 #endif
 
   struct codepoint
@@ -201,6 +209,17 @@ namespace jank::read::lex
   }
 
   native_bool ratio::operator!=(ratio const &rhs) const
+  {
+    return !(*this == rhs);
+  }
+
+  native_bool big_integer::operator==(big_integer const &rhs) const
+  {
+    return number_literal == rhs.number_literal && radix == rhs.radix
+      && is_negative == rhs.is_negative;
+  }
+
+  native_bool big_integer::operator!=(big_integer const &rhs) const
   {
     return !(*this == rhs);
   }
@@ -772,6 +791,7 @@ namespace jank::read::lex
             {
               require_space = false;
               ++pos;
+              auto const slash_pos = pos;
               if(found_exponent_sign || is_scientific || expecting_exponent || contains_dot
                  || found_slash_after_number || (radix != 10 && radix != 8))
               {
@@ -786,7 +806,8 @@ namespace jank::read::lex
               found_slash_after_number = false;
               if(denominator.is_ok())
               {
-                if(denominator.expect_ok().kind != token_kind::integer)
+                if(denominator.expect_ok().kind != token_kind::integer
+                   && denominator.expect_ok().kind != token_kind::big_integer)
                 {
                   return error::lex_invalid_ratio(
                     "A ratio denominator must be an integer.",
@@ -798,12 +819,35 @@ namespace jank::read::lex
                                  { denominator.expect_ok().start, denominator.expect_ok().end } });
                 }
                 auto const &denominator_token(denominator.expect_ok());
-                return ok(
-                  token(token_start,
-                        pos,
-                        token_kind::ratio,
-                        { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
-                          .denominator = std::get<native_integer>(denominator_token.data) }));
+                native_big_integer numerator;
+                if(radix == 8 && *(file.data() + token_start) == '0')
+                {
+                  numerator.assign(
+                    std::string(file.data() + token_start + 1, slash_pos - token_start - 1));
+                }
+                else
+                {
+                  numerator.assign(std::string(file.data() + token_start, slash_pos - token_start));
+                }
+                if(denominator.expect_ok().kind == token_kind::integer)
+                {
+                  return ok(token(token_start,
+                                  pos,
+                                  token_kind::ratio,
+                                  { .numerator = numerator,
+                                    .denominator = native_big_integer(
+                                      std::get<native_integer>(denominator_token.data)) }));
+                }
+                if(denominator.expect_ok().kind == token_kind::big_integer)
+                {
+                  return ok(token(
+                    token_start,
+                    pos,
+                    token_kind::ratio,
+                    { .numerator = numerator,
+                      .denominator = native_big_integer(
+                        std::get<lex::big_integer>(denominator_token.data).number_literal) }));
+                }
               }
               return denominator.expect_err();
             }
@@ -942,7 +986,7 @@ namespace jank::read::lex
             if(errno == ERANGE)
             {
               native_persistent_string_view const number_literal{ file.data() + number_start,
-                                                                  pos - token_start };
+                                                                  pos - number_start };
 
               return ok(token{
                 token_start,

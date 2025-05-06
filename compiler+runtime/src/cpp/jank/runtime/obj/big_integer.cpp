@@ -206,6 +206,13 @@ namespace jank::runtime::obj
     }
   }
 
+  object_ptr big_integer::create(native_persistent_string_view const &s,
+                                 native_integer radix,
+                                 native_bool is_negative)
+  {
+    return make_box<big_integer>(s, radix, is_negative);
+  }
+
   native_bool big_integer::equal(object const &o) const
   {
     if(o.type == object_type::big_integer)

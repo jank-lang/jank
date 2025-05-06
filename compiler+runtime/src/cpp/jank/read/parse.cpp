@@ -1360,9 +1360,10 @@ namespace jank::read::parse
   {
     auto const token{ token_current->expect_ok() };
     ++token_current;
-    auto const &big_integer(std::get<lex::big_integer>(token.data));
-    (void)big_integer;
-    return object_source_info{ expect_object<obj::big_integer>(0), token, token };
+    auto const &big_int(std::get<lex::big_integer>(token.data));
+    auto const bi(
+      obj::big_integer::create(big_int.number_literal, big_int.radix, big_int.is_negative));
+    return object_source_info{ expect_object<obj::big_integer>(bi), token, token };
   }
 
   processor::object_result processor::parse_ratio()
@@ -1383,6 +1384,10 @@ namespace jank::read::parse
     else if(ratio->type == object_type::integer)
     {
       return object_source_info{ expect_object<obj::integer>(ratio), token, token };
+    }
+    else if(ratio->type == object_type::big_integer)
+    {
+      return object_source_info{ expect_object<obj::big_integer>(ratio), token, token };
     }
     else
     {

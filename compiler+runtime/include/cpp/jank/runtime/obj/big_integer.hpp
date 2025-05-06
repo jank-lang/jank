@@ -40,13 +40,11 @@ namespace jank::runtime::obj
     big_integer();
     big_integer(big_integer &&) noexcept = default;
     big_integer(big_integer const &) = default;
-    big_integer(native_big_integer const &val);
-    big_integer(native_big_integer &&val);
-    big_integer(native_integer val);
-    explicit big_integer(native_persistent_string_view const &s);
-    explicit big_integer(native_persistent_string_view const &s,
-                         native_integer radix,
-                         native_bool is_negative);
+    big_integer(native_big_integer const &);
+    big_integer(native_big_integer &&);
+    big_integer(native_integer);
+    explicit big_integer(native_persistent_string_view const &);
+    explicit big_integer(native_persistent_string_view const &, native_integer, native_bool);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -68,8 +66,8 @@ namespace jank::runtime::obj
     static native_integer to_native_integer(native_big_integer const &);
     static native_real to_native_real(native_big_integer const &);
     static native_hash to_hash(native_big_integer const &);
-
-    void init(native_persistent_string_view const &s);
+    static object_ptr create(native_persistent_string_view const &, native_integer, native_bool);
+    void init(native_persistent_string_view const &);
     object base{ obj_type };
     native_big_integer data;
   };

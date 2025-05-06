@@ -123,8 +123,8 @@ namespace jank::read::lex
     native_bool operator==(ratio const &rhs) const;
     native_bool operator!=(ratio const &rhs) const;
 
-    native_integer numerator{};
-    native_integer denominator{};
+    native_big_integer numerator{};
+    native_big_integer denominator{};
   };
 
   struct big_integer
@@ -133,16 +133,8 @@ namespace jank::read::lex
     native_integer radix;
     native_bool is_negative;
 
-    native_bool operator==(big_integer const &rhs) const
-    {
-      return number_literal == rhs.number_literal && radix == rhs.radix
-        && is_negative == rhs.is_negative;
-    }
-
-    native_bool operator!=(big_integer const &rhs) const
-    {
-      return !(*this == rhs);
-    }
+    native_bool operator==(big_integer const &) const;
+    native_bool operator!=(big_integer const &) const;
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to

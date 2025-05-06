@@ -30,14 +30,12 @@ namespace jank::runtime::obj
   }
 
   ratio_data::ratio_data(big_integer const &numerator, big_integer const &denominator)
-    : numerator{ numerator.data }
-    , denominator{ denominator.data }
+    : ratio_data(numerator.data, denominator.data)
   {
   }
 
   ratio_data::ratio_data(native_integer const numerator, native_integer const denominator)
-    : numerator{ native_big_integer(numerator) }
-    , denominator{ native_big_integer(denominator) }
+    : ratio_data(native_big_integer(numerator), native_big_integer(denominator))
   {
   }
 
@@ -57,7 +55,15 @@ namespace jank::runtime::obj
     ratio_data const data{ numerator, denominator };
     if(data.denominator == 1)
     {
-      return make_box<integer>(big_integer::to_native_integer(data.numerator));
+      if(data.numerator < std::numeric_limits<native_integer>::max()
+         && data.numerator > std::numeric_limits<native_integer>::min())
+      {
+        return make_box<integer>(big_integer::to_native_integer(data.numerator));
+      }
+      else
+      {
+        return make_box<big_integer>(data.numerator);
+      }
     }
     return make_box<ratio>(data);
   }

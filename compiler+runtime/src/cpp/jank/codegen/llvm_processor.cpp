@@ -1291,12 +1291,12 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
-                                { ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_ratio_create", create_fn_type));
       llvm::SmallVector<llvm::Value *, 2> const args{
-        gen_global(make_box<obj::big_integer>(r->data.numerator)),
-        gen_global(make_box<obj::big_integer>(r->data.denominator))
+        gen_global(make_box(r->data.numerator)),
+        gen_global(make_box(r->data.denominator))
       };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);

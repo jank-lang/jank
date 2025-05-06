@@ -483,6 +483,17 @@ namespace jank::read::lex
                 { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
         }));
       }
+      // SUBCASE("Success - big integer")
+      // {
+      //   processor p{ "4/8888888888888888888888888888888888" };
+      //   native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+      //   CHECK(tokens
+      //         == make_tokens({
+      //           { 0,
+      //            36, token_kind::ratio,
+      //            { .numerator = 1, .denominator = 2222222222222222222222222222222222 } }
+      //   }));
+      // }
       SUBCASE("Success - -x/x")
       {
         processor p{ "-4/5" };
@@ -645,15 +656,29 @@ namespace jank::read::lex
 
       SUBCASE("Arbitrary radix edge cases")
       {
-        /* Exceeds 64-bit integer max */
         processor p{ "36r0123456789abcdefghijklmnopqrstuvwxyz" };
         native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
-        CHECK(tokens == make_results({ make_error(kind::lex_invalid_number, 0, 39) }));
+        CHECK(tokens
+              == make_tokens({
+                { { 0, 1, 1 },
+                 { 39, 1, 40 },
+                 token_kind::big_integer,
+                 { .number_literal = "0123456789abcdefghijklmnopqrstuvwxyz",
+                    .radix = 36,
+                    .is_negative = false } }
+        }));
 
-        /* 65 bits. */
         processor p2{ "2r11111111111111111111111111111111111111111111111111111111111111111" };
         native_vector<result<token, error_ptr>> const tokens2(p2.begin(), p2.end());
-        CHECK(tokens2 == make_results({ make_error(kind::lex_invalid_number, 0, 67) }));
+        CHECK(tokens2
+              == make_tokens({
+                { 0,
+                 67, token_kind::big_integer,
+                 { .number_literal
+                    = "11111111111111111111111111111111111111111111111111111111111111111",
+                    .radix = 2,
+                    .is_negative = false } }
+        }));
       }
 
       SUBCASE("Invalid arbitrary radix edge cases")
