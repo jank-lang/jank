@@ -37,8 +37,7 @@ namespace jank::codegen
   static llvm::Value *convert_object(reusable_context &ctx,
                                      conversion_policy const policy,
                                      jtl::ptr<void> const input_type,
-                                     /* TODO: Needed? */
-                                     [[maybe_unused]] jtl::ptr<void> const output_type,
+                                     jtl::ptr<void> const output_type,
                                      jtl::ptr<void> const conversion_type,
                                      llvm::Value * const arg)
   {
@@ -1281,6 +1280,7 @@ namespace jank::codegen
        * in order to avoid context issues. */
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(ctor_fn_callable.getModule())));
 
+    auto const type_name{ Cpp::GetTypeAsString(expr->type) };
     jank_debug_assert(expr->type);
     jank_debug_assert(Cpp::IsComplete(expr->type));
     auto const size{ Cpp::GetSizeOfType(expr->type) };
@@ -1290,10 +1290,10 @@ namespace jank::codegen
     /* TODO: If it's an IR intrinsic, use that. */
     auto const ctor_alloc{ ctx->builder->CreateAlloca(
       ctx->builder->getInt8Ty(),
-      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
+      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
+      util::format("{}.ret", type_name).c_str()) };
     ctor_alloc->setAlignment(llvm::Align{ alignment });
 
-    auto const type_name{ Cpp::GetTypeAsString(expr->type) };
     auto const arg_count{ expr->arg_exprs.size() };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
     auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
@@ -1318,6 +1318,21 @@ namespace jank::codegen
                                     param_type,
                                     arg_handle);
       }
+      else if(expr->arg_exprs[i]->kind != expression_kind::cpp_value
+              && expr->arg_exprs[i]->kind != expression_kind::cpp_constructor_call
+              //&& expr->arg_exprs[i]->kind != expression_kind::cpp_call
+      )
+      {
+        /* TODO: Helper for allocating a type. */
+        auto const size{ Cpp::GetSizeOfType(arg_type) };
+        auto const alignment{ Cpp::GetAlignmentOfType(arg_type) };
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getInt8Ty(),
+          llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
+        alloc->setAlignment(llvm::Align{ alignment });
+        ctx->builder->CreateStore(arg_handle, alloc);
+        arg_handle = alloc;
+      }
 
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
@@ -1329,7 +1344,7 @@ namespace jank::codegen
 
     auto const ctor_fn(ctx->module->getFunction(ctor_fn_callable.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
-      ctor_alloc,
+      llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
       llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
       args_array,
       ctor_alloc
@@ -1341,7 +1356,10 @@ namespace jank::codegen
       auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->type) };
       if(is_untyped_obj)
       {
-        return ctx->builder->CreateRet(ctor_alloc);
+        auto const ret_load{
+          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ctor_alloc, "ret")
+        };
+        return ctx->builder->CreateRet(ret_load);
       }
       auto const converted{ convert_object(*ctx,
                                            conversion_policy::into_object,

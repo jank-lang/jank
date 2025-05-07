@@ -2115,6 +2115,7 @@ namespace jank::analyze
     }
 
     return error::internal_analyze_failure("Unsupported C++ expression.",
+                                           object_source(sym),
                                            latest_expansion(macro_expansions));
   }
 
@@ -2206,9 +2207,21 @@ namespace jank::analyze
                                                          jtl::move(arg_exprs));
       }
 
-      return error::internal_analyze_failure(
-        util::format("No matching call to '{}' constructor.", Cpp::GetTypeAsString(val->type)),
-        latest_expansion(macro_expansions));
+      /* TODO: Find a better way to render this. */
+      util::string_builder sb;
+      for(usize i{}; i != arg_types.size(); ++i)
+      {
+        util::format_to(sb,
+                        " With argument {} having type '{}'.",
+                        i,
+                        Cpp::GetTypeAsString(arg_types[i].m_Type));
+      }
+
+      return error::internal_analyze_failure(util::format("No matching call to '{}' constructor.{}",
+                                                          Cpp::GetTypeAsString(val->type),
+                                                          sb.release()),
+                                             object_source(o),
+                                             latest_expansion(macro_expansions));
     }
 
     return error::internal_analyze_failure("nyi: analyze_cpp_call",
@@ -2270,7 +2283,11 @@ namespace jank::analyze
         typed_expr->type,
         Cpp::GetScopeFromType(typed_expr->type),
         expr::cpp_value::value_kind::constructor) };
-      return analyze_cpp_call(l, cpp_value, current_frame, position, fn_ctx, needs_box);
+      /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
+       * want to remove the cpp/cast and the type and then add back in a new head. Since
+       * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
+      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil)) };
+      return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     if(cpp_util::is_any_object(typed_expr->type) && cpp_util::is_convertible(value_type))
     {
