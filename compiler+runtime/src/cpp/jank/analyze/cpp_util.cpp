@@ -42,7 +42,7 @@ namespace jank::analyze::cpp_util
       scope = Cpp::GetNamed(subs, scope);
       if(!scope)
       {
-        return err(util::format("Unable to find scope for symbol '{}'", sym));
+        return err(util::format("Unable to find scope for symbol '{}'.", sym));
       }
     }
 
@@ -50,7 +50,7 @@ namespace jank::analyze::cpp_util
     {
       return ok(scope);
     }
-    return err(util::format("Unable to find scope for symbol '{}'", sym));
+    return err(util::format("Unable to find scope for symbol '{}'.", sym));
   }
 
   jtl::ptr<void> untyped_object_ptr_type()

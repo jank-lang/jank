@@ -48,6 +48,7 @@
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
 #include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -2048,6 +2049,7 @@ namespace jank::analyze
     {
       /* TODO: Error. */
       return error::internal_analyze_failure("Invalid C++ name.",
+                                             object_source(sym),
                                              latest_expansion(macro_expansions));
     }
 
@@ -2143,61 +2145,54 @@ namespace jank::analyze
       arg_types.emplace_back(cpp_util::expression_type(arg_exprs.back()));
     }
 
-    if(val->val_kind == expr::cpp_value::value_kind::constructor)
+    auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
+    if(is_ctor && Cpp::IsBuiltin(val->type))
     {
-      if(Cpp::IsBuiltin(val->type))
-      {
-        if(arg_types.size() > 1)
-        {
-          return error::internal_analyze_failure(
-            util::format("A '{}' may only be constructed with one argument.",
-                         Cpp::GetTypeAsString(val->type)),
-            object_source(o),
-            latest_expansion(macro_expansions));
-        }
-        if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
-           && !cpp_util::is_convertible(val->type))
-        {
-          return error::internal_analyze_failure(
-            util::format("A '{}' cannot be constructed from a '{}'.",
-                         Cpp::GetTypeAsString(val->type),
-                         Cpp::GetTypeAsString(arg_types[0].m_Type)),
-            object_source(o),
-            latest_expansion(macro_expansions));
-        }
-
-        return jtl::make_ref<expr::cpp_constructor_call>(position,
-                                                         current_frame,
-                                                         needs_box,
-                                                         val->type,
-                                                         nullptr,
-                                                         jtl::move(arg_exprs));
-      }
-
-      std::vector<void *> ctors;
-      Cpp::LookupConstructors("", val->scope, ctors);
-
-      auto match{ Cpp::BestOverloadFunctionMatch(ctors, {}, arg_types) };
-      if(match)
-      {
-        return jtl::make_ref<expr::cpp_constructor_call>(position,
-                                                         current_frame,
-                                                         needs_box,
-                                                         val->type,
-                                                         match,
-                                                         jtl::move(arg_exprs));
-      }
-
-      auto const new_types{ cpp_util::find_best_arg_types_with_conversions(ctors, arg_types) };
-      if(new_types.is_err())
+      if(arg_types.size() > 1)
       {
         return error::internal_analyze_failure(
-          util::format("Ambiguous call. {}", new_types.expect_err()),
+          util::format("'{}' can only be constructed with one argument.",
+                       Cpp::GetTypeAsString(val->type)),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
+      if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
+         && !cpp_util::is_convertible(val->type))
+      {
+        return error::internal_analyze_failure(
+          util::format("'{}' cannot be constructed from a '{}'.",
+                       Cpp::GetTypeAsString(val->type),
+                       Cpp::GetTypeAsString(arg_types[0].m_Type)),
+          object_source(o),
           latest_expansion(macro_expansions));
       }
 
-      match = Cpp::BestOverloadFunctionMatch(ctors, {}, new_types.expect_ok());
-      if(match)
+      return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                       current_frame,
+                                                       needs_box,
+                                                       val->type,
+                                                       nullptr,
+                                                       jtl::move(arg_exprs));
+    }
+
+    std::vector<void *> fns;
+    auto const &scope_name{ Cpp::GetScopeName(val->scope) };
+    if(is_ctor)
+    {
+      /* TODO: GetScopeName. */
+      Cpp::LookupConstructors("", val->scope, fns);
+    }
+    else
+    {
+      /* TODO: Use scope to find fns. */
+      fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
+    }
+
+    auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, arg_types) };
+    util::println("fns {}, match {}", fns, match);
+    if(match)
+    {
+      if(is_ctor)
       {
         return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                          current_frame,
@@ -2206,25 +2201,67 @@ namespace jank::analyze
                                                          match,
                                                          jtl::move(arg_exprs));
       }
-
-      /* TODO: Find a better way to render this. */
-      util::string_builder sb;
-      for(usize i{}; i != arg_types.size(); ++i)
+      else
       {
-        util::format_to(sb,
-                        " With argument {} having type '{}'.",
-                        i,
-                        Cpp::GetTypeAsString(arg_types[i].m_Type));
+        auto const return_type{ Cpp::GetFunctionReturnType(match) };
+        return jtl::make_ref<expr::cpp_call>(position,
+                                             current_frame,
+                                             needs_box,
+                                             return_type,
+                                             match,
+                                             jtl::move(arg_exprs));
       }
-
-      return error::internal_analyze_failure(util::format("No matching call to '{}' constructor.{}",
-                                                          Cpp::GetTypeAsString(val->type),
-                                                          sb.release()),
-                                             object_source(o),
-                                             latest_expansion(macro_expansions));
     }
 
-    return error::internal_analyze_failure("nyi: analyze_cpp_call",
+    auto const new_types{ cpp_util::find_best_arg_types_with_conversions(fns, arg_types) };
+    if(new_types.is_err())
+    {
+      return error::internal_analyze_failure(
+        util::format("Ambiguous call. {}", new_types.expect_err()),
+        object_source(o),
+        latest_expansion(macro_expansions));
+    }
+
+    match = Cpp::BestOverloadFunctionMatch(fns, {}, new_types.expect_ok());
+    if(match)
+    {
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                         current_frame,
+                                                         needs_box,
+                                                         val->type,
+                                                         match,
+                                                         jtl::move(arg_exprs));
+      }
+      else
+      {
+        auto const return_type{ Cpp::GetFunctionReturnType(match) };
+        return jtl::make_ref<expr::cpp_call>(position,
+                                             current_frame,
+                                             needs_box,
+                                             return_type,
+                                             match,
+                                             jtl::move(arg_exprs));
+      }
+    }
+
+    /* TODO: Find a better way to render this. */
+    util::string_builder sb;
+    for(usize i{}; i != arg_types.size(); ++i)
+    {
+      util::format_to(sb,
+                      " With argument {} having type '{}'.",
+                      i,
+                      Cpp::GetTypeAsString(arg_types[i].m_Type));
+    }
+
+    /* TODO: Use scope name, if there is a scope. */
+    return error::internal_analyze_failure(util::format("No matching call to '{}' {}.{}",
+                                                        scope_name,
+                                                        is_ctor ? "constructor" : "function",
+                                                        sb.release()),
+                                           object_source(o),
                                            latest_expansion(macro_expansions));
   }
 

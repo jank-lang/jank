@@ -278,6 +278,7 @@ add_library(
   src/cpp/jank/analyze/expr/cpp_type.cpp
   src/cpp/jank/analyze/expr/cpp_value.cpp
   src/cpp/jank/analyze/expr/cpp_cast.cpp
+  src/cpp/jank/analyze/expr/cpp_call.cpp
   src/cpp/jank/analyze/expr/cpp_constructor_call.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp

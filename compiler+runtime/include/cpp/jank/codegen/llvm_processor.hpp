@@ -13,6 +13,11 @@
 
 #include <jank/analyze/processor.hpp>
 
+namespace Cpp
+{
+  class AotCall;
+}
+
 namespace jank::runtime::obj
 {
   using nil_ref = oref<struct nil>;
@@ -55,6 +60,7 @@ namespace jank::analyze
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
   }
 }
@@ -148,6 +154,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
 
@@ -173,6 +180,12 @@ namespace jank::codegen
     llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
+    llvm::Value *gen_aot_call(Cpp::AotCall const &call,
+                              jtl::ptr<void> const fn,
+                              jtl::ptr<void> const expr_type,
+                              native_vector<analyze::expression_ref> const &arg_exprs,
+                              analyze::expression_position const position,
+                              analyze::expr::function_arity const &arity);
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;

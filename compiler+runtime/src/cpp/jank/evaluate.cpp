@@ -695,6 +695,13 @@ namespace jank::evaluate
     return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
   }
 
+  object_ref eval(expr::cpp_call_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_call", {})));
+  }
+
   object_ref eval(expr::cpp_constructor_call_ref const expr)
   {
     cpp_util::ensure_convertible(expr).expect_ok();

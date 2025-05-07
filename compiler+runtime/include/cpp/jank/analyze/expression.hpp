@@ -56,6 +56,7 @@ namespace jank::analyze
     cpp_type,
     cpp_value,
     cpp_cast,
+    cpp_call,
     cpp_constructor_call,
   };
 
@@ -113,6 +114,8 @@ namespace jank::analyze
         return "cpp_value";
       case expression_kind::cpp_cast:
         return "cpp_cast";
+      case expression_kind::cpp_call:
+        return "cpp_call";
       case expression_kind::cpp_constructor_call:
         return "cpp_constructor_call";
     }

@@ -28,9 +28,11 @@ namespace jank::analyze::expr
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
 
-    /* The type we're going to construct. */
+    /* In general, this represents the type of the value. For constructors,
+     * this will represent the type we're constructing. */
     jtl::ptr<void> type;
-    /* If the type is builtin, the scope will be null. */
+    /* If the type is built-in, the scope will be null. Built-in types don't have
+     * scopes in Clang. */
     jtl::ptr<void> scope;
     value_kind val_kind;
   };

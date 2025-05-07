@@ -1244,6 +1244,122 @@ namespace jank::codegen
     return converted;
   }
 
+  llvm::Value *llvm_processor::gen_aot_call(Cpp::AotCall const &call,
+                                            jtl::ptr<void> const fn,
+                                            jtl::ptr<void> const expr_type,
+                                            native_vector<expression_ref> const &arg_exprs,
+                                            expression_position const position,
+                                            expr::function_arity const &arity)
+  {
+    /* TODO: Fns are reused, so this could cause a linker issue. */
+    llvm::Linker::linkModules(
+      *ctx->module,
+      /* TODO: Will need to share context with interpreter or serialize module to bitcode
+       * in order to avoid context issues. */
+      llvm::CloneModule(*reinterpret_cast<llvm::Module *>(call.getModule())));
+
+    jank_debug_assert(expr_type);
+    auto const type_name{ Cpp::GetTypeAsString(expr_type) };
+    jank_debug_assert(Cpp::IsComplete(expr_type));
+    auto const size{ Cpp::GetSizeOfType(expr_type) };
+    jank_debug_assert(size > 0);
+    auto const alignment{ Cpp::GetAlignmentOfType(expr_type) };
+    jank_debug_assert(alignment > 0);
+    /* TODO: If it's an IR intrinsic, use that. */
+    auto const ctor_alloc{ ctx->builder->CreateAlloca(
+      ctx->builder->getInt8Ty(),
+      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
+      util::format("{}.ret", type_name).c_str()) };
+    ctor_alloc->setAlignment(llvm::Align{ alignment });
+
+    auto const arg_count{ arg_exprs.size() };
+    auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
+    auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
+                                                      nullptr,
+                                                      util::format("{}.args", type_name).c_str()) };
+
+    for(usize i{}; i < arg_count; ++i)
+    {
+      auto arg_handle{ gen(arg_exprs[i], arity) };
+      auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
+      /* If we're constructing a builtin type, we don't have a ctor fn. We know the
+       * param type we need though. */
+      auto const param_type{ fn ? Cpp::GetFunctionArgType(fn, i) : expr_type.data };
+      if(is_untyped_obj
+         && (Cpp::IsBuiltin(param_type) || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
+      {
+        arg_handle = convert_object(*ctx,
+                                    conversion_policy::from_object,
+                                    arg_type,
+                                    param_type,
+                                    param_type,
+                                    arg_handle);
+      }
+      else if(arg_exprs[i]->kind != expression_kind::cpp_value
+              && arg_exprs[i]->kind != expression_kind::cpp_constructor_call
+              && arg_exprs[i]->kind != expression_kind::cpp_call)
+      {
+        /* TODO: Helper for allocating a type. */
+        auto const size{ Cpp::GetSizeOfType(arg_type) };
+        auto const alignment{ Cpp::GetAlignmentOfType(arg_type) };
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getInt8Ty(),
+          llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
+        alloc->setAlignment(llvm::Align{ alignment });
+        ctx->builder->CreateStore(arg_handle, alloc);
+        arg_handle = alloc;
+      }
+
+      auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
+        args_array_type,
+        args_array,
+        { ctx->builder->getInt32(0), ctx->builder->getInt32(i) },
+        util::format("{}.args[{}]", type_name, i).c_str()) };
+      ctx->builder->CreateStore(arg_handle, arg_ptr);
+    }
+
+    auto const ctor_fn(ctx->module->getFunction(call.getName()));
+    llvm::SmallVector<llvm::Value *, 4> const ctor_args{
+      llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
+      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
+      args_array,
+      ctor_alloc
+    };
+    ctx->builder->CreateCall(ctor_fn, ctor_args);
+
+    if(position == expression_position::tail)
+    {
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr_type) };
+      if(is_untyped_obj)
+      {
+        auto const ret_load{
+          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ctor_alloc, "ret")
+        };
+        return ctx->builder->CreateRet(ret_load);
+      }
+      auto const converted{ convert_object(*ctx,
+                                           conversion_policy::into_object,
+                                           expr_type,
+                                           cpp_util::untyped_object_ptr_type(),
+                                           expr_type,
+                                           ctor_alloc) };
+      return ctx->builder->CreateRet(converted);
+    }
+
+    return ctor_alloc;
+  }
+
+  llvm::Value *llvm_processor::gen(expr::cpp_call_ref const expr, expr::function_arity const &arity)
+  {
+    return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
+                        expr->fn,
+                        expr->type,
+                        expr->arg_exprs,
+                        expr->position,
+                        arity);
+  }
+
   llvm::Value *
   llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
   {
@@ -1273,104 +1389,12 @@ namespace jank::codegen
     }
     jank_debug_assert(ctor_fn_callable);
 
-    /* TODO: Fns are reused, so this could cause a linker issue. */
-    llvm::Linker::linkModules(
-      *ctx->module,
-      /* TODO: Will need to share context with interpreter or serialize module to bitcode
-       * in order to avoid context issues. */
-      llvm::CloneModule(*reinterpret_cast<llvm::Module *>(ctor_fn_callable.getModule())));
-
-    auto const type_name{ Cpp::GetTypeAsString(expr->type) };
-    jank_debug_assert(expr->type);
-    jank_debug_assert(Cpp::IsComplete(expr->type));
-    auto const size{ Cpp::GetSizeOfType(expr->type) };
-    jank_debug_assert(size > 0);
-    auto const alignment{ Cpp::GetAlignmentOfType(expr->type) };
-    jank_debug_assert(alignment > 0);
-    /* TODO: If it's an IR intrinsic, use that. */
-    auto const ctor_alloc{ ctx->builder->CreateAlloca(
-      ctx->builder->getInt8Ty(),
-      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
-      util::format("{}.ret", type_name).c_str()) };
-    ctor_alloc->setAlignment(llvm::Align{ alignment });
-
-    auto const arg_count{ expr->arg_exprs.size() };
-    auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
-    auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
-                                                      nullptr,
-                                                      util::format("{}.args", type_name).c_str()) };
-
-    for(usize i{}; i < arg_count; ++i)
-    {
-      auto arg_handle{ gen(expr->arg_exprs[i], arity) };
-      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[i]) };
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      /* If we're constructing a builtin type, we don't have a ctor fn. We know the
-       * param type we need though. */
-      auto const param_type{ expr->fn ? Cpp::GetFunctionArgType(expr->fn, i) : expr->type.data };
-      if(is_untyped_obj
-         && (Cpp::IsBuiltin(param_type) || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
-      {
-        arg_handle = convert_object(*ctx,
-                                    conversion_policy::from_object,
-                                    arg_type,
-                                    param_type,
-                                    param_type,
-                                    arg_handle);
-      }
-      else if(expr->arg_exprs[i]->kind != expression_kind::cpp_value
-              && expr->arg_exprs[i]->kind != expression_kind::cpp_constructor_call
-              //&& expr->arg_exprs[i]->kind != expression_kind::cpp_call
-      )
-      {
-        /* TODO: Helper for allocating a type. */
-        auto const size{ Cpp::GetSizeOfType(arg_type) };
-        auto const alignment{ Cpp::GetAlignmentOfType(arg_type) };
-        auto const alloc{ ctx->builder->CreateAlloca(
-          ctx->builder->getInt8Ty(),
-          llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
-        alloc->setAlignment(llvm::Align{ alignment });
-        ctx->builder->CreateStore(arg_handle, alloc);
-        arg_handle = alloc;
-      }
-
-      auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
-        args_array_type,
-        args_array,
-        { ctx->builder->getInt32(0), ctx->builder->getInt32(i) },
-        util::format("{}.args[{}]", type_name, i).c_str()) };
-      ctx->builder->CreateStore(arg_handle, arg_ptr);
-    }
-
-    auto const ctor_fn(ctx->module->getFunction(ctor_fn_callable.getName()));
-    llvm::SmallVector<llvm::Value *, 4> const ctor_args{
-      llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
-      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
-      args_array,
-      ctor_alloc
-    };
-    ctx->builder->CreateCall(ctor_fn, ctor_args);
-
-    if(expr->position == expression_position::tail)
-    {
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->type) };
-      if(is_untyped_obj)
-      {
-        auto const ret_load{
-          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ctor_alloc, "ret")
-        };
-        return ctx->builder->CreateRet(ret_load);
-      }
-      auto const converted{ convert_object(*ctx,
-                                           conversion_policy::into_object,
-                                           expr->type,
-                                           cpp_util::untyped_object_ptr_type(),
-                                           expr->type,
-                                           ctor_alloc) };
-      return ctx->builder->CreateRet(converted);
-    }
-
-    return ctor_alloc;
+    return gen_aot_call(ctor_fn_callable,
+                        expr->fn,
+                        expr->type,
+                        expr->arg_exprs,
+                        expr->position,
+                        arity);
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const
