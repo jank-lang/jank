@@ -2026,6 +2026,19 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
+    if(name == "nullptr")
+    {
+      auto const scope_res{ cpp_util::resolve_scope("std.nullptr_t") };
+      auto const scope{ Cpp::GetUnderlyingScope(scope_res.expect_ok()) };
+      auto const type{ Cpp::GetTypeFromScope(scope) };
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            type,
+                                            scope,
+                                            expr::cpp_value::value_kind::null);
+    }
+
     auto const global_type{ cpp_util::resolve_type(name) };
 
     /* Find a builtin type first. Then we know it's a cpp_type expression. */

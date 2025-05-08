@@ -1175,6 +1175,20 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
   {
+    if(expr->val_kind == expr::cpp_value::value_kind::null)
+    {
+      auto const alloc{ ctx->builder->CreateAlloca(
+        ctx->builder->getPtrTy(),
+        llvm::ConstantInt::get(ctx->builder->getInt8Ty(), 1)) };
+      auto const null{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
+      ctx->builder->CreateStore(null, alloc);
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(alloc);
+      }
+      return alloc;
+    }
+
     auto const callable{ Cpp::MakeAotCallable(expr->scope) };
     /* TODO: Fns are reused, so this could cause a linker issue. */
     llvm::Linker::linkModules(
