@@ -54,8 +54,15 @@ namespace jank::codegen
       policy == conversion_policy::into_object ? "into_object" : "from_object") };
     Cpp::TemplateArgInfo input_arg{ Cpp::GetTypeWithoutCv(input_type) };
     auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { input_arg }) };
-    /* TODO: Proper internal error. */
-    jank_assert(match);
+    if(!match)
+    {
+      throw std::runtime_error{ util::format(
+        "Unable to find conversion function match for policy '{}' with conversion type '{}' and "
+        "input type '{}'",
+        policy == conversion_policy::into_object ? "into_object" : "from_object",
+        Cpp::GetTypeAsString(conversion_type),
+        Cpp::GetTypeAsString(input_type)) };
+    }
     auto const match_name{ Cpp::GetName(match) };
     auto const fn_callable{ Cpp::MakeAotCallable(match) };
 
@@ -1259,18 +1266,24 @@ namespace jank::codegen
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(call.getModule())));
 
     jank_debug_assert(expr_type);
+    auto const is_void{ Cpp::IsVoid(expr_type) };
     auto const type_name{ Cpp::GetTypeAsString(expr_type) };
-    jank_debug_assert(Cpp::IsComplete(expr_type));
-    auto const size{ Cpp::GetSizeOfType(expr_type) };
-    jank_debug_assert(size > 0);
-    auto const alignment{ Cpp::GetAlignmentOfType(expr_type) };
-    jank_debug_assert(alignment > 0);
     /* TODO: If it's an IR intrinsic, use that. */
-    auto const ctor_alloc{ ctx->builder->CreateAlloca(
-      ctx->builder->getInt8Ty(),
-      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
-      util::format("{}.ret", type_name).c_str()) };
-    ctor_alloc->setAlignment(llvm::Align{ alignment });
+    llvm::AllocaInst *ctor_alloc{};
+    if(!is_void)
+    {
+      jank_debug_assert(Cpp::IsComplete(expr_type));
+      auto const size{ Cpp::GetSizeOfType(expr_type) };
+      /* TODO: Handle void return types. */
+      jank_debug_assert(size > 0 || is_void);
+      auto const alignment{ Cpp::GetAlignmentOfType(expr_type) };
+      jank_debug_assert(alignment > 0 || is_void);
+      ctor_alloc
+        = ctx->builder->CreateAlloca(ctx->builder->getInt8Ty(),
+                                     llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
+                                     util::format("{}.ret", type_name).c_str());
+      ctor_alloc->setAlignment(llvm::Align{ alignment });
+    }
 
     auto const arg_count{ arg_exprs.size() };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
@@ -1319,17 +1332,25 @@ namespace jank::codegen
       ctx->builder->CreateStore(arg_handle, arg_ptr);
     }
 
+    auto const sret{ is_void ? static_cast<llvm::Value *>(
+                                 llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()))
+                             : static_cast<llvm::Value *>(ctor_alloc) };
     auto const ctor_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
       llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
       args_array,
-      ctor_alloc
+      sret
     };
     ctx->builder->CreateCall(ctor_fn, ctor_args);
 
     if(position == expression_position::tail)
     {
+      if(is_void)
+      {
+        return ctx->builder->CreateRet(gen_global(jank_nil));
+      }
+
       auto const is_untyped_obj{ cpp_util::is_untyped_object(expr_type) };
       if(is_untyped_obj)
       {

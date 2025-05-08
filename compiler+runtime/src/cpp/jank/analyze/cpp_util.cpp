@@ -105,6 +105,7 @@ namespace jank::analyze::cpp_util
                                       expr::cpp_type,
                                       expr::cpp_value,
                                       expr::cpp_cast,
+                                      expr::cpp_call,
                                       expr::cpp_constructor_call>)
         {
           return typed_expr->type;

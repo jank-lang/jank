@@ -2189,7 +2189,6 @@ namespace jank::analyze
     }
 
     auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, arg_types) };
-    util::println("fns {}, match {}", fns, match);
     if(match)
     {
       if(is_ctor)
