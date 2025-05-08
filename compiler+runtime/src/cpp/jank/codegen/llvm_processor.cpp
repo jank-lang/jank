@@ -1270,6 +1270,7 @@ namespace jank::codegen
                                             jtl::ptr<void> const expr_type,
                                             native_vector<expression_ref> const &arg_exprs,
                                             expression_position const position,
+                                            expression_kind const kind,
                                             expr::function_arity const &arity)
   {
     /* TODO: Fns are reused, so this could cause a linker issue. */
@@ -1299,15 +1300,26 @@ namespace jank::codegen
       ctor_alloc->setAlignment(llvm::Align{ alignment });
     }
 
-    auto const arg_count{ arg_exprs.size() };
+    /* For member function calls, we steal the first argument and use it as
+     * the invoking object. Otherwise, we pass null as the invoking object. */
+    auto const is_member_call{ kind == expression_kind::cpp_member_call };
+    llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
+    auto const arg_count{ arg_exprs.size() - (is_member_call ? 1 : 0) };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
     auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
                                                       nullptr,
                                                       util::format("{}.args", type_name).c_str()) };
 
-    for(usize i{}; i < arg_count; ++i)
+    for(usize i{}; i < arg_exprs.size(); ++i)
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
+
+      if(i == 0 && is_member_call)
+      {
+        this_obj = arg_handle;
+        continue;
+      }
+
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
@@ -1351,7 +1363,7 @@ namespace jank::codegen
                              : static_cast<llvm::Value *>(ctor_alloc) };
     auto const ctor_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
-      llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
+      this_obj,
       llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
       args_array,
       sret
@@ -1392,6 +1404,7 @@ namespace jank::codegen
                         expr->type,
                         expr->arg_exprs,
                         expr->position,
+                        expr->kind,
                         arity);
   }
 
@@ -1429,6 +1442,19 @@ namespace jank::codegen
                         expr->type,
                         expr->arg_exprs,
                         expr->position,
+                        expr->kind,
+                        arity);
+  }
+
+  llvm::Value *
+  llvm_processor::gen(expr::cpp_member_call_ref const expr, expr::function_arity const &arity)
+  {
+    return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
+                        expr->fn,
+                        expr->type,
+                        expr->arg_exprs,
+                        expr->position,
+                        expr->kind,
                         arity);
   }
 

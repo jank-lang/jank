@@ -707,4 +707,10 @@ namespace jank::evaluate
     cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
   }
+
+  object_ref eval(expr::cpp_member_call_ref const expr)
+  {
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_member_call", {})));
+  }
 }

@@ -13,8 +13,10 @@ namespace jank::analyze::expr
   cpp_type::cpp_type(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
+                     runtime::obj::symbol_ref sym,
                      jtl::ptr<void> const type)
     : expression{ expr_kind, position, frame, needs_box }
+    , sym{ sym }
     , type{ type }
   {
   }

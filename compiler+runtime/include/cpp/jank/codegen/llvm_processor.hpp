@@ -62,6 +62,7 @@ namespace jank::analyze
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;
     using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+    using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
   }
 }
 
@@ -157,6 +158,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_member_call_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
@@ -185,6 +187,7 @@ namespace jank::codegen
                               jtl::ptr<void> const expr_type,
                               native_vector<analyze::expression_ref> const &arg_exprs,
                               analyze::expression_position const position,
+                              analyze::expression_kind const kind,
                               analyze::expr::function_arity const &arity);
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,

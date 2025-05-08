@@ -50,6 +50,7 @@
 #include <jank/analyze/expr/cpp_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
+#include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -2034,9 +2035,28 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
+                                            sym,
                                             type,
                                             scope,
                                             expr::cpp_value::value_kind::null);
+    }
+
+    /* TODO: Handle data members. */
+    if(name.starts_with(".-"))
+    {
+      return error::internal_analyze_failure("NYI: data members",
+                                             object_source(sym),
+                                             latest_expansion(macro_expansions));
+    }
+    else if(name.starts_with('.'))
+    {
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            nullptr,
+                                            nullptr,
+                                            expr::cpp_value::value_kind::member_call);
     }
 
     auto const global_type{ cpp_util::resolve_type(name) };
@@ -2049,12 +2069,13 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_value>(position,
                                               current_frame,
                                               needs_box,
+                                              sym,
                                               global_type,
                                               nullptr,
                                               expr::cpp_value::value_kind::constructor);
       }
 
-      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, global_type);
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, global_type);
     }
 
     auto const scope_res{ cpp_util::resolve_scope(name) };
@@ -2084,12 +2105,13 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_value>(position,
                                               current_frame,
                                               needs_box,
+                                              sym,
                                               type,
                                               scope,
                                               expr::cpp_value::value_kind::constructor);
       }
 
-      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, type);
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
 
     /* We're not a type, but we have a . suffix, so this is an error. */
@@ -2124,6 +2146,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
+                                            sym,
                                             type,
                                             scope,
                                             vk.unwrap());
@@ -2158,6 +2181,8 @@ namespace jank::analyze
       arg_types.emplace_back(cpp_util::expression_type(arg_exprs.back()));
     }
 
+    std::vector<void *> fns;
+
     auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
     if(is_ctor && Cpp::IsBuiltin(val->type))
     {
@@ -2188,17 +2213,68 @@ namespace jank::analyze
                                                        jtl::move(arg_exprs));
     }
 
-    std::vector<void *> fns;
-    auto const &scope_name{ Cpp::GetScopeName(val->scope) };
+    auto const is_member_call{ val->val_kind == expr::cpp_value::value_kind::member_call };
+    jtl::ptr<void> obj_type{};
+    jtl::ptr<void> obj_scope{};
+    if(is_member_call)
+    {
+      if(arg_exprs.empty())
+      {
+        return error::internal_analyze_failure("Member function calls need an invoking object.",
+                                               object_source(o),
+                                               latest_expansion(macro_expansions));
+      }
+
+      /* TODO: Switch std::vector to native_vector where possible. */
+      auto const name{ val->sym->name.substr(1) };
+      obj_type = arg_types[0].m_Type;
+      obj_scope = Cpp::GetScopeFromType(obj_type);
+      if(!obj_scope)
+      {
+        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
+                                                            name,
+                                                            Cpp::GetTypeAsString(obj_type)),
+                                               object_source(o),
+                                               latest_expansion(macro_expansions));
+      }
+
+      /* TODO: Check const of method and invoking object. */
+
+      arg_types.erase(arg_types.begin());
+      //arg_exprs.erase(arg_exprs.begin());
+
+      fns = Cpp::LookupMethods(name, obj_scope);
+      if(fns.empty())
+      {
+        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
+                                                            name,
+                                                            Cpp::GetTypeAsString(obj_type)),
+                                               object_source(o),
+                                               latest_expansion(macro_expansions));
+      }
+    }
+
+    std::string scope_name{};
     if(is_ctor)
     {
-      /* TODO: GetScopeName. */
+      /* TODO: scope_name. */
       Cpp::LookupConstructors("", val->scope, fns);
+    }
+    else if(is_member_call)
+    {
+      scope_name = val->sym->name.substr(1);
     }
     else
     {
-      /* TODO: Use scope to find fns. */
+      scope_name = Cpp::GetScopeName(val->scope);
       fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
+      if(fns.empty())
+      {
+        return error::internal_analyze_failure(
+          util::format("There is no '{}' function.", scope_name),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
     }
 
     auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, arg_types) };
@@ -2212,6 +2288,16 @@ namespace jank::analyze
                                                          val->type,
                                                          match,
                                                          jtl::move(arg_exprs));
+      }
+      else if(is_member_call)
+      {
+        return jtl::make_ref<expr::cpp_member_call>(position,
+                                                    current_frame,
+                                                    needs_box,
+                                                    Cpp::GetFunctionReturnType(match),
+                                                    obj_scope,
+                                                    match,
+                                                    jtl::move(arg_exprs));
       }
       else
       {
@@ -2246,6 +2332,16 @@ namespace jank::analyze
                                                          match,
                                                          jtl::move(arg_exprs));
       }
+      else if(is_member_call)
+      {
+        return jtl::make_ref<expr::cpp_member_call>(position,
+                                                    current_frame,
+                                                    needs_box,
+                                                    Cpp::GetFunctionReturnType(match),
+                                                    obj_scope,
+                                                    match,
+                                                    jtl::move(arg_exprs));
+      }
       else
       {
         auto const return_type{ Cpp::GetFunctionReturnType(match) };
@@ -2268,7 +2364,6 @@ namespace jank::analyze
                       Cpp::GetTypeAsString(arg_types[i].m_Type));
     }
 
-    /* TODO: Use scope name, if there is a scope. */
     return error::internal_analyze_failure(util::format("No matching call to '{}' {}.{}",
                                                         scope_name,
                                                         is_ctor ? "constructor" : "function",
@@ -2312,6 +2407,7 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
+    /* TODO: Rename to type_expr. */
     auto const typed_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
     auto const value_obj(l->data.rest().rest().first().unwrap());
     auto value_expr_res(
@@ -2329,6 +2425,7 @@ namespace jank::analyze
         position,
         current_frame,
         needs_box,
+        typed_expr->sym,
         typed_expr->type,
         Cpp::GetScopeFromType(typed_expr->type),
         expr::cpp_value::value_kind::constructor) };

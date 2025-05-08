@@ -41,6 +41,7 @@ namespace jank::analyze
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;
     using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+    using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
   }
 }
 
@@ -80,4 +81,5 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::cpp_cast_ref);
   runtime::object_ref eval(analyze::expr::cpp_call_ref);
   runtime::object_ref eval(analyze::expr::cpp_constructor_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_member_call_ref);
 }
