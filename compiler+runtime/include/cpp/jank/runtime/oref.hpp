@@ -441,13 +441,6 @@ namespace jank::runtime
     return ret;
   }
 
-  /* TODO: This no longer makes sense. */
-  template <typename T>
-  constexpr jtl::ref<T> make_array_box()
-  {
-    return nullptr;
-  }
-
   template <typename T, usize N>
   constexpr jtl::ref<T> make_array_box()
   {
