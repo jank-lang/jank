@@ -309,7 +309,7 @@ jank_object_ref jank_load_clojure_core_native()
   auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
 
   auto const intern_val([=](jtl::immutable_string const &name, auto const val) {
-    ns->intern_var(name)->bind_root(convert<decltype(val), object_ref>::call(val));
+    ns->intern_var(name)->bind_root(convert<decltype(val)>::into_object(val));
   });
   auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
