@@ -1,0 +1,9 @@
+(assert
+ (=
+  (case 3/4
+    4/3 :four-thirds
+    3/4 :three-fourths
+    :default)
+  :three-fourths))
+
+:success

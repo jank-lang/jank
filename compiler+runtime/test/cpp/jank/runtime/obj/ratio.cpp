@@ -23,6 +23,12 @@ namespace jank::runtime
           CHECK_EQ(ratio.numerator, 2); // Simplified
           CHECK_EQ(ratio.denominator, 3);
         }
+        SUBCASE("Valid ratio object_ptr ctor")
+        {
+          obj::ratio_data const ratio{ 4, 6 };
+          CHECK_EQ(ratio.numerator, 2); // Simplified
+          CHECK_EQ(ratio.denominator, 3);
+        }
         SUBCASE("Invalid Denominator")
         {
           CHECK_THROWS_AS(obj::ratio_data(4, 0), std::invalid_argument);

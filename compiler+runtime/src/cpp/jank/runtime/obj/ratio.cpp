@@ -1,13 +1,36 @@
 #include <limits>
-#include <numeric>
 #include <cmath>
 
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
+  namespace
+  {
+    native_big_integer extract_big_integer(object_ptr const d)
+    {
+      native_big_integer result{};
+      if(d->type == object_type::big_integer)
+      {
+        result = expect_object<big_integer>(d)->data;
+      }
+      else if(d->type == object_type::integer)
+      {
+        result = expect_object<integer>(d)->data;
+      }
+      else
+      {
+        throw std::runtime_error{
+          util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
+        };
+      }
+      return result;
+    }
+  }
+
   static constexpr auto epsilon{ std::numeric_limits<native_real>::epsilon() };
 
   ratio_data::ratio_data(native_big_integer const &numerator, native_big_integer const &denominator)
@@ -39,9 +62,9 @@ namespace jank::runtime::obj
   {
   }
 
-  ratio_data::ratio_data(object_ptr numerator, object_ptr denominator)
+  ratio_data::ratio_data(object_ptr const numerator, object_ptr const denominator)
+    : ratio_data(extract_big_integer(numerator), extract_big_integer(denominator))
   {
-    ratio_data(expect_object<big_integer>(numerator), expect_object<big_integer>(denominator));
   }
 
   ratio::ratio(ratio_data const &data)
@@ -60,10 +83,7 @@ namespace jank::runtime::obj
       {
         return make_box<integer>(big_integer::to_native_integer(data.numerator));
       }
-      else
-      {
-        return make_box<big_integer>(data.numerator);
-      }
+      return make_box<big_integer>(data.numerator);
     }
     return make_box<ratio>(data);
   }
