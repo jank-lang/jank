@@ -385,7 +385,8 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::character>
                      || std::same_as<T, runtime::obj::keyword>
                      || std::same_as<T, runtime::obj::persistent_string>
-                     || std::same_as<T, runtime::obj::ratio>)
+                     || std::same_as<T, runtime::obj::ratio>
+                     || std::same_as<T, runtime::obj::big_integer>)
         {
           return gen_global(typed_o);
         }
@@ -1294,10 +1295,8 @@ namespace jank::codegen
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_ratio_create", create_fn_type));
-      llvm::SmallVector<llvm::Value *, 2> const args{
-        gen_global(make_box(r->data.numerator)),
-        gen_global(make_box(r->data.denominator))
-      };
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(r->data.numerator)),
+                                                      gen_global(make_box(r->data.denominator)) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
