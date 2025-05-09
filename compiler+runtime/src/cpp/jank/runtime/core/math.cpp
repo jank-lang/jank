@@ -9,7 +9,6 @@
 
 namespace jank::runtime
 {
-  native_bool operator>(native_real const &l, native_big_integer const &r);
   template <typename T>
   static auto to_number(T const &t)
   {
@@ -553,25 +552,22 @@ namespace jank::runtime
     }
     else if constexpr(std::is_same_v<T, obj::ratio_data>)
     {
-      return val.to_real(); // Assuming ratio_data has a to_real method
+      return val.to_real();
     }
     else
     {
-      // Handle error or static assert for unsupported types
-      static_assert(!sizeof(T *), "Unsupported type for to_real conversion");
-      return 0.0; // Should not reach here
+      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return 0.0;
     }
   }
 
   object_ptr rem(object_ptr const l, object_ptr const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const r_obj)
-        -> object_ptr { // typed_l is integer_ptr, big_integer_ptr, real_ptr, or ratio_ptr
+      [](auto const typed_l, auto const r_obj) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l_data)
-            -> object_ptr { // typed_r is integer_ptr, etc., typed_l_data is the native data type
-            using LeftType = std::decay_t<decltype(typed_l_data)>;
+          []<typename T>(auto const typed_r, T const typed_l_data) -> object_ptr {
+            using LeftType = std::decay_t<T>;
             using RightType = std::decay_t<decltype(typed_r->data)>;
 
             constexpr bool left_is_int_like = std::is_same_v<LeftType, native_integer>
@@ -598,8 +594,8 @@ namespace jank::runtime
             }
             else
             {
-              native_real l_real = to_real(typed_l_data);
-              native_real r_real = to_real(typed_r->data);
+              native_real const l_real = to_real(typed_l_data);
+              native_real const r_real = to_real(typed_r->data);
               return make_box(std::fmod(l_real, r_real));
             }
           },

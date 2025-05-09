@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime::obj
 {

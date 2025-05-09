@@ -2,10 +2,8 @@
 
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/visit.hpp>
-#include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime
@@ -79,7 +77,7 @@ namespace jank::runtime
 
   native_bool operator!=(native_real const &l, native_big_integer const &r)
   {
-    return r != l; // Reuse
+    return r != l;
   }
 
   native_bool operator<(native_big_integer const &l, native_real const &r)
@@ -287,7 +285,6 @@ namespace jank::runtime::obj
   {
     return visit_number_like(
       [this](auto const typed_o) -> native_integer {
-        /* Converts to native_integer for now. */
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> native_integer {
@@ -325,7 +322,7 @@ namespace jank::runtime::obj
   {
     try
     {
-      return data.template convert_to<native_real>();
+      return data.convert_to<native_real>();
     }
     catch(std::overflow_error const &)
     {
@@ -344,5 +341,4 @@ namespace jank::runtime::obj
     return big_integer::to_native_real(data);
   }
 
-
-} // namespace jank::runtime::obj
+}

@@ -483,17 +483,18 @@ namespace jank::read::lex
                 { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
         }));
       }
-      // SUBCASE("Success - big integer")
-      // {
-      //   processor p{ "4/8888888888888888888888888888888888" };
-      //   native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
-      //   CHECK(tokens
-      //         == make_tokens({
-      //           { 0,
-      //            36, token_kind::ratio,
-      //            { .numerator = 1, .denominator = 2222222222222222222222222222222222 } }
-      //   }));
-      // }
+      SUBCASE("Success - big integer")
+      {
+        processor p{ "4/8888888888888888888888888888888888" };
+        native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 36, token_kind::ratio,
+                 { .numerator = 4,
+                    .denominator = native_big_integer("8888888888888888888888888888888888") } }
+        }));
+      }
       SUBCASE("Success - -x/x")
       {
         processor p{ "-4/5" };

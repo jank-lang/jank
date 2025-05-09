@@ -1,11 +1,11 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
-#include <cmath> // For std::isinf, std::fabs
+#include <cmath>
 
 #include <jank/runtime/obj/big_integer.hpp>
-#include <jank/runtime/obj/number.hpp> // For integer, real
-#include <jank/runtime/obj/ratio.hpp> // For ratio comparison
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/string_builder.hpp>
@@ -15,8 +15,7 @@
 
 namespace jank::runtime::obj
 {
-  // Helper to create native_big_integer easily
-  native_big_integer nbi(long long val)
+  native_big_integer nbi(long long const val)
   {
     return native_big_integer(val);
   }
@@ -46,8 +45,7 @@ namespace jank::runtime::obj
       SUBCASE("native_big_integer && constructor")
       {
         native_big_integer val = nbi("-98765432109876543210");
-        big_integer bi(std::move(val)); // Move construction
-        // Note: After move, 'val' state is unspecified but valid. Check 'bi'.
+        big_integer bi(std::move(val));
         CHECK_EQ(bi.data, nbi("-98765432109876543210"));
       }
 
@@ -61,7 +59,7 @@ namespace jank::runtime::obj
 
       SUBCASE("string constructor - valid")
       {
-        big_integer bi("999999999999999999999999999999"); // Large number
+        big_integer bi("999999999999999999999999999999");
         CHECK_EQ(bi.data, nbi("999999999999999999999999999999"));
         big_integer bi_neg("-100000000000000000000");
         CHECK_EQ(bi_neg.data, nbi("-100000000000000000000"));
@@ -75,7 +73,7 @@ namespace jank::runtime::obj
       {
         CHECK_THROWS_AS(big_integer("abc"), std::runtime_error);
         CHECK_THROWS_AS(big_integer("123a"), std::runtime_error);
-        CHECK_THROWS_AS(big_integer(""), std::runtime_error); // Empty string often invalid
+        CHECK_THROWS_AS(big_integer(""), std::runtime_error);
         CHECK_THROWS_AS(big_integer("--1"), std::runtime_error);
       }
     }
@@ -90,11 +88,11 @@ namespace jank::runtime::obj
       auto i2 = make_box<integer>(12345LL);
       auto i3 = make_box<integer>(-12345LL);
       auto r1 = make_box<real>(12345.0);
-      auto r2 = make_box<real>(12345.00000000001); // Should be different
-      auto r3 = make_box<real>(12345.0000000000000001); // Should be equal due to epsilon
-      auto r_large_exact = make_box<real>(123456789012345.0); // Exact fit
-      auto r_large_approx = make_box<real>(123456789012345.00001); // Approx fit
-      auto ratio1 = make_box<obj::ratio>(obj::ratio_data(1, 2)); // Incompatible type
+      auto r2 = make_box<real>(12345.00000000001);
+      auto r3 = make_box<real>(12345.0000000000000001);
+      auto r_large_exact = make_box<real>(123456789012345.0);
+      auto r_large_approx = make_box<real>(123456789012345.00001);
+      auto ratio1 = make_box<obj::ratio>(obj::ratio_data(1, 2));
 
       SUBCASE("big_integer vs big_integer")
       {
@@ -121,22 +119,22 @@ namespace jank::runtime::obj
 
         CHECK(bi_r1.equal(*erase(r1)));
         CHECK_FALSE(bi_r1.equal(*erase(r2)));
-        CHECK(bi_r1.equal(*erase(r3))); // Within epsilon
+        CHECK(bi_r1.equal(*erase(r3)));
 
-        // Large number check
+
         CHECK(bi_r_large.equal(*erase(r_large_exact)));
-        CHECK(bi_r_large.equal(*erase(r_large_approx))); // Within epsilon
+        CHECK(bi_r_large.equal(*erase(r_large_approx)));
 
-        // Numbers that cause overflow during conversion in `equal`
-        // Create a BI larger than double can represent
-        native_big_integer huge_val = nbi("1") << 1024; // 2^1024
+        /* Numbers that cause overflow during conversion in `equal`. */
+        /* Create a BI larger than double can represent. */
+        native_big_integer huge_val = nbi("1") << 1024;
         big_integer bi_huge_pos(huge_val);
         big_integer bi_huge_neg(-huge_val);
         auto r_inf_pos = make_box<real>(std::numeric_limits<native_real>::infinity());
         auto r_inf_neg = make_box<real>(-std::numeric_limits<native_real>::infinity());
 
-        CHECK_FALSE(bi_huge_pos.equal(*erase(
-          r_inf_pos))); // Conversion works, but comparison should use epsilon logic which fails for inf
+        /* Conversion works, but comparison should use epsilon logic which fails for inf. */
+        CHECK_FALSE(bi_huge_pos.equal(*erase(r_inf_pos)));
         CHECK_FALSE(bi_huge_neg.equal(*erase(r_inf_neg)));
         CHECK_FALSE(bi_huge_pos.equal(*erase(r1)));
       }
@@ -219,7 +217,7 @@ namespace jank::runtime::obj
       auto bi_10 = make_box<big_integer>(10);
       auto bi_20 = make_box<big_integer>(20);
       auto bi_10_neg = make_box<big_integer>(-10);
-      auto bi_large = make_box<big_integer>(nbi("100000000000000000000")); // > LLONG_MAX
+      auto bi_large = make_box<big_integer>(nbi("100000000000000000000"));
 
       auto i_15 = make_box<integer>(15);
       auto i_10 = make_box<integer>(10);
@@ -231,7 +229,7 @@ namespace jank::runtime::obj
       auto r_neg_9_5 = make_box<real>(-9.5);
 
       auto ratio_half = make_box<obj::ratio>(obj::ratio_data(1, 2));
-      auto bool_true = make_box<obj::boolean>(true); // Incompatible
+      auto bool_true = make_box<obj::boolean>(true);
 
       SUBCASE("big_integer vs big_integer")
       {
@@ -278,7 +276,7 @@ namespace jank::runtime::obj
       CHECK_EQ(big_integer::gcd(nbi(-12), nbi(18)), 6);
       CHECK_EQ(big_integer::gcd(nbi(12), nbi(-18)), 6);
       CHECK_EQ(big_integer::gcd(nbi(-12), nbi(-18)), 6);
-      CHECK_EQ(big_integer::gcd(nbi(17), nbi(5)), 1); // Co-prime
+      CHECK_EQ(big_integer::gcd(nbi(17), nbi(5)), 1);
       CHECK_EQ(big_integer::gcd(nbi(0LL), nbi(5)), 5);
       CHECK_EQ(big_integer::gcd(nbi(5), nbi(0LL)), 5);
       CHECK_EQ(big_integer::gcd(nbi(0LL), nbi(0LL)), 0LL);
@@ -301,16 +299,14 @@ namespace jank::runtime::obj
       SUBCASE("Outside native_integer range (throws)")
       {
         native_big_integer max_plus_1 = nbi(LLONG_MAX);
-        max_plus_1++;
+        ++max_plus_1;
         native_big_integer min_minus_1 = nbi(LLONG_MIN);
-        min_minus_1--;
+        --min_minus_1;
 
-        // Expect std::runtime_error for values outside native_integer range
         CHECK_THROWS_AS(big_integer(max_plus_1).to_integer(), std::runtime_error);
         CHECK_THROWS_AS(big_integer(min_minus_1).to_integer(), std::runtime_error);
 
-        native_big_integer very_large = nbi(1) << 100; // 2^100
-        // Expect std::runtime_error for large positive/negative values
+        native_big_integer very_large = nbi(1) << 100; /* 2^100 */
         CHECK_THROWS_AS(big_integer(very_large).to_integer(), std::runtime_error);
         CHECK_THROWS_AS(big_integer(-very_large).to_integer(), std::runtime_error);
       }
@@ -323,35 +319,30 @@ namespace jank::runtime::obj
         CHECK_EQ(big_integer(123).to_real(), doctest::Approx(123.0));
         CHECK_EQ(big_integer(0).to_real(), doctest::Approx(0.0));
         CHECK_EQ(big_integer(-456).to_real(), doctest::Approx(-456.0));
-        // A large number exactly representable by double
-        native_big_integer exact_double_val = nbi(1) << 50;
+        /* A large number exactly representable by double. */
+        native_big_integer const exact_double_val = nbi(1) << 50;
         CHECK_EQ(big_integer(exact_double_val).to_real(), doctest::Approx(std::pow(2.0, 50)));
       }
 
       SUBCASE("Outside native_real range (infinity)")
       {
-        // Need a number guaranteed to exceed double's max exponent
-        native_big_integer huge_pos = nbi(1) << 1024; // 2^1024 > DBL_MAX
-        native_big_integer huge_neg = -huge_pos;
-
+        native_big_integer const huge_pos = nbi(1) << 1024; /* 2^1024 > DBL_MAX */
+        native_big_integer const huge_neg = -huge_pos;
         CHECK_EQ(big_integer(huge_pos).to_real(), std::numeric_limits<native_real>::infinity());
         CHECK_EQ(big_integer(huge_neg).to_real(), -std::numeric_limits<native_real>::infinity());
       }
     }
 
-    // --- Tests for free operators defined in jank::runtime scope ---
     TEST_CASE("Operators (big_integer vs native_real)")
     {
-      // Need to use the `jank::runtime::` scope explicitly or rely on ADL (which won't work here)
       using namespace jank::runtime;
 
-      native_big_integer bi_10 = nbi(10);
-      native_big_integer bi_neg_5 = nbi(-5);
-      native_big_integer bi_large = nbi("10000000000000000"); // Fit in double
-      native_real r_3_5 = 3.5;
-      native_real r_neg_2 = -2.0;
-      native_real r_10 = 10.0;
-      native_real r_large = 1.0e16; // Equivalent to bi_large
+      native_big_integer const bi_10 = nbi(10);
+      native_big_integer const bi_neg_5 = nbi(-5);
+      native_big_integer const bi_large = nbi("10000000000000000");
+      constexpr native_real r_3_5 = 3.5;
+      constexpr native_real r_10 = 10.0;
+      constexpr native_real r_large = 1.0e16;
 
       SUBCASE("Addition")
       {
@@ -376,6 +367,7 @@ namespace jank::runtime::obj
       }
       SUBCASE("Division")
       {
+        constexpr native_real r_neg_2 = -2.0;
         CHECK_EQ(operator/(bi_10, r_neg_2), doctest::Approx(-5.0));
         CHECK_EQ(operator/(r_neg_2, bi_10), doctest::Approx(-0.2));
         CHECK_EQ(operator/(bi_neg_5, r_neg_2), doctest::Approx(2.5));
@@ -392,10 +384,10 @@ namespace jank::runtime::obj
         CHECK(operator==(bi_large, r_large));
         CHECK(operator==(r_large, bi_large));
 
-        CHECK(operator==(bi_10, r_10_eps)); // Within epsilon
+        CHECK(operator==(bi_10, r_10_eps));
         CHECK(operator==(r_10_eps, bi_10));
 
-        CHECK_FALSE(operator==(bi_10, r_10_10eps)); // Outside epsilon
+        CHECK_FALSE(operator==(bi_10, r_10_10eps));
         CHECK_FALSE(operator==(r_10_10eps, bi_10));
 
         CHECK_FALSE(operator==(bi_10, r_3_5));
@@ -420,8 +412,8 @@ namespace jank::runtime::obj
         CHECK(operator<=(bi_10, r_large));
         CHECK(operator<=(r_3_5, bi_10));
         CHECK_FALSE(operator<=(bi_10, r_3_5));
-        CHECK(operator<=(bi_10, r_10)); // Equal case
-        CHECK(operator<=(r_10, bi_10)); // Equal case
+        CHECK(operator<=(bi_10, r_10));
+        CHECK(operator<=(r_10, bi_10));
       }
       SUBCASE("Greater Than")
       {
@@ -435,25 +427,24 @@ namespace jank::runtime::obj
         CHECK(operator>=(bi_large, r_10));
         CHECK(operator>=(bi_10, r_3_5));
         CHECK_FALSE(operator>=(r_3_5, bi_10));
-        CHECK(operator>=(bi_10, r_10)); // Equal case
-        CHECK(operator>=(r_10, bi_10)); // Equal case
+        CHECK(operator>=(bi_10, r_10));
+        CHECK(operator>=(r_10, bi_10));
       }
     }
 
     TEST_CASE("BigInteger string constructor with radix")
     {
       using namespace jank::runtime::obj;
-      using boost::multiprecision::cpp_int; // Use alias for clarity
+      using boost::multiprecision::cpp_int;
 
       SUBCASE("Radix 2 (Binary)")
       {
-        // Expected values calculated manually or via known conversions
         CHECK_EQ(big_integer("101010", 2, false).data, cpp_int(42));
         CHECK_EQ(big_integer("11111111", 2, false).data, cpp_int(255));
         CHECK_EQ(big_integer("100000000", 2, true).data, cpp_int(-256));
         CHECK_EQ(big_integer("0", 2, false).data, cpp_int(0));
-        // Large binary
-        cpp_int expected_large_bin = (cpp_int(1) << 64) - 1; // Example: 2^64 - 1
+
+        cpp_int expected_large_bin = (cpp_int(1) << 64) - 1; /* 2^64 - 1 */
         CHECK_EQ(
           big_integer("1111111111111111111111111111111111111111111111111111111111111111", 2, false)
             .data,
@@ -462,16 +453,15 @@ namespace jank::runtime::obj
 
       SUBCASE("Radix 8 (Octal)")
       {
-        // Use Boost's "0" prefix parsing for octal in expected value
-        CHECK_EQ(big_integer("777", 8, false).data, cpp_int("0777")); // 511
-        CHECK_EQ(big_integer("12345", 8, false).data, cpp_int("012345")); // 5349
-        CHECK_EQ(big_integer("10", 8, true).data, cpp_int("-010")); // -8
+        /* Use Boost's "0" prefix parsing for octal in expected value. */
+        CHECK_EQ(big_integer("777", 8, false).data, cpp_int("0777"));
+        CHECK_EQ(big_integer("12345", 8, false).data, cpp_int("012345"));
+        CHECK_EQ(big_integer("10", 8, true).data, cpp_int("-010"));
         CHECK_EQ(big_integer("0", 8, false).data, cpp_int(0));
       }
 
       SUBCASE("Radix 10 (Decimal)")
       {
-        // Direct string comparison for decimal
         CHECK_EQ(big_integer("12345678901234567890", 10, false).data,
                  cpp_int("12345678901234567890"));
         CHECK_EQ(big_integer("9876543210", 10, true).data, cpp_int("-9876543210"));
@@ -480,19 +470,18 @@ namespace jank::runtime::obj
 
       SUBCASE("Radix 16 (Hex)")
       {
-        // Use Boost's "0x" prefix parsing for hex in expected value
-        CHECK_EQ(big_integer("abcdef", 16, false).data, cpp_int("0xabcdef")); // 11259375
-        CHECK_EQ(big_integer("FFFFFFFF", 16, false).data, cpp_int("0xFFFFFFFF")); // 4294967295
-        CHECK_EQ(big_integer("10", 16, true).data, cpp_int("-0x10")); // -16
+        CHECK_EQ(big_integer("abcdef", 16, false).data, cpp_int("0xabcdef"));
+        CHECK_EQ(big_integer("FFFFFFFF", 16, false).data, cpp_int("0xFFFFFFFF"));
+        CHECK_EQ(big_integer("10", 16, true).data, cpp_int("-0x10"));
         CHECK_EQ(big_integer("0", 16, false).data, cpp_int(0));
         CHECK_EQ(big_integer("123456789ABCDEF0", 16, false).data, cpp_int("0x123456789ABCDEF0"));
       }
 
       SUBCASE("Radix 36")
       {
-        // 1bz9 (base 36) = 1*36^3 + 11*36^2 + 35*36^1 + 9*36^0 = 46656 + 14256 + 1260 + 9 = 62181
+        /* 1bz9 (base 36) = 1*36^3 + 11*36^2 + 35*36^1 + 9*36^0 = 46656 + 14256 + 1260 + 9 = 62181 */
         CHECK_EQ(big_integer("1bz9", 36, false).data, cpp_int(62181));
-        // za (base 36) = 35*36^1 + 10*36^0 = 1260 + 10 = 1270
+        /* za (base 36) = 35*36^1 + 10*36^0 = 1260 + 10 = 1270 */
         CHECK_EQ(big_integer("za", 36, true).data, cpp_int(-1270));
         CHECK_EQ(big_integer("helloworld", 36, false).data, 1767707668033969);
         CHECK_EQ(big_integer("0", 36, false).data, cpp_int(0));
@@ -500,7 +489,6 @@ namespace jank::runtime::obj
 
       SUBCASE("Large Numbers (Manual Construction)")
       {
-        // Construct large expected values directly
         cpp_int expected_bin_100_ones = (cpp_int(1) << 100) - 1;
         std::string large_bin(100, '1');
         CHECK_EQ(big_integer(large_bin, 2, false).data, expected_bin_100_ones);
@@ -510,13 +498,13 @@ namespace jank::runtime::obj
         large_hex.append(30, '0');
         CHECK_EQ(big_integer(large_hex, 16, false).data, expected_hex_1_30_zeros);
 
-        // Calculate large base 36 number 'ghijklmnopqrstuvwxyz'
+        /* Calculate large base 36 number 'ghijklmnopqrstuvwxyz' */
         cpp_int expected_large_36 = 0;
         std::string large_36_str = "ghijklmnopqrstuvwxyz";
         cpp_int power_36 = 1;
         for(auto it = large_36_str.rbegin(); it != large_36_str.rend(); ++it)
         {
-          int digit_val = (*it) - 'a' + 10; // g=16, h=17, ..., z=35
+          int digit_val = (*it) - 'a' + 10;
           expected_large_36 += power_36 * digit_val;
           if(it + 1 != large_36_str.rend())
           {
@@ -527,4 +515,4 @@ namespace jank::runtime::obj
       }
     }
   }
-} // namespace jank::runtime::obj
+}

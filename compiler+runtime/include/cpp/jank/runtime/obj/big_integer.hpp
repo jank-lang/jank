@@ -72,6 +72,8 @@ namespace jank::runtime::obj
     native_big_integer data;
   };
 
+  /* For some reason, operators defined in jank::runtime namespace cannot be accessed from jank namespace.
+   * We therefore added the following as a workaround. The root cause is not clear, likely due to boost cpp_int quirks.*/
   using jank::runtime::operator+;
   using jank::runtime::operator+;
   using jank::runtime::operator-;
@@ -93,25 +95,3 @@ namespace jank::runtime::obj
   using jank::runtime::operator>=;
   using jank::runtime::operator>=;
 }
-
-namespace std
-{
-  template <>
-  struct hash<jank::runtime::obj::big_integer_ptr>
-  {
-    size_t operator()(jank::runtime::obj::big_integer_ptr const o) const noexcept
-    {
-      return o->to_hash();
-    }
-  };
-
-  template <>
-  struct hash<jank::runtime::obj::big_integer>
-  {
-    size_t operator()(jank::runtime::obj::big_integer const &o) const noexcept
-    {
-      std::hash<boost::multiprecision::cpp_int> hasher;
-      return hasher(o.data);
-    }
-  };
-} // namespace std

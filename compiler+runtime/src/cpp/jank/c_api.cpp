@@ -377,7 +377,6 @@ extern "C"
   jank_object_ptr jank_big_integer_create(char const *s)
   {
     assert(s);
-    std::cout << "jank_big_integer_create(" << s << ")\n";
     return erase(make_box<runtime::obj::big_integer>(jank::native_persistent_string_view{ s }));
   }
 
