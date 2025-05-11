@@ -147,22 +147,22 @@ namespace jank::runtime::obj
 
     TEST_CASE("String conversions")
     {
-      big_integer bi_pos(nbi("1234567890987654321"));
-      big_integer bi_neg(nbi("-9876543210123456789"));
-      big_integer bi_zero(0);
+      big_integer const bi_pos(nbi("1234567890987654321"));
+      big_integer const bi_neg(nbi("-9876543210123456789"));
+      big_integer const bi_zero(0);
 
       SUBCASE("to_string()")
       {
-        CHECK_EQ(bi_pos.to_string(), "1234567890987654321");
-        CHECK_EQ(bi_neg.to_string(), "-9876543210123456789");
-        CHECK_EQ(bi_zero.to_string(), "0");
+        CHECK_EQ(bi_pos.to_string(), "1234567890987654321N");
+        CHECK_EQ(bi_neg.to_string(), "-9876543210123456789N");
+        CHECK_EQ(bi_zero.to_string(), "0N");
       }
 
       SUBCASE("to_code_string()")
       {
-        CHECK_EQ(bi_pos.to_code_string(), "1234567890987654321");
-        CHECK_EQ(bi_neg.to_code_string(), "-9876543210123456789");
-        CHECK_EQ(bi_zero.to_code_string(), "0");
+        CHECK_EQ(bi_pos.to_code_string(), "1234567890987654321N");
+        CHECK_EQ(bi_neg.to_code_string(), "-9876543210123456789N");
+        CHECK_EQ(bi_zero.to_code_string(), "0N");
       }
 
       SUBCASE("to_string(string_builder)")
@@ -489,16 +489,16 @@ namespace jank::runtime::obj
 
       SUBCASE("Large Numbers (Manual Construction)")
       {
-        cpp_int expected_bin_100_ones = (cpp_int(1) << 100) - 1;
-        std::string large_bin(100, '1');
+        cpp_int const expected_bin_100_ones = (cpp_int(1) << 100) - 1;
+        std::string const large_bin(100, '1');
         CHECK_EQ(big_integer(large_bin, 2, false).data, expected_bin_100_ones);
 
-        cpp_int expected_hex_1_30_zeros = cpp_int(1) << (30 * 4); // 1 * 16^30
+        cpp_int const expected_hex_1_30_zeros = cpp_int(1) << (30 * 4); // 1 * 16^30
         std::string large_hex = "1";
         large_hex.append(30, '0');
         CHECK_EQ(big_integer(large_hex, 16, false).data, expected_hex_1_30_zeros);
 
-        /* Calculate large base 36 number 'ghijklmnopqrstuvwxyz' */
+        /* Calculate a large base 36 number 'ghijklmnopqrstuvwxyz' */
         cpp_int expected_large_36 = 0;
         std::string large_36_str = "ghijklmnopqrstuvwxyz";
         cpp_int power_36 = 1;

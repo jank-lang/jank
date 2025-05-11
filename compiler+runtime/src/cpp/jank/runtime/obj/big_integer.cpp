@@ -143,7 +143,14 @@ namespace jank::runtime::obj
 
     try
     {
-      data.assign(std::string(s));
+      if(s.ends_with('N'))
+      {
+        data.assign(std::string(s.substr(0, s.size() - 1)));
+      }
+      else
+      {
+        data.assign(std::string(s));
+      }
     }
     catch(std::exception const &e)
     {
@@ -158,11 +165,11 @@ namespace jank::runtime::obj
   }
 
   big_integer::big_integer(native_persistent_string_view const &s,
-                           native_integer radix,
-                           native_bool is_negative)
+                           native_integer const radix,
+                           native_bool const is_negative)
     : big_integer()
   {
-    /* Radix passed from lexer and it's made sure to be between 2 and 36. */
+    /* Radix passed from lexer, and it's made sure to be between 2 and 36. */
     if(radix == 10)
     {
       init(s);
@@ -177,14 +184,13 @@ namespace jank::runtime::obj
     }
     else
     {
-      /* For all other radix, we need to manually parse the number. */
+      /* For all other radixes, we need to manually parse the number. */
       native_big_integer temp_val = 0;
       native_big_integer current_radix_power = 1;
       for(auto it = s.rbegin(); it != s.rend(); ++it)
       {
         int digit_val;
-        char c = std::tolower(*it);
-        if(c >= '0' && c <= '9')
+        if(char const c = std::tolower(*it); c >= '0' && c <= '9')
         {
           digit_val = c - '0';
         }
@@ -239,7 +245,7 @@ namespace jank::runtime::obj
 
   native_persistent_string big_integer::to_string() const
   {
-    return data.str();
+    return data.str() + 'N';
   }
 
   void big_integer::to_string(util::string_builder &buff) const
