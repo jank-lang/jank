@@ -108,7 +108,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
 
-if(jank_tests)
+if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
 
@@ -472,7 +472,7 @@ jank_hook_llvm(jank_exe)
 # ---- jank executable ----
 
 # ---- Tests ----
-if(jank_tests)
+if(jank_test)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
