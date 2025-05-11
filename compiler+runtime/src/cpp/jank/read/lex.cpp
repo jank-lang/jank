@@ -648,6 +648,7 @@ namespace jank::read::lex
           native_bool found_exponent_sign{};
           native_bool expecting_exponent{};
           native_bool expecting_more_digits{};
+          native_bool found_N{};
           int radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           native_bool found_beginning_negative{};
@@ -700,7 +701,7 @@ namespace jank::read::lex
             }
             if(auto const [c, len](result.unwrap_or(codepoint{ ' ', 1 })); c == '.')
             {
-              if(contains_dot || is_scientific || !contains_leading_digit)
+              if(contains_dot || is_scientific || !contains_leading_digit || found_N)
               {
                 ++pos;
                 return error::lex_invalid_number("Unexpected '.' found in number.",
@@ -729,6 +730,13 @@ namespace jank::read::lex
               {
                 ++pos;
                 continue;
+              }
+              if(found_N)
+              {
+                ++pos;
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
               }
               if(radix < 15)
               {
@@ -775,6 +783,12 @@ namespace jank::read::lex
               {
                 continue;
               }
+              if(found_N)
+              {
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
+              }
               found_r = true;
               expecting_more_digits = true;
               r_pos = pos;
@@ -798,6 +812,12 @@ namespace jank::read::lex
                 /* TODO: Add a note for why it's not an integer. */
                 return error::lex_invalid_ratio("A ratio numerator must be an integer.",
                                                 { token_start, pos });
+              }
+              if(found_N)
+              {
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
               }
               found_slash_after_number = true;
               /* Skip the '/' char and look for the denominator number. */
@@ -851,7 +871,7 @@ namespace jank::read::lex
               }
               return denominator.expect_err();
             }
-            else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
+            else if(std::iswdigit(static_cast<wint_t>(c)) == 0 /* Not a digit */)
             {
               if(expecting_exponent)
               {
@@ -867,6 +887,27 @@ namespace jank::read::lex
               if(!contains_leading_digit)
               {
                 /* If we don't have a leading digit, then we are parsing a symbol. */
+                break;
+              }
+              if(c == 'N')
+              {
+                ++pos;
+                /* big integer */
+                if(found_N)
+                {
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                if(found_slash_after_number)
+                {
+                  found_slash_after_number = false;
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                found_N = true;
+                expecting_more_digits = false;
                 break;
               }
               /* When parsing decimal numbers only, we would break if we see a non-digit char. */
@@ -955,7 +996,8 @@ namespace jank::read::lex
 
             /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
-            for(auto i{ number_start }; i < pos; i++)
+            auto const number_end{ found_N ? pos - 1 : pos };
+            for(auto i{ number_start }; i < number_end; i++)
             {
               if(!is_valid_num_char(file[i], radix))
               {
@@ -983,10 +1025,10 @@ namespace jank::read::lex
             errno = 0;
             auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
                                    * (found_beginning_negative ? -1 : 1) };
-            if(errno == ERANGE)
+            if(errno == ERANGE || found_N)
             {
               native_persistent_string_view const number_literal{ file.data() + number_start,
-                                                                  pos - number_start };
+                                                                  number_end - number_start };
 
               return ok(token{
                 token_start,
