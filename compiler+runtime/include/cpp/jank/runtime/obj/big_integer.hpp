@@ -69,7 +69,7 @@ namespace jank::runtime::obj
     static object_ptr create(native_persistent_string_view const &, native_integer, native_bool);
     void init(native_persistent_string_view const &);
     object base{ obj_type };
-    native_big_integer data;
+    native_big_integer data{};
   };
 
   /* For some reason, operators defined in jank::runtime namespace cannot be accessed from jank namespace.

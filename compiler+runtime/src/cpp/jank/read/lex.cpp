@@ -121,7 +121,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               big_integer const d)
+               big_integer const &d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -839,7 +839,7 @@ namespace jank::read::lex
                                  { denominator.expect_ok().start, denominator.expect_ok().end } });
                 }
                 auto const &denominator_token(denominator.expect_ok());
-                native_big_integer numerator;
+                native_big_integer numerator{};
                 if(radix == 8 && *(file.data() + token_start) == '0')
                 {
                   numerator.assign(

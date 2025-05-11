@@ -10,13 +10,13 @@
 #include <llvm/Analysis/CGSCCPassManager.h>
 
 #include <jank/analyze/processor.hpp>
-#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime::obj
 {
   using nil_ptr = native_box<struct nil>;
   using keyword_ptr = native_box<struct keyword>;
   using boolean_ptr = native_box<struct boolean>;
+  using big_integer_ptr = native_box<struct big_integer>;
   using integer_ptr = native_box<struct integer>;
   using real_ptr = native_box<struct real>;
   using ratio_ptr = native_box<struct ratio>;

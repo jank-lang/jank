@@ -5,6 +5,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/fmt.hpp>
+#include <ranges>
 
 namespace jank::runtime
 {
@@ -187,10 +188,10 @@ namespace jank::runtime::obj
       /* For all other radixes, we need to manually parse the number. */
       native_big_integer temp_val = 0;
       native_big_integer current_radix_power = 1;
-      for(auto it = s.rbegin(); it != s.rend(); ++it)
+      for(char const it : std::ranges::reverse_view(s))
       {
         int digit_val;
-        if(char const c = std::tolower(*it); c >= '0' && c <= '9')
+        if(char const c = std::tolower(it); c >= '0' && c <= '9')
         {
           digit_val = c - '0';
         }
@@ -250,7 +251,7 @@ namespace jank::runtime::obj
 
   void big_integer::to_string(util::string_builder &buff) const
   {
-    buff(data.str());
+    buff(to_string());
   }
 
   native_persistent_string big_integer::to_code_string() const
@@ -259,7 +260,7 @@ namespace jank::runtime::obj
   }
 
   template <class T>
-  inline void hash_combine(std::size_t &seed, T const &v)
+  static void hash_combine(std::size_t &seed, T const &v)
   {
     std::hash<T> hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

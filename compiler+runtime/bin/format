@@ -3,6 +3,6 @@
 set -euo pipefail
 
 for i in $(git status | grep -E "modified:.*[hc]pp" | sed 's/modified:\s*//'); do
-  /usr/local/bin/clang-format -i "${i}"
+  clang-format -i "${i}"
   echo "formatted" "${i}"
 done
