@@ -180,7 +180,7 @@ namespace jank::read::lex
           movable_position const &e,
           token_kind const k,
           native_bool const);
-    token(movable_position const &s, movable_position const &e, token_kind const k, ratio const);
+    token(movable_position const &s, movable_position const &e, token_kind const k, ratio const &);
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
@@ -194,7 +194,7 @@ namespace jank::read::lex
     token(size_t offset, size_t width, token_kind const k, native_persistent_string_view const);
     token(size_t offset, size_t width, token_kind const k, char const * const);
     token(size_t offset, size_t width, token_kind const k, native_bool const);
-    token(size_t offset, size_t width, token_kind const k, ratio const);
+    token(size_t offset, size_t width, token_kind const k, ratio const &);
     token(size_t offset, size_t width, token_kind const k, big_integer const);
 #endif
 

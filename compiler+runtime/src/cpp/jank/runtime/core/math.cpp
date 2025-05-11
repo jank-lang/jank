@@ -32,7 +32,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return make_box(typed_l + typed_r->data);
           },
           r,
@@ -159,7 +159,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return make_box(typed_l - typed_r->data);
           },
           r,
@@ -286,7 +286,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return make_box(typed_l / typed_r->data);
           },
           r,
@@ -413,7 +413,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return make_box(typed_l * typed_r->data);
           },
           r,
@@ -536,7 +536,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  native_real to_real(T const &val)
+  static native_real to_real(T const &val)
   {
     if constexpr(std::is_same_v<T, native_integer>)
     {
@@ -566,7 +566,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r_obj) -> object_ptr {
         return visit_number_like(
-          []<typename T>(auto const typed_r, T const typed_l_data) -> object_ptr {
+          []<typename T>(auto const typed_r, T const &typed_l_data) -> object_ptr {
             using LeftType = std::decay_t<T>;
             using RightType = std::decay_t<decltype(typed_r->data)>;
 
@@ -611,7 +611,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             auto const typed_l_data{ to_number(typed_l) };
             auto const typed_r_data{ to_number(typed_r->data) };
 #pragma clang diagnostic push
@@ -708,7 +708,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> native_bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const &typed_l) -> native_bool {
             auto const data_l{ to_number(typed_l) };
             auto const data_r{ to_number(typed_r->data) };
 
@@ -910,7 +910,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> native_bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const &typed_l) -> native_bool {
             return typed_l < typed_r->data;
           },
           r,
@@ -1029,7 +1029,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> native_bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_bool {
+          [](auto const typed_r, auto const &typed_l) -> native_bool {
             return typed_l <= typed_r->data;
           },
           r,
@@ -1164,7 +1164,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return typed_l < typed_r->data ? make_box(typed_l) : make_box(typed_r->data);
           },
           r,
@@ -1307,7 +1307,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ptr {
+          [](auto const typed_r, auto const &typed_l) -> object_ptr {
             return typed_r->data > typed_l ? make_box(typed_r) : make_box(typed_l);
           },
           r,
@@ -1513,7 +1513,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> native_real {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> native_real {
+          [](auto const typed_r, auto const &typed_l) -> native_real {
             auto const typed_r_data{ to_number(typed_r->data) };
             auto const typed_l_data{ to_number(typed_l) };
             using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;

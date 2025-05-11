@@ -110,7 +110,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               ratio const d)
+               ratio const &d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -180,7 +180,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, ratio const d)
+  token::token(size_t const offset, size_t const width, token_kind const k, ratio const &d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -272,7 +272,7 @@ namespace jank::read::lex
     return os << r.numerator << "/" << r.denominator;
   }
 
-  std::ostream &operator<<(std::ostream &os, big_integer const &r)
+  static std::ostream &operator<<(std::ostream &os, big_integer const &r)
   {
     if(r.is_negative)
     {
@@ -423,11 +423,11 @@ namespace jank::read::lex
     wchar_t wc{};
     auto const len{ std::mbrtowc(&wc, sv.data(), sv.size(), &state) };
 
-    if(len == static_cast<size_t>(-1))
+    if(std::cmp_equal(len, static_cast<size_t>(-1)))
     {
       return error::lex_invalid_unicode("Unfinished character.", pos);
     }
-    else if(len == static_cast<size_t>(-2))
+    else if(std::cmp_equal(len, static_cast<size_t>(-2)))
     {
       return error::lex_invalid_unicode("Invalid Unicode character.", pos);
     }

@@ -800,10 +800,13 @@ namespace jank
         switch((byte_size + word_width - 1) / word_width)
         {
           case 3:
+            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
             store.large.extra = std::bit_cast<size_type const *>(aligned_data)[2];
           case 2:
+            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
             store.large.size = std::bit_cast<size_type const *>(aligned_data)[1];
           case 1:
+            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
             store.large.data = std::bit_cast<pointer_type *>(aligned_data)[0];
           case 0:
             break;

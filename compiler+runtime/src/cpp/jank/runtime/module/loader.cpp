@@ -302,7 +302,7 @@ namespace jank::runtime::module
   std::time_t file_entry::last_modified_at() const
   {
     auto const source_path{ archive_path.unwrap_or(path) };
-    return std::filesystem::last_write_time(native_transient_string{ source_path })
+    return std::filesystem::last_write_time(native_transient_string{ source_path }) // NOLINT(*-narrowing-conversions)
       .time_since_epoch()
       .count();
   }

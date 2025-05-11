@@ -16,7 +16,7 @@ namespace jank::ui
 
   static Element symbol_color(Element const &e, native_persistent_string_view const &sym)
   {
-    if(specials.find(sym) != specials.end())
+    if(specials.contains(sym))
     {
       return e | color(Color::CyanLight) | bold;
     }
