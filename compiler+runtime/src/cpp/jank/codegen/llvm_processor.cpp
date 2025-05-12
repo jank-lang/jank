@@ -1197,7 +1197,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::gen_global(obj::big_integer_ptr i) const
+  llvm::Value *llvm_processor::gen_global(obj::big_integer_ptr const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())

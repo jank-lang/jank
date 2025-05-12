@@ -805,7 +805,7 @@ namespace jank::read::lex
             {
               require_space = false;
               ++pos;
-              auto const slash_pos = pos;
+              auto const slash_pos{ pos };
               if(found_exponent_sign || is_scientific || expecting_exponent || contains_dot
                  || found_slash_after_number || (radix != 10 && radix != 8))
               {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 namespace jank::runtime
 {
@@ -30,21 +29,21 @@ namespace jank::runtime
 namespace jank::runtime::obj
 {
   using big_integer_ptr = native_box<struct big_integer>;
-  using native_big_integer = boost::multiprecision::cpp_int;
 
   struct big_integer : gc
   {
     static constexpr object_type obj_type{ object_type::big_integer };
-    static constexpr native_bool pointer_free{ false };
+    static constexpr native_bool pointer_free{ true };
 
-    big_integer();
+    big_integer() = default;
     big_integer(big_integer &&) noexcept = default;
     big_integer(big_integer const &) = default;
-    big_integer(native_big_integer const &);
-    big_integer(native_big_integer &&);
-    big_integer(native_integer);
-    explicit big_integer(native_persistent_string_view const &);
-    explicit big_integer(native_persistent_string_view const &, native_integer, native_bool);
+
+    explicit big_integer(native_big_integer const &);
+    explicit big_integer(native_big_integer &&);
+    explicit big_integer(native_integer);
+    explicit big_integer(native_persistent_string const &);
+    explicit big_integer(native_persistent_string const &, native_integer, native_bool);
 
     /* behavior::object_like */
     native_bool equal(object const &) const;
@@ -66,8 +65,8 @@ namespace jank::runtime::obj
     static native_integer to_native_integer(native_big_integer const &);
     static native_real to_native_real(native_big_integer const &);
     static native_hash to_hash(native_big_integer const &);
-    static object_ptr create(native_persistent_string_view const &, native_integer, native_bool);
-    void init(native_persistent_string_view const &);
+    static object_ptr create(native_persistent_string const &, native_integer, native_bool);
+    void init(native_persistent_string const &);
     object base{ obj_type };
     native_big_integer data{};
   };

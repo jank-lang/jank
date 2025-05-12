@@ -8,27 +8,24 @@
 
 namespace jank::runtime::obj
 {
-  namespace
+  static native_big_integer extract_big_integer(object_ptr const d)
   {
-    native_big_integer extract_big_integer(object_ptr const d)
+    native_big_integer result{};
+    if(d->type == object_type::big_integer)
     {
-      native_big_integer result{};
-      if(d->type == object_type::big_integer)
-      {
-        result = expect_object<big_integer>(d)->data;
-      }
-      else if(d->type == object_type::integer)
-      {
-        result = expect_object<integer>(d)->data;
-      }
-      else
-      {
-        throw std::runtime_error{
-          util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
-        };
-      }
-      return result;
+      result = expect_object<big_integer>(d)->data;
     }
+    else if(d->type == object_type::integer)
+    {
+      result = expect_object<integer>(d)->data;
+    }
+    else
+    {
+      throw std::runtime_error{
+        util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
+      };
+    }
+    return result;
   }
 
   static constexpr auto epsilon{ std::numeric_limits<native_real>::epsilon() };

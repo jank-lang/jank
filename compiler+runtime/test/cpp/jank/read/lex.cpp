@@ -483,7 +483,19 @@ namespace jank::read::lex
                 { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
         }));
       }
-      SUBCASE("Success - big integer")
+      SUBCASE("Success - big integer numerator")
+      {
+        processor p{ "8888888888888888888888888888888888/4" };
+        native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 36, token_kind::ratio,
+                 { .numerator = native_big_integer("8888888888888888888888888888888888"),
+                    .denominator = 4 } }
+        }));
+      }
+      SUBCASE("Success - big integer denominator")
       {
         processor p{ "4/8888888888888888888888888888888888" };
         native_vector<result<token, error_ptr>> const tokens(p.begin(), p.end());

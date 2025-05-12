@@ -26,6 +26,32 @@ namespace jank::runtime
     }
   }
 
+  template <typename T>
+  static native_real to_real(T const &val)
+  {
+    if constexpr(std::is_same_v<T, native_integer>)
+    {
+      return static_cast<native_real>(val);
+    }
+    else if constexpr(std::is_same_v<T, native_big_integer>)
+    {
+      return val.template convert_to<native_real>();
+    }
+    else if constexpr(std::is_same_v<T, native_real>)
+    {
+      return val;
+    }
+    else if constexpr(std::is_same_v<T, obj::ratio_data>)
+    {
+      return val.to_real();
+    }
+    else
+    {
+      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return 0.0;
+    }
+  }
+
   /* TODO: visit_number_like */
   object_ptr add(object_ptr const l, object_ptr const r)
   {
@@ -535,32 +561,6 @@ namespace jank::runtime
     return l * r;
   }
 
-  template <typename T>
-  static native_real to_real(T const &val)
-  {
-    if constexpr(std::is_same_v<T, native_integer>)
-    {
-      return static_cast<native_real>(val);
-    }
-    else if constexpr(std::is_same_v<T, native_big_integer>)
-    {
-      return val.template convert_to<native_real>();
-    }
-    else if constexpr(std::is_same_v<T, native_real>)
-    {
-      return val;
-    }
-    else if constexpr(std::is_same_v<T, obj::ratio_data>)
-    {
-      return val.to_real();
-    }
-    else
-    {
-      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
-      return 0.0;
-    }
-  }
-
   object_ptr rem(object_ptr const l, object_ptr const r)
   {
     return visit_number_like(
@@ -594,8 +594,8 @@ namespace jank::runtime
             }
             else
             {
-              native_real const l_real = to_real(typed_l_data);
-              native_real const r_real = to_real(typed_r->data);
+              native_real const l_real{ to_real(typed_l_data) };
+              native_real const r_real{ to_real(typed_r->data) };
               return make_box(std::fmod(l_real, r_real));
             }
           },
@@ -612,8 +612,8 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ptr {
         return visit_number_like(
           [](auto const typed_r, auto const &typed_l) -> object_ptr {
-            auto const typed_l_data{ to_number(typed_l) };
-            auto const typed_r_data{ to_number(typed_r->data) };
+            auto const typed_l_data{ to_real(typed_l) };
+            auto const typed_r_data{ to_real(typed_r->data) };
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
             if(typed_r_data == 0LL)
@@ -709,8 +709,8 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_bool {
         return visit_number_like(
           [](auto const typed_r, auto const &typed_l) -> native_bool {
-            auto const data_l{ to_number(typed_l) };
-            auto const data_r{ to_number(typed_r->data) };
+            auto const data_l{ to_real(typed_l) };
+            auto const data_r{ to_real(typed_r->data) };
 
             using C = std::common_type_t<decltype(data_l), decltype(data_r)>;
 #pragma clang diagnostic push
@@ -1208,7 +1208,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
@@ -1220,7 +1220,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1242,7 +1242,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1254,7 +1254,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_r_data), decltype(typed_l)>;
         return std::min(static_cast<C>(typed_r_data), static_cast<C>(typed_l));
       },
@@ -1351,7 +1351,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
@@ -1363,7 +1363,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
       },
@@ -1385,7 +1385,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
       },
@@ -1397,7 +1397,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
@@ -1514,8 +1514,8 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> native_real {
         return visit_number_like(
           [](auto const typed_r, auto const &typed_l) -> native_real {
-            auto const typed_r_data{ to_number(typed_r->data) };
-            auto const typed_l_data{ to_number(typed_l) };
+            auto const typed_r_data{ to_real(typed_r->data) };
+            auto const typed_l_data{ to_real(typed_l) };
             using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;
             return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r_data));
           },
@@ -1530,8 +1530,8 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
-        auto const typed_l_data{ to_number(typed_l) };
+        auto const typed_r_data{ to_real(typed_r->data) };
+        auto const typed_l_data{ to_real(typed_l) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r_data));
       },
@@ -1543,7 +1543,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1565,7 +1565,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
@@ -1577,7 +1577,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1599,7 +1599,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1611,7 +1611,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
@@ -1638,7 +1638,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> native_real {
-        auto const typed_l_data{ to_number(typed_l->data) };
+        auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
@@ -1650,7 +1650,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> native_real {
-        auto const typed_r_data{ to_number(typed_r->data) };
+        auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },

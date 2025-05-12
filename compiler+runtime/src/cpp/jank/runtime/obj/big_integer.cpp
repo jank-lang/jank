@@ -1,5 +1,3 @@
-#include <boost/multiprecision/cpp_int.hpp>
-
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -62,7 +60,7 @@ namespace jank::runtime
 
   native_bool operator==(native_big_integer const &l, native_real const &r)
   {
-    constexpr native_real epsilon{std::numeric_limits<native_real>::epsilon()};
+    constexpr native_real epsilon{ std::numeric_limits<native_real>::epsilon() };
     return std::abs(l - r) < epsilon;
   }
 
@@ -115,11 +113,6 @@ namespace jank::runtime
 
 namespace jank::runtime::obj
 {
-  big_integer::big_integer()
-    : data(0)
-  {
-  }
-
   big_integer::big_integer(native_big_integer const &val)
     : data(val)
   {
@@ -130,12 +123,12 @@ namespace jank::runtime::obj
   {
   }
 
-  big_integer::big_integer(native_integer val)
+  big_integer::big_integer(native_integer const val)
     : data(val)
   {
   }
 
-  void big_integer::init(native_persistent_string_view const &s)
+  void big_integer::init(native_persistent_string const &s)
   {
     if(s.empty())
     {
@@ -160,15 +153,14 @@ namespace jank::runtime::obj
     }
   }
 
-  big_integer::big_integer(native_persistent_string_view const &s)
+  big_integer::big_integer(native_persistent_string const &s)
   {
     init(s);
   }
 
-  big_integer::big_integer(native_persistent_string_view const &s,
+  big_integer::big_integer(native_persistent_string const &s,
                            native_integer const radix,
                            native_bool const is_negative)
-    : big_integer()
   {
     /* Radix passed from lexer, and it's made sure to be between 2 and 36. */
     if(radix == 10)
@@ -187,7 +179,7 @@ namespace jank::runtime::obj
     {
       /* For all other radixes, we need to manually parse the number. */
       native_big_integer temp_val{};
-      native_big_integer current_radix_power{1};
+      native_big_integer current_radix_power{ 1 };
       for(char const it : std::ranges::reverse_view(s))
       {
         int digit_val{};
@@ -211,9 +203,9 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr big_integer::create(native_persistent_string_view const &s,
-                                 native_integer radix,
-                                 native_bool is_negative)
+  object_ptr big_integer::create(native_persistent_string const &s,
+                                 native_integer const radix,
+                                 native_bool const is_negative)
   {
     return make_box<big_integer>(s, radix, is_negative);
   }
@@ -268,13 +260,13 @@ namespace jank::runtime::obj
 
   native_hash big_integer::to_hash(native_big_integer const &data)
   {
-    auto const &backend{data.backend()};
+    auto const &backend{ data.backend() };
 
-    auto const *limbs{backend.limbs()};
-    auto const size{backend.size()};
-    auto const sign{backend.sign()};
+    auto const *limbs{ backend.limbs() };
+    auto const size{ backend.size() };
+    auto const sign{ backend.sign() };
 
-    auto seed{static_cast<std::size_t>(sign)};
+    auto seed{ static_cast<std::size_t>(sign) };
     for(unsigned i = 0; i < size; ++i)
     {
       hash_combine(seed, limbs[i]);
