@@ -128,7 +128,7 @@ namespace jank::runtime
   template <>
   struct convert<native_big_integer, object_ptr>
   {
-    static object_ptr call(native_big_integer const o)
+    static object_ptr call(native_big_integer const &o)
     {
       return make_box<obj::big_integer>(o);
     }

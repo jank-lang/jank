@@ -62,7 +62,7 @@ namespace jank::runtime
 
   native_bool operator==(native_big_integer const &l, native_real const &r)
   {
-    constexpr native_real epsilon = std::numeric_limits<native_real>::epsilon();
+    constexpr native_real epsilon{std::numeric_limits<native_real>::epsilon()};
     return std::abs(l - r) < epsilon;
   }
 
@@ -186,12 +186,12 @@ namespace jank::runtime::obj
     else
     {
       /* For all other radixes, we need to manually parse the number. */
-      native_big_integer temp_val = 0;
-      native_big_integer current_radix_power = 1;
+      native_big_integer temp_val{};
+      native_big_integer current_radix_power{1};
       for(char const it : std::ranges::reverse_view(s))
       {
-        int digit_val;
-        if(char const c = std::tolower(it); c >= '0' && c <= '9')
+        int digit_val{};
+        if(int const c = std::tolower(it); c >= '0' && c <= '9')
         {
           digit_val = c - '0';
         }
@@ -262,19 +262,19 @@ namespace jank::runtime::obj
   template <class T>
   static void hash_combine(std::size_t &seed, T const &v)
   {
-    std::hash<T> hasher;
+    std::hash<T> const hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 
   native_hash big_integer::to_hash(native_big_integer const &data)
   {
-    auto const &backend = data.backend();
+    auto const &backend{data.backend()};
 
-    auto const *limbs = backend.limbs();
-    auto const size = backend.size();
-    auto const sign = backend.sign();
+    auto const *limbs{backend.limbs()};
+    auto const size{backend.size()};
+    auto const sign{backend.sign()};
 
-    std::size_t seed = static_cast<std::size_t>(sign);
+    auto seed{static_cast<std::size_t>(sign)};
     for(unsigned i = 0; i < size; ++i)
     {
       hash_combine(seed, limbs[i]);
@@ -307,6 +307,7 @@ namespace jank::runtime::obj
 
   native_big_integer big_integer::gcd(native_big_integer const &l, native_big_integer const &r)
   {
+    /* NOLINTNEXTLINE(clang-analyzer-core.StackAddressEscape) */
     return boost::multiprecision::gcd(l, r);
   }
 

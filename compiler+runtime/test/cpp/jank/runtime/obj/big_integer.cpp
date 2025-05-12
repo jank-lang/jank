@@ -17,12 +17,12 @@ namespace jank::runtime::obj
 {
   static native_big_integer nbi(long long const val)
   {
-    return native_big_integer(val);
+    return native_big_integer{val};
   }
 
   static native_big_integer nbi(char const *s)
   {
-    return native_big_integer(s);
+    return native_big_integer{s};
   }
 
   TEST_SUITE("big_integer")
@@ -317,8 +317,8 @@ namespace jank::runtime::obj
       SUBCASE("Equality (epsilon)")
       {
         constexpr native_real epsilon{ std::numeric_limits<native_real>::epsilon() };
-        constexpr native_real r_10_eps{ 10.0 + epsilon / 2.0 };
-        constexpr native_real r_10_10eps{ 10.0 + epsilon * 10.0 };
+        constexpr native_real r_10_eps{ 10.0 + (epsilon / 2.0) };
+        constexpr native_real r_10_10eps{ 10.0 + (epsilon * 10.0) };
 
         CHECK(operator==(bi_10, r_10));
         CHECK(operator==(r_10, bi_10));
