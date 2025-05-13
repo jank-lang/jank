@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::test::cpp::call::global::pass_void
+          {
+            void foo()
+            {
+            }
+          }")
+(let* [a (cpp/jank.test.cpp.call.global.pass_void.foo)]
+  (if (nil? a)
+    :success))

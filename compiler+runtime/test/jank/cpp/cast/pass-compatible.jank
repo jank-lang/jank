@@ -1,0 +1,4 @@
+(let* [a (cpp/cast cpp/int (cpp/float. 4))
+       b (cpp/cast cpp/double (cpp/float. 4.0))]
+  (if (and (= 4 a) (= 4.0 b))
+    :success))

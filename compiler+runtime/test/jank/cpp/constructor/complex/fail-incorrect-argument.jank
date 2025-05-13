@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::test::cpp::constructor::complex::fail_incorrect_argument
+          {
+            struct foo
+            {
+              foo(int const a)
+              {}
+            };
+          }")
+(let* [a (cpp/cast cpp/std.string "meow")
+       f (cpp/jank.test.cpp.constructor.complex.fail_incorrect_argument.foo. a)]
+  :success)

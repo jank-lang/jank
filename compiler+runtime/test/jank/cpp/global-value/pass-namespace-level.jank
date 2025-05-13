@@ -1,0 +1,4 @@
+(cpp/raw "namespace jank::test::cpp::global_value::pass_namespace_level { int boop{ 5 }; }")
+(if (= 5 cpp/jank.test.cpp.global_value.pass_namespace_level.boop)
+  :success
+  :failure)

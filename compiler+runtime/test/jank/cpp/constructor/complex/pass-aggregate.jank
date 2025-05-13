@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::constructor::complex::pass_aggregate
+          {
+            struct foo
+            {
+              int a{}, b{7};
+            };
+          }")
+(let* [f (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. 4 6)]
+  (if (and (= 4 (cpp/.-a f)) (= 6 (cpp/.-b f)))
+    :success))

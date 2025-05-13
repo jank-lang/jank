@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::call::overload::fail_no_match
+          {
+            int foo(int const * const a)
+            {
+              return *a;
+            }
+          }")
+(let* [f (cpp/float. 5.0)
+       ff (cpp/jank.test.cpp.call.overload.fail_no_match.foo f)]
+  :success)

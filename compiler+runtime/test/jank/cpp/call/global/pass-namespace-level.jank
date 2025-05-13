@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::test::cpp::call::global::pass_namespace_level
+          {
+            void foo()
+            {
+            }
+          }")
+(let* [a (cpp/jank.test.cpp.call.global.pass_namespace_level.foo)]
+  (if (nil? a)
+    :success))

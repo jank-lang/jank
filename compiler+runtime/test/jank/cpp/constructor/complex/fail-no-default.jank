@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::test::cpp::constructor::complex::fail_no_default
+          {
+            struct foo
+            {
+              foo() = delete;
+
+              int a{}, b{7};
+            };
+          }")
+(let* [f (cpp/jank.test.cpp.constructor.complex.fail_no_default.foo.)]
+  :success)

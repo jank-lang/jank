@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::null::pass_convert_to_pointer
+          {
+            int foo(int const * const)
+            {
+              return -700;
+            }
+          }")
+(let* [a (cpp/jank.test.cpp.null.pass_convert_to_pointer.foo cpp/nullptr)]
+  (if (= -700 a)
+    :success))

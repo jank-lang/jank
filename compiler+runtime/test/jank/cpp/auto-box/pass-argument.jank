@@ -1,0 +1,8 @@
+(defn foo [a]
+  (assert (== 5 a)))
+
+(foo (cpp/int. 5))
+
+(let* [a (cpp/float. 5.0)]
+  (foo a)
+  :success)

@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::test::cpp::member::pass_static
+          {
+            struct bar
+            {
+              static const int a{ 5 };
+            };
+          }")
+(let* [b (cpp/jank.test.cpp.member.pass_static.bar.)
+       a (cpp/.-a b)]
+  (if (= 5 a)
+    :success))

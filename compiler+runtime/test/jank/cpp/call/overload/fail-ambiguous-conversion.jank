@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::test::cpp::call::overload::fail_ambiguous_conversion
+          {
+            int foo(int const a)
+            {
+              return a;
+            }
+
+            float foo(float const a)
+            {
+              return a;
+            }
+          }")
+(let* [fi (cpp/jank.test.cpp.call.overload.fail_ambiguous_conversion.foo 5)]
+  :success)

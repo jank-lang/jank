@@ -1,0 +1,23 @@
+(cpp/raw "namespace jank::test::cpp::call::reference
+          {
+            struct foo
+            { long l{}; };
+
+            long not_ref(long l)
+            { return l; }
+            long ref(long const &l)
+            { return l; }
+          }")
+(let* [foo (cpp/jank.test.cpp.call.reference.foo.)
+       l-ref (cpp/.-l foo)
+       i (cpp/int. 5)
+
+       ; Arg: ref, Param: not ref
+       _ (assert (= l-ref (cpp/jank.test.cpp.call.reference.not_ref l-ref)))
+       ; Arg: ref, Param: ref
+       _ (assert (= l-ref (cpp/jank.test.cpp.call.reference.ref l-ref)))
+       ; Arg: not ref, Param: not ref
+       _ (assert (= i (cpp/jank.test.cpp.call.reference.not_ref i)))
+       ; Arg: not ref, Param: ref
+       _ (assert (= i (cpp/jank.test.cpp.call.reference.ref i)))]
+  :success)

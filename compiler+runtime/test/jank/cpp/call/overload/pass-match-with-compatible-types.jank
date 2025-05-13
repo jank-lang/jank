@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::test::cpp::call::overload::pass_match_with_compatible_types
+          {
+            int foo(int const a)
+            {
+              return a;
+            }
+          }")
+(let* [f (cpp/float. 5.0)
+       ff (cpp/jank.test.cpp.call.overload.pass_match_with_compatible_types.foo f)]
+  (if (= 5 ff)
+    :success))

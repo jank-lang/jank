@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::global_value::pass_static
+         {
+           struct foo
+           {
+             static int const boop{ 5 };
+           };
+         }")
+(if (= 5 cpp/jank.test.cpp.global_value.pass_static.foo.boop)
+  :success
+  :failure)

@@ -1,0 +1,23 @@
+(cpp/raw "namespace jank::test::cpp::call::overload::pass_match
+          {
+            int foo()
+            {
+              return 0;
+            }
+
+            int foo(int const a)
+            {
+              return a;
+            }
+
+            float foo(float const a)
+            {
+              return a;
+            }
+          }")
+(let* [i (cpp/int. 10)
+       fi (cpp/jank.test.cpp.call.overload.pass_match.foo i)
+       f (cpp/float. 5.0)
+       ff (cpp/jank.test.cpp.call.overload.pass_match.foo f)]
+  (if (and (= 10 fi) (= 5.0 ff))
+    :success))

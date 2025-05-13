@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::test::cpp::call::global::pass_struct
+          {
+            struct bar
+            {
+              static std::string foo()
+              {
+                return \"success\";
+              }
+            };
+          }")
+(let* [a (cpp/jank.test.cpp.call.global.pass_struct.bar.foo)]
+  (keyword a))

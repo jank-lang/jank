@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::test::cpp::cast::fail_no_conversion
+          {
+            struct foo
+            {
+            };
+          }")
+(let* [a (cpp/cast cpp/jank.test.cpp.cast.fail_no_conversion.foo 5.0)]
+  :success)

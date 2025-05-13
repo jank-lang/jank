@@ -1,0 +1,29 @@
+(cpp/raw "namespace jank::test::cpp::call::member::pass_daisy_chain
+          {
+            struct bar
+            {
+              bar& add(int i)
+              {
+                data += i;
+                return *this;
+              }
+
+              bar& inc()
+              {
+                return add(1);
+              }
+
+              int get()
+              {
+                return data;
+              }
+
+              int data{};
+            };
+
+            bar const b;
+          }")
+(let* [b (cpp/jank.test.cpp.call.member.pass_daisy_chain.bar.)
+       a (cpp/.get (cpp/.inc (cpp/.add b 5)))]
+  (if (= 6 a)
+    :success))

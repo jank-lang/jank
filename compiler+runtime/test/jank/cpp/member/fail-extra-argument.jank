@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::member::fail_extra_argument
+          {
+            struct bar
+            {
+              int a{};
+            };
+          }")
+(let* [b (cpp/jank.test.cpp.member.fail_extra_argument.bar.)
+       a (cpp/.-a b 1)]
+  :success)

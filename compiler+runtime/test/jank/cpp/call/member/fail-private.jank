@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::test::cpp::call::member::fail_private
+          {
+            class bar
+            {
+              float foo()
+              {
+                return 0.0f;
+              }
+            };
+
+            bar b;
+          }")
+(let* [a (cpp/.foo cpp/jank.test.cpp.call.member.fail_private.b)]
+  :success)

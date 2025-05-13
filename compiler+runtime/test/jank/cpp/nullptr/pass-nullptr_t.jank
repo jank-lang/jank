@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::test::cpp::null::pass_nullptr_t
+          {
+            int foo(std::nullptr_t)
+            {
+              return 7;
+            }
+          }")
+(let* [a (cpp/jank.test.cpp.null.pass_nullptr_t.foo cpp/nullptr)]
+  (if (= 7 a)
+    :success))
