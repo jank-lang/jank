@@ -38,9 +38,11 @@ namespace jank::codegen
                                      conversion_policy const policy,
                                      jtl::ptr<void> const input_type,
                                      jtl::ptr<void> const output_type,
-                                     jtl::ptr<void> const conversion_type,
+                                     jtl::ptr<void> conversion_type,
                                      llvm::Value * const arg)
   {
+    conversion_type = Cpp::GetNonReferenceType(conversion_type);
+    auto const is_input_ref{ Cpp::IsReferenceType(input_type) };
     //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
     //              Cpp::GetTypeAsString(input_type),
     //              Cpp::GetTypeAsString(output_type),
@@ -58,12 +60,12 @@ namespace jank::codegen
     {
       throw std::runtime_error{ util::format(
         "Unable to find conversion function match for policy '{}' with conversion type '{}' and "
-        "input type '{}'",
+        "input type '{}'.",
         policy == conversion_policy::into_object ? "into_object" : "from_object",
         Cpp::GetTypeAsString(conversion_type),
         Cpp::GetTypeAsString(input_type)) };
     }
-    auto const match_name{ Cpp::GetName(match) };
+    auto const match_name{ Cpp::GetCompleteName(match) };
     auto const fn_callable{ Cpp::MakeAotCallable(match) };
 
     /* TODO: Fns are reused, so this could cause a linker issue. */
@@ -79,6 +81,10 @@ namespace jank::codegen
       arg_alloc = ctx.builder->CreateAlloca(ctx.builder->getPtrTy(),
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
       ctx.builder->CreateStore(arg, arg_alloc);
+    }
+    else if(is_input_ref)
+    {
+      arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
 
     auto const fn(ctx.module->getFunction(fn_callable.getName()));
@@ -131,11 +137,12 @@ namespace jank::codegen
       return load_ret;
     }
 
-    //util::println("convert_object ret_type = {}", Cpp::GetTypeAsString(ret_type));
-
     /* No need to call a function to erase a typed object. Just find the
      * offset to its base member and shift our pointer accordingly. */
     auto const base_offset{ cpp_util::offset_to_typed_object_base(ret_type) };
+    //util::println("convert_object ret_type = {}, needs base adjustment by {} bytes",
+    //              Cpp::GetTypeAsString(ret_type),
+    //              base_offset);
     auto const ret_base{ ctx.builder->CreateInBoundsGEP(ctx.builder->getInt8Ty(),
                                                         load_ret,
                                                         { ctx.builder->getInt32(base_offset) },
@@ -1268,6 +1275,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen_aot_call(Cpp::AotCall const &call,
                                             jtl::ptr<void> const fn,
                                             jtl::ptr<void> const expr_type,
+                                            jtl::immutable_string const &name,
                                             native_vector<expression_ref> const &arg_exprs,
                                             expression_position const position,
                                             expression_kind const kind,
@@ -1282,7 +1290,6 @@ namespace jank::codegen
 
     jank_debug_assert(expr_type);
     auto const is_void{ Cpp::IsVoid(expr_type) };
-    auto const type_name{ Cpp::GetTypeAsString(expr_type) };
     /* TODO: If it's an IR intrinsic, use that. */
     llvm::AllocaInst *ctor_alloc{};
     if(!is_void)
@@ -1296,30 +1303,32 @@ namespace jank::codegen
       ctor_alloc
         = ctx->builder->CreateAlloca(ctx->builder->getInt8Ty(),
                                      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
-                                     util::format("{}.ret", type_name).c_str());
+                                     util::format("{}.ret", name).c_str());
       ctor_alloc->setAlignment(llvm::Align{ alignment });
     }
 
     /* For member function calls, we steal the first argument and use it as
      * the invoking object. Otherwise, we pass null as the invoking object. */
-    auto const is_member_call{ kind == expression_kind::cpp_member_call };
+    auto const requires_this_obj{ kind == expression_kind::cpp_member_call
+                                  || kind == expression_kind::cpp_member_access };
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
-    auto const arg_count{ arg_exprs.size() - (is_member_call ? 1 : 0) };
+    auto const arg_count{ arg_exprs.size() - (requires_this_obj ? 1 : 0) };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
-    auto const args_array{ ctx->builder->CreateAlloca(args_array_type,
-                                                      nullptr,
-                                                      util::format("{}.args", type_name).c_str()) };
+    auto const args_array{
+      ctx->builder->CreateAlloca(args_array_type, nullptr, util::format("{}.args", name).c_str())
+    };
 
     for(usize i{}; i < arg_exprs.size(); ++i)
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
 
-      if(i == 0 && is_member_call)
+      if(i == 0 && requires_this_obj)
       {
         this_obj = arg_handle;
         continue;
       }
 
+      /* TODO: Need to handle references here? */
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
@@ -1354,7 +1363,7 @@ namespace jank::codegen
         args_array_type,
         args_array,
         { ctx->builder->getInt32(0), ctx->builder->getInt32(i) },
-        util::format("{}.args[{}]", type_name, i).c_str()) };
+        util::format("{}.args[{}]", name, i).c_str()) };
       ctx->builder->CreateStore(arg_handle, arg_ptr);
     }
 
@@ -1402,6 +1411,7 @@ namespace jank::codegen
     return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
                         expr->fn,
                         expr->type,
+                        Cpp::GetName(expr->fn),
                         expr->arg_exprs,
                         expr->position,
                         expr->kind,
@@ -1440,6 +1450,7 @@ namespace jank::codegen
     return gen_aot_call(ctor_fn_callable,
                         expr->fn,
                         expr->type,
+                        Cpp::GetTypeAsString(expr->type),
                         expr->arg_exprs,
                         expr->position,
                         expr->kind,
@@ -1452,7 +1463,21 @@ namespace jank::codegen
     return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
                         expr->fn,
                         expr->type,
+                        Cpp::GetName(expr->fn),
                         expr->arg_exprs,
+                        expr->position,
+                        expr->kind,
+                        arity);
+  }
+
+  llvm::Value *
+  llvm_processor::gen(expr::cpp_member_access_ref const expr, expr::function_arity const &arity)
+  {
+    return gen_aot_call(Cpp::MakeAotCallable(expr->scope),
+                        nullptr,
+                        expr->type,
+                        Cpp::GetName(expr->scope),
+                        { expr->obj_expr },
                         expr->position,
                         expr->kind,
                         arity);

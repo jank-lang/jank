@@ -10,12 +10,10 @@ namespace jank::analyze::expr
   {
     static constexpr expression_kind expr_kind{ expression_kind::cpp_member_call };
 
-    cpp_member_call();
     cpp_member_call(expression_position position,
                     local_frame_ptr frame,
                     bool needs_box,
                     jtl::ptr<void> type,
-                    jtl::ptr<void> scope,
                     jtl::ptr<void> fn,
                     native_vector<expression_ref> &&arg_exprs);
 
@@ -24,8 +22,6 @@ namespace jank::analyze::expr
 
     /* The type of the member. */
     jtl::ptr<void> type{};
-    /* The scope of the member. */
-    jtl::ptr<void> scope{};
     /* The matched fn to call. */
     jtl::ptr<void> fn{};
     native_vector<expression_ref> arg_exprs;

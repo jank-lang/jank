@@ -51,6 +51,7 @@
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/expr/cpp_member_call.hpp>
+#include <jank/analyze/expr/cpp_member_access.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -2029,7 +2030,7 @@ namespace jank::analyze
 
     if(name == "nullptr")
     {
-      auto const scope_res{ cpp_util::resolve_scope("std.nullptr_t") };
+      static auto const scope_res{ cpp_util::resolve_scope("std.nullptr_t") };
       auto const scope{ Cpp::GetUnderlyingScope(scope_res.expect_ok()) };
       auto const type{ Cpp::GetTypeFromScope(scope) };
       return jtl::make_ref<expr::cpp_value>(position,
@@ -2041,12 +2042,15 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::null);
     }
 
-    /* TODO: Handle data members. */
     if(name.starts_with(".-"))
     {
-      return error::internal_analyze_failure("NYI: data members",
-                                             object_source(sym),
-                                             latest_expansion(macro_expansions));
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            nullptr,
+                                            nullptr,
+                                            expr::cpp_value::value_kind::member_access);
     }
     else if(name.starts_with('.'))
     {
@@ -2165,6 +2169,11 @@ namespace jank::analyze
                               jtl::option<expr::function_context_ref> const &fn_ctx,
                               bool const needs_box)
   {
+    if(val->val_kind == expr::cpp_value::value_kind::member_access)
+    {
+      return analyze_cpp_member_access(o, val, current_frame, position, fn_ctx, needs_box);
+    }
+
     auto it(o->data.rest());
     auto const arg_count(it.size());
     native_vector<expression_ref> arg_exprs;
@@ -2214,8 +2223,6 @@ namespace jank::analyze
     }
 
     auto const is_member_call{ val->val_kind == expr::cpp_value::value_kind::member_call };
-    jtl::ptr<void> obj_type{};
-    jtl::ptr<void> obj_scope{};
     if(is_member_call)
     {
       if(arg_exprs.empty())
@@ -2227,8 +2234,8 @@ namespace jank::analyze
 
       /* TODO: Switch std::vector to native_vector where possible. */
       auto const name{ val->sym->name.substr(1) };
-      obj_type = arg_types[0].m_Type;
-      obj_scope = Cpp::GetScopeFromType(obj_type);
+      auto const obj_type{ arg_types[0].m_Type };
+      auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
       if(!obj_scope)
       {
         return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
@@ -2241,7 +2248,6 @@ namespace jank::analyze
       /* TODO: Check const of method and invoking object. */
 
       arg_types.erase(arg_types.begin());
-      //arg_exprs.erase(arg_exprs.begin());
 
       fns = Cpp::LookupMethods(name, obj_scope);
       if(fns.empty())
@@ -2295,7 +2301,6 @@ namespace jank::analyze
                                                     current_frame,
                                                     needs_box,
                                                     Cpp::GetFunctionReturnType(match),
-                                                    obj_scope,
                                                     match,
                                                     jtl::move(arg_exprs));
       }
@@ -2338,7 +2343,6 @@ namespace jank::analyze
                                                     current_frame,
                                                     needs_box,
                                                     Cpp::GetFunctionReturnType(match),
-                                                    obj_scope,
                                                     match,
                                                     jtl::move(arg_exprs));
       }
@@ -2464,6 +2468,64 @@ namespace jank::analyze
         Cpp::GetTypeAsString(typed_expr->type)),
       object_source(l),
       latest_expansion(macro_expansions));
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_member_access(obj::persistent_list_ref const l,
+                                       expr::cpp_value_ref const val,
+                                       local_frame_ptr const current_frame,
+                                       expression_position const position,
+                                       jtl::option<expr::function_context_ref> const &fn_ctx,
+                                       bool const needs_box)
+  {
+    auto const name{ val->sym->name.substr(2) };
+    auto const count(l->count());
+    if(count < 2)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure(
+        util::format("Missing value from which to access '{}' member.", name),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+    else if(count > 3)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure(
+        util::format("Excess arguments provided for '{}' member access. Only one is expected.",
+                     name),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const obj(l->data.rest().first().unwrap());
+    auto const obj_res(analyze(obj, current_frame, expression_position::value, fn_ctx, false));
+    if(obj_res.is_err())
+    {
+      return obj_res;
+    }
+
+    auto const obj_expr{ obj_res.expect_ok() };
+    auto const parent_type{ cpp_util::expression_type(obj_expr) };
+    auto const parent_scope{ Cpp::GetScopeFromType(parent_type) };
+    auto const member_scope{ Cpp::LookupDatamember(name, parent_scope) };
+    if(!parent_scope || !member_scope)
+    {
+      return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
+                                                          name,
+                                                          Cpp::GetTypeAsString(parent_type)),
+                                             object_source(l),
+                                             latest_expansion(macro_expansions));
+    }
+    auto const member_type{ Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope)) };
+
+    return jtl::make_ref<expr::cpp_member_access>(position,
+                                                  current_frame,
+                                                  needs_box,
+                                                  member_type,
+                                                  member_scope,
+                                                  name,
+                                                  obj_expr);
   }
 
   processor::expression_result
