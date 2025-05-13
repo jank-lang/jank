@@ -9,6 +9,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -41,6 +44,8 @@ try
    * leading to duplicate symbols being generated. */
   jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::latest)
     .expect_ok();
+
+  Cpp::Declare("#include <jank/runtime/convert/builtin.hpp>");
 
   auto const res(context.run());
   if(context.shouldExit())
