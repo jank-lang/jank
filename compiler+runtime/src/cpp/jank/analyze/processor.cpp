@@ -2095,13 +2095,15 @@ namespace jank::analyze
      * possible that it represents a whole bunch of other things that we need to filter
      * out. */
     auto const scope{ Cpp::GetUnderlyingScope(scope_res.expect_ok()) };
-    auto const type{ Cpp::GetTypeFromScope(scope) };
 
     if(Cpp::IsNamespace(scope))
     {
       return error::internal_analyze_failure("Taking a C++ namespace by value is not permitted.",
+                                             object_source(sym),
                                              latest_expansion(macro_expansions));
     }
+
+    auto const type{ Cpp::GetTypeFromScope(scope) };
     if(Cpp::IsClass(scope) || Cpp::IsClassTemplateSpecialization(scope) || Cpp::IsEnumType(type))
     {
       if(is_ctor)
