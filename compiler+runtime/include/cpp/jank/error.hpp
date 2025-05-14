@@ -217,7 +217,6 @@ namespace jank::error
     return "unknown";
   }
 
-  /* NOLINTNEXTLINE */
   struct note
   {
     enum class kind : u8
