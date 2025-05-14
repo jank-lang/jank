@@ -13,11 +13,11 @@ namespace jank::analyze::expr
 
   function::function(expression_position const position,
                      local_frame_ptr const frame,
-                     native_bool const needs_box,
-                     native_persistent_string const &name,
-                     native_persistent_string const &unique_name,
+                     bool const needs_box,
+                     jtl::immutable_string const &name,
+                     jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
-                     runtime::obj::persistent_hash_map_ptr const meta)
+                     runtime::obj::persistent_hash_map_ref const meta)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
     , unique_name{ unique_name }
@@ -26,9 +26,9 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr function_arity::to_runtime_data() const
+  object_ref function_arity::to_runtime_data() const
   {
-    object_ptr param_maps(make_box<obj::persistent_vector>());
+    object_ref param_maps(make_box<obj::persistent_vector>());
     for(auto const e : params)
     {
       param_maps = conj(param_maps, e);
@@ -44,14 +44,14 @@ namespace jank::analyze::expr
                                                     jank::detail::to_runtime_data(fn_ctx));
   }
 
-  native_bool arity_key::operator==(arity_key const &rhs) const
+  bool arity_key::operator==(arity_key const &rhs) const
   {
     return param_count == rhs.param_count && is_variadic == rhs.is_variadic;
   }
 
-  native_unordered_map<obj::symbol_ptr, analyze::local_binding_ptr> function::captures() const
+  native_unordered_map<obj::symbol_ref, analyze::local_binding_ptr> function::captures() const
   {
-    native_unordered_map<obj::symbol_ptr, analyze::local_binding_ptr> ret;
+    native_unordered_map<obj::symbol_ref, analyze::local_binding_ptr> ret;
     for(auto const &arity : arities)
     {
       for(auto const &capture : arity.frame->captures)
@@ -62,7 +62,7 @@ namespace jank::analyze::expr
     return ret;
   }
 
-  object_ptr function::to_runtime_data() const
+  object_ref function::to_runtime_data() const
   {
     auto arity_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arities)

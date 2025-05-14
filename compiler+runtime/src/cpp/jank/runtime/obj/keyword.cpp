@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   }
 
   /* Keywords are interned, so we can always count on identity equality. */
-  native_bool keyword::equal(object const &o) const
+  bool keyword::equal(object const &o) const
   {
     return &base == &o;
   }
@@ -34,49 +34,49 @@ namespace jank::runtime::obj
     to_string_impl(*sym, buff);
   }
 
-  native_persistent_string keyword::to_string() const
+  jtl::immutable_string keyword::to_string() const
   {
     util::string_builder buff;
     to_string_impl(*sym, buff);
     return buff.release();
   }
 
-  native_persistent_string keyword::to_code_string() const
+  jtl::immutable_string keyword::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash keyword::to_hash() const
+  uhash keyword::to_hash() const
   {
     return sym->to_hash() + 0x9e3779b9;
   }
 
-  native_integer keyword::compare(object const &o) const
+  i64 keyword::compare(object const &o) const
   {
     return compare(*expect_object<keyword>(&o));
   }
 
-  native_integer keyword::compare(keyword const &s) const
+  i64 keyword::compare(keyword const &s) const
   {
     return sym->compare(*s.sym);
   }
 
-  native_persistent_string const &keyword::get_name() const
+  jtl::immutable_string const &keyword::get_name() const
   {
     return sym->name;
   }
 
-  native_persistent_string const &keyword::get_namespace() const
+  jtl::immutable_string const &keyword::get_namespace() const
   {
     return sym->ns;
   }
 
-  object_ptr keyword::call(object_ptr const m)
+  object_ref keyword::call(object_ref const m)
   {
     return runtime::get(m, this);
   }
 
-  object_ptr keyword::call(object_ptr const m, object_ptr const fallback)
+  object_ref keyword::call(object_ref const m, object_ref const fallback)
   {
     return runtime::get(m, this, fallback);
   }

@@ -6,6 +6,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace clojure::core_native
@@ -13,24 +14,24 @@ namespace clojure::core_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ptr subvec(object_ptr const o, object_ptr const start, object_ptr const end)
+  static object_ref subvec(object_ref const o, object_ref const start, object_ref const end)
   {
     return runtime::subvec(o, runtime::to_int(start), runtime::to_int(end));
   }
 
-  static object_ptr not_(object_ptr const o)
+  static object_ref not_(object_ref const o)
   {
     if(runtime::is_nil(o))
     {
-      return obj::boolean::true_const();
+      return jank_true;
     }
     return make_box(runtime::is_false(o));
   }
 
-  static object_ptr to_unqualified_symbol(object_ptr const o)
+  static object_ref to_unqualified_symbol(object_ref const o)
   {
     return runtime::visit_object(
-      [&](auto const typed_o) -> object_ptr {
+      [&](auto const typed_o) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::symbol>)
@@ -58,250 +59,248 @@ namespace clojure::core_native
       o);
   }
 
-  static object_ptr to_qualified_symbol(object_ptr const ns, object_ptr const name)
+  static object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
   {
     return make_box<obj::symbol>(ns, name);
   }
 
-  static object_ptr lazy_seq(object_ptr const o)
+  static object_ref lazy_seq(object_ref const o)
   {
     return make_box<obj::lazy_sequence>(o);
   }
 
-  static object_ptr is_var(object_ptr const o)
+  static object_ref is_var(object_ref const o)
   {
     return make_box(o->type == object_type::var);
   }
 
-  static object_ptr var_get(object_ptr const o)
+  static object_ref var_get(object_ref const o)
   {
     return try_object<var>(o)->deref();
   }
 
-  static object_ptr intern_var(object_ptr const sym)
+  static object_ref intern_var(object_ref const sym)
   {
     return __rt_ctx->intern_var(try_object<obj::symbol>(sym)).expect_ok();
   }
 
-  static object_ptr var_get_root(object_ptr const o)
+  static object_ref var_get_root(object_ref const o)
   {
     return try_object<var>(o)->get_root();
   }
 
-  static object_ptr var_bind_root(object_ptr const v, object_ptr const o)
+  static object_ref var_bind_root(object_ref const v, object_ref const o)
   {
     return try_object<var>(v)->bind_root(o);
   }
 
-  static object_ptr alter_var_root(object_ptr const o, object_ptr const fn, object_ptr const args)
+  static object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args)
   {
     return try_object<var>(o)->alter_root(fn, args);
   }
 
-  static object_ptr is_var_bound(object_ptr const o)
+  static object_ref is_var_bound(object_ref const o)
   {
     return make_box(try_object<runtime::var>(o)->is_bound());
   }
 
-  static object_ptr is_var_thread_bound(object_ptr const o)
+  static object_ref is_var_thread_bound(object_ref const o)
   {
-    return make_box(try_object<runtime::var>(o)->get_thread_binding() != nullptr);
+    return make_box(try_object<runtime::var>(o)->get_thread_binding().is_some());
   }
 
-  static object_ptr delay(object_ptr const fn)
+  static object_ref delay(object_ref const fn)
   {
     return make_box<obj::delay>(fn);
   }
 
-  static object_ptr is_fn(object_ptr const o)
+  static object_ref is_fn(object_ref const o)
   {
     return make_box(o->type == object_type::native_function_wrapper
                     || o->type == object_type::jit_function);
   }
 
-  static object_ptr is_multi_fn(object_ptr const o)
+  static object_ref is_multi_fn(object_ref const o)
   {
     return make_box(o->type == object_type::multi_function);
   }
 
-  static object_ptr multi_fn(object_ptr const name,
-                             object_ptr const dispatch_fn,
-                             object_ptr const default_,
-                             object_ptr const hierarchy)
+  static object_ref multi_fn(object_ref const name,
+                             object_ref const dispatch_fn,
+                             object_ref const default_,
+                             object_ref const hierarchy)
   {
     return make_box<obj::multi_function>(name, dispatch_fn, default_, hierarchy);
   }
 
-  static object_ptr
-  defmethod(object_ptr const multifn, object_ptr const dispatch_val, object_ptr const fn)
+  static object_ref
+  defmethod(object_ref const multifn, object_ref const dispatch_val, object_ref const fn)
   {
     return try_object<obj::multi_function>(multifn)->add_method(dispatch_val, fn);
   }
 
-  static object_ptr remove_all_methods(object_ptr const multifn)
+  static object_ref remove_all_methods(object_ref const multifn)
   {
     return try_object<obj::multi_function>(multifn)->reset();
   }
 
-  static object_ptr remove_method(object_ptr const multifn, object_ptr const dispatch_val)
+  static object_ref remove_method(object_ref const multifn, object_ref const dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->remove_method(dispatch_val);
   }
 
-  static object_ptr prefer_method(object_ptr const multifn,
-                                  object_ptr const dispatch_val_x,
-                                  object_ptr const dispatch_val_y)
+  static object_ref prefer_method(object_ref const multifn,
+                                  object_ref const dispatch_val_x,
+                                  object_ref const dispatch_val_y)
   {
     return try_object<obj::multi_function>(multifn)->prefer_method(dispatch_val_x, dispatch_val_y);
   }
 
-  static object_ptr methods(object_ptr const multifn)
+  static object_ref methods(object_ref const multifn)
   {
     return try_object<obj::multi_function>(multifn)->method_table;
   }
 
-  static object_ptr get_method(object_ptr const multifn, object_ptr const dispatch_val)
+  static object_ref get_method(object_ref const multifn, object_ref const dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->get_fn(dispatch_val);
   }
 
-  static object_ptr prefers(object_ptr const multifn)
+  static object_ref prefers(object_ref const multifn)
   {
     return try_object<obj::multi_function>(multifn)->prefer_table;
   }
 
-  static object_ptr sleep(object_ptr const ms)
+  static object_ref sleep(object_ref const ms)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr current_time()
+  static object_ref current_time()
   {
     using namespace std::chrono;
     auto const t(high_resolution_clock::now());
     return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
   }
 
-  static object_ptr in_ns(object_ptr const sym)
+  static object_ref in_ns(object_ref const sym)
   {
     __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr intern_ns(object_ptr const sym)
+  static object_ref intern_ns(object_ref const sym)
   {
     return __rt_ctx->intern_ns(try_object<obj::symbol>(sym));
   }
 
-  static object_ptr find_ns(object_ptr const sym)
+  static object_ref find_ns(object_ref const sym)
   {
-    return __rt_ctx->find_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->find_ns(try_object<obj::symbol>(sym));
   }
 
-  static object_ptr find_var(object_ptr const sym)
+  static object_ref find_var(object_ref const sym)
   {
-    return __rt_ctx->find_var(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->find_var(try_object<obj::symbol>(sym));
   }
 
-  static object_ptr remove_ns(object_ptr const sym)
+  static object_ref remove_ns(object_ref const sym)
   {
-    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym)).unwrap_or(nullptr)
-      ?: obj::nil::nil_const();
+    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym));
   }
 
-  static object_ptr is_ns(object_ptr const ns_or_sym)
+  static object_ref is_ns(object_ref const ns_or_sym)
   {
     return make_box(ns_or_sym->type == object_type::ns);
   }
 
-  static object_ptr ns_name(object_ptr const ns)
+  static object_ref ns_name(object_ref const ns)
   {
     return try_object<runtime::ns>(ns)->name;
   }
 
-  static object_ptr ns_map(object_ptr const ns)
+  static object_ref ns_map(object_ref const ns)
   {
     return try_object<runtime::ns>(ns)->get_mappings();
   }
 
-  static object_ptr var_ns(object_ptr const v)
+  static object_ref var_ns(object_ref const v)
   {
     return try_object<runtime::var>(v)->n;
   }
 
-  static object_ptr ns_resolve(object_ptr const ns, object_ptr const sym)
+  static object_ref ns_resolve(object_ref const ns, object_ref const sym)
   {
     auto const n(try_object<runtime::ns>(ns));
     auto const found(n->find_var(try_object<obj::symbol>(sym)));
-    if(found.is_some())
-    {
-      return found.unwrap();
-    }
-    return obj::nil::nil_const();
+    return found;
   }
 
-  static object_ptr
-  alias(object_ptr const current_ns, object_ptr const remote_ns, object_ptr const alias)
+  static object_ref
+  alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias)
   {
     try_object<ns>(current_ns)
       ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
       .expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr ns_unalias(object_ptr const current_ns, object_ptr const alias)
+  static object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
   {
     try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr ns_unmap(object_ptr const current_ns, object_ptr const sym)
+  static object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
   {
     try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr refer(object_ptr const current_ns, object_ptr const sym, object_ptr const var)
+  static object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var)
   {
     expect_object<runtime::ns>(current_ns)
       ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
       .expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr load_module(object_ptr const path)
+  static object_ref load_module(object_ref const path)
   {
     __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr compile(object_ptr const path)
+  static object_ref compile(object_ref const path)
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  static object_ptr eval(object_ptr const expr)
+  static object_ref eval(object_ref const expr)
   {
     return __rt_ctx->eval(expr);
   }
 
-  // TODO: implement opts for `read-string`
-  static object_ptr read_string(object_ptr const /* opts */, object_ptr const str)
+  static object_ref hash_unordered(object_ref const expr)
+  {
+    return make_box(hash::unordered(expr.data)).erase();
+  }
+
+  /* TODO: implement opts for `read-string` */
+  static object_ref read_string(object_ref const /* opts */, object_ref const str)
   {
     return __rt_ctx->read_string(runtime::to_string(str));
   }
 
-  static object_ptr jank_version()
+  static object_ref jank_version()
   {
     return make_box(JANK_VERSION);
   }
 }
 
-jank_object_ptr jank_load_clojure_core_native()
+jank_object_ref jank_load_clojure_core_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -309,17 +308,17 @@ jank_object_ptr jank_load_clojure_core_native()
 
   auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
 
-  auto const intern_val([=](native_persistent_string const &name, auto const val) {
-    ns->intern_var(name)->bind_root(convert<decltype(val), object_ptr>::call(val));
+  auto const intern_val([=](jtl::immutable_string const &name, auto const val) {
+    ns->intern_var(name)->bind_root(convert<decltype(val)>::into_object(val));
   });
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
           __rt_ctx->intern_keyword("name").expect_ok(),
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
-  auto const intern_fn_obj([=](native_persistent_string const &name, object_ptr const fn) {
+  auto const intern_fn_obj([=](jtl::immutable_string const &name, object_ref const fn) {
     ns->intern_var(name)->bind_root(with_meta(
       fn,
       obj::persistent_hash_map::create_unique(std::make_pair(
@@ -332,17 +331,17 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("identical?", &is_identical);
   intern_fn("empty?", &is_empty);
   intern_fn("empty", &empty);
-  intern_fn("count", static_cast<size_t (*)(object_ptr)>(&sequence_length));
-  intern_fn("boolean", static_cast<native_bool (*)(object_ptr)>(&truthy));
-  intern_fn("integer", static_cast<native_integer (*)(object_ptr)>(&to_int));
-  intern_fn("real", static_cast<native_real (*)(object_ptr)>(&to_real));
-  intern_fn("seq", static_cast<object_ptr (*)(object_ptr)>(&seq));
-  intern_fn("fresh-seq", static_cast<object_ptr (*)(object_ptr)>(&fresh_seq));
-  intern_fn("first", static_cast<object_ptr (*)(object_ptr)>(&first));
-  intern_fn("second", static_cast<object_ptr (*)(object_ptr)>(&second));
-  intern_fn("next", static_cast<object_ptr (*)(object_ptr)>(&next));
-  intern_fn("next-in-place", static_cast<object_ptr (*)(object_ptr)>(&next_in_place));
-  intern_fn("rest", static_cast<object_ptr (*)(object_ptr)>(&rest));
+  intern_fn("count", static_cast<usize (*)(object_ref)>(&sequence_length));
+  intern_fn("boolean", static_cast<bool (*)(object_ref)>(&truthy));
+  intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
+  intern_fn("real", static_cast<f64 (*)(object_ref)>(&to_real));
+  intern_fn("seq", static_cast<object_ref (*)(object_ref)>(&seq));
+  intern_fn("fresh-seq", static_cast<object_ref (*)(object_ref)>(&fresh_seq));
+  intern_fn("first", static_cast<object_ref (*)(object_ref)>(&first));
+  intern_fn("second", static_cast<object_ref (*)(object_ref)>(&second));
+  intern_fn("next", static_cast<object_ref (*)(object_ref)>(&next));
+  intern_fn("next-in-place", static_cast<object_ref (*)(object_ref)>(&next_in_place));
+  intern_fn("rest", static_cast<object_ref (*)(object_ref)>(&rest));
   intern_fn("cons", &cons);
   intern_fn("coll?", &is_collection);
   intern_fn("seq?", &is_seq);
@@ -354,12 +353,12 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
   intern_fn("associative?", &is_associative);
-  intern_fn("assoc", &assoc);
-  intern_fn("pr-str", static_cast<native_persistent_string (*)(object const *)>(&to_code_string));
+  intern_fn("assoc", static_cast<object_ref (*)(object_ref, object_ref, object_ref)>(&assoc));
+  intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object_ref)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);
-  intern_fn("to-string", static_cast<native_persistent_string (*)(object const *)>(&to_string));
-  intern_fn("str", static_cast<native_persistent_string (*)(object_ptr, object_ptr)>(&str));
+  intern_fn("to-string", static_cast<jtl::immutable_string (*)(object_ref)>(&to_string));
+  intern_fn("str", static_cast<jtl::immutable_string (*)(object_ref, object_ref)>(&str));
   intern_fn("symbol?", &is_symbol);
   intern_fn("true?", &is_true);
   intern_fn("false?", &is_false);
@@ -395,10 +394,10 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("volatile!", &volatile_);
   intern_fn("volatile?", &is_volatile);
   intern_fn("vreset!", &vreset);
-  intern_fn("+", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&add));
-  intern_fn("-", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&sub));
-  intern_fn("/", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&div));
-  intern_fn("*", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&mul));
+  intern_fn("+", static_cast<object_ref (*)(object_ref, object_ref)>(&add));
+  intern_fn("-", static_cast<object_ref (*)(object_ref, object_ref)>(&sub));
+  intern_fn("/", static_cast<object_ref (*)(object_ref, object_ref)>(&div));
+  intern_fn("*", static_cast<object_ref (*)(object_ref, object_ref)>(&mul));
   intern_fn("bit-not", &bit_not);
   intern_fn("bit-and", &bit_and);
   intern_fn("bit-or", &bit_or);
@@ -411,20 +410,20 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("bit-shift-left", &bit_shift_left);
   intern_fn("bit-shift-right", &bit_shift_right);
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
-  intern_fn("<", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lt));
-  intern_fn("<=", static_cast<native_bool (*)(object_ptr, object_ptr)>(&lte));
+  intern_fn("<", static_cast<bool (*)(object_ref, object_ref)>(&lt));
+  intern_fn("<=", static_cast<bool (*)(object_ref, object_ref)>(&lte));
   intern_fn("compare", &runtime::compare);
-  intern_fn("min", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&min));
-  intern_fn("max", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&max));
-  intern_fn("inc", static_cast<object_ptr (*)(object_ptr)>(&inc));
-  intern_fn("dec", static_cast<object_ptr (*)(object_ptr)>(&dec));
+  intern_fn("min", static_cast<object_ref (*)(object_ref, object_ref)>(&min));
+  intern_fn("max", static_cast<object_ref (*)(object_ref, object_ref)>(&max));
+  intern_fn("inc", static_cast<object_ref (*)(object_ref)>(&inc));
+  intern_fn("dec", static_cast<object_ref (*)(object_ref)>(&dec));
   intern_fn("numerator", &numerator);
   intern_fn("denominator", &denominator);
   intern_fn("pos?", &is_pos);
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
-  intern_fn("rem", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&rem));
-  intern_fn("quot", static_cast<object_ptr (*)(object_ptr, object_ptr)>(&quot));
+  intern_fn("rem", static_cast<object_ref (*)(object_ref, object_ref)>(&rem));
+  intern_fn("quot", static_cast<object_ref (*)(object_ref, object_ref)>(&quot));
   intern_fn("integer?", &is_integer);
   intern_fn("real?", &is_real);
   intern_fn("ratio?", &is_ratio);
@@ -487,10 +486,10 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("methods", &core_native::methods);
   intern_fn("get-method", &core_native::get_method);
   intern_fn("prefers", &core_native::prefers);
-  intern_val("int-min", std::numeric_limits<native_integer>::min());
-  intern_val("int-max", std::numeric_limits<native_integer>::max());
-  intern_val("int32-min", std::numeric_limits<int32_t>::min());
-  intern_val("int32-max", std::numeric_limits<int32_t>::max());
+  intern_val("int-min", std::numeric_limits<i64>::min());
+  intern_val("int-max", std::numeric_limits<i64>::max());
+  intern_val("int32-min", std::numeric_limits<i32>::min());
+  intern_val("int32-max", std::numeric_limits<i32>::max());
   intern_fn("sleep", &core_native::sleep);
   intern_fn("current-time", &core_native::current_time);
   intern_fn("create-ns", &core_native::intern_ns);
@@ -510,7 +509,7 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("load-module", &core_native::load_module);
   intern_fn("compile", &core_native::compile);
   intern_fn("eval", &core_native::eval);
-  intern_fn("hash-unordered-coll", static_cast<native_hash (*)(object const *)>(&hash::unordered));
+  intern_fn("hash-unordered-coll", &core_native::hash_unordered);
   intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
   intern_fn("parse-long", &parse_long);
@@ -522,41 +521,42 @@ jank_object_ptr jank_load_clojure_core_native()
   intern_fn("shuffle", &shuffle);
 
   /* TODO: jank.math? */
-  intern_fn("sqrt", static_cast<native_real (*)(object_ptr)>(&runtime::sqrt));
-  intern_fn("tan", static_cast<native_real (*)(object_ptr)>(&runtime::tan));
-  intern_fn("abs", static_cast<object_ptr (*)(object_ptr)>(&runtime::abs));
-  intern_fn("pow", static_cast<native_real (*)(object_ptr, object_ptr)>(&runtime::pow));
+  intern_fn("sqrt", static_cast<f64 (*)(object_ref)>(&runtime::sqrt));
+  intern_fn("tan", static_cast<f64 (*)(object_ref)>(&runtime::tan));
+  intern_fn("abs", static_cast<object_ref (*)(object_ref)>(&runtime::abs));
+  intern_fn("pow", static_cast<f64 (*)(object_ref, object_ref)>(&runtime::pow));
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return list(seq); };
+    fn->arity_1 = [](object * const seq) -> object * { return list(seq).erase(); };
     intern_fn_obj("list", fn);
   }
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
-    fn->arity_1 = [](object *) -> object * { return obj::boolean::true_const(); };
-    fn->arity_2
-      = [](object * const l, object * const r) -> object * { return make_box(equal(l, r)); };
+    fn->arity_1 = [](object *) -> object * { return jank_true.erase(); };
+    fn->arity_2 = [](object * const l, object * const r) -> object * {
+      return make_box(equal(l, r)).erase();
+    };
     fn->arity_3 = [](object * const l, object * const r, object * const rest) -> object * {
       if(!equal(l, r))
       {
-        return obj::boolean::false_const();
+        return jank_false.erase();
       }
 
       return visit_seqable(
-        [](auto const typed_rest, object_ptr const l) {
-          for(auto it(typed_rest->fresh_seq()); it != nullptr; it = it->next_in_place())
+        [](auto const typed_rest, object_ref const l) {
+          for(auto const e : make_sequence_range(typed_rest))
           {
-            if(!equal(l, it->first()))
+            if(!equal(l, e))
             {
-              return obj::boolean::false_const();
+              return jank_false.erase();
             }
           }
 
-          return obj::boolean::true_const();
+          return jank_true.erase();
         },
         rest,
         l);
@@ -567,24 +567,25 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
-    fn->arity_1 = [](object *) -> object * { return obj::boolean::true_const(); };
-    fn->arity_2
-      = [](object * const l, object * const r) -> object * { return make_box(is_equiv(l, r)); };
+    fn->arity_1 = [](object *) -> object * { return jank_true.erase(); };
+    fn->arity_2 = [](object * const l, object * const r) -> object * {
+      return make_box(is_equiv(l, r)).erase();
+    };
     fn->arity_3 = [](object * const l, object * const r, object * const rest) -> object * {
       if(!is_equiv(l, r))
       {
-        return obj::boolean::false_const();
+        return jank_false.erase();
       }
 
-      for(auto it(fresh_seq(rest)); it != obj::nil::nil_const(); it = next_in_place(it))
+      for(auto it(fresh_seq(rest)); it != jank_nil; it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
-          return obj::boolean::false_const();
+          return jank_false.erase();
         }
       }
 
-      return obj::boolean::true_const();
+      return jank_true.erase();
     };
     intern_fn_obj("==", fn);
   }
@@ -592,36 +593,36 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return println(seq); };
+    fn->arity_1 = [](object * const seq) -> object * { return println(seq).erase(); };
     intern_fn_obj("println", fn);
   }
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return print(seq); };
+    fn->arity_1 = [](object * const seq) -> object * { return print(seq).erase(); };
     intern_fn_obj("print", fn);
   }
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return prn(seq); };
+    fn->arity_1 = [](object * const seq) -> object * { return prn(seq).erase(); };
     intern_fn_obj("prn", fn);
   }
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, false)));
-    fn->arity_1 = [](object * const seq) -> object * { return pr(seq); };
+    fn->arity_1 = [](object * const seq) -> object * { return pr(seq).erase(); };
     intern_fn_obj("pr", fn);
   }
 
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
-    fn->arity_0 = []() -> object * { return gensym(make_box("G__")); };
-    fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix); };
+    fn->arity_0 = []() -> object * { return gensym(make_box("G__")).erase(); };
+    fn->arity_1 = [](object * const prefix) -> object * { return gensym(prefix).erase(); };
     intern_fn_obj("gensym", fn);
   }
 
@@ -629,21 +630,21 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
     fn->arity_2 = [](object * const atom, object * const fn) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn);
+      return try_object<obj::atom>(atom)->swap(fn).erase();
     };
     fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1);
+      return try_object<obj::atom>(atom)->swap(fn, a1).erase();
     };
     fn->arity_4 =
       [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+      return try_object<obj::atom>(atom)->swap(fn, a1, a2).erase();
     };
     fn->arity_5 = [](object * const atom,
                      object * const fn,
                      object * const a1,
                      object * const a2,
                      object * const rest) -> object * {
-      return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+      return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest).erase();
     };
     intern_fn_obj("swap!", fn);
   }
@@ -652,21 +653,21 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(4, true, true)));
     fn->arity_2 = [](object * const atom, object * const fn) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn);
+      return try_object<obj::atom>(atom)->swap_vals(fn).erase();
     };
     fn->arity_3 = [](object * const atom, object * const fn, object * const a1) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1).erase();
     };
     fn->arity_4 =
       [](object * const atom, object * const fn, object * const a1, object * const a2) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2).erase();
     };
     fn->arity_5 = [](object * const atom,
                      object * const fn,
                      object * const a1,
                      object * const a2,
                      object * const rest) -> object * {
-      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+      return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest).erase();
     };
     intern_fn_obj("swap-vals!", fn);
   }
@@ -674,9 +675,10 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, true, true)));
-    fn->arity_2 = [](object * const vol, object * const fn) -> object * { return vswap(vol, fn); };
+    fn->arity_2
+      = [](object * const vol, object * const fn) -> object * { return vswap(vol, fn).erase(); };
     fn->arity_3 = [](object * const vol, object * const fn, object * const rest) -> object * {
-      return vswap(vol, fn, rest);
+      return vswap(vol, fn, rest).erase();
     };
     intern_fn_obj("vswap!", fn);
   }
@@ -684,9 +686,10 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, false, false)));
-    fn->arity_2 = [](object * const s, object * const start) -> object * { return subs(s, start); };
+    fn->arity_2
+      = [](object * const s, object * const start) -> object * { return subs(s, start).erase(); };
     fn->arity_3 = [](object * const s, object * const start, object * const end) -> object * {
-      return subs(s, start, end);
+      return subs(s, start, end).erase();
     };
     intern_fn_obj("subs", fn);
   }
@@ -694,9 +697,9 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_hash_map::empty(); };
+    fn->arity_0 = []() -> object * { return obj::persistent_hash_map::empty().erase(); };
     fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_hash_map::create_from_seq(kvs);
+      return obj::persistent_hash_map::create_from_seq(kvs).erase();
     };
     intern_fn_obj("hash-map", fn);
   }
@@ -704,9 +707,9 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_sorted_map::empty(); };
+    fn->arity_0 = []() -> object * { return obj::persistent_sorted_map::empty().erase(); };
     fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_sorted_map::create_from_seq(kvs);
+      return obj::persistent_sorted_map::create_from_seq(kvs).erase();
     };
     intern_fn_obj("sorted-map", fn);
   }
@@ -714,9 +717,9 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_hash_set::empty(); };
+    fn->arity_0 = []() -> object * { return obj::persistent_hash_set::empty().erase(); };
     fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_hash_set::create_from_seq(kvs);
+      return obj::persistent_hash_set::create_from_seq(kvs).erase();
     };
     intern_fn_obj("hash-set", fn);
   }
@@ -724,9 +727,9 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(0, true, true)));
-    fn->arity_0 = []() -> object * { return obj::persistent_sorted_set::empty(); };
+    fn->arity_0 = []() -> object * { return obj::persistent_sorted_set::empty().erase(); };
     fn->arity_1 = [](object * const kvs) -> object * {
-      return obj::persistent_sorted_set::create_from_seq(kvs);
+      return obj::persistent_sorted_set::create_from_seq(kvs).erase();
     };
     intern_fn_obj("sorted-set", fn);
   }
@@ -734,9 +737,9 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k); };
+    fn->arity_2 = [](object * const o, object * const k) -> object * { return get(o, k).erase(); };
     fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
-      return get(o, k, fallback);
+      return get(o, k, fallback).erase();
     };
     intern_fn_obj("get", fn);
   }
@@ -744,9 +747,10 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
-    fn->arity_2 = [](object * const o, object * const k) -> object * { return get_in(o, k); };
+    fn->arity_2
+      = [](object * const o, object * const k) -> object * { return get_in(o, k).erase(); };
     fn->arity_3 = [](object * const o, object * const k, object * const fallback) -> object * {
-      return get_in(o, k, fallback);
+      return get_in(o, k, fallback).erase();
     };
     intern_fn_obj("get-in", fn);
   }
@@ -755,14 +759,15 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
     fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0))
+        .erase();
     };
-    fn->arity_1 = [](object * const end) -> object * { return obj::range::create(end); };
+    fn->arity_1 = [](object * const end) -> object * { return obj::range::create(end).erase(); };
     fn->arity_2 = [](object * const start, object * const end) -> object * {
-      return obj::range::create(start, end);
+      return obj::range::create(start, end).erase();
     };
     fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
-      return obj::range::create(start, end, step);
+      return obj::range::create(start, end, step).erase();
     };
     intern_fn_obj("range", fn);
   }
@@ -771,19 +776,22 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
     fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0))
+        .erase();
     };
     fn->arity_1 = [](object * const end) -> object * {
-      return obj::integer_range::create(try_object<obj::integer>(end));
+      return obj::integer_range::create(try_object<obj::integer>(end)).erase();
     };
     fn->arity_2 = [](object * const start, object * const end) -> object * {
       return obj::integer_range::create(try_object<obj::integer>(start),
-                                        try_object<obj::integer>(end));
+                                        try_object<obj::integer>(end))
+        .erase();
     };
     fn->arity_3 = [](object * const start, object * const end, object * const step) -> object * {
       return obj::integer_range::create(try_object<obj::integer>(start),
                                         try_object<obj::integer>(end),
-                                        try_object<obj::integer>(step));
+                                        try_object<obj::integer>(step))
+        .erase();
     };
     intern_fn_obj("integer-range", fn);
   }
@@ -792,13 +800,15 @@ jank_object_ptr jank_load_clojure_core_native()
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(3, false, false)));
     fn->arity_0 = []() -> object * {
-      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0));
+      return iterate(__rt_ctx->intern_var("clojure.core", "inc").expect_ok()->deref(), make_box(0))
+        .erase();
     };
-    fn->arity_2
-      = [](object * const coll, object * const index) -> object * { return nth(coll, index); };
+    fn->arity_2 = [](object * const coll, object * const index) -> object * {
+      return nth(coll, index).erase();
+    };
     fn->arity_3
       = [](object * const coll, object * const index, object * const fallback) -> object * {
-      return nth(coll, index, fallback);
+      return nth(coll, index, fallback).erase();
     };
     intern_fn_obj("nth", fn);
   }
@@ -806,12 +816,12 @@ jank_object_ptr jank_load_clojure_core_native()
   {
     auto const fn(
       make_box<obj::jit_function>(behavior::callable::build_arity_flags(2, false, false)));
-    fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val); };
+    fn->arity_1 = [](object * const val) -> object * { return obj::repeat::create(val).erase(); };
     fn->arity_2 = [](object * const n, object * const val) -> object * {
-      return obj::repeat::create(n, val);
+      return obj::repeat::create(n, val).erase();
     };
     intern_fn_obj("repeat", fn);
   }
 
-  return erase(obj::nil::nil_const());
+  return jank_nil.erase();
 }

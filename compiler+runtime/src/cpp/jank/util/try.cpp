@@ -94,7 +94,7 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(runtime::object_ptr const e)
+  void print_exception(runtime::object_ref const e)
   {
     if(e->type == runtime::object_type::persistent_string)
     {
@@ -107,13 +107,13 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(native_persistent_string const &e)
+  void print_exception(jtl::immutable_string const &e)
   {
     util::println("Uncaught exception: {}\n", e);
     print_exception_stack_trace();
   }
 
-  void print_exception(error_ptr const e)
+  void print_exception(error_ref const e)
   {
     error::report(e);
 
@@ -124,7 +124,7 @@ namespace jank::util
      * compilation will not have exceptions. So this helps keep our
      * compiler error output cleaner, since the stack trace isn't
      * actually going to provide any useful info. */
-    error_ptr original{ e };
+    jtl::ptr<error::base> original{ e };
     cpptrace::stacktrace *deepest_trace{ original->trace.get() };
     while(original->cause)
     {

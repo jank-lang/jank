@@ -18,7 +18,7 @@ namespace jank::read::lex
     std::visit(
       [&](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr(std::is_same_v<T, native_persistent_string>
+        if constexpr(std::is_same_v<T, jtl::immutable_string>
                      || std::is_same_v<T, native_persistent_string_view>)
         {
           os << std::quoted(arg);
@@ -55,7 +55,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_integer const d)
+               i64 const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -66,7 +66,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_real const d)
+               f64 const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -99,7 +99,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_bool const d)
+               bool const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -130,22 +130,14 @@ namespace jank::read::lex
   }
 
 #ifdef JANK_TEST
-  token::token(size_t const offset, size_t const width, token_kind const k)
+  token::token(usize const offset, usize const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, native_integer const d)
-    : start{ offset, 1, offset + 1 }
-    , end{ offset + width, 1, offset + width + 1 }
-    , kind{ k }
-    , data{ d }
-  {
-  }
-
-  token::token(size_t const offset, size_t const width, token_kind const k, native_real const d)
+  token::token(usize const offset, usize const width, token_kind const k, i64 const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -153,8 +145,16 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset,
-               size_t const width,
+  token::token(usize const offset, usize const width, token_kind const k, f64 const d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(usize const offset,
+               usize const width,
                token_kind const k,
                native_persistent_string_view const d)
     : start{ offset, 1, offset + 1 }
@@ -164,7 +164,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, char const * const d)
+  token::token(usize const offset, usize const width, token_kind const k, char const * const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -172,7 +172,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, native_bool const d)
+  token::token(usize const offset, usize const width, token_kind const k, bool const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -180,7 +180,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, ratio const &d)
+  token::token(usize const offset, usize const width, token_kind const k, ratio const &d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -188,7 +188,7 @@ namespace jank::read::lex
   {
   }
 
-  token::token(size_t const offset, size_t const width, token_kind const k, big_integer const d)
+  token::token(usize const offset, usize const width, token_kind const k, big_integer const &d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -200,41 +200,41 @@ namespace jank::read::lex
   struct codepoint
   {
     char32_t character{};
-    uint8_t len{};
+    u8 len{};
   };
 
-  native_bool ratio::operator==(ratio const &rhs) const
+  bool ratio::operator==(ratio const &rhs) const
   {
     return numerator == rhs.numerator && denominator == rhs.denominator;
   }
 
-  native_bool ratio::operator!=(ratio const &rhs) const
+  bool ratio::operator!=(ratio const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool big_integer::operator==(big_integer const &rhs) const
+  bool big_integer::operator==(big_integer const &rhs) const
   {
     return number_literal == rhs.number_literal && radix == rhs.radix
       && is_negative == rhs.is_negative;
   }
 
-  native_bool big_integer::operator!=(big_integer const &rhs) const
+  bool big_integer::operator!=(big_integer const &rhs) const
   {
     return !(*this == rhs);
   }
 
-  native_bool token::no_data::operator==(no_data const &) const
+  bool token::no_data::operator==(no_data const &) const
   {
     return true;
   }
 
-  native_bool token::no_data::operator!=(no_data const &) const
+  bool token::no_data::operator!=(no_data const &) const
   {
     return false;
   }
 
-  native_bool token::operator==(token const &rhs) const
+  bool token::operator==(token const &rhs) const
   {
     if(start.offset == token::ignore_pos || rhs.start.offset == token::ignore_pos)
     {
@@ -246,7 +246,7 @@ namespace jank::read::lex
     }
   }
 
-  native_bool token::operator!=(token const &rhs) const
+  bool token::operator!=(token const &rhs) const
   {
     return !(*this == rhs);
   }
@@ -304,7 +304,7 @@ namespace jank::read::lex
   {
   }
 
-  processor::processor(native_persistent_string_view const &f, size_t const offset)
+  processor::processor(native_persistent_string_view const &f, usize const offset)
     : pos{ .proc = this }
     , file{ f }
   {
@@ -313,7 +313,7 @@ namespace jank::read::lex
 
   movable_position &movable_position::operator++()
   {
-    assert(offset < proc->file.size());
+    jank_debug_assert(offset < proc->file.size());
 
     if(proc->file[offset] == '\n')
     {
@@ -336,29 +336,29 @@ namespace jank::read::lex
     return ret;
   }
 
-  movable_position &movable_position::operator+=(size_t const count)
+  movable_position &movable_position::operator+=(usize const count)
   {
-    for(size_t i{}; i < count; ++i)
+    for(usize i{}; i < count; ++i)
     {
       ++(*this);
     }
     return *this;
   }
 
-  native_bool movable_position::operator==(movable_position const &rhs) const
+  bool movable_position::operator==(movable_position const &rhs) const
   {
     return offset == rhs.offset;
   }
 
-  native_bool movable_position::operator!=(movable_position const &rhs) const
+  bool movable_position::operator!=(movable_position const &rhs) const
   {
     return offset != rhs.offset;
   }
 
-  movable_position movable_position::operator+(size_t const count) const
+  movable_position movable_position::operator+(usize const count) const
   {
     movable_position ret{ *this };
-    for(size_t i{}; i < count; ++i)
+    for(usize i{}; i < count; ++i)
     {
       ++ret;
     }
@@ -386,12 +386,12 @@ namespace jank::read::lex
     return *this;
   }
 
-  native_bool processor::iterator::operator!=(processor::iterator const &rhs) const
+  bool processor::iterator::operator!=(processor::iterator const &rhs) const
   {
     return latest != rhs.latest;
   }
 
-  native_bool processor::iterator::operator==(processor::iterator const &rhs) const
+  bool processor::iterator::operator==(processor::iterator const &rhs) const
   {
     return latest == rhs.latest;
   }
@@ -406,7 +406,7 @@ namespace jank::read::lex
     return { some(token_kind::eof), *this };
   }
 
-  option<error_ptr> processor::check_whitespace(native_bool const found_space)
+  jtl::option<error_ref> processor::check_whitespace(bool const found_space)
   {
     if(require_space && !found_space)
     {
@@ -416,7 +416,7 @@ namespace jank::read::lex
     return none;
   }
 
-  static result<codepoint, error_ptr>
+  static jtl::result<codepoint, error_ref>
   convert_to_codepoint(native_persistent_string_view const sv, movable_position const &pos)
   {
     std::mbstate_t state{};
@@ -431,10 +431,10 @@ namespace jank::read::lex
     {
       return error::lex_invalid_unicode("Invalid Unicode character.", pos);
     }
-    return ok(codepoint{ static_cast<char32_t>(wc), static_cast<uint8_t>(len) });
+    return ok(codepoint{ static_cast<char32_t>(wc), static_cast<u8>(len) });
   }
 
-  static native_bool is_utf8_char(char32_t const c)
+  static bool is_utf8_char(char32_t const c)
   {
     /* Checks if the codepoint is within Unicode scalar ranges */
     if(c <= 0x7FF)
@@ -457,13 +457,13 @@ namespace jank::read::lex
     return false;
   }
 
-  static native_bool is_special_char(char32_t const c)
+  static bool is_special_char(char32_t const c)
   {
     return c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '"'
       || c == '^' || c == '\\' || c == '`' || c == '~' || c == ',' || c == ';';
   }
 
-  static native_bool is_symbol_char(char32_t const c)
+  static bool is_symbol_char(char32_t const c)
   {
     return !std::iswspace(static_cast<wint_t>(c)) && !is_special_char(c)
       && (std::iswalnum(static_cast<wint_t>(c)) != 0 || c == '_' || c == '-' || c == '/' || c == '?'
@@ -471,22 +471,22 @@ namespace jank::read::lex
           || c == '>' || c == '#' || c == '%' || is_utf8_char(c));
   }
 
-  static native_bool is_lower_letter(char32_t const c)
+  static bool is_lower_letter(char32_t const c)
   {
     return c >= 'a' && c <= 'z';
   }
 
-  static native_bool is_upper_letter(char32_t const c)
+  static bool is_upper_letter(char32_t const c)
   {
     return c >= 'A' && c <= 'Z';
   }
 
-  static native_bool is_letter(char32_t const c)
+  static bool is_letter(char32_t const c)
   {
     return is_lower_letter(c) || is_upper_letter(c);
   }
 
-  static native_bool is_valid_num_char(char32_t const c, native_integer const radix)
+  static bool is_valid_num_char(char32_t const c, i64 const radix)
   {
     if(c == '-' || c == '+' || c == '.')
     {
@@ -511,10 +511,10 @@ namespace jank::read::lex
     return c >= '0' && c <= '9';
   }
 
-  result<token, error_ptr> processor::next()
+  jtl::result<token, error_ref> processor::next()
   {
     /* Skip whitespace. */
-    native_bool found_space{};
+    bool found_space{};
     while(true)
     {
       if(pos.offset >= file.size())
@@ -532,7 +532,7 @@ namespace jank::read::lex
     }
 
     /* Whether or not we've found the r in radix-specific integers such as 2r01010. */
-    native_bool found_r{};
+    bool found_r{};
     auto const token_start(pos);
     auto const oc{ convert_to_codepoint(file.substr(token_start), token_start) };
     if(oc.is_err())
@@ -596,8 +596,8 @@ namespace jank::read::lex
         }
       case ';':
         {
-          size_t leading_semis{ 1 };
-          native_bool hit_non_semi{};
+          usize leading_semis{ 1 };
+          bool hit_non_semi{};
           while(true)
           {
             auto const oc(peek());
@@ -642,16 +642,16 @@ namespace jank::read::lex
             return err(std::move(e.unwrap()));
           }
 
-          native_bool contains_leading_digit{ file[token_start] != '-' };
-          native_bool contains_dot{};
-          native_bool is_scientific{};
-          native_bool found_exponent_sign{};
-          native_bool expecting_exponent{};
-          native_bool expecting_more_digits{};
-          native_bool found_N{};
+          bool contains_leading_digit{ file[token_start] != '-' };
+          bool contains_dot{};
+          bool is_scientific{};
+          bool found_exponent_sign{};
+          bool expecting_exponent{};
+          bool expecting_more_digits{};
+          bool found_N{};
           int radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
-          native_bool found_beginning_negative{};
+          bool found_beginning_negative{};
 
           if(auto const [c, l]{ peek().unwrap_or({ ' ', 1 }) };
              file[token_start] == '-' && c == '0' && !found_slash_after_number)
@@ -851,12 +851,12 @@ namespace jank::read::lex
                 }
                 if(denominator.expect_ok().kind == token_kind::integer)
                 {
-                  return ok(token(token_start,
-                                  pos,
-                                  token_kind::ratio,
-                                  { .numerator = numerator,
-                                    .denominator = native_big_integer(
-                                      std::get<native_integer>(denominator_token.data)) }));
+                  return ok(token(
+                    token_start,
+                    pos,
+                    token_kind::ratio,
+                    { .numerator = numerator,
+                      .denominator = native_big_integer(std::get<i64>(denominator_token.data)) }));
                 }
                 if(denominator.expect_ok().kind == token_kind::big_integer)
                 {
@@ -871,7 +871,8 @@ namespace jank::read::lex
               }
               return denominator.expect_err();
             }
-            else if(std::iswdigit(static_cast<wint_t>(c)) == 0 /* Not a digit */)
+            /* Not a digit */
+            else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
             {
               if(expecting_exponent)
               {
@@ -968,7 +969,7 @@ namespace jank::read::lex
             auto number_start{ token_start.offset };
             if(file[token_start] == '-' || file[token_start] == '+')
             {
-              number_start = token_start + static_cast<size_t>(1);
+              number_start = token_start + 1llu;
               found_beginning_negative = file[token_start] == '-';
             }
             if(found_r)
@@ -987,7 +988,7 @@ namespace jank::read::lex
                     radix),
                   { token_start, pos });
               }
-              number_start = r_pos + static_cast<size_t>(1);
+              number_start = r_pos + 1llu;
             }
             else if(radix == 16)
             {
@@ -1165,7 +1166,7 @@ namespace jank::read::lex
             return err(std::move(e.unwrap()));
           }
           auto const token_start(pos);
-          native_bool escaped{}, contains_escape{};
+          bool escaped{}, contains_escape{};
           while(true)
           {
             auto const oc(peek());
@@ -1201,7 +1202,7 @@ namespace jank::read::lex
                   return error::lex_invalid_string_escape(
                     util::format("Unsupported string escape character '{}'.",
                                  sb(oc.expect_ok().character).view()),
-                    { pos, pos + 2zu });
+                    { pos, pos + 2llu });
               }
               escaped = false;
             }
@@ -1289,7 +1290,7 @@ namespace jank::read::lex
                 }
 
                 ++pos;
-                if(pos == token_start + 2zu)
+                if(pos == token_start + 2llu)
                 {
                   return ok(token{ token_start, pos, token_kind::comment, ""sv });
                 }
@@ -1391,7 +1392,7 @@ namespace jank::read::lex
     }
   }
 
-  result<codepoint, error_ptr> processor::peek(size_t const ahead) const
+  jtl::result<codepoint, error_ref> processor::peek(usize const ahead) const
   {
     auto const peek_pos{ pos + ahead };
     if(peek_pos >= file.size())

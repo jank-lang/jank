@@ -1,10 +1,10 @@
 #pragma once
 
-#include <jank/result.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::util::cli
 {
-  enum class command : uint8_t
+  enum class command : u8
   {
     run,
     compile,
@@ -17,18 +17,18 @@ namespace jank::util::cli
   {
     /* Runtime. */
     native_transient_string module_path;
-    native_bool profiler_enabled{};
+    bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
-    native_bool gc_incremental{};
+    bool gc_incremental{};
 
     /* Native dependencies. */
-    native_vector<native_persistent_string> include_dirs;
-    native_vector<native_persistent_string> library_dirs;
-    native_vector<native_persistent_string> define_macros;
-    native_vector<native_persistent_string> libs;
+    native_vector<jtl::immutable_string> include_dirs;
+    native_vector<jtl::immutable_string> library_dirs;
+    native_vector<jtl::immutable_string> define_macros;
+    native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    native_integer optimization_level{};
+    i64 optimization_level{};
 
     /* Run command. */
     native_transient_string target_file;
@@ -38,7 +38,7 @@ namespace jank::util::cli
     native_transient_string target_runtime{ "dynamic" };
 
     /* REPL command. */
-    native_bool repl_server{};
+    bool repl_server{};
 
     /* Run main command. */
     native_transient_string target_module;
@@ -51,5 +51,5 @@ namespace jank::util::cli
     command command{ command::repl };
   };
 
-  result<options, int> parse(int const argc, char const **argv);
+  jtl::result<options, int> parse(int const argc, char const **argv);
 }

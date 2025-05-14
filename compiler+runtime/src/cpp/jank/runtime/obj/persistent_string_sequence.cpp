@@ -5,22 +5,22 @@
 
 namespace jank::runtime::obj
 {
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s)
     : str{ s }
   {
-    assert(!s->data.empty());
+    jank_debug_assert(!s->data.empty());
   }
 
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ptr const s,
-                                                         size_t const i)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
+                                                         usize const i)
     : str{ s }
     , index{ i }
   {
-    assert(!s->data.empty() && i < s->data.size());
+    jank_debug_assert(!s->data.empty() && i < s->data.size());
   }
 
   /* behavior::object_like */
-  native_bool persistent_string_sequence::equal(object const &o) const
+  bool persistent_string_sequence::equal(object const &o) const
   {
     return runtime::equal(o, str->data.begin() + index, str->data.end());
   }
@@ -30,74 +30,74 @@ namespace jank::runtime::obj
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
-  native_persistent_string persistent_string_sequence::to_string() const
+  jtl::immutable_string persistent_string_sequence::to_string() const
   {
     util::string_builder buff;
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return buff.release();
   }
 
-  native_persistent_string persistent_string_sequence::to_code_string() const
+  jtl::immutable_string persistent_string_sequence::to_code_string() const
   {
     util::string_builder buff;
     runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return buff.release();
   }
 
-  native_hash persistent_string_sequence::to_hash() const
+  uhash persistent_string_sequence::to_hash() const
   {
     return hash::ordered(str->data.begin() + index, str->data.end());
   }
 
   /* behavior::countable */
-  size_t persistent_string_sequence::count() const
+  usize persistent_string_sequence::count() const
   {
     return str->data.size() - index;
   }
 
   /* behavior::seqable */
-  persistent_string_sequence_ptr persistent_string_sequence::seq()
+  persistent_string_sequence_ref persistent_string_sequence::seq()
   {
     return this;
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::fresh_seq() const
+  persistent_string_sequence_ref persistent_string_sequence::fresh_seq() const
   {
     return make_box<persistent_string_sequence>(str, index);
   }
 
   /* behavior::sequenceable */
-  object_ptr persistent_string_sequence::first() const
+  object_ref persistent_string_sequence::first() const
   {
     return make_box(str->data[index]);
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::next() const
+  persistent_string_sequence_ref persistent_string_sequence::next() const
   {
     auto n(index);
     ++n;
 
     if(n == str->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return make_box<persistent_string_sequence>(str, n);
   }
 
-  persistent_string_sequence_ptr persistent_string_sequence::next_in_place()
+  persistent_string_sequence_ref persistent_string_sequence::next_in_place()
   {
     ++index;
 
     if(index == str->data.size())
     {
-      return nullptr;
+      return {};
     }
 
     return this;
   }
 
-  cons_ptr persistent_string_sequence::conj(object_ptr const head)
+  cons_ref persistent_string_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, this);
   }

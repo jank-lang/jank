@@ -1,151 +1,161 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime
 {
   namespace obj
   {
-    using persistent_list_ptr = native_box<struct persistent_list>;
-    using persistent_vector_ptr = native_box<struct persistent_vector>;
+    using persistent_list_ref = oref<struct persistent_list>;
+    using persistent_vector_ref = oref<struct persistent_vector>;
   }
 
   template <typename T>
   requires behavior::seqable<T>
-  auto seq(native_box<T> const s)
+  auto seq(jtl::ref<T> const s)
   {
     return s->seq();
   }
 
-  object_ptr seq(object_ptr s);
+  object_ref seq(object_ref s);
 
   template <typename T>
   requires behavior::seqable<T>
-  auto fresh_seq(native_box<T> const s)
+  auto fresh_seq(jtl::ref<T> const s)
   {
     return s->fresh_seq();
   }
 
-  object_ptr fresh_seq(object_ptr s);
+  object_ref fresh_seq(object_ref s);
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto next(native_box<T> const s)
+  auto next(jtl::ref<T> const s)
   {
     return s->next();
   }
 
-  object_ptr next(object_ptr s);
+  object_ref next(object_ref s);
 
   template <typename T>
   requires behavior::sequenceable_in_place<T>
-  auto next_in_place(native_box<T> const s)
+  auto next_in_place(jtl::ref<T> const s)
   {
     return s->next_in_place();
   }
 
   template <typename T>
   requires(behavior::sequenceable<T> && !behavior::sequenceable_in_place<T>)
-  auto next_in_place(native_box<T> const s)
+  auto next_in_place(jtl::ref<T> const s)
   {
     /* Not all sequences can be updated in place. For those, just gracefully
      * do a normal next. */
     return s->next();
   }
 
-  object_ptr next_in_place(object_ptr s);
+  object_ref next_in_place(object_ref s);
 
-  object_ptr rest(object_ptr s);
+  object_ref rest(object_ref s);
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto first(native_box<T> const s)
+  auto first(jtl::ref<T> const s)
   {
     return s->first();
   }
 
-  object_ptr first(object_ptr s);
+  object_ref first(object_ref s);
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto second(native_box<T> const s)
+  auto second(jtl::ref<T> const s)
   {
     return next(s)->first();
   }
 
-  object_ptr second(object_ptr s);
+  object_ref second(object_ref s);
 
-  native_bool is_empty(object_ptr o);
-  native_bool is_seq(object_ptr o);
-  native_bool is_sequential(object_ptr o);
-  native_bool is_seqable(object_ptr o);
-  native_bool is_collection(object_ptr o);
-  native_bool is_list(object_ptr o);
-  native_bool is_vector(object_ptr o);
-  native_bool is_map(object_ptr o);
-  native_bool is_associative(object_ptr o);
-  native_bool is_set(object_ptr o);
-  native_bool is_counter(object_ptr o);
-  native_bool is_transientable(object_ptr o);
-  native_bool is_sorted(object_ptr o);
+  bool is_empty(object_ref o);
+  bool is_seq(object_ref o);
+  bool is_sequential(object_ref o);
+  bool is_seqable(object_ref o);
+  bool is_collection(object_ref o);
+  bool is_list(object_ref o);
+  bool is_vector(object_ref o);
+  bool is_map(object_ref o);
+  bool is_associative(object_ref o);
+  bool is_set(object_ref o);
+  bool is_counter(object_ref o);
+  bool is_transientable(object_ref o);
+  bool is_sorted(object_ref o);
 
-  object_ptr transient(object_ptr o);
-  object_ptr persistent(object_ptr o);
-  object_ptr conj_in_place(object_ptr coll, object_ptr o);
-  object_ptr disj_in_place(object_ptr coll, object_ptr o);
-  object_ptr assoc_in_place(object_ptr coll, object_ptr k, object_ptr v);
-  object_ptr dissoc_in_place(object_ptr coll, object_ptr k);
-  object_ptr pop_in_place(object_ptr coll);
+  object_ref transient(object_ref o);
+  object_ref persistent(object_ref o);
+  object_ref conj_in_place(object_ref coll, object_ref o);
+  object_ref disj_in_place(object_ref coll, object_ref o);
+  object_ref assoc_in_place(object_ref coll, object_ref k, object_ref v);
+  object_ref dissoc_in_place(object_ref coll, object_ref k);
+  object_ref pop_in_place(object_ref coll);
 
-  object_ptr cons(object_ptr head, object_ptr tail);
-  object_ptr conj(object_ptr s, object_ptr o);
-  object_ptr disj(object_ptr s, object_ptr o);
-  object_ptr assoc(object_ptr m, object_ptr k, object_ptr v);
-  object_ptr dissoc(object_ptr m, object_ptr k);
-  object_ptr get(object_ptr m, object_ptr key);
-  object_ptr get(object_ptr m, object_ptr key, object_ptr fallback);
-  object_ptr get_in(object_ptr m, object_ptr keys);
-  object_ptr get_in(object_ptr m, object_ptr keys, object_ptr fallback);
-  object_ptr find(object_ptr s, object_ptr key);
-  native_bool contains(object_ptr s, object_ptr key);
-  object_ptr merge(object_ptr m, object_ptr other);
-  object_ptr subvec(object_ptr o, native_integer start, native_integer end);
-  object_ptr nth(object_ptr o, object_ptr idx);
-  object_ptr nth(object_ptr o, object_ptr idx, object_ptr fallback);
-  object_ptr peek(object_ptr o);
-  object_ptr pop(object_ptr o);
-  object_ptr empty(object_ptr o);
+  object_ref cons(object_ref head, object_ref tail);
+  object_ref conj(object_ref s, object_ref o);
+  object_ref disj(object_ref s, object_ref o);
 
-  native_persistent_string str(object_ptr o, object_ptr args);
+  template <typename T>
+  requires behavior::associatively_writable<T>
+  auto assoc(oref<T> const m, object_ref const k, object_ref const v)
+  {
+    return m->assoc(k, v);
+  }
 
-  obj::persistent_list_ptr list(object_ptr s);
-  obj::persistent_vector_ptr vec(object_ptr s);
+  object_ref assoc(object_ref m, object_ref k, object_ref v);
+  object_ref dissoc(object_ref m, object_ref k);
+  object_ref get(object_ref m, object_ref key);
+  object_ref get(object_ref m, object_ref key, object_ref fallback);
+  object_ref get_in(object_ref m, object_ref keys);
+  object_ref get_in(object_ref m, object_ref keys, object_ref fallback);
+  object_ref find(object_ref s, object_ref key);
+  bool contains(object_ref s, object_ref key);
+  object_ref merge(object_ref m, object_ref other);
+  object_ref merge_in_place(object_ref m, object_ref other);
+  object_ref subvec(object_ref o, i64 start, i64 end);
+  object_ref nth(object_ref o, object_ref idx);
+  object_ref nth(object_ref o, object_ref idx, object_ref fallback);
+  object_ref peek(object_ref o);
+  object_ref pop(object_ref o);
+  object_ref empty(object_ref o);
 
-  native_bool sequence_equal(object_ptr l, object_ptr r);
+  jtl::immutable_string str(object_ref o, object_ref args);
 
-  size_t sequence_length(object_ptr const s);
-  size_t sequence_length(object_ptr const s, size_t const max);
+  obj::persistent_list_ref list(object_ref s);
+  obj::persistent_vector_ref vec(object_ref s);
 
-  object_ptr reduce(object_ptr f, object_ptr init, object_ptr s);
-  object_ptr reduced(object_ptr o);
-  native_bool is_reduced(object_ptr o);
+  bool sequence_equal(object_ref l, object_ref r);
 
-  object_ptr chunk_buffer(object_ptr capacity);
-  object_ptr chunk_append(object_ptr buff, object_ptr val);
-  object_ptr chunk(object_ptr buff);
-  object_ptr chunk_first(object_ptr o);
-  object_ptr chunk_next(object_ptr o);
-  object_ptr chunk_rest(object_ptr o);
-  object_ptr chunk_cons(object_ptr chunk, object_ptr rest);
-  native_bool is_chunked_seq(object_ptr o);
+  usize sequence_length(object_ref const s);
+  usize sequence_length(object_ref const s, usize const max);
 
-  object_ptr iterate(object_ptr fn, object_ptr o);
+  object_ref reduce(object_ref f, object_ref init, object_ref s);
+  object_ref reduced(object_ref o);
+  bool is_reduced(object_ref o);
 
-  object_ptr repeat(object_ptr val);
-  object_ptr repeat(object_ptr n, object_ptr val);
+  object_ref chunk_buffer(object_ref capacity);
+  object_ref chunk_append(object_ref buff, object_ref val);
+  object_ref chunk(object_ref buff);
+  object_ref chunk_first(object_ref o);
+  object_ref chunk_next(object_ref o);
+  object_ref chunk_rest(object_ref o);
+  object_ref chunk_cons(object_ref chunk, object_ref rest);
+  bool is_chunked_seq(object_ref o);
 
-  object_ptr sort(object_ptr coll);
+  object_ref iterate(object_ref fn, object_ref o);
 
-  object_ptr shuffle(object_ptr coll);
+  object_ref repeat(object_ref val);
+  object_ref repeat(object_ref n, object_ref val);
+
+  object_ref sort(object_ref coll);
+
+  object_ref shuffle(object_ref coll);
 }

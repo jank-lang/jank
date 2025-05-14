@@ -62,7 +62,7 @@ To make a debug build, specify the build type when configuring.
 
 ```bash
 cd compiler+runtime
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_tests=on
+./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_test=on
 ./bin/compile
 
 # When developing, continuously run the tests locally.

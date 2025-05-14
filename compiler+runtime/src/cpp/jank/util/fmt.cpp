@@ -2,7 +2,7 @@
 
 namespace jank::util
 {
-  native_persistent_string format(char const * const fmt)
+  jtl::immutable_string format(char const * const fmt)
   {
     if(native_persistent_string_view{ fmt }.find("{}") != native_persistent_string_view::npos)
     {

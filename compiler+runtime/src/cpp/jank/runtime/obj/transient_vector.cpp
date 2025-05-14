@@ -23,18 +23,18 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_vector_ptr transient_vector::empty()
+  transient_vector_ref transient_vector::empty()
   {
     return make_box<transient_vector>();
   }
 
-  native_bool transient_vector::equal(object const &o) const
+  bool transient_vector::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
   }
 
-  native_persistent_string transient_vector::to_string() const
+  jtl::immutable_string transient_vector::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -46,38 +46,38 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string transient_vector::to_code_string() const
+  jtl::immutable_string transient_vector::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash transient_vector::to_hash() const
+  uhash transient_vector::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t transient_vector::count() const
+  usize transient_vector::count() const
   {
     assert_active();
     return data.size();
   }
 
-  transient_vector_ptr transient_vector::conj_in_place(object_ptr const head)
+  transient_vector_ref transient_vector::conj_in_place(object_ref const head)
   {
     assert_active();
     data.push_back(head);
     return this;
   }
 
-  transient_vector::persistent_type_ptr transient_vector::to_persistent()
+  transient_vector::persistent_type_ref transient_vector::to_persistent()
   {
     assert_active();
     active = false;
     return make_box<persistent_vector>(data.persistent());
   }
 
-  object_ptr transient_vector::call(object_ptr const idx) const
+  object_ref transient_vector::call(object_ref const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -99,7 +99,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr transient_vector::get(object_ptr const idx) const
+  object_ref transient_vector::get(object_ref const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -107,7 +107,7 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return nil::nil_const();
+        return jank_nil;
       }
 
       return data[i];
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr transient_vector::get(object_ptr const idx, object_ptr const fallback) const
+  object_ref transient_vector::get(object_ref const idx, object_ref const fallback) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -139,14 +139,14 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr transient_vector::get_entry(object_ptr const idx) const
+  object_ref transient_vector::get_entry(object_ref const idx) const
   {
     if(idx->type == object_type::integer)
     {
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return nil::nil_const();
+        return jank_nil;
       }
       /* TODO: Map entry type? */
       return make_box<persistent_vector>(std::in_place, idx, data[i]);
@@ -158,7 +158,7 @@ namespace jank::runtime::obj
     }
   }
 
-  native_bool transient_vector::contains(object_ptr const elem) const
+  bool transient_vector::contains(object_ref const elem) const
   {
     if(elem->type == object_type::integer)
     {
@@ -171,7 +171,7 @@ namespace jank::runtime::obj
     }
   }
 
-  transient_vector_ptr transient_vector::pop_in_place()
+  transient_vector_ref transient_vector::pop_in_place()
   {
     assert_active();
     if(data.empty())

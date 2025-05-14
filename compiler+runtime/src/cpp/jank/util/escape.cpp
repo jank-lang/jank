@@ -5,10 +5,10 @@
 namespace jank::util
 {
   /* Converts escape sequences starting with backslash to their mapped character. e.g., \" => " */
-  result<native_persistent_string, unescape_error> unescape(native_persistent_string const &input)
+  jtl::result<jtl::immutable_string, unescape_error> unescape(jtl::immutable_string const &input)
   {
     util::string_builder sb{ input.size() };
-    native_bool escape{};
+    bool escape{};
 
     for(auto const c : input)
     {
@@ -68,7 +68,7 @@ namespace jank::util
   }
 
   /* Converts special characters to their escape sequences. e.g., " => \" */
-  native_persistent_string escape(native_persistent_string const &input)
+  jtl::immutable_string escape(jtl::immutable_string const &input)
   {
     /* We can expect on relocation, since escaping anything will result in a larger string.
      * I'm not going to guess at the stats, to predict a better allocation, until this shows

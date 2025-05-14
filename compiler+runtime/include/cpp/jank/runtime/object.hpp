@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  enum class object_type : uint8_t
+  enum class object_type : u8
   {
     nil,
 
@@ -223,6 +223,11 @@ namespace jank::runtime
   {
     object_type type{};
   };
+
+  namespace obj
+  {
+    struct nil;
+  }
 }
 
 namespace jank::runtime::behavior
@@ -238,22 +243,22 @@ namespace jank::runtime::behavior
      * the current object. Identical means having the same address, the same identity.
      * Equal just means having equal values. Equivalent means having equal values of the
      * same type. :O Here, we're just focused on equality. */
-    { t->equal(std::declval<object const &>()) } -> std::convertible_to<native_bool>;
+    { t->equal(std::declval<object const &>()) } -> std::convertible_to<bool>;
 
     /* Returns a string version of the object, generally for printing or displaying. This
      * is distinct from its code representation, which doesn't yet have a corresponding
      * function in this behavior. */
-    { t->to_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_string() } -> std::convertible_to<jtl::immutable_string>;
     { t->to_string(std::declval<util::string_builder &>()) } -> std::same_as<void>;
 
     /* Returns the code representation of the object. */
-    { t->to_code_string() } -> std::convertible_to<native_persistent_string>;
+    { t->to_code_string() } -> std::convertible_to<jtl::immutable_string>;
 
     /* Returns a deterministic hash value for the object. For some objects, like functions
      * and transients, the hash is actually just the object's address. For others, it's
      * based on the value, or values, within the object. There are a set of hash functions
      * which should be used for this in hash.hpp. */
-    { t->to_hash() } -> std::convertible_to<native_integer>;
+    { t->to_hash() } -> std::convertible_to<i64>;
 
     /* Every object needs to have this base field, which is the actual object field.
      * When we pass around object pointers, we pass around pointers to this field within
@@ -263,27 +268,30 @@ namespace jank::runtime::behavior
   };
 }
 
-#include <jank/runtime/native_box.hpp>
+#include <jank/runtime/oref.hpp>
 
 namespace jank::runtime
 {
-  using object_ptr = native_box<object>;
+  using object_ref = oref<object>;
 
   /* This isn't a great name, but it represents more than just value equality, since it
    * also includes type equality. Otherwise, [] equals '(). This is important when deduping
    * constants during codegen, since we don't want to be lossy in how we generate values. */
   struct very_equal_to
   {
-    bool operator()(object_ptr const lhs, object_ptr const rhs) const noexcept;
+    bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
+
+  bool operator==(object const *, object_ref);
+  bool operator!=(object const *, object_ref);
 }
 
 namespace std
 {
   template <>
-  struct hash<jank::runtime::object_ptr>
+  struct hash<jank::runtime::object_ref>
   {
-    size_t operator()(jank::runtime::object_ptr const o) const noexcept;
+    size_t operator()(jank::runtime::object_ref const o) const noexcept;
   };
 
   template <>
@@ -293,9 +301,9 @@ namespace std
   };
 
   template <>
-  struct equal_to<jank::runtime::object_ptr>
+  struct equal_to<jank::runtime::object_ref>
   {
-    bool operator()(jank::runtime::object_ptr const lhs,
-                    jank::runtime::object_ptr const rhs) const noexcept;
+    bool operator()(jank::runtime::object_ref const lhs,
+                    jank::runtime::object_ref const rhs) const noexcept;
   };
 }

@@ -4,7 +4,7 @@
 #include <array>
 #include <utility>
 
-namespace jank::util
+namespace jtl
 {
   template <std::size_t... Idxs>
   constexpr auto substring_as_array(std::string_view const str, std::index_sequence<Idxs...> const)

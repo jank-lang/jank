@@ -145,14 +145,14 @@ namespace jank::error
     return "Unknown error 😮!";
   }
 
-  native_persistent_string note::to_string() const
+  jtl::immutable_string note::to_string() const
   {
     util::string_builder sb;
     return sb("note(\"")(message)("\", ")(source.to_string())(", ")(note::kind_str(kind))(")")
       .release();
   }
 
-  static void add_expansion_note(base &e, runtime::object_ptr const expansion)
+  static void add_expansion_note(base &e, runtime::object_ref const expansion)
   {
     auto source{ runtime::object_source(expansion) };
     /* We just want to point at the start of the expansion, not underline the
@@ -177,7 +177,7 @@ namespace jank::error
   {
   }
 
-  base::base(enum kind const k, native_persistent_string const &message, read::source const &source)
+  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -185,7 +185,7 @@ namespace jank::error
   {
   }
 
-  base::base(enum kind const k, native_persistent_string const &message, read::source const &source, runtime::object_ptr const expansion)
+  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -195,9 +195,9 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr const expansion,
+         runtime::object_ref const expansion,
          std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }
     , message{ message }
@@ -210,7 +210,7 @@ namespace jank::error
 
   base::base(enum kind const k,
              read::source const &source,
-             native_persistent_string const &note_message)
+             jtl::immutable_string const &note_message)
     : kind{ k }
     , message{ kind_to_message(k) }
     , source{ source }
@@ -219,9 +219,9 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
-             native_persistent_string const &note_message)
+             jtl::immutable_string const &note_message)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -230,10 +230,10 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
-             native_persistent_string const &note_message,
-             runtime::object_ptr const expansion)
+             jtl::immutable_string const &note_message,
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -251,7 +251,7 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
              note const &note)
     : kind{ k }
@@ -262,10 +262,10 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
              note const &note,
-             runtime::object_ptr const expansion)
+             runtime::object_ref const expansion)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -275,7 +275,7 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
              native_vector<note> const &notes)
     : kind{ k }
@@ -286,10 +286,10 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
-             runtime::native_box<base> const cause)
+             runtime::object_ref const expansion,
+             jtl::ref<base> const cause)
     : kind{ k }
     , message{ message }
     , source{ source }
@@ -300,10 +300,10 @@ namespace jank::error
   }
 
   base::base(enum kind const k,
-             native_persistent_string const &message,
+             jtl::immutable_string const &message,
              read::source const &source,
-             runtime::object_ptr const expansion,
-             runtime::native_box<base> const cause,
+             runtime::object_ref const expansion,
+             jtl::ref<base> const cause,
              std::unique_ptr<cpptrace::stacktrace> trace)
     : kind{ k }
     , message{ message }
@@ -315,12 +315,12 @@ namespace jank::error
     add_expansion_note(*this, expansion);
   }
 
-  native_bool base::operator==(base const &rhs) const
+  bool base::operator==(base const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_bool base::operator!=(base const &rhs) const
+  bool base::operator!=(base const &rhs) const
   {
     return kind != rhs.kind || source != rhs.source || message != rhs.message;
   }
@@ -347,7 +347,7 @@ namespace jank::error
    * For other cases, we'll add an additional note. There's also a final case where
    * the current error has an unknown source, since we didn't have a good source to
    * begin with. In that case, we update the existing note rather than adding a new one. */
-  runtime::native_box<base> base::add_usage(read::source const &usage_source)
+  jtl::ref<base> base::add_usage(read::source const &usage_source)
   {
     if(usage_source == read::source::unknown || usage_source.overlaps(source))
     {

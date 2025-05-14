@@ -8,13 +8,13 @@ namespace jank::analyze::expr
 
   case_::case_(expression_position const position,
                local_frame_ptr const frame,
-               native_bool const needs_box,
-               expression_ptr const value_expr,
-               native_integer const shift,
-               native_integer const mask,
-               expression_ptr const default_expr,
-               native_vector<native_integer> &&keys,
-               native_vector<expression_ptr> &&exprs)
+               bool const needs_box,
+               expression_ref const value_expr,
+               i64 const shift,
+               i64 const mask,
+               expression_ref const default_expr,
+               native_vector<i64> &&keys,
+               native_vector<expression_ref> &&exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , value_expr{ value_expr }
     , shift{ shift }
@@ -35,10 +35,10 @@ namespace jank::analyze::expr
     position = pos;
   }
 
-  object_ptr case_::to_runtime_data() const
+  object_ref case_::to_runtime_data() const
   {
     auto pairs{ make_box<obj::persistent_vector>() };
-    for(size_t i{}; i < keys.size(); ++i)
+    for(usize i{}; i < keys.size(); ++i)
     {
       pairs = pairs->conj(make_box<obj::persistent_vector>(std::in_place,
                                                            make_box(keys[i]),

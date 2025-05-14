@@ -15,23 +15,23 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(std::nullptr_t const &)
   {
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_bool const b)
+  inline auto make_box(bool const b)
   {
-    return b ? obj::boolean::true_const() : obj::boolean::false_const();
+    return b ? jank_true : jank_false;
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(int const i)
   {
-    return make_box<obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<i64>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_integer const i)
+  inline auto make_box(i64 const i)
   {
     return make_box<obj::integer>(i);
   }
@@ -49,13 +49,13 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(size_t const i)
+  inline auto make_box(usize const i)
   {
-    return make_box<obj::integer>(static_cast<native_integer>(i));
+    return make_box<obj::integer>(static_cast<i64>(i));
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_real const r)
+  inline auto make_box(f64 const r)
   {
     return make_box<obj::real>(r);
   }
@@ -73,9 +73,9 @@ namespace jank::runtime
   }
 
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline obj::persistent_string_ptr make_box(char const * const s)
+  inline obj::persistent_string_ref make_box(char const * const s)
   {
-    assert(s);
+    jank_assert(s != nullptr);
     return make_box<obj::persistent_string>(s);
   }
 
@@ -113,14 +113,6 @@ namespace jank::runtime
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   inline auto make_box(T const * const d)
-  {
-    return d;
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto make_box(native_box<T> const &d)
   {
     return d;
   }

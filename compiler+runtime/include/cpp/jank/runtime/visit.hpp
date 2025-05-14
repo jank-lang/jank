@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/assert.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -60,22 +62,19 @@ namespace jank::runtime
   template <typename T, typename F, typename... Args>
   requires behavior::object_like<T>
   [[gnu::hot]]
-  constexpr auto visit_object(F const &fn, native_box<T const> const not_erased, Args &&...args)
+  constexpr auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
   }
 
   template <typename F, typename... Args>
-  concept visitable = requires(F f) { f(obj::nil_ptr{}, std::declval<Args>()...); };
+  concept visitable = requires(F f) { f(obj::nil_ref{}, std::declval<Args>()...); };
 
   template <typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::hot]]
-  auto visit_object(F const &fn, object const * const const_erased, Args &&...args)
+  auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    assert(const_erased);
-    auto * const erased(const_cast<object *>(const_erased));
-
     switch(erased->type)
     {
       case object_type::nil:
@@ -380,28 +379,25 @@ namespace jank::runtime
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
   [[gnu::hot]]
-  constexpr auto visit_type(F const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_type(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(const_erased->type == T::obj_type)
+    if(erased->type == T::obj_type)
     {
-      return fn(expect_object<T>(const_erased), std::forward<Args>(args)...);
+      return fn(expect_object<T>(erased), std::forward<Args>(args)...);
     }
     else
     {
       throw std::runtime_error{ "invalid object type: "
-                                + std::to_string(static_cast<int>(const_erased->type)) };
+                                + std::to_string(static_cast<int>(erased->type)) };
     }
   }
 
   template <typename F1, typename F2, typename... Args>
-  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
   constexpr auto
-  visit_seqable(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  visit_seqable(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    assert(const_erased);
-    auto * const erased(const_cast<object *>(const_erased));
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
@@ -556,26 +552,27 @@ namespace jank::runtime
   /* Throws if the object isn't seqable. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  constexpr auto visit_seqable(F1 const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_seqable(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_seqable(
       fn,
-      [=]() -> decltype(fn(obj::cons_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not seqable: " + to_code_string(const_erased) };
+      [=]() -> decltype(fn(obj::cons_ref{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not seqable: " + to_code_string(erased) };
       },
-      const_erased,
+      erased,
       std::forward<Args>(args)...);
   }
 
+  template <typename F, typename... Args>
+  concept map_visitable
+    = requires(F f) { f(obj::persistent_hash_map_ref{}, std::declval<Args>()...); };
+
   template <typename F1, typename F2, typename... Args>
-  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  requires(map_visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
   constexpr auto
-  visit_map_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  visit_map_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    assert(const_erased);
-    auto * const erased(const_cast<object *>(const_erased));
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
@@ -605,26 +602,23 @@ namespace jank::runtime
   /* Throws if the object isn't map-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  constexpr auto visit_map_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_map_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_map_like(
       fn,
-      [=]() -> decltype(fn(obj::persistent_hash_map_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not map-like: " + to_code_string(const_erased) };
+      [=]() -> decltype(fn(obj::persistent_hash_map_ref{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not map-like: " + to_code_string(erased) };
       },
-      const_erased,
+      erased,
       std::forward<Args>(args)...);
   }
 
   template <typename F1, typename F2, typename... Args>
-  requires(visitable<F1, Args...> && !std::convertible_to<F2, object const *>)
+  requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
   constexpr auto
-  visit_set_like(F1 const &fn, F2 const &else_fn, object const * const const_erased, Args &&...args)
+  visit_set_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    assert(const_erased);
-    auto * const erased(const_cast<object *>(const_erased));
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
@@ -639,7 +633,7 @@ namespace jank::runtime
           return fn(expect_object<obj::persistent_sorted_set>(erased), std::forward<Args>(args)...);
         }
         break;
-      /* Not map-like. */
+      /* Not set-like. */
       default:
         return else_fn();
     }
@@ -649,28 +643,23 @@ namespace jank::runtime
   /* Throws if the object isn't set-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  constexpr auto visit_set_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_set_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_set_like(
       fn,
-      [=]() -> decltype(fn(obj::persistent_hash_set_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not set-like: " + to_code_string(const_erased) };
+      [=]() -> decltype(fn(obj::persistent_hash_set_ref{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not set-like: " + to_code_string(erased) };
       },
-      const_erased,
+      erased,
       std::forward<Args>(args)...);
   }
 
   template <typename F1, typename F2, typename... Args>
-  requires(!std::convertible_to<F2, object const *>)
+  requires(!std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  constexpr auto visit_number_like(F1 const &fn,
-                                   F2 const &else_fn,
-                                   object const * const const_erased,
-                                   Args &&...args)
+  constexpr auto
+  visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    assert(const_erased);
-    auto * const erased(const_cast<object *>(const_erased));
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(erased->type)
@@ -704,14 +693,14 @@ namespace jank::runtime
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  constexpr auto visit_number_like(F1 const &fn, object const * const const_erased, Args &&...args)
+  constexpr auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_number_like(
       fn,
-      [=]() -> decltype(fn(obj::integer_ptr{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not a number: " + to_code_string(const_erased) };
+      [=]() -> decltype(fn(obj::integer_ref{}, std::forward<Args>(args)...)) {
+        throw std::runtime_error{ "not a number: " + to_code_string(erased) };
       },
-      const_erased,
+      erased,
       std::forward<Args>(args)...);
   }
 }

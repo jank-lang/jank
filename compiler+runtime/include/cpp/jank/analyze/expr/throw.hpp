@@ -4,7 +4,7 @@
 
 namespace jank::analyze::expr
 {
-  using throw_ptr = runtime::native_box<struct throw_>;
+  using throw_ref = jtl::ref<struct throw_>;
 
   struct throw_ : expression
   {
@@ -12,11 +12,11 @@ namespace jank::analyze::expr
 
     throw_(expression_position position,
            local_frame_ptr frame,
-           native_bool needs_box,
-           expression_ptr value);
+           bool needs_box,
+           expression_ref value);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
-    expression_ptr value{};
+    expression_ref value;
   };
 }

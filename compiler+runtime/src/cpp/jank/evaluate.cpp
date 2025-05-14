@@ -110,7 +110,7 @@ namespace jank::evaluate
   }
 
   template <typename F>
-  static void walk(expression_ptr const expr, F const &f)
+  static void walk(expression_ref const expr, F const &f)
   {
     visit_expr([&](auto const typed_expr) { walk(*typed_expr, f); }, expr);
   }
@@ -129,13 +129,13 @@ namespace jank::evaluate
    * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
    * type to a fn frame. */
   template <typename E>
-  static expr::function_ptr wrap_expression(native_box<E> const orig_expr,
-                                            native_persistent_string const &name,
-                                            native_vector<obj::symbol_ptr> params)
+  static expr::function_ref wrap_expression(jtl::ref<E> const orig_expr,
+                                            jtl::immutable_string const &name,
+                                            native_vector<obj::symbol_ref> params)
   {
-    auto ret{ make_box<expr::function>() };
+    auto ret{ jtl::make_ref<expr::function>() };
     /* TODO: Deep clone? */
-    auto expr{ make_box<E>(*orig_expr) };
+    auto expr{ jtl::make_ref<E>(*orig_expr) };
     ret->kind = analyze::expression_kind::function;
     ret->name = name;
     ret->unique_name = __rt_ctx->unique_string(ret->name);
@@ -143,28 +143,31 @@ namespace jank::evaluate
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));
 
-    expr::function_arity arity;
-    arity.frame
-      = make_box<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent);
+    auto const frame{
+      jtl::make_ref<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent)
+    };
+    auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
+    expr::function_arity arity{ std::move(params),
+                                jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
+                                frame,
+                                fn_ctx };
     expr->frame->parent = arity.frame;
     ret->frame = arity.frame->parent.unwrap_or(arity.frame);
     ret->frame->lift_constant(ret->meta);
-    arity.frame->fn_ctx = make_box<expr::function_context>();
-    arity.frame->fn_ctx->name = ret->name;
-    arity.frame->fn_ctx->unique_name = ret->unique_name;
-    arity.frame->fn_ctx->fn = ret;
-    arity.fn_ctx = arity.frame->fn_ctx;
+    fn_ctx->name = ret->name;
+    fn_ctx->unique_name = ret->unique_name;
+    fn_ctx->fn = ret;
+    arity.frame->fn_ctx = fn_ctx;
+    arity.fn_ctx = fn_ctx;
 
     arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
 
-    arity.params = std::move(params);
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const sym : arity.params)
     {
       arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
     }
 
-    arity.body = make_box<expr::do_>(expression_position::tail, arity.frame, true);
     arity.body->values.push_back(expr);
 
     walk(arity, [&](auto const &form) {
@@ -193,16 +196,16 @@ namespace jank::evaluate
   }
 
   /* TODO: Expression wrapping makes sense in analyze, not eval. We use it all over the place. */
-  expr::function_ptr wrap_expressions(native_vector<expression_ptr> const &exprs,
+  expr::function_ref wrap_expressions(native_vector<expression_ref> const &exprs,
                                       processor const &an_prc,
-                                      native_persistent_string const &name)
+                                      jtl::immutable_string const &name)
   {
     if(exprs.empty())
     {
-      return wrap_expression(make_box<expr::primitive_literal>(expression_position::tail,
-                                                               an_prc.root_frame,
-                                                               true,
-                                                               obj::nil::nil_const()),
+      return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
+                                                                    an_prc.root_frame,
+                                                                    true,
+                                                                    jank_nil),
                              name,
                              {});
     }
@@ -234,30 +237,29 @@ namespace jank::evaluate
     }
   }
 
-  expr::function_ptr wrap_expression(expression_ptr const expr,
-                                     native_persistent_string const &name,
-                                     native_vector<obj::symbol_ptr> params)
+  expr::function_ref wrap_expression(expression_ref const expr,
+                                     jtl::immutable_string const &name,
+                                     native_vector<obj::symbol_ref> params)
   {
     return visit_expr(
       [&](auto const typed_expr) { return wrap_expression(typed_expr, name, std::move(params)); },
       expr);
   }
 
-  object_ptr eval(expression_ptr const ex)
+  object_ref eval(expression_ref const ex)
   {
     profile::timer const timer{ "eval ast node" };
-    object_ptr ret{};
+    object_ref ret{};
     visit_expr([&ret](auto const typed_ex) { ret = eval(typed_ex); }, ex);
-    assert(ret);
     return ret;
   }
 
-  object_ptr eval(expr::def_ptr const expr)
+  object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
     var->meta = expr->name->meta;
 
-    auto const meta(var->meta.unwrap_or(obj::nil::nil_const()));
+    auto const meta(var->meta.unwrap_or(jank_nil));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
     var->set_dynamic(truthy(dynamic));
 
@@ -272,19 +274,19 @@ namespace jank::evaluate
     return var;
   }
 
-  object_ptr eval(expr::var_deref_ptr const expr)
+  object_ref eval(expr::var_deref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
-    return var.unwrap()->deref();
+    return var->deref();
   }
 
-  object_ptr eval(expr::var_ref_ptr const expr)
+  object_ref eval(expr::var_ref_ref const expr)
   {
     auto const var(__rt_ctx->find_var(expr->qualified_name));
-    return var.unwrap();
+    return var;
   }
 
-  object_ptr eval(expr::call_ptr const expr)
+  object_ref eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
     if(source->type == object_type::var)
@@ -295,12 +297,12 @@ namespace jank::evaluate
     try
     {
       return visit_object(
-        [&](auto const typed_source) -> object_ptr {
+        [&](auto const typed_source) -> object_ref {
           using T = typename decltype(typed_source)::value_type;
 
           if constexpr(std::is_base_of_v<behavior::callable, T>)
           {
-            native_vector<object_ptr> arg_vals;
+            native_vector<object_ref> arg_vals;
             arg_vals.reserve(expr->arg_exprs.size());
             for(auto const &arg_expr : expr->arg_exprs)
             {
@@ -432,7 +434,7 @@ namespace jank::evaluate
         },
         source);
     }
-    catch(error_ptr const e)
+    catch(error_ref const e)
     {
       /* We keep the original form from the call expression so we can point
        * back to it if an exception is thrown during eval. */
@@ -441,7 +443,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::primitive_literal_ptr const expr)
+  object_ref eval(expr::primitive_literal_ref const expr)
   {
     if(expr->data->type == object_type::keyword)
     {
@@ -451,9 +453,9 @@ namespace jank::evaluate
     return expr->data;
   }
 
-  object_ptr eval(expr::list_ptr const expr)
+  object_ref eval(expr::list_ref const expr)
   {
-    native_vector<object_ptr> ret;
+    native_vector<object_ref> ret;
     for(auto const &e : expr->data_exprs)
     {
       ret.emplace_back(eval(e));
@@ -470,7 +472,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::vector_ptr const expr)
+  object_ref eval(expr::vector_ref const expr)
   {
     runtime::detail::native_transient_vector ret;
     for(auto const &e : expr->data_exprs)
@@ -487,13 +489,13 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::map_ptr const expr)
+  object_ref eval(expr::map_ref const expr)
   {
     auto const size(expr->data_exprs.size());
     if(size <= obj::persistent_array_map::max_size)
     {
-      auto const array_box(make_array_box<object_ptr>(size * 2));
-      size_t i{};
+      auto const array_box(make_array_box<object_ref>(size * 2llu));
+      usize i{};
       for(auto const &e : expr->data_exprs)
       {
         array_box.data[i++] = eval(e.first);
@@ -533,7 +535,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::set_ptr const expr)
+  object_ref eval(expr::set_ref const expr)
   {
     runtime::detail::native_transient_hash_set ret;
     for(auto const &e : expr->data_exprs)
@@ -550,13 +552,13 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::local_reference_ptr const)
+  object_ref eval(expr::local_reference_ref const)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
     throw make_box("unsupported eval: local_reference");
   }
 
-  object_ptr eval(expr::function_ptr const expr)
+  object_ref eval(expr::function_ref const expr)
   {
     auto const &module(
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
@@ -579,27 +581,27 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::recur_ptr const)
+  object_ref eval(expr::recur_ref const)
   /* This will always be in a fn or loop, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recur");
   }
 
-  object_ptr eval(expr::recursion_reference_ptr const)
+  object_ref eval(expr::recursion_reference_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: recursion_reference");
   }
 
-  object_ptr eval(expr::named_recursion_ptr const)
+  object_ref eval(expr::named_recursion_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
     throw make_box("unsupported eval: named_recursion");
   }
 
-  object_ptr eval(expr::do_ptr const expr)
+  object_ref eval(expr::do_ref const expr)
   {
-    object_ptr ret{ obj::nil::nil_const() };
+    object_ref ret{ jank_nil };
     for(auto const &form : expr->values)
     {
       ret = eval(form);
@@ -607,17 +609,17 @@ namespace jank::evaluate
     return ret;
   }
 
-  object_ptr eval(expr::let_ptr const expr)
+  object_ref eval(expr::let_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "let", {})));
   }
 
-  object_ptr eval(expr::letfn_ptr const expr)
+  object_ref eval(expr::letfn_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "letfn", {})));
   }
 
-  object_ptr eval(expr::if_ptr const expr)
+  object_ref eval(expr::if_ref const expr)
   {
     auto const condition(eval(expr->condition));
     if(truthy(condition))
@@ -628,10 +630,10 @@ namespace jank::evaluate
     {
       return eval(expr->else_.unwrap());
     }
-    return obj::nil::nil_const();
+    return jank_nil;
   }
 
-  object_ptr eval(expr::throw_ptr const expr)
+  object_ref eval(expr::throw_ref const expr)
   {
     /* XXX: Clojure wraps throw expressions. I _suspect_ it does this because
      * clojure.main uses the stack trace to provide source info by stripping out
@@ -640,7 +642,7 @@ namespace jank::evaluate
     throw eval(expr->value);
   }
 
-  object_ptr eval(expr::try_ptr const expr)
+  object_ref eval(expr::try_ref const expr)
   {
     util::scope_exit const finally{ [=]() {
       if(expr->finally_body)
@@ -657,7 +659,7 @@ namespace jank::evaluate
     {
       return eval(expr->body);
     }
-    catch(object_ptr const e)
+    catch(object_ref const e)
     {
       return dynamic_call(eval(wrap_expression(expr->catch_body.unwrap().body,
                                                "catch",
@@ -666,7 +668,7 @@ namespace jank::evaluate
     }
   }
 
-  object_ptr eval(expr::case_ptr const expr)
+  object_ref eval(expr::case_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
   }

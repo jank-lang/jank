@@ -261,7 +261,7 @@ namespace jank::runtime
     "xor_eq__",
   };
 
-  native_persistent_string munge(native_persistent_string const &o)
+  jtl::immutable_string munge(jtl::immutable_string const &o)
   {
     native_transient_string munged;
     for(auto const &c : o)
@@ -285,9 +285,9 @@ namespace jank::runtime
     return munged;
   }
 
-  native_persistent_string munge_extra(native_persistent_string const &o,
-                                       native_persistent_string const &search,
-                                       char const * const replace)
+  jtl::immutable_string munge_extra(jtl::immutable_string const &o,
+                                    jtl::immutable_string const &search,
+                                    char const * const replace)
   {
     native_transient_string const ret{ munge(o) };
     std::regex const search_regex{ search.c_str() };
@@ -295,9 +295,10 @@ namespace jank::runtime
   }
 
   /* TODO: Support symbols and other data; Clojure takes in anything and passes it through str. */
-  object_ptr munge(object_ptr const o)
+  object_ref munge(object_ref const o)
   {
-    if(auto const s = dyn_cast<obj::persistent_string>(o))
+    auto const s{ dyn_cast<obj::persistent_string>(o) };
+    if(s.is_some())
     {
       return make_box<obj::persistent_string>(munge(s->data));
     }
@@ -307,7 +308,7 @@ namespace jank::runtime
     }
   }
 
-  native_persistent_string demunge(native_persistent_string const &o)
+  jtl::immutable_string demunge(jtl::immutable_string const &o)
   {
     if(munged_cpp_keywords.contains(o))
     {
@@ -319,7 +320,7 @@ namespace jank::runtime
 
     for(auto const &pair : demunge_chars)
     {
-      size_t pos{};
+      usize pos{};
       auto const pattern_length{ pair.first.length() };
       native_transient_string tmp;
       tmp.reserve(ret.size());

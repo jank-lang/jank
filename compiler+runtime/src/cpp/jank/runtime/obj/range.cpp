@@ -8,17 +8,17 @@
 
 namespace jank::runtime::obj
 {
-  static native_bool positive_step_bounds_check(object_ptr const val, object_ptr const end)
+  static bool positive_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(end, val);
   }
 
-  static native_bool negative_step_bounds_check(object_ptr const val, object_ptr const end)
+  static bool negative_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(val, end);
   }
 
-  range::range(object_ptr const end)
+  range::range(object_ref const end)
     : start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ptr const start, object_ptr const end)
+  range::range(object_ref const start, object_ref const end)
     : start{ start }
     , end{ end }
     , step{ make_box(1) }
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ptr const start, object_ptr const end, object_ptr const step)
+  range::range(object_ref const start, object_ref const end, object_ref const step)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -42,9 +42,9 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ptr const start,
-               object_ptr const end,
-               object_ptr const step,
+  range::range(object_ref const start,
+               object_ref const end,
+               object_ref const step,
                range::bounds_check_t const bounds_check)
     : start{ start }
     , end{ end }
@@ -53,11 +53,11 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ptr const start,
-               object_ptr const end,
-               object_ptr const step,
+  range::range(object_ref const start,
+               object_ref const end,
+               object_ref const step,
                range::bounds_check_t const bounds_check,
-               array_chunk_ptr const chunk,
+               array_chunk_ref const chunk,
                range_ptr const chunk_next)
     : start{ start }
     , end{ end }
@@ -68,7 +68,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ptr range::create(object_ptr const end)
+  object_ref range::create(object_ref const end)
   {
     if(is_pos(end))
     {
@@ -77,12 +77,12 @@ namespace jank::runtime::obj
     return persistent_list::empty();
   }
 
-  object_ptr range::create(object_ptr const start, object_ptr const end)
+  object_ref range::create(object_ref const start, object_ref const end)
   {
     return create(start, end, make_box(1));
   }
 
-  object_ptr range::create(object_ptr const start, object_ptr const end, object_ptr const step)
+  object_ref range::create(object_ref const start, object_ref const end, object_ref const step)
   {
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
@@ -107,22 +107,22 @@ namespace jank::runtime::obj
     return make_box<range>(start, end, step, bounds_check);
   }
 
-  object_ptr range::first() const
+  object_ref range::first() const
   {
     return start;
   }
 
   void range::force_chunk() const
   {
-    if(chunk)
+    if(chunk.is_some())
     {
       return;
     }
 
-    native_vector<object_ptr> arr;
+    native_vector<object_ref> arr;
     arr.reserve(chunk_size);
-    size_t n{};
-    object_ptr val{ start };
+    usize n{};
+    object_ref val{ start };
     while(n < chunk_size)
     {
       arr.emplace_back(val);
@@ -147,7 +147,7 @@ namespace jank::runtime::obj
 
   range_ptr range::next() const
   {
-    if(cached_next)
+    if(cached_next.is_some())
     {
       return cached_next;
     }
@@ -179,7 +179,7 @@ namespace jank::runtime::obj
     return chunk_next;
   }
 
-  array_chunk_ptr range::chunked_first() const
+  array_chunk_ref range::chunked_first() const
   {
     force_chunk();
     return chunk;
@@ -188,36 +188,21 @@ namespace jank::runtime::obj
   range_ptr range::chunked_next() const
   {
     force_chunk();
-    if(!chunk_next)
+    if(chunk_next.is_nil())
     {
-      return nullptr;
+      return {};
     }
     return chunk_next;
   }
 
-  cons_ptr range::conj(object_ptr const head) const
+  cons_ref range::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  native_bool range::equal(object const &o) const
+  bool range::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
-            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
-        {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq == nullptr;
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void range::to_string(util::string_builder &buff)
@@ -225,22 +210,22 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string range::to_string()
+  jtl::immutable_string range::to_string()
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string range::to_code_string()
+  jtl::immutable_string range::to_code_string()
   {
     return runtime::to_code_string(seq());
   }
 
-  native_hash range::to_hash() const
+  uhash range::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  range_ptr range::with_meta(object_ptr const m) const
+  range_ptr range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

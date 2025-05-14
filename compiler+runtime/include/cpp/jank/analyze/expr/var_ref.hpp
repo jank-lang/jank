@@ -6,15 +6,15 @@ namespace jank::runtime
 {
   namespace obj
   {
-    using symbol_ptr = native_box<struct symbol>;
+    using symbol_ref = oref<struct symbol>;
   }
 
-  using var_ptr = native_box<struct var>;
+  using var_ref = oref<struct var>;
 }
 
 namespace jank::analyze::expr
 {
-  using var_ref_ptr = runtime::native_box<struct var_ref>;
+  using var_ref_ref = jtl::ref<struct var_ref>;
 
   struct var_ref : expression
   {
@@ -22,13 +22,13 @@ namespace jank::analyze::expr
 
     var_ref(expression_position position,
             local_frame_ptr frame,
-            native_bool needs_box,
-            runtime::obj::symbol_ptr qualified_name,
-            runtime::var_ptr var);
+            bool needs_box,
+            runtime::obj::symbol_ref qualified_name,
+            runtime::var_ref var);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
-    runtime::obj::symbol_ptr qualified_name{};
-    runtime::var_ptr var{};
+    runtime::obj::symbol_ref qualified_name{};
+    runtime::var_ref var{};
   };
 }

@@ -11,18 +11,18 @@ namespace jank::runtime::obj
   {
     TEST_CASE("equal")
     {
-      CHECK(
-        equal(make_box<persistent_list>(std::in_place), make_box<persistent_list>(std::in_place)));
-      CHECK(!equal(make_box<persistent_list>(std::in_place),
-                   make_box<persistent_list>(std::in_place, make_box('f'), make_box('o'))));
-      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')),
-                   make_box<persistent_list>(std::in_place)));
-      CHECK(equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')),
-                  make_box<persistent_list>(std::in_place, make_box('f'), make_box('o'))));
-      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f')),
-                   make_box<persistent_list>(std::in_place, make_box('f'), make_box('o'))));
-      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')),
-                   make_box<persistent_list>(std::in_place, make_box('f'))));
+      CHECK(equal(make_box<persistent_list>(std::in_place).erase(),
+                  make_box<persistent_list>(std::in_place).erase()));
+      CHECK(!equal(make_box<persistent_list>(std::in_place).erase(),
+                   make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase()));
+      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase(),
+                   make_box<persistent_list>(std::in_place).erase()));
+      CHECK(equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase(),
+                  make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase()));
+      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f')).erase(),
+                   make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase()));
+      CHECK(!equal(make_box<persistent_list>(std::in_place, make_box('f'), make_box('o')).erase(),
+                   make_box<persistent_list>(std::in_place, make_box('f')).erase()));
     }
   }
 }

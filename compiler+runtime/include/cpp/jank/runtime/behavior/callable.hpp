@@ -1,18 +1,17 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime
 {
-  using object_ptr = native_box<struct object>;
-
   namespace obj
   {
-    using persistent_list_ptr = native_box<struct persistent_list>;
+    using persistent_list_ref = oref<struct persistent_list>;
   }
 
-  constexpr size_t const max_params{ 10 };
+  constexpr usize const max_params{ 10 };
 
   struct variadic_tag
   {
@@ -22,123 +21,123 @@ namespace jank::runtime
    * supported arities at compile-time, but that's not always the case in
    * dynamic code. We may not every know if the source is callable at all, so
    * codegen will use this suite of fns instead. */
-  object_ptr dynamic_call(object_ptr source);
-  object_ptr dynamic_call(object_ptr source, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr
-  dynamic_call(object_ptr source, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr);
-  object_ptr dynamic_call(object_ptr source,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          object_ptr,
-                          obj::persistent_list_ptr);
+  object_ref dynamic_call(object_ref source);
+  object_ref dynamic_call(object_ref source, object_ref);
+  object_ref dynamic_call(object_ref source, object_ref, object_ref);
+  object_ref dynamic_call(object_ref source, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref source, object_ref, object_ref, object_ref, object_ref);
+  object_ref
+  dynamic_call(object_ref source, object_ref, object_ref, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          obj::persistent_list_ref);
 
-  object_ptr apply_to(object_ptr source, object_ptr args);
+  object_ref apply_to(object_ref source, object_ref args);
 
   namespace behavior
   {
     /* TODO: I think we can use CRTP here. */
     struct callable
     {
-      using arity_flag_t = uint8_t;
+      using arity_flag_t = u8;
 
       virtual ~callable() = default;
 
-      virtual object_ptr call();
-      virtual object_ptr call(object_ptr);
-      virtual object_ptr call(object_ptr, object_ptr);
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr);
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr);
-      virtual object_ptr call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-      virtual object_ptr
-        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-      virtual object_ptr
-        call(object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr, object_ptr);
-      virtual object_ptr call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr);
-      virtual object_ptr call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr);
-      virtual object_ptr call(object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr,
-                              object_ptr);
+      virtual object_ref call();
+      virtual object_ref call(object_ref);
+      virtual object_ref call(object_ref, object_ref);
+      virtual object_ref call(object_ref, object_ref, object_ref);
+      virtual object_ref call(object_ref, object_ref, object_ref, object_ref);
+      virtual object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref);
+      virtual object_ref
+        call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref);
+      virtual object_ref
+        call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref);
+      virtual object_ref call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref);
+      virtual object_ref call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref);
+      virtual object_ref call(object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref,
+                              object_ref);
 
       /* Callables need a way to get back to the root object so we can do helpful
        * error reporting on failed calls. */
-      virtual object_ptr this_object_ptr() = 0;
+      virtual object_ref this_object_ref() = 0;
 
       /* When dynamically calling a function, we need to know three things:
        *
@@ -171,7 +170,7 @@ namespace jank::runtime
        */
       virtual arity_flag_t get_arity_flags() const;
 
-      static constexpr arity_flag_t mask_variadic_arity(uint8_t const pos)
+      static constexpr arity_flag_t mask_variadic_arity(u8 const pos)
       {
         return (0b10000000 | pos);
       }
@@ -181,66 +180,66 @@ namespace jank::runtime
         return (arity_flags & 0b10001111);
       }
 
-      static constexpr native_bool is_variadic_ambiguous(arity_flag_t const arity_flags)
+      static constexpr bool is_variadic_ambiguous(arity_flag_t const arity_flags)
       {
         return (arity_flags & 0b01000000);
       }
 
-      static constexpr arity_flag_t build_arity_flags(uint8_t const highest_fixed_arity,
-                                                      native_bool const is_variadic,
-                                                      native_bool const is_variadic_ambiguous)
+      static constexpr arity_flag_t build_arity_flags(u8 const highest_fixed_arity,
+                                                      bool const is_variadic,
+                                                      bool const is_variadic_ambiguous)
       {
         return (is_variadic << 7) | (is_variadic_ambiguous << 6) | highest_fixed_arity;
       }
     };
 
-    using callable_ptr = native_box<callable>;
+    using callable_ref = jtl::ref<callable>;
 
     /* TODO: Is this needed? A non-callable function-like would need to define all call overloads? :( */
     template <typename T>
     concept function_like = requires(T * const t) {
-      { t->call(object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
-      { t->call(object_ptr{}, object_ptr{}, object_ptr{}) } -> std::convertible_to<object_ptr>;
+      { t->call(object_ref{}) } -> std::convertible_to<object_ref>;
+      { t->call(object_ref{}, object_ref{}) } -> std::convertible_to<object_ref>;
+      { t->call(object_ref{}, object_ref{}, object_ref{}) } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{}, object_ref{}, object_ref{}, object_ref{})
+      } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{}, object_ref{}, object_ref{}, object_ref{}, object_ref{})
+      } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{}, object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{}, object_ref{}, object_ref{}, object_ref{}, object_ref{}, object_ref{})
+      } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{})
+      } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{})
+      } -> std::convertible_to<object_ref>;
       {
-        t->call(object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{},
-                object_ptr{})
-      } -> std::convertible_to<object_ptr>;
+        t->call(object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{},
+                object_ref{})
+      } -> std::convertible_to<object_ref>;
 
       { t->get_arity_flags() } -> std::convertible_to<size_t>;
     };

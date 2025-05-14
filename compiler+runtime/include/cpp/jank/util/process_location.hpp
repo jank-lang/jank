@@ -7,22 +7,22 @@
 #include <string>
 #include <filesystem>
 
-#include <jank/option.hpp>
+#include <jtl/option.hpp>
 
 namespace jank::util
 {
   /* TODO: Put this in a cpp file. */
-  inline option<std::filesystem::path> process_location()
+  inline jtl::option<std::filesystem::path> process_location()
 #if defined(__APPLE__)
   {
-    uint32_t path_length{};
+    u32 path_length{};
     if(_NSGetExecutablePath(nullptr, &path_length) != -1 || path_length <= 1)
     {
       return none;
     }
 
-    /* XXX: This needs to be a std::string, not a native_persistent_string. */
-    std::string path(path_length, native_persistent_string::value_type{});
+    /* XXX: This needs to be a std::string, not a jtl::immutable_string. */
+    std::string path(path_length, jtl::immutable_string::value_type{});
     if(_NSGetExecutablePath(path.data(), &path_length) != 0)
     {
       return none;

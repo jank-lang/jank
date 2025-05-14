@@ -5,13 +5,13 @@
 
 namespace jank::runtime::obj
 {
-  chunk_buffer::chunk_buffer(size_t const capacity)
+  chunk_buffer::chunk_buffer(usize const capacity)
     : capacity{ capacity }
   {
     buffer.reserve(capacity);
   }
 
-  chunk_buffer::chunk_buffer(object_ptr const capacity)
+  chunk_buffer::chunk_buffer(object_ref const capacity)
   {
     auto const c(to_int(capacity));
     if(c < 0)
@@ -22,12 +22,12 @@ namespace jank::runtime::obj
     buffer.reserve(c);
   }
 
-  native_bool chunk_buffer::equal(object const &o) const
+  bool chunk_buffer::equal(object const &o) const
   {
     return &o == &base;
   }
 
-  native_persistent_string chunk_buffer::to_string() const
+  jtl::immutable_string chunk_buffer::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -39,22 +39,22 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string chunk_buffer::to_code_string() const
+  jtl::immutable_string chunk_buffer::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash chunk_buffer::to_hash() const
+  uhash chunk_buffer::to_hash() const
   {
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t chunk_buffer::count() const
+  usize chunk_buffer::count() const
   {
     return buffer.size();
   }
 
-  void chunk_buffer::append(object_ptr const o)
+  void chunk_buffer::append(object_ref const o)
   {
     if(buffer.size() == capacity)
     {
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     buffer.emplace_back(o);
   }
 
-  array_chunk_ptr chunk_buffer::chunk()
+  array_chunk_ref chunk_buffer::chunk()
   {
     auto const ret(make_box<array_chunk>(std::move(buffer)));
     buffer.clear();

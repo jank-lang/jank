@@ -7,16 +7,16 @@ namespace jank::analyze::expr
 
   map::map(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
-           native_vector<std::pair<expression_ptr, expression_ptr>> &&data_exprs,
-           option<runtime::object_ptr> const &meta)
+           bool const needs_box,
+           native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
+           jtl::option<runtime::object_ref> const &meta)
     : expression{ expr_kind, position, frame, needs_box }
     , data_exprs{ std::move(data_exprs) }
     , meta{ meta }
   {
   }
 
-  object_ptr map::to_runtime_data() const
+  object_ref map::to_runtime_data() const
   {
     auto pair_maps(make_box<obj::persistent_vector>());
     for(auto const &e : data_exprs)

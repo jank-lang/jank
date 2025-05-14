@@ -5,7 +5,7 @@
 namespace jank::profile
 {
   void configure(util::cli::options const &opts);
-  native_bool is_enabled();
+  bool is_enabled();
   void enter(native_persistent_string_view const &region);
   void exit(native_persistent_string_view const &region);
   void report(native_persistent_string_view const &boundary);
@@ -18,6 +18,6 @@ namespace jank::profile
 
     void report(native_persistent_string_view const &boundary) const;
 
-    native_persistent_string region;
+    jtl::immutable_string region;
   };
 }

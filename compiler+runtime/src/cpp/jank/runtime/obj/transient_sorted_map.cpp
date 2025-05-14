@@ -24,12 +24,12 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_sorted_map_ptr transient_sorted_map::empty()
+  transient_sorted_map_ref transient_sorted_map::empty()
   {
     return make_box<transient_sorted_map>();
   }
 
-  native_bool transient_sorted_map::equal(object const &o) const
+  bool transient_sorted_map::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
@@ -40,31 +40,31 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string transient_sorted_map::to_string() const
+  jtl::immutable_string transient_sorted_map::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  native_persistent_string transient_sorted_map::to_code_string() const
+  jtl::immutable_string transient_sorted_map::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash transient_sorted_map::to_hash() const
+  uhash transient_sorted_map::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t transient_sorted_map::count() const
+  usize transient_sorted_map::count() const
   {
     assert_active();
     return data.size();
   }
 
-  object_ptr transient_sorted_map::get(object_ptr const key) const
+  object_ref transient_sorted_map::get(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -72,10 +72,10 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
-  object_ptr transient_sorted_map::get(object_ptr const key, object_ptr const fallback) const
+  object_ref transient_sorted_map::get(object_ref const key, object_ref const fallback) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -86,7 +86,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ptr transient_sorted_map::get_entry(object_ptr const key) const
+  object_ref transient_sorted_map::get_entry(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -94,38 +94,42 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return nil::nil_const();
+    return jank_nil;
   }
 
-  native_bool transient_sorted_map::contains(object_ptr const key) const
+  bool transient_sorted_map::contains(object_ref const key) const
   {
     assert_active();
     return data.find(key) != data.end();
   }
 
-  transient_sorted_map_ptr
-  transient_sorted_map::assoc_in_place(object_ptr const key, object_ptr const val)
+  transient_sorted_map_ref
+  transient_sorted_map::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
     data.insert_or_assign(key, val);
     return this;
   }
 
-  transient_sorted_map_ptr transient_sorted_map::dissoc_in_place(object_ptr const key)
+  transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
     data.erase_key(key);
     return this;
   }
 
-  transient_sorted_map_ptr transient_sorted_map::conj_in_place(object_ptr const head)
+  transient_sorted_map_ref transient_sorted_map::conj_in_place(object_ref const head)
   {
     assert_active();
 
-    if(head->type == object_type::persistent_array_map
-       || head->type == object_type::persistent_sorted_map)
+    if(head.is_nil())
     {
-      return expect_object<transient_sorted_map>(runtime::merge(this, head));
+      return this;
+    }
+
+    if(is_map(head))
+    {
+      return expect_object<transient_sorted_map>(runtime::merge_in_place(this, head));
     }
 
     if(head->type != object_type::persistent_vector)
@@ -143,19 +147,19 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_sorted_map::persistent_type_ptr transient_sorted_map::to_persistent()
+  transient_sorted_map::persistent_type_ref transient_sorted_map::to_persistent()
   {
     assert_active();
     active = false;
     return make_box<persistent_sorted_map>(std::move(data).persistent());
   }
 
-  object_ptr transient_sorted_map::call(object_ptr const o) const
+  object_ref transient_sorted_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ptr transient_sorted_map::call(object_ptr const o, object_ptr const fallback) const
+  object_ref transient_sorted_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

@@ -4,36 +4,36 @@
 
 namespace jank::runtime
 {
-  native_real operator+(native_big_integer const &l, native_real const &r);
-  native_real operator+(native_real const &l, native_big_integer const &r);
-  native_real operator-(native_big_integer const &l, native_real const &r);
-  native_real operator-(native_real const &l, native_big_integer const &r);
-  native_real operator*(native_big_integer const &l, native_real const &r);
-  native_real operator*(native_real const &l, native_big_integer const &r);
-  native_real operator/(native_big_integer const &l, native_real const &r);
-  native_real operator/(native_real const &l, native_big_integer const &r);
-  native_bool operator==(native_big_integer const &l, native_real const &r);
-  native_bool operator==(native_real const &l, native_big_integer const &r);
-  native_bool operator!=(native_big_integer const &l, native_real const &r);
-  native_bool operator!=(native_real const &l, native_big_integer const &r);
-  native_bool operator<(native_big_integer const &l, native_real const &r);
-  native_bool operator<(native_real const &l, native_big_integer const &r);
-  native_bool operator<=(native_big_integer const &l, native_real const &r);
-  native_bool operator<=(native_real const &l, native_big_integer const &r);
-  native_bool operator>(native_big_integer const &l, native_real const &r);
-  native_bool operator>(native_real const &l, native_big_integer const &r);
-  native_bool operator>=(native_big_integer const &l, native_real const &r);
-  native_bool operator>=(native_real const &l, native_big_integer const &r);
+  f64 operator+(native_big_integer const &l, f64 const &r);
+  f64 operator+(f64 const &l, native_big_integer const &r);
+  f64 operator-(native_big_integer const &l, f64 const &r);
+  f64 operator-(f64 const &l, native_big_integer const &r);
+  f64 operator*(native_big_integer const &l, f64 const &r);
+  f64 operator*(f64 const &l, native_big_integer const &r);
+  f64 operator/(native_big_integer const &l, f64 const &r);
+  f64 operator/(f64 const &l, native_big_integer const &r);
+  bool operator==(native_big_integer const &l, f64 const &r);
+  bool operator==(f64 const &l, native_big_integer const &r);
+  bool operator!=(native_big_integer const &l, f64 const &r);
+  bool operator!=(f64 const &l, native_big_integer const &r);
+  bool operator<(native_big_integer const &l, f64 const &r);
+  bool operator<(f64 const &l, native_big_integer const &r);
+  bool operator<=(native_big_integer const &l, f64 const &r);
+  bool operator<=(f64 const &l, native_big_integer const &r);
+  bool operator>(native_big_integer const &l, f64 const &r);
+  bool operator>(f64 const &l, native_big_integer const &r);
+  bool operator>=(native_big_integer const &l, f64 const &r);
+  bool operator>=(f64 const &l, native_big_integer const &r);
 }
 
 namespace jank::runtime::obj
 {
-  using big_integer_ptr = native_box<struct big_integer>;
+  using big_integer_ref = oref<struct big_integer>;
 
   struct big_integer : gc
   {
     static constexpr object_type obj_type{ object_type::big_integer };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     big_integer() = default;
     big_integer(big_integer &&) noexcept = default;
@@ -41,32 +41,35 @@ namespace jank::runtime::obj
 
     explicit big_integer(native_big_integer const &);
     explicit big_integer(native_big_integer &&);
-    explicit big_integer(native_integer);
-    explicit big_integer(native_persistent_string const &);
-    explicit big_integer(native_persistent_string const &, native_integer, native_bool);
+    explicit big_integer(i64);
+    explicit big_integer(jtl::immutable_string const &);
+    explicit big_integer(jtl::immutable_string const &, i64, bool);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    bool equal(object const &) const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(big_integer const &) const;
+    i64 compare(big_integer const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
-    native_real to_real() const;
+    i64 to_integer() const;
+    f64 to_real() const;
+
     static native_big_integer gcd(native_big_integer const &, native_big_integer const &);
-    static native_integer to_native_integer(native_big_integer const &);
-    static native_real to_native_real(native_big_integer const &);
-    static native_hash to_hash(native_big_integer const &);
-    static object_ptr create(native_persistent_string const &, native_integer, native_bool);
-    void init(native_persistent_string const &);
+    static i64 to_i64(native_big_integer const &);
+    static f64 to_f64(native_big_integer const &);
+    static uhash to_hash(native_big_integer const &);
+    static object_ref create(jtl::immutable_string const &, i64, bool);
+
+    void init(jtl::immutable_string const &);
+
     object base{ obj_type };
     native_big_integer data{};
   };

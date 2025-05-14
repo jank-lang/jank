@@ -8,14 +8,14 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
 
-jank_object_ptr jank_load_jank_perf_native()
+jank_object_ref jank_load_jank_perf_native()
 {
   using namespace jank;
   using namespace jank::runtime;
 
   auto const ns(__rt_ctx->intern_ns("jank.perf-native"));
 
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
@@ -24,5 +24,5 @@ jank_object_ptr jank_load_jank_perf_native()
   });
   intern_fn("benchmark", &perf::benchmark);
 
-  return erase(obj::nil::nil_const());
+  return jank_nil.erase();
 }

@@ -34,6 +34,7 @@ misc-definitions-in-headers,\
 -cppcoreguidelines-avoid-const-or-ref-data-members,\
 -cppcoreguidelines-rvalue-reference-param-not-moved,\
 -cppcoreguidelines-pro-bounds-constant-array-index,\
+-cppcoreguidelines-missing-std-forward,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -bugprone-multi-level-implicit-pointer-conversion,\

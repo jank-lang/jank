@@ -21,18 +21,18 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_hash_set_ptr transient_hash_set::empty()
+  transient_hash_set_ref transient_hash_set::empty()
   {
     return make_box<transient_hash_set>();
   }
 
-  native_bool transient_hash_set::equal(object const &o) const
+  bool transient_hash_set::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
     return &base == &o;
   }
 
-  native_persistent_string transient_hash_set::to_string() const
+  jtl::immutable_string transient_hash_set::to_string() const
   {
     util::string_builder buff;
     to_string(buff);
@@ -44,49 +44,49 @@ namespace jank::runtime::obj
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
-  native_persistent_string transient_hash_set::to_code_string() const
+  jtl::immutable_string transient_hash_set::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash transient_hash_set::to_hash() const
+  uhash transient_hash_set::to_hash() const
   {
     /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<native_hash>(reinterpret_cast<uintptr_t>(this));
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  size_t transient_hash_set::count() const
+  usize transient_hash_set::count() const
   {
     assert_active();
     return data.size();
   }
 
-  transient_hash_set_ptr transient_hash_set::conj_in_place(object_ptr const elem)
+  transient_hash_set_ref transient_hash_set::conj_in_place(object_ref const elem)
   {
     assert_active();
     data.insert(elem);
     return this;
   }
 
-  transient_hash_set::persistent_type_ptr transient_hash_set::to_persistent()
+  transient_hash_set::persistent_type_ref transient_hash_set::to_persistent()
   {
     assert_active();
     active = false;
     return make_box<persistent_hash_set>(data.persistent());
   }
 
-  object_ptr transient_hash_set::call(object_ptr const elem) const
+  object_ref transient_hash_set::call(object_ref const elem) const
   {
     assert_active();
     auto const found(data.find(elem));
     if(!found)
     {
-      return nil::nil_const();
+      return jank_nil;
     }
     return *found;
   }
 
-  object_ptr transient_hash_set::call(object_ptr const elem, object_ptr const fallback) const
+  object_ref transient_hash_set::call(object_ref const elem, object_ref const fallback) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -97,20 +97,20 @@ namespace jank::runtime::obj
     return *found;
   }
 
-  object_ptr transient_hash_set::get(object_ptr const elem) const
+  object_ref transient_hash_set::get(object_ref const elem) const
   {
     return call(elem);
   }
 
-  object_ptr transient_hash_set::get(object_ptr const elem, object_ptr const fallback) const
+  object_ref transient_hash_set::get(object_ref const elem, object_ref const fallback) const
   {
     return call(elem, fallback);
   }
 
-  object_ptr transient_hash_set::get_entry(object_ptr const elem) const
+  object_ref transient_hash_set::get_entry(object_ref const elem) const
   {
     auto const found = call(elem);
-    auto const nil(nil::nil_const());
+    auto const nil(jank_nil);
     if(found == nil)
     {
       return nil;
@@ -119,13 +119,13 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(std::in_place, found, found);
   }
 
-  native_bool transient_hash_set::contains(object_ptr const elem) const
+  bool transient_hash_set::contains(object_ref const elem) const
   {
     assert_active();
     return data.find(elem);
   }
 
-  transient_hash_set_ptr transient_hash_set::disjoin_in_place(object_ptr const elem)
+  transient_hash_set_ref transient_hash_set::disjoin_in_place(object_ref const elem)
   {
     assert_active();
     data.erase(elem);

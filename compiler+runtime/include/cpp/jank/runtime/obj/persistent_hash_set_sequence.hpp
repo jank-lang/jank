@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_hash_set_ptr = native_box<struct persistent_hash_set>;
-  using persistent_hash_set_sequence_ptr = native_box<struct persistent_hash_set_sequence>;
+  using persistent_hash_set_ref = oref<struct persistent_hash_set>;
+  using persistent_hash_set_sequence_ref = oref<struct persistent_hash_set_sequence>;
 
   struct persistent_hash_set_sequence
     : gc
@@ -16,8 +16,8 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_hash_set::iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_set_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_hash_set_sequence(persistent_hash_set_sequence &&) = default;
     persistent_hash_set_sequence(persistent_hash_set_sequence const &) = default;

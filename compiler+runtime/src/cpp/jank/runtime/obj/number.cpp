@@ -7,24 +7,12 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
-  boolean_ptr boolean::true_const()
-  {
-    static boolean r{ true };
-    return &r;
-  }
-
-  boolean_ptr boolean::false_const()
-  {
-    static boolean r{ false };
-    return &r;
-  }
-
-  boolean::boolean(native_bool const d)
+  boolean::boolean(bool const d)
     : data{ d }
   {
   }
 
-  native_bool boolean::equal(object const &o) const
+  bool boolean::equal(object const &o) const
   {
     if(o.type != object_type::boolean)
     {
@@ -40,47 +28,45 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string boolean::to_string() const
+  jtl::immutable_string boolean::to_string() const
   {
     util::string_builder buff;
     buff(data);
     return buff.release();
   }
 
-  native_persistent_string boolean::to_code_string() const
+  jtl::immutable_string boolean::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash boolean::to_hash() const
+  uhash boolean::to_hash() const
   {
     return data ? 1231 : 1237;
   }
 
-  native_integer boolean::compare(object const &o) const
+  i64 boolean::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> native_integer {
-        return (data > typed_o->data) - (data < typed_o->data);
-      },
-      [&]() -> native_integer {
+      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
 
-  native_integer boolean::compare(boolean const &o) const
+  i64 boolean::compare(boolean const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
   /***** integer *****/
-  integer::integer(native_integer const d)
+  integer::integer(i64 const d)
     : data{ d }
   {
   }
 
-  native_bool integer::equal(object const &o) const
+  bool integer::equal(object const &o) const
   {
     if(o.type != object_type::integer)
     {
@@ -91,7 +77,7 @@ namespace jank::runtime::obj
     return data == i->data;
   }
 
-  native_persistent_string integer::to_string() const
+  jtl::immutable_string integer::to_string() const
   {
     util::string_builder sb;
     return sb(data).release();
@@ -102,50 +88,48 @@ namespace jank::runtime::obj
     buff(data);
   }
 
-  native_persistent_string integer::to_code_string() const
+  jtl::immutable_string integer::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash integer::to_hash() const
+  uhash integer::to_hash() const
   {
     return hash::integer(data);
   }
 
-  native_integer integer::compare(object const &o) const
+  i64 integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> native_integer {
-        return (data > typed_o->data) - (data < typed_o->data);
-      },
-      [&]() -> native_integer {
+      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
 
-  native_integer integer::compare(integer const &o) const
+  i64 integer::compare(integer const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
-  native_integer integer::to_integer() const
+  i64 integer::to_integer() const
   {
     return data;
   }
 
-  native_real integer::to_real() const
+  f64 integer::to_real() const
   {
-    return static_cast<native_real>(data);
+    return static_cast<f64>(data);
   }
 
   /***** real *****/
-  real::real(native_real const d)
+  real::real(f64 const d)
     : data{ d }
   {
   }
 
-  native_bool real::equal(object const &o) const
+  bool real::equal(object const &o) const
   {
     if(o.type != object_type::real)
     {
@@ -153,11 +137,11 @@ namespace jank::runtime::obj
     }
 
     auto const r(expect_object<real>(&o));
-    std::hash<native_real> const hasher{};
+    std::hash<f64> const hasher{};
     return hasher(data) == hasher(r->data);
   }
 
-  native_persistent_string real::to_string() const
+  jtl::immutable_string real::to_string() const
   {
     util::string_builder sb;
     to_string(sb);
@@ -187,40 +171,58 @@ namespace jank::runtime::obj
     }
   }
 
-  native_persistent_string real::to_code_string() const
+  jtl::immutable_string real::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash real::to_hash() const
+  uhash real::to_hash() const
   {
     return hash::real(data);
   }
 
-  native_integer real::compare(object const &o) const
+  i64 real::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> native_integer {
-        return (data > typed_o->data) - (data < typed_o->data);
-      },
-      [&]() -> native_integer {
+      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
 
-  native_integer real::compare(real const &o) const
+  i64 real::compare(real const &o) const
   {
     return (data > o.data) - (data < o.data);
   }
 
-  native_integer real::to_integer() const
+  i64 real::to_integer() const
   {
-    return static_cast<native_integer>(data);
+    return static_cast<i64>(data);
   }
 
-  native_real real::to_real() const
+  f64 real::to_real() const
   {
     return data;
   }
+}
+
+namespace jank::runtime
+{
+  static obj::boolean_ref true_const()
+  {
+    static obj::boolean r{ true };
+    return &r;
+  }
+
+  static obj::boolean_ref false_const()
+  {
+    static obj::boolean r{ false };
+    return &r;
+  }
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::boolean_ref jank_true{ true_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::boolean_ref jank_false{ false_const() };
 }

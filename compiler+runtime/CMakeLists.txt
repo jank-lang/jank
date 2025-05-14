@@ -32,7 +32,7 @@ project(
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
-option(jank_tests "Whether or not to build jank's compilter test suite" OFF)
+option(jank_test "Enable jank's test suite" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 
 find_package(Git REQUIRED)
@@ -78,8 +78,9 @@ set(
   -frtti
   -fexceptions
   #-ftime-trace
-  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Debug>:-O0 -g>
   $<$<CONFIG:Release>:-O2>
+  $<$<CONFIG:RelWithDebInfo>:-O2 -g>
 )
 
 set(
@@ -107,7 +108,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
 
-if(jank_tests)
+if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
 
@@ -154,6 +155,8 @@ endfunction()
 
 add_library(
   jank_lib STATIC
+  src/cpp/jtl/panic.cpp
+  src/cpp/jtl/assert.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
@@ -473,11 +476,11 @@ jank_hook_llvm(jank_exe)
 # ---- jank executable ----
 
 # ---- Tests ----
-if(jank_tests)
+if(jank_test)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
-    test/cpp/jank/native_persistent_string.cpp
+    test/cpp/jtl/immutable_string.cpp
     test/cpp/jank/util/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp
@@ -485,7 +488,6 @@ if(jank_tests)
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/analyze/box.cpp
     test/cpp/jank/runtime/behavior/callable.cpp
-    test/cpp/jank/runtime/core/equal.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/big_integer.cpp

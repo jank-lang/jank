@@ -5,24 +5,24 @@
 
 namespace jank::runtime
 {
-  native_bool equal(char const lhs, object_ptr const rhs)
+  bool equal(char const lhs, object_ref const rhs)
   {
-    if(!rhs || rhs->type != object_type::character)
+    if(rhs.is_nil() || rhs->type != object_type::character)
     {
       return false;
     }
 
     auto const typed_rhs = expect_object<obj::character>(rhs);
-    return typed_rhs->to_hash() == static_cast<native_hash>(lhs);
+    return typed_rhs->to_hash() == static_cast<uhash>(lhs);
   }
 
-  native_bool equal(object_ptr const lhs, object_ptr const rhs)
+  bool equal(object_ref const lhs, object_ref const rhs)
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }
@@ -30,22 +30,22 @@ namespace jank::runtime
     return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  native_integer compare(object_ptr const l, object_ptr const r)
+  i64 compare(object_ref const l, object_ref const r)
   {
     if(l == r)
     {
       return 0;
     }
 
-    if(l != obj::nil::nil_const())
+    if(l != jank_nil)
     {
-      if(r == obj::nil::nil_const())
+      if(r == jank_nil)
       {
         return 1;
       }
 
       return visit_object(
-        [](auto const typed_l, auto const r) -> native_integer {
+        [](auto const typed_l, auto const r) -> i64 {
           using L = typename decltype(typed_l)::value_type;
           if constexpr(behavior::comparable<L>)
           {
@@ -63,7 +63,7 @@ namespace jank::runtime
     return -1;
   }
 
-  native_bool is_identical(object_ptr const lhs, object_ptr const rhs)
+  bool is_identical(object_ref const lhs, object_ref const rhs)
   {
     return lhs == rhs;
   }

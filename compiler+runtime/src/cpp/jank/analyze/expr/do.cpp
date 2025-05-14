@@ -11,17 +11,15 @@ namespace jank::analyze::expr
   {
   }
 
-  do_::do_(expression_position const position,
-           local_frame_ptr const frame,
-           native_bool const needs_box)
+  do_::do_(expression_position const position, local_frame_ptr const frame, bool const needs_box)
     : expression{ expr_kind, position, frame, needs_box }
   {
   }
 
   do_::do_(expression_position const position,
            local_frame_ptr const frame,
-           native_bool const needs_box,
-           native_vector<expression_ptr> &&values)
+           bool const needs_box,
+           native_vector<expression_ref> &&values)
     : expression{ expr_kind, position, frame, needs_box }
     , values{ std::move(values) }
   {
@@ -36,7 +34,7 @@ namespace jank::analyze::expr
     }
   }
 
-  object_ptr do_::to_runtime_data() const
+  object_ref do_::to_runtime_data() const
   {
     auto body_maps{ make_box<obj::persistent_vector>() };
     for(auto const &e : values)

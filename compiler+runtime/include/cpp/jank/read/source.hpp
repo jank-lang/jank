@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/native_persistent_string.hpp>
+#include <jtl/immutable_string.hpp>
 
 namespace jank::read
 {
@@ -11,14 +11,14 @@ namespace jank::read
   {
     static source_position const unknown;
 
-    native_bool operator==(source_position const &rhs) const;
-    native_bool operator!=(source_position const &rhs) const;
-    native_bool operator<=(source_position const &rhs) const;
-    native_bool operator>=(source_position const &rhs) const;
+    bool operator==(source_position const &rhs) const;
+    bool operator!=(source_position const &rhs) const;
+    bool operator<=(source_position const &rhs) const;
+    bool operator>=(source_position const &rhs) const;
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
-    size_t offset{}, line{ 1 }, col{ 1 };
+    usize offset{}, line{ 1 }, col{ 1 };
   };
 
   struct source
@@ -30,31 +30,31 @@ namespace jank::read
     source(source &&) noexcept = default;
     source(source_position const &start);
     source(source_position const &start, source_position const &end);
-    source(native_persistent_string const &file_path,
+    source(jtl::immutable_string const &file_path,
            source_position const &start,
            source_position const &end);
-    source(native_persistent_string const &file_path,
+    source(jtl::immutable_string const &file_path,
            source_position const &start,
            source_position const &end,
-           runtime::object_ptr macro_expansion);
+           runtime::object_ref macro_expansion);
 
     source &operator=(source const &rhs) = default;
     source &operator=(source &&rhs) = default;
 
-    native_bool operator==(source const &rhs) const;
-    native_bool operator!=(source const &rhs) const;
+    bool operator==(source const &rhs) const;
+    bool operator!=(source const &rhs) const;
 
-    native_bool overlaps(source const &) const;
+    bool overlaps(source const &) const;
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
-    native_persistent_string file_path;
+    jtl::immutable_string file_path;
     /* Note that start may be equal to end, if the source occupies a single byte. */
     source_position start, end;
     /* The form (and its meta) from which the form at this location expanded. Note
      * that this isn't stored within the jank/source key. It has its own key, since
      * it may be attached to synthetic data which has no source info. */
-    runtime::object_ptr macro_expansion{};
+    runtime::object_ref macro_expansion{};
   };
 
   std::ostream &operator<<(std::ostream &os, source_position const &p);

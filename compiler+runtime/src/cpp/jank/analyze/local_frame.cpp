@@ -13,17 +13,17 @@ namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  object_ptr lifted_var::to_runtime_data() const
+  object_ref lifted_var::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("var_name"), var_name);
   }
 
-  object_ptr lifted_constant::to_runtime_data() const
+  object_ref lifted_constant::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(make_box("data"), data);
   }
 
-  object_ptr local_binding::to_runtime_data() const
+  object_ref local_binding::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
       make_box("name"),
@@ -42,7 +42,7 @@ namespace jank::analyze
 
   local_frame::local_frame(frame_type const &type,
                            context &rt_ctx,
-                           option<native_box<local_frame>> const &p)
+                           jtl::option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
     , rt_ctx{ rt_ctx }
@@ -78,9 +78,8 @@ namespace jank::analyze
     return *this;
   }
 
-  static option<local_frame::find_result> find_local_impl(local_frame_ptr const start,
-                                                          obj::symbol_ptr sym,
-                                                          native_bool const allow_captures)
+  static jtl::option<local_frame::find_result>
+  find_local_impl(local_frame_ptr const start, obj::symbol_ref sym, bool const allow_captures)
   {
     decltype(local_frame::find_result::crossed_fns) crossed_fns;
 
@@ -118,7 +117,8 @@ namespace jank::analyze
     throw std::runtime_error{ util::format("unable to find local: {}", sym->to_string()) };
   }
 
-  option<local_frame::find_result> local_frame::find_local_or_capture(obj::symbol_ptr const sym)
+  jtl::option<local_frame::find_result>
+  local_frame::find_local_or_capture(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, true);
   }
@@ -136,12 +136,14 @@ namespace jank::analyze
     }
   }
 
-  option<local_frame::find_result> local_frame::find_originating_local(obj::symbol_ptr const sym)
+  jtl::option<local_frame::find_result>
+  local_frame::find_originating_local(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, false);
   }
 
-  option<expr::function_context_ptr> local_frame::find_named_recursion(obj::symbol_ptr const sym)
+  jtl::option<expr::function_context_ref>
+  local_frame::find_named_recursion(obj::symbol_ref const sym)
   {
     auto const sym_str(sym->to_string());
     for(local_frame_ptr it{ this }; it != nullptr;)
@@ -185,12 +187,12 @@ namespace jank::analyze
     return const_cast<local_frame &>(find_closest_fn_frame(std::as_const(frame)));
   }
 
-  native_bool local_frame::within_same_fn(local_frame_ptr const l, local_frame_ptr const r)
+  bool local_frame::within_same_fn(local_frame_ptr const l, local_frame_ptr const r)
   {
     return &find_closest_fn_frame(*l) == &find_closest_fn_frame(*r);
   }
 
-  obj::symbol_ptr local_frame::lift_var(obj::symbol_ptr const &sym)
+  obj::symbol_ref local_frame::lift_var(obj::symbol_ref const &sym)
   {
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
@@ -199,7 +201,7 @@ namespace jank::analyze
       return found->first;
     }
 
-    obj::symbol_ptr qualified_sym{};
+    obj::symbol_ref qualified_sym{};
     if(sym->ns.empty())
     {
       qualified_sym
@@ -217,10 +219,9 @@ namespace jank::analyze
     return qualified_sym;
   }
 
-  option<std::reference_wrapper<lifted_var const>>
-  local_frame::find_lifted_var(obj::symbol_ptr const &sym) const
+  jtl::option<std::reference_wrapper<lifted_var const>>
+  local_frame::find_lifted_var(obj::symbol_ref const &sym) const
   {
-    assert(sym);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_vars.find(sym));
     if(found != closest_fn.lifted_vars.end())
@@ -230,9 +231,8 @@ namespace jank::analyze
     return none;
   }
 
-  void local_frame::lift_constant(object_ptr const constant)
+  void local_frame::lift_constant(object_ref const constant)
   {
-    assert(constant);
     auto &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(constant));
     if(found != closest_fn.lifted_constants.end())
@@ -242,20 +242,19 @@ namespace jank::analyze
 
     auto const name(__rt_ctx->unique_symbol("const"));
     auto const unboxed_name{ visit_number_like(
-      [&](auto const) -> option<obj::symbol> {
+      [&](auto const) -> jtl::option<obj::symbol> {
         return obj::symbol{ name.ns, name.name + "__unboxed" };
       },
-      []() -> option<obj::symbol> { return none; },
+      []() -> jtl::option<obj::symbol> { return none; },
       constant) };
 
     lifted_constant l{ constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 
-  option<std::reference_wrapper<lifted_constant const>>
-  local_frame::find_lifted_constant(object_ptr const o) const
+  jtl::option<std::reference_wrapper<lifted_constant const>>
+  local_frame::find_lifted_constant(object_ref const o) const
   {
-    assert(o);
     auto const &closest_fn(find_closest_fn_frame(*this));
     auto const &found(closest_fn.lifted_constants.find(o));
     if(found != closest_fn.lifted_constants.end())
@@ -265,7 +264,7 @@ namespace jank::analyze
     return none;
   }
 
-  object_ptr local_frame::to_runtime_data() const
+  object_ref local_frame::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
       make_box("type"),

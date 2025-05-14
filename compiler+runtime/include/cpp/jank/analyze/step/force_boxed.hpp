@@ -4,5 +4,5 @@
 
 namespace jank::analyze::step
 {
-  void force_boxed(expr::do_ptr do_);
+  void force_boxed(expr::do_ref do_);
 }

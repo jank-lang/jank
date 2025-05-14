@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_sequence_ptr = native_box<struct persistent_array_map_sequence>;
+  using persistent_array_map_sequence_ref = oref<struct persistent_array_map_sequence>;
 
   struct persistent_array_map_sequence
     : detail::base_persistent_map_sequence<

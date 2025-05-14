@@ -16,6 +16,8 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <folly/FBVector.h>
 
+#include <jtl/primitive.hpp>
+
 namespace jank
 {
   template <typename T>
@@ -26,12 +28,8 @@ namespace jank
                                              immer::gc_transience_policy,
                                              false>;
 
-  using native_integer = long long;
-  using native_big_integer = boost::multiprecision::cpp_int;
-  using native_real = double;
-  using native_bool = bool;
-  using native_hash = uint32_t;
   using native_persistent_string_view = std::string_view;
+  using native_big_integer = boost::multiprecision::cpp_int;
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;
@@ -54,7 +52,7 @@ namespace jank
 
 #include <jank/hash.hpp>
 
-/* NOTE: native_persistent_string.hpp includes this file to learn about integer
+/* NOTE: jtl::immutable_string.hpp includes this file to learn about integer
  * types, but we also include it to forward our string type. Pragma once allows
  * this to work, but we need to make sure the order is right. */
-#include <jank/native_persistent_string.hpp>
+#include <jtl/immutable_string.hpp>

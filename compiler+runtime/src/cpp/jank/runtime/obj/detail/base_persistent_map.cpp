@@ -2,17 +2,20 @@
 #include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(option<object_ptr> const &meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ref> const &meta)
     : meta{ meta }
   {
   }
 
   template <typename PT, typename ST, typename V>
-  native_bool base_persistent_map<PT, ST, V>::equal(object const &o) const
+  bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
     if(&o == &base)
     {
@@ -20,7 +23,7 @@ namespace jank::runtime::obj::detail
     }
 
     return visit_map_like(
-      [&](auto const typed_o) -> native_bool {
+      [&](auto const typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
@@ -46,7 +49,7 @@ namespace jank::runtime::obj::detail
   void base_persistent_map<PT, ST, V>::to_string_impl(typename V::const_iterator const &begin,
                                                       typename V::const_iterator const &end,
                                                       util::string_builder &buff,
-                                                      native_bool const to_code)
+                                                      bool const to_code)
   {
     auto inserter(std::back_inserter(buff));
     inserter = '{';
@@ -91,7 +94,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_persistent_string base_persistent_map<PT, ST, V>::to_string() const
+  jtl::immutable_string base_persistent_map<PT, ST, V>::to_string() const
   {
     util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
@@ -102,7 +105,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_persistent_string base_persistent_map<PT, ST, V>::to_code_string() const
+  jtl::immutable_string base_persistent_map<PT, ST, V>::to_code_string() const
   {
     util::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
@@ -113,7 +116,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_hash base_persistent_map<PT, ST, V>::to_hash() const
+  uhash base_persistent_map<PT, ST, V>::to_hash() const
   {
     if(hash)
     {
@@ -125,11 +128,11 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_box<ST> base_persistent_map<PT, ST, V>::seq() const
+  oref<ST> base_persistent_map<PT, ST, V>::seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<ST>(static_cast<PT const *>(this),
                         static_cast<PT const *>(this)->data.begin(),
@@ -137,11 +140,11 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  native_box<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
+  oref<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
-      return nullptr;
+      return {};
     }
     return make_box<ST>(static_cast<PT const *>(this),
                         static_cast<PT const *>(this)->data.begin(),
@@ -149,13 +152,43 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  size_t base_persistent_map<PT, ST, V>::count() const
+  usize base_persistent_map<PT, ST, V>::count() const
   {
     return static_cast<PT const *>(this)->data.size();
   }
 
   template <typename PT, typename ST, typename V>
-  native_box<PT> base_persistent_map<PT, ST, V>::with_meta(object_ptr const m) const
+  object_ref base_persistent_map<PT, ST, V>::conj(object_ref const head) const
+  {
+    auto const ret(static_cast<PT const *>(this));
+    if(head.is_nil())
+    {
+      return ret;
+    }
+
+    if(is_map(head))
+    {
+      return merge(ret, head);
+    }
+
+    if(head->type != object_type::persistent_vector)
+    {
+      throw std::runtime_error{ util::format("invalid map entry: {}",
+                                             runtime::to_code_string(head)) };
+    }
+
+    auto const vec(expect_object<obj::persistent_vector>(head));
+    if(vec->count() != 2)
+    {
+      throw std::runtime_error{ util::format("invalid map entry: {}",
+                                             runtime::to_code_string(head)) };
+    }
+
+    return ret->assoc(vec->data[0], vec->data[1]);
+  }
+
+  template <typename PT, typename ST, typename V>
+  oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));

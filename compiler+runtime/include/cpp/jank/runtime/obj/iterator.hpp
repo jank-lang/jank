@@ -5,45 +5,45 @@
 
 namespace jank::runtime::obj
 {
-  using cons_ptr = native_box<struct cons>;
-  using iterator_ptr = native_box<struct iterator>;
+  using cons_ref = oref<struct cons>;
+  using iterator_ref = oref<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
   struct iterator : gc
   {
     static constexpr object_type obj_type{ object_type::iterator };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     iterator() = default;
     iterator(iterator &&) noexcept = default;
     iterator(iterator const &) = default;
-    iterator(object_ptr const fn, object_ptr const start);
+    iterator(object_ref const fn, object_ref const start);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string();
+    bool equal(object const &) const;
+    jtl::immutable_string to_string();
     void to_string(util::string_builder &buff);
-    native_persistent_string to_code_string();
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string();
+    uhash to_hash() const;
 
     /* behavior::seqable */
-    iterator_ptr seq();
-    iterator_ptr fresh_seq() const;
+    iterator_ref seq();
+    iterator_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    object_ptr first() const;
-    iterator_ptr next() const;
-    obj::cons_ptr conj(object_ptr head) const;
+    object_ref first() const;
+    iterator_ref next() const;
+    obj::cons_ref conj(object_ref head) const;
 
     /* behavior::sequenceable_in_place */
-    iterator_ptr next_in_place();
+    iterator_ref next_in_place();
 
     object base{ obj_type };
     /* TODO: Support chunking. */
-    object_ptr fn{};
-    object_ptr current{};
-    object_ptr previous{};
-    mutable iterator_ptr cached_next{};
+    object_ref fn{};
+    object_ref current{};
+    object_ref previous{};
+    mutable iterator_ref cached_next{};
   };
 }

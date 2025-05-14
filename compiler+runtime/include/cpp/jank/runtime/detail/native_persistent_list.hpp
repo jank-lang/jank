@@ -1,14 +1,16 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
-#include <jank/option.hpp>
 
 namespace jank::runtime::detail
 {
+  /* TODO: No doubt this can be optimized. */
   template <typename T>
   struct list_node
   {
-    static constexpr native_bool pointer_free{ false };
+    static constexpr bool pointer_free{ false };
 
     list_node() = default;
     list_node(list_node const &) = default;
@@ -25,14 +27,14 @@ namespace jank::runtime::detail
     {
     }
 
-    list_node(T const &t, native_box<list_node<T>> const &r, size_t const s)
+    list_node(T const &t, jtl::ptr<list_node<T>> const &r, usize const s)
       : first{ t }
       , rest{ r }
       , length{ s + 1 }
     {
     }
 
-    list_node(T &&t, native_box<list_node<T>> const &r, size_t const s)
+    list_node(T &&t, jtl::ptr<list_node<T>> const &r, usize const s)
       : first{ std::move(t) }
       , rest{ r }
       , length{ s + 1 }
@@ -40,10 +42,8 @@ namespace jank::runtime::detail
     }
 
     T first;
-    /* TODO: This should ultimately be able to point to anything which
-     * implements the equivalent of IPersistentList. */
-    native_box<list_node<T>> rest;
-    size_t length{};
+    jtl::ptr<list_node<T>> rest;
+    usize length{};
   };
 
   template <typename T>
@@ -91,24 +91,24 @@ namespace jank::runtime::detail
         return *this;
       }
 
-      native_bool operator==(iterator const &rhs) const
+      bool operator==(iterator const &rhs) const
       {
         return latest == rhs.latest;
       }
 
-      native_bool operator!=(iterator const &rhs) const
+      bool operator!=(iterator const &rhs) const
       {
         return latest != rhs.latest;
       }
 
-      native_box<native_persistent_list_impl<T>::value_type> latest;
+      jtl::ptr<native_persistent_list_impl<T>::value_type> latest;
     };
 
     native_persistent_list_impl() = default;
     native_persistent_list_impl(native_persistent_list_impl<T> const &) = default;
     native_persistent_list_impl(native_persistent_list_impl<T> &&) noexcept = default;
 
-    native_persistent_list_impl(native_box<value_type> const &d)
+    native_persistent_list_impl(jtl::ptr<value_type> const &d)
       : data{ d }
     {
     }
@@ -122,7 +122,7 @@ namespace jank::runtime::detail
     /* XXX: These must be reverse iterators. */
     native_persistent_list_impl(It const &rb, It const &re)
     {
-      size_t length{};
+      usize length{};
       for(auto it(rb); it != re; ++it)
       {
         data = make_box<value_type>(*it, data, length++);
@@ -168,17 +168,17 @@ namespace jank::runtime::detail
       return head;
     }
 
-    size_t size() const
+    usize size() const
     {
       return data ? data->length : 0;
     }
 
-    native_bool empty() const
+    bool empty() const
     {
       return data ? data->length == 0 : true;
     }
 
-    option<T> first() const
+    jtl::option<T> first() const
     {
       if(data)
       {
@@ -192,8 +192,8 @@ namespace jank::runtime::detail
       return data ? native_persistent_list_impl<T>{ data->rest } : native_persistent_list_impl<T>{};
     }
 
-    native_box<value_type> data{};
+    jtl::ptr<value_type> data{};
   };
 
-  using native_persistent_list = native_persistent_list_impl<object_ptr>;
+  using native_persistent_list = native_persistent_list_impl<object_ref>;
 }

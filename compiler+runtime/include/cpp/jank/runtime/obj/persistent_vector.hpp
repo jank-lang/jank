@@ -5,15 +5,15 @@
 
 namespace jank::runtime::obj
 {
-  using transient_vector_ptr = native_box<struct transient_vector>;
-  using persistent_vector_ptr = native_box<struct persistent_vector>;
-  using persistent_vector_sequence_ptr = native_box<struct persistent_vector_sequence>;
+  using transient_vector_ref = oref<struct transient_vector>;
+  using persistent_vector_ref = oref<struct persistent_vector>;
+  using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
   struct persistent_vector : gc
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     using transient_type = transient_vector;
     using value_type = runtime::detail::native_persistent_vector;
@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(option<object_ptr> const &meta, value_type &&d);
+    persistent_vector(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
@@ -32,62 +32,62 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_vector(object_ptr const meta, std::in_place_t, Args &&...args)
+    persistent_vector(object_ref const meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
-    static persistent_vector_ptr create(object_ptr s);
+    static persistent_vector_ref create(object_ref s);
 
-    static persistent_vector_ptr empty();
+    static persistent_vector_ref empty();
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    bool equal(object const &) const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(persistent_vector const &) const;
+    i64 compare(persistent_vector const &) const;
 
     /* behavior::metadatable */
-    persistent_vector_ptr with_meta(object_ptr m) const;
+    persistent_vector_ref with_meta(object_ref m) const;
 
     /* behavior::seqable */
-    persistent_vector_sequence_ptr seq() const;
-    persistent_vector_sequence_ptr fresh_seq() const;
+    persistent_vector_sequence_ref seq() const;
+    persistent_vector_sequence_ref fresh_seq() const;
 
     /* behavior::countable */
-    size_t count() const;
+    usize count() const;
 
     /* behavior::associatively_readable */
-    object_ptr get(object_ptr key) const;
-    object_ptr get(object_ptr key, object_ptr fallback) const;
-    object_ptr get_entry(object_ptr key) const;
-    native_bool contains(object_ptr key) const;
+    object_ref get(object_ref key) const;
+    object_ref get(object_ref key, object_ref fallback) const;
+    object_ref get_entry(object_ref key) const;
+    bool contains(object_ref key) const;
 
     /* behavior::conjable */
-    persistent_vector_ptr conj(object_ptr head) const;
+    persistent_vector_ref conj(object_ref head) const;
 
     /* behavior::stackable */
-    object_ptr peek() const;
-    persistent_vector_ptr pop() const;
+    object_ref peek() const;
+    persistent_vector_ref pop() const;
 
     /* behavior::indexable */
-    object_ptr nth(object_ptr index) const;
-    object_ptr nth(object_ptr index, object_ptr fallback) const;
+    object_ref nth(object_ref index) const;
+    object_ref nth(object_ref index, object_ref fallback) const;
 
     /* behavior::transientable */
-    obj::transient_vector_ptr to_transient() const;
+    obj::transient_vector_ref to_transient() const;
 
     object base{ obj_type };
     value_type data;
-    option<object_ptr> meta;
-    mutable native_hash hash{};
+    jtl::option<object_ref> meta;
+    mutable uhash hash{};
   };
 }

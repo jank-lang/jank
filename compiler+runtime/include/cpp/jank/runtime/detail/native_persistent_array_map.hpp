@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+#include <jtl/ref.hpp>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::detail
@@ -18,40 +20,40 @@ namespace jank::runtime::detail
     /* Array maps are fast only for a small number of keys. Clojure JVM uses a threshold of 8
      * k/v pairs, thus 16 elements. We follow the same. */
     /* TODO: Benchmark difference thresholds. */
-    static constexpr size_t max_size{ 8 };
+    static constexpr usize max_size{ 8 };
 
     native_persistent_array_map() = default;
     native_persistent_array_map(native_persistent_array_map const &s) = default;
     native_persistent_array_map(native_persistent_array_map &&s) noexcept = default;
 
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    native_persistent_array_map(in_place_unique, object_ptr * const kvs, L const l)
-      : data{ std::move(kvs) }
+    native_persistent_array_map(in_place_unique, jtl::ref<object_ref> const kvs, L const l)
+      : data{ std::move(kvs.data) }
       , length{ static_cast<decltype(length)>(l) }
     {
     }
 
     ~native_persistent_array_map() = default;
 
-    void insert_unique(object_ptr const key, object_ptr const val);
+    void insert_unique(object_ref const key, object_ref const val);
 
-    void insert_or_assign(object_ptr const key, object_ptr const val);
+    void insert_or_assign(object_ref const key, object_ref const val);
 
-    void erase(object_ptr const key);
+    void erase(object_ref const key);
 
-    object_ptr find(object_ptr const key) const;
+    object_ref find(object_ref const key) const;
 
-    native_hash to_hash() const;
+    uhash to_hash() const;
 
     struct iterator
     {
       using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
-      using value_type = std::pair<object_ptr, object_ptr>;
+      using value_type = std::pair<object_ref, object_ref>;
       using pointer = value_type *;
       using reference = value_type &;
 
-      iterator(object_ptr const *data, size_t index);
+      iterator(object_ref const *data, usize index);
       iterator(iterator const &) = default;
       iterator(iterator &&) noexcept = default;
 
@@ -59,14 +61,14 @@ namespace jank::runtime::detail
 
       iterator &operator++();
 
-      native_bool operator!=(iterator const &rhs) const;
+      bool operator!=(iterator const &rhs) const;
 
-      native_bool operator==(iterator const &rhs) const;
+      bool operator==(iterator const &rhs) const;
 
       iterator &operator=(iterator const &rhs);
 
-      object_ptr const *data{};
-      size_t index{};
+      object_ref const *data{};
+      usize index{};
     };
 
     using const_iterator = iterator;
@@ -74,14 +76,14 @@ namespace jank::runtime::detail
     const_iterator begin() const;
     const_iterator end() const;
 
-    size_t size() const;
+    usize size() const;
 
-    native_bool empty() const;
+    bool empty() const;
 
     native_persistent_array_map clone() const;
 
-    object_ptr *data{};
-    size_t length{};
-    mutable native_hash hash{};
+    object_ref *data{};
+    usize length{};
+    mutable uhash hash{};
   };
 }

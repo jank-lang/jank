@@ -7,10 +7,10 @@ namespace jank::analyze::expr
 
   call::call(expression_position const position,
              local_frame_ptr const frame,
-             native_bool const needs_box,
-             expression_ptr const source,
-             runtime::obj::persistent_list_ptr const form,
-             native_vector<expression_ptr> &&arg_exprs)
+             bool const needs_box,
+             expression_ref const source,
+             runtime::obj::persistent_list_ref const form,
+             native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , source_expr{ source }
     , form{ form }
@@ -18,7 +18,7 @@ namespace jank::analyze::expr
   {
   }
 
-  object_ptr call::to_runtime_data() const
+  object_ref call::to_runtime_data() const
   {
     auto arg_expr_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arg_exprs)

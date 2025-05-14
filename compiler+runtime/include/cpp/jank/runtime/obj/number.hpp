@@ -4,99 +4,107 @@
 
 namespace jank::runtime::obj
 {
-  using boolean_ptr = native_box<struct boolean>;
+  using boolean_ref = oref<struct boolean>;
 
   struct boolean : gc
   {
     static constexpr object_type obj_type{ object_type::boolean };
-    static constexpr native_bool pointer_free{ true };
-
-    static boolean_ptr true_const();
-    static boolean_ptr false_const();
+    static constexpr bool pointer_free{ true };
 
     boolean() = default;
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
-    boolean(native_bool const d);
+    boolean(bool const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    bool equal(object const &) const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(boolean const &) const;
+    i64 compare(boolean const &) const;
 
     object base{ obj_type };
-    native_bool data{};
+    bool data{};
   };
 
-  using integer_ptr = native_box<struct integer>;
+  using integer_ref = oref<struct integer>;
 
   struct integer : gc
   {
     static constexpr object_type obj_type{ object_type::integer };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     integer() = default;
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
-    integer(native_integer const d);
+    integer(i64 const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    bool equal(object const &) const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(integer const &) const;
+    i64 compare(integer const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
-    native_real to_real() const;
+    i64 to_integer() const;
+    f64 to_real() const;
 
-    native_integer data{};
+    /* TODO: Is it faster to have the data first or the base first? */
+    i64 data{};
     object base{ obj_type };
   };
+
+  using real_ref = oref<struct real>;
 
   struct real : gc
   {
     static constexpr object_type obj_type{ object_type::real };
-    static constexpr native_bool pointer_free{ true };
+    static constexpr bool pointer_free{ true };
 
     real() = default;
     real(real &&) noexcept = default;
     real(real const &) = default;
-    real(native_real const d);
+    real(f64 const d);
 
     /* behavior::object_like */
-    native_bool equal(object const &) const;
-    native_persistent_string to_string() const;
+    bool equal(object const &) const;
+    jtl::immutable_string to_string() const;
     void to_string(util::string_builder &buff) const;
-    native_persistent_string to_code_string() const;
-    native_hash to_hash() const;
+    jtl::immutable_string to_code_string() const;
+    uhash to_hash() const;
 
     /* behavior::comparable */
-    native_integer compare(object const &) const;
+    i64 compare(object const &) const;
 
     /* behavior::comparable extended */
-    native_integer compare(real const &) const;
+    i64 compare(real const &) const;
 
     /* behavior::number_like */
-    native_integer to_integer() const;
-    native_real to_real() const;
+    i64 to_integer() const;
+    f64 to_real() const;
 
-    native_real data{};
+    f64 data{};
     object base{ obj_type };
   };
+}
+
+namespace jank::runtime
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern obj::boolean_ref jank_true;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern obj::boolean_ref jank_false;
 }

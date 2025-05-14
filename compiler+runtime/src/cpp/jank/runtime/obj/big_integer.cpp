@@ -8,103 +8,103 @@
 namespace jank::runtime
 {
 
-  native_real operator+(native_big_integer const &l, native_real const &r)
+  f64 operator+(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) + r;
+    return obj::big_integer::to_f64(l) + r;
   }
 
-  native_real operator+(native_real const &l, native_big_integer const &r)
+  f64 operator+(f64 const &l, native_big_integer const &r)
   {
-    return l + obj::big_integer::to_native_real(r);
+    return l + obj::big_integer::to_f64(r);
   }
 
-  native_real operator-(native_big_integer const &l, native_real const &r)
+  f64 operator-(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) - r;
+    return obj::big_integer::to_f64(l) - r;
   }
 
-  native_real operator-(native_real const &l, native_big_integer const &r)
+  f64 operator-(f64 const &l, native_big_integer const &r)
   {
-    return l - obj::big_integer::to_native_real(r);
+    return l - obj::big_integer::to_f64(r);
   }
 
-  native_real operator*(native_big_integer const &l, native_real const &r)
+  f64 operator*(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) * r;
+    return obj::big_integer::to_f64(l) * r;
   }
 
-  native_real operator*(native_real const &l, native_big_integer const &r)
+  f64 operator*(f64 const &l, native_big_integer const &r)
   {
     return r * l;
   }
 
-  native_real operator/(native_big_integer const &l, native_real const &r)
+  f64 operator/(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) / r;
+    return obj::big_integer::to_f64(l) / r;
   }
 
-  native_real operator/(native_real const &l, native_big_integer const &r)
+  f64 operator/(f64 const &l, native_big_integer const &r)
   {
-    return l / obj::big_integer::to_native_real(r);
+    return l / obj::big_integer::to_f64(r);
   }
 
-  native_bool operator>(native_big_integer const &l, native_real const &r)
+  bool operator>(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) > r;
+    return obj::big_integer::to_f64(l) > r;
   }
 
-  native_bool operator>(native_real const &l, native_big_integer const &r)
+  bool operator>(f64 const &l, native_big_integer const &r)
   {
-    return l > obj::big_integer::to_native_real(r);
+    return l > obj::big_integer::to_f64(r);
   }
 
-  native_bool operator==(native_big_integer const &l, native_real const &r)
+  bool operator==(native_big_integer const &l, f64 const &r)
   {
-    constexpr native_real epsilon{ std::numeric_limits<native_real>::epsilon() };
+    constexpr f64 epsilon{ std::numeric_limits<f64>::epsilon() };
     return std::abs(l - r) < epsilon;
   }
 
-  native_bool operator==(native_real const &l, native_big_integer const &r)
+  bool operator==(f64 const &l, native_big_integer const &r)
   {
     return r == l;
   }
 
-  native_bool operator!=(native_big_integer const &l, native_real const &r)
+  bool operator!=(native_big_integer const &l, f64 const &r)
   {
     return !(l == r);
   }
 
-  native_bool operator!=(native_real const &l, native_big_integer const &r)
+  bool operator!=(f64 const &l, native_big_integer const &r)
   {
     return r != l;
   }
 
-  native_bool operator<(native_big_integer const &l, native_real const &r)
+  bool operator<(native_big_integer const &l, f64 const &r)
   {
-    return obj::big_integer::to_native_real(l) < r;
+    return obj::big_integer::to_f64(l) < r;
   }
 
-  native_bool operator<(native_real const &l, native_big_integer const &r)
+  bool operator<(f64 const &l, native_big_integer const &r)
   {
-    return l < obj::big_integer::to_native_real(r);
+    return l < obj::big_integer::to_f64(r);
   }
 
-  native_bool operator<=(native_big_integer const &l, native_real const &r)
-  {
-    return l < r || l == r;
-  }
-
-  native_bool operator<=(native_real const &l, native_big_integer const &r)
+  bool operator<=(native_big_integer const &l, f64 const &r)
   {
     return l < r || l == r;
   }
 
-  native_bool operator>=(native_big_integer const &l, native_real const &r)
+  bool operator<=(f64 const &l, native_big_integer const &r)
+  {
+    return l < r || l == r;
+  }
+
+  bool operator>=(native_big_integer const &l, f64 const &r)
   {
     return l > r || l == r;
   }
 
-  native_bool operator>=(native_real const &l, native_big_integer const &r)
+  bool operator>=(f64 const &l, native_big_integer const &r)
   {
     return l > r || l == r;
   }
@@ -123,12 +123,12 @@ namespace jank::runtime::obj
   {
   }
 
-  big_integer::big_integer(native_integer const val)
+  big_integer::big_integer(i64 const val)
     : data(val)
   {
   }
 
-  void big_integer::init(native_persistent_string const &s)
+  void big_integer::init(jtl::immutable_string const &s)
   {
     if(s.empty())
     {
@@ -153,14 +153,12 @@ namespace jank::runtime::obj
     }
   }
 
-  big_integer::big_integer(native_persistent_string const &s)
+  big_integer::big_integer(jtl::immutable_string const &s)
   {
     init(s);
   }
 
-  big_integer::big_integer(native_persistent_string const &s,
-                           native_integer const radix,
-                           native_bool const is_negative)
+  big_integer::big_integer(jtl::immutable_string const &s, i64 const radix, bool const is_negative)
   {
     /* Radix passed from lexer, and it's made sure to be between 2 and 36. */
     if(radix == 10)
@@ -203,14 +201,13 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr big_integer::create(native_persistent_string const &s,
-                                 native_integer const radix,
-                                 native_bool const is_negative)
+  object_ref
+  big_integer::create(jtl::immutable_string const &s, i64 const radix, bool const is_negative)
   {
     return make_box<big_integer>(s, radix, is_negative);
   }
 
-  native_bool big_integer::equal(object const &o) const
+  bool big_integer::equal(object const &o) const
   {
     if(o.type == object_type::big_integer)
     {
@@ -225,7 +222,7 @@ namespace jank::runtime::obj
       try
       {
         return std::fabs(this->to_real() - expect_object<real>(&o)->data)
-          < std::numeric_limits<native_real>::epsilon();
+          < std::numeric_limits<f64>::epsilon();
       }
       catch(...)
       {
@@ -236,7 +233,7 @@ namespace jank::runtime::obj
     return false;
   }
 
-  native_persistent_string big_integer::to_string() const
+  jtl::immutable_string big_integer::to_string() const
   {
     return data.str() + 'N';
   }
@@ -246,7 +243,7 @@ namespace jank::runtime::obj
     buff(to_string());
   }
 
-  native_persistent_string big_integer::to_code_string() const
+  jtl::immutable_string big_integer::to_code_string() const
   {
     return to_string();
   }
@@ -258,7 +255,7 @@ namespace jank::runtime::obj
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 
-  native_hash big_integer::to_hash(native_big_integer const &data)
+  uhash big_integer::to_hash(native_big_integer const &data)
   {
     auto const &backend{ data.backend() };
 
@@ -272,27 +269,25 @@ namespace jank::runtime::obj
       hash_combine(seed, limbs[i]);
     }
 
-    return static_cast<native_hash>(seed);
+    return static_cast<uhash>(seed);
   }
 
-  native_hash big_integer::to_hash() const
+  uhash big_integer::to_hash() const
   {
     return big_integer::to_hash(data);
   }
 
-  native_integer big_integer::compare(object const &o) const
+  i64 big_integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> native_integer {
-        return (data > typed_o->data) - (data < typed_o->data);
-      },
-      [&]() -> native_integer {
+      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
       &o);
   }
 
-  native_integer big_integer::compare(big_integer const &o) const
+  i64 big_integer::compare(big_integer const &o) const
   {
     return data.compare(o.data);
   }
@@ -303,42 +298,40 @@ namespace jank::runtime::obj
     return boost::multiprecision::gcd(l, r);
   }
 
-  native_integer big_integer::to_native_integer(native_big_integer const &d)
+  i64 big_integer::to_i64(native_big_integer const &d)
   {
-    if(d > std::numeric_limits<native_integer>::max()
-       || d < std::numeric_limits<native_integer>::min())
+    if(d > std::numeric_limits<i64>::max() || d < std::numeric_limits<i64>::min())
     {
       throw std::runtime_error{ "Value out of range for integer." };
     }
-    return static_cast<native_integer>(d);
+    return static_cast<i64>(d);
   }
 
-  native_integer big_integer::to_integer() const
+  i64 big_integer::to_integer() const
   {
-    return big_integer::to_native_integer(data);
+    return big_integer::to_i64(data);
   }
 
-  native_real big_integer::to_native_real(native_big_integer const &data)
+  f64 big_integer::to_f64(native_big_integer const &data)
   {
     try
     {
-      return data.convert_to<native_real>();
+      return data.convert_to<f64>();
     }
     catch(std::overflow_error const &)
     {
-      return data < 0 ? -std::numeric_limits<native_real>::infinity()
-                      : std::numeric_limits<native_real>::infinity();
+      return data < 0 ? -std::numeric_limits<f64>::infinity()
+                      : std::numeric_limits<f64>::infinity();
     }
     catch(std::exception const &e)
     {
-      throw std::runtime_error(
-        util::format("Error converting BigInteger to native_real: {}", e.what()));
+      throw std::runtime_error(util::format("Error converting BigInteger to f64: {}", e.what()));
     }
   }
 
-  native_real big_integer::to_real() const
+  f64 big_integer::to_real() const
   {
-    return big_integer::to_native_real(data);
+    return big_integer::to_f64(data);
   }
 
 }

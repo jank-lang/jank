@@ -5,11 +5,11 @@
 
 namespace jank::runtime
 {
-  native_bool truthy(object const *o);
-  native_bool truthy(object_ptr o);
-  native_bool truthy(obj::nil_ptr);
-  native_bool truthy(obj::boolean_ptr const o);
-  native_bool truthy(native_bool const o);
+  bool truthy(object const *o);
+  bool truthy(object_ref o);
+  bool truthy(obj::nil_ref);
+  bool truthy(obj::boolean_ref const o);
+  bool truthy(bool const o);
 
   template <typename T>
   requires runtime::behavior::object_like<T>
@@ -33,8 +33,8 @@ namespace jank::runtime
   template <typename T>
   requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto truthy(native_box<T> const &d)
+  inline auto truthy(oref<T> const &d)
   {
-    return truthy(d.data);
+    return truthy(d.erase());
   }
 }

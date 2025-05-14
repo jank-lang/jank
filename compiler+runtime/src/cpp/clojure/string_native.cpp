@@ -14,58 +14,57 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ptr blank(object_ptr const s)
+  static object_ref blank(object_ref const s)
   {
     if(runtime::is_nil(s))
     {
-      return obj::boolean::true_const();
+      return jank_true;
     }
     auto const s_str(runtime::to_string(s));
     return make_box(s_str.is_blank());
   }
 
-  static object_ptr reverse(object_ptr const s)
+  static object_ref reverse(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
-    return make_box<obj::persistent_string>(
-      native_persistent_string{ s_str.rbegin(), s_str.rend() });
+    return make_box<obj::persistent_string>(jtl::immutable_string{ s_str.rbegin(), s_str.rend() });
   }
 
-  static object_ptr lower_case(object_ptr const s)
+  static object_ref lower_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_lowercase(s_str));
   }
 
-  static object_ptr starts_with(object_ptr const s, object_ptr const substr)
+  static object_ref starts_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.starts_with(substr_str));
   }
 
-  static object_ptr ends_with(object_ptr const s, object_ptr const substr)
+  static object_ref ends_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.ends_with(substr_str));
   }
 
-  static object_ptr includes(object_ptr const s, object_ptr const substr)
+  static object_ref includes(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.contains(substr_str));
   }
 
-  static object_ptr upper_case(object_ptr const s)
+  static object_ref upper_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_uppercase(s_str));
   }
 }
 
-jank_object_ptr jank_load_clojure_string_native()
+jank_object_ref jank_load_clojure_string_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -73,7 +72,7 @@ jank_object_ptr jank_load_clojure_string_native()
 
   auto const ns(__rt_ctx->intern_ns("clojure.string-native"));
 
-  auto const intern_fn([=](native_persistent_string const &name, auto const fn) {
+  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(
       make_box<obj::native_function_wrapper>(convert_function(fn))
         ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
@@ -89,5 +88,5 @@ jank_object_ptr jank_load_clojure_string_native()
   intern_fn("starts-with?", &string_native::starts_with);
   intern_fn("upper-case", &string_native::upper_case);
 
-  return erase(obj::nil::nil_const());
+  return jank_nil.erase();
 }

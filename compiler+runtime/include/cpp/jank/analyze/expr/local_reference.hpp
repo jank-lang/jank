@@ -4,17 +4,17 @@
 
 namespace jank::runtime::obj
 {
-  using symbol_ptr = runtime::native_box<struct symbol>;
+  using symbol_ref = oref<struct symbol>;
 }
 
 namespace jank::analyze
 {
-  using local_binding_ptr = runtime::native_box<struct local_binding>;
+  using local_binding_ptr = jtl::ptr<struct local_binding>;
 }
 
 namespace jank::analyze::expr
 {
-  using local_reference_ptr = runtime::native_box<struct local_reference>;
+  using local_reference_ref = jtl::ref<struct local_reference>;
 
   struct local_reference : expression
   {
@@ -22,13 +22,13 @@ namespace jank::analyze::expr
 
     local_reference(expression_position position,
                     local_frame_ptr frame,
-                    native_bool needs_box,
-                    runtime::obj::symbol_ptr name,
+                    bool needs_box,
+                    runtime::obj::symbol_ref name,
                     local_binding_ptr binding);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
-    runtime::obj::symbol_ptr name{};
-    local_binding_ptr binding{};
+    runtime::obj::symbol_ref name{};
+    local_binding_ptr binding;
   };
 }

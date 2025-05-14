@@ -6,7 +6,7 @@
 
 namespace jank::util::cli
 {
-  result<options, int> parse(int const argc, char const **argv)
+  jtl::result<options, int> parse(int const argc, char const **argv)
   {
     CLI::App cli{ "jank compiler" };
     options opts;

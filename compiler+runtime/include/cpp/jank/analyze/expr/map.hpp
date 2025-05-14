@@ -1,11 +1,12 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
-#include <jank/option.hpp>
 
 namespace jank::analyze::expr
 {
-  using map_ptr = runtime::native_box<struct map>;
+  using map_ref = jtl::ref<struct map>;
 
   struct map : expression
   {
@@ -13,13 +14,13 @@ namespace jank::analyze::expr
 
     map(expression_position position,
         local_frame_ptr frame,
-        native_bool needs_box,
-        native_vector<std::pair<expression_ptr, expression_ptr>> &&data_exprs,
-        option<runtime::object_ptr> const &meta);
+        bool needs_box,
+        native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
+        jtl::option<runtime::object_ref> const &meta);
 
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
-    native_vector<std::pair<expression_ptr, expression_ptr>> data_exprs;
-    option<runtime::object_ptr> meta;
+    native_vector<std::pair<expression_ref, expression_ref>> data_exprs;
+    jtl::option<runtime::object_ref> meta;
   };
 }

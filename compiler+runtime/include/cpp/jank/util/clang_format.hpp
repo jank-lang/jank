@@ -1,15 +1,15 @@
 #pragma once
 
-#include <jank/native_persistent_string.hpp>
-#include <jank/result.hpp>
+#include <jtl/immutable_string.hpp>
+#include <jtl/result.hpp>
 
 namespace jank::util
 {
   struct format_failure
   {
-    native_persistent_string reason;
+    jtl::immutable_string reason;
   };
 
-  result<native_persistent_string, format_failure>
-  format_cpp_source(native_persistent_string const &);
+  jtl::result<jtl::immutable_string, format_failure>
+  format_cpp_source(jtl::immutable_string const &);
 }

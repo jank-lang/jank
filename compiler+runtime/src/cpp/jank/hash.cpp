@@ -1,24 +1,25 @@
 #include <jank/hash.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/sequence_range.hpp>
 
 namespace jank::hash
 {
-  static constexpr uint32_t seed{ 0 };
-  static constexpr uint32_t C1{ 0xcc9e2d51 };
-  static constexpr uint32_t C2{ 0x1b873593 };
+  static constexpr u32 seed{ 0 };
+  static constexpr u32 C1{ 0xcc9e2d51 };
+  static constexpr u32 C2{ 0x1b873593 };
 
-  uint32_t rotate_left(uint32_t const x, int8_t const r)
+  u32 rotate_left(u32 const x, i8 const r)
   {
     return (x << r) | (x >> (32 - r));
   }
 
-  uint64_t rotate_left(uint64_t const x, int8_t const r)
+  u64 rotate_left(u64 const x, i8 const r)
   {
     return (x << r) | (x >> (64 - r));
   }
 
-  uint32_t fmix(uint32_t h)
+  u32 fmix(u32 h)
   {
     h ^= h >> 16;
     h *= 0x85ebca6b;
@@ -29,7 +30,7 @@ namespace jank::hash
     return h;
   }
 
-  uint32_t fmix(uint32_t h1, uint32_t const length)
+  u32 fmix(u32 h1, u32 const length)
   {
     h1 ^= length;
     h1 ^= h1 >> 16;
@@ -40,7 +41,7 @@ namespace jank::hash
     return h1;
   }
 
-  uint32_t mix_k1(uint32_t k1)
+  u32 mix_k1(u32 k1)
   {
     k1 *= C1;
     k1 = rotate_left(k1, 15);
@@ -48,7 +49,7 @@ namespace jank::hash
     return k1;
   }
 
-  uint32_t mix_h1(uint32_t h1, uint32_t k1)
+  u32 mix_h1(u32 h1, u32 k1)
   {
     h1 ^= k1;
     h1 = rotate_left(h1, 13);
@@ -56,19 +57,19 @@ namespace jank::hash
     return h1;
   }
 
-  uint32_t mix_collection_hash(uint32_t const hash, uint32_t const length)
+  u32 mix_collection_hash(u32 const hash, u32 const length)
   {
-    uint32_t const k1{ mix_k1(hash) };
-    uint32_t const h1{ mix_h1(seed, k1) };
+    u32 const k1{ mix_k1(hash) };
+    u32 const h1{ mix_h1(seed, k1) };
     return fmix(h1, length);
   }
 
-  uint32_t combine(uint32_t const seed, uint32_t const t)
+  u32 combine(u32 const seed, u32 const t)
   {
     return seed ^ (t + 0x9e3779b9 + (seed << 6) + (seed >> 2));
   }
 
-  uint32_t integer(uint32_t const input)
+  u32 integer(u32 const input)
   {
     if(input == 0)
     {
@@ -81,15 +82,15 @@ namespace jank::hash
     return fmix(h1, 4);
   }
 
-  uint32_t integer(uint64_t const input)
+  u32 integer(u64 const input)
   {
     if(input == 0)
     {
       return 0;
     }
 
-    auto const low(static_cast<uint32_t>(input));
-    auto const high(static_cast<uint32_t>(input >> 32));
+    auto const low(static_cast<u32>(input));
+    auto const high(static_cast<u32>(input >> 32));
 
     auto k1(mix_k1(low));
     auto h1(mix_h1(seed, k1));
@@ -100,46 +101,46 @@ namespace jank::hash
     return fmix(h1, 8);
   }
 
-  uint32_t integer(native_integer const input)
+  u32 integer(i64 const input)
   {
-    if constexpr(sizeof(uint64_t) == sizeof(native_integer))
+    if constexpr(sizeof(u64) == sizeof(i64))
     {
-      return integer(static_cast<uint64_t>(input));
+      return integer(static_cast<u64>(input));
     }
     else
     {
-      return integer(static_cast<uint32_t>(input));
+      return integer(static_cast<u32>(input));
     }
   }
 
-  uint32_t real(native_real const input)
+  u32 real(f64 const input)
   {
-    if constexpr(8 == sizeof(native_integer))
+    if constexpr(8 == sizeof(i64))
     {
-      auto const v(*reinterpret_cast<uint64_t const *>(&input));
+      auto const v(*reinterpret_cast<u64 const *>(&input));
       return v ^ (v >> 32);
     }
     else
     {
-      return *reinterpret_cast<uint32_t const *>(&input);
+      return *reinterpret_cast<u32 const *>(&input);
     }
   }
 
-  uint32_t string(native_persistent_string_view const &input)
+  u32 string(native_persistent_string_view const &input)
   {
     auto const length(input.size());
-    uint32_t h1{ seed };
+    u32 h1{ seed };
 
-    for(size_t i{ 1 }; i < length; i += 2)
+    for(usize i{ 1 }; i < length; i += 2)
     {
-      auto k1(static_cast<uint32_t>(input[i - 1] | (input[i] << 16)));
+      auto k1(static_cast<u32>(input[i - 1] | (input[i] << 16)));
       k1 = mix_k1(k1);
       h1 = mix_h1(h1, k1);
     }
 
     if((length & 1) == 1)
     {
-      auto k1(static_cast<uint32_t>(static_cast<uint8_t>(input[length - 1])));
+      auto k1(static_cast<u32>(static_cast<u8>(input[length - 1])));
       k1 = mix_k1(k1);
       h1 ^= k1;
     }
@@ -147,30 +148,36 @@ namespace jank::hash
     return fmix(h1, 2 * length);
   }
 
-  uint32_t visit(char const ch)
+  u32 visit(char const ch)
   {
-    return static_cast<uint32_t>(ch);
+    return static_cast<u32>(ch);
   }
 
-  uint32_t visit(runtime::object const * const o)
+  u32 visit(runtime::object_ref const o)
   {
-    assert(o);
-    return runtime::visit_object([](auto const typed_o) { return typed_o->to_hash(); }, o);
+    return runtime::visit_object([](auto const typed_o) -> u32 { return typed_o->to_hash(); }, o);
   }
 
-  uint32_t ordered(runtime::object const * const sequence)
+  template <typename T>
+  requires runtime::behavior::object_like<T>
+  static u32 visit(runtime::oref<T> const o)
   {
-    assert(sequence);
+    return o->to_hash();
+  }
+
+  u32 ordered(runtime::object const * const sequence)
+  {
+    jank_debug_assert(sequence);
     return runtime::visit_object(
-      [](auto const typed_sequence) -> uint32_t {
+      [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;
         if constexpr(runtime::behavior::sequenceable<T>)
         {
-          uint32_t n{};
-          uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          u32 n{};
+          u32 hash{ 1 };
+          for(auto const e : make_sequence_range(typed_sequence))
           {
-            hash = 31 * hash + visit(it->first());
+            hash = 31 * hash + visit(e);
             ++n;
           }
 
@@ -184,19 +191,19 @@ namespace jank::hash
       sequence);
   }
 
-  uint32_t unordered(runtime::object const * const sequence)
+  u32 unordered(runtime::object const * const sequence)
   {
-    assert(sequence);
+    jank_debug_assert(sequence);
     return runtime::visit_object(
-      [](auto const typed_sequence) -> uint32_t {
+      [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;
         if constexpr(runtime::behavior::sequenceable<T>)
         {
-          uint32_t n{};
-          uint32_t hash{ 1 };
-          for(auto it(fresh_seq(typed_sequence)); it != nullptr; it = next_in_place(it))
+          u32 n{};
+          u32 hash{ 1 };
+          for(auto const e : make_sequence_range(typed_sequence))
           {
-            hash += visit(it->first());
+            hash += visit(e);
             ++n;
           }
 

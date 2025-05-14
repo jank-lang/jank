@@ -7,14 +7,14 @@ namespace jank::analyze::expr
 
   primitive_literal::primitive_literal(expression_position const position,
                                        local_frame_ptr const frame,
-                                       native_bool const needs_box,
-                                       runtime::object_ptr const data)
+                                       bool const needs_box,
+                                       runtime::object_ref const data)
     : expression{ expr_kind, position, frame, needs_box }
     , data{ data }
   {
   }
 
-  object_ptr primitive_literal::to_runtime_data() const
+  object_ref primitive_literal::to_runtime_data() const
   {
     using namespace runtime::obj;
 

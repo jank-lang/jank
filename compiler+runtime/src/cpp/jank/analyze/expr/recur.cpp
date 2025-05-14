@@ -7,16 +7,16 @@ namespace jank::analyze::expr
 
   recur::recur(expression_position const position,
                local_frame_ptr const frame,
-               native_bool const needs_box,
-               runtime::obj::persistent_list_ptr const args,
-               native_vector<expression_ptr> &&arg_exprs)
+               bool const needs_box,
+               runtime::obj::persistent_list_ref const args,
+               native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , args{ args }
     , arg_exprs{ std::move(arg_exprs) }
   {
   }
 
-  object_ptr recur::to_runtime_data() const
+  object_ref recur::to_runtime_data() const
   {
     auto arg_expr_maps(make_box<obj::persistent_vector>());
     for(auto const &e : arg_exprs)

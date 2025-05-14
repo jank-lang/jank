@@ -1,3 +1,4 @@
+#include "jank/runtime/rtti.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -79,8 +80,8 @@ namespace jank
       profile::timer const timer{ "eval user code" };
       __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
 
-      auto const main_var(__rt_ctx->find_var(opts.target_module, "-main").unwrap_or(nullptr));
-      if(main_var)
+      auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
+      if(main_var.is_some())
       {
         /* TODO: Handle the case when `-main` accepts no arg. */
         runtime::detail::native_transient_vector extra_args;
@@ -134,7 +135,7 @@ namespace jank
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
-    auto const get_prompt([](native_persistent_string const &suffix) {
+    auto const get_prompt([](jtl::immutable_string const &suffix) {
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
@@ -242,21 +243,32 @@ namespace jank
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
 {
+  using namespace jank;
+  using namespace jank::runtime;
+
   JANK_TRY
   {
-    using namespace jank;
-    using namespace jank::runtime;
-
     /* To handle UTF-8 Text , we set the locale to the current environment locale
-   * Usage of the local locale allows better localization.
-   * Notably this might make text encoding become more platform dependent.
-   */
+     * Usage of the local locale allows better localization.
+     * Notably this might make text encoding become more platform dependent.
+     */
     std::locale::global(std::locale(""));
 
     /* The GC needs to enabled even before arg parsing, since our native types,
-   * like strings, use the GC for allocations. It can still be configured later. */
+     * like strings, use the GC for allocations. It can still be configured later. */
     GC_set_all_interior_pointers(1);
     GC_enable();
+
+    //obj::symbol_ref r;
+    //r = make_box<obj::symbol>("foo");
+    //if(r)
+    //{
+    //  object_ref o;
+    //  o = erase(r);
+    //  util::println("r {}", r->to_code_string());
+    //}
+
+    //return 0;
 
     llvm::llvm_shutdown_obj const Y{};
 

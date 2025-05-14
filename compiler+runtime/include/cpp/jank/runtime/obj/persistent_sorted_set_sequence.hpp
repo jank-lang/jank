@@ -7,8 +7,8 @@
 
 namespace jank::runtime::obj
 {
-  using persistent_sorted_set_ptr = native_box<struct persistent_sorted_set>;
-  using persistent_sorted_set_sequence_ptr = native_box<struct persistent_sorted_set_sequence>;
+  using persistent_sorted_set_ref = oref<struct persistent_sorted_set>;
+  using persistent_sorted_set_sequence_ref = oref<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set_sequence
     : gc
@@ -16,8 +16,8 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_sorted_set::const_iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set_sequence };
-    static constexpr native_bool pointer_free{ false };
-    static constexpr native_bool is_sequential{ true };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
 
     persistent_sorted_set_sequence(persistent_sorted_set_sequence &&) noexcept = default;
     persistent_sorted_set_sequence(persistent_sorted_set_sequence const &) = default;

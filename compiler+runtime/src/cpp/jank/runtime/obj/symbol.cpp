@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   static void separate(symbol &sym, S &&s)
   {
     auto const found(s.find('/'));
-    if(found != native_persistent_string::npos && s.size() > 1)
+    if(found != jtl::immutable_string::npos && s.size() > 1)
     {
       sym.ns = s.substr(0, found);
       sym.name = s.substr(found + 1);
@@ -19,44 +19,44 @@ namespace jank::runtime::obj
     }
   }
 
-  symbol::symbol(native_persistent_string const &d)
+  symbol::symbol(jtl::immutable_string const &d)
   {
     separate(*this, d);
   }
 
-  symbol::symbol(native_persistent_string &&d)
+  symbol::symbol(jtl::immutable_string &&d)
   {
     separate(*this, std::move(d));
   }
 
-  symbol::symbol(native_persistent_string const &ns, native_persistent_string const &n)
+  symbol::symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n)
     : ns{ ns }
     , name{ n }
   {
   }
 
-  symbol::symbol(native_persistent_string &&ns, native_persistent_string &&n)
+  symbol::symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n)
     : ns{ std::move(ns) }
     , name{ std::move(n) }
   {
   }
 
-  symbol::symbol(object_ptr const meta,
-                 native_persistent_string const &ns,
-                 native_persistent_string const &n)
+  symbol::symbol(object_ref const meta,
+                 jtl::immutable_string const &ns,
+                 jtl::immutable_string const &n)
     : ns{ ns }
     , name{ n }
     , meta{ meta }
   {
   }
 
-  symbol::symbol(object_ptr const ns, object_ptr const n)
+  symbol::symbol(object_ref const ns, object_ref const n)
     : ns{ runtime::to_string(ns) }
     , name{ runtime::to_string(n) }
   {
   }
 
-  native_bool symbol::equal(object const &o) const
+  bool symbol::equal(object const &o) const
   {
     if(o.type != object_type::symbol)
     {
@@ -67,17 +67,17 @@ namespace jank::runtime::obj
     return ns == s->ns && name == s->name;
   }
 
-  native_bool symbol::equal(symbol const &s) const
+  bool symbol::equal(symbol const &s) const
   {
     return ns == s.ns && name == s.name;
   }
 
-  native_integer symbol::compare(object const &o) const
+  i64 symbol::compare(object const &o) const
   {
     return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
   }
 
-  native_integer symbol::compare(symbol const &s) const
+  i64 symbol::compare(symbol const &s) const
   {
     if(equal(s))
     {
@@ -103,8 +103,8 @@ namespace jank::runtime::obj
     return name.compare(s.name);
   }
 
-  static void to_string_impl(native_persistent_string const &ns,
-                             native_persistent_string const &name,
+  static void to_string_impl(jtl::immutable_string const &ns,
+                             jtl::immutable_string const &name,
                              util::string_builder &buff)
   {
     if(!ns.empty())
@@ -122,19 +122,19 @@ namespace jank::runtime::obj
     to_string_impl(ns, name, buff);
   }
 
-  native_persistent_string symbol::to_string() const
+  jtl::immutable_string symbol::to_string() const
   {
     util::string_builder buff;
     to_string_impl(ns, name, buff);
     return buff.release();
   }
 
-  native_persistent_string symbol::to_code_string() const
+  jtl::immutable_string symbol::to_code_string() const
   {
     return to_string();
   }
 
-  native_hash symbol::to_hash() const
+  uhash symbol::to_hash() const
   {
     if(hash)
     {
@@ -144,7 +144,7 @@ namespace jank::runtime::obj
     return hash = hash::combine(hash::string(name), hash::string(ns));
   }
 
-  symbol_ptr symbol::with_meta(object_ptr const m) const
+  symbol_ref symbol::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<symbol>(ns, name));
@@ -152,12 +152,12 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  native_persistent_string const &symbol::get_name() const
+  jtl::immutable_string const &symbol::get_name() const
   {
     return name;
   }
 
-  native_persistent_string const &symbol::get_namespace() const
+  jtl::immutable_string const &symbol::get_namespace() const
   {
     return ns;
   }
@@ -172,13 +172,13 @@ namespace jank::runtime::obj
     return compare(rhs) < 0;
   }
 
-  void symbol::set_ns(native_persistent_string const &s)
+  void symbol::set_ns(jtl::immutable_string const &s)
   {
     ns = s;
     hash = 0;
   }
 
-  void symbol::set_name(native_persistent_string const &s)
+  void symbol::set_name(jtl::immutable_string const &s)
   {
     name = s;
     hash = 0;
@@ -193,21 +193,21 @@ namespace std
     return o.to_hash();
   }
 
-  size_t hash<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &o) const noexcept
+  size_t hash<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &o) const noexcept
   {
     return o->to_hash();
   }
 
-  bool equal_to<jank::runtime::obj::symbol_ptr>::operator()(
-    jank::runtime::obj::symbol_ptr const &lhs,
-    jank::runtime::obj::symbol_ptr const &rhs) const noexcept
+  bool equal_to<jank::runtime::obj::symbol_ref>::operator()(
+    jank::runtime::obj::symbol_ref const &lhs,
+    jank::runtime::obj::symbol_ref const &rhs) const noexcept
   {
-    if(!lhs)
+    if(lhs.is_nil())
     {
-      return !rhs;
+      return rhs.is_nil();
     }
-    else if(!rhs)
+    else if(rhs.is_nil())
     {
       return false;
     }

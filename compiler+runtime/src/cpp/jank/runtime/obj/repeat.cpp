@@ -6,13 +6,13 @@
 
 namespace jank::runtime::obj
 {
-  repeat::repeat(object_ptr const value)
+  repeat::repeat(object_ref const value)
     : value{ value }
     , count{ make_box(infinite) }
   {
   }
 
-  repeat::repeat(object_ptr const count, object_ptr const value)
+  repeat::repeat(object_ref const count, object_ref const value)
     : value{ value }
     , count{ count }
   {
@@ -23,12 +23,12 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ptr repeat::create(object_ptr const value)
+  object_ref repeat::create(object_ref const value)
   {
     return make_box<repeat>(value);
   }
 
-  object_ptr repeat::create(object_ptr const count, object_ptr const value)
+  object_ref repeat::create(object_ref const count, object_ref const value)
   {
     if(lte(count, make_box(0)))
     {
@@ -37,12 +37,12 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  repeat_ptr repeat::seq()
+  repeat_ref repeat::seq()
   {
     return this;
   }
 
-  repeat_ptr repeat::fresh_seq() const
+  repeat_ref repeat::fresh_seq() const
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -51,12 +51,12 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  object_ptr repeat::first() const
+  object_ref repeat::first() const
   {
     return value;
   }
 
-  repeat_ptr repeat::next() const
+  repeat_ref repeat::next() const
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -64,12 +64,12 @@ namespace jank::runtime::obj
     }
     if(lte(count, make_box(1)))
     {
-      return nullptr;
+      return {};
     }
     return make_box<repeat>(make_box(add(count, make_box(-1))), value);
   }
 
-  repeat_ptr repeat::next_in_place()
+  repeat_ref repeat::next_in_place()
   {
     if(runtime::equal(count, make_box(infinite)))
     {
@@ -77,35 +77,20 @@ namespace jank::runtime::obj
     }
     if(lte(count, make_box(1)))
     {
-      return nullptr;
+      return {};
     }
     count = add(count, make_box(-1));
     return this;
   }
 
-  cons_ptr repeat::conj(object_ptr const head) const
+  cons_ref repeat::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  native_bool repeat::equal(object const &o) const
+  bool repeat::equal(object const &o) const
   {
-    return visit_seqable(
-      [this](auto const typed_o) {
-        auto seq(typed_o->fresh_seq());
-        /* TODO: This is common code; can it be shared? */
-        for(auto it(fresh_seq()); it != nullptr;
-            it = runtime::next_in_place(it), seq = runtime::next_in_place(seq))
-        {
-          if(seq == nullptr || !runtime::equal(it->first(), seq->first()))
-          {
-            return false;
-          }
-        }
-        return seq == nullptr;
-      },
-      []() { return false; },
-      &o);
+    return runtime::sequence_equal(this, &o);
   }
 
   void repeat::to_string(util::string_builder &buff)
@@ -113,22 +98,22 @@ namespace jank::runtime::obj
     runtime::to_string(seq(), buff);
   }
 
-  native_persistent_string repeat::to_string()
+  jtl::immutable_string repeat::to_string()
   {
     return runtime::to_string(seq());
   }
 
-  native_persistent_string repeat::to_code_string()
+  jtl::immutable_string repeat::to_code_string()
   {
     return runtime::to_code_string(seq());
   }
 
-  native_hash repeat::to_hash() const
+  uhash repeat::to_hash() const
   {
     return hash::ordered(&base);
   }
 
-  repeat_ptr repeat::with_meta(object_ptr const m) const
+  repeat_ref repeat::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

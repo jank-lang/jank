@@ -25,7 +25,7 @@
                           "CCACHE_MAXSIZE" "1G"
                           "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")})
           configure-flags ["-GNinja"
-                           "-Djank_tests=on"
+                           "-Djank_test=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)

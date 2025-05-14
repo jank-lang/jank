@@ -10,74 +10,74 @@
 
 namespace jank::runtime
 {
-  native_persistent_string type(object_ptr o);
-  native_bool is_nil(object_ptr o);
-  native_bool is_true(object_ptr o);
-  native_bool is_false(object_ptr o);
-  native_bool is_some(object_ptr o);
-  native_bool is_string(object_ptr o);
-  native_bool is_char(object_ptr o);
+  jtl::immutable_string type(object_ref o);
+  bool is_nil(object_ref o);
+  bool is_true(object_ref o);
+  bool is_false(object_ref o);
+  bool is_some(object_ref o);
+  bool is_string(object_ref o);
+  bool is_char(object_ref o);
 
-  native_bool is_symbol(object_ptr o);
-  native_bool is_simple_symbol(object_ptr o);
-  native_bool is_qualified_symbol(object_ptr o);
+  bool is_symbol(object_ref o);
+  bool is_simple_symbol(object_ref o);
+  bool is_qualified_symbol(object_ref o);
 
-  object_ptr print(object_ptr args);
-  object_ptr println(object_ptr args);
-  object_ptr pr(object_ptr args);
-  object_ptr prn(object_ptr args);
+  object_ref print(object_ref args);
+  object_ref println(object_ref args);
+  object_ref pr(object_ref args);
+  object_ref prn(object_ref args);
 
-  obj::persistent_string_ptr subs(object_ptr s, object_ptr start);
-  obj::persistent_string_ptr subs(object_ptr s, object_ptr start, object_ptr end);
-  native_integer first_index_of(object_ptr s, object_ptr m);
-  native_integer last_index_of(object_ptr s, object_ptr m);
+  obj::persistent_string_ref subs(object_ref s, object_ref start);
+  obj::persistent_string_ref subs(object_ref s, object_ref start, object_ref end);
+  i64 first_index_of(object_ref s, object_ref m);
+  i64 last_index_of(object_ref s, object_ref m);
 
-  native_bool is_named(object_ptr o);
-  native_persistent_string name(object_ptr o);
-  object_ptr namespace_(object_ptr o);
+  bool is_named(object_ref o);
+  jtl::immutable_string name(object_ref o);
+  object_ref namespace_(object_ref o);
 
-  object_ptr keyword(object_ptr ns, object_ptr name);
-  native_bool is_keyword(object_ptr o);
-  native_bool is_simple_keyword(object_ptr o);
-  native_bool is_qualified_keyword(object_ptr o);
+  object_ref keyword(object_ref ns, object_ref name);
+  bool is_keyword(object_ref o);
+  bool is_simple_keyword(object_ref o);
+  bool is_qualified_keyword(object_ref o);
 
-  native_bool is_callable(object_ptr o);
+  bool is_callable(object_ref o);
 
-  native_hash to_hash(object_ptr o);
+  uhash to_hash(object_ref o);
 
-  object_ptr macroexpand1(object_ptr o);
-  object_ptr macroexpand(object_ptr o);
+  object_ref macroexpand1(object_ref o);
+  object_ref macroexpand(object_ref o);
 
-  object_ptr gensym(object_ptr o);
+  object_ref gensym(object_ref o);
 
-  object_ptr atom(object_ptr o);
-  object_ptr deref(object_ptr o);
-  object_ptr swap_atom(object_ptr atom, object_ptr fn);
-  object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1);
-  object_ptr swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
-  object_ptr
-  swap_atom(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
-  object_ptr swap_vals(object_ptr atom, object_ptr fn);
-  object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1);
-  object_ptr swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2);
-  object_ptr
-  swap_vals(object_ptr atom, object_ptr fn, object_ptr a1, object_ptr a2, object_ptr rest);
-  object_ptr compare_and_set(object_ptr atom, object_ptr old_val, object_ptr new_val);
-  object_ptr reset(object_ptr atom, object_ptr new_val);
-  object_ptr reset_vals(object_ptr atom, object_ptr new_val);
+  object_ref atom(object_ref o);
+  object_ref deref(object_ref o);
+  object_ref swap_atom(object_ref atom, object_ref fn);
+  object_ref swap_atom(object_ref atom, object_ref fn, object_ref a1);
+  object_ref swap_atom(object_ref atom, object_ref fn, object_ref a1, object_ref a2);
+  object_ref
+  swap_atom(object_ref atom, object_ref fn, object_ref a1, object_ref a2, object_ref rest);
+  object_ref swap_vals(object_ref atom, object_ref fn);
+  object_ref swap_vals(object_ref atom, object_ref fn, object_ref a1);
+  object_ref swap_vals(object_ref atom, object_ref fn, object_ref a1, object_ref a2);
+  object_ref
+  swap_vals(object_ref atom, object_ref fn, object_ref a1, object_ref a2, object_ref rest);
+  object_ref compare_and_set(object_ref atom, object_ref old_val, object_ref new_val);
+  object_ref reset(object_ref atom, object_ref new_val);
+  object_ref reset_vals(object_ref atom, object_ref new_val);
 
-  object_ptr volatile_(object_ptr o);
-  native_bool is_volatile(object_ptr o);
-  object_ptr vswap(object_ptr v, object_ptr fn);
-  object_ptr vswap(object_ptr v, object_ptr fn, object_ptr args);
-  object_ptr vreset(object_ptr v, object_ptr new_val);
+  object_ref volatile_(object_ref o);
+  bool is_volatile(object_ref o);
+  object_ref vswap(object_ref v, object_ref fn);
+  object_ref vswap(object_ref v, object_ref fn, object_ref args);
+  object_ref vreset(object_ref v, object_ref new_val);
 
-  void push_thread_bindings(object_ptr o);
+  void push_thread_bindings(object_ref o);
   void pop_thread_bindings();
-  object_ptr get_thread_bindings();
+  object_ref get_thread_bindings();
 
-  object_ptr force(object_ptr o);
+  object_ref force(object_ref o);
 
-  object_ptr tagged_literal(object_ptr tag, object_ptr form);
-  native_bool is_tagged_literal(object_ptr o);
+  object_ref tagged_literal(object_ref tag, object_ref form);
+  bool is_tagged_literal(object_ref o);
 }

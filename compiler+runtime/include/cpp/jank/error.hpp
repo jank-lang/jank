@@ -1,8 +1,11 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
+#include <jtl/option.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/read/source.hpp>
-#include <jank/option.hpp>
 
 namespace cpptrace
 {
@@ -11,7 +14,7 @@ namespace cpptrace
 
 namespace jank::error
 {
-  enum class kind : uint8_t
+  enum class kind : u8
   {
     lex_unexpected_eof,
     lex_expecting_whitespace,
@@ -217,7 +220,7 @@ namespace jank::error
   /* NOLINTNEXTLINE */
   struct note
   {
-    enum class kind : uint8_t
+    enum class kind : u8
     {
       info,
       warning,
@@ -238,9 +241,9 @@ namespace jank::error
       return "unknown";
     }
 
-    native_persistent_string to_string() const;
+    jtl::immutable_string to_string() const;
 
-    native_persistent_string message;
+    jtl::immutable_string message;
     read::source source;
     kind kind{ kind::error };
   };
@@ -254,63 +257,63 @@ namespace jank::error
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
-    base(kind k, native_persistent_string const &message, read::source const &source);
+    base(kind k, jtl::immutable_string const &message, read::source const &source);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
+         runtime::object_ref expansion,
          std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         native_persistent_string const &note_message,
-         runtime::object_ptr expansion);
-    base(kind k, read::source const &source, native_persistent_string const &note_message);
+         jtl::immutable_string const &note_message,
+         runtime::object_ref expansion);
+    base(kind k, read::source const &source, jtl::immutable_string const &note_message);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         native_persistent_string const &note_message);
+         jtl::immutable_string const &note_message);
     base(kind k, read::source const &source, note const &note);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          note const &note);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          note const &note,
-         runtime::object_ptr expansion);
+         runtime::object_ref expansion);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
          native_vector<note> const &notes);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
-         runtime::native_box<base> cause);
+         runtime::object_ref expansion,
+         jtl::ref<base> cause);
     base(kind k,
-         native_persistent_string const &message,
+         jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ptr expansion,
-         runtime::native_box<base> cause,
+         runtime::object_ref expansion,
+         jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 
-    native_bool operator==(base const &rhs) const;
-    native_bool operator!=(base const &rhs) const;
+    bool operator==(base const &rhs) const;
+    bool operator!=(base const &rhs) const;
 
     void sort_notes();
-    runtime::native_box<base> add_usage(read::source const &usage_source);
+    jtl::ref<base> add_usage(read::source const &usage_source);
 
     kind kind{};
-    native_persistent_string message;
+    jtl::immutable_string message;
     read::source source;
     native_vector<note> notes;
-    runtime::native_box<base> cause;
+    jtl::ptr<base> cause;
     std::unique_ptr<cpptrace::stacktrace> trace;
     /* TODO: context */
     /* TODO: suggestions */
@@ -321,11 +324,11 @@ namespace jank::error
 
 namespace jank
 {
-  using error_ptr = runtime::native_box<error::base>;
+  using error_ref = jtl::ref<error::base>;
 
   template <typename... Args>
-  error_ptr make_error(Args &&...args)
+  error_ref make_error(Args &&...args)
   {
-    return runtime::make_box<error::base>(std::forward<Args>(args)...);
+    return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
   }
 }

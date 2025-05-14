@@ -6,7 +6,7 @@ namespace jank::analyze::expr
 {
   using namespace jank::runtime;
 
-  using case_ptr = runtime::native_box<struct case_>;
+  using case_ref = jtl::ref<struct case_>;
 
   struct case_ : expression
   {
@@ -14,22 +14,22 @@ namespace jank::analyze::expr
 
     case_(expression_position position,
           local_frame_ptr frame,
-          native_bool needs_box,
-          expression_ptr value_expr,
-          native_integer shift,
-          native_integer mask,
-          expression_ptr default_expr,
-          native_vector<native_integer> &&keys,
-          native_vector<expression_ptr> &&exprs);
+          bool needs_box,
+          expression_ref value_expr,
+          i64 shift,
+          i64 mask,
+          expression_ref default_expr,
+          native_vector<i64> &&keys,
+          native_vector<expression_ref> &&exprs);
 
     void propagate_position(expression_position const pos) override;
-    runtime::object_ptr to_runtime_data() const override;
+    runtime::object_ref to_runtime_data() const override;
 
-    expression_ptr value_expr{};
-    native_integer shift{};
-    native_integer mask{};
-    expression_ptr default_expr{};
-    native_vector<native_integer> keys{};
-    native_vector<expression_ptr> exprs{};
+    expression_ref value_expr;
+    i64 shift{};
+    i64 mask{};
+    expression_ref default_expr;
+    native_vector<i64> keys{};
+    native_vector<expression_ref> exprs{};
   };
 }
