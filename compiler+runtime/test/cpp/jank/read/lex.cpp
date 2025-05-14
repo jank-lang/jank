@@ -483,6 +483,30 @@ namespace jank::read::lex
                 { 0, 3, token_kind::ratio, { .numerator = 4, .denominator = 5 } }
         }));
       }
+      SUBCASE("Success - big integer numerator")
+      {
+        processor p{ "8888888888888888888888888888888888/4" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 36, token_kind::ratio,
+                 { .numerator = native_big_integer("8888888888888888888888888888888888"),
+                    .denominator = 4 } }
+        }));
+      }
+      SUBCASE("Success - big integer denominator")
+      {
+        processor p{ "4/8888888888888888888888888888888888" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 36, token_kind::ratio,
+                 { .numerator = 4,
+                    .denominator = native_big_integer("8888888888888888888888888888888888") } }
+        }));
+      }
       SUBCASE("Success - -x/x")
       {
         processor p{ "-4/5" };
@@ -645,15 +669,29 @@ namespace jank::read::lex
 
       SUBCASE("Arbitrary radix edge cases")
       {
-        /* Exceeds 64-bit integer max */
         processor p{ "36r0123456789abcdefghijklmnopqrstuvwxyz" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(tokens == make_results({ make_error(kind::lex_invalid_number, 0, 39) }));
+        CHECK(tokens
+              == make_tokens({
+                { { 0, 1, 1 },
+                 { 39, 1, 40 },
+                 token_kind::big_integer,
+                 { .number_literal = "0123456789abcdefghijklmnopqrstuvwxyz",
+                    .radix = 36,
+                    .is_negative = false } }
+        }));
 
-        /* 65 bits. */
         processor p2{ "2r11111111111111111111111111111111111111111111111111111111111111111" };
         native_vector<jtl::result<token, error_ref>> const tokens2(p2.begin(), p2.end());
-        CHECK(tokens2 == make_results({ make_error(kind::lex_invalid_number, 0, 67) }));
+        CHECK(tokens2
+              == make_tokens({
+                { 0,
+                 67, token_kind::big_integer,
+                 { .number_literal
+                    = "11111111111111111111111111111111111111111111111111111111111111111",
+                    .radix = 2,
+                    .is_negative = false } }
+        }));
       }
 
       SUBCASE("Invalid arbitrary radix edge cases")
@@ -922,7 +960,134 @@ namespace jank::read::lex
         }
       }
     }
-
+    TEST_CASE("N suffix")
+    {
+      SUBCASE("1N")
+      {
+        processor p{ "1N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 2, token_kind::big_integer,
+                 { .number_literal = "1", .radix = 10, .is_negative = false } }
+        }));
+      }
+      SUBCASE("-1N")
+      {
+        processor p{ "-1N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 3, token_kind::big_integer,
+                 { .number_literal = "1", .radix = 10, .is_negative = true } }
+        }));
+      }
+      SUBCASE("0xa7N")
+      {
+        processor p{ "0xa7N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 5, token_kind::big_integer,
+                 { .number_literal = "a7", .radix = 16, .is_negative = false } }
+        }));
+      }
+      SUBCASE("077N")
+      {
+        processor p{ "077N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 4, token_kind::big_integer,
+                 { .number_literal = "077", .radix = 8, .is_negative = false } }
+        }));
+      }
+      SUBCASE("-1N34")
+      {
+        processor p{ "-1N34" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0,
+                      3, token_kind::big_integer,
+                      { .number_literal = "1", .radix = 10, .is_negative = true }    },
+                make_error(kind::lex_expecting_whitespace, 3, 0),
+                token{ 3, 2,     token_kind::integer,                            34ll }
+        }));
+      }
+      SUBCASE("1/34N")
+      {
+        processor p{ "1/34N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_number, 2, 2),
+                token{ 4, 1, token_kind::symbol, "N"sv },
+        }));
+      }
+      SUBCASE("1N/34")
+      {
+        processor p{ "1N/34" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0,
+                      2, token_kind::big_integer,
+                      { .number_literal = "1", .radix = 10, .is_negative = false } },
+                make_error(kind::lex_expecting_whitespace, 2, 0),
+                make_error(kind::lex_invalid_number, 2, 1),
+        }));
+      }
+      SUBCASE("34NN")
+      {
+        processor p{ "34NN" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0,
+                      3, token_kind::big_integer,
+                      { .number_literal = "34", .radix = 10, .is_negative = false }    },
+                make_error(kind::lex_expecting_whitespace, 3, 0),
+                token{ 3, 1,      token_kind::symbol,                             "N"sv }
+        }));
+      }
+      SUBCASE("34N N")
+      {
+        processor p{ "34N N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0,
+                 3, token_kind::big_integer,
+                 { .number_literal = "34", .radix = 10, .is_negative = false }    },
+                { 4, 1,      token_kind::symbol,                             "N"sv }
+        }));
+      }
+      SUBCASE("N34")
+      {
+        processor p{ "N34" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 3, token_kind::symbol, "N34"sv }
+        }));
+      }
+      SUBCASE("12.3N")
+      {
+        processor p{ "12.3N" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 4,   token_kind::real,  12.3 },
+                make_error(kind::lex_expecting_whitespace, 4, 0),
+                token{ 4, 1, token_kind::symbol, "N"sv }
+        }));
+      }
+    }
     TEST_CASE("Real")
     {
       SUBCASE("Positive 0.")

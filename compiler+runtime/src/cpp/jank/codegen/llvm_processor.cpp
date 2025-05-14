@@ -385,7 +385,8 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::character>
                      || std::same_as<T, runtime::obj::keyword>
                      || std::same_as<T, runtime::obj::persistent_string>
-                     || std::same_as<T, runtime::obj::ratio>)
+                     || std::same_as<T, runtime::obj::ratio>
+                     || std::same_as<T, runtime::obj::big_integer>)
         {
           return gen_global(typed_o);
         }
@@ -1195,6 +1196,46 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
+  llvm::Value *llvm_processor::gen_global(obj::big_integer_ref const i) const
+  {
+    auto const found(ctx->literal_globals.find(i));
+    if(found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[i]);
+    auto const name(util::format("big_integer_{}", i->to_hash()));
+    auto const var(create_global_var(name));
+    ctx->module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      auto const create_fn(
+        ctx->module->getOrInsertFunction("jank_big_integer_create", create_fn_type));
+
+      auto const str_repr(i->to_string());
+      auto const c_str_arg(gen_c_string(str_repr));
+
+      llvm::SmallVector<llvm::Value *, 1> const args{ c_str_arg };
+      auto const call(ctx->builder->CreateCall(create_fn, args));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
   llvm::Value *llvm_processor::gen_global(obj::real_ref const r) const
   {
     auto const found(ctx->literal_globals.find(r));
@@ -1250,14 +1291,12 @@ namespace jank::codegen
 
       auto const create_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
-                                { ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const create_fn(ctx->module->getOrInsertFunction("jank_ratio_create", create_fn_type));
-      auto const num_arg(
-        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.numerator));
-      auto const denom_arg(
-        llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), r->data.denominator));
-      auto const call(ctx->builder->CreateCall(create_fn, { num_arg, denom_arg }));
+      llvm::SmallVector<llvm::Value *, 2> const args{ gen_global(make_box(r->data.numerator)),
+                                                      gen_global(make_box(r->data.denominator)) };
+      auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)

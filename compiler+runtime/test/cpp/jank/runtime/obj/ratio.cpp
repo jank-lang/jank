@@ -20,7 +20,15 @@ namespace jank::runtime
         SUBCASE("Valid ratio")
         {
           obj::ratio_data const ratio{ 4, 6 };
-          CHECK_EQ(ratio.numerator, 2); // Simplified
+          CHECK_EQ(ratio.numerator, 2);
+          CHECK_EQ(ratio.denominator, 3);
+        }
+        SUBCASE("Valid ratio object_ref ctor")
+        {
+          auto const num_ptr{ make_box<obj::integer>(4).erase() };
+          auto const denom_ptr{ make_box<obj::integer>(6).erase() };
+          obj::ratio_data const ratio{ num_ptr, denom_ptr };
+          CHECK_EQ(ratio.numerator, 2);
           CHECK_EQ(ratio.denominator, 3);
         }
         SUBCASE("Invalid Denominator")

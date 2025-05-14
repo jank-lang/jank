@@ -13,7 +13,7 @@
 #include <immer/heap/gc_heap.hpp>
 #include <immer/heap/heap_policy.hpp>
 #include <immer/memory_policy.hpp>
-
+#include <boost/multiprecision/cpp_int.hpp>
 #include <folly/FBVector.h>
 
 #include <jtl/primitive.hpp>
@@ -29,6 +29,7 @@ namespace jank
                                              false>;
 
   using native_persistent_string_view = std::string_view;
+  using native_big_integer = boost::multiprecision::cpp_int;
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;

@@ -117,6 +117,26 @@ namespace jank::runtime
     }
   };
 
+  /* Native big integer. */
+  template <>
+  struct convert<native_big_integer>
+  {
+    static constexpr obj::big_integer_ref into_object(native_big_integer const &o)
+    {
+      return make_box(o);
+    }
+
+    static native_big_integer from_object(object_ref const o)
+    {
+      return try_object<obj::big_integer>(o)->data;
+    }
+
+    static native_big_integer from_object(obj::big_integer_ref const o)
+    {
+      return o->data;
+    }
+  };
+
   /* Native floating point primitives. */
   template <typename T>
   requires(std::is_floating_point_v<T>)

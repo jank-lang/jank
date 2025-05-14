@@ -1,5 +1,4 @@
 #include <cstdarg>
-#include <cstdint>
 
 #include <utility>
 
@@ -384,14 +383,23 @@ extern "C"
     return make_box(i).erase();
   }
 
+  jank_object_ref jank_big_integer_create(char const * const s)
+  {
+    jank_assert(s);
+    return make_box<runtime::obj::big_integer>(s).erase();
+  }
+
   jank_object_ref jank_real_create(jank_f64 const r)
   {
     return make_box(r).erase();
   }
 
-  jank_object_ref jank_ratio_create(jank_i64 const numerator, jank_i64 const denominator)
+  jank_object_ref
+  jank_ratio_create(jank_object_ref const numerator, jank_object_ref const denominator)
   {
-    return make_box(runtime::obj::ratio_data(numerator, denominator)).erase();
+    return make_box(runtime::obj::ratio_data(reinterpret_cast<object *>(numerator),
+                                             reinterpret_cast<object *>(denominator)))
+      .erase();
   }
 
   jank_object_ref jank_string_create(char const *s)

@@ -262,6 +262,8 @@ namespace jank::read::parse
           return parse_real();
         case lex::token_kind::ratio:
           return parse_ratio();
+        case lex::token_kind::big_integer:
+          return parse_big_integer();
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::escaped_string:
@@ -1350,6 +1352,15 @@ namespace jank::read::parse
     return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
   }
 
+  processor::object_result processor::parse_big_integer()
+  {
+    auto const token{ token_current->expect_ok() };
+    ++token_current;
+    auto const &[number_literal, radix, is_negative](std::get<lex::big_integer>(token.data));
+    auto const bi(obj::big_integer::create(number_literal, radix, is_negative));
+    return object_source_info{ bi, token, token };
+  }
+
   processor::object_result processor::parse_ratio()
   {
     auto const token(token_current->expect_ok());
@@ -1360,14 +1371,18 @@ namespace jank::read::parse
       return error::parse_invalid_ratio({ token.start, latest_token.end },
                                         "A ratio may not have a denominator of zero.");
     }
-    auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
-    if(ratio->type == object_type::ratio)
+    if(auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
+       ratio->type == object_type::ratio)
     {
       return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
     }
     else if(ratio->type == object_type::integer)
     {
       return object_source_info{ expect_object<obj::integer>(ratio), token, token };
+    }
+    else if(ratio->type == object_type::big_integer)
+    {
+      return object_source_info{ expect_object<obj::big_integer>(ratio), token, token };
     }
     else
     {

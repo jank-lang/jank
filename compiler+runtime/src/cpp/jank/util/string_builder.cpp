@@ -158,6 +158,11 @@ namespace jank::util
     return *this;
   }
 
+  string_builder &string_builder::operator()(native_big_integer const &d) &
+  {
+    return (*this)(d.str());
+  }
+
   string_builder &string_builder::operator()(unsigned long const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */

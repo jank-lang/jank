@@ -247,8 +247,8 @@ namespace jank::runtime
 
   f64 rand();
 
-  i64 numerator(object_ref o);
-  i64 denominator(object_ref o);
+  native_big_integer numerator(object_ref o);
+  native_big_integer denominator(object_ref o);
 
   i64 to_int(object_ref l);
   i64 to_int(obj::integer_ref l);
