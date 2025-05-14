@@ -1,15 +1,36 @@
 #include <limits>
-#include <numeric>
 #include <cmath>
 
 #include <jank/runtime/obj/ratio.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
   static constexpr auto epsilon{ std::numeric_limits<f64>::epsilon() };
 
-  ratio_data::ratio_data(i64 const numerator, i64 const denominator)
+  static native_big_integer extract_big_integer(object_ref const d)
+  {
+    native_big_integer result{};
+    if(d->type == object_type::big_integer)
+    {
+      result = expect_object<big_integer>(d)->data;
+    }
+    else if(d->type == object_type::integer)
+    {
+      result = expect_object<integer>(d)->data;
+    }
+    else
+    {
+      throw std::runtime_error{
+        util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
+      };
+    }
+    return result;
+  }
+
+  ratio_data::ratio_data(native_big_integer const &numerator, native_big_integer const &denominator)
     : numerator{ numerator }
     , denominator{ denominator }
   {
@@ -17,7 +38,7 @@ namespace jank::runtime::obj
     {
       throw std::invalid_argument{ "Ratio denominator cannot be zero." };
     }
-    auto const gcd{ std::gcd(numerator, denominator) };
+    auto const gcd{ big_integer::gcd(numerator, denominator) };
     this->numerator /= gcd;
     this->denominator /= gcd;
 
@@ -28,19 +49,45 @@ namespace jank::runtime::obj
     }
   }
 
+  ratio_data::ratio_data(big_integer const &numerator, big_integer const &denominator)
+    : ratio_data(numerator.data, denominator.data)
+  {
+  }
+
+  ratio_data::ratio_data(i64 const numerator, i64 const denominator)
+    : ratio_data(native_big_integer(numerator), native_big_integer(denominator))
+  {
+  }
+
+  ratio_data::ratio_data(object_ref const numerator, object_ref const denominator)
+    : ratio_data(extract_big_integer(numerator), extract_big_integer(denominator))
+  {
+  }
+
   ratio::ratio(ratio_data const &data)
     : data{ data }
   {
   }
 
-  object_ref ratio::create(i64 const numerator, i64 const denominator)
+  object_ref
+  ratio::create(native_big_integer const &numerator, native_big_integer const &denominator)
   {
     ratio_data const data{ numerator, denominator };
     if(data.denominator == 1)
     {
-      return make_box<integer>(data.numerator);
+      if(data.numerator < std::numeric_limits<i64>::max()
+         && data.numerator > std::numeric_limits<i64>::min())
+      {
+        return make_box<integer>(big_integer::to_i64(data.numerator));
+      }
+      return make_box<big_integer>(data.numerator);
     }
     return make_box<ratio>(data);
+  }
+
+  object_ref ratio::create(i64 const numerator, i64 const denominator)
+  {
+    return create(native_big_integer(numerator), native_big_integer(denominator));
   }
 
   f64 ratio_data::to_real() const
@@ -50,7 +97,7 @@ namespace jank::runtime::obj
 
   i64 ratio_data::to_integer() const
   {
-    return numerator / denominator;
+    return big_integer::to_i64(numerator / denominator);
   }
 
   f64 ratio::to_real() const
@@ -82,7 +129,8 @@ namespace jank::runtime::obj
 
   uhash ratio::to_hash() const
   {
-    return hash::combine(hash::integer(data.numerator), hash::integer(data.denominator));
+    return hash::combine(big_integer::to_hash(data.numerator),
+                         big_integer::to_hash(data.denominator));
   }
 
   bool ratio::equal(object const &o) const
@@ -545,4 +593,105 @@ namespace jank::runtime::obj
   {
     return l < (r ? 1ll : 0ll);
   }
+
+  ratio_ref operator+(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator + (r * l.denominator), l.denominator));
+  }
+
+  ratio_ref operator+(native_big_integer const &l, ratio_data const &r)
+  {
+    return r + l;
+  }
+
+  ratio_ref operator-(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator - (r * l.denominator), l.denominator));
+  }
+
+  ratio_ref operator-(native_big_integer const &l, ratio_data const &r)
+  {
+    return make_box<ratio>(ratio_data((l * r.denominator) - r.numerator, r.denominator));
+  }
+
+  object_ref operator*(ratio_data const &l, native_big_integer const &r)
+  {
+    return l * ratio_data(r, 1ll);
+  }
+
+  object_ref operator*(native_big_integer const &l, ratio_data const &r)
+  {
+    return r * l;
+  }
+
+  ratio_ref operator/(ratio_data const &l, native_big_integer const &r)
+  {
+    return make_box<ratio>(ratio_data(l.numerator, l.denominator * r));
+  }
+
+  object_ref operator/(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) / r;
+  }
+
+  bool operator==(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) == r;
+  }
+
+  bool operator==(ratio_data const &l, native_big_integer const &r)
+  {
+    return l == ratio_data(r, 1);
+  }
+
+  bool operator!=(native_big_integer const &l, ratio_data const &r)
+  {
+    return !(l == r);
+  }
+
+  bool operator!=(ratio_data const &l, native_big_integer const &r)
+  {
+    return !(l == r);
+  }
+
+  bool operator<(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) < r;
+  }
+
+  bool operator<(ratio_data const &l, native_big_integer const &r)
+  {
+    return l < ratio_data(r, 1);
+  }
+
+  bool operator<=(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) <= r;
+  }
+
+  bool operator<=(ratio_data const &l, native_big_integer const &r)
+  {
+    return l <= ratio_data(r, 1);
+  }
+
+  bool operator>(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) > r;
+  }
+
+  bool operator>(ratio_data const &l, native_big_integer const &r)
+  {
+    return l > ratio_data(r, 1);
+  }
+
+  bool operator>=(native_big_integer const &l, ratio_data const &r)
+  {
+    return ratio_data(l, 1ll) >= r;
+  }
+
+  bool operator>=(ratio_data const &l, native_big_integer const &r)
+  {
+    return l >= ratio_data(r, 1);
+  }
+
 }

@@ -145,6 +145,8 @@ namespace jank::jit
     args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/lib");
     args.emplace_back(
       "-I/home/jeaye/projects/jank/compiler+runtime/third-party/boost-preprocessor/include");
+    args.emplace_back(
+      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/boost-multiprecision/include");
 
     /* TODO: Pass in clang binary name as macro define. */
     auto const resource_dir{ Cpp::DetectResourceDir("clang++") };

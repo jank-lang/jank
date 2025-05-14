@@ -1,0 +1,9 @@
+(assert
+ (=
+  (case 9999999999999999999999999999999999999
+    :no-match                             :no-match
+    9999999999999999999999999999999999999 :many-nines
+    :default)
+  :many-nines))
+
+:success

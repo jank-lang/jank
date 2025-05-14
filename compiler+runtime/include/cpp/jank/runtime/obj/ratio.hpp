@@ -1,19 +1,23 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime::obj
 {
   struct ratio_data
   {
     ratio_data(i64 const, i64 const);
+    ratio_data(native_big_integer const &, native_big_integer const &);
+    ratio_data(big_integer const &, big_integer const &);
+    ratio_data(object_ref, object_ref);
     ratio_data(ratio_data const &) = default;
 
     f64 to_real() const;
     i64 to_integer() const;
 
-    i64 numerator{};
-    i64 denominator{};
+    native_big_integer numerator{};
+    native_big_integer denominator{};
   };
 
   using integer_ref = oref<struct integer>;
@@ -30,6 +34,7 @@ namespace jank::runtime::obj
     ratio(ratio_data const &);
 
     static object_ref create(i64 const, i64 const);
+    static object_ref create(native_big_integer const &, native_big_integer const &);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -137,4 +142,24 @@ namespace jank::runtime::obj
   bool operator>=(f64 l, ratio_data const &r);
   bool operator>=(ratio_data const &l, i64 r);
   bool operator>=(i64 l, ratio_data const &r);
+  ratio_ref operator+(native_big_integer const &l, ratio_data const &r);
+  ratio_ref operator+(ratio_data const &l, native_big_integer const &r);
+  ratio_ref operator-(native_big_integer const &l, ratio_data const &r);
+  ratio_ref operator-(ratio_data const &l, native_big_integer const &r);
+  object_ref operator*(native_big_integer const &l, ratio_data const &r);
+  object_ref operator*(ratio_data const &l, native_big_integer const &r);
+  object_ref operator/(native_big_integer const &l, ratio_data const &r);
+  ratio_ref operator/(ratio_data const &l, native_big_integer const &r);
+  bool operator==(native_big_integer const &l, ratio_data const &r);
+  bool operator==(ratio_data const &l, native_big_integer const &r);
+  bool operator!=(native_big_integer const &l, ratio_data const &r);
+  bool operator!=(ratio_data const &l, native_big_integer const &r);
+  bool operator<(native_big_integer const &l, ratio_data const &r);
+  bool operator<(ratio_data const &l, native_big_integer const &r);
+  bool operator<=(native_big_integer const &l, ratio_data const &r);
+  bool operator<=(ratio_data const &l, native_big_integer const &r);
+  bool operator>(native_big_integer const &l, ratio_data const &r);
+  bool operator>(ratio_data const &l, native_big_integer const &r);
+  bool operator>=(native_big_integer const &l, ratio_data const &r);
+  bool operator>=(ratio_data const &l, native_big_integer const &r);
 }

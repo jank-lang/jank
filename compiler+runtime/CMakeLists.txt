@@ -103,7 +103,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWith
   list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
 endif()
 
-if(jank_tests)
+if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
 
@@ -216,6 +216,7 @@ add_library(
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/tagged_literal.cpp
   src/cpp/jank/runtime/obj/character.cpp
+  src/cpp/jank/runtime/obj/big_integer.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
@@ -309,6 +310,7 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
+include(cmake/dependency/boost-multiprecision.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(BDWgc REQUIRED)
@@ -334,6 +336,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
 )
 
 target_link_libraries(
@@ -345,6 +348,7 @@ target_link_libraries(
   clangCppInterOp
   ftxui::screen ftxui::dom
   OpenSSL::Crypto
+  Boost::multiprecision
 )
 
 jank_hook_llvm(jank_lib)
@@ -488,7 +492,7 @@ jank_hook_llvm(jank_exe)
 # ---- jank executable ----
 
 # ---- Tests ----
-if(jank_tests)
+if(jank_test)
   add_executable(
     jank_test_exe
     test/cpp/main.cpp
@@ -502,6 +506,7 @@ if(jank_tests)
     test/cpp/jank/runtime/behavior/callable.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
+    test/cpp/jank/runtime/obj/big_integer.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp

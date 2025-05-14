@@ -24,6 +24,7 @@ namespace jank::runtime::obj
   using keyword_ref = oref<struct keyword>;
   using boolean_ref = oref<struct boolean>;
   using integer_ref = oref<struct integer>;
+  using big_integer_ref = oref<struct big_integer>;
   using real_ref = oref<struct real>;
   using ratio_ref = oref<struct ratio>;
   using persistent_string_ref = oref<struct persistent_string>;
@@ -175,6 +176,7 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::nil_ref) const;
     llvm::Value *gen_global(runtime::obj::boolean_ref b) const;
     llvm::Value *gen_global(runtime::obj::integer_ref i) const;
+    llvm::Value *gen_global(runtime::obj::big_integer_ref i) const;
     llvm::Value *gen_global(runtime::obj::real_ref r) const;
     llvm::Value *gen_global(runtime::obj::ratio_ref r) const;
     llvm::Value *gen_global(runtime::obj::persistent_string_ref s) const;

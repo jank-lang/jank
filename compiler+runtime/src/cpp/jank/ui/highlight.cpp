@@ -16,7 +16,7 @@ namespace jank::ui
 
   static Element symbol_color(Element const &e, native_persistent_string_view const &sym)
   {
-    if(specials.find(sym) != specials.end())
+    if(specials.contains(sym))
     {
       return e | color(Color::CyanLight) | bold;
     }
@@ -54,6 +54,7 @@ namespace jank::ui
       case token_kind::integer:
       case token_kind::real:
       case token_kind::ratio:
+      case token_kind::big_integer:
       case token_kind::boolean:
       case token_kind::character:
         return e | color(Color::MagentaLight);
