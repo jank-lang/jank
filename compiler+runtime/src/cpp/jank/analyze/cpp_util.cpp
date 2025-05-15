@@ -101,16 +101,15 @@ namespace jank::analyze::cpp_util
       [](auto const typed_expr) -> jtl::ptr<void> {
         using T = typename decltype(typed_expr)::value_type;
 
-        if constexpr(jtl::is_any_same<T,
-                                      expr::cpp_type,
-                                      expr::cpp_value,
-                                      expr::cpp_cast,
-                                      expr::cpp_call,
-                                      expr::cpp_constructor_call,
-                                      expr::cpp_member_call,
-                                      expr::cpp_member_access>)
+        if constexpr(requires(T *t) {
+                       { t->type } -> jtl::is_convertible<jtl::ptr<void>>;
+                     })
         {
           return typed_expr->type;
+        }
+        if constexpr(jtl::is_same<T, expr::local_reference>)
+        {
+          return typed_expr->binding->type;
         }
         else
         {

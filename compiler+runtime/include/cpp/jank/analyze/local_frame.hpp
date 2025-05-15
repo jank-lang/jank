@@ -15,6 +15,11 @@ namespace jank::runtime
   }
 }
 
+namespace jank::analyze::cpp_util
+{
+  jtl::ptr<void> untyped_object_ptr_type();
+}
+
 namespace jank::analyze
 {
   struct expression;
@@ -48,6 +53,7 @@ namespace jank::analyze
     bool needs_box{ true };
     bool has_boxed_usage{};
     bool has_unboxed_usage{};
+    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ptr_type() };
 
     runtime::object_ref to_runtime_data() const;
   };

@@ -988,10 +988,11 @@ namespace jank::analyze
       {
         return res.expect_err_move();
       }
-      auto it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
+      auto const it(ret->pairs.emplace_back(sym, res.expect_ok_move()));
+      auto const expr_type{ cpp_util::expression_type(it.second) };
       ret->frame->locals.emplace(
         sym,
-        local_binding{ sym, it.second, current_frame, it.second->needs_box });
+        local_binding{ sym, it.second, current_frame, it.second->needs_box, .type = expr_type });
     }
 
     usize const form_count{ o->count() - 2 };

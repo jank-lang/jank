@@ -1,6 +1,6 @@
 (cpp/raw "namespace jank::test::cpp::null::pass_nullptr_t
           {
-            int foo(std::nullptr_t)
+            short foo(std::nullptr_t)
             {
               return 7;
             }
