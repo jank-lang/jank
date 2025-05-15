@@ -140,6 +140,7 @@ namespace jank::runtime
     /* TODO: This needs to be a dynamic var. */
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
+    native_deque<jtl::immutable_string> loaded_modules_in_order;
     jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 

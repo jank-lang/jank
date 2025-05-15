@@ -178,9 +178,7 @@ namespace jank::runtime
 
     if(truthy(compile_files_var->deref()))
     {
-      auto const &module(
-        expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
-          ->to_string());
+      auto const &module(runtime::to_string(current_module_var->deref()));
       /* No matter what's in the fn, we'll return nil. */
       exprs.emplace_back(
         make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
@@ -282,7 +280,11 @@ namespace jank::runtime
       absolute_module = module::nest_module(ns->to_string(), module);
     }
 
-    binding_scope const preserve{ *this };
+    binding_scope const preserve{ *this,
+                                  obj::persistent_hash_map::create_unique(
+                                    std::make_pair(current_ns_var, ns),
+                                    std::make_pair(current_module_var,
+                                                   make_box(absolute_module))) };
 
     try
     {
@@ -305,8 +307,7 @@ namespace jank::runtime
 
     binding_scope const preserve{ *this,
                                   obj::persistent_hash_map::create_unique(
-                                    std::make_pair(compile_files_var, jank_true),
-                                    std::make_pair(current_module_var, make_box(module))) };
+                                    std::make_pair(compile_files_var, jank_true)) };
 
     return load_module(util::format("/{}", module), module::origin::latest);
   }

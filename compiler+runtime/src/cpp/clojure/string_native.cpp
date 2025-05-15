@@ -64,7 +64,7 @@ namespace clojure::string_native
   }
 }
 
-jank_object_ref jank_load_clojure_string_native()
+extern "C" jank_object_ref jank_load_clojure_string_native()
 {
   using namespace jank;
   using namespace jank::runtime;
