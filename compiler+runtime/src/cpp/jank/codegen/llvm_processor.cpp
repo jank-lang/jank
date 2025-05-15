@@ -660,7 +660,18 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return ctx->builder->CreateRet(ret);
+      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->binding->type) };
+      if(is_untyped_obj)
+      {
+        return ctx->builder->CreateRet(ret);
+      }
+      auto const converted{ convert_object(*ctx,
+                                           conversion_policy::into_object,
+                                           expr->binding->type,
+                                           cpp_util::untyped_object_ptr_type(),
+                                           expr->binding->type,
+                                           ret) };
+      return ctx->builder->CreateRet(converted);
     }
 
     return ret;
