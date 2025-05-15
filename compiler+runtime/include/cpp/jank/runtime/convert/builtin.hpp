@@ -77,6 +77,20 @@ namespace jank::runtime
   };
 
   template <>
+  struct convert<jtl::nullptr_t>
+  {
+    static constexpr obj::nil_ref into_object(jtl::nullptr_t)
+    {
+      return jank_nil;
+    }
+
+    static constexpr jtl::nullptr_t from_object(object_ref)
+    {
+      return nullptr;
+    }
+  };
+
+  template <>
   struct convert<bool>
   {
     static constexpr obj::boolean_ref into_object(bool const o)

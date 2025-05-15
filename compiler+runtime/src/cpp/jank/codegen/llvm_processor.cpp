@@ -1192,7 +1192,13 @@ namespace jank::codegen
       ctx->builder->CreateStore(null, alloc);
       if(expr->position == expression_position::tail)
       {
-        return ctx->builder->CreateRet(alloc);
+        auto const converted{ convert_object(*ctx,
+                                             conversion_policy::into_object,
+                                             expr->type,
+                                             cpp_util::untyped_object_ptr_type(),
+                                             expr->type,
+                                             alloc) };
+        return ctx->builder->CreateRet(converted);
       }
       return alloc;
     }
