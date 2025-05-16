@@ -18,6 +18,8 @@ namespace jank::analyze::cpp_util
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &args);
+  jtl::string_result<jtl::ptr<void>>
+  find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args);
 
   bool is_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);

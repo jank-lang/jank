@@ -2287,7 +2287,14 @@ namespace jank::analyze
       }
     }
 
-    auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, arg_types) };
+    auto const match_res{ cpp_util::find_best_overload(fns, arg_types) };
+    if(match_res.is_err())
+    {
+      return error::internal_analyze_failure(util::format("{}", match_res.expect_err()),
+                                             object_source(o),
+                                             latest_expansion(macro_expansions));
+    }
+    jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
     {
       if(is_ctor)
@@ -2324,13 +2331,19 @@ namespace jank::analyze
     auto const new_types{ cpp_util::find_best_arg_types_with_conversions(fns, arg_types) };
     if(new_types.is_err())
     {
-      return error::internal_analyze_failure(
-        util::format("Ambiguous call. {}", new_types.expect_err()),
-        object_source(o),
-        latest_expansion(macro_expansions));
+      return error::internal_analyze_failure(util::format("{}", new_types.expect_err()),
+                                             object_source(o),
+                                             latest_expansion(macro_expansions));
     }
 
-    match = Cpp::BestOverloadFunctionMatch(fns, {}, new_types.expect_ok());
+    auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types.expect_ok()) };
+    if(conversion_match_res.is_err())
+    {
+      return error::internal_analyze_failure(util::format("{}", conversion_match_res.expect_err()),
+                                             object_source(o),
+                                             latest_expansion(macro_expansions));
+    }
+    match = conversion_match_res.expect_ok();
     if(match)
     {
       if(is_ctor)
