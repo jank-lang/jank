@@ -53,6 +53,7 @@ misc-definitions-in-headers,\
 -readability-qualified-auto,\
 -readability-redundant-declaration,\
 -readability-use-anyofallof,\
+-readability-enum-initial-value,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

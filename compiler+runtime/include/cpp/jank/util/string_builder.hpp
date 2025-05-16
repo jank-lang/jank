@@ -6,6 +6,8 @@
 
 namespace jank::util
 {
+  enum class terminal_color : u8;
+
   struct string_builder
   {
     static constexpr usize initial_capacity{ 32 };
@@ -39,6 +41,7 @@ namespace jank::util
     string_builder &operator()(char const *d) &;
     string_builder &operator()(native_transient_string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
+    string_builder &operator()(terminal_color c) &;
 
     template <template <typename> typename V, typename T>
     requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, native_vector<T>>)

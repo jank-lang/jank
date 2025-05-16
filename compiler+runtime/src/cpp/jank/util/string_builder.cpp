@@ -5,6 +5,7 @@
 #include <jtl/assert.hpp>
 
 #include <jank/util/string_builder.hpp>
+#include <jank/util/fmt/color.hpp>
 
 namespace jank::util
 {
@@ -38,6 +39,49 @@ namespace jank::util
   {
     string_builder::traits_type::copy(sb.buffer + sb.pos, str, size);
     sb.pos += size;
+  }
+
+  static constexpr char const *fg(terminal_color const col)
+  {
+    switch(col)
+    {
+      case terminal_color::reset:
+        return "\u001b[0m";
+      case terminal_color::black:
+        return "\u001b[0;30m";
+      case terminal_color::red:
+        return "\u001b[0;31m";
+      case terminal_color::green:
+        return "\u001b[0;32m";
+      case terminal_color::yellow:
+        return "\u001b[0;33m";
+      case terminal_color::blue:
+        return "\u001b[0;34m";
+      case terminal_color::magenta:
+        return "\u001b[0;35m";
+      case terminal_color::cyan:
+        return "\u001b[0;36m";
+      case terminal_color::white:
+        return "\u001b[0;37m";
+      case terminal_color::bright_black:
+        return "\u001b[0;90m";
+      case terminal_color::bright_red:
+        return "\u001b[0;91m";
+      case terminal_color::bright_green:
+        return "\u001b[0;92m";
+      case terminal_color::bright_yellow:
+        return "\u001b[0;93m";
+      case terminal_color::bright_blue:
+        return "\u001b[0;94m";
+      case terminal_color::bright_magenta:
+        return "\u001b[0;95m";
+      case terminal_color::bright_cyan:
+        return "\u001b[0;96m";
+      case terminal_color::bright_white:
+        return "\u001b[0;97m";
+      default:
+        return "";
+    }
   }
 
   string_builder::string_builder()
@@ -241,6 +285,11 @@ namespace jank::util
     write(*this, d.data(), required);
 
     return *this;
+  }
+
+  string_builder &string_builder::operator()(terminal_color const c) &
+  {
+    return (*this)(fg(c));
   }
 
   void string_builder::push_back(bool const d) &

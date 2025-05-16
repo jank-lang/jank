@@ -5,6 +5,7 @@
 
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/fmt/color.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -44,7 +45,6 @@ namespace jank::jit
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
 
-      /* TODO: Add color back in, once we have a good API for it. */
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
         if(!std::filesystem::is_regular_file(dir_entry.path()))
@@ -144,15 +144,17 @@ namespace jank::jit
 
         if(allow_failure)
         {
-          util::print("allowed failure\n");
+          util::println("{}allowed failure{}",
+                        util::terminal_color::yellow,
+                        util::terminal_color::reset);
         }
         else if(passed)
         {
-          util::print("success\n");
+          util::println("{}success{}", util::terminal_color::green, util::terminal_color::reset);
         }
         else
         {
-          util::print("failure\n");
+          util::println("{}failure{}", util::terminal_color::red, util::terminal_color::reset);
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
@@ -161,7 +163,11 @@ namespace jank::jit
       CHECK(failures.empty());
       for(auto const &f : failures)
       {
-        util::print("{}: {} {}\n", "failure", f.path.string(), f.error);
+        util::print("{}failure{}: {} {}\n",
+                    util::terminal_color::red,
+                    util::terminal_color::reset,
+                    f.path.string(),
+                    f.error);
       }
       util::print("tested {} jank files\n", test_count);
     }
