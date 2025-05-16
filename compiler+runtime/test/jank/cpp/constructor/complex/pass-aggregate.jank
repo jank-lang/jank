@@ -4,7 +4,12 @@
             {
               int a{}, b{7};
             };
+
+            int a{ 4 };
+            int b{ 6 };
           }")
-(let* [f (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. 4 6)]
+(let* [a cpp/jank.test.cpp.constructor.complex.pass_aggregate.a
+       b cpp/jank.test.cpp.constructor.complex.pass_aggregate.b
+       f (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. a b)]
   (if (and (= 4 (cpp/.-a f)) (= 6 (cpp/.-b f)))
     :success))

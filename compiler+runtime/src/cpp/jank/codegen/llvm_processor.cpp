@@ -1458,6 +1458,15 @@ namespace jank::codegen
                                                    needs_conversion ? expr->type : arg_type);
       }
     }
+    else if(expr->is_aggregate)
+    {
+      std::vector<Cpp::TemplateArgInfo> arg_types;
+      for(auto const &expr : expr->arg_exprs)
+      {
+        arg_types.emplace_back(cpp_util::expression_type(expr));
+      }
+      ctor_fn_callable = Cpp::MakeAggregateInitializationAotCallable(expr->type, arg_types);
+    }
     else
     {
       jank_debug_assert(expr->fn);

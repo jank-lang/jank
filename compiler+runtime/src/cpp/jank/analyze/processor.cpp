@@ -2222,6 +2222,7 @@ namespace jank::analyze
                                                        needs_box,
                                                        val->type,
                                                        nullptr,
+                                                       false,
                                                        jtl::move(arg_exprs));
     }
 
@@ -2296,6 +2297,7 @@ namespace jank::analyze
                                                          needs_box,
                                                          val->type,
                                                          match,
+                                                         false,
                                                          jtl::move(arg_exprs));
       }
       else if(is_member_call)
@@ -2338,6 +2340,7 @@ namespace jank::analyze
                                                          needs_box,
                                                          val->type,
                                                          match,
+                                                         false,
                                                          jtl::move(arg_exprs));
       }
       else if(is_member_call)
@@ -2359,6 +2362,17 @@ namespace jank::analyze
                                              match,
                                              jtl::move(arg_exprs));
       }
+    }
+
+    if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
+    {
+      return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                       current_frame,
+                                                       needs_box,
+                                                       val->type,
+                                                       nullptr,
+                                                       true,
+                                                       jtl::move(arg_exprs));
     }
 
     /* TODO: Find a better way to render this. */

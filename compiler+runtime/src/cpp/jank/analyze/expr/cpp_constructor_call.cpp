@@ -15,11 +15,13 @@ namespace jank::analyze::expr
                                              bool const needs_box,
                                              jtl::ptr<void> const type,
                                              jtl::ptr<void> const fn,
+                                             bool const is_aggregate,
                                              native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , type{ type }
     , fn{ fn }
     , arg_exprs{ jtl::move(arg_exprs) }
+    , is_aggregate{ is_aggregate }
   {
   }
 
