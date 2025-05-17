@@ -39,6 +39,9 @@ namespace jank::runtime
     {
     }
 
+    constexpr oref(oref const &) = default;
+    constexpr oref(oref &&) noexcept = default;
+
     constexpr oref(nullptr_t) noexcept = delete;
 
     constexpr oref(value_type * const data)
@@ -87,6 +90,9 @@ namespace jank::runtime
       jank_assert_throw(data);
       return *data;
     }
+
+    constexpr oref &operator=(oref const &rhs) noexcept = default;
+    constexpr oref &operator=(oref &&rhs) noexcept = default;
 
     constexpr bool operator==(oref const &rhs) const noexcept
     {
@@ -439,13 +445,6 @@ namespace jank::runtime
     }
 
     return ret;
-  }
-
-  /* TODO: This no longer makes sense. */
-  template <typename T>
-  constexpr jtl::ref<T> make_array_box()
-  {
-    return nullptr;
   }
 
   template <typename T, usize N>

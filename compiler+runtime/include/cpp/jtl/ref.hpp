@@ -63,8 +63,8 @@ namespace jtl
       return *data;
     }
 
-    constexpr ref& operator=(ref const &rhs) noexcept = default;
-    constexpr ref& operator=(ref &&rhs) noexcept = default;
+    constexpr ref &operator=(ref const &rhs) noexcept = default;
+    constexpr ref &operator=(ref &&rhs) noexcept = default;
 
     constexpr bool operator==(ref const &rhs) const noexcept
     {

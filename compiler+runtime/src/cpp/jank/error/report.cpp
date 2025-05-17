@@ -511,8 +511,6 @@ namespace jank::error
 
   void report(error_ref const e)
   {
-    util::println("reporting error {} at {}", e->message, e->source.to_string());
-
     plan const p{ e };
 
     auto const terminal_width{ Terminal::Size().dimx };
@@ -552,7 +550,7 @@ namespace jank::error
     }
 
     auto document{ vbox(doc_body) };
-    auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
+    auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
     Render(screen, document);
     screen.Print();
     util::print("\n");

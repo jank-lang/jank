@@ -110,7 +110,18 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               ratio const d)
+               ratio const &d)
+    : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
+    , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(movable_position const &s,
+               movable_position const &e,
+               token_kind const k,
+               big_integer const &d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -169,7 +180,15 @@ namespace jank::read::lex
   {
   }
 
-  token::token(usize const offset, usize const width, token_kind const k, ratio const d)
+  token::token(usize const offset, usize const width, token_kind const k, ratio const &d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(usize const offset, usize const width, token_kind const k, big_integer const &d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -190,6 +209,17 @@ namespace jank::read::lex
   }
 
   bool ratio::operator!=(ratio const &rhs) const
+  {
+    return !(*this == rhs);
+  }
+
+  bool big_integer::operator==(big_integer const &rhs) const
+  {
+    return number_literal == rhs.number_literal && radix == rhs.radix
+      && is_negative == rhs.is_negative;
+  }
+
+  bool big_integer::operator!=(big_integer const &rhs) const
   {
     return !(*this == rhs);
   }
@@ -240,6 +270,32 @@ namespace jank::read::lex
   std::ostream &operator<<(std::ostream &os, ratio const &r)
   {
     return os << r.numerator << "/" << r.denominator;
+  }
+
+  static std::ostream &operator<<(std::ostream &os, big_integer const &r)
+  {
+    if(r.is_negative)
+    {
+      os << "-";
+    }
+
+    if(r.radix == 10)
+    {
+      os << r.number_literal;
+    }
+    else if(r.radix == 8)
+    {
+      os << "0" << r.number_literal;
+    }
+    else if(r.radix == 16)
+    {
+      os << "0x" << r.number_literal;
+    }
+    else
+    {
+      os << r.radix << "r" << r.number_literal;
+    }
+    return os;
   }
 
   processor::processor(native_persistent_string_view const &f)
@@ -367,11 +423,11 @@ namespace jank::read::lex
     wchar_t wc{};
     auto const len{ std::mbrtowc(&wc, sv.data(), sv.size(), &state) };
 
-    if(len == static_cast<size_t>(-1))
+    if(std::cmp_equal(len, static_cast<size_t>(-1)))
     {
       return error::lex_invalid_unicode("Unfinished character.", pos);
     }
-    else if(len == static_cast<size_t>(-2))
+    else if(std::cmp_equal(len, static_cast<size_t>(-2)))
     {
       return error::lex_invalid_unicode("Invalid Unicode character.", pos);
     }
@@ -592,6 +648,7 @@ namespace jank::read::lex
           bool found_exponent_sign{};
           bool expecting_exponent{};
           bool expecting_more_digits{};
+          bool found_N{};
           int radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           bool found_beginning_negative{};
@@ -644,7 +701,7 @@ namespace jank::read::lex
             }
             if(auto const [c, len](result.unwrap_or(codepoint{ ' ', 1 })); c == '.')
             {
-              if(contains_dot || is_scientific || !contains_leading_digit)
+              if(contains_dot || is_scientific || !contains_leading_digit || found_N)
               {
                 ++pos;
                 return error::lex_invalid_number("Unexpected '.' found in number.",
@@ -673,6 +730,13 @@ namespace jank::read::lex
               {
                 ++pos;
                 continue;
+              }
+              if(found_N)
+              {
+                ++pos;
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
               }
               if(radix < 15)
               {
@@ -719,6 +783,12 @@ namespace jank::read::lex
               {
                 continue;
               }
+              if(found_N)
+              {
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
+              }
               found_r = true;
               expecting_more_digits = true;
               r_pos = pos;
@@ -735,12 +805,19 @@ namespace jank::read::lex
             {
               require_space = false;
               ++pos;
+              auto const slash_pos{ pos };
               if(found_exponent_sign || is_scientific || expecting_exponent || contains_dot
                  || found_slash_after_number || (radix != 10 && radix != 8))
               {
                 /* TODO: Add a note for why it's not an integer. */
                 return error::lex_invalid_ratio("A ratio numerator must be an integer.",
                                                 { token_start, pos });
+              }
+              if(found_N)
+              {
+                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                 { token_start, pos },
+                                                 error::note{ "Found 'N' here.", pos });
               }
               found_slash_after_number = true;
               /* Skip the '/' char and look for the denominator number. */
@@ -749,7 +826,8 @@ namespace jank::read::lex
               found_slash_after_number = false;
               if(denominator.is_ok())
               {
-                if(denominator.expect_ok().kind != token_kind::integer)
+                if(denominator.expect_ok().kind != token_kind::integer
+                   && denominator.expect_ok().kind != token_kind::big_integer)
                 {
                   return error::lex_invalid_ratio(
                     "A ratio denominator must be an integer.",
@@ -761,14 +839,39 @@ namespace jank::read::lex
                                  { denominator.expect_ok().start, denominator.expect_ok().end } });
                 }
                 auto const &denominator_token(denominator.expect_ok());
-                return ok(token(token_start,
-                                pos,
-                                token_kind::ratio,
-                                { .numerator = std::strtoll(file.data() + token_start, nullptr, 10),
-                                  .denominator = std::get<i64>(denominator_token.data) }));
+                native_big_integer numerator{};
+                if(radix == 8 && *(file.data() + token_start) == '0')
+                {
+                  numerator.assign(
+                    std::string(file.data() + token_start + 1, slash_pos - token_start - 1));
+                }
+                else
+                {
+                  numerator.assign(std::string(file.data() + token_start, slash_pos - token_start));
+                }
+                if(denominator.expect_ok().kind == token_kind::integer)
+                {
+                  return ok(token(
+                    token_start,
+                    pos,
+                    token_kind::ratio,
+                    { .numerator = numerator,
+                      .denominator = native_big_integer(std::get<i64>(denominator_token.data)) }));
+                }
+                if(denominator.expect_ok().kind == token_kind::big_integer)
+                {
+                  return ok(token(
+                    token_start,
+                    pos,
+                    token_kind::ratio,
+                    { .numerator = numerator,
+                      .denominator = native_big_integer(
+                        std::get<lex::big_integer>(denominator_token.data).number_literal) }));
+                }
               }
               return denominator.expect_err();
             }
+            /* Not a digit */
             else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
             {
               if(expecting_exponent)
@@ -785,6 +888,27 @@ namespace jank::read::lex
               if(!contains_leading_digit)
               {
                 /* If we don't have a leading digit, then we are parsing a symbol. */
+                break;
+              }
+              if(c == 'N')
+              {
+                ++pos;
+                /* big integer */
+                if(found_N)
+                {
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                if(found_slash_after_number)
+                {
+                  found_slash_after_number = false;
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                found_N = true;
+                expecting_more_digits = false;
                 break;
               }
               /* When parsing decimal numbers only, we would break if we see a non-digit char. */
@@ -873,7 +997,8 @@ namespace jank::read::lex
 
             /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
-            for(auto i{ number_start }; i < pos; i++)
+            auto const number_end{ found_N ? pos - 1 : pos };
+            for(auto i{ number_start }; i < number_end; i++)
             {
               if(!is_valid_num_char(file[i], radix))
               {
@@ -901,19 +1026,17 @@ namespace jank::read::lex
             errno = 0;
             auto const parsed_int{ std::strtoll(file.data() + number_start, nullptr, radix)
                                    * (found_beginning_negative ? -1 : 1) };
-            if(errno == ERANGE)
+            if(errno == ERANGE || found_N)
             {
-              static constexpr auto const max(std::numeric_limits<i64>::max());
-              /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-              auto const max_width{ static_cast<usize>(snprintf(nullptr, 0, "%lld", max)) };
-              return error::lex_invalid_number(
-                "Number is too large to be stored.",
-                {
-                  token_start,
-                  pos
-              },
-                error::note{ "I can fit about this much.",
-                             { token_start, token_start + max_width } });
+              native_persistent_string_view const number_literal{ file.data() + number_start,
+                                                                  number_end - number_start };
+
+              return ok(token{
+                token_start,
+                pos,
+                token_kind::big_integer,
+                big_integer{ number_literal, radix, found_beginning_negative }
+              });
             }
             return ok(token{ token_start, pos, token_kind::integer, parsed_int });
           }

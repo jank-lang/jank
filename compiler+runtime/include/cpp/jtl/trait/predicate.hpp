@@ -20,6 +20,9 @@ namespace jtl
   template <typename L, typename R>
   concept is_same = detail::is_same<L, R>::value;
 
+  template <typename T, typename... U>
+  concept is_any_same = (is_same<T, U> || ...);
+
   template <typename T>
   concept is_void = detail::is_same<T, void>::value;
 
@@ -29,9 +32,14 @@ namespace jtl
   template <typename From, typename To>
   concept is_implicitly_convertible = requires(void (&fn)(To), From &f) { fn(f); };
 
+#if __has_builtin(__is_convertible)
+  template <typename From, typename To>
+  concept is_convertible = __is_convertible(From, To);
+#else
   template <typename From, typename To>
   concept is_convertible
     = (is_returnable<To> && is_implicitly_convertible<From, To>) || (is_void<From> && is_void<To>);
+#endif
 
   template <typename T>
   concept is_lvalue_reference = is_same<T, T &>;

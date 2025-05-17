@@ -33,9 +33,8 @@ namespace jank::jit
   }
 #endif
 
-  static void handle_fatal_llvm_error(void * const user_data,
-                                      char const *message,
-                                      bool const gen_crash_diag)
+  static void
+  handle_fatal_llvm_error(void * const user_data, char const *message, bool const gen_crash_diag)
   {
     auto &diags(*static_cast<clang::DiagnosticsEngine *>(user_data));
     diags.Report(clang::diag::err_fe_error_backend) << message;

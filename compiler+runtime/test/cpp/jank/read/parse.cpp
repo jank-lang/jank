@@ -865,8 +865,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_array_map::empty()));
         auto const m{ meta(r.expect_ok().unwrap().ptr) };
-        CHECK(
-          equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_true));
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_true));
       }
 
       SUBCASE("Keyword meta for non-metadatable target")
@@ -906,8 +905,7 @@ namespace jank::read::parse
         auto const m{ meta(r.expect_ok().unwrap().ptr) };
         CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()),
                     __rt_ctx->intern_keyword("bar").expect_ok()));
-        CHECK(
-          equal(get(m, __rt_ctx->intern_keyword("meow").expect_ok()), jank_true));
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("meow").expect_ok()), jank_true));
       }
 
       SUBCASE("Nested hints")
@@ -936,8 +934,7 @@ namespace jank::read::parse
                              ->data.rest()
                              .first()
                              .unwrap()) };
-        CHECK(
-          equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_true));
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_true));
       }
     }
 

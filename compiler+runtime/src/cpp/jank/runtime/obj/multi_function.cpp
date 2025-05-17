@@ -247,8 +247,8 @@ namespace jank::runtime::obj
   }
 
   bool multi_function::is_preferred(object_ref const hierarchy,
-                                           object_ref const x,
-                                           object_ref const y) const
+                                    object_ref const x,
+                                    object_ref const y) const
   {
     auto const x_prefs(prefer_table->get(x));
     if(x_prefs != jank_nil && expect_object<persistent_hash_set>(x_prefs)->contains(y))
@@ -281,8 +281,7 @@ namespace jank::runtime::obj
     return false;
   }
 
-  bool
-  multi_function::is_a(object_ref const hierarchy, object_ref const x, object_ref const y)
+  bool multi_function::is_a(object_ref const hierarchy, object_ref const x, object_ref const y)
   {
     static object_ref const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
@@ -291,8 +290,8 @@ namespace jank::runtime::obj
   }
 
   bool multi_function::is_dominant(object_ref const hierarchy,
-                                          object_ref const x,
-                                          object_ref const y) const
+                                   object_ref const x,
+                                   object_ref const y) const
   {
     return is_preferred(hierarchy, x, y) || is_a(hierarchy, x, y);
   }

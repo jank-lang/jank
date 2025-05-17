@@ -138,8 +138,9 @@ extern "C"
   jank_object_ref jank_const_true();
   jank_object_ref jank_const_false();
   jank_object_ref jank_integer_create(jank_i64 i);
+  jank_object_ref jank_big_integer_create(char const * const s);
   jank_object_ref jank_real_create(jank_f64 r);
-  jank_object_ref jank_ratio_create(jank_i64 numerator, jank_i64 denominator);
+  jank_object_ref jank_ratio_create(jank_object_ref numerator, jank_object_ref denominator);
   jank_object_ref jank_string_create(char const *s);
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_character_create(char const *s);

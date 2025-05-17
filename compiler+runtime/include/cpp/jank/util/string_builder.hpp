@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/ptr.hpp>
+
 #include <jank/type.hpp>
 
 namespace jank::util
@@ -25,9 +27,11 @@ namespace jank::util
     string_builder &operator()(double d) &;
     string_builder &operator()(uhash d) &;
     string_builder &operator()(void const *d) &;
+    string_builder &operator()(jtl::ptr<void> d) &;
     string_builder &operator()(int d) &;
     string_builder &operator()(long d) &;
     string_builder &operator()(long long d) &;
+    string_builder &operator()(native_big_integer const &d) &;
     string_builder &operator()(unsigned long d) &;
     string_builder &operator()(unsigned long long d) &;
     string_builder &operator()(char d) &;
@@ -35,6 +39,24 @@ namespace jank::util
     string_builder &operator()(char const *d) &;
     string_builder &operator()(native_transient_string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
+
+    template <template <typename> typename V, typename T>
+    requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, native_vector<T>>)
+    string_builder &operator()(V<T> const &d) &
+    {
+      (*this)("[ ");
+      for(size_t i{}; i < d.size(); ++i)
+      {
+        (*this)(d[i]);
+        if(i + 1 != d.size())
+        {
+          (*this)(',');
+        }
+        (*this)(' ');
+      }
+      (*this)(']');
+      return *this;
+    }
 
     void push_back(bool d) &;
     void push_back(float d) &;

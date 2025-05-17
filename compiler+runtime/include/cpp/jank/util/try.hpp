@@ -54,6 +54,11 @@ namespace jank::util
     fun(e);                                \
     then;                                  \
   }                                        \
+  catch(jank::runtime::object * const e)   \
+  {                                        \
+    fun(e);                                \
+    then;                                  \
+  }                                        \
   catch(jank::runtime::object_ref const e) \
   {                                        \
     fun(e);                                \

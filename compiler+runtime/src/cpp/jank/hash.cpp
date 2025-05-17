@@ -155,8 +155,7 @@ namespace jank::hash
 
   u32 visit(runtime::object_ref const o)
   {
-    return runtime::visit_object([](auto const typed_o) -> u32 { return typed_o->to_hash(); },
-                                 o);
+    return runtime::visit_object([](auto const typed_o) -> u32 { return typed_o->to_hash(); }, o);
   }
 
   template <typename T>
