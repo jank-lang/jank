@@ -68,6 +68,7 @@ namespace jank::jit
         std::stringstream const captured_output;
 
         util::print("testing file {} => ", dir_entry.path().string());
+        std::fflush(stdout);
 
         try
         {
@@ -99,6 +100,7 @@ namespace jank::jit
             }
           }
         }
+        /* TODO: Use JANK_TRY here? */
         catch(std::exception const &e)
         {
           if(expect_success || expect_throw)

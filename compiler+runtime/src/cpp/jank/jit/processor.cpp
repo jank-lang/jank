@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>

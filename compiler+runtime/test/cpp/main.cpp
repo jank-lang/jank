@@ -45,6 +45,7 @@ try
   jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::latest)
     .expect_ok();
 
+  Cpp::EnableDebugOutput(false);
   Cpp::Declare("#include <jank/runtime/convert/builtin.hpp>");
 
   auto const res(context.run());
