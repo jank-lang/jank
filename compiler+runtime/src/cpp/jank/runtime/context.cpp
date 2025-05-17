@@ -44,6 +44,7 @@ namespace jank::runtime
                                                opts.include_dirs,
                                                opts.define_macros) }
     , module_loader{ *this, opts.module_path }
+    , opts { opts }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 

@@ -153,6 +153,9 @@ namespace jank::runtime
     var_ref no_recur_var;
     var_ref gensym_env_var;
 
+    /* Hold onto the CLI Options for use at runtime */
+    util::cli::options opts;
+
     /* TODO: Remove this map. Just use the list. */
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;

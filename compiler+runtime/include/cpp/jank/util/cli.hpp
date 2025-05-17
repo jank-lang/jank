@@ -29,7 +29,7 @@ namespace jank::util::cli
 
     /* Compilation. */
     i64 optimization_level{};
-    bool direct_linking;
+    bool direct_linking{};
 
     /* Run command. */
     native_transient_string target_file;
