@@ -280,6 +280,11 @@ namespace jank::runtime
       absolute_module = module::nest_module(ns->to_string(), module);
     }
 
+    /* When we load a module, the `*ns*` var is still set to the previous module.
+     * In the `clojure.core/ns` macro, `in-ns` is called that sets the value of the
+     * current ns to the module being loaded. To avoid overwriting the previous `ns` value, `current_ns_var`
+     * binding is pushed in the context, and then `in-ns` sets the value of `*ns*` var in
+     * the new binding scope. */
     binding_scope const preserve{ *this,
                                   obj::persistent_hash_map::create_unique(
                                     std::make_pair(current_ns_var, ns),

@@ -4,8 +4,7 @@
 
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <jank/aot.hpp>
-#include <jank/init.hpp>
+#include <jank/aot/processor.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -15,6 +14,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/c_api.h>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
@@ -247,8 +247,14 @@ namespace jank
     }
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
-    jank::aot_compiler aot{ opts };
-    aot.compile(opts.target_module);
+    jank::aot::processor aot_prc{ opts };
+    auto const res{ aot_prc.compile(opts.target_module) };
+    if(res.is_err())
+    {
+      throw std::runtime_error{ util::format("Exitted with code: {}. {}",
+                                             res.expect_err().return_code,
+                                             res.expect_err().err_message) };
+    }
   }
 }
 
@@ -258,11 +264,11 @@ int main(int const argc, char const **argv)
   using namespace jank;
   using namespace jank::runtime;
 
-  return init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
+  return jank_init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
     auto const parse_result(util::cli::parse(argc, argv));
     if(parse_result.is_err())
     {
-      return;
+      return parse_result.expect_err();
     }
     auto const &opts(parse_result.expect_ok());
 
@@ -297,5 +303,6 @@ int main(int const argc, char const **argv)
         compile_main(opts);
         break;
     }
+    return 0;
   });
 }

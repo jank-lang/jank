@@ -159,8 +159,6 @@ add_library(
   src/cpp/jtl/assert.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
-  src/cpp/jank/init.cpp
-  src/cpp/jank/aot.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/dir.cpp
@@ -276,6 +274,7 @@ add_library(
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
+  src/cpp/jank/aot/processor.cpp
 
   # Native module sources.
   src/cpp/clojure/core_native.cpp
