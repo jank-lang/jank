@@ -97,7 +97,7 @@ namespace jank
     }
   }
 
-  static void compile(util::cli::options const &opts)
+  static void compile_module(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -236,7 +236,7 @@ namespace jank
     }
   }
 
-  static void compile_main(util::cli::options const &opts)
+  static void compile(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -287,8 +287,8 @@ int main(int const argc, char const **argv)
       case util::cli::command::run:
         run(opts);
         break;
-      case util::cli::command::compile:
-        compile(opts);
+      case util::cli::command::compile_module:
+        compile_module(opts);
         break;
       case util::cli::command::repl:
         repl(opts);
@@ -299,8 +299,8 @@ int main(int const argc, char const **argv)
       case util::cli::command::run_main:
         run_main(opts);
         break;
-      case util::cli::command::compile_main:
-        compile_main(opts);
+      case util::cli::command::compile:
+        compile(opts);
         break;
     }
     return 0;

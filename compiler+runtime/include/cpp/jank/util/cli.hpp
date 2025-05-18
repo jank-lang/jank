@@ -8,10 +8,10 @@ namespace jank::util::cli
   {
     run,
     compile,
+    compile_module,
     repl,
     cpp_repl,
-    run_main,
-    compile_main
+    run_main
   };
 
   struct options
