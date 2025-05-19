@@ -150,6 +150,23 @@ namespace jank::codegen
     return ret_base;
   }
 
+  static llvm::Value *
+  convert_into_object(reusable_context &ctx, llvm::Value *arg_handle, expression_ref const expr)
+  {
+    auto const type{ cpp_util::expression_type(expr) };
+    auto const is_untyped_obj{ cpp_util::is_untyped_object(type) };
+    if(!is_untyped_obj)
+    {
+      arg_handle = convert_object(ctx,
+                                  conversion_policy::into_object,
+                                  type,
+                                  cpp_util::untyped_object_ptr_type(),
+                                  type,
+                                  arg_handle);
+    }
+    return arg_handle;
+  }
+
   reusable_context::reusable_context(jtl::immutable_string const &module_name)
     : module_name{ module_name }
     , ctor_name{ runtime::munge(__rt_ctx->unique_string("jank_global_init")) }
@@ -473,18 +490,7 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      auto const arg_type{ cpp_util::expression_type(arg_expr) };
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      auto arg_handle{ gen(arg_expr, arity) };
-      if(!is_untyped_obj)
-      {
-        arg_handle = convert_object(*ctx,
-                                    conversion_policy::into_object,
-                                    arg_type,
-                                    cpp_util::untyped_object_ptr_type(),
-                                    arg_type,
-                                    arg_handle);
-      }
+      auto const arg_handle{ convert_into_object(*ctx, gen(arg_expr, arity), arg_expr) };
       arg_handles.emplace_back(arg_handle);
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
@@ -560,7 +566,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(convert_into_object(*ctx, gen(expr, arity), expr));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -586,7 +592,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(convert_into_object(*ctx, gen(expr, arity), expr));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -612,8 +618,8 @@ namespace jank::codegen
 
     for(auto const &pair : expr->data_exprs)
     {
-      args.emplace_back(gen(pair.first, arity));
-      args.emplace_back(gen(pair.second, arity));
+      args.emplace_back(convert_into_object(*ctx, gen(pair.first, arity), pair.first));
+      args.emplace_back(convert_into_object(*ctx, gen(pair.second, arity), pair.second));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -639,7 +645,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(convert_into_object(*ctx, gen(expr, arity), expr));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -727,7 +733,7 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      arg_handles.emplace_back(convert_into_object(*ctx, gen(arg_expr, arity), arg_expr));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
@@ -999,7 +1005,7 @@ namespace jank::codegen
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
-    auto const condition(gen(expr->condition, arity));
+    auto const condition(convert_into_object(*ctx, gen(expr->condition, arity), expr->condition));
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_truthy", truthy_fn_type));
@@ -1069,7 +1075,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::throw_ref const expr, expr::function_arity const &arity)
   {
     /* TODO: Generate direct call to __cxa_throw. */
-    auto const value(gen(expr->value, arity));
+    auto const value(convert_into_object(*ctx, gen(expr->value, arity), expr->value));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto fn(ctx->module->getOrInsertFunction("jank_throw", fn_type));
@@ -1274,17 +1280,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      if(cpp_util::is_untyped_object(expr->type))
-      {
-        return ctx->builder->CreateRet(converted);
-      }
-      auto const untyped_obj{ convert_object(*ctx,
-                                             conversion_policy::into_object,
-                                             expr->type,
-                                             cpp_util::untyped_object_ptr_type(),
-                                             expr->type,
-                                             converted) };
-      return ctx->builder->CreateRet(untyped_obj);
+      return ctx->builder->CreateRet(convert_into_object(*ctx, converted, expr));
     }
 
     return converted;
