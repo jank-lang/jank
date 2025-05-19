@@ -4,11 +4,12 @@
 
 #include <jtl/result.hpp>
 
+#include <llvm/ADT/IntrusiveRefCntPtr.h>
+#include <llvm/Option/OptTable.h>
+#include <llvm/Support/Program.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/VirtualFileSystem.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
-#include <llvm/Option/OptTable.h>
 #include <llvm/TargetParser/Host.h>
 
 #include <clang/Basic/DiagnosticIDs.h>
@@ -23,9 +24,9 @@
 #include <jank/util/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
-#include <jank/util/string_builder.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/string_builder.hpp>
 
 namespace jank::aot
 {
@@ -143,16 +144,21 @@ int main(int argc, const char** argv)
     /* The Driver needs the path to the executable (used for finding related tools/resources)
      * For this example, we'll use argv[0] or a placeholder. This might need adjustment
      * depending on how/where your program is run relative to clang resources.
-     * TODO: Infer clang++ path. Will be OS dependent and will require to infer correct version's path */
-    auto const clang_executable_path{ "/usr/bin/clang++" };
-    clang::driver::Driver driver(clang_executable_path,
+     * TODO: Ensure correct clang++ version. Will be OS dependent. */
+    auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
+    if(!clang_inferred_path)
+    {
+      return jtl::err(
+        compiler_err{ 1, "clang++ executable not found. Ensure it exists on the path!" });
+    }
+    clang::driver::Driver driver(clang_inferred_path.get(),
                                  target_triple,
                                  diags,
                                  "jank_aot_compilation",
                                  vfs);
     driver.setCheckInputsExist(false);
 
-    std::vector<char const *> Args = { strdup(clang_executable_path) };
+    std::vector<char const *> Args = { strdup(clang_inferred_path.get().c_str()) };
 
     for(auto const &module : __rt_ctx->loaded_modules_in_order)
     {
@@ -218,7 +224,6 @@ int main(int argc, const char** argv)
     } };
 
     llvm::ArrayRef<char const *> Argv(Args);
-
 
     std::unique_ptr<clang::driver::Compilation> C(driver.BuildCompilation(Argv));
 
