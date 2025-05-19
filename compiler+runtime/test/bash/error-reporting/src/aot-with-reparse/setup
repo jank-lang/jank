@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-jank --module-path=. compile aot
+jank --module-path=. compile-module aot
