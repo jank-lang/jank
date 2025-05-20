@@ -2087,7 +2087,7 @@ namespace jank::analyze
     if(scope_res.is_err())
     {
       /* TODO: Error. */
-      return error::internal_analyze_failure("Invalid C++ name.",
+      return error::internal_analyze_failure(util::format("{}", scope_res.expect_err()),
                                              object_source(sym),
                                              latest_expansion(macro_expansions));
     }

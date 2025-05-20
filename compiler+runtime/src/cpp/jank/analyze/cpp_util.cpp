@@ -33,13 +33,20 @@ namespace jank::analyze::cpp_util
       auto const dot{ sym.find('.', new_start) };
       if(dot == jtl::immutable_string::npos)
       {
+        /* If we have a template specialization and we want to access one of its members, we
+         * need to be sure that it's fully instantiated. If we don't, the member won't
+         * be found. */
+        if(Cpp::IsTemplateSpecialization(scope))
+        {
+          Cpp::InstantiateTemplate(scope);
+        }
         /* Finding dots will still leave us with the last part of the symbol to lookup. */
         scope = Cpp::GetNamed(sym.substr(new_start), scope);
         break;
       }
       auto const subs{ sym.substr(new_start, dot - new_start) };
       new_start = dot + 1;
-      scope = Cpp::GetNamed(subs, scope);
+      scope = Cpp::GetUnderlyingScope(Cpp::GetNamed(subs, scope));
       if(!scope)
       {
         return err(util::format("Unable to find scope for symbol '{}'.", sym));
