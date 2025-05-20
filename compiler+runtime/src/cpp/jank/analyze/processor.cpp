@@ -2297,6 +2297,24 @@ namespace jank::analyze
     jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
     {
+      /* TODO: Remove duplication for these checks. */
+      if(Cpp::IsPrivateMethod(match))
+      {
+        return error::internal_analyze_failure(
+          util::format("The '{}' function is private. It can only be accessed if it's public.",
+                       scope_name),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
+      if(Cpp::IsProtectedMethod(match))
+      {
+        return error::internal_analyze_failure(
+          util::format("The '{}' function is protected. It can only be accessed if it's public.",
+                       scope_name),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
+
       if(is_ctor)
       {
         return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -2346,6 +2364,22 @@ namespace jank::analyze
     match = conversion_match_res.expect_ok();
     if(match)
     {
+      if(Cpp::IsPrivateMethod(match))
+      {
+        return error::internal_analyze_failure(
+          util::format("The '{}' function is private. It can only be accessed if it's public.",
+                       scope_name),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
+      if(Cpp::IsProtectedMethod(match))
+      {
+        return error::internal_analyze_failure(
+          util::format("The '{}' function is protected. It can only be accessed if it's public.",
+                       scope_name),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
       if(is_ctor)
       {
         return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -2546,6 +2580,26 @@ namespace jank::analyze
                                                           Cpp::GetTypeAsString(parent_type)),
                                              object_source(l),
                                              latest_expansion(macro_expansions));
+    }
+    if(Cpp::IsPrivateVariable(member_scope))
+    {
+      return error::internal_analyze_failure(
+        util::format(
+          "The '{}' member within '{}' is private. It can only be accessed if it's public.",
+          name,
+          Cpp::GetTypeAsString(parent_type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+    if(Cpp::IsProtectedVariable(member_scope))
+    {
+      return error::internal_analyze_failure(
+        util::format(
+          "The '{}' member within '{}' is protected. It can only be accessed if it's public.",
+          name,
+          Cpp::GetTypeAsString(parent_type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
     }
     auto const member_type{ Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope)) };
 
