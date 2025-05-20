@@ -204,7 +204,7 @@ namespace jank::codegen
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
-    native_unordered_map<obj::symbol_ref, llvm::Value *> locals;
+    native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
     /* TODO: Use gc allocator to avoid leaks. */
     std::list<deferred_init> deferred_inits{};
   };

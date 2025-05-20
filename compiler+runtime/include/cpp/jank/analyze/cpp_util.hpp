@@ -14,6 +14,7 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym);
 
   jtl::ptr<void> expression_type(expression_ref expr);
+  jtl::ptr<void> non_void_expression_type(expression_ref expr);
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,

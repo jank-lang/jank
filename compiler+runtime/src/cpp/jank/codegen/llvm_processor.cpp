@@ -1310,10 +1310,9 @@ namespace jank::codegen
     {
       jank_debug_assert(Cpp::IsComplete(expr_type));
       auto const size{ Cpp::GetSizeOfType(expr_type) };
-      /* TODO: Handle void return types. */
-      jank_debug_assert(size > 0 || is_void);
+      jank_debug_assert(size > 0);
       auto const alignment{ Cpp::GetAlignmentOfType(expr_type) };
-      jank_debug_assert(alignment > 0 || is_void);
+      jank_debug_assert(alignment > 0);
       ctor_alloc
         = ctx->builder->CreateAlloca(ctx->builder->getInt8Ty(),
                                      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
@@ -1328,6 +1327,7 @@ namespace jank::codegen
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
     auto const arg_count{ arg_exprs.size() - (requires_this_obj ? 1 : 0) };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
+    /* TODO: If we have no args, don't alloc an array. */
     auto const args_array{
       ctx->builder->CreateAlloca(args_array_type, nullptr, util::format("{}.args", name).c_str())
     };
@@ -1417,6 +1417,10 @@ namespace jank::codegen
       return ctx->builder->CreateRet(converted);
     }
 
+    if(is_void)
+    {
+      return gen_global(jank_nil);
+    }
     return ctor_alloc;
   }
 

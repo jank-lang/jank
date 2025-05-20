@@ -119,6 +119,17 @@ namespace jank::analyze::cpp_util
       expr);
   }
 
+  /* Void is a special case which gets turned into nil, but only in some circumstances. */
+  jtl::ptr<void> non_void_expression_type(expression_ref const expr)
+  {
+    auto const type{ expression_type(expr) };
+    if(Cpp::IsVoid(type))
+    {
+      return untyped_object_ptr_type();
+    }
+    return type;
+  }
+
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &args)
