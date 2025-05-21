@@ -171,7 +171,11 @@ namespace jank::jit
                     f.path.string(),
                     f.error);
       }
-      util::print("tested {} jank files\n", test_count);
+      util::print("tested {} jank files with {}{} failures{}\n",
+                  test_count,
+                  (failures.empty() ? util::terminal_color::reset : util::terminal_color::red),
+                  failures.size(),
+                  util::terminal_color::reset);
     }
   }
 }
