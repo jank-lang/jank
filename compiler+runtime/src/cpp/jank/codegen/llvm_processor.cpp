@@ -1359,20 +1359,6 @@ namespace jank::codegen
                                     param_type,
                                     arg_handle);
       }
-      else if(arg_exprs[i]->kind != expression_kind::cpp_value
-              && arg_exprs[i]->kind != expression_kind::cpp_constructor_call
-              && arg_exprs[i]->kind != expression_kind::cpp_call)
-      {
-        /* TODO: Helper for allocating a type. */
-        auto const size{ Cpp::GetSizeOfType(arg_type) };
-        auto const alignment{ Cpp::GetAlignmentOfType(arg_type) };
-        auto const alloc{ ctx->builder->CreateAlloca(
-          ctx->builder->getInt8Ty(),
-          llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
-        alloc->setAlignment(llvm::Align{ alignment });
-        ctx->builder->CreateStore(arg_handle, alloc);
-        arg_handle = alloc;
-      }
 
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
