@@ -604,7 +604,17 @@ namespace jank::analyze
       {
         return value_result;
       }
-      value_expr = some(value_result.expect_ok());
+      auto const value_conv_expr{ apply_implicit_conversion(value_result.expect_ok(),
+                                                            cpp_util::untyped_object_ptr_type(),
+                                                            current_frame,
+                                                            expression_position::value,
+                                                            true,
+                                                            macro_expansions) };
+      if(value_conv_expr.is_err())
+      {
+        return value_conv_expr;
+      }
+      value_expr = some(value_conv_expr.expect_ok());
 
       vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
     }
@@ -637,9 +647,9 @@ namespace jank::analyze
 
   processor::expression_result
   processor::analyze_case(obj::persistent_list_ref const o,
-                          local_frame_ptr const f,
+                          local_frame_ptr const current_frame,
                           expression_position const position,
-                          jtl::option<expr::function_context_ref> const &fc,
+                          jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
@@ -659,12 +669,24 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const value_expr_obj{ it.first().unwrap() };
-    auto const value_expr{ analyze(value_expr_obj, f, expression_position::value, fc, needs_box) };
+    auto value_expr{
+      analyze(value_expr_obj, current_frame, expression_position::value, fn_ctx, needs_box)
+    };
     if(value_expr.is_err())
     {
       return error::analyze_invalid_case(value_expr.expect_err()->message,
                                          meta_source(o->meta),
                                          latest_expansion(macro_expansions));
+    }
+    value_expr = apply_implicit_conversion(value_expr.expect_ok(),
+                                           cpp_util::untyped_object_ptr_type(),
+                                           current_frame,
+                                           expression_position::value,
+                                           needs_box,
+                                           macro_expansions);
+    if(value_expr.is_err())
+    {
+      return value_expr.expect_err();
     }
 
     it = it.rest();
@@ -707,7 +729,9 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const default_expr_obj{ it.first().unwrap() };
-    auto const default_expr{ analyze(default_expr_obj, f, position, fc, needs_box) };
+    auto const default_expr{
+      analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box)
+    };
 
     it = it.rest();
     if(it.first().is_none())
@@ -737,7 +761,7 @@ namespace jank::analyze
             return err("Map key for case* is expected to be an integer.");
           }
           auto const key{ runtime::expect_object<obj::integer>(k_obj) };
-          auto const expr{ analyze(v_obj, f, position, fc, needs_box) };
+          auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
@@ -762,7 +786,7 @@ namespace jank::analyze
     auto pairs{ keys_exprs.expect_ok_move() };
 
     return jtl::make_ref<expr::case_>(position,
-                                      f,
+                                      current_frame,
                                       needs_box,
                                       value_expr.expect_ok(),
                                       shift->data,
@@ -1242,7 +1266,17 @@ namespace jank::analyze
       {
         return arg_expr;
       }
-      arg_exprs.emplace_back(arg_expr.expect_ok());
+      auto const arg_conv_expr{ apply_implicit_conversion(arg_expr.expect_ok(),
+                                                          cpp_util::untyped_object_ptr_type(),
+                                                          current_frame,
+                                                          expression_position::value,
+                                                          true,
+                                                          macro_expansions) };
+      if(arg_conv_expr.is_err())
+      {
+        return arg_conv_expr;
+      }
+      arg_exprs.emplace_back(arg_conv_expr.expect_ok());
     }
 
     fn_ctx.unwrap()->is_tail_recursive = true;
@@ -1671,9 +1705,30 @@ namespace jank::analyze
     {
       return condition_expr.expect_err_move();
     }
+    /* TODO: Support native types if they're compatible with bool. */
+    condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                               cpp_util::untyped_object_ptr_type(),
+                                               current_frame,
+                                               expression_position::value,
+                                               false,
+                                               macro_expansions);
+    if(condition_expr.is_err())
+    {
+      return condition_expr.expect_err_move();
+    }
 
     auto const then(o->data.rest().rest().first().unwrap());
     auto then_expr(analyze(then, current_frame, position, fn_ctx, needs_box));
+    if(then_expr.is_err())
+    {
+      return then_expr.expect_err_move();
+    }
+    then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                          cpp_util::untyped_object_ptr_type(),
+                                          current_frame,
+                                          position,
+                                          needs_box,
+                                          macro_expansions);
     if(then_expr.is_err())
     {
       return then_expr.expect_err_move();
@@ -1684,6 +1739,16 @@ namespace jank::analyze
     {
       auto const else_(o->data.rest().rest().rest().first().unwrap());
       auto else_expr(analyze(else_, current_frame, position, fn_ctx, needs_box));
+      if(else_expr.is_err())
+      {
+        return else_expr.expect_err_move();
+      }
+      else_expr = apply_implicit_conversion(else_expr.expect_ok(),
+                                            cpp_util::untyped_object_ptr_type(),
+                                            current_frame,
+                                            position,
+                                            needs_box,
+                                            macro_expansions);
       if(else_expr.is_err())
       {
         return else_expr.expect_err_move();
@@ -1795,6 +1860,16 @@ namespace jank::analyze
 
     auto const arg(o->data.rest().first().unwrap());
     auto arg_expr(analyze(arg, current_frame, expression_position::value, fn_ctx, true));
+    if(arg_expr.is_err())
+    {
+      return arg_expr.expect_err_move();
+    }
+    arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
+                                         cpp_util::untyped_object_ptr_type(),
+                                         current_frame,
+                                         expression_position::value,
+                                         true,
+                                         macro_expansions);
     if(arg_expr.is_err())
     {
       return arg_expr.expect_err_move();
@@ -2040,6 +2115,16 @@ namespace jank::analyze
       {
         return res.expect_err_move();
       }
+      res = apply_implicit_conversion(res.expect_ok(),
+                                      cpp_util::untyped_object_ptr_type(),
+                                      current_frame,
+                                      expression_position::value,
+                                      true,
+                                      macro_expansions);
+      if(res.is_err())
+      {
+        return res.expect_err_move();
+      }
       exprs.emplace_back(res.expect_ok_move());
       if(exprs.back()->kind != expression_kind::primitive_literal)
       {
@@ -2102,11 +2187,33 @@ namespace jank::analyze
           {
             return k_expr.expect_err_move();
           }
+          k_expr = apply_implicit_conversion(k_expr.expect_ok(),
+                                             cpp_util::untyped_object_ptr_type(),
+                                             current_frame,
+                                             expression_position::value,
+                                             true,
+                                             macro_expansions);
+          if(k_expr.is_err())
+          {
+            return k_expr.expect_err_move();
+          }
+
           auto v_expr(analyze(second, current_frame, expression_position::value, fn_ctx, true));
           if(v_expr.is_err())
           {
             return v_expr.expect_err_move();
           }
+          v_expr = apply_implicit_conversion(v_expr.expect_ok(),
+                                             cpp_util::untyped_object_ptr_type(),
+                                             current_frame,
+                                             expression_position::value,
+                                             true,
+                                             macro_expansions);
+          if(v_expr.is_err())
+          {
+            return v_expr.expect_err_move();
+          }
+
           exprs.emplace_back(k_expr.expect_ok_move(), v_expr.expect_ok_move());
         }
 
@@ -2137,6 +2244,16 @@ namespace jank::analyze
         for(auto d = typed_o->fresh_seq(); d.is_some(); d = d->next_in_place())
         {
           auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
+          if(res.is_err())
+          {
+            return res.expect_err_move();
+          }
+          res = apply_implicit_conversion(res.expect_ok(),
+                                          cpp_util::untyped_object_ptr_type(),
+                                          current_frame,
+                                          expression_position::value,
+                                          true,
+                                          macro_expansions);
           if(res.is_err())
           {
             return res.expect_err_move();
@@ -2320,8 +2437,8 @@ namespace jank::analyze
       auto const arg_conv_expr{ apply_implicit_conversion(arg_expr.expect_ok(),
                                                           cpp_util::untyped_object_ptr_type(),
                                                           current_frame,
-                                                          position,
-                                                          needs_box,
+                                                          expression_position::value,
+                                                          needs_arg_box,
                                                           macro_expansions) };
       if(arg_conv_expr.is_err())
       {
