@@ -37,8 +37,9 @@ namespace jank::analyze::expr
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
 
-    /* TODO: Turn this into an object_ref called 'form'. */
-    runtime::obj::symbol_ref sym;
+    /* The original value form of either the type symbol or the value
+     * being casted. We use this mainly for source info. */
+    runtime::object_ref form;
     /* In general, this represents the type of the value. For constructors,
      * this will represent the type we're constructing. */
     jtl::ptr<void> type;

@@ -2192,7 +2192,7 @@ namespace jank::analyze
         return error::internal_analyze_failure(
           util::format("'{}' can only be constructed with one argument.",
                        Cpp::GetTypeAsString(val->type)),
-          object_source(val->sym),
+          object_source(val->form),
           latest_expansion(macro_expansions));
       }
       if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
@@ -2202,7 +2202,7 @@ namespace jank::analyze
           util::format("'{}' cannot be constructed from a '{}'.",
                        Cpp::GetTypeAsString(val->type),
                        Cpp::GetTypeAsString(arg_types[0].m_Type)),
-          object_source(val->sym),
+          object_source(val->form),
           latest_expansion(macro_expansions));
       }
 
@@ -2221,20 +2221,20 @@ namespace jank::analyze
       if(arg_exprs.empty())
       {
         return error::internal_analyze_failure("Member function calls need an invoking object.",
-                                               object_source(val->sym),
+                                               object_source(val->form),
                                                latest_expansion(macro_expansions));
       }
 
       /* TODO: Switch std::vector to native_vector where possible. */
-      auto const name{ val->sym->name.substr(1) };
       auto const obj_type{ arg_types[0].m_Type };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
+      auto const name{ Cpp::GetScopeName(obj_scope) };
       if(!obj_scope)
       {
         return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
                                                             name,
                                                             Cpp::GetTypeAsString(obj_type)),
-                                               object_source(val->sym),
+                                               object_source(val->form),
                                                latest_expansion(macro_expansions));
       }
 
@@ -2248,7 +2248,7 @@ namespace jank::analyze
         return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
                                                             name,
                                                             Cpp::GetTypeAsString(obj_type)),
-                                               object_source(val->sym),
+                                               object_source(val->form),
                                                latest_expansion(macro_expansions));
       }
     }
@@ -2261,7 +2261,7 @@ namespace jank::analyze
     }
     else if(is_member_call)
     {
-      scope_name = val->sym->name.substr(1);
+      scope_name = try_object<obj::symbol>(val->form)->name.substr(1);
     }
     else
     {
@@ -2271,7 +2271,7 @@ namespace jank::analyze
       {
         return error::internal_analyze_failure(
           util::format("There is no '{}' function.", scope_name),
-          object_source(val->sym),
+          object_source(val->form),
           latest_expansion(macro_expansions));
       }
     }
@@ -2280,7 +2280,7 @@ namespace jank::analyze
     if(match_res.is_err())
     {
       return error::internal_analyze_failure(util::format("{}", match_res.expect_err()),
-                                             object_source(val->sym),
+                                             object_source(val->form),
                                              latest_expansion(macro_expansions));
     }
     jtl::ptr<void> match{ match_res.expect_ok() };
@@ -2332,7 +2332,7 @@ namespace jank::analyze
     if(new_types.is_err())
     {
       return error::internal_analyze_failure(util::format("{}", new_types.expect_err()),
-                                             object_source(val->sym),
+                                             object_source(val->form),
                                              latest_expansion(macro_expansions));
     }
 
@@ -2340,7 +2340,7 @@ namespace jank::analyze
     if(conversion_match_res.is_err())
     {
       return error::internal_analyze_failure(util::format("{}", conversion_match_res.expect_err()),
-                                             object_source(val->sym),
+                                             object_source(val->form),
                                              latest_expansion(macro_expansions));
     }
     match = conversion_match_res.expect_ok();
@@ -2413,7 +2413,7 @@ namespace jank::analyze
                                                         scope_name,
                                                         is_ctor ? "constructor" : "function",
                                                         sb.release()),
-                                           object_source(val->sym),
+                                           object_source(val->form),
                                            latest_expansion(macro_expansions));
   }
 
@@ -2601,7 +2601,7 @@ namespace jank::analyze
                                        jtl::option<expr::function_context_ref> const &fn_ctx,
                                        bool const needs_box)
   {
-    auto const name{ val->sym->name.substr(2) };
+    auto const name{ try_object<obj::symbol>(val->form)->name.substr(2) };
     auto const count(l->count());
     if(count < 2)
     {

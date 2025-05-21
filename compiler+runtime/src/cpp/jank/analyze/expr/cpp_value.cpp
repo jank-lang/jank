@@ -13,7 +13,7 @@ namespace jank::analyze::expr
                        jtl::ptr<void> const scope,
                        value_kind const val_kind)
     : expression{ expr_kind, position, frame, needs_box }
-    , sym{ sym }
+    , form{ sym }
     , type{ type }
     , scope{ scope }
     , val_kind{ val_kind }
