@@ -2430,8 +2430,12 @@ namespace jank::analyze
     for(usize i{}; i < fn_param_count; ++i)
     {
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
-      if(Cpp::GetUnderlyingType(param_type) != Cpp::GetUnderlyingType(arg_types[i].m_Type)
-         && Cpp::IsConstructible(param_type, arg_types[i].m_Type))
+      if(Cpp::GetUnderlyingType(param_type) == Cpp::GetUnderlyingType(arg_types[i].m_Type))
+      {
+        continue;
+      }
+
+      if(Cpp::IsConstructible(param_type, arg_types[i].m_Type))
       {
         auto const bare_param_type{ Cpp::GetNonReferenceType(Cpp::GetTypeWithoutCv(param_type)) };
         auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
@@ -2455,6 +2459,34 @@ namespace jank::analyze
           return new_expr.expect_err();
         }
         arg_exprs[i] = new_expr.expect_ok();
+      }
+      else if(cpp_util::is_any_object(param_type) && cpp_util::is_convertible(arg_types[i].m_Type))
+      {
+        arg_exprs[i] = jtl::make_ref<expr::cpp_cast>(position,
+                                                     current_frame,
+                                                     needs_box,
+                                                     param_type,
+                                                     arg_types[i].m_Type,
+                                                     conversion_policy::into_object,
+                                                     arg_exprs[i]);
+      }
+      else if(cpp_util::is_any_object(arg_types[i].m_Type) && cpp_util::is_convertible(param_type))
+      {
+        arg_exprs[i] = jtl::make_ref<expr::cpp_cast>(position,
+                                                     current_frame,
+                                                     needs_box,
+                                                     param_type,
+                                                     param_type,
+                                                     conversion_policy::from_object,
+                                                     arg_exprs[i]);
+      }
+      else
+      {
+        return error::internal_analyze_failure(
+          util::format("Unknown implicit conversion from {} to {}.",
+                       Cpp::GetTypeAsString(arg_types[i].m_Type),
+                       Cpp::GetTypeAsString(param_type)),
+          latest_expansion(macro_expansions));
       }
     }
     return ok();
