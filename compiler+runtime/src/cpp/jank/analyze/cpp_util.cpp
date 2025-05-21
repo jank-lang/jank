@@ -102,6 +102,14 @@ namespace jank::analyze::cpp_util
     return is_untyped_object(type) || is_typed_object(type);
   }
 
+  /* Clang treats int, long, float, etc as built-in, but not pointers. I consider
+   * all of them built-in, but to not confuse the nomenclature, I'm calling them
+   * primitives instead. */
+  bool is_primitive(jtl::ptr<void> const type)
+  {
+    return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type);
+  }
+
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(

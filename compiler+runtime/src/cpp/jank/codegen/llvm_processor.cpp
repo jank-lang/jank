@@ -1349,7 +1349,8 @@ namespace jank::codegen
        * param type we need though. */
       jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i) : expr_type.data };
       if(is_untyped_obj
-         && (Cpp::IsBuiltin(param_type) || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
+         && (cpp_util::is_primitive(param_type)
+             || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
       {
         arg_handle = convert_object(*ctx,
                                     conversion_policy::from_object,
@@ -1439,9 +1440,9 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
   {
-    auto const is_builtin{ Cpp::IsBuiltin(expr->type) };
+    auto const is_primitive{ cpp_util::is_primitive(expr->type) };
     Cpp::AotCall ctor_fn_callable;
-    if(is_builtin)
+    if(is_primitive)
     {
       if(expr->arg_exprs.empty())
       {

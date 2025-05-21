@@ -26,6 +26,7 @@ namespace jank::analyze::cpp_util
   bool is_untyped_object(jtl::ptr<void> type);
   bool is_typed_object(jtl::ptr<void> type);
   bool is_any_object(jtl::ptr<void> type);
+  bool is_primitive(jtl::ptr<void> type);
 
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();
