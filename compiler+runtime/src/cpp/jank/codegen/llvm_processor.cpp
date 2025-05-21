@@ -1347,7 +1347,7 @@ namespace jank::codegen
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
        * param type we need though. */
-      auto const param_type{ fn ? Cpp::GetFunctionArgType(fn, i) : expr_type.data };
+      jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i) : expr_type.data };
       if(is_untyped_obj
          && (Cpp::IsBuiltin(param_type) || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
       {

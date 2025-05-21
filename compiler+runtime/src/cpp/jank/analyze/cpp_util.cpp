@@ -206,10 +206,26 @@ namespace jank::analyze::cpp_util
   find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args)
   {
     auto const match{ Cpp::BestOverloadFunctionMatch(fns, {}, args) };
-    if(match && Cpp::IsFunctionDeleted(match))
+    if(match)
     {
-      /* TODO: Would be great to point at the C++ source for where it's deleted. */
-      return err(util::format("Unable to call '{}' since it's deleted.", Cpp::GetScopeName(match)));
+      if(Cpp::IsFunctionDeleted(match))
+      {
+        /* TODO: Would be great to point at the C++ source for where it's deleted. */
+        return err(
+          util::format("Unable to call '{}' since it's deleted.", Cpp::GetScopeName(match)));
+      }
+      if(Cpp::IsPrivateMethod(match))
+      {
+        return err(
+          util::format("The '{}' function is private. It can only be accessed if it's public.",
+                       Cpp::GetScopeName(match)));
+      }
+      if(Cpp::IsProtectedMethod(match))
+      {
+        return err(
+          util::format("The '{}' function is protected. It can only be accessed if it's public.",
+                       Cpp::GetScopeName(match)));
+      }
     }
     return match;
   }
