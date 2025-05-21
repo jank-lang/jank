@@ -19,6 +19,7 @@ namespace jank::analyze::expr
    * conversion trait. During analysis, if the cast can be done using
    * normal construction, we'll create a cpp_constructor_call expression
    * instead. */
+  /* TODO: Rename to cpp_conversion or something. */
   struct cpp_cast : expression
   {
     static constexpr expression_kind expr_kind{ expression_kind::cpp_cast };
