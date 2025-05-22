@@ -24,6 +24,7 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -54,8 +55,12 @@ namespace jank::codegen
     auto const conversion_fns{ Cpp::GetFunctionsUsingName(
       instantiation,
       policy == conversion_policy::into_object ? "into_object" : "from_object") };
-    Cpp::TemplateArgInfo input_arg{ Cpp::GetTypeWithoutCv(input_type) };
-    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, { input_arg }) };
+    std::vector<Cpp::TemplateArgInfo> input_args;
+    if(!Cpp::IsVoid(input_type))
+    {
+      input_args.emplace_back(Cpp::GetTypeWithoutCv(input_type));
+    }
+    auto const match{ Cpp::BestOverloadFunctionMatch(conversion_fns, {}, input_args) };
     if(!match)
     {
       throw std::runtime_error{ util::format(
@@ -666,18 +671,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(expr->binding->type) };
-      if(is_untyped_obj)
-      {
-        return ctx->builder->CreateRet(ret);
-      }
-      auto const converted{ convert_object(*ctx,
-                                           conversion_policy::into_object,
-                                           expr->binding->type,
-                                           cpp_util::untyped_object_ptr_type(),
-                                           expr->binding->type,
-                                           ret) };
-      return ctx->builder->CreateRet(converted);
+      return ctx->builder->CreateRet(ret);
     }
 
     return ret;
@@ -690,14 +684,17 @@ namespace jank::codegen
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
       llvm_processor nested{ expr, std::move(ctx) };
+
+      /* We need to make sure to transfer ownership of the context back, even if an exception
+       * is thrown. */
+      util::scope_exit const finally{ [&]() { ctx = std::move(nested.ctx); } };
+
       auto const res{ nested.gen() };
       if(res.is_err())
       {
         /* TODO: Return error. */
         res.expect_ok();
       }
-
-      ctx = std::move(nested.ctx);
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));

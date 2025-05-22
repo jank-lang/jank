@@ -89,7 +89,6 @@ namespace jank::codegen
     std::unique_ptr<llvm::LLVMContext> llvm_ctx;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    llvm::Value *nil{};
     llvm::BasicBlock *global_ctor_block{};
 
     /* TODO: Is this needed, given lifted constants? */

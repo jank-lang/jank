@@ -126,6 +126,18 @@ namespace jank::analyze::cpp_util
         {
           return typed_expr->binding->type;
         }
+        else if constexpr(jtl::is_same<T, expr::let> || jtl::is_same<T, expr::letfn>)
+        {
+          return expression_type(typed_expr->body);
+        }
+        else if constexpr(jtl::is_same<T, expr::do_>)
+        {
+          if(typed_expr->values.empty())
+          {
+            return untyped_object_ptr_type();
+          }
+          return expression_type(typed_expr->values.back());
+        }
         else
         {
           return untyped_object_ptr_type();

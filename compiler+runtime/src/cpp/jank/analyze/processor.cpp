@@ -366,20 +366,25 @@ namespace jank::analyze
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> const expr_type,
                             jtl::ptr<void> const expected_type,
-                            local_frame_ptr const current_frame,
-                            expression_position const position,
-                            bool const needs_box,
+                            /* TODO: Remove these. */
+                            local_frame_ptr const,
+                            expression_position const,
+                            bool const,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type))
+    if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+       || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return ok(expr);
     }
-    else if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
+
+    expr->position = expression_position::value;
+
+    if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
+      return jtl::make_ref<expr::cpp_cast>(expr->position,
+                                           expr->frame,
+                                           expr->needs_box,
                                            expected_type,
                                            expr_type,
                                            conversion_policy::into_object,
@@ -387,9 +392,9 @@ namespace jank::analyze
     }
     else if(cpp_util::is_any_object(expr_type) && cpp_util::is_convertible(expected_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
+      return jtl::make_ref<expr::cpp_cast>(expr->position,
+                                           expr->frame,
+                                           expr->needs_box,
                                            expected_type,
                                            expected_type,
                                            conversion_policy::from_object,
@@ -400,7 +405,7 @@ namespace jank::analyze
       auto const bare_param_type{ Cpp::GetNonReferenceType(Cpp::GetTypeWithoutCv(expected_type)) };
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         expression_position::value,
-        current_frame,
+        expr->frame,
         false,
         /* TODO: Can we do better here? */
         make_box<obj::symbol>(Cpp::GetTypeAsString(bare_param_type)),
@@ -410,9 +415,9 @@ namespace jank::analyze
       auto const new_expr{ build_cpp_call(cpp_value,
                                           { expr },
                                           { { expr_type } },
-                                          current_frame,
-                                          position,
-                                          needs_box,
+                                          expr->frame,
+                                          expr->position,
+                                          expr->needs_box,
                                           macro_expansions) };
       if(new_expr.is_err())
       {
@@ -430,8 +435,7 @@ namespace jank::analyze
     }
   }
 
-  [[maybe_unused]]
-  static jtl::result<expression_ref, error_ref>
+  jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> const expected_type,
                             local_frame_ptr const current_frame,
@@ -604,17 +608,17 @@ namespace jank::analyze
       {
         return value_result;
       }
-      auto const value_conv_expr{ apply_implicit_conversion(value_result.expect_ok(),
-                                                            cpp_util::untyped_object_ptr_type(),
-                                                            current_frame,
-                                                            expression_position::value,
-                                                            true,
-                                                            macro_expansions) };
-      if(value_conv_expr.is_err())
+      value_result = apply_implicit_conversion(value_result.expect_ok(),
+                                               cpp_util::untyped_object_ptr_type(),
+                                               current_frame,
+                                               expression_position::value,
+                                               true,
+                                               macro_expansions);
+      if(value_result.is_err())
       {
-        return value_conv_expr;
+        return value_result;
       }
-      value_expr = some(value_conv_expr.expect_ok());
+      value_expr = some(value_result.expect_ok());
 
       vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
     }
@@ -996,12 +1000,13 @@ namespace jank::analyze
     usize i{};
     for(auto const &item : list->data.rest())
     {
-      auto const position((++i == form_count) ? expression_position::tail
-                                              : expression_position::statement);
-      auto form(analyze(item, frame, position, fn_ctx, position != expression_position::statement));
+      auto const last_item{ (++i == form_count) };
+      auto const position(last_item ? expression_position::tail : expression_position::statement);
+      auto const needs_box{ position != expression_position::statement };
+      auto const form(analyze(item, frame, position, fn_ctx, needs_box));
       if(form.is_err())
       {
-        return form.expect_err_move();
+        return form.expect_err();
       }
       body_do->values.emplace_back(form.expect_ok());
     }
@@ -1031,6 +1036,19 @@ namespace jank::analyze
           object_source(list),
           latest_expansion(macro_expansions));
       }
+
+      auto const new_last_expression{ apply_implicit_conversion(last_expression,
+                                                                last_expression_type,
+                                                                cpp_util::untyped_object_ptr_type(),
+                                                                last_expression->frame,
+                                                                last_expression->position,
+                                                                last_expression->needs_box,
+                                                                macro_expansions) };
+      if(new_last_expression.is_err())
+      {
+        return new_last_expression.expect_err();
+      }
+      body_do->values.back() = new_last_expression.expect_ok();
     }
 
     return ok(expr::function_arity{ std::move(param_symbols),
@@ -1266,17 +1284,17 @@ namespace jank::analyze
       {
         return arg_expr;
       }
-      auto const arg_conv_expr{ apply_implicit_conversion(arg_expr.expect_ok(),
-                                                          cpp_util::untyped_object_ptr_type(),
-                                                          current_frame,
-                                                          expression_position::value,
-                                                          true,
-                                                          macro_expansions) };
-      if(arg_conv_expr.is_err())
+      arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
+                                           cpp_util::untyped_object_ptr_type(),
+                                           current_frame,
+                                           expression_position::value,
+                                           true,
+                                           macro_expansions);
+      if(arg_expr.is_err())
       {
-        return arg_conv_expr;
+        return arg_expr;
       }
-      arg_exprs.emplace_back(arg_conv_expr.expect_ok());
+      arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
     fn_ctx.unwrap()->is_tail_recursive = true;
@@ -2425,26 +2443,26 @@ namespace jank::analyze
     auto it(o->data.rest());
     for(usize i{}; i < runtime::max_params && i < arg_count; ++i, it = it.rest())
     {
-      auto const arg_expr(analyze(it.first().unwrap(),
-                                  current_frame,
-                                  expression_position::value,
-                                  fn_ctx,
-                                  needs_arg_box));
+      auto arg_expr(analyze(it.first().unwrap(),
+                            current_frame,
+                            expression_position::value,
+                            fn_ctx,
+                            needs_arg_box));
       if(arg_expr.is_err())
       {
         return arg_expr;
       }
-      auto const arg_conv_expr{ apply_implicit_conversion(arg_expr.expect_ok(),
-                                                          cpp_util::untyped_object_ptr_type(),
-                                                          current_frame,
-                                                          expression_position::value,
-                                                          needs_arg_box,
-                                                          macro_expansions) };
-      if(arg_conv_expr.is_err())
+      arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
+                                           cpp_util::untyped_object_ptr_type(),
+                                           current_frame,
+                                           expression_position::value,
+                                           needs_arg_box,
+                                           macro_expansions);
+      if(arg_expr.is_err())
       {
-        return arg_conv_expr;
+        return arg_expr;
       }
-      arg_exprs.emplace_back(arg_conv_expr.expect_ok());
+      arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
     /* If we have more args than a fn allows, we need to pack all of the extras

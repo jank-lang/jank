@@ -137,8 +137,7 @@ namespace jank::evaluate
                                             native_vector<obj::symbol_ref> params)
   {
     auto ret{ jtl::make_ref<expr::function>() };
-    /* TODO: Deep clone? */
-    auto expr{ jtl::make_ref<E>(*orig_expr) };
+    auto expr{ make_ref<E>(orig_expr) };
     ret->kind = analyze::expression_kind::function;
     ret->name = name;
     ret->unique_name = __rt_ctx->unique_string(ret->name);
@@ -171,7 +170,21 @@ namespace jank::evaluate
       arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
     }
 
-    arity.body->values.push_back(expr);
+    auto const expr_type{ cpp_util::expression_type(expr) };
+    expression_ref expr_to_add{ expr };
+    if(!cpp_util::is_untyped_object(expr_type))
+    {
+      jank_debug_assert(cpp_util::is_convertible(expr_type));
+      expr->position = expression_position::value;
+      expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
+                                                  expr->frame,
+                                                  expr->needs_box,
+                                                  cpp_util::untyped_object_ptr_type(),
+                                                  expr_type,
+                                                  conversion_policy::into_object,
+                                                  expr);
+    }
+    arity.body->values.push_back(expr_to_add);
 
     walk(arity, [&](auto const &form) {
       using T = std::decay_t<decltype(form)>;
