@@ -175,7 +175,6 @@ namespace jank::evaluate
     if(!cpp_util::is_untyped_object(expr_type))
     {
       jank_debug_assert(cpp_util::is_convertible(expr_type));
-      expr->position = expression_position::value;
       expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
                                                   expr->frame,
                                                   expr->needs_box,
@@ -183,6 +182,7 @@ namespace jank::evaluate
                                                   expr_type,
                                                   conversion_policy::into_object,
                                                   expr);
+      expr->position = expression_position::value;
     }
     arity.body->values.push_back(expr_to_add);
 

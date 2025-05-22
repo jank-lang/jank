@@ -35,7 +35,6 @@ namespace jank::analyze
     using throw_ref = jtl::ref<struct throw_>;
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
-    using function_ref = jtl::ref<struct function>;
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;

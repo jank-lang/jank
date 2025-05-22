@@ -378,11 +378,12 @@ namespace jank::analyze
       return ok(expr);
     }
 
+    auto const cast_position{ expr->position };
     expr->position = expression_position::value;
 
     if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(expr->position,
+      return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
                                            expr->needs_box,
                                            expected_type,
@@ -392,7 +393,7 @@ namespace jank::analyze
     }
     else if(cpp_util::is_any_object(expr_type) && cpp_util::is_convertible(expected_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(expr->position,
+      return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
                                            expr->needs_box,
                                            expected_type,
@@ -416,7 +417,7 @@ namespace jank::analyze
                                           { expr },
                                           { { expr_type } },
                                           expr->frame,
-                                          expr->position,
+                                          cast_position,
                                           expr->needs_box,
                                           macro_expansions) };
       if(new_expr.is_err())
@@ -435,7 +436,7 @@ namespace jank::analyze
     }
   }
 
-  jtl::result<expression_ref, error_ref>
+  static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> const expected_type,
                             local_frame_ptr const current_frame,

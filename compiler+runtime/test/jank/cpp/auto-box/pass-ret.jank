@@ -1,7 +1,7 @@
 (assert (= 5 (let* [a (cpp/int. 5)]
                a)))
 
-(assert (= true ((fn []
+(assert (= true ((fn* []
                    (cpp/bool. true)))))
 
 :success
