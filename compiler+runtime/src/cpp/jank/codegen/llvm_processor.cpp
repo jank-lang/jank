@@ -1286,6 +1286,7 @@ namespace jank::codegen
     /* For member function calls, we steal the first argument and use it as
      * the invoking object. Otherwise, we pass null as the invoking object. */
     auto const requires_this_obj{ kind == expression_kind::cpp_member_call
+                                  /* TODO: Not required if the member is static. */
                                   || kind == expression_kind::cpp_member_access };
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
     auto const arg_count{ arg_exprs.size() - (requires_this_obj ? 1 : 0) };

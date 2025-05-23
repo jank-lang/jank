@@ -182,7 +182,7 @@ namespace jank::evaluate
                                                   expr_type,
                                                   conversion_policy::into_object,
                                                   expr);
-      expr->position = expression_position::value;
+      expr->propagate_position(expression_position::value);
     }
     arity.body->values.push_back(expr_to_add);
 

@@ -379,7 +379,7 @@ namespace jank::analyze
     }
 
     auto const cast_position{ expr->position };
-    expr->position = expression_position::value;
+    expr->propagate_position(expression_position::value);
 
     if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
     {
@@ -405,7 +405,7 @@ namespace jank::analyze
     {
       auto const bare_param_type{ Cpp::GetNonReferenceType(Cpp::GetTypeWithoutCv(expected_type)) };
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
-        expression_position::value,
+        cast_position,
         expr->frame,
         false,
         /* TODO: Can we do better here? */
@@ -2852,16 +2852,15 @@ namespace jank::analyze
     auto const obj_expr{ obj_res.expect_ok() };
     auto const parent_type{ cpp_util::expression_type(obj_expr) };
     auto const parent_scope{ Cpp::GetScopeFromType(parent_type) };
-    auto const member_scope{ Cpp::LookupDatamember(name, parent_scope) };
-    if(!parent_scope || !member_scope)
+    auto member_scope{ Cpp::LookupDatamember(name, parent_scope) };
+    if(!parent_scope)
     {
-      return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
-                                                          name,
-                                                          Cpp::GetTypeAsString(parent_type)),
-                                             object_source(l),
-                                             latest_expansion(macro_expansions));
+      return error::internal_analyze_failure(
+        util::format("Unable to find any members within '{}'.", Cpp::GetTypeAsString(parent_type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
     }
-    if(Cpp::IsPrivateVariable(member_scope))
+    if(member_scope && Cpp::IsPrivateVariable(member_scope))
     {
       return error::internal_analyze_failure(
         util::format(
@@ -2871,7 +2870,7 @@ namespace jank::analyze
         object_source(l),
         latest_expansion(macro_expansions));
     }
-    if(Cpp::IsProtectedVariable(member_scope))
+    if(member_scope && Cpp::IsProtectedVariable(member_scope))
     {
       return error::internal_analyze_failure(
         util::format(
@@ -2881,8 +2880,38 @@ namespace jank::analyze
         object_source(l),
         latest_expansion(macro_expansions));
     }
-    auto const member_type{ Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope)) };
+    else if(!member_scope)
+    {
+      /* We could be referencing a static member through an instance. This is totally
+       * fine, but we need to do a separate lookup in order to check it. */
+      std::vector<Cpp::TCppScope_t> static_members;
+      Cpp::GetStaticDatamembers(parent_scope, static_members);
+      for(auto const m : static_members)
+      {
+        if(Cpp::GetScopeName(m) == name)
+        {
+          member_scope = m;
+          break;
+        }
+      }
 
+
+      if(!member_scope)
+      {
+        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
+                                                            name,
+                                                            Cpp::GetQualifiedName(parent_scope)),
+                                               object_source(l),
+                                               latest_expansion(macro_expansions));
+      }
+
+      val->val_kind = expr::cpp_value::value_kind::variable;
+      val->type = Cpp::GetTypeFromScope(member_scope);
+      val->scope = member_scope;
+      return val;
+    }
+
+    auto const member_type{ Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope)) };
     return jtl::make_ref<expr::cpp_member_access>(position,
                                                   current_frame,
                                                   needs_box,
