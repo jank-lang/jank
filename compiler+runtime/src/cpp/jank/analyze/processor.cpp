@@ -2832,7 +2832,7 @@ namespace jank::analyze
         object_source(l),
         latest_expansion(macro_expansions));
     }
-    else if(count > 3)
+    else if(count >= 3)
     {
       /* TODO: Error */
       return error::internal_analyze_failure(
