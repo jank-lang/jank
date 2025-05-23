@@ -23,7 +23,13 @@ namespace jank::analyze::cpp_util
    *
    * For example, `std.string.iterator` gives us the scope for iterator in std::string.
    *
-   * This doesn't work on built-in types, such as `int`, since they don't have a scope. */
+   * This doesn't work on built-in types, such as `int`, since they don't have a scope.
+   *
+   * When resolving the scope for an overloaded function, this is tricksy. We just
+   * return the scope of the first overload, whatever that is. Then, when we analyze
+   * C++ function calls, we end up looking for all functions within the parent scope
+   * of the one we chose.
+   */
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym)
   {
     jtl::ptr<void> scope{ Cpp::GetGlobalScope() };
@@ -40,24 +46,38 @@ namespace jank::analyze::cpp_util
         {
           Cpp::InstantiateTemplate(scope);
         }
+        auto const old_scope{ scope };
+        auto const subs{ sym.substr(new_start) };
         /* Finding dots will still leave us with the last part of the symbol to lookup. */
-        scope = Cpp::GetNamed(sym.substr(new_start), scope);
+        scope = Cpp::GetNamed(subs, scope);
+        if(!scope)
+        {
+          auto const fns{ Cpp::GetFunctionsUsingName(old_scope, subs) };
+          if(fns.empty())
+          {
+            return err(util::format("Unable to find '{}' within namespace '{}'.",
+                                    subs,
+                                    Cpp::GetQualifiedName(old_scope)));
+          }
+          return fns[0];
+        }
         break;
       }
       auto const subs{ sym.substr(new_start, dot - new_start) };
       new_start = dot + 1;
+      auto const old_scope{ scope };
       scope = Cpp::GetUnderlyingScope(Cpp::GetNamed(subs, scope));
       if(!scope)
       {
-        return err(util::format("Unable to find scope for symbol '{}'.", sym));
+        return err(
+          util::format("Unable to find '{}' within namespace '{}' while trying to resolve '{}'.",
+                       subs,
+                       Cpp::GetQualifiedName(old_scope),
+                       sym));
       }
     }
 
-    if(scope)
-    {
-      return ok(scope);
-    }
-    return err(util::format("Unable to find scope for symbol '{}'.", sym));
+    return ok(scope);
   }
 
   jtl::ptr<void> untyped_object_ptr_type()

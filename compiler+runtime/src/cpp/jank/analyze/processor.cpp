@@ -2541,7 +2541,7 @@ namespace jank::analyze
     {
       /* TODO: Error. */
       return error::internal_analyze_failure(
-        "Name must not contain consecutive '.' dots. Each '.' corresponds to a '::' in C++.",
+        "Name must not contain consecutive '.' dots. Each '.' corresponds with a '::' in C++.",
         object_source(sym),
         latest_expansion(macro_expansions));
     }
