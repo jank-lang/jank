@@ -1288,8 +1288,13 @@ namespace jank::codegen
     auto const requires_this_obj{ kind == expression_kind::cpp_member_call
                                   /* TODO: Not required if the member is static. */
                                   || kind == expression_kind::cpp_member_access };
+    if(requires_this_obj)
+    {
+      jank_debug_assert(arg_exprs.size() > 0);
+    }
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
-    auto const arg_count{ arg_exprs.size() - (requires_this_obj ? 1 : 0) };
+    auto const index_offset{ requires_this_obj ? 1 : 0 };
+    auto const arg_count{ arg_exprs.size() - index_offset };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
     /* TODO: If we have no args, don't alloc an array. */
     auto const args_array{
@@ -1327,7 +1332,7 @@ namespace jank::codegen
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
         args_array,
-        { ctx->builder->getInt32(0), ctx->builder->getInt32(i) },
+        { ctx->builder->getInt32(0), ctx->builder->getInt32(i - index_offset) },
         util::format("{}.args[{}]", name, i).c_str()) };
       ctx->builder->CreateStore(arg_handle, arg_ptr);
     }

@@ -4,7 +4,7 @@
             {
               int foo(int i)
               {
-                return i;
+                return i + 1;
               }
 
               float foo(float i)
@@ -12,8 +12,12 @@
                 return i;
               }
             };
+
+            int a{ 7 };
+            float f{ 3.0f };
           }")
 (let* [b (cpp/jank.test.cpp.call.member.pass_match.bar.)
-       a (cpp/.foo b (cpp/int. 7))]
-  (if (= 7 a)
+       a (cpp/.foo b cpp/jank.test.cpp.call.member.pass_match.a)
+       f (cpp/.foo b (cpp/float. 3.0))]
+  (if (and (= 8 a) (= 3.0 f))
     :success))

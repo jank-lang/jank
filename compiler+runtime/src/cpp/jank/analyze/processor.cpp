@@ -173,28 +173,27 @@ namespace jank::analyze
       /* TODO: Switch std::vector to native_vector where possible. */
       auto const obj_type{ arg_types[0].m_Type };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
-      auto const name{ Cpp::GetScopeName(obj_scope) };
+      auto const member_name{ try_object<obj::symbol>(val->form)->name.substr(1) };
+      auto const parent_name{ Cpp::GetQualifiedName(obj_scope) };
       if(!obj_scope)
       {
-        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
-                                                            name,
-                                                            Cpp::GetTypeAsString(obj_type)),
-                                               object_source(val->form),
-                                               latest_expansion(macro_expansions));
+        return error::internal_analyze_failure(
+          util::format("There is no '{}' member function within '{}'.", parent_name),
+          object_source(val->form),
+          latest_expansion(macro_expansions));
       }
 
       /* TODO: Check const of method and invoking object. */
 
       arg_types.erase(arg_types.begin());
 
-      fns = Cpp::LookupMethods(name, obj_scope);
+      fns = Cpp::LookupMethods(member_name, obj_scope);
       if(fns.empty())
       {
-        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
-                                                            name,
-                                                            Cpp::GetTypeAsString(obj_type)),
-                                               object_source(val->form),
-                                               latest_expansion(macro_expansions));
+        return error::internal_analyze_failure(
+          util::format("There is no '{}' member function within '{}'.", parent_name),
+          object_source(val->form),
+          latest_expansion(macro_expansions));
       }
     }
 
