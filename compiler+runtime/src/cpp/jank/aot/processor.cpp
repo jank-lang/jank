@@ -130,14 +130,16 @@ int main(int argc, const char** argv)
   {
     auto const entrypoint_path{ gen_entrypoint(module) };
 
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{ new clang::DiagnosticOptions() };
+    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> const diag_opts{
+      new clang::DiagnosticOptions()
+    };
     auto *diag_client{
       new clang::TextDiagnosticPrinter{ llvm::errs(), &*diag_opts }
     };
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> diag_id{ new clang::DiagnosticIDs() };
+    llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
     clang::DiagnosticsEngine diags{ diag_id, &*diag_opts, diag_client, /*ShouldOwnClient=*/true };
 
-    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> vfs{ llvm::vfs::getRealFileSystem() };
+    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> const vfs{ llvm::vfs::getRealFileSystem() };
 
     std::string const target_triple{ llvm::sys::getDefaultTargetTriple() };
 
@@ -223,7 +225,7 @@ int main(int argc, const char** argv)
       }
     } };
 
-    llvm::ArrayRef<char const *> Argv(Args);
+    llvm::ArrayRef<char const *> const Argv(Args);
 
     std::unique_ptr<clang::driver::Compilation> C(driver.BuildCompilation(Argv));
 
