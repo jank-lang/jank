@@ -44,6 +44,7 @@ namespace jank::jit
        * individual failures being reported would be helpful. Thus all the manual tracking in
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
+      native_vector<std::filesystem::path> skips;
 
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
@@ -57,8 +58,9 @@ namespace jank::jit
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));
         auto const allow_failure(filename.starts_with("warn-"));
-        CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
-                      "Test file needs to begin with pass- or fail- or throw- or warn-: ",
+        auto const skip(filename.starts_with("skip-"));
+        CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw || skip),
+                      "Test file needs to begin with pass- or fail- or throw- or warn- or skip-: ",
                       filename);
         ++test_count;
 
@@ -69,6 +71,13 @@ namespace jank::jit
 
         util::print("testing file {} => ", dir_entry.path().string());
         std::fflush(stdout);
+
+        if(skip)
+        {
+          util::println("{}success{}", util::terminal_color::yellow, util::terminal_color::reset);
+          skips.push_back(dir_entry.path());
+          continue;
+        }
 
         try
         {
@@ -163,16 +172,26 @@ namespace jank::jit
       }
 
       CHECK(failures.empty());
+      for(auto const &f : skips)
+      {
+        util::print("{}skip{}: {}\n",
+                    util::terminal_color::yellow,
+                    util::terminal_color::reset,
+                    f.string());
+      }
       for(auto const &f : failures)
       {
-        util::print("{}failure{}: {} {}\n",
+        util::print("{}failure{}: {}\n\t{}\n",
                     util::terminal_color::red,
                     util::terminal_color::reset,
                     f.path.string(),
                     f.error);
       }
-      util::print("tested {} jank files with {}{} failures{}\n",
+      util::print("tested {} jank files with {}{} skips{} and {}{} failures{}\n",
                   test_count,
+                  (skips.empty() ? util::terminal_color::reset : util::terminal_color::yellow),
+                  skips.size(),
+                  util::terminal_color::reset,
                   (failures.empty() ? util::terminal_color::reset : util::terminal_color::red),
                   failures.size(),
                   util::terminal_color::reset);
