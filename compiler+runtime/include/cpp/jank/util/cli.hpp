@@ -54,5 +54,12 @@ namespace jank::util::cli
     command command{ command::repl };
   };
 
+  struct empty_options
+  {
+    /* TODO: Use a native_persistent_vector instead. */
+    std::vector<native_transient_string> opts;
+  };
+
   jtl::result<options, int> parse(int const argc, char const **argv);
+  empty_options parse_empty(int const argc, char const **argv);
 }

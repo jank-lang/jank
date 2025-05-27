@@ -300,6 +300,8 @@ extern "C"
                 jank_bool init_default_ctx,
                 int (*fn)(int const, char const **));
 
+  jank_object_ref jank_parse_command_line_args(int const argc, char const **argv);
+
 #ifdef __cplusplus
 }
 #endif

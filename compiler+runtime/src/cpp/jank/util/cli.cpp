@@ -131,4 +131,20 @@ namespace jank::util::cli
 
     return ok(opts);
   }
+
+  empty_options parse_empty(int const argc, char const **argv)
+  {
+    CLI::App cli{ "jank default cli" };
+    empty_options opts;
+    cli.allow_extras();
+
+    cli.parse(argc, argv);
+
+    if(cli.remaining_size() > 0)
+    {
+      opts.opts = cli.remaining();
+    }
+
+    return opts;
+  }
 }

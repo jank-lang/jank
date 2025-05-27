@@ -995,4 +995,17 @@ extern "C"
 
     return 0;
   }
+
+  jank_object_ref jank_parse_command_line_args(int const argc, char const **argv)
+  {
+    obj::transient_vector trans;
+    auto const opts{ util::cli::parse_empty(argc, argv).opts };
+
+    for(auto &arg : opts)
+    {
+      trans.conj_in_place(make_box(arg));
+    }
+
+    return trans.to_persistent().erase();
+  }
 }

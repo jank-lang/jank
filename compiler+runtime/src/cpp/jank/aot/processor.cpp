@@ -72,7 +72,8 @@ extern "C" jank_object_ref jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_load_clojure_core();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
-extern "C" jank_object_ref jank_call0(jank_object_ref);
+extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
+extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
 
     for(auto const &m : __rt_ctx->loaded_modules_in_order)
@@ -99,9 +100,14 @@ int main(int argc, const char** argv)
       util::format_to(sb, "{}();\n", module::module_to_load_function(m));
     }
 
+    sb(R"(auto const apply{ jank_var_intern_c("clojure.core", "apply") };)");
+    sb("\n");
+    sb(R"(auto const command_line_args{ jank_parse_command_line_args(argc, argv) };)");
+    sb("\n");
+
     util::format_to(sb, R"(auto const fn(jank_var_intern_c("{}", "-main"));)", module);
     sb("\n");
-    sb(R"(jank_call0(jank_deref(fn));
+    sb(R"(jank_call2(jank_deref(apply), jank_deref(fn), command_line_args);
 
     return 0;
 
@@ -150,8 +156,7 @@ int main(int argc, const char** argv)
     auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
     if(!clang_inferred_path)
     {
-      return jtl::err(
-        compiler_err{ 1, "clang++ executable not found. Ensure it exists on the path!" });
+      return compiler_err{ 1, "clang++ executable not found. Ensure it exists on the path!" };
     }
     clang::driver::Driver driver(clang_inferred_path.get(),
                                  target_triple,
@@ -231,7 +236,7 @@ int main(int argc, const char** argv)
 
     if(!C || C->containsError())
     {
-      return jtl::err(compiler_err{ 1, "Failed to build compilation steps." });
+      return compiler_err{ 1, "Failed to build compilation steps." };
     }
 
     /* Execute the compilation jobs (preprocess, compile, assemble)
@@ -260,7 +265,7 @@ int main(int argc, const char** argv)
 
     if(diags.hasErrorOccurred())
     {
-      return jtl::err(compiler_err{ 1, "Compilation failed with errors.\n" });
+      return compiler_err{ 1, "Compilation failed with errors.\n" };
     }
 
     if(Result == 0)
@@ -271,7 +276,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-      return jtl::err(compiler_err{ Result, "Compilation command execution failed.\n" });
+      return compiler_err{ Result, "Compilation command execution failed.\n" };
     }
 
     return jtl::ok();
