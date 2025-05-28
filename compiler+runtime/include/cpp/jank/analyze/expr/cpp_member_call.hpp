@@ -21,7 +21,7 @@ namespace jank::analyze::expr
     runtime::object_ref to_runtime_data() const override;
 
     /* The type of the member. */
-    jtl::ptr<void> type{};
+    jtl::ptr<void> parent_type{};
     /* The matched fn to call. */
     jtl::ptr<void> fn{};
     native_vector<expression_ref> arg_exprs;

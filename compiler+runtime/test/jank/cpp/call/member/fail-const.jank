@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::test::cpp::call::member::fail_const
+          {
+            struct bar
+            {
+              int foo(int i)
+              {
+                return i;
+              }
+            };
+
+            bar const b;
+          }")
+(let* [a (cpp/.foo cpp/jank.test.cpp.call.member.fail_const.b (cpp/int. 7))]
+  :success)

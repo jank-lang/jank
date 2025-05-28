@@ -1258,7 +1258,6 @@ namespace jank::codegen
                                             expression_kind const kind,
                                             expr::function_arity const &arity)
   {
-    /* TODO: Fns are reused, so this could cause a linker issue. */
     llvm::Linker::linkModules(
       *ctx->module,
       /* TODO: Will need to share context with interpreter or serialize module to bitcode
@@ -1293,8 +1292,8 @@ namespace jank::codegen
       jank_debug_assert(arg_exprs.size() > 0);
     }
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
-    auto const index_offset{ requires_this_obj ? 1 : 0 };
-    auto const arg_count{ arg_exprs.size() - index_offset };
+    auto const member_offset{ requires_this_obj ? 1 : 0 };
+    auto const arg_count{ arg_exprs.size() - member_offset };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
     /* TODO: If we have no args, don't alloc an array. */
     auto const args_array{
@@ -1316,7 +1315,12 @@ namespace jank::codegen
       auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
        * param type we need though. */
-      jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i) : expr_type.data };
+      jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset)
+                                          : expr_type.data };
+      util::println("gen_aot_call arg {}, arg type {}, param type {}",
+                    i,
+                    Cpp::GetTypeAsString(arg_type),
+                    Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)));
       if(is_untyped_obj
          && (cpp_util::is_primitive(param_type)
              || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
@@ -1332,8 +1336,8 @@ namespace jank::codegen
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
         args_array,
-        { ctx->builder->getInt32(0), ctx->builder->getInt32(i - index_offset) },
-        util::format("{}.args[{}]", name, i).c_str()) };
+        { ctx->builder->getInt32(0), ctx->builder->getInt32(i - member_offset) },
+        util::format("{}.args[{}]", name, i - member_offset).c_str()) };
       ctx->builder->CreateStore(arg_handle, arg_ptr);
     }
 
@@ -1432,7 +1436,7 @@ namespace jank::codegen
   {
     return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
                         expr->fn,
-                        expr->type,
+                        cpp_util::expression_type(expr),
                         Cpp::GetName(expr->fn),
                         expr->arg_exprs,
                         expr->position,

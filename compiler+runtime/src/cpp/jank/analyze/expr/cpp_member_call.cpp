@@ -12,7 +12,7 @@ namespace jank::analyze::expr
                                    jtl::ptr<void> const fn,
                                    native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
-    , type{ type }
+    , parent_type{ type }
     , fn{ fn }
     , arg_exprs{ jtl::move(arg_exprs) }
   {

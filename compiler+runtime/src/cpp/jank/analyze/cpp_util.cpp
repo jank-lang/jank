@@ -80,6 +80,19 @@ namespace jank::analyze::cpp_util
     return ok(scope);
   }
 
+  /* For some scopes, CppInterOp will give an <unnamed> result here. That's not
+   * helpful for error reporting, so we turn that into the full type name if
+   * needed. */
+  jtl::immutable_string get_qualified_name(jtl::ptr<void> const scope)
+  {
+    auto res{ Cpp::GetQualifiedName(scope) };
+    if(res == "<unnamed>")
+    {
+      res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
+    }
+    return res;
+  }
+
   jtl::ptr<void> untyped_object_ptr_type()
   {
     static jtl::ptr<void> const ret{ Cpp::GetPointerType(Cpp::GetTypeFromScope(
@@ -142,7 +155,11 @@ namespace jank::analyze::cpp_util
         {
           return typed_expr->type;
         }
-        if constexpr(jtl::is_same<T, expr::local_reference>)
+        else if constexpr(jtl::is_same<T, expr::cpp_member_call>)
+        {
+          return Cpp::GetFunctionReturnType(typed_expr->fn);
+        }
+        else if constexpr(jtl::is_same<T, expr::local_reference>)
         {
           return typed_expr->binding->type;
         }
@@ -179,9 +196,11 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
-                                       std::vector<Cpp::TemplateArgInfo> const &args)
+                                       std::vector<Cpp::TemplateArgInfo> const &args,
+                                       bool const is_member_call)
   {
-    auto const arg_count{ args.size() };
+    auto const member_offset{ (is_member_call ? 1 : 0) };
+    auto const arg_count{ args.size() - member_offset };
     usize max_arg_count{};
     std::vector<void *> matching_fns;
 
@@ -207,7 +226,7 @@ namespace jank::analyze::cpp_util
 
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
-      auto const is_untyped_obj{ is_untyped_object(args[arg_idx].m_Type) };
+      auto const is_untyped_obj{ is_untyped_object(args[arg_idx + member_offset].m_Type) };
       /* TODO: Check the other way, too, if we're calling a fn taking objects. */
       if(!is_untyped_obj)
       {
@@ -222,7 +241,7 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        if(Cpp::IsImplicitlyConvertible(args[arg_idx].m_Type, param_type))
+        if(Cpp::IsImplicitlyConvertible(args[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
         }
@@ -234,7 +253,7 @@ namespace jank::analyze::cpp_util
             return err("Ambiguous call.");
           }
           needed_conversion = fn_idx;
-          converted_args[arg_idx] = param_type;
+          converted_args[arg_idx + member_offset] = param_type;
         }
       }
     }
@@ -245,7 +264,11 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args)
   {
-    auto const match{ Cpp::BestOverloadFunctionMatch(fns, {}, args) };
+    auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, args) };
+    if(!match)
+    {
+      match = Cpp::BestMemberOverloadFunctionMatch(fns, args);
+    }
     if(match)
     {
       if(Cpp::IsFunctionDeleted(match))

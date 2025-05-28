@@ -171,21 +171,25 @@ namespace jank::analyze
       }
 
       /* TODO: Switch std::vector to native_vector where possible. */
-      auto const obj_type{ arg_types[0].m_Type };
+      auto const obj_type{ Cpp::GetNonReferenceType(arg_types[0].m_Type) };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
       auto const member_name{ try_object<obj::symbol>(val->form)->name.substr(1) };
-      auto const parent_name{ Cpp::GetQualifiedName(obj_scope) };
+      auto const parent_name{ cpp_util::get_qualified_name(obj_scope) };
       if(!obj_scope)
       {
         return error::internal_analyze_failure(
-          util::format("There is no '{}' member function within '{}'.", parent_name),
+          util::format("There is no '{}' member function within '{}'.", member_name, parent_name),
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
 
-      /* TODO: Check const of method and invoking object. */
-
-      arg_types.erase(arg_types.begin());
+      if(!Cpp::IsReferenceType(arg_types[0].m_Type))
+      {
+        arg_types[0].m_Type = Cpp::GetLValueReferenceType(obj_type);
+        //arg_types[0].m_Type = Cpp::GetPointerType(obj_type);
+      }
+      //arg_types[0].m_Type = Cpp::GetPointerType(obj_type);
+      //arg_types.erase(arg_types.begin());
 
       fns = Cpp::LookupMethods(member_name, obj_scope);
       if(fns.empty())
@@ -220,6 +224,20 @@ namespace jank::analyze
       }
     }
 
+    util::println("all fns");
+    for(auto const fn : fns)
+    {
+      util::println("\tfound fn {}, type {}",
+                    cpp_util::get_qualified_name(fn),
+                    Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    }
+    util::println("args");
+    for(auto const arg : arg_types)
+    {
+      util::println("\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
+    }
+
+    util::println("looking for normal match");
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types) };
     if(match_res.is_err())
     {
@@ -230,6 +248,12 @@ namespace jank::analyze
     jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
     {
+      util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
+      /* TODO: Handle this better. */
+      if(is_member_call)
+      {
+        arg_types.erase(arg_types.begin());
+      }
       auto const conversion_res{ apply_implicit_conversions(match,
                                                             arg_exprs,
                                                             arg_types,
@@ -272,7 +296,10 @@ namespace jank::analyze
       }
     }
 
-    auto const new_types{ cpp_util::find_best_arg_types_with_conversions(fns, arg_types) };
+    util::println("looking for conversion match");
+    auto const new_types{
+      cpp_util::find_best_arg_types_with_conversions(fns, arg_types, is_member_call)
+    };
     if(new_types.is_err())
     {
       return error::internal_analyze_failure(util::format("{}", new_types.expect_err()),
@@ -290,6 +317,15 @@ namespace jank::analyze
     match = conversion_match_res.expect_ok();
     if(match)
     {
+      util::println("\tconversion match found with new arg types");
+      for(auto const arg : new_types.expect_ok())
+      {
+        util::println("\t\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
+      }
+      if(is_member_call)
+      {
+        arg_types.erase(arg_types.begin());
+      }
       auto const conversion_res{ apply_implicit_conversions(match,
                                                             arg_exprs,
                                                             arg_types,
@@ -371,6 +407,9 @@ namespace jank::analyze
                             bool const,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
+    util::println("apply_implicit_conversion expr type {}, expected type {}",
+                  Cpp::GetTypeAsString(expr_type),
+                  Cpp::GetTypeAsString(expected_type));
     if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
@@ -463,12 +502,13 @@ namespace jank::analyze
                              bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
+    auto const member_offset{ Cpp::IsMethod(fn) ? 1 : 0 };
     auto const fn_param_count{ Cpp::GetFunctionNumArgs(fn) };
     for(usize i{}; i < fn_param_count; ++i)
     {
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
-      auto const res{ apply_implicit_conversion(arg_exprs[i],
-                                                arg_types[i].m_Type,
+      auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],
+                                                arg_types[i + member_offset].m_Type,
                                                 param_type,
                                                 current_frame,
                                                 position,
@@ -478,7 +518,7 @@ namespace jank::analyze
       {
         return res.expect_err();
       }
-      arg_exprs[i] = res.expect_ok();
+      arg_exprs[i + member_offset] = res.expect_ok();
     }
     return ok();
   }
@@ -2849,7 +2889,7 @@ namespace jank::analyze
     }
 
     auto const obj_expr{ obj_res.expect_ok() };
-    auto const parent_type{ cpp_util::expression_type(obj_expr) };
+    auto const parent_type{ Cpp::GetNonReferenceType(cpp_util::expression_type(obj_expr)) };
     auto const parent_scope{ Cpp::GetScopeFromType(parent_type) };
     auto member_scope{ Cpp::LookupDatamember(name, parent_scope) };
     if(!parent_scope)
@@ -2897,11 +2937,12 @@ namespace jank::analyze
 
       if(!member_scope)
       {
-        return error::internal_analyze_failure(util::format("There is no '{}' member within '{}'.",
-                                                            name,
-                                                            Cpp::GetQualifiedName(parent_scope)),
-                                               object_source(l),
-                                               latest_expansion(macro_expansions));
+        return error::internal_analyze_failure(
+          util::format("There is no '{}' member within '{}'.",
+                       name,
+                       cpp_util::get_qualified_name(parent_scope)),
+          object_source(l),
+          latest_expansion(macro_expansions));
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
