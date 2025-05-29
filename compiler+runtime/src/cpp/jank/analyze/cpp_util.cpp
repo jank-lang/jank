@@ -107,6 +107,11 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  bool is_member_function(jtl::ptr<void> const scope)
+  {
+    return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
+  }
+
   bool is_untyped_object(jtl::ptr<void> const type)
   {
     auto const can_type{ Cpp::GetCanonicalType(type) };

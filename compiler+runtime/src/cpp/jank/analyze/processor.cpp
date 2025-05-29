@@ -509,7 +509,7 @@ namespace jank::analyze
                              bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
-    auto const member_offset{ Cpp::IsMethod(fn) ? 1 : 0 };
+    auto const member_offset{ cpp_util::is_member_function(fn) ? 1 : 0 };
     auto const fn_param_count{ Cpp::GetFunctionNumArgs(fn) };
     for(usize i{}; i < fn_param_count; ++i)
     {
