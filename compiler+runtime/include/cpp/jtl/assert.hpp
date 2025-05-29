@@ -21,7 +21,7 @@
       jtl::do_assertion_throw("Assertion failed! " #expr); \
     }
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
-  #define jank_debug_assert_fmt_throw(expr, msg, ...)                  \
+  #define jank_debug_assert_fmt_throw(expr, fmt, ...)                  \
     if(!static_cast<bool>(expr))                                       \
     {                                                                  \
       jtl::do_assertion_throw(jank::util::format((fmt), __VA_ARGS__)); \

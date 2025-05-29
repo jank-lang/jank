@@ -224,20 +224,20 @@ namespace jank::analyze
       }
     }
 
-    util::println("all fns");
-    for(auto const fn : fns)
-    {
-      util::println("\tfound fn {}, type {}",
-                    cpp_util::get_qualified_name(fn),
-                    Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
-    }
-    util::println("args");
-    for(auto const arg : arg_types)
-    {
-      util::println("\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
-    }
+    //util::println("all fns");
+    //for(auto const fn : fns)
+    //{
+    //  util::println("\tfound fn {}, type {}",
+    //                cpp_util::get_qualified_name(fn),
+    //                Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    //}
+    //util::println("args");
+    //for(auto const arg : arg_types)
+    //{
+    //  util::println("\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
+    //}
 
-    util::println("looking for normal match");
+    //util::println("looking for normal match");
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types) };
     if(match_res.is_err())
     {
@@ -248,7 +248,7 @@ namespace jank::analyze
     jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
     {
-      util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
+      //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       /* TODO: Handle this better. */
       if(is_member_call)
       {
@@ -296,7 +296,7 @@ namespace jank::analyze
       }
     }
 
-    util::println("looking for conversion match");
+    //util::println("looking for conversion match");
     auto const new_types{
       cpp_util::find_best_arg_types_with_conversions(fns, arg_types, is_member_call)
     };
@@ -317,11 +317,12 @@ namespace jank::analyze
     match = conversion_match_res.expect_ok();
     if(match)
     {
-      util::println("\tconversion match found with new arg types");
-      for(auto const arg : new_types.expect_ok())
-      {
-        util::println("\t\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
-      }
+      //util::println("\tconversion match found with new arg types");
+      //for(auto const arg : new_types.expect_ok())
+      //{
+      //  util::println("\t\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
+      //}
+
       if(is_member_call)
       {
         arg_types.erase(arg_types.begin());
@@ -407,10 +408,10 @@ namespace jank::analyze
                             bool const,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
-    util::println("apply_implicit_conversion expr type {}, expected type {}",
-                  Cpp::GetTypeAsString(expr_type),
-                  Cpp::GetTypeAsString(expected_type));
-    if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+    //util::println("apply_implicit_conversion expr type {}, expected type {}",
+    //              Cpp::GetTypeAsString(expr_type),
+    //              Cpp::GetTypeAsString(expected_type));
+    if(Cpp::GetTypeWithoutCv(expr_type) == Cpp::GetTypeWithoutCv(expected_type)
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return ok(expr);
@@ -438,6 +439,12 @@ namespace jank::analyze
                                            expected_type,
                                            conversion_policy::from_object,
                                            expr);
+    }
+    else if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+            && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+    {
+      expr->propagate_position(cast_position);
+      return expr;
     }
     else if(Cpp::IsConstructible(expected_type, expr_type))
     {

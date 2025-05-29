@@ -1,5 +1,6 @@
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
+
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/Transforms/Utils/Cloning.h>
@@ -30,6 +31,83 @@
 namespace jank::codegen
 {
   using namespace jank::analyze;
+
+  [[maybe_unused]]
+  static llvm::Type *llvm_type(reusable_context &ctx, jtl::ptr<void> type)
+  {
+    auto &interp{ __rt_ctx->jit_prc.interpreter };
+    auto const ci{ interp->getCI() };
+    auto const qtype{ clang::QualType::getFromOpaquePtr(type) };
+    if(qtype->isIntegerType())
+    {
+      return ctx.builder->getIntNTy(ci->getASTContext().getTypeSize(qtype));
+    }
+    else if(qtype->isRealFloatingType())
+    {
+      switch(ci->getASTContext().getTypeSize(qtype))
+      {
+        case 16:
+          return ctx.builder->getHalfTy();
+        case 32:
+          return ctx.builder->getFloatTy();
+        case 64:
+          return ctx.builder->getDoubleTy();
+        case 128:
+          return llvm::Type::getFP128Ty(*ctx.llvm_ctx);
+        default:
+          break;
+      }
+    }
+    jank_debug_assert_fmt_throw(false,
+                                "Unable to find LLVM IR primitive for type '{}'.",
+                                Cpp::GetTypeAsString(type));
+  }
+
+  static llvm::Value *alloc_type(reusable_context &ctx,
+                                 jtl::ptr<void> const type,
+                                 jtl::immutable_string const &name = "")
+  {
+    jank_debug_assert(type);
+    jank_debug_assert(Cpp::IsComplete(type));
+    auto const size{ Cpp::GetSizeOfType(type) };
+    jank_debug_assert(size > 0);
+    auto const alignment{ Cpp::GetAlignmentOfType(type) };
+    jank_debug_assert(alignment > 0);
+    llvm::Type *ir_type{};
+    llvm::ConstantInt *ir_size{ llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1) };
+
+    ir_type = ctx.builder->getInt8Ty();
+    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), size);
+    //if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type))
+    //{
+    //  ir_type = ctx.builder->getPtrTy();
+    //}
+    //else if(Cpp::IsBuiltin(type))
+    //{
+    //  ir_type = llvm_type(ctx, type);
+    //}
+
+    //auto const scope{ Cpp::GetScopeFromType(type) };
+    //if(scope && Cpp::IsClass(scope))
+    //{
+    //  /* TODO: The struct belongs to another context, so this won't work. */
+    //  ir_type = llvm::StructType::getTypeByName(*ctx.llvm_ctx,
+    //                                            Cpp::GetQualifiedName(Cpp::GetScopeFromType(type)));
+    //  if(!ir_type)
+    //  {
+    //    ir_type = ctx.builder->getInt8Ty();
+    //    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), size);
+    //  }
+    //}
+
+    jank_debug_assert_fmt_throw(ir_type,
+                                "Unable to find LLVM IR primitive to use for allocating type '{}'.",
+                                Cpp::GetTypeAsString(type));
+
+    auto const alloc{ ctx.builder->CreateAlloca(ir_type, ir_size, name.c_str()) };
+    alloc->setAlignment(llvm::Align{ alignment });
+    return alloc;
+  }
 
   /* Generates the IR to call into jank's conversion trait to convert to/from
    * an object, based on the `policy`. We need to know the input's type, the
@@ -104,22 +182,9 @@ namespace jank::codegen
       util::format("{}.args[{}]", match_name, 0).c_str()) };
     ctx.builder->CreateStore(arg_alloc, arg_array_0);
 
-    auto const ret_size{ Cpp::GetSizeOfType(output_type) };
-    jank_debug_assert(ret_size > 0);
-    auto const ret_alignment{ Cpp::GetAlignmentOfType(output_type) };
-    jank_debug_assert(ret_alignment > 0);
-
-    //util::println("convert_object output_type size = {}, alignment = {}",
-    //              Cpp::GetTypeAsString(output_type),
-    //              ret_size,
-    //              ret_alignment);
-
-    /* TODO: If it's an IR intrinsic, use that. */
-    auto const ret_alloc{ ctx.builder->CreateAlloca(
-      ctx.builder->getInt8Ty(),
-      llvm::ConstantInt::get(ctx.builder->getInt32Ty(), ret_size),
-      util::format("{}.ret_alloc", match_name).c_str()) };
-    ret_alloc->setAlignment(llvm::Align{ ret_alignment });
+    auto const ret_alloc{
+      alloc_type(ctx, output_type, util::format("{}.ret_alloc", match_name).c_str())
+    };
 
     llvm::SmallVector<llvm::Value *, 4> const args{
       llvm::ConstantPointerNull::get(ctx.builder->getPtrTy()),
@@ -1202,18 +1267,7 @@ namespace jank::codegen
        * in order to avoid context issues. */
       llvm::CloneModule(*reinterpret_cast<llvm::Module *>(callable.getModule())));
 
-    jank_debug_assert(expr->type);
-    jank_debug_assert(Cpp::IsComplete(expr->type));
-    auto const size{ Cpp::GetSizeOfType(expr->type) };
-    jank_debug_assert(size > 0);
-    auto const alignment{ Cpp::GetAlignmentOfType(expr->type) };
-    jank_debug_assert(alignment > 0);
-    /* TODO: If it's an IR intrinsic, use that. */
-    auto const alloc{ ctx->builder->CreateAlloca(
-      ctx->builder->getInt8Ty(),
-      llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size)) };
-    alloc->setAlignment(llvm::Align{ alignment });
-
+    auto const alloc{ alloc_type(*ctx, expr->type) };
     auto const fn(ctx->module->getFunction(callable.getName()));
     llvm::SmallVector<llvm::Value *, 4> const args{
       llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
@@ -1266,20 +1320,10 @@ namespace jank::codegen
 
     jank_debug_assert(expr_type);
     auto const is_void{ Cpp::IsVoid(expr_type) };
-    /* TODO: If it's an IR intrinsic, use that. */
-    llvm::AllocaInst *ctor_alloc{};
+    llvm::Value *ctor_alloc{};
     if(!is_void)
     {
-      jank_debug_assert(Cpp::IsComplete(expr_type));
-      auto const size{ Cpp::GetSizeOfType(expr_type) };
-      jank_debug_assert(size > 0);
-      auto const alignment{ Cpp::GetAlignmentOfType(expr_type) };
-      jank_debug_assert(alignment > 0);
-      ctor_alloc
-        = ctx->builder->CreateAlloca(ctx->builder->getInt8Ty(),
-                                     llvm::ConstantInt::get(ctx->builder->getInt32Ty(), size),
-                                     util::format("{}.ret", name).c_str());
-      ctor_alloc->setAlignment(llvm::Align{ alignment });
+      ctor_alloc = alloc_type(*ctx, expr_type, util::format("{}.ret", name));
     }
 
     /* For member function calls, we steal the first argument and use it as
@@ -1312,16 +1356,19 @@ namespace jank::codegen
 
       /* TODO: Need to handle references here? */
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
-      auto const is_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
+      auto const is_arg_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
        * param type we need though. */
       jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset)
                                           : expr_type.data };
-      util::println("gen_aot_call arg {}, arg type {}, param type {}",
-                    i,
-                    Cpp::GetTypeAsString(arg_type),
-                    Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)));
-      if(is_untyped_obj
+      //util::println("gen_aot_call arg {}, arg type {}, param type {}, implicitly convertible {}",
+      //              i,
+      //              Cpp::GetTypeAsString(arg_type),
+      //              Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)),
+      //              Cpp::IsImplicitlyConvertible(arg_type, param_type));
+      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
+      auto const is_param_ref{ Cpp::IsReferenceType(param_type) };
+      if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
              || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
       {
@@ -1331,6 +1378,14 @@ namespace jank::codegen
                                     param_type,
                                     param_type,
                                     arg_handle);
+      }
+      else if(is_arg_ref && !is_param_ref)
+      {
+        arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+      }
+      else if(!is_arg_ref && is_param_ref)
+      {
+        /* TODO: Nothing to do here? */
       }
 
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
@@ -1343,7 +1398,7 @@ namespace jank::codegen
 
     auto const sret{ is_void ? static_cast<llvm::Value *>(
                                  llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()))
-                             : static_cast<llvm::Value *>(ctor_alloc) };
+                             : ctor_alloc };
     auto const ctor_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       this_obj,
