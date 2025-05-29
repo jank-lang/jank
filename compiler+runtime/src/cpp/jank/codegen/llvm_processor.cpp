@@ -32,7 +32,6 @@ namespace jank::codegen
 {
   using namespace jank::analyze;
 
-  [[maybe_unused]]
   static llvm::Type *llvm_type(reusable_context &ctx, jtl::ptr<void> type)
   {
     auto &interp{ __rt_ctx->jit_prc.interpreter };
@@ -77,28 +76,28 @@ namespace jank::codegen
     llvm::ConstantInt *ir_size{ llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1) };
 
     ir_type = ctx.builder->getInt8Ty();
-    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), size);
-    //if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type))
-    //{
-    //  ir_type = ctx.builder->getPtrTy();
-    //}
-    //else if(Cpp::IsBuiltin(type))
-    //{
-    //  ir_type = llvm_type(ctx, type);
-    //}
+    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1);
+    if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type))
+    {
+      ir_type = ctx.builder->getPtrTy();
+    }
+    else if(Cpp::IsBuiltin(type))
+    {
+      ir_type = llvm_type(ctx, type);
+    }
 
-    //auto const scope{ Cpp::GetScopeFromType(type) };
-    //if(scope && Cpp::IsClass(scope))
-    //{
-    //  /* TODO: The struct belongs to another context, so this won't work. */
-    //  ir_type = llvm::StructType::getTypeByName(*ctx.llvm_ctx,
-    //                                            Cpp::GetQualifiedName(Cpp::GetScopeFromType(type)));
-    //  if(!ir_type)
-    //  {
-    //    ir_type = ctx.builder->getInt8Ty();
-    //    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), size);
-    //  }
-    //}
+    auto const scope{ Cpp::GetScopeFromType(type) };
+    if(scope && Cpp::IsClass(scope))
+    {
+      /* TODO: The struct belongs to another context, so this won't work. */
+      ir_type = llvm::StructType::getTypeByName(*ctx.llvm_ctx,
+                                                Cpp::GetQualifiedName(Cpp::GetScopeFromType(type)));
+      if(!ir_type)
+      {
+        ir_type = ctx.builder->getInt8Ty();
+        ir_size = llvm::ConstantInt::get(ctx.builder->getInt32Ty(), size);
+      }
+    }
 
     jank_debug_assert_fmt_throw(ir_type,
                                 "Unable to find LLVM IR primitive to use for allocating type '{}'.",
@@ -1347,15 +1346,20 @@ namespace jank::codegen
     for(usize i{}; i < arg_exprs.size(); ++i)
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
+      auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
+      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
 
       if(i == 0 && requires_this_obj)
       {
         this_obj = arg_handle;
+        if(is_arg_ref)
+        {
+          this_obj = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
         continue;
       }
 
       /* TODO: Need to handle references here? */
-      auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
       auto const is_arg_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
        * param type we need though. */
@@ -1366,7 +1370,6 @@ namespace jank::codegen
       //              Cpp::GetTypeAsString(arg_type),
       //              Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)),
       //              Cpp::IsImplicitlyConvertible(arg_type, param_type));
-      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
       auto const is_param_ref{ Cpp::IsReferenceType(param_type) };
       if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
