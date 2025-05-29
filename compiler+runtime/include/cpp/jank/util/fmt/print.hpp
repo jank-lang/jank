@@ -16,6 +16,7 @@ namespace jank::util
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), stdout);
     std::putc('\n', stdout);
+    std::fflush(stdout);
   }
 
   template <typename T, typename... Args>
@@ -25,6 +26,7 @@ namespace jank::util
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), file);
     std::putc('\n', file);
+    std::fflush(stdout);
   }
 
   template <typename T, typename... Args>
