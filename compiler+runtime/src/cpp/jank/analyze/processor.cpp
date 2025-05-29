@@ -544,6 +544,7 @@ namespace jank::analyze
         return (this->*fn)(list, current_frame, position, fn_ctx, needs_box);
       };
     };
+    /* TODO: Just use a raw fn pointer. No need for std::function. */
     specials = {
       {      make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
       {      make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
