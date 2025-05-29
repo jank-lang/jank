@@ -181,34 +181,38 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     object_ref ret{ jank_nil };
-    native_vector<analyze::expression_ref> exprs{};
+    native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
       auto const expr(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
-
       ret = evaluate::eval(expr.expect_ok());
-      exprs.emplace_back(expr.expect_ok());
+
+      forms.emplace_back(form.expect_ok().unwrap().ptr);
     }
 
+    /* When compiling, we analyze twice. This is because eval will modify its expression
+     * in order to wrap it in a function. Undoing this is arduous and error prone, so
+     * we just don't bother. */
     if(truthy(compile_files_var->deref()))
     {
       auto const &module(
         expect_object<runtime::ns>(intern_var("clojure.core", "*ns*").expect_ok()->deref())
           ->to_string());
-      /* No matter what's in the fn, we'll return nil. */
-      exprs.emplace_back(
-        make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
-                                                   an_prc.root_frame,
-                                                   true,
-                                                   jank_nil));
-      /* TODO: Pass in module_to_load_function result */
-      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
-      auto fn(static_ref_cast<analyze::expr::function>(wrapped_exprs));
-      fn->name = module::module_to_load_function(module);
-      fn->unique_name = fn->name;
-      codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
+      auto const name{ module::module_to_load_function(module) };
+
+      auto const form{ runtime::conj(
+        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(std::move(forms)),
+                                    obj::persistent_vector::empty()),
+                      make_box<obj::symbol>(name)),
+        make_box<obj::symbol>("fn*")) };
+      auto const expr(an_prc.analyze(form, analyze::expression_position::statement));
+      auto const fn{ static_box_cast<analyze::expr::function>(expr.expect_ok()) };
+      fn->unique_name = name;
+
+      codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
       cg_prc.gen().expect_ok();
+      cg_prc.optimize();
       write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
     }
 
@@ -281,16 +285,19 @@ namespace jank::runtime
     native_vector<analyze::expression_ref> ret{};
     for(auto const &form : p_prc)
     {
-      auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       if(eval)
       {
+        auto const expr(
+          an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
         if(expr.is_err())
         {
           util::println("{}", expr.expect_err()->message);
         }
         evaluate::eval(expr.expect_ok());
       }
+
+      auto const expr(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       ret.emplace_back(expr.expect_ok());
     }
 

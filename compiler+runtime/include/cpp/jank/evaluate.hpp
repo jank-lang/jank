@@ -54,6 +54,8 @@ namespace jank::evaluate
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);
 
+  /* XXX: Evaluating an expression will modify it. Do NOT reuse that expression elsewhere
+   * afterward, unless it's also for eval. */
   runtime::object_ref eval(analyze::expression_ref);
   runtime::object_ref eval(analyze::expr::def_ref);
   runtime::object_ref eval(analyze::expr::var_deref_ref);
