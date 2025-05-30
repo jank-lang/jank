@@ -25,6 +25,7 @@ namespace jank::util::cli
                    opts.profiler_file,
                    "The file to write profile entries (will be overwritten).");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
+    cli.add_flag("--fdirect-linking", opts.direct_linking, "Compile with direct linking.");
     cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use.")
       ->check(CLI::Range(0, 3));
 
@@ -61,8 +62,6 @@ namespace jank::util::cli
     cli_compile
       .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on module path).")
       ->required();
-    cli_compile
-      .add_flag("--fdirect-linking", opts.direct_linking, "Compile with direct linking.");
 
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server."));
