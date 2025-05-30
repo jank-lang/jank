@@ -98,6 +98,7 @@ namespace jank::runtime::module
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
   bool is_nested_module(jtl::immutable_string const &module);
+  jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module);
 
   struct loader
   {

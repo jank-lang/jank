@@ -5,11 +5,11 @@
 namespace jank::util
 {
   jtl::immutable_string format(char const * const fmt);
-  void format(string_builder &sb, char const * const fmt);
+  void format_to(string_builder &sb, char const * const fmt);
 
   /* TODO: We can extern template all common usages here, if they show up in the trace. */
   template <typename T>
-  void format(string_builder &sb, char const *&fmt, T &&arg)
+  void format_to(string_builder &sb, char const *&fmt, T &&arg)
   {
     for(; *fmt != '\0'; ++fmt)
     {
@@ -28,7 +28,7 @@ namespace jank::util
   {
     string_builder sb;
     [[maybe_unused]]
-    int const dummy[sizeof...(Args)]{ (format(sb, fmt, std::forward<Args>(args)), 0)... };
+    int const dummy[sizeof...(Args)]{ (format_to(sb, fmt, std::forward<Args>(args)), 0)... };
     sb(fmt);
     return sb.release();
   }
@@ -37,7 +37,7 @@ namespace jank::util
   void format_to(string_builder &sb, char const *fmt, Args &&...args)
   {
     [[maybe_unused]]
-    int const dummy[sizeof...(Args)]{ (format(sb, fmt, std::forward<Args>(args)), 0)... };
+    int const dummy[sizeof...(Args)]{ (format_to(sb, fmt, std::forward<Args>(args)), 0)... };
     sb(fmt);
   }
 }

@@ -14,7 +14,7 @@ namespace jank::util
     return sb.release();
   }
 
-  void format(string_builder &sb, char const * const fmt)
+  void format_to(string_builder &sb, char const * const fmt)
   {
     if(native_persistent_string_view{ fmt }.find("{}") != native_persistent_string_view::npos)
     {

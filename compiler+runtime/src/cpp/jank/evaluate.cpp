@@ -167,7 +167,7 @@ namespace jank::evaluate
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const sym : arity.params)
     {
-      arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
+      arity.frame->locals.emplace(sym, local_binding{ sym, sym->name, none, arity.frame });
     }
 
     auto const expr_type{ cpp_util::expression_type(expr) };

@@ -214,7 +214,7 @@ namespace jank::analyze
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ qualified_sym };
+    lifted_var lv{ __rt_ctx->unique_string(munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
@@ -242,13 +242,11 @@ namespace jank::analyze
 
     auto const name(__rt_ctx->unique_symbol("const"));
     auto const unboxed_name{ visit_number_like(
-      [&](auto const) -> jtl::option<obj::symbol> {
-        return obj::symbol{ name.ns, name.name + "__unboxed" };
-      },
-      []() -> jtl::option<obj::symbol> { return none; },
+      [&](auto const) -> jtl::option<jtl::immutable_string> { return name.name + "__unboxed"; },
+      []() -> jtl::option<jtl::immutable_string> { return none; },
       constant) };
 
-    lifted_constant l{ constant };
+    lifted_constant l{ name.name, unboxed_name, constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 

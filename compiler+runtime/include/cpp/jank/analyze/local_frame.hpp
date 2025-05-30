@@ -31,6 +31,7 @@ namespace jank::analyze
 
   struct lifted_var
   {
+    jtl::immutable_string native_name{};
     runtime::obj::symbol_ref var_name{};
 
     runtime::object_ref to_runtime_data() const;
@@ -40,6 +41,8 @@ namespace jank::analyze
    * rather than just doing both. */
   struct lifted_constant
   {
+    jtl::immutable_string native_name{};
+    jtl::option<jtl::immutable_string> unboxed_native_name{};
     runtime::object_ref data{};
 
     runtime::object_ref to_runtime_data() const;
@@ -48,6 +51,7 @@ namespace jank::analyze
   struct local_binding
   {
     runtime::obj::symbol_ref name{};
+    jtl::immutable_string native_name{};
     jtl::option<jtl::ref<expression>> value_expr{};
     jtl::ptr<struct local_frame> originating_frame;
     bool needs_box{ true };

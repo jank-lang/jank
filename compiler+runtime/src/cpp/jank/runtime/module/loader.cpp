@@ -80,6 +80,55 @@ namespace jank::runtime::module
     return module.find('$') != module.rfind('$');
   }
 
+  /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
+   * we return a native namespace name. So foo.bar will become foo::bar. But we also strip off
+   * the last nested module, since the way the codegen works is that foo.bar$spam lives in the
+   * native namespace foo::bar. Lastly, we need to split the module into parts and munge each
+   * individually, since we can have a module like clojure.template which will munge cleanly
+   * on its own, but template is a C++ keyword and the resulting clojure::template namespace
+   * will be a problem. So we split the module on each ., munge, and put it back together
+   * using ::. */
+  jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module)
+  {
+    static std::regex const dollar{ "\\$" };
+
+    native_transient_string module{ munge(orig_module) };
+
+    native_vector<native_transient_string> module_parts;
+    for(size_t dot_pos{}; (dot_pos = module.find('.')) != jtl::immutable_string::npos;)
+    {
+      module_parts.emplace_back(munge(module.substr(0, dot_pos)));
+      module.erase(0, dot_pos + 1);
+    }
+
+    if(module.find('$') != native_transient_string::npos)
+    {
+      for(size_t dollar_pos{}; (dollar_pos = module.find('$')) != jtl::immutable_string::npos;)
+      {
+        module_parts.emplace_back(munge(module.substr(0, dollar_pos)));
+        module.erase(0, dollar_pos + 1);
+      }
+    }
+    else
+    {
+      module_parts.emplace_back(munge(module));
+    }
+
+    std::string ret;
+    for(auto &part : module_parts)
+    {
+      part = std::regex_replace(part, dollar, "::");
+
+      if(!ret.empty())
+      {
+        ret += "::";
+      }
+      ret += part;
+    }
+
+    return ret;
+  }
+
   /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
   static void visit_jar_entry(file_entry const &entry, F const &fn)
