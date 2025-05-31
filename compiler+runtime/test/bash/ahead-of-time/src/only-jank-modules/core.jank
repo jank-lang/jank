@@ -1,0 +1,11 @@
+(ns core
+  (:require [app] [lib]))
+
+(defn -main [& [admin port]]
+  (if (or admin port)
+    (do
+      (lib/greet admin)
+      (app/run admin port))
+    (println :failed)))
+
+(println "Loaded 'core")

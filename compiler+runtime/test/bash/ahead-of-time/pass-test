@@ -1,0 +1,117 @@
+#!/usr/bin/env bb
+
+(ns jank.test.ahead-of-time
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :as proc]
+   [clojure.string :as str]
+   [clojure.test :as t :refer [deftest is run-test testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def jank-path
+  (-> (proc/sh "which jank") :out str/trim))
+
+(def jank-build-dir (fs/parent jank-path))
+
+(def lib-paths
+  ;; TODO: These library paths should ideally be included
+  ;; in the AOT program
+  (let [libs-relative-paths ["/" "/third-party/libzippp"
+                             "/third-party/ftxui"
+                             "/third-party/cpptrace"]]
+    (->> libs-relative-paths
+         (map (fn [lib] (str "-L" jank-build-dir lib)))
+         (str/join " "))))
+
+(def jank_exe
+  (str jank-path " -DIMMER_HAS_LIBGC " lib-paths))
+
+(defn- module-path [alias]
+  (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
+
+(defn- find-cli []
+  (-> (proc/sh "find ./target -name cli") :out str/trim))
+
+(defn- get-headers []
+  ;; TODO: These headers should be included by default in the AOT program
+  ;; As of now, we expect the users to include these
+  (->> (fs/list-dirs [(str jank-build-dir "/../include")
+                      (str jank-build-dir "/../third-party")
+                      (str jank-build-dir "/third-party")]
+                     (constantly true))
+       (concat ["/usr/lib/clang/19/include" (str jank-build-dir "/../third-party/bpptree/include")])
+       (map #(str "--include-dir " %))
+       (str/join " ")))
+
+(defn compile-command [module-path main-module & {:keys [include-headers?]}]
+  (str jank_exe " --module-path=" module-path
+       " "
+       (when include-headers? (get-headers))
+       " compile " main-module " -o cli"))
+
+(use-fixtures
+  :each
+  (fn [f]
+    (fs/delete-tree "./target")
+    (println "Cleaned up 'target'")
+    (f)))
+
+(deftest aot-only-jank-modules
+  (let [alias-name  "single-jank-module"
+        module-path (module-path alias-name)]
+    (doseq [main-with-args? [true false]
+            :let [main-module (if main-with-args?
+                                "main-with-args"
+                                "main-without-args")
+                  args (if main-with-args?
+                         " foo bar baz"
+                         nil)
+                  expected-output (slurp (str "expected_outputs/" alias-name "/" main-module))
+                  compile-command (compile-command module-path main-module)
+                  cli-path (delay (find-cli))]]
+      (testing (str alias-name " & " main-module)
+        (is (= 0 (-> compile-command proc/sh :exit)))
+        (is (= expected-output (-> @cli-path (str args)
+                                   proc/sh :out))))
+      (testing "Executable in temp directory"
+        (fs/with-temp-dir [dir {}]
+          (fs/move @cli-path dir)
+          (is (= expected-output (->> (str "./cli " args)
+                                      (proc/sh {:dir dir})
+                                      :out))))))))
+
+(deftest aot-multiple-jank-modules
+  (let [alias-name "only-jank-modules"
+        module-path (module-path alias-name)
+        module "core"
+        args " Admin 3000"
+        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
+        compile-command (compile-command module-path module)
+        cli-path (delay (find-cli))]
+    (testing (str alias-name " & core")
+      (is (= 0 (-> compile-command proc/sh :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(deftest aot-jank-and-cpp-modules
+  (let [alias-name "jank-and-cpp-modules"
+        module-path (module-path alias-name)
+        module "core"
+        args " foo bar"
+        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
+        compile-command (compile-command module-path module :include-headers? true)
+        cli-path (delay (find-cli))]
+    (testing (str alias-name " & core")
+      (is (= 0 (-> compile-command proc/sh :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(defn -main []
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

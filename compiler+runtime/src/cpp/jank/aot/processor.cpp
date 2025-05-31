@@ -169,8 +169,26 @@ int main(int argc, const char** argv)
 
     for(auto const &module : __rt_ctx->loaded_modules_in_order)
     {
-      auto const &module_path{ module::module_to_path(module) };
-      Args.push_back(strdup(util::format("{}.o", relative_to_cache_dir(module_path)).c_str()));
+      auto const &module_path{
+        util::format("{}.o", relative_to_cache_dir(module::module_to_path(module)))
+      };
+
+      if(std::filesystem::exists(module_path.c_str()))
+      {
+        Args.push_back(strdup(module_path.c_str()));
+      }
+      else
+      {
+        auto const find_res{ __rt_ctx->module_loader.find(module, module::origin::latest) };
+        if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
+        {
+          Args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+        }
+        else
+        {
+          return compiler_err{ 1, util::format("module '{}' not found", module) };
+        }
+      }
     }
 
     Args.push_back(strdup("-x"));

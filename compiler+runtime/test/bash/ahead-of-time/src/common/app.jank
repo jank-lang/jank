@@ -1,0 +1,8 @@
+(ns app (:require [lib]))
+
+(defn run [admin port]
+  (println "Running app on port:" port)
+  (lib/bark admin true)
+  (println "Done running the app!"))
+
+(println "Loaded 'app")

@@ -1,0 +1,9 @@
+(ns core
+  (:require [my-lib] [lib]))
+
+(defn -main [& args]
+  (println "Received args:" args)
+  (lib/greet (first args))
+  (println (my-lib/greet-str (second args))))
+
+(println "Loaded 'core")
