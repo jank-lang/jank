@@ -654,7 +654,10 @@ namespace jank::runtime::module
     }
 
     loader::set_is_loaded(module);
-    __rt_ctx->loaded_modules_in_order.push_back(module);
+    {
+      auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
+      locked_ordered_modules->push_back(module);
+    }
     return ok();
   }
 

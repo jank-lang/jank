@@ -76,7 +76,9 @@ extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_obj
 extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
 
-    for(auto const &m : __rt_ctx->loaded_modules_in_order)
+    /* TODO: Is there a better way to do this then copying? */
+    auto const ordered_modules{ __rt_ctx->loaded_modules_in_order.copy() };
+    for(auto const &m : ordered_modules)
     {
       util::format_to(sb,
                       R"(extern "C" jank_object_ref {}();)",
@@ -95,7 +97,7 @@ int main(int argc, const char** argv)
 
     )");
 
-    for(auto const &m : __rt_ctx->loaded_modules_in_order)
+    for(auto const &m : ordered_modules)
     {
       util::format_to(sb, "{}();\n", module::module_to_load_function(m));
     }
@@ -167,7 +169,8 @@ int main(int argc, const char** argv)
 
     std::vector<char const *> Args = { strdup(clang_inferred_path.get().c_str()) };
 
-    for(auto const &module : __rt_ctx->loaded_modules_in_order)
+    /* TODO: Can we avoid copying? */
+    for(auto const &module : __rt_ctx->loaded_modules_in_order.copy())
     {
       auto const &module_path{
         util::format("{}.o", relative_to_cache_dir(module::module_to_path(module)))

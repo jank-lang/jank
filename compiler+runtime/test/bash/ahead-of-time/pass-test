@@ -44,8 +44,10 @@
        (map #(str "--include-dir " %))
        (str/join " ")))
 
-(defn compile-command [module-path main-module & {:keys [include-headers?]}]
-  (str jank_exe " --module-path=" module-path
+(defn compile-command [module-path main-module {:keys [include-headers?
+                                                       optimization-flag]
+                                                :or {optimization-flag "-O0"}}]
+  (str jank_exe " " optimization-flag " --module-path=" module-path
        " "
        (when include-headers? (get-headers))
        " compile " main-module " -o cli"))
@@ -68,10 +70,14 @@
                          " foo bar baz"
                          nil)
                   expected-output (slurp (str "expected_outputs/" alias-name "/" main-module))
-                  compile-command (compile-command module-path main-module)
+                  compile-command (compile-command module-path main-module {})
                   cli-path (delay (find-cli))]]
       (testing (str alias-name " & " main-module)
-        (is (= 0 (-> compile-command proc/sh :exit)))
+        (println "Compile command: " compile-command)
+        (is (= 0 (->> compile-command
+                      (proc/sh {:out *out*
+                                :err *err*})
+                      :exit)))
         (is (= expected-output (-> @cli-path (str args)
                                    proc/sh :out))))
       (testing "Executable in temp directory"
@@ -87,10 +93,14 @@
         module "core"
         args " Admin 3000"
         expected-output (slurp (str "expected_outputs/" alias-name "/" module))
-        compile-command (compile-command module-path module)
+        compile-command (compile-command module-path module {})
         cli-path (delay (find-cli))]
     (testing (str alias-name " & core")
-      (is (= 0 (-> compile-command proc/sh :exit)))
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *err*})
+                    :exit)))
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
 
@@ -100,10 +110,32 @@
         module "core"
         args " foo bar"
         expected-output (slurp (str "expected_outputs/" alias-name "/" module))
-        compile-command (compile-command module-path module :include-headers? true)
+        compile-command (compile-command module-path module {:include-headers? true})
         cli-path (delay (find-cli))]
     (testing (str alias-name " & core")
-      (is (= 0 (-> compile-command proc/sh :exit)))
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *err*})
+                    :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(deftest aot-jank-and-cpp-modules-release-build
+  (let [alias-name "jank-and-cpp-modules"
+        module-path (module-path alias-name)
+        module "core"
+        args " foo bar"
+        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
+        compile-command (compile-command module-path module {:include-headers? true
+                                                             :optimization-flag "-O3"})
+        cli-path (delay (find-cli))]
+    (testing (str alias-name " & core")
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *err*})
+                    :exit)))
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
 
