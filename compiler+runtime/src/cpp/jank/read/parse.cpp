@@ -353,7 +353,6 @@ namespace jank::read::parse
                                latest_token };
   }
 
-  /* TODO: Uniqueness check. */
   processor::object_result processor::parse_map()
   {
     auto const start_token((*token_current).expect_ok());
@@ -367,6 +366,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
+    native_unordered_map<runtime::object_ref, jank::read::parse::object_source_info> parsed_keys{};
     /* TODO: Only use an array map if everything can fit. */
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -389,6 +389,19 @@ namespace jank::read::parse
       }
       auto const value(it.latest.unwrap().expect_ok());
 
+      if(auto parsed_key = parsed_keys.find(key.unwrap().ptr); parsed_key != parsed_keys.end())
+      {
+        return error::parse_duplicate_keys_in_map(
+          {
+            key.unwrap().start.start,
+            key.unwrap().end.end
+        },
+          { "Original key.",
+            { parsed_key->second.start.start, parsed_key->second.end.end },
+            error::note::kind::info });
+      }
+
+      parsed_keys.insert({ key.unwrap().ptr, key.unwrap() });
       ret.insert_or_assign(key.unwrap().ptr, value.unwrap().ptr);
     }
     if(expected_closer.is_some())

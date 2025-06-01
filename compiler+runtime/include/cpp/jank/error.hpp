@@ -37,6 +37,7 @@ namespace jank::error
     parse_unterminated_map,
     parse_unterminated_set,
     parse_odd_entries_in_map,
+    parse_duplicate_keys_in_map,
     parse_invalid_quote,
     parse_invalid_meta_hint_value,
     parse_invalid_meta_hint_target,
@@ -129,6 +130,8 @@ namespace jank::error
         return "parse/unterminated-set";
       case kind::parse_odd_entries_in_map:
         return "parse/odd-entries-in-map";
+      case kind::parse_duplicate_keys_in_map:
+        return "parse/duplicate-keys-in-map";
       case kind::parse_invalid_quote:
         return "parse/invalid-quote";
       case kind::parse_invalid_meta_hint_value:

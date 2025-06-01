@@ -821,6 +821,14 @@ namespace jank::read::parse
         CHECK(r1.is_err());
       }
 
+      SUBCASE("Duplicate keys")
+      {
+        lex::processor lp{ "{:k1 1 :k2 2 :k1 2}" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
+
       SUBCASE("Extra close")
       {
         lex::processor lp{ ":foo}" };
