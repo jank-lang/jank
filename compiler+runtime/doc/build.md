@@ -6,13 +6,13 @@ scripts to compile your own. See the section on compiling Clang/LLVM below.
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang libclang-dev llvm llvm-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
+sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev clang-19 libclang-19-dev llvm-19 llvm-19-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev libdwarf-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs clang llvm llvm-libs pkg-config cmake ninja make python3 libffi entr doctest libzip lbzip2 gc
+sudo pacman -S git git-lfs clang llvm llvm-libs pkg-config cmake ninja make python3 libffi entr doctest libzip lbzip2 gc libdwarf
 ```
 
 For Nix:
