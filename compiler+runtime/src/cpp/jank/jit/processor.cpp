@@ -10,6 +10,9 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
+#include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/IRReader/IRReader.h>
 
 #include <cpptrace/gdb_jit.hpp>
@@ -20,6 +23,11 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
+
+namespace jank_llvm
+{
+  llvm::JITEventListener *createPerfJITEventListener();
+}
 
 namespace jank::jit
 {
@@ -94,6 +102,7 @@ namespace jank::jit
         O = "-O2";
         break;
       case 3:
+        /* TODO: Use -O3? */
         O = "-Ofast";
         break;
       default:

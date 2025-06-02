@@ -57,9 +57,9 @@ namespace jank::codegen
           break;
       }
     }
-    jank_debug_assert_fmt_throw(false,
-                                "Unable to find LLVM IR primitive for type '{}'.",
-                                Cpp::GetTypeAsString(type));
+    jank_assert_fmt_throw(false,
+                          "Unable to find LLVM IR primitive for type '{}'.",
+                          Cpp::GetTypeAsString(type));
   }
 
   static llvm::Value *alloc_type(reusable_context &ctx,

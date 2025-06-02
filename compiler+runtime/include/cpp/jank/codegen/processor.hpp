@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/analyze/processor.hpp>
+#include <jank/codegen/llvm_processor.hpp>
 
 namespace jank::analyze
 {
@@ -74,13 +75,6 @@ namespace jank::codegen
 
     jtl::immutable_string boxed_name;
     jtl::immutable_string unboxed_name;
-  };
-
-  enum class compilation_target : u8
-  {
-    module,
-    function,
-    eval
   };
 
   /* Codegen processors render a single function expression to a C++ functor. REPL expressions
@@ -188,6 +182,7 @@ namespace jank::codegen
 
     compilation_target target{};
     runtime::obj::symbol struct_name;
+    util::string_builder deps_buffer;
     util::string_builder header_buffer;
     util::string_builder body_buffer;
     util::string_builder footer_buffer;

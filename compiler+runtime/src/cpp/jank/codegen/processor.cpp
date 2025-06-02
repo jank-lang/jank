@@ -7,6 +7,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/clang_format.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
@@ -183,12 +184,9 @@ namespace jank::codegen
           {
             if(typed_o->meta.is_some())
             {
-              util::format_to(buffer,
-                              R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}", )",
-                              typed_o->ns,
-                              typed_o->name);
+              util::format_to(buffer, "jank::runtime::make_box<jank::runtime::obj::symbol>( ");
               gen_constant(typed_o->meta.unwrap(), buffer, true);
-              util::format_to(buffer, ")");
+              util::format_to(buffer, R"(, "{}", "{}"))", typed_o->ns, typed_o->name);
             }
             else
             {
@@ -202,7 +200,7 @@ namespace jank::codegen
           {
             util::format_to(buffer,
                             R"(jank::runtime::make_box<jank::runtime::obj::character>({}))",
-                            util::escape(typed_o->data));
+                            typed_o->to_code_string());
           }
           else if constexpr(std::same_as<T, runtime::obj::keyword>)
           {
@@ -216,7 +214,7 @@ namespace jank::codegen
           {
             util::format_to(buffer,
                             "jank::runtime::make_box<jank::runtime::obj::persistent_string>({})",
-                            util::escape(typed_o->data));
+                            typed_o->to_code_string());
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
@@ -224,8 +222,11 @@ namespace jank::codegen
                             "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
             if(typed_o->meta.is_some())
             {
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
-              util::format_to(buffer, ", ");
+              util::format_to(buffer,
+                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              //gen_constant(typed_o->meta.unwrap(), buffer, true);
+              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -241,8 +242,11 @@ namespace jank::codegen
                             "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
             if(typed_o->meta.is_some())
             {
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
-              util::format_to(buffer, ", ");
+              util::format_to(buffer,
+                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              //gen_constant(typed_o->meta.unwrap(), buffer, true);
+              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -258,8 +262,11 @@ namespace jank::codegen
                             "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
             if(typed_o->meta.is_some())
             {
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
-              util::format_to(buffer, ", ");
+              util::format_to(buffer,
+                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              //gen_constant(typed_o->meta.unwrap(), buffer, true);
+              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -271,17 +278,21 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
           {
+            bool need_comma{};
             if(typed_o->meta.is_some())
             {
               util::format_to(buffer,
                               "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              util::format_to(buffer,
+                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              //gen_constant(typed_o->meta.unwrap(), buffer, true);
+              need_comma = true;
             }
             else
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_array_map::create_unique(");
             }
-            bool need_comma{};
             for(auto const &form : typed_o->data)
             {
               if(need_comma)
@@ -297,17 +308,21 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
           {
+            bool need_comma{};
             if(typed_o->meta.is_some())
             {
               util::format_to(buffer,
                               "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              //gen_constant(typed_o->meta.unwrap(), buffer, true);
+              util::format_to(buffer,
+                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              need_comma = true;
             }
             else
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_hash_map::create_unique(");
             }
-            bool need_comma{};
             for(auto const &form : typed_o->data)
             {
               if(need_comma)
@@ -624,10 +639,13 @@ namespace jank::codegen
                                       analyze::expr::function_arity const &fn_arity,
                                       bool const arg_box_needed)
   {
+    //util::println("format_dynamic_call source {}", source_tmp);
     native_vector<handle> arg_tmps;
     arg_tmps.reserve(arg_exprs.size());
     for(auto const &arg_expr : arg_exprs)
     {
+      //util::println("\tformat_dynamic_call arg {}",
+      //              runtime::to_code_string(arg_expr->to_runtime_data()));
       arg_tmps.emplace_back(gen(arg_expr, fn_arity, arg_box_needed).unwrap());
     }
 
@@ -699,18 +717,18 @@ namespace jank::codegen
       }
       else if(expr->arg_exprs.size() == 1)
       {
-        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "print" }))
-        {
-          format_elided_var("jank::runtime::context::print(",
-                            ")",
-                            ret_tmp.str(false),
-                            expr->arg_exprs,
-                            fn_arity,
-                            true,
-                            false);
-          elided = true;
-        }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "abs" }))
+        //if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "print" }))
+        //{
+        //  format_elided_var("jank::runtime::print(",
+        //                    ")",
+        //                    ret_tmp.str(false),
+        //                    expr->arg_exprs,
+        //                    fn_arity,
+        //                    true,
+        //                    false);
+        //  elided = true;
+        //}
+        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "abs" }))
         {
           format_elided_var("jank::runtime::abs(",
                             ")",
@@ -1111,17 +1129,18 @@ namespace jank::codegen
     if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
       util::format_to(body_buffer, "auto const {}(", ret_tmp);
+      bool need_comma{};
       if(expr->meta.is_some())
       {
         util::format_to(body_buffer,
                         "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
         detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+        need_comma = true;
       }
       else
       {
         util::format_to(body_buffer, "jank::runtime::obj::persistent_array_map::create_unique(");
       }
-      bool need_comma{};
       for(auto const &data_tmp : data_tmps)
       {
         if(need_comma)
@@ -1136,18 +1155,19 @@ namespace jank::codegen
     }
     else
     {
+      bool need_comma{};
       util::format_to(body_buffer, "auto const {}(", ret_tmp);
       if(expr->meta.is_some())
       {
         util::format_to(body_buffer,
                         "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
         detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+        need_comma = true;
       }
       else
       {
         util::format_to(body_buffer, "jank::runtime::obj::persistent_hash_map::create_unique(");
       }
-      bool need_comma{};
       for(auto const &data_tmp : data_tmps)
       {
         if(need_comma)
@@ -1247,13 +1267,14 @@ namespace jank::codegen
     auto const compiling(truthy(__rt_ctx->compile_files_var->deref()));
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ expr,
-                   runtime::module::nest_module(module, runtime::munge(expr->unique_name)),
+                   module,
+                   //runtime::module::nest_module(module, runtime::munge(expr->unique_name)),
                    compiling ? compilation_target::function : compilation_target::eval };
 
     /* If we're compiling, we'll create a separate file for this. */
-    if(target != compilation_target::module)
+    //if(target != compilation_target::module)
     {
-      util::format_to(header_buffer, "{}", prc.declaration_str());
+      util::format_to(deps_buffer, "{}", prc.declaration_str());
     }
 
     switch(expr->position)
@@ -1297,14 +1318,24 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &,
                                      bool const)
   {
-    return none;
+    return munge(root_fn->name);
   }
 
-  jtl::option<handle> processor::gen(analyze::expr::named_recursion_ref const,
-                                     analyze::expr::function_arity const &,
+  jtl::option<handle> processor::gen(analyze::expr::named_recursion_ref const expr,
+                                     analyze::expr::function_arity const &fn_arity,
                                      bool const)
   {
-    return none;
+    handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("named_recursion")) };
+
+    auto const &source_tmp(
+      gen(jtl::ref<analyze::expr::recursion_reference>{ &expr->recursion_ref }, fn_arity, false));
+    format_dynamic_call(source_tmp.unwrap().str(true),
+                        ret_tmp.str(true),
+                        expr->arg_exprs,
+                        fn_arity,
+                        true);
+
+    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(analyze::expr::let_ref const expr,
@@ -1315,12 +1346,12 @@ namespace jank::codegen
 
     if(expr->needs_box)
     {
-      util::format_to(body_buffer, "object_ref {}{{ }}; {{", ret_tmp.str(expr->needs_box));
+      util::format_to(body_buffer, "object_ref {}{ }; {", ret_tmp.str(expr->needs_box));
     }
     else
     {
       util::format_to(body_buffer,
-                      "auto const {}([&](){}{{",
+                      "auto const {}([&](){}{",
                       ret_tmp.str(expr->needs_box),
                       (expr->needs_box ? "-> object_ref" : ""));
     }
@@ -1338,7 +1369,7 @@ namespace jank::codegen
       auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
       /* Every binding is wrapped in its own scope, to allow shadowing. */
       util::format_to(body_buffer,
-                      "{{ auto const {}({}); ",
+                      "{ auto const {}({}); ",
                       munged_name,
                       val_tmp.unwrap().str(false));
 
@@ -1375,16 +1406,16 @@ namespace jank::codegen
     for(auto const &_ : expr->pairs)
     {
       static_cast<void>(_);
-      util::format_to(body_buffer, "}}");
+      util::format_to(body_buffer, "}");
     }
 
     if(expr->needs_box)
     {
-      util::format_to(body_buffer, "}}");
+      util::format_to(body_buffer, "}");
     }
     else
     {
-      util::format_to(body_buffer, "}}());");
+      util::format_to(body_buffer, "}());");
     }
 
     if(expr->position == analyze::expression_position::tail)
@@ -1434,42 +1465,39 @@ namespace jank::codegen
   {
     /* TODO: Handle unboxed results! */
     auto ret_tmp(runtime::munge(__rt_ctx->unique_string("if")));
-    util::format_to(body_buffer, "object_ref {}{{ }};", ret_tmp);
+    util::format_to(body_buffer, "object_ref {}{ };", ret_tmp);
     auto const &condition_tmp(gen(expr->condition, fn_arity, false));
     util::format_to(body_buffer,
-                    "if(jank::runtime::truthy({})) {{",
+                    "if(jank::runtime::truthy({})) {",
                     condition_tmp.unwrap().str(false));
     auto const &then_tmp(gen(expr->then, fn_arity, true));
     if(then_tmp.is_some())
     {
-      util::format_to(body_buffer, "{} = {}; }}", ret_tmp, then_tmp.unwrap().str(expr->needs_box));
+      util::format_to(body_buffer, "{} = {}; }", ret_tmp, then_tmp.unwrap().str(expr->needs_box));
     }
     else
     {
-      util::format_to(body_buffer, "}}");
+      util::format_to(body_buffer, "}");
     }
 
     if(expr->else_.is_some())
     {
-      util::format_to(body_buffer, "else {{");
+      util::format_to(body_buffer, "else {");
       auto const &else_tmp(gen(expr->else_.unwrap(), fn_arity, true));
       if(else_tmp.is_some())
       {
-        util::format_to(body_buffer,
-                        "{} = {}; }}",
-                        ret_tmp,
-                        else_tmp.unwrap().str(expr->needs_box));
+        util::format_to(body_buffer, "{} = {}; }", ret_tmp, else_tmp.unwrap().str(expr->needs_box));
       }
       else
       {
-        util::format_to(body_buffer, "}}");
+        util::format_to(body_buffer, "}");
       }
     }
     /* If we don't have an else, but we're in return position, we need to be sure to return
      * something, so we return nil. */
     else if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "else {{ return {}; }}", ret_tmp);
+      util::format_to(body_buffer, "else { return {}; }", ret_tmp);
     }
 
     return ret_tmp;
@@ -1494,17 +1522,17 @@ namespace jank::codegen
                                      bool const box_needed)
   {
     auto ret_tmp(runtime::munge(__rt_ctx->unique_string("try")));
-    util::format_to(body_buffer, "object_ref {}{{ }};", ret_tmp);
+    util::format_to(body_buffer, "object_ref {}{ };", ret_tmp);
 
-    util::format_to(body_buffer, "{{");
+    util::format_to(body_buffer, "{");
     if(expr->finally_body.is_some())
     {
-      util::format_to(body_buffer, "jank::util::scope_exit const finally{{ [&](){{ ");
+      util::format_to(body_buffer, "jank::util::scope_exit const finally{ [&](){ ");
       gen(expr->finally_body.unwrap(), fn_arity, box_needed);
-      util::format_to(body_buffer, "}} }};");
+      util::format_to(body_buffer, "} };");
     }
 
-    util::format_to(body_buffer, "try {{");
+    util::format_to(body_buffer, "try {");
     auto const &body_tmp(gen(expr->body, fn_arity, box_needed));
     if(body_tmp.is_some())
     {
@@ -1514,7 +1542,7 @@ namespace jank::codegen
     {
       util::format_to(body_buffer, "return {};", ret_tmp);
     }
-    util::format_to(body_buffer, "}}");
+    util::format_to(body_buffer, "}");
 
     if(expr->catch_body.is_none())
     {
@@ -1531,7 +1559,7 @@ namespace jank::codegen
      * an object_ref.
      */
       util::format_to(body_buffer,
-                      "catch(jank::runtime::object_ref const {}) {{",
+                      "catch(jank::runtime::object_ref const {}) {",
                       runtime::munge(expr->catch_body.unwrap().sym->name));
       auto const &catch_tmp(gen(expr->catch_body.unwrap().body, fn_arity, box_needed));
       if(catch_tmp.is_some())
@@ -1542,10 +1570,10 @@ namespace jank::codegen
       {
         util::format_to(body_buffer, "return {};", ret_tmp);
       }
-      util::format_to(body_buffer, "}}");
+      util::format_to(body_buffer, "}");
     }
 
-    util::format_to(body_buffer, "}}");
+    util::format_to(body_buffer, "}");
 
     return ret_tmp;
   }
@@ -1612,10 +1640,15 @@ namespace jank::codegen
     }
 
     native_transient_string ret;
-    ret.reserve(header_buffer.size() + body_buffer.size() + footer_buffer.size());
+    ret.reserve(deps_buffer.size() + header_buffer.size() + body_buffer.size()
+                + footer_buffer.size());
+    ret += native_persistent_string_view{ deps_buffer.data(), deps_buffer.size() };
     ret += native_persistent_string_view{ header_buffer.data(), header_buffer.size() };
     ret += native_persistent_string_view{ body_buffer.data(), body_buffer.size() };
     ret += native_persistent_string_view{ footer_buffer.data(), footer_buffer.size() };
+
+    //ret = util::format_cpp_source(ret).expect_ok();
+
     //util::println("codegen declaration {}", ret);
     return ret;
   }
@@ -1626,17 +1659,18 @@ namespace jank::codegen
      * Do we need three module compilation targets? Top-level, nested, local?
      *
      * Local fns are within a struct already, so we can't enter the ns again. */
-    if(!runtime::module::is_nested_module(module))
+    //if(!runtime::module::is_nested_module(module))
+    //if(target == compilation_target::module)
     {
       util::format_to(header_buffer,
-                      "namespace {} {{",
+                      "namespace {} {",
                       runtime::module::module_to_native_ns(module));
     }
 
     util::format_to(header_buffer,
                     R"(
-        struct {0} : jank::runtime::obj::jit_function
-        {{
+        struct {} : jank::runtime::obj::jit_function
+        {
       )",
                     runtime::munge(struct_name.name));
 
@@ -1654,7 +1688,7 @@ namespace jank::codegen
           used_vars.emplace(v.second.native_name.to_hash());
 
           util::format_to(header_buffer,
-                          "jank::runtime::var_ref const {0};",
+                          "jank::runtime::var_ref const {};",
                           runtime::munge(v.second.native_name));
         }
 
@@ -1674,11 +1708,11 @@ namespace jank::codegen
           if(v.second.unboxed_native_name.is_some())
           {
             util::format_to(header_buffer,
-                            "static constexpr {} const {}{{ ",
+                            "static constexpr {} const {}{ ",
                             detail::gen_constant_type(v.second.data, false),
                             runtime::munge(v.second.unboxed_native_name.unwrap()));
             detail::gen_constant(v.second.data, header_buffer, false);
-            util::format_to(header_buffer, "}};");
+            util::format_to(header_buffer, "};");
           }
         }
 
@@ -1692,7 +1726,7 @@ namespace jank::codegen
           used_captures.emplace(v.first->to_hash());
 
           util::format_to(header_buffer,
-                          "jank::runtime::object_ref const {0};",
+                          "jank::runtime::object_ref const {};",
                           runtime::munge(v.second.native_name));
         }
       }
@@ -1700,7 +1734,7 @@ namespace jank::codegen
 
     {
       native_set<i64> used_captures;
-      util::format_to(header_buffer, "{0}(", runtime::munge(struct_name.name));
+      util::format_to(header_buffer, "{}(", runtime::munge(struct_name.name));
 
       bool need_comma{};
       for(auto const &arity : root_fn->arities)
@@ -1725,11 +1759,11 @@ namespace jank::codegen
 
     {
       native_set<i64> used_vars, used_constants, used_captures;
-      util::format_to(header_buffer, ") : jank::runtime::obj::jit_function{{ ");
+      util::format_to(header_buffer, ") : jank::runtime::obj::jit_function{ ");
       /* TODO: All of the meta in clojure.core alone costs 2s to JIT compile at run-time.
        * How can this be faster? */
       detail::gen_constant(root_fn->meta, header_buffer, true);
-      util::format_to(header_buffer, "}}");
+      util::format_to(header_buffer, "}");
 
       for(auto const &arity : root_fn->arities)
       {
@@ -1741,12 +1775,11 @@ namespace jank::codegen
           }
           used_vars.emplace(v.second.native_name.to_hash());
 
-          util::format_to(
-            header_buffer,
-            R"(, {0}{{ jank::runtime::__rt_ctx->intern_var("{1}", "{2}").expect_ok() }})",
-            runtime::munge(v.second.native_name),
-            v.second.var_name->ns,
-            v.second.var_name->name);
+          util::format_to(header_buffer,
+                          R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}", "{}").expect_ok() })",
+                          runtime::munge(v.second.native_name),
+                          v.second.var_name->ns,
+                          v.second.var_name->name);
         }
 
         for(auto const &v : arity.frame->lifted_constants)
@@ -1757,9 +1790,9 @@ namespace jank::codegen
           }
           used_constants.emplace(v.second.native_name.to_hash());
 
-          util::format_to(header_buffer, ", {0}{{", runtime::munge(v.second.native_name));
+          util::format_to(header_buffer, ", {}{", runtime::munge(v.second.native_name));
           detail::gen_constant(v.second.data, header_buffer, true);
-          util::format_to(header_buffer, "}}");
+          util::format_to(header_buffer, "}");
         }
 
         for(auto const &v : arity.frame->captures)
@@ -1770,12 +1803,13 @@ namespace jank::codegen
           }
           used_captures.emplace(v.first->to_hash());
 
-          util::format_to(header_buffer, ", {0}{{ {0} }}", runtime::munge(v.second.native_name));
+          auto const name{ runtime::munge(v.second.native_name) };
+          util::format_to(header_buffer, ", {}{ {} }", name, name);
         }
       }
     }
 
-    util::format_to(header_buffer, "{{  }}");
+    util::format_to(header_buffer, "{  }");
   }
 
   void processor::build_body()
@@ -1816,36 +1850,32 @@ namespace jank::codegen
 
       util::format_to(body_buffer,
                       R"(
-          ) final {{
+          ) final {
           using namespace jank;
           using namespace jank::runtime;
         )");
 
-      util::format_to(body_buffer, "jank::profile::timer __timer{{ \"{}\" }};", root_fn->name);
+      //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
       if(!param_shadows_fn)
       {
-        util::format_to(body_buffer,
-                        "object_ref const {}{{ this }};",
-                        runtime::munge(root_fn->name));
+        util::format_to(body_buffer, "object_ref const {}{ this };", runtime::munge(root_fn->name));
       }
 
       if(arity.fn_ctx->is_tail_recursive)
       {
-        util::format_to(body_buffer, "{{");
+        util::format_to(body_buffer, "{");
 
         for(auto const &param : arity.params)
         {
-          util::format_to(body_buffer,
-                          "auto {0}({0}{1});",
-                          runtime::munge(param->name),
-                          recur_suffix);
+          auto const name{ runtime::munge(param->name) };
+          util::format_to(body_buffer, "auto {}({}{});", name, name, recur_suffix);
         }
 
         util::format_to(body_buffer,
                         R"(
             while(true)
-            {{
+            {
           )");
       }
 
@@ -1861,10 +1891,10 @@ namespace jank::codegen
 
       if(arity.fn_ctx->is_tail_recursive)
       {
-        util::format_to(body_buffer, "}} }}");
+        util::format_to(body_buffer, "} }");
       }
 
-      util::format_to(body_buffer, "}}");
+      util::format_to(body_buffer, "}");
     }
 
     if(variadic_arity)
@@ -1876,7 +1906,7 @@ namespace jank::codegen
       util::format_to(body_buffer,
                       R"(
           jank::runtime::behavior::callable::arity_flag_t get_arity_flags() const final
-          {{ return jank::runtime::behavior::callable::build_arity_flags({}, true, {}); }}
+          { return jank::runtime::behavior::callable::build_arity_flags({}, true, {}); }
         )",
                       variadic_arity->fn_ctx->param_count - 1,
                       variadic_ambiguous);
@@ -1886,12 +1916,13 @@ namespace jank::codegen
   void processor::build_footer()
   {
     /* Struct. */
-    util::format_to(footer_buffer, "}};");
+    util::format_to(footer_buffer, "};");
 
     /* Namespace. */
-    if(!runtime::module::is_nested_module(module))
+    //if(!runtime::module::is_nested_module(module))
+    //if(target == compilation_target::module)
     {
-      util::format_to(footer_buffer, "}}");
+      util::format_to(footer_buffer, "}");
     }
   }
 
@@ -1901,19 +1932,19 @@ namespace jank::codegen
 
     if(!generated_expression)
     {
-      jtl::immutable_string close = ").data";
+      jtl::immutable_string close = ")";
       if(box_needed)
       {
         util::format_to(
           expression_buffer,
-          "jank::runtime::make_box<{0}>(",
+          "jank::runtime::make_box<{}>(",
           runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
       }
       else
       {
         util::format_to(
           expression_buffer,
-          "{0}{{ ",
+          "{}{ ",
           runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
         close = "}";
       }
@@ -1951,16 +1982,16 @@ namespace jank::codegen
   {
     util::string_builder module_buffer;
 
-    util::format_to(module_buffer, "namespace {} {{", runtime::module::module_to_native_ns(module));
+    util::format_to(module_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
 
     util::format_to(module_buffer,
                     R"(
         struct __ns__init
-        {{
+        {
       )");
 
-    util::format_to(module_buffer, "static void __init(){{");
-    util::format_to(module_buffer, "jank::profile::timer __timer{{ \"ns __init\" }};");
+    util::format_to(module_buffer, "static void __init(){");
+    //util::format_to(module_buffer, "jank::profile::timer __timer{ \"ns __init\" };");
     util::format_to(
       module_buffer,
       "constexpr auto const deps(jank::util::make_array<jank::jtl::immutable_string>(");
@@ -1976,18 +2007,18 @@ namespace jank::codegen
     }
     util::format_to(module_buffer, "));");
 
-    util::format_to(module_buffer, "for(auto const &dep : deps){{");
+    util::format_to(module_buffer, "for(auto const &dep : deps){");
     util::format_to(module_buffer, "jank::runtime::__rt_ctx->load_module(dep).expect_ok();");
-    util::format_to(module_buffer, "}}");
+    util::format_to(module_buffer, "}");
 
     /* __init fn */
-    util::format_to(module_buffer, "}}");
+    util::format_to(module_buffer, "}");
 
     /* Struct */
-    util::format_to(module_buffer, "}};");
+    util::format_to(module_buffer, "};");
 
     /* Namespace */
-    util::format_to(module_buffer, "}}");
+    util::format_to(module_buffer, "}");
 
     native_transient_string ret;
     ret.reserve(module_buffer.size());

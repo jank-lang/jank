@@ -25,6 +25,7 @@
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime
@@ -184,6 +185,7 @@ namespace jank::runtime
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
+      analyze::processor an_prc{ *this };
       auto const expr(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       ret = evaluate::eval(expr.expect_ok());
@@ -214,6 +216,15 @@ namespace jank::runtime
       cg_prc.gen().expect_ok();
       cg_prc.optimize();
       write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
+
+      //{
+      //  codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
+      //  jit_prc.eval_string(cg_prc.declaration_str());
+      //  auto const expr_str{ cg_prc.expression_str(true) };
+      //  clang::Value v;
+      //  auto err(jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
+      //  llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+      //}
     }
 
     return ret;
@@ -372,7 +383,7 @@ namespace jank::runtime
                               module_path.c_str(),
                               file_error.message()));
     }
-    //codegen_ctx->module->print(llvm::outs(), nullptr);
+    //module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;

@@ -31,16 +31,17 @@ namespace jank::runtime::obj
     jit_function_ref with_meta(object_ref m);
 
     /* behavior::callable */
-    object_ref call() final;
-    object_ref call(object_ref) final;
-    object_ref call(object_ref, object_ref) final;
-    object_ref call(object_ref, object_ref, object_ref) final;
-    object_ref call(object_ref, object_ref, object_ref, object_ref) final;
-    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) final;
-    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) final;
+    object_ref call() override;
+    object_ref call(object_ref) override;
+    object_ref call(object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref, object_ref) override;
+    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) override;
+    object_ref
+      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) override;
     object_ref
       call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
-        final;
+        override;
     object_ref call(object_ref,
                     object_ref,
                     object_ref,
@@ -48,16 +49,7 @@ namespace jank::runtime::obj
                     object_ref,
                     object_ref,
                     object_ref,
-                    object_ref) final;
-    object_ref call(object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref) final;
+                    object_ref) override;
     object_ref call(object_ref,
                     object_ref,
                     object_ref,
@@ -66,11 +58,20 @@ namespace jank::runtime::obj
                     object_ref,
                     object_ref,
                     object_ref,
+                    object_ref) override;
+    object_ref call(object_ref,
                     object_ref,
-                    object_ref) final;
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref,
+                    object_ref) override;
 
-    arity_flag_t get_arity_flags() const final;
-    object_ref this_object_ref() final;
+    arity_flag_t get_arity_flags() const override;
+    object_ref this_object_ref() override;
 
     object base{ obj_type };
     object *(*arity_0)(){};

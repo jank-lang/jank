@@ -36,7 +36,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 0 args to {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -83,7 +83,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 1 arg to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -130,7 +130,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 2 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -173,7 +173,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 3 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -221,7 +221,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 4 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -272,7 +272,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 5 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -338,7 +338,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 6 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -409,7 +409,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 7 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -485,7 +485,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 8 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -563,7 +563,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 9 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -688,7 +688,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 10 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -857,7 +857,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format("invalid call with {} args to: {}",
                                                  10 + sequence_length(rest),
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
       source);
@@ -1008,38 +1008,38 @@ namespace jank::runtime
   {
     object_ref callable::call()
     {
-      throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref)
     {
-      throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref)
     {
-      throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref
     callable::call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1050,7 +1050,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1062,7 +1062,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1075,7 +1075,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1089,7 +1089,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }
 
     callable::arity_flag_t callable::get_arity_flags() const
