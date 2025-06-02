@@ -225,8 +225,6 @@ namespace jank::codegen
               util::format_to(buffer,
                               "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              //gen_constant(typed_o->meta.unwrap(), buffer, true);
-              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -245,8 +243,6 @@ namespace jank::codegen
               util::format_to(buffer,
                               "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              //gen_constant(typed_o->meta.unwrap(), buffer, true);
-              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -265,8 +261,6 @@ namespace jank::codegen
               util::format_to(buffer,
                               "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              //gen_constant(typed_o->meta.unwrap(), buffer, true);
-              //util::format_to(buffer, ", ");
             }
             util::format_to(buffer, "std::in_place ");
             for(auto const &form : typed_o->data)
@@ -286,7 +280,6 @@ namespace jank::codegen
               util::format_to(buffer,
                               "jank::runtime::__rt_ctx->read_string(\"{}\")",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              //gen_constant(typed_o->meta.unwrap(), buffer, true);
               need_comma = true;
             }
             else
@@ -308,35 +301,21 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
           {
-            bool need_comma{};
-            if(typed_o->meta.is_some())
+            /* TODO: Expect type? */
+            auto const has_meta{ typed_o->meta.is_some() };
+            if(has_meta)
+            {
+              util::format_to(buffer, "jank::runtime::reset_meta(");
+            }
+            util::format_to(buffer,
+                            "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                            util::escape(typed_o->to_code_string()));
+            if(has_meta)
             {
               util::format_to(buffer,
-                              "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
-              //gen_constant(typed_o->meta.unwrap(), buffer, true);
-              util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                              ", jank::runtime::__rt_ctx->read_string(\"{}\"))",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              need_comma = true;
             }
-            else
-            {
-              util::format_to(buffer, "jank::runtime::obj::persistent_hash_map::create_unique(");
-            }
-            for(auto const &form : typed_o->data)
-            {
-              if(need_comma)
-              {
-                util::format_to(buffer, ", ");
-              }
-              need_comma = true;
-              util::format_to(buffer, "std::make_pair(");
-              gen_constant(form.first, buffer, true);
-              util::format_to(buffer, ", ");
-              gen_constant(form.second, buffer, true);
-              util::format_to(buffer, ")");
-            }
-            util::format_to(buffer, ")");
           }
           /* Cons, etc. */
           else if constexpr(runtime::behavior::seqable<T>)
