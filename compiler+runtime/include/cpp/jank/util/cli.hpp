@@ -19,6 +19,7 @@ namespace jank::util::cli
     native_transient_string module_path;
     bool profiler_enabled{};
     native_transient_string profiler_file{ "jank.profile" };
+    bool perf_profiling_enabled{};
     bool gc_incremental{};
 
     /* Native dependencies. */
@@ -28,7 +29,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    i64 optimization_level{};
+    u8 optimization_level{};
 
     /* Run command. */
     native_transient_string target_file;

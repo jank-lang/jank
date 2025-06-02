@@ -24,6 +24,7 @@ namespace jank::util::cli
     cli.add_option("--profile-output",
                    opts.profiler_file,
                    "The file to write profile entries (will be overwritten).");
+    cli.add_flag("--perf", opts.perf_profiling_enabled, "Enable Linux perf event sampling.");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
     cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use.")
       ->check(CLI::Range(0, 3));

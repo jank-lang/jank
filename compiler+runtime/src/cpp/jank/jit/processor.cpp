@@ -12,6 +12,7 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
+#include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/IRReader/IRReader.h>
 
@@ -23,11 +24,6 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
-
-namespace jank_llvm
-{
-  llvm::JITEventListener *createPerfJITEventListener();
-}
 
 namespace jank::jit
 {
@@ -121,6 +117,12 @@ namespace jank::jit
     {
       args.emplace_back(strdup(flag.c_str()));
     }
+
+    if(opts.perf_profiling_enabled)
+    {
+      O = "-Og";
+      args.emplace_back("-ggdb");
+    }
     args.emplace_back(strdup(O.c_str()));
 
     for(auto const &include_path : opts.include_dirs)
@@ -170,33 +172,44 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
-    //{
-    //  clang::IncrementalCompilerBuilder compiler_builder;
-    //  compiler_builder.SetCompilerArgs(args);
-    //  auto compiler_instance(llvm::cantFail(compiler_builder.CreateCpp()));
-    //  llvm::install_fatal_error_handler(handle_fatal_llvm_error,
-    //                                    static_cast<void *>(&compiler_instance->getDiagnostics()));
-
-    //  compiler_instance->LoadRequestedPlugins();
-
-    //  interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
-
-    //  auto const *Clang = interpreter->getCompilerInstance();
-    //  if(!Clang->getFrontendOpts().LLVMArgs.empty())
-    //  {
-    //    unsigned NumArgs = Clang->getFrontendOpts().LLVMArgs.size();
-    //    auto Args = std::make_unique<char const *[]>(NumArgs + 2);
-    //    Args[0] = "clang (LLVM option parsing)";
-    //    for(unsigned i = 0; i != NumArgs; ++i)
-    //    {
-    //      Args[i + 1] = Clang->getFrontendOpts().LLVMArgs[i].c_str();
-    //    }
-    //    Args[NumArgs + 1] = nullptr;
-    //    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
-    //  }
-    //}
-
     interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args)));
+
+    /* Enabling perf support requires registering a couple of plugins with LLVM. These
+     * plugins will generate files which perf can then use to inject additional info
+     * into its recorded data (via `perf inject`).
+     *
+     * Note that we need to manually get the start/end/impl address for perf, rather than
+     * using the PerfSupportPlugin::Create factory, since the latter leads to crashes on
+     * Clang 19, at least. This workaround was suggested by and borrowed from Julia devs.
+     *
+     * https://github.com/mortenpi/julia/blob/1edc6f1b7752ed67059020ba7ce174dffa225954/src/jitlayers.cpp#L2330
+     */
+    if(opts.perf_profiling_enabled)
+    {
+      auto const ee{ interpreter->getExecutionEngine() };
+      auto &es{ ee->getExecutionSession() };
+      auto &ol{ ee->getObjLinkingLayer() };
+      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+
+#define add_address_to_map(map, name)                                     \
+  ((map)[es.intern(ee->mangle(#name))]                                    \
+   = { llvm::orc::ExecutorAddr::fromPtr(&(name)),                         \
+       llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable }, \
+   llvm::orc::ExecutorAddr::fromPtr(&(name)))
+
+      llvm::orc::SymbolMap perf_fns;
+      auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
+      auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
+      auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
+      llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
+      oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+      oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
+                                                                   start_addr,
+                                                                   end_addr,
+                                                                   impl_addr,
+                                                                   true,
+                                                                   true));
+    }
 
     auto const &load_result{ load_dynamic_libs(opts.libs) };
     if(load_result.is_err())
