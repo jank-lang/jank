@@ -37,5 +37,7 @@ namespace jank::analyze::cpp_util
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 
+  jtl::option<Cpp::Operator> match_operator(jtl::immutable_string const &name);
+
   jtl::result<void, error_ref> ensure_convertible(expression_ref expr);
 }

@@ -329,6 +329,55 @@ namespace jank::analyze::cpp_util
     return offset;
   }
 
+  jtl::option<Cpp::Operator> match_operator(jtl::immutable_string const &name)
+  {
+    static native_unordered_map<jtl::immutable_string, Cpp::Operator> const operators{
+      {   "+",                Cpp::OP_Plus },
+      {   "-",               Cpp::OP_Minus },
+      {   "*",                Cpp::OP_Star },
+      {   "/",               Cpp::OP_Slash },
+      {   "%",             Cpp::OP_Percent },
+      {  "++",            Cpp::OP_PlusPlus },
+      {  "--",          Cpp::OP_MinusMinus },
+      {  "==",          Cpp::OP_EqualEqual },
+      {  "!=",        Cpp::OP_ExclaimEqual },
+      {   ">",             Cpp::OP_Greater },
+      {   "<",                Cpp::OP_Less },
+      {  ">=",        Cpp::OP_GreaterEqual },
+      {  "<=",           Cpp::OP_LessEqual },
+      { "<=>",           Cpp::OP_Spaceship },
+      {   "!",             Cpp::OP_Exclaim },
+      {  "&&",              Cpp::OP_AmpAmp },
+      {  "||",            Cpp::OP_PipePipe },
+      {   "~",               Cpp::OP_Tilde },
+      {   "&",                 Cpp::OP_Amp },
+      {   "|",                Cpp::OP_Pipe },
+      {   "^",               Cpp::OP_Caret },
+      {  "<<",            Cpp::OP_LessLess },
+      {  ">>",      Cpp::OP_GreaterGreater },
+      {   "=",               Cpp::OP_Equal },
+      {  "+=",           Cpp::OP_PlusEqual },
+      {  "-=",          Cpp::OP_MinusEqual },
+      {  "*=",           Cpp::OP_StarEqual },
+      {  "/=",          Cpp::OP_SlashEqual },
+      {  "%=",        Cpp::OP_PercentEqual },
+      {  "&=",            Cpp::OP_AmpEqual },
+      {  "|=",           Cpp::OP_PipeEqual },
+      {  "^=",          Cpp::OP_CaretEqual },
+      { "<<=",       Cpp::OP_LessLessEqual },
+      { ">>=", Cpp::OP_GreaterGreaterEqual }
+    };
+
+    auto const op{ operators.find(name) };
+    if(op != operators.end())
+    {
+      util::println("match_operator {} (found)", name);
+      return op->second;
+    }
+    util::println("match_operator {} (not found)", name);
+    return none;
+  }
+
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr)
   {
     auto const type{ expression_type(expr) };

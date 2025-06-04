@@ -23,7 +23,8 @@ namespace jank::analyze::expr
       enum_constant,
       function,
       member_access,
-      member_call
+      member_call,
+      operator_call
     };
 
     cpp_value(expression_position position,

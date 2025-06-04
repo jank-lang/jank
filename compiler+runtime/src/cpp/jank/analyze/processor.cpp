@@ -118,6 +118,268 @@ namespace jank::analyze
                              bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
+  static processor::expression_result build_builtin_operator_call(
+    [[maybe_unused]] expr::cpp_value_ref const val,
+    Cpp::Operator const op,
+    [[maybe_unused]] native_vector<expression_ref> const &arg_exprs,
+    [[maybe_unused]] std::vector<Cpp::TemplateArgInfo> const &arg_types,
+    [[maybe_unused]] local_frame_ptr const current_frame,
+    [[maybe_unused]] expression_position const position,
+    [[maybe_unused]] bool const needs_box,
+    [[maybe_unused]] native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    auto const op_name{ try_object<obj::symbol>(val->form)->name };
+
+    auto const invalid_unary{ [&]() {
+      return error::internal_analyze_failure(
+        util::format("Unary operator {} is not supported for '{}'.",
+                     op_name,
+                     Cpp::GetTypeAsString(arg_types[0].m_Type)),
+        object_source(val->form),
+        latest_expansion(macro_expansions));
+    } };
+    auto const invalid_binary{ [&]() {
+      return error::internal_analyze_failure(
+        util::format("Binary operator {} is not supported for '{}' and '{}'.",
+                     op_name,
+                     Cpp::GetTypeAsString(arg_types[0].m_Type),
+                     Cpp::GetTypeAsString(arg_types[1].m_Type)),
+        object_source(val->form),
+        latest_expansion(macro_expansions));
+    } };
+    auto const invalid{ [&]() {
+      if(arg_exprs.size() == 1)
+      {
+        return invalid_unary();
+      }
+      return invalid_binary();
+    } };
+
+    using validator_ret = jtl::result<void, error_ref>;
+
+    auto const no_binary{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 1)
+      {
+        return ok();
+      }
+
+      return invalid_binary();
+    } };
+
+    auto const no_unary{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2)
+      {
+        return ok();
+      }
+
+      return invalid_unary();
+    } };
+
+    auto const no_unary_ptr{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2 || !Cpp::IsPointerType(args[0].m_Type))
+      {
+        return ok();
+      }
+
+      return invalid_unary();
+    } };
+
+    auto const no_unary_non_ptr{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type))
+      {
+        return ok();
+      }
+
+      return invalid_unary();
+    } };
+
+    auto const no_weird_ptr_math{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2)
+      {
+        if((Cpp::IsPointerType(args[0].m_Type) && !Cpp::IsIntegral(args[1].m_Type))
+           || (Cpp::IsPointerType(args[1].m_Type) && !Cpp::IsIntegral(args[0].m_Type)))
+        {
+          return invalid_unary();
+        }
+      }
+
+      return ok();
+    } };
+
+    auto const no_ptrs{ [&](auto const &args) -> validator_ret {
+      for(auto const &arg : args)
+      {
+        if(Cpp::IsPointerType(arg.m_Type))
+        {
+          return invalid();
+        }
+      }
+
+      return ok();
+    } };
+
+    auto const no_binary_ptrs{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2)
+      {
+        for(auto const &arg : args)
+        {
+          if(Cpp::IsPointerType(arg.m_Type))
+          {
+            return invalid();
+          }
+        }
+      }
+
+      return ok();
+    } };
+
+    auto const no_non_ints{ [&](auto const &args) -> validator_ret {
+      for(auto const &arg : args)
+      {
+        if(!Cpp::IsIntegral(arg.m_Type))
+        {
+          return invalid();
+        }
+      }
+
+      return ok();
+    } };
+
+    auto const no_binary_non_ints{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2)
+      {
+        for(auto const &arg : args)
+        {
+          if(!Cpp::IsIntegral(arg.m_Type))
+          {
+            return invalid();
+          }
+        }
+      }
+
+      return ok();
+    } };
+
+    /* If you have one ptr arg, the other arg must be a compatible ptr arg. */
+    auto const no_binary_incompat_ptrs{ [&](auto const &args) -> validator_ret {
+      if(args.size() == 2)
+      {
+        auto const arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
+        if((arg0_ptr && arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
+           || !Cpp::IsImplicitlyConvertible(args[0].m_Type, args[1].m_Type))
+        {
+          return invalid();
+        }
+      }
+
+      return ok();
+    } };
+
+    auto const common_type{ [&](auto const &args) {
+      if(args.size() == 2)
+      {
+        return Cpp::GetCommonType(args[0].m_Type, args[1].m_Type);
+      }
+
+      return args[0].m_Type;
+    } };
+
+    auto const star_type{ [&](auto const &args) {
+      if(args.size() == 2)
+      {
+        return common_type(args);
+      }
+
+      return Cpp::GetPointeeType(args[0].m_Type);
+    } };
+
+    auto const amp_type{ [&](auto const &args) {
+      if(args.size() == 2)
+      {
+        return common_type(args);
+      }
+
+      return Cpp::GetPointerType(args[0].m_Type);
+    } };
+
+    auto const bool_type{ [&](auto const &) { return Cpp::GetType("bool"); } };
+    auto const left_type{ [&](auto const &args) { return args[0].m_Type; } };
+
+    struct op_processor
+    {
+      native_vector<std::function<validator_ret(std::vector<Cpp::TemplateArgInfo> const &)>>
+        validators;
+      std::function<jtl::ptr<void>(std::vector<Cpp::TemplateArgInfo> const &)> type{ common_type };
+    };
+
+    static native_unordered_map<Cpp::Operator, op_processor> ops{
+      //{ Cpp::OP_New, {} },
+      //{ Cpp::OP_Delete, {} },
+      //{ Cpp::OP_Array_New, {} },
+      //{ Cpp::OP_Array_Delete, {} },
+      {                Cpp::OP_Plus,              { { no_unary_ptr, no_weird_ptr_math } } },
+      {               Cpp::OP_Minus,              { { no_unary_ptr, no_weird_ptr_math } } },
+      {                Cpp::OP_Star,  { { no_unary_non_ptr, no_binary_ptrs }, star_type } },
+      {               Cpp::OP_Slash,                            { { no_unary, no_ptrs } } },
+      {             Cpp::OP_Percent,                        { { no_unary, no_non_ints } } },
+      {               Cpp::OP_Caret,                        { { no_unary, no_non_ints } } },
+      {                 Cpp::OP_Amp,                 { { no_binary_non_ints }, amp_type } },
+      {                Cpp::OP_Pipe,                 { { no_unary, no_binary_non_ints } } },
+      {               Cpp::OP_Tilde,                       { { no_binary, no_non_ints } } },
+      {             Cpp::OP_Exclaim,                         { { no_binary }, bool_type } },
+      {               Cpp::OP_Equal, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
+      {                Cpp::OP_Less, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
+      {             Cpp::OP_Greater, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
+      {           Cpp::OP_PlusEqual,       { { no_unary, no_weird_ptr_math }, left_type } },
+      {          Cpp::OP_MinusEqual,       { { no_unary, no_weird_ptr_math }, left_type } },
+      {           Cpp::OP_StarEqual,          { { no_unary, no_binary_ptrs }, left_type } },
+      {          Cpp::OP_SlashEqual,          { { no_unary, no_binary_ptrs }, left_type } },
+      {        Cpp::OP_PercentEqual,          { { no_unary, no_binary_ptrs }, left_type } },
+      {          Cpp::OP_CaretEqual,          { { no_unary, no_binary_ptrs }, left_type } },
+      {            Cpp::OP_AmpEqual,             { { no_unary, no_non_ints }, left_type } },
+      {           Cpp::OP_PipeEqual,             { { no_unary, no_non_ints }, left_type } },
+      {            Cpp::OP_LessLess,             { { no_unary, no_non_ints }, left_type } },
+      {      Cpp::OP_GreaterGreater,             { { no_unary, no_non_ints }, left_type } },
+      {       Cpp::OP_LessLessEqual,             { { no_unary, no_non_ints }, left_type } },
+      { Cpp::OP_GreaterGreaterEqual,             { { no_unary, no_non_ints }, left_type } },
+      {          Cpp::OP_EqualEqual, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
+      {        Cpp::OP_ExclaimEqual,             { { no_unary, no_non_ints }, left_type } },
+      {           Cpp::OP_LessEqual,                 { { no_unary, no_ptrs }, bool_type } },
+      {        Cpp::OP_GreaterEqual,                 { { no_unary, no_ptrs }, bool_type } },
+      //{           Cpp::OP_Spaceship, { { no_unary, no_binary_incompat_ptrs } } },
+      {              Cpp::OP_AmpAmp,                          { { no_unary }, bool_type } },
+      {            Cpp::OP_PipePipe,                          { { no_unary }, bool_type } },
+      {            Cpp::OP_PlusPlus,                         { { no_binary }, left_type } },
+      {          Cpp::OP_MinusMinus,                         { { no_binary }, left_type } },
+      //{ Cpp::OP_Comma, { {} } },
+      //{ Cpp::OP_ArrowStar, { {} } },
+      //{ Cpp::OP_Arrow, { {} } },
+      //{ Cpp::OP_Call, { {} } },
+    };
+
+    auto const found{ ops.find(op) };
+    if(found != ops.end())
+    {
+      for(auto const &f : found->second.validators)
+      {
+        auto const res{ f(arg_types) };
+        if(res.is_err())
+        {
+          return res.expect_err();
+        }
+      }
+
+      util::println("validated operator call with '{}' and '{}' to result to '{}'",
+                    Cpp::GetTypeAsString(arg_types[0].m_Type),
+                    Cpp::GetTypeAsString(arg_types[1].m_Type),
+                    Cpp::GetTypeAsString(found->second.type(arg_types)));
+
+      throw "NICE!";
+    }
+
+    return invalid();
+  }
+
   static processor::expression_result
   build_cpp_call(expr::cpp_value_ref const val,
                  native_vector<expression_ref> arg_exprs,
@@ -201,6 +463,83 @@ namespace jank::analyze
       }
     }
 
+    auto const is_operator_call{ val->val_kind == expr::cpp_value::value_kind::operator_call };
+    if(is_operator_call)
+    {
+      auto const arg_count{ arg_exprs.size() };
+      if(arg_count == 0)
+      {
+        return error::internal_analyze_failure("Operator calls need an invoking object.",
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions));
+      }
+      else if(arg_count > 2)
+      {
+        return error::internal_analyze_failure("Operator calls may only take one or two arguments.",
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions));
+      }
+
+      /* TODO: Cases:
+       *
+       * 1. Operator in object scope
+       * 2. Operator in parent scope
+       * 3. Operator in global scope, for primitives
+       */
+      auto const obj_type{ Cpp::GetNonReferenceType(arg_types[0].m_Type) };
+      auto const op_name{ try_object<obj::symbol>(val->form)->name };
+      auto const op{ cpp_util::match_operator(op_name).unwrap() };
+      //auto const is_builtin{ Cpp::IsBuiltin(obj_type) };
+      //auto const is_pointer{ Cpp::IsPointerType(obj_type) };
+
+      if(Cpp::IsBuiltin(obj_type))
+      {
+        if(arg_types.size() == 1 || Cpp::IsBuiltin(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
+        {
+          return build_builtin_operator_call(val,
+                                             op,
+                                             arg_exprs,
+                                             arg_types,
+                                             current_frame,
+                                             position,
+                                             needs_box,
+                                             macro_expansions);
+        }
+      }
+
+
+      auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
+      auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
+      auto const parent_scope{ obj_scope ? Cpp::GetParentScope(obj_scope) : nullptr };
+      auto const global_scope{ Cpp::GetGlobalScope() };
+      for(auto const scope : { obj_scope, parent_scope, global_scope })
+      {
+        if(!scope)
+        {
+          continue;
+        }
+
+        util::println("looking for op {} in scope {}", op_name, Cpp::GetQualifiedName(scope));
+        Cpp::GetOperator(scope, op, fns, arity);
+        if(!fns.empty())
+        {
+          break;
+        }
+      }
+
+      //fns = Cpp::BestOperatorOverload(op, arg_types);
+      if(fns.empty())
+      {
+        /* TODO: Show arg types. */
+        return error::internal_analyze_failure(
+          util::format("There is no '{}' operator support for '{}'.",
+                       op_name,
+                       Cpp::GetTypeAsString(obj_type)),
+          object_source(val->form),
+          latest_expansion(macro_expansions));
+      }
+    }
+
     std::string scope_name{};
     if(is_ctor)
     {
@@ -210,6 +549,10 @@ namespace jank::analyze
     else if(is_member_call)
     {
       scope_name = try_object<obj::symbol>(val->form)->name.substr(1);
+    }
+    else if(is_operator_call)
+    {
+      scope_name = try_object<obj::symbol>(val->form)->name;
     }
     else
     {
@@ -2609,6 +2952,19 @@ namespace jank::analyze
                                             type,
                                             scope,
                                             expr::cpp_value::value_kind::null);
+    }
+
+    auto const op{ cpp_util::match_operator(name) };
+    if(op.is_some())
+    {
+      util::println("found op call {}", name);
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            nullptr,
+                                            nullptr,
+                                            expr::cpp_value::value_kind::operator_call);
     }
 
     if(name.starts_with(".-"))
