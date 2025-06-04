@@ -29,6 +29,7 @@
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/analyze/expr/cpp_member_access.hpp>
+#include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
 
 namespace jank::analyze
 {
@@ -93,6 +94,9 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::cpp_member_call>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_member_access:
         return f(jtl::static_ref_cast<expr::cpp_member_access>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_builtin_operator_call:
+        return f(jtl::static_ref_cast<expr::cpp_builtin_operator_call>(e),
+                 std::forward<Args>(args)...);
 
       case expression_kind::uninitialized:
         break;

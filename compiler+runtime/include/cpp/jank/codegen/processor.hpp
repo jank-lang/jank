@@ -37,6 +37,7 @@ namespace jank::analyze
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
     using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
     using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
   }
 }
 
@@ -148,6 +149,9 @@ namespace jank::codegen
                             analyze::expr::function_arity const &,
                             bool box_needed);
     jtl::option<handle> gen(analyze::expr::cpp_member_access_ref const,
+                            analyze::expr::function_arity const &,
+                            bool box_needed);
+    jtl::option<handle> gen(analyze::expr::cpp_builtin_operator_call_ref const,
                             analyze::expr::function_arity const &,
                             bool box_needed);
 

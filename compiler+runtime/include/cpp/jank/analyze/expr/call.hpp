@@ -19,16 +19,16 @@ namespace jank::analyze::expr
          local_frame_ptr frame,
          bool needs_box,
          expression_ref source,
-         runtime::obj::persistent_list_ref form,
-         native_vector<expression_ref> &&arg_exprs);
+         native_vector<expression_ref> &&arg_exprs,
+         runtime::obj::persistent_list_ref form);
 
     runtime::object_ref to_runtime_data() const override;
 
     /* Var, local, or callable. */
     expression_ref source_expr;
+    native_vector<expression_ref> arg_exprs;
     /* We keep the original form from the call expression so we can point
      * back to it if an exception is thrown during eval. */
     runtime::obj::persistent_list_ref form{};
-    native_vector<expression_ref> arg_exprs;
   };
 }

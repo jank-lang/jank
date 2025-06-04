@@ -1515,6 +1515,26 @@ namespace jank::codegen
                         arity);
   }
 
+  llvm::Value *llvm_processor::gen(analyze::expr::cpp_builtin_operator_call_ref const expr,
+                                   analyze::expr::function_arity const &arity)
+  {
+    std::vector<Cpp::TemplateArgInfo> arg_types;
+    for(auto const e : expr->arg_exprs)
+    {
+      arg_types.emplace_back(cpp_util::expression_type(e));
+    }
+    return gen_aot_call(Cpp::MakeBuiltinOperatorAotCallable(static_cast<Cpp::Operator>(expr->op),
+                                                            expr->type,
+                                                            arg_types),
+                        nullptr,
+                        expr->type,
+                        "",
+                        expr->arg_exprs,
+                        expr->position,
+                        expr->kind,
+                        arity);
+  }
+
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));

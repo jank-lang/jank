@@ -65,6 +65,7 @@ namespace jank::analyze
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
     using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
     using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
   }
 }
 
@@ -161,6 +162,8 @@ namespace jank::codegen
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_member_call_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_member_access_ref, analyze::expr::function_arity const &);
+    llvm::Value *
+    gen(analyze::expr::cpp_builtin_operator_call_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;

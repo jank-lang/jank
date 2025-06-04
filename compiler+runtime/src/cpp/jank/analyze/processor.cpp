@@ -52,6 +52,7 @@
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/analyze/expr/cpp_member_access.hpp>
+#include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -118,15 +119,15 @@ namespace jank::analyze
                              bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
-  static processor::expression_result build_builtin_operator_call(
-    [[maybe_unused]] expr::cpp_value_ref const val,
-    Cpp::Operator const op,
-    [[maybe_unused]] native_vector<expression_ref> const &arg_exprs,
-    [[maybe_unused]] std::vector<Cpp::TemplateArgInfo> const &arg_types,
-    [[maybe_unused]] local_frame_ptr const current_frame,
-    [[maybe_unused]] expression_position const position,
-    [[maybe_unused]] bool const needs_box,
-    [[maybe_unused]] native_vector<runtime::object_ref> const &macro_expansions)
+  static processor::expression_result
+  build_builtin_operator_call(expr::cpp_value_ref const val,
+                              Cpp::Operator const op,
+                              native_vector<expression_ref> &&arg_exprs,
+                              std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                              local_frame_ptr const current_frame,
+                              expression_position const position,
+                              bool const needs_box,
+                              native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const op_name{ try_object<obj::symbol>(val->form)->name };
 
@@ -369,12 +370,12 @@ namespace jank::analyze
         }
       }
 
-      util::println("validated operator call with '{}' and '{}' to result to '{}'",
-                    Cpp::GetTypeAsString(arg_types[0].m_Type),
-                    Cpp::GetTypeAsString(arg_types[1].m_Type),
-                    Cpp::GetTypeAsString(found->second.type(arg_types)));
-
-      throw "NICE!";
+      return jtl::make_ref<expr::cpp_builtin_operator_call>(position,
+                                                            current_frame,
+                                                            needs_box,
+                                                            op,
+                                                            jtl::move(arg_exprs),
+                                                            found->second.type(arg_types));
     }
 
     return invalid();
@@ -492,13 +493,14 @@ namespace jank::analyze
       //auto const is_builtin{ Cpp::IsBuiltin(obj_type) };
       //auto const is_pointer{ Cpp::IsPointerType(obj_type) };
 
-      if(Cpp::IsBuiltin(obj_type))
+      if(cpp_util::is_primitive(obj_type))
       {
-        if(arg_types.size() == 1 || Cpp::IsBuiltin(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
+        if(arg_types.size() == 1
+           || cpp_util::is_primitive(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
         {
           return build_builtin_operator_call(val,
                                              op,
-                                             arg_exprs,
+                                             std::move(arg_exprs),
                                              arg_types,
                                              current_frame,
                                              position,
@@ -2906,8 +2908,8 @@ namespace jank::analyze
                                        current_frame,
                                        needs_ret_box,
                                        source.as_ref(),
-                                       o,
-                                       std::move(arg_exprs));
+                                       std::move(arg_exprs),
+                                       o);
     }
   }
 
