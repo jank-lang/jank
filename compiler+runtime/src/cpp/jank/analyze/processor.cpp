@@ -490,13 +490,14 @@ namespace jank::analyze
       auto const obj_type{ Cpp::GetNonReferenceType(arg_types[0].m_Type) };
       auto const op_name{ try_object<obj::symbol>(val->form)->name };
       auto const op{ cpp_util::match_operator(op_name).unwrap() };
-      //auto const is_builtin{ Cpp::IsBuiltin(obj_type) };
-      //auto const is_pointer{ Cpp::IsPointerType(obj_type) };
+      auto const is_addressof{ op == Cpp::OP_Amp && arg_types.size() == 1 };
+      auto const always_use_builtin{ is_addressof };
 
-      if(cpp_util::is_primitive(obj_type))
+      if(always_use_builtin || cpp_util::is_primitive(obj_type))
       {
-        if(arg_types.size() == 1
-           || cpp_util::is_primitive(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
+        if(always_use_builtin
+           || (arg_types.size() == 1
+               || cpp_util::is_primitive(Cpp::GetNonReferenceType(arg_types[1].m_Type))))
         {
           return build_builtin_operator_call(val,
                                              op,
