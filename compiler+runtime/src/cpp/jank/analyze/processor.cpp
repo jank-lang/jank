@@ -520,10 +520,7 @@ namespace jank::analyze
       if(!Cpp::IsReferenceType(arg_types[0].m_Type))
       {
         arg_types[0].m_Type = Cpp::GetLValueReferenceType(obj_type);
-        //arg_types[0].m_Type = Cpp::GetPointerType(obj_type);
       }
-      //arg_types[0].m_Type = Cpp::GetPointerType(obj_type);
-      //arg_types.erase(arg_types.begin());
 
       fns = Cpp::LookupMethods(member_name, obj_scope);
       if(fns.empty())
@@ -552,12 +549,6 @@ namespace jank::analyze
                                                latest_expansion(macro_expansions));
       }
 
-      /* TODO: Cases:
-       *
-       * 1. Operator in object scope
-       * 2. Operator in parent scope
-       * 3. Operator in global scope, for primitives
-       */
       auto const obj_type{ Cpp::GetNonReferenceType(arg_types[0].m_Type) };
       auto const op_name{ try_object<obj::symbol>(val->form)->name };
       auto const op{ cpp_util::match_operator(op_name).unwrap() };
@@ -600,7 +591,6 @@ namespace jank::analyze
         }
       }
 
-      //fns = Cpp::BestOperatorOverload(op, arg_types);
       if(fns.empty())
       {
         /* TODO: Show arg types. */
@@ -665,7 +655,6 @@ namespace jank::analyze
     if(match)
     {
       //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
-      /* TODO: Handle this better. */
       if(is_member_call)
       {
         arg_types.erase(arg_types.begin());

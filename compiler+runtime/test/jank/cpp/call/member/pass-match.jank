@@ -14,7 +14,6 @@
             };
 
             int a{ 7 };
-            float f{ 3.0f };
           }")
 (let* [b (cpp/jank.test.cpp.call.member.pass_match.bar.)
        a (cpp/.foo b cpp/jank.test.cpp.call.member.pass_match.a)
