@@ -371,10 +371,8 @@ namespace jank::analyze::cpp_util
     auto const op{ operators.find(name) };
     if(op != operators.end())
     {
-      util::println("match_operator {} (found)", name);
       return op->second;
     }
-    util::println("match_operator {} (not found)", name);
     return none;
   }
 

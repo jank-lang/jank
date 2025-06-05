@@ -119,6 +119,249 @@ namespace jank::analyze
                              bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
+  static error_ref invalid_unary(std::vector<Cpp::TemplateArgInfo> const &args,
+                                 jtl::immutable_string const &op_name,
+                                 expr::cpp_value_ref const val,
+                                 native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    return error::internal_analyze_failure(
+      util::format("Unary operator {} is not supported for '{}'.",
+                   op_name,
+                   Cpp::GetTypeAsString(args[0].m_Type)),
+      object_source(val->form),
+      latest_expansion(macro_expansions));
+  }
+
+  static error_ref invalid_binary(std::vector<Cpp::TemplateArgInfo> const &args,
+                                  jtl::immutable_string const &op_name,
+                                  expr::cpp_value_ref const val,
+                                  native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    return error::internal_analyze_failure(
+      util::format("Binary operator {} is not supported for '{}' and '{}'.",
+                   op_name,
+                   Cpp::GetTypeAsString(args[0].m_Type),
+                   Cpp::GetTypeAsString(args[1].m_Type)),
+      object_source(val->form),
+      latest_expansion(macro_expansions));
+  }
+
+  static error_ref invalid(std::vector<Cpp::TemplateArgInfo> const &args,
+                           jtl::immutable_string const &op_name,
+                           expr::cpp_value_ref const val,
+                           native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 1)
+    {
+      return invalid_unary(args, op_name, val, macro_expansions);
+    }
+    return invalid_binary(args, op_name, val, macro_expansions);
+  }
+
+  using validator_ret = jtl::result<void, error_ref>;
+
+  static validator_ret no_binary(std::vector<Cpp::TemplateArgInfo> const &args,
+                                 jtl::immutable_string const &op_name,
+                                 expr::cpp_value_ref const val,
+                                 native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 1)
+    {
+      return ok();
+    }
+
+    return invalid_binary(args, op_name, val, macro_expansions);
+  }
+
+  static validator_ret no_unary(std::vector<Cpp::TemplateArgInfo> const &args,
+                                jtl::immutable_string const &op_name,
+                                expr::cpp_value_ref const val,
+                                native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      return ok();
+    }
+
+    return invalid_unary(args, op_name, val, macro_expansions);
+  }
+
+  static validator_ret no_unary_non_ptr(std::vector<Cpp::TemplateArgInfo> const &args,
+                                        jtl::immutable_string const &op_name,
+                                        expr::cpp_value_ref const val,
+                                        native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type))
+    {
+      return ok();
+    }
+
+    return invalid_unary(args, op_name, val, macro_expansions);
+  }
+
+  static validator_ret no_weird_ptr_math(std::vector<Cpp::TemplateArgInfo> const &args,
+                                         jtl::immutable_string const &op_name,
+                                         expr::cpp_value_ref const val,
+                                         native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      if((Cpp::IsPointerType(args[0].m_Type) && !Cpp::IsIntegral(args[1].m_Type))
+         || (Cpp::IsPointerType(args[1].m_Type) && !Cpp::IsIntegral(args[0].m_Type)))
+      {
+        return invalid_unary(args, op_name, val, macro_expansions);
+      }
+    }
+
+    return ok();
+  }
+
+  static validator_ret no_ptrs(std::vector<Cpp::TemplateArgInfo> const &args,
+                               jtl::immutable_string const &op_name,
+                               expr::cpp_value_ref const val,
+                               native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    for(auto const &arg : args)
+    {
+      if(Cpp::IsPointerType(arg.m_Type))
+      {
+        return invalid(args, op_name, val, macro_expansions);
+      }
+    }
+
+    return ok();
+  }
+
+  static validator_ret no_binary_ptrs(std::vector<Cpp::TemplateArgInfo> const &args,
+                                      jtl::immutable_string const &op_name,
+                                      expr::cpp_value_ref const val,
+                                      native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      for(auto const &arg : args)
+      {
+        if(Cpp::IsPointerType(arg.m_Type))
+        {
+          return invalid(args, op_name, val, macro_expansions);
+        }
+      }
+    }
+
+    return ok();
+  }
+
+  static validator_ret no_non_ints(std::vector<Cpp::TemplateArgInfo> const &args,
+                                   jtl::immutable_string const &op_name,
+                                   expr::cpp_value_ref const val,
+                                   native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    for(auto const &arg : args)
+    {
+      if(!Cpp::IsIntegral(arg.m_Type))
+      {
+        return invalid(args, op_name, val, macro_expansions);
+      }
+    }
+
+    return ok();
+  }
+
+  static validator_ret
+  no_binary_non_ints(std::vector<Cpp::TemplateArgInfo> const &args,
+                     jtl::immutable_string const &op_name,
+                     expr::cpp_value_ref const val,
+                     native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      for(auto const &arg : args)
+      {
+        if(!Cpp::IsIntegral(arg.m_Type))
+        {
+          return invalid(args, op_name, val, macro_expansions);
+        }
+      }
+    }
+
+    return ok();
+  }
+
+  /* If you have one ptr arg, the other arg must be a compatible ptr arg. */
+  static validator_ret
+  no_binary_incompat_ptrs(std::vector<Cpp::TemplateArgInfo> const &args,
+                          jtl::immutable_string const &op_name,
+                          expr::cpp_value_ref const val,
+                          native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      auto const arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
+      if((arg0_ptr && arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
+         || !Cpp::IsImplicitlyConvertible(args[0].m_Type, args[1].m_Type))
+      {
+        return invalid(args, op_name, val, macro_expansions);
+      }
+    }
+
+    return ok();
+  }
+
+  static jtl::ptr<void> common_type(std::vector<Cpp::TemplateArgInfo> const &args)
+  {
+    if(args.size() == 2)
+    {
+      auto const ret{ Cpp::GetCommonType(args[0].m_Type, args[1].m_Type) };
+      if(ret)
+      {
+        return ret;
+      }
+
+      /* For pointer arithmetic, we won't have a common type. We want to return the
+       * pointer type, though. */
+      if(Cpp::IsPointerType(args[0].m_Type))
+      {
+        return args[0].m_Type;
+      }
+      if(Cpp::IsPointerType(args[1].m_Type))
+      {
+        return args[1].m_Type;
+      }
+    }
+
+    return args[0].m_Type;
+  }
+
+  static jtl::ptr<void> star_type(std::vector<Cpp::TemplateArgInfo> const &args)
+  {
+    if(args.size() == 2)
+    {
+      return common_type(args);
+    }
+
+    return Cpp::GetPointeeType(args[0].m_Type);
+  }
+
+  static jtl::ptr<void> amp_type(std::vector<Cpp::TemplateArgInfo> const &args)
+  {
+    if(args.size() == 2)
+    {
+      return common_type(args);
+    }
+
+    return Cpp::GetPointerType(args[0].m_Type);
+  }
+
+  static jtl::ptr<void> bool_type(std::vector<Cpp::TemplateArgInfo> const &)
+  {
+    return Cpp::GetType("bool");
+  }
+
+  static jtl::ptr<void> left_type(std::vector<Cpp::TemplateArgInfo> const &args)
+  {
+    return args[0].m_Type;
+  }
+
   static processor::expression_result
   build_builtin_operator_call(expr::cpp_value_ref const val,
                               Cpp::Operator const op,
@@ -131,184 +374,12 @@ namespace jank::analyze
   {
     auto const op_name{ try_object<obj::symbol>(val->form)->name };
 
-    auto const invalid_unary{ [&]() {
-      return error::internal_analyze_failure(
-        util::format("Unary operator {} is not supported for '{}'.",
-                     op_name,
-                     Cpp::GetTypeAsString(arg_types[0].m_Type)),
-        object_source(val->form),
-        latest_expansion(macro_expansions));
-    } };
-    auto const invalid_binary{ [&]() {
-      return error::internal_analyze_failure(
-        util::format("Binary operator {} is not supported for '{}' and '{}'.",
-                     op_name,
-                     Cpp::GetTypeAsString(arg_types[0].m_Type),
-                     Cpp::GetTypeAsString(arg_types[1].m_Type)),
-        object_source(val->form),
-        latest_expansion(macro_expansions));
-    } };
-    auto const invalid{ [&]() {
-      if(arg_exprs.size() == 1)
-      {
-        return invalid_unary();
-      }
-      return invalid_binary();
-    } };
-
-    using validator_ret = jtl::result<void, error_ref>;
-
-    auto const no_binary{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 1)
-      {
-        return ok();
-      }
-
-      return invalid_binary();
-    } };
-
-    auto const no_unary{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2)
-      {
-        return ok();
-      }
-
-      return invalid_unary();
-    } };
-
-    auto const no_unary_ptr{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2 || !Cpp::IsPointerType(args[0].m_Type))
-      {
-        return ok();
-      }
-
-      return invalid_unary();
-    } };
-
-    auto const no_unary_non_ptr{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type))
-      {
-        return ok();
-      }
-
-      return invalid_unary();
-    } };
-
-    auto const no_weird_ptr_math{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2)
-      {
-        if((Cpp::IsPointerType(args[0].m_Type) && !Cpp::IsIntegral(args[1].m_Type))
-           || (Cpp::IsPointerType(args[1].m_Type) && !Cpp::IsIntegral(args[0].m_Type)))
-        {
-          return invalid_unary();
-        }
-      }
-
-      return ok();
-    } };
-
-    auto const no_ptrs{ [&](auto const &args) -> validator_ret {
-      for(auto const &arg : args)
-      {
-        if(Cpp::IsPointerType(arg.m_Type))
-        {
-          return invalid();
-        }
-      }
-
-      return ok();
-    } };
-
-    auto const no_binary_ptrs{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2)
-      {
-        for(auto const &arg : args)
-        {
-          if(Cpp::IsPointerType(arg.m_Type))
-          {
-            return invalid();
-          }
-        }
-      }
-
-      return ok();
-    } };
-
-    auto const no_non_ints{ [&](auto const &args) -> validator_ret {
-      for(auto const &arg : args)
-      {
-        if(!Cpp::IsIntegral(arg.m_Type))
-        {
-          return invalid();
-        }
-      }
-
-      return ok();
-    } };
-
-    auto const no_binary_non_ints{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2)
-      {
-        for(auto const &arg : args)
-        {
-          if(!Cpp::IsIntegral(arg.m_Type))
-          {
-            return invalid();
-          }
-        }
-      }
-
-      return ok();
-    } };
-
-    /* If you have one ptr arg, the other arg must be a compatible ptr arg. */
-    auto const no_binary_incompat_ptrs{ [&](auto const &args) -> validator_ret {
-      if(args.size() == 2)
-      {
-        auto const arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
-        if((arg0_ptr && arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
-           || !Cpp::IsImplicitlyConvertible(args[0].m_Type, args[1].m_Type))
-        {
-          return invalid();
-        }
-      }
-
-      return ok();
-    } };
-
-    auto const common_type{ [&](auto const &args) {
-      if(args.size() == 2)
-      {
-        return Cpp::GetCommonType(args[0].m_Type, args[1].m_Type);
-      }
-
-      return args[0].m_Type;
-    } };
-
-    auto const star_type{ [&](auto const &args) {
-      if(args.size() == 2)
-      {
-        return common_type(args);
-      }
-
-      return Cpp::GetPointeeType(args[0].m_Type);
-    } };
-
-    auto const amp_type{ [&](auto const &args) {
-      if(args.size() == 2)
-      {
-        return common_type(args);
-      }
-
-      return Cpp::GetPointerType(args[0].m_Type);
-    } };
-
-    auto const bool_type{ [&](auto const &) { return Cpp::GetType("bool"); } };
-    auto const left_type{ [&](auto const &args) { return args[0].m_Type; } };
-
     struct op_processor
     {
-      native_vector<std::function<validator_ret(std::vector<Cpp::TemplateArgInfo> const &)>>
+      native_vector<std::function<validator_ret(std::vector<Cpp::TemplateArgInfo> const &,
+                                                jtl::immutable_string const &,
+                                                expr::cpp_value_ref,
+                                                native_vector<runtime::object_ref> const &)>>
         validators;
       std::function<jtl::ptr<void>(std::vector<Cpp::TemplateArgInfo> const &)> type{ common_type };
     };
@@ -318,8 +389,8 @@ namespace jank::analyze
       //{ Cpp::OP_Delete, {} },
       //{ Cpp::OP_Array_New, {} },
       //{ Cpp::OP_Array_Delete, {} },
-      {                Cpp::OP_Plus,              { { no_unary_ptr, no_weird_ptr_math } } },
-      {               Cpp::OP_Minus,              { { no_unary_ptr, no_weird_ptr_math } } },
+      {                Cpp::OP_Plus,                  { { no_unary, no_weird_ptr_math } } },
+      {               Cpp::OP_Minus,                  { { no_unary, no_weird_ptr_math } } },
       {                Cpp::OP_Star,  { { no_unary_non_ptr, no_binary_ptrs }, star_type } },
       {               Cpp::OP_Slash,                            { { no_unary, no_ptrs } } },
       {             Cpp::OP_Percent,                        { { no_unary, no_non_ints } } },
@@ -363,7 +434,7 @@ namespace jank::analyze
     {
       for(auto const &f : found->second.validators)
       {
-        auto const res{ f(arg_types) };
+        auto const res{ f(arg_types, op_name, val, macro_expansions) };
         if(res.is_err())
         {
           return res.expect_err();
@@ -378,7 +449,7 @@ namespace jank::analyze
                                                             found->second.type(arg_types));
     }
 
-    return invalid();
+    return invalid(arg_types, op_name, val, macro_expansions);
   }
 
   static processor::expression_result
@@ -522,7 +593,6 @@ namespace jank::analyze
           continue;
         }
 
-        util::println("looking for op {} in scope {}", op_name, Cpp::GetQualifiedName(scope));
         Cpp::GetOperator(scope, op, fns, arity);
         if(!fns.empty())
         {
@@ -2960,7 +3030,6 @@ namespace jank::analyze
     auto const op{ cpp_util::match_operator(name) };
     if(op.is_some())
     {
-      util::println("found op call {}", name);
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
