@@ -10,6 +10,8 @@
           }")
 (let* [a cpp/jank.test.cpp.constructor.complex.pass_aggregate.a
        b cpp/jank.test.cpp.constructor.complex.pass_aggregate.b
-       f (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. a b)]
-  (if (and (= 4 (cpp/.-a f)) (= 6 (cpp/.-b f)))
+       f (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. a b)
+       f2 (cpp/jank.test.cpp.constructor.complex.pass_aggregate.foo. (cpp/int. 4) (cpp/int. 6))]
+  (if (and (and (= 4 (cpp/.-a f)) (= 6 (cpp/.-b f)))
+           (and (= 4 (cpp/.-a f2)) (= 6 (cpp/.-b f2))))
     :success))
