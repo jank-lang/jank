@@ -119,6 +119,17 @@ namespace jank::error
     });
   }
 
+  error_ref parse_duplicate_items_in_set(read::source const &duplicate_item_source,
+                                         note const &original_item_source)
+  {
+    return make_error(kind::parse_duplicate_items_in_set,
+                      duplicate_item_source,
+                      native_vector<note>{
+                        { "Duplicate item.", duplicate_item_source },
+                        original_item_source
+    });
+  }
+
   error_ref parse_invalid_quote(read::source const &source, jtl::immutable_string const &note)
   {
     return make_error(kind::parse_invalid_quote, source, note);
