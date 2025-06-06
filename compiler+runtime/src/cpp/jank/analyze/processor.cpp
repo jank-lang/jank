@@ -584,10 +584,11 @@ namespace jank::analyze
           continue;
         }
 
-        Cpp::GetOperator(scope, op, fns, arity);
-        if(!fns.empty())
+        std::vector<void *> scope_fns;
+        Cpp::GetOperator(scope, op, scope_fns, arity);
+        for(auto const f : scope_fns)
         {
-          break;
+          fns.emplace_back(f);
         }
       }
 
