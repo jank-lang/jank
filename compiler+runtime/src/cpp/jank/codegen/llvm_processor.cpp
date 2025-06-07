@@ -252,9 +252,13 @@ namespace jank::codegen
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const fn(ctx->module->getOrInsertFunction("jank_var_bind_root", fn_type));
-
-      llvm::SmallVector<llvm::Value *, 2> const args{ ref, gen(expr->value.unwrap(), arity) };
+      auto const var_root(gen(expr->value.unwrap(), arity));
+      llvm::SmallVector<llvm::Value *, 2> const args{ ref, var_root };
       ctx->builder->CreateCall(fn, args);
+      if(__rt_ctx->opts.direct_linking)
+      {
+          gen_var_root(expr)
+      }
     }
 
     jtl::option<std::reference_wrapper<lifted_constant const>> meta;
@@ -299,14 +303,23 @@ namespace jank::codegen
   /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm::Value *llvm_processor::gen(expr::var_deref_ref const expr, expr::function_arity const &)
   {
-    auto const ref(gen_var(make_box<obj::symbol>(expr->var->n, expr->var->name)));
-    auto const fn_type(
-      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-    auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
+    llvm::Value *call{};
+    if(__rt_ctx->opts.direct_linking)
+    {
+      // auto var = expr.data->var;
+      // auto var_root = var->get_root();
+      call = gen_var_root(expr->qualified_name);
+    }
+    else
+    {
+      auto const ref(gen_var(make_box<obj::symbol>(expr->var->n, expr->var->name)));
+      auto const fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 1> const args{ ref };
-    auto const call(ctx->builder->CreateCall(fn, args));
-
+      llvm::SmallVector<llvm::Value *, 1> const args{ ref };
+      call = (ctx->builder->CreateCall(fn, args));
+    }
     if(expr->position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
@@ -343,15 +356,17 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen_var_root(obj::symbol_ref qualified_name) const
   {
-    auto const found(ctx->var_globals.find(qualified_name));
-    if(found != ctx->var_globals.end())
+    // auto const found(ctx->var_root_globals.find(qualified_name));
+    // if(found != ctx->var_root_globals.end())
+    // {
+    //   return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    // }
+    auto const found_root(ctx->var_root_globals.find(qualified_name));
+    if(found_root != ctx->var_root_globals.end())
     {
-      // if(ctx->builder->GetInsertBlock() == ctx->global_ctor_block)
-      // {
-      //   return found->second;
-      // }
-      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found_root->second);
     }
+
     auto &global(ctx->var_root_globals[qualified_name]);
     auto const name(util::format("var_root_{}", munge(qualified_name->to_string())));
     auto const var_root(create_global_var(name));
@@ -380,30 +395,30 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::call_ref const expr, expr::function_arity const &arity)
   {
-    llvm::Value *callee{};
+    // llvm::Value *callee{};
 
-    if(__rt_ctx->opts.direct_linking && expr->source_expr.data->kind == expression_kind::var_deref)
-    {
-      auto var_deref_ref = jtl::static_ref_cast<expr::var_deref>(expr->source_expr);
-      auto var = var_deref_ref.data->var;
-      auto var_root = var->get_root();
-      /* TODO: Support native_function_wrapper type in direct-linking */
-      if(var_root->type == object_type::jit_function)
-      {
-        auto qualified_name(var_deref_ref->qualified_name);
-        auto const var_root_ref(gen_var_root(qualified_name));
-        callee = var_root_ref;
-      }
-      else
-      {
-        callee = gen(expr->source_expr, arity);
-      }
-    }
-    else
-    {
-      callee = gen(expr->source_expr, arity);
-    }
-    // auto const callee(gen(expr->source_expr, arity));
+    // if(__rt_ctx->opts.direct_linking && expr->source_expr.data->kind == expression_kind::var_deref)
+    // {
+    //   auto var_deref_ref = jtl::static_ref_cast<expr::var_deref>(expr->source_expr);
+    //   auto var = var_deref_ref.data->var;
+    //   auto var_root = var->get_root();
+    //   /* TODO: Support native_function_wrapper type in direct-linking */
+    //   if(var_root->type == object_type::jit_function || var_root->type == object_type::var_unbound_root)
+    //   {
+    //     auto qualified_name(var_deref_ref->qualified_name);
+    //     auto const var_root_ref(gen_var_root(qualified_name));
+    //     callee = var_root_ref;
+    //   }
+    //   else
+    //   {
+    //     callee = gen(expr->source_expr, arity);
+    //   }
+    // }
+    // else
+    // {
+    //   callee = gen(expr->source_expr, arity);
+    // }
+    auto const callee(gen(expr->source_expr, arity));
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
     arg_handles.reserve(expr->arg_exprs.size() + 1);
