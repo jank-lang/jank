@@ -366,7 +366,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
-    native_unordered_map<runtime::object_ref, jank::read::parse::object_source_info> parsed_keys{};
+    native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
     /* TODO: Only use an array map if everything can fit. */
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -389,7 +389,8 @@ namespace jank::read::parse
       }
       auto const value(it.latest.unwrap().expect_ok());
 
-      if(auto parsed_key = parsed_keys.find(key.unwrap().ptr); parsed_key != parsed_keys.end())
+      if(auto const parsed_key = parsed_keys.find(key.unwrap().ptr);
+         parsed_key != parsed_keys.end())
       {
         return error::parse_duplicate_keys_in_map(
           {
@@ -602,7 +603,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
-    native_unordered_map<runtime::object_ref, jank::read::parse::object_source_info> parsed_items{};
+    native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
     runtime::detail::native_transient_hash_set ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -611,22 +612,22 @@ namespace jank::read::parse
         return err(it.latest.unwrap().expect_err());
       }
 
-      auto const item(it.latest.unwrap().expect_ok());
+      auto const item(it.latest.unwrap().expect_ok().unwrap());
 
-      if(auto parsed_item = parsed_items.find(item.unwrap().ptr); parsed_item != parsed_items.end())
+      if(auto const parsed_item = parsed_items.find(item.ptr); parsed_item != parsed_items.end())
       {
         return error::parse_duplicate_items_in_set(
           {
-            item.unwrap().start.start,
-            item.unwrap().end.end
+            item.start.start,
+            item.end.end
         },
           { "Original item.",
             { parsed_item->second.start.start, parsed_item->second.end.end },
             error::note::kind::info });
       }
 
-      parsed_items.insert({ item.unwrap().ptr, item.unwrap() });
-      ret.insert(item.unwrap().ptr);
+      parsed_items.insert({ item.ptr, item });
+      ret.insert(item.ptr);
     }
     if(expected_closer.is_some())
     {
