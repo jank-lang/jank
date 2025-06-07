@@ -607,7 +607,7 @@ namespace jank::analyze
     std::string scope_name{};
     if(is_ctor)
     {
-      scope_name = Cpp::GetScopeName(val->scope);
+      scope_name = Cpp::GetName(val->scope);
       Cpp::LookupConstructors("", val->scope, fns);
     }
     else if(is_member_call)
@@ -620,7 +620,7 @@ namespace jank::analyze
     }
     else
     {
-      scope_name = Cpp::GetScopeName(val->scope);
+      scope_name = Cpp::GetName(val->scope);
       fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
       if(fns.empty())
       {
@@ -3091,7 +3091,7 @@ namespace jank::analyze
     }
 
     auto const type{ Cpp::GetTypeFromScope(scope) };
-    if(Cpp::IsClass(scope) || Cpp::IsClassTemplateSpecialization(scope) || Cpp::IsEnumType(type))
+    if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope) || Cpp::IsEnumType(type))
     {
       if(is_ctor)
       {
@@ -3357,7 +3357,7 @@ namespace jank::analyze
       Cpp::GetStaticDatamembers(parent_scope, static_members);
       for(auto const m : static_members)
       {
-        if(Cpp::GetScopeName(m) == name)
+        if(Cpp::GetName(m) == name)
         {
           member_scope = m;
           break;

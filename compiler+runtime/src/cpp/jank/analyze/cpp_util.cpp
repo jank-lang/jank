@@ -279,20 +279,19 @@ namespace jank::analyze::cpp_util
       if(Cpp::IsFunctionDeleted(match))
       {
         /* TODO: Would be great to point at the C++ source for where it's deleted. */
-        return err(
-          util::format("Unable to call '{}' since it's deleted.", Cpp::GetScopeName(match)));
+        return err(util::format("Unable to call '{}' since it's deleted.", Cpp::GetName(match)));
       }
       if(Cpp::IsPrivateMethod(match))
       {
         return err(
           util::format("The '{}' function is private. It can only be accessed if it's public.",
-                       Cpp::GetScopeName(match)));
+                       Cpp::GetName(match)));
       }
       if(Cpp::IsProtectedMethod(match))
       {
         return err(
           util::format("The '{}' function is protected. It can only be accessed if it's public.",
-                       Cpp::GetScopeName(match)));
+                       Cpp::GetName(match)));
       }
     }
     return match;
