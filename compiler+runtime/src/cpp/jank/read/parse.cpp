@@ -353,7 +353,6 @@ namespace jank::read::parse
                                latest_token };
   }
 
-  /* TODO: Uniqueness check. */
   processor::object_result processor::parse_map()
   {
     auto const start_token((*token_current).expect_ok());
@@ -367,6 +366,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
+    native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
     /* TODO: Only use an array map if everything can fit. */
     runtime::detail::native_persistent_array_map ret;
     for(auto it(begin()); it != end(); ++it)
@@ -375,12 +375,12 @@ namespace jank::read::parse
       {
         return err(it.latest.unwrap().expect_err());
       }
-      auto const key(it.latest.unwrap().expect_ok());
+      auto const key(it.latest.unwrap().expect_ok().unwrap());
 
       if(++it == end())
       {
         return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
-                                               { key.unwrap().start.start, key.unwrap().end.end });
+                                               { key.start.start, key.end.end });
       }
 
       if(it.latest.unwrap().is_err())
@@ -389,7 +389,20 @@ namespace jank::read::parse
       }
       auto const value(it.latest.unwrap().expect_ok());
 
-      ret.insert_or_assign(key.unwrap().ptr, value.unwrap().ptr);
+      if(auto const parsed_key = parsed_keys.find(key.ptr); parsed_key != parsed_keys.end())
+      {
+        return error::parse_duplicate_keys_in_map(
+          {
+            key.start.start,
+            key.end.end
+        },
+          { "Original key.",
+            { parsed_key->second.start.start, parsed_key->second.end.end },
+            error::note::kind::info });
+      }
+
+      parsed_keys.insert({ key.ptr, key });
+      ret.insert_or_assign(key.ptr, value.unwrap().ptr);
     }
     if(expected_closer.is_some())
     {
@@ -589,6 +602,7 @@ namespace jank::read::parse
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
+    native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
     runtime::detail::native_transient_hash_set ret;
     for(auto it(begin()); it != end(); ++it)
     {
@@ -596,7 +610,23 @@ namespace jank::read::parse
       {
         return err(it.latest.unwrap().expect_err());
       }
-      ret.insert(it.latest.unwrap().expect_ok().unwrap().ptr);
+
+      auto const item(it.latest.unwrap().expect_ok().unwrap());
+
+      if(auto const parsed_item = parsed_items.find(item.ptr); parsed_item != parsed_items.end())
+      {
+        return error::parse_duplicate_items_in_set(
+          {
+            item.start.start,
+            item.end.end
+        },
+          { "Original item.",
+            { parsed_item->second.start.start, parsed_item->second.end.end },
+            error::note::kind::info });
+      }
+
+      parsed_items.insert({ item.ptr, item });
+      ret.insert(item.ptr);
     }
     if(expected_closer.is_some())
     {

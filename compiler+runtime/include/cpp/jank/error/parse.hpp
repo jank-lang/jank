@@ -14,6 +14,10 @@ namespace jank::error
   error_ref parse_unterminated_set(read::source const &source);
   error_ref
   parse_odd_entries_in_map(read::source const &map_source, read::source const &last_key_source);
+  error_ref parse_duplicate_keys_in_map(read::source const &duplicate_key_source,
+                                        note const &original_key_source);
+  error_ref parse_duplicate_items_in_set(read::source const &duplicate_item_source,
+                                         note const &original_item_source);
   error_ref parse_invalid_quote(read::source const &source, jtl::immutable_string const &note);
   error_ref parse_invalid_meta_hint_value(read::source const &source);
   error_ref
