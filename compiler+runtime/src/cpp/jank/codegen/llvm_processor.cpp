@@ -182,7 +182,7 @@ namespace jank::codegen
     ctx.builder->CreateStore(arg_alloc, arg_array_0);
 
     auto const ret_alloc{
-      alloc_type(ctx, output_type, util::format("{}.ret_alloc", match_name).c_str())
+      alloc_type(ctx, output_type, util::format("{}.alloc", match_name).c_str())
     };
 
     llvm::SmallVector<llvm::Value *, 4> const args{
@@ -197,7 +197,9 @@ namespace jank::codegen
       return ret_alloc;
     }
 
-    auto const load_ret{ ctx.builder->CreateLoad(ctx.builder->getPtrTy(), ret_alloc, "ret") };
+    auto const load_ret{ ctx.builder->CreateLoad(ctx.builder->getPtrTy(),
+                                                 ret_alloc,
+                                                 util::format("{}.res", match_name).c_str()) };
 
     /* If it's a typed object, erase it. */
     auto const ret_type{ Cpp::GetFunctionReturnType(match) };
@@ -212,10 +214,11 @@ namespace jank::codegen
     //util::println("convert_object ret_type = {}, needs base adjustment by {} bytes",
     //              Cpp::GetTypeAsString(ret_type),
     //              base_offset);
-    auto const ret_base{ ctx.builder->CreateInBoundsGEP(ctx.builder->getInt8Ty(),
-                                                        load_ret,
-                                                        { ctx.builder->getInt32(base_offset) },
-                                                        "ret_base") };
+    auto const ret_base{ ctx.builder->CreateInBoundsGEP(
+      ctx.builder->getInt8Ty(),
+      load_ret,
+      { ctx.builder->getInt32(base_offset) },
+      util::format("{}.base", load_ret->getName().str()).c_str()) };
     return ret_base;
   }
 
@@ -1322,7 +1325,7 @@ namespace jank::codegen
     llvm::Value *ctor_alloc{};
     if(!is_void)
     {
-      ctor_alloc = alloc_type(*ctx, expr_type, util::format("{}.ret", name));
+      ctor_alloc = alloc_type(*ctx, expr_type, util::format("{}.res", name));
     }
 
     /* For member function calls, we steal the first argument and use it as
@@ -1338,10 +1341,13 @@ namespace jank::codegen
     auto const member_offset{ requires_this_obj ? 1 : 0 };
     auto const arg_count{ arg_exprs.size() - member_offset };
     auto const args_array_type{ llvm::ArrayType::get(ctx->builder->getPtrTy(), arg_count) };
-    /* TODO: If we have no args, don't alloc an array. */
-    auto const args_array{
-      ctx->builder->CreateAlloca(args_array_type, nullptr, util::format("{}.args", name).c_str())
-    };
+    auto const args_array{ arg_count == 0
+                             ? static_cast<llvm::Value *>(
+                                 llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()))
+                             : static_cast<llvm::Value *>(ctx->builder->CreateAlloca(
+                                 args_array_type,
+                                 nullptr,
+                                 util::format("{}.args", name).c_str())) };
 
     for(usize i{}; i < arg_exprs.size(); ++i)
     {
