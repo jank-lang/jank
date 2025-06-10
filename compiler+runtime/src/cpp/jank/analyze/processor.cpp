@@ -209,7 +209,24 @@ namespace jank::analyze
       if((Cpp::IsPointerType(args[0].m_Type) && !Cpp::IsIntegral(args[1].m_Type))
          || (Cpp::IsPointerType(args[1].m_Type) && !Cpp::IsIntegral(args[0].m_Type)))
       {
-        return invalid_unary(args, op_name, val, macro_expansions);
+        return invalid_binary(args, op_name, val, macro_expansions);
+      }
+    }
+
+    return ok();
+  }
+
+  static validator_ret no_lhs_ptr_math(std::vector<Cpp::TemplateArgInfo> const &args,
+                                       jtl::immutable_string const &op_name,
+                                       expr::cpp_value_ref const val,
+                                       native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(args.size() == 2)
+    {
+      if(Cpp::IsIntegral(args[0].m_Type) && Cpp::IsPointerType(args[1].m_Type))
+      {
+        /* TODO: Add a note to swap the arguments. */
+        return invalid_binary(args, op_name, val, macro_expansions);
       }
     }
 
@@ -390,7 +407,7 @@ namespace jank::analyze
       //{ Cpp::OP_Array_New, {} },
       //{ Cpp::OP_Array_Delete, {} },
       {                Cpp::OP_Plus,                  { { no_unary, no_weird_ptr_math } } },
-      {               Cpp::OP_Minus,                  { { no_unary, no_weird_ptr_math } } },
+      {               Cpp::OP_Minus, { { no_unary, no_weird_ptr_math, no_lhs_ptr_math } } },
       {                Cpp::OP_Star,  { { no_unary_non_ptr, no_binary_ptrs }, star_type } },
       {               Cpp::OP_Slash,                            { { no_unary, no_ptrs } } },
       {             Cpp::OP_Percent,                        { { no_unary, no_non_ints } } },
