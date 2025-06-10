@@ -24,7 +24,7 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string const &user_cache_dir()
+  jtl::immutable_string const &user_cache_dir(jtl::immutable_string const &binary_version)
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -38,7 +38,7 @@ namespace jank::util
       res = util::format("{}/jank", home);
       return res;
     }
-    res = util::format("{}/.cache/jank", user_home_dir());
+    res = util::format("{}/.cache/jank/{}", user_home_dir(), binary_version);
     return res;
   }
 
@@ -60,10 +60,7 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string const &
-  binary_cache_dir(i64 const optimization_level,
-                   native_vector<jtl::immutable_string> const &includes,
-                   native_vector<jtl::immutable_string> const &defines)
+  jtl::immutable_string const &binary_cache_dir(jtl::immutable_string const &binary_version)
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -71,7 +68,7 @@ namespace jank::util
       return res;
     }
 
-    return res = util::format("target/{}", binary_version(optimization_level, includes, defines));
+    return res = util::format("target/{}", binary_version);
   }
 
   /* The binary version is composed of two things:

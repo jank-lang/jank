@@ -43,9 +43,10 @@ namespace jank::runtime
 
   context::context(util::cli::options const &opts)
     : jit_prc{ opts }
-    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
-                                               opts.include_dirs,
-                                               opts.define_macros) }
+    , binary_version{ util::binary_version(opts.optimization_level,
+                                           opts.include_dirs,
+                                           opts.define_macros) }
+    , binary_cache_dir{ util::binary_cache_dir(binary_version) }
     , module_loader{ *this, opts.module_path }
   {
     auto const cpp(intern_ns(make_box<obj::symbol>("cpp")));
