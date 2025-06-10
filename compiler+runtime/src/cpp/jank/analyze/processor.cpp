@@ -576,8 +576,10 @@ namespace jank::analyze
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
       auto const parent_scope{ obj_scope ? Cpp::GetParentScope(obj_scope) : nullptr };
+      auto const arg_scope{ arg_count == 2 ? Cpp::GetScopeFromType(arg_types[1].m_Type) : nullptr };
+      auto const arg_parent_scope{ arg_scope ? Cpp::GetParentScope(arg_scope) : nullptr };
       auto const global_scope{ Cpp::GetGlobalScope() };
-      for(auto const scope : { obj_scope, parent_scope, global_scope })
+      for(auto const scope : { obj_scope, parent_scope, arg_scope, arg_parent_scope, global_scope })
       {
         if(!scope)
         {
