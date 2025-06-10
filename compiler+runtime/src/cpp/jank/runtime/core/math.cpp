@@ -623,7 +623,7 @@ namespace jank::runtime
             }
             else
             {
-              return make_box(long(typed_l_data / typed_r_data)).erase();
+              return make_box(static_cast<i64>(typed_l_data / typed_r_data)).erase();
             }
           },
           r,
@@ -1733,6 +1733,7 @@ namespace jank::runtime
       o);
   }
 
+  /* TODO: Rename these to match the type name. */
   i64 parse_long(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
