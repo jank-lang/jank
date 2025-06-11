@@ -171,6 +171,8 @@ namespace jank::jit
         }
       }
 
+      util::println(
+        "\n===============================================================================");
       CHECK(failures.empty());
       for(auto const &f : skips)
       {
