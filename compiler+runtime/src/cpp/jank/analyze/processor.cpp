@@ -515,7 +515,8 @@ namespace jank::analyze
                                                        jtl::move(arg_exprs));
     }
 
-    auto const is_member_call{ val->val_kind == expr::cpp_value::value_kind::member_call };
+    /* We may set this later, if the operator we choose ends up being a member function. */
+    auto is_member_call{ val->val_kind == expr::cpp_value::value_kind::member_call };
     if(is_member_call)
     {
       if(arg_exprs.empty())
@@ -678,6 +679,10 @@ namespace jank::analyze
     jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
     {
+      if(cpp_util::is_non_static_member_function(match))
+      {
+        is_member_call = true;
+      }
       //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       if(is_member_call)
       {
@@ -746,6 +751,11 @@ namespace jank::analyze
     match = conversion_match_res.expect_ok();
     if(match)
     {
+      if(cpp_util::is_non_static_member_function(match))
+      {
+        is_member_call = true;
+      }
+
       //util::println("\tconversion match found with new arg types");
       //for(auto const arg : new_types.expect_ok())
       //{

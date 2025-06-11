@@ -31,6 +31,7 @@ namespace jank::analyze::cpp_util
   bool is_any_object(jtl::ptr<void> type);
   bool is_primitive(jtl::ptr<void> type);
   bool is_member_function(jtl::ptr<void> scope);
+  bool is_non_static_member_function(jtl::ptr<void> scope);
 
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();
