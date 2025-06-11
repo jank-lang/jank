@@ -145,7 +145,7 @@ namespace jank::analyze::cpp_util
    * primitives instead. */
   bool is_primitive(jtl::ptr<void> const type)
   {
-    return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type);
+    return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type);
   }
 
   jtl::ptr<void> expression_type(expression_ref const expr)

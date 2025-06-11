@@ -191,7 +191,7 @@ namespace jank::analyze
                                         expr::cpp_value_ref const val,
                                         native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type))
+    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type) || Cpp::IsArrayType(args[0].m_Type))
     {
       return ok();
     }
@@ -354,6 +354,10 @@ namespace jank::analyze
     if(args.size() == 2)
     {
       return common_type(args);
+    }
+    else if(Cpp::IsArrayType(args[0].m_Type))
+    {
+      return Cpp::GetArrayElementType(args[0].m_Type);
     }
 
     return Cpp::GetPointeeType(args[0].m_Type);
