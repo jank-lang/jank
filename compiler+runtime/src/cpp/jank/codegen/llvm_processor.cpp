@@ -77,7 +77,7 @@ namespace jank::codegen
 
     ir_type = ctx.builder->getInt8Ty();
     ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1);
-    if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type))
+    if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type) || Cpp::IsArrayType(type))
     {
       ir_type = ctx.builder->getPtrTy();
     }
