@@ -1,0 +1,8 @@
+(let* [i (cpp/int. 4)
+       ++i (cpp/++ i)
+       _ (assert (= 5 ++i))
+
+       f (cpp/float. 5.0)
+       ++f (cpp/++ f)
+       _ (assert (= 6.0 ++f))]
+  :success)

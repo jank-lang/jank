@@ -1,0 +1,6 @@
+(let* [i (cpp/int. 1)
+       pi (cpp/& i)
+       l (cpp/int. 1)
+       pl (cpp/& l)
+       _ (cpp/> pi pl)]
+  :success)

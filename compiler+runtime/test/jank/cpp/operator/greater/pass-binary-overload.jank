@@ -1,0 +1,46 @@
+(cpp/raw "namespace jank::cpp::operator_::greater::pass_binary_compatible_types
+          {
+            struct foo
+            {
+              bool operator >(long l)
+              {
+                return a > l;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+
+            bool operator>(foo const &lhs, foo const &rhs)
+            { return lhs.a > rhs.a; }
+            bool operator>(int lhs, foo const &rhs)
+            { return lhs > rhs.a; }
+            bool operator>(foo const &lhs, int rhs)
+            { return lhs.a > rhs; }
+          }")
+(let* [i0 (cpp/int.)
+       i2 (cpp/int. 2)
+       i10 (cpp/int. 10)
+       i12 (cpp/int. 12)
+       lhs-foo (cpp/jank.cpp.operator_.greater.pass_binary_compatible_types.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.greater.pass_binary_compatible_types.foo. i0 i2)
+
+       ; foo > foo
+       _ (assert (= false (cpp/> lhs-foo lhs-foo)))
+       _ (assert (= true (cpp/> lhs-foo rhs-foo)))
+       _ (assert (= true (cpp/> lhs-foo rhs-foo)))
+
+       ; int > foo
+       _ (assert (= true (cpp/> i12 lhs-foo)))
+       _ (assert (= false (cpp/> i2 lhs-foo)))
+
+       ; foo > int
+       _ (assert (= false (cpp/> rhs-foo i2)))
+       _ (assert (= true (cpp/> i10 rhs-foo)))
+
+       ; member foo > long
+       l9 (cpp/long. 9)
+       _ (assert (= true (cpp/> lhs-foo l9)))
+       _ (assert (= false (cpp/> rhs-foo l9)))]
+  :success)

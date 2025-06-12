@@ -1,0 +1,22 @@
+(cpp/raw "namespace jank::cpp::operator_::minusminus::pass_overload
+          {
+            struct foo
+            {
+              foo& operator --()
+              {
+                --a;
+                return *this;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+          }")
+(let* [i0 (cpp/int.)
+       i5 (cpp/int. 5)
+       foo (cpp/jank.cpp.operator_.minusminus.pass_overload.foo. i0 i5)
+       _ (cpp/-- foo)
+       _ (assert (= 4 (cpp/.-a foo)))
+       _ (assert (= 3 (cpp/.-a (cpp/-- foo))))]
+  :success)

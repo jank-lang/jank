@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::operator_::plusplus::pass_pointer
+          {
+            int foo[2]{ 2, 4 };
+          }")
+(let* [&foo0 cpp/jank.cpp.operator_.plusplus.pass_pointer.foo
+       _ (assert (= 2 (cpp/* &foo0)))
+       &foo1 (cpp/++ &foo0)
+       _ (assert (= 4 (cpp/* &foo1)))]
+  :success)

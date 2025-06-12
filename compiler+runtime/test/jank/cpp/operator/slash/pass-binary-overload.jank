@@ -1,0 +1,45 @@
+(cpp/raw "namespace jank::cpp::operator_::slash::pass_binary_compatible_types
+          {
+            struct foo
+            {
+              foo& operator /(long l)
+              {
+                a /= l;
+                return *this;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+
+            foo operator/(foo const &lhs, foo const &rhs)
+            { return { 0, lhs.a / rhs.a }; }
+            foo operator/(int lhs, foo const &rhs)
+            { return { 0, lhs / rhs.a }; }
+            foo operator/(foo const &lhs, int rhs)
+            { return { 0, lhs.a / rhs }; }
+          }")
+(let* [i0 (cpp/int.)
+       i2 (cpp/int. 2)
+       i10 (cpp/int. 10)
+       lhs-foo (cpp/jank.cpp.operator_.slash.pass_binary_compatible_types.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.slash.pass_binary_compatible_types.foo. i0 i2)
+
+       ; foo / foo
+       foos (cpp// lhs-foo rhs-foo)
+       _ (assert (= 5 (cpp/.-a foos)))
+
+       ; int / foo
+       i*foo (cpp// i10 lhs-foo)
+       _ (assert (= 1 (cpp/.-a i*foo)))
+
+       ; foo / int
+       foo*i (cpp// lhs-foo i2)
+       _ (assert (= 5 (cpp/.-a foo*i)))
+
+       ; member foo / long
+       l2 (cpp/long. 2)
+       foo-member*l (cpp// lhs-foo l2)
+       _ (assert (= 5 (cpp/.-a foo-member*l)))]
+  :success)

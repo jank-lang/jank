@@ -1,0 +1,7 @@
+(let* [i (cpp/int. 1)
+       p (cpp/& i)
+       np (cpp/- p i)
+       _ (assert (cpp/< np p))
+       _ (assert (cpp/== (cpp/- p i) np))
+       _ (assert (= 1 (cpp/* (cpp/+ np i))))]
+  :success)
