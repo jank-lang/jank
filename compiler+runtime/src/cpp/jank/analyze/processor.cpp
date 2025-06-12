@@ -436,7 +436,7 @@ namespace jank::analyze
       {       Cpp::OP_LessLessEqual,             { { no_unary, no_non_ints }, left_type } },
       { Cpp::OP_GreaterGreaterEqual,             { { no_unary, no_non_ints }, left_type } },
       {          Cpp::OP_EqualEqual, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {        Cpp::OP_ExclaimEqual,             { { no_unary, no_non_ints }, left_type } },
+      {        Cpp::OP_ExclaimEqual, { { no_unary, no_binary_incompat_ptrs }, bool_type } },
       {           Cpp::OP_LessEqual,                 { { no_unary, no_ptrs }, bool_type } },
       {        Cpp::OP_GreaterEqual,                 { { no_unary, no_ptrs }, bool_type } },
       //{           Cpp::OP_Spaceship, { { no_unary, no_binary_incompat_ptrs } } },
