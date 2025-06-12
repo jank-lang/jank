@@ -821,6 +821,14 @@ namespace jank::read::parse
         CHECK(r1.is_err());
       }
 
+      SUBCASE("Promoted maps")
+      {
+        lex::processor lp{ "{:k1 1 :k2 2 :k3 3 :k4 4 :k5 5 :k6 6 :k7 7 :k8 8 :k9 9 :k10 10}" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_ok());
+      }
+
       SUBCASE("Duplicate keys")
       {
         lex::processor lp{ "{:k1 1 :k2 2 :k1 2}" };

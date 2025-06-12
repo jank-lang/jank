@@ -118,7 +118,7 @@ namespace jank::read::parse
 
   processor::iterator &processor::iterator::operator++()
   {
-    latest = some(p.next());
+    latest = some(p->next());
     return *this;
   }
 
@@ -130,12 +130,6 @@ namespace jank::read::parse
   bool processor::iterator::operator==(processor::iterator const &rhs) const
   {
     return latest == rhs.latest;
-  }
-
-  processor::iterator &processor::iterator::operator=(processor::iterator const &rhs)
-  {
-    latest = rhs.latest;
-    return *this;
   }
 
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
@@ -365,56 +359,100 @@ namespace jank::read::parse
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    native_vector<processor::object_result> const items(begin(), end());
 
-    native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
-    /* TODO: Only use an array map if everything can fit. */
-    runtime::detail::native_persistent_array_map ret;
-    for(auto it(begin()); it != end(); ++it)
-    {
-      if(it.latest.unwrap().is_err())
-      {
-        return err(it.latest.unwrap().expect_err());
-      }
-      auto const key(it.latest.unwrap().expect_ok().unwrap());
-
-      if(++it == end())
-      {
-        return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
-                                               { key.start.start, key.end.end });
-      }
-
-      if(it.latest.unwrap().is_err())
-      {
-        return err(it.latest.unwrap().expect_err());
-      }
-      auto const value(it.latest.unwrap().expect_ok());
-
-      if(auto const parsed_key = parsed_keys.find(key.ptr); parsed_key != parsed_keys.end())
-      {
-        return error::parse_duplicate_keys_in_map(
-          {
-            key.start.start,
-            key.end.end
-        },
-          { "Original key.",
-            { parsed_key->second.start.start, parsed_key->second.end.end },
-            error::note::kind::info });
-      }
-
-      parsed_keys.insert({ key.ptr, key });
-      ret.insert_or_assign(key.ptr, value.unwrap().ptr);
-    }
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_map(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
-    return object_source_info{ make_box<obj::persistent_array_map>(
-                                 source_to_meta(start_token.start, latest_token.end),
-                                 std::move(ret)),
-                               start_token,
-                               latest_token };
+
+    native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
+
+    auto const build_map([&](auto &ret) -> processor::object_result {
+      using T = std::remove_reference_t<decltype(ret)>;
+
+      for(auto item(items.begin()); item != items.end(); ++item)
+      {
+        if(item->is_err())
+        {
+          return err(item->expect_err());
+        }
+        auto const key(item->expect_ok().unwrap());
+
+        if(++item == items.end())
+        {
+          return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
+                                                 { key.start.start, key.end.end });
+        }
+
+        if(item->is_err())
+        {
+          return err(item->expect_err());
+        }
+        auto const value(item->expect_ok());
+
+        if(auto const parsed_key = parsed_keys.find(key.ptr); parsed_key != parsed_keys.end())
+        {
+          return error::parse_duplicate_keys_in_map(
+            {
+              key.start.start,
+              key.end.end
+          },
+            { "Original key.",
+              { parsed_key->second.start.start, parsed_key->second.end.end },
+              error::note::kind::info });
+        }
+
+        parsed_keys.insert({ key.ptr, key });
+
+        if constexpr(std::same_as<T, runtime::detail::native_persistent_array_map>)
+        {
+          ret.insert_or_assign(key.ptr, value.unwrap().ptr);
+        }
+        else
+        {
+          ret = ret.insert(std::make_pair(key.ptr, value.unwrap().ptr));
+        }
+      }
+
+      return jtl::ok(none);
+    });
+
+    /* TODO: use transients to build up maps. */
+    if(items.size() <= runtime::detail::native_persistent_array_map::max_size)
+    {
+      runtime::detail::native_persistent_array_map ret;
+      auto res = build_map(ret);
+
+      if(res.is_err())
+      {
+        return res;
+      }
+
+      return object_source_info{ make_box<obj::persistent_array_map>(
+                                   source_to_meta(start_token.start, latest_token.end),
+                                   std::move(ret)),
+                                 start_token,
+                                 latest_token };
+    }
+    else
+    {
+      runtime::detail::native_persistent_hash_map ret;
+      auto res = build_map(ret);
+
+      if(res.is_err())
+      {
+        return res;
+      }
+
+      return object_source_info{ make_box<obj::persistent_hash_map>(
+                                   source_to_meta(start_token.start, latest_token.end),
+                                   std::move(ret)),
+                                 start_token,
+                                 latest_token };
+    }
   }
 
   processor::object_result processor::parse_quote()
@@ -1458,11 +1496,11 @@ namespace jank::read::parse
 
   processor::iterator processor::begin()
   {
-    return { some(next()), *this };
+    return { some(next()), this };
   }
 
   processor::iterator processor::end()
   {
-    return { some(ok(none)), *this };
+    return { some(ok(none)), this };
   }
 }
