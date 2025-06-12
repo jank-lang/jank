@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::fail_private
+(cpp/raw "namespace jank::cpp::call::member::fail_private
           {
             class bar
             {
@@ -10,5 +10,5 @@
 
             bar b;
           }")
-(let* [a (cpp/.foo cpp/jank.test.cpp.call.member.fail_private.b)]
+(let* [a (cpp/.foo cpp/jank.cpp.call.member.fail_private.b)]
   :success)

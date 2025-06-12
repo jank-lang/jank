@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::pass_choose_const
+(cpp/raw "namespace jank::cpp::call::member::pass_choose_const
           {
             struct bar
             {
@@ -15,6 +15,6 @@
 
             bar const b;
           }")
-(let* [a (cpp/.foo cpp/jank.test.cpp.call.member.pass_choose_const.b (cpp/int. 7))]
+(let* [a (cpp/.foo cpp/jank.cpp.call.member.pass_choose_const.b (cpp/int. 7))]
   (if (= 8 a)
     :success))

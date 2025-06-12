@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::global::pass_template
+(cpp/raw "namespace jank::cpp::call::global::pass_template
           {
             template <typename T>
             struct bar
@@ -10,5 +10,5 @@
             };
             using string_bar = bar<std::string>;
           }")
-(let* [a (cpp/jank.test.cpp.call.global.pass_template.string_bar.foo)]
+(let* [a (cpp/jank.cpp.call.global.pass_template.string_bar.foo)]
   (keyword a))

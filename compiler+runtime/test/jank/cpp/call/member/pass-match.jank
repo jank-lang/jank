@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::pass_match
+(cpp/raw "namespace jank::cpp::call::member::pass_match
           {
             struct bar
             {
@@ -15,8 +15,8 @@
 
             int a{ 7 };
           }")
-(let* [b (cpp/jank.test.cpp.call.member.pass_match.bar.)
-       a (cpp/.foo b cpp/jank.test.cpp.call.member.pass_match.a)
+(let* [b (cpp/jank.cpp.call.member.pass_match.bar.)
+       a (cpp/.foo b cpp/jank.cpp.call.member.pass_match.a)
        f (cpp/.foo b (cpp/float. 3.0))]
   (if (and (= 8 a) (= 3.0 f))
     :success))

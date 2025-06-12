@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::global_value::fail_unknown_value { }")
-(if (= 5 cpp/jank.test.cpp.global_value.fail_unknown_value.barp)
+(cpp/raw "namespace jank::cpp::global_value::fail_unknown_value { }")
+(if (= 5 cpp/jank.cpp.global_value.fail_unknown_value.barp)
   :success
   :failure)

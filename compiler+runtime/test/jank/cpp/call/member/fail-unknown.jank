@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::fail_unknown
+(cpp/raw "namespace jank::cpp::call::member::fail_unknown
           {
             struct bar
             {
@@ -6,5 +6,5 @@
 
             bar const b;
           }")
-(let* [a (cpp/.unknown cpp/jank.test.cpp.call.member.fail_unknown.b)]
+(let* [a (cpp/.unknown cpp/jank.cpp.call.member.fail_unknown.b)]
   :success)

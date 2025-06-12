@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::test::cpp::null::pass_nullptr_t
+(cpp/raw "namespace jank::cpp::null::pass_nullptr_t
           {
             short foo(std::nullptr_t)
             {
               return 7;
             }
           }")
-(let* [a (cpp/jank.test.cpp.null.pass_nullptr_t.foo cpp/nullptr)]
+(let* [a (cpp/jank.cpp.null.pass_nullptr_t.foo cpp/nullptr)]
   (if (= 7 a)
     :success))

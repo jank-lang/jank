@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::cpp::operator_::greaterequal::pass_binary_compatible_types
+(cpp/raw "namespace jank::cpp::operator_::greaterequal::pass_binary_overload
           {
             struct foo
             {
-              bool operator >=(long l)
+              bool operator >=(long *l)
               {
-                return a >= l;
+                return a >= *l;
               }
 
               /* Not used. Ensures we're offsetting fields correctly. */
@@ -23,8 +23,8 @@
        i2 (cpp/int. 2)
        i10 (cpp/int. 10)
        i12 (cpp/int. 12)
-       lhs-foo (cpp/jank.cpp.operator_.greaterequal.pass_binary_compatible_types.foo. i0 i10)
-       rhs-foo (cpp/jank.cpp.operator_.greaterequal.pass_binary_compatible_types.foo. i0 i2)
+       lhs-foo (cpp/jank.cpp.operator_.greaterequal.pass_binary_overload.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.greaterequal.pass_binary_overload.foo. i0 i2)
 
        ; foo >= foo
        _ (assert (= true (cpp/>= lhs-foo lhs-foo)))
@@ -41,6 +41,7 @@
 
        ; member foo >= long
        l9 (cpp/long. 9)
-       _ (assert (= true (cpp/>= lhs-foo l9)))
-       _ (assert (= false (cpp/>= rhs-foo l9)))]
+       &l9 (cpp/& l9)
+       _ (assert (= true (cpp/>= lhs-foo &l9)))
+       _ (assert (= false (cpp/>= rhs-foo &l9)))]
   :success)

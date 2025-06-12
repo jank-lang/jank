@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::overload::fail_no_match
+(cpp/raw "namespace jank::cpp::call::overload::fail_no_match
           {
             int foo(int const * const a)
             {
@@ -6,5 +6,5 @@
             }
           }")
 (let* [f (cpp/float. 5.0)
-       ff (cpp/jank.test.cpp.call.overload.fail_no_match.foo f)]
+       ff (cpp/jank.cpp.call.overload.fail_no_match.foo f)]
   :success)

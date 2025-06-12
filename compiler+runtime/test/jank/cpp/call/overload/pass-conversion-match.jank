@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::test::cpp::call::overload::pass_conversion_match
+(cpp/raw "namespace jank::cpp::call::overload::pass_conversion_match
           {
             int foo(int const a)
             {
               return a;
             }
           }")
-(let* [ff (cpp/jank.test.cpp.call.overload.pass_conversion_match.foo 200)]
+(let* [ff (cpp/jank.cpp.call.overload.pass_conversion_match.foo 200)]
   (if (= 200 ff)
     :success))

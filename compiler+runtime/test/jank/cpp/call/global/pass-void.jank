@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::global::pass_void
+(cpp/raw "namespace jank::cpp::call::global::pass_void
           {
             int a{ 5 };
 
@@ -7,8 +7,8 @@
               a = 10;
             }
           }")
-(let* [_ (assert (= 5 cpp/jank.test.cpp.call.global.pass_void.a))
-       a (cpp/jank.test.cpp.call.global.pass_void.foo)
-       _ (assert (= 10 cpp/jank.test.cpp.call.global.pass_void.a))]
+(let* [_ (assert (= 5 cpp/jank.cpp.call.global.pass_void.a))
+       a (cpp/jank.cpp.call.global.pass_void.foo)
+       _ (assert (= 10 cpp/jank.cpp.call.global.pass_void.a))]
   (if (nil? a)
     :success))

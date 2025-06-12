@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::cpp::operator_::percent::pass_binary_compatible_types
+(cpp/raw "namespace jank::cpp::operator_::percent::pass_binary_overload
           {
             struct foo
             {
-              foo& operator %(long l)
+              foo& operator %(long *l)
               {
-                a %= l;
+                a %= *l;
                 return *this;
               }
 
@@ -24,8 +24,8 @@
        i2 (cpp/int. 2)
        i10 (cpp/int. 10)
        i25 (cpp/int. 25)
-       lhs-foo (cpp/jank.cpp.operator_.percent.pass_binary_compatible_types.foo. i0 i10)
-       rhs-foo (cpp/jank.cpp.operator_.percent.pass_binary_compatible_types.foo. i0 i2)
+       lhs-foo (cpp/jank.cpp.operator_.percent.pass_binary_overload.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.percent.pass_binary_overload.foo. i0 i2)
 
        ; foo % foo
        foos (cpp/% lhs-foo rhs-foo)
@@ -41,6 +41,7 @@
 
        ; member foo % long
        l3 (cpp/long. 3)
-       foo-member%l (cpp/% lhs-foo l3)
+       &l3 (cpp/& l3)
+       foo-member%l (cpp/% lhs-foo &l3)
        _ (assert (= 1 (cpp/.-a foo-member%l)))]
   :success)

@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::cpp::operator_::minus::pass_binary_compatible_types
+(cpp/raw "namespace jank::cpp::operator_::minus::pass_binary_overload
           {
             struct foo
             {
-              foo& operator -(long l)
+              foo& operator -(long *l)
               {
-                a -= l;
+                a -= *l;
                 return *this;
               }
 
@@ -23,8 +23,8 @@
 (let* [i0 (cpp/int.)
        i5 (cpp/int. 5)
        i10 (cpp/int. 10)
-       lhs-foo (cpp/jank.cpp.operator_.minus.pass_binary_compatible_types.foo. i0 i10)
-       rhs-foo (cpp/jank.cpp.operator_.minus.pass_binary_compatible_types.foo. i0 i5)
+       lhs-foo (cpp/jank.cpp.operator_.minus.pass_binary_overload.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.minus.pass_binary_overload.foo. i0 i5)
 
        ; foo - foo
        foos (cpp/- lhs-foo rhs-foo)
@@ -40,6 +40,7 @@
 
        ; member foo - long
        l20 (cpp/long. 20)
-       foo-member-l (cpp/- lhs-foo l20)
+       &l20 (cpp/& l20)
+       foo-member-l (cpp/- lhs-foo &l20)
        _ (assert (= -10 (cpp/.-a foo-member-l)))]
   :success)

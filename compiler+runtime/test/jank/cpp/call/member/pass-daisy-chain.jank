@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::pass_daisy_chain
+(cpp/raw "namespace jank::cpp::call::member::pass_daisy_chain
           {
             struct bar
             {
@@ -23,7 +23,7 @@
 
             bar const b;
           }")
-(let* [b (cpp/jank.test.cpp.call.member.pass_daisy_chain.bar.)
+(let* [b (cpp/jank.cpp.call.member.pass_daisy_chain.bar.)
        a (cpp/.get (cpp/.inc (cpp/.add b 5)))]
   (if (= 6 a)
     :success))

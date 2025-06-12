@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::member::pass_ref_qualifier
+(cpp/raw "namespace jank::cpp::call::member::pass_ref_qualifier
           {
             struct bar
             {
@@ -17,9 +17,9 @@
             bar &b2{ b };
             bar &&c{ std::move(b) };
           }")
-(let* [b nil ;(cpp/.foo cpp/jank.test.cpp.call.member.pass_ref_qualifier.b (cpp/int. 7))
-       b2 nil ;(cpp/.foo cpp/jank.test.cpp.call.member.pass_ref_qualifier.b2 (cpp/int. 7))
-       c (cpp/.foo cpp/jank.test.cpp.call.member.pass_ref_qualifier.c (cpp/int. 7))]
+(let* [b nil ;(cpp/.foo cpp/jank.cpp.call.member.pass_ref_qualifier.b (cpp/int. 7))
+       b2 nil ;(cpp/.foo cpp/jank.cpp.call.member.pass_ref_qualifier.b2 (cpp/int. 7))
+       c (cpp/.foo cpp/jank.cpp.call.member.pass_ref_qualifier.c (cpp/int. 7))]
   (println :b b :b2 b2 :c c)
   (if (and (= 7 b) (= 7 b2) (= 8 c))
     :success))

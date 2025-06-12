@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::constructor::complex::pass_argument
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_argument
           {
             struct foo
             {
@@ -10,6 +10,6 @@
             };
           }")
 (let* [arg (cpp/int. 5)
-       f (cpp/jank.test.cpp.constructor.complex.pass_argument.foo. arg)]
+       f (cpp/jank.cpp.constructor.complex.pass_argument.foo. arg)]
   (if (and (= 5 (cpp/.-a f)) (= 5 (cpp/.-b f)))
     :success))

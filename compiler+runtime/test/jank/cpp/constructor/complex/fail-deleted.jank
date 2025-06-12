@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::constructor::complex::fail_deleted
+(cpp/raw "namespace jank::cpp::constructor::complex::fail_deleted
           {
             struct foo
             {
@@ -7,5 +7,5 @@
               int a{}, b{7};
             };
           }")
-(let* [f (cpp/jank.test.cpp.constructor.complex.fail_deleted.foo.)]
+(let* [f (cpp/jank.cpp.constructor.complex.fail_deleted.foo.)]
   :success)

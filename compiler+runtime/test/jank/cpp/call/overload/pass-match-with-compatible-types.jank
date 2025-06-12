@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::overload::pass_match_with_compatible_types
+(cpp/raw "namespace jank::cpp::call::overload::pass_match_with_compatible_types
           {
             int foo(int const a)
             {
@@ -20,8 +20,8 @@
             }
           }")
 (let* [f (cpp/float. 5.0)
-       ff (cpp/jank.test.cpp.call.overload.pass_match_with_compatible_types.foo f)
+       ff (cpp/jank.cpp.call.overload.pass_match_with_compatible_types.foo f)
        i (cpp/int. 888)
-       ii (cpp/jank.test.cpp.call.overload.pass_match_with_compatible_types.foo_bar i)]
+       ii (cpp/jank.cpp.call.overload.pass_match_with_compatible_types.foo_bar i)]
   (if (and (= 5 ff) (= 888 ii))
     :success))

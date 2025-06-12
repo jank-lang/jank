@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::cpp::operator_::less::pass_binary_compatible_types
+(cpp/raw "namespace jank::cpp::operator_::less::pass_binary_overload
           {
             struct foo
             {
-              bool operator <(long l)
+              bool operator <(long *l)
               {
-                return a < l;
+                return a < *l;
               }
 
               /* Not used. Ensures we're offsetting fields correctly. */
@@ -22,8 +22,8 @@
 (let* [i0 (cpp/int.)
        i2 (cpp/int. 2)
        i10 (cpp/int. 10)
-       lhs-foo (cpp/jank.cpp.operator_.less.pass_binary_compatible_types.foo. i0 i10)
-       rhs-foo (cpp/jank.cpp.operator_.less.pass_binary_compatible_types.foo. i0 i2)
+       lhs-foo (cpp/jank.cpp.operator_.less.pass_binary_overload.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.less.pass_binary_overload.foo. i0 i2)
 
        ; foo < foo
        _ (assert (= false (cpp/< lhs-foo lhs-foo)))
@@ -40,6 +40,7 @@
 
        ; member foo < long
        l10 (cpp/long. 10)
-       _ (assert (= false (cpp/< lhs-foo l10)))
-       _ (assert (= true (cpp/< rhs-foo l10)))]
+       &l10 (cpp/& l10)
+       _ (assert (= false (cpp/< lhs-foo &l10)))
+       _ (assert (= true (cpp/< rhs-foo &l10)))]
   :success)

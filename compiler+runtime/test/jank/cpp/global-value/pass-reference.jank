@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::global_value::pass_reference { int const &boop{ 5 }; }")
-(if (= 5 cpp/jank.test.cpp.global_value.pass_reference.boop)
+(cpp/raw "namespace jank::cpp::global_value::pass_reference { int const &boop{ 5 }; }")
+(if (= 5 cpp/jank.cpp.global_value.pass_reference.boop)
   :success
   :failure)

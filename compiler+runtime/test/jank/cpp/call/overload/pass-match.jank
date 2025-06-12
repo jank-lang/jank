@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::test::cpp::call::overload::pass_match
+(cpp/raw "namespace jank::cpp::call::overload::pass_match
           {
             int foo()
             {
@@ -16,8 +16,8 @@
             }
           }")
 (let* [i (cpp/int. 10)
-       fi (cpp/jank.test.cpp.call.overload.pass_match.foo i)
+       fi (cpp/jank.cpp.call.overload.pass_match.foo i)
        f (cpp/float. 5.0)
-       ff (cpp/jank.test.cpp.call.overload.pass_match.foo f)]
+       ff (cpp/jank.cpp.call.overload.pass_match.foo f)]
   (if (and (= 10 fi) (= 5.0 ff))
     :success))

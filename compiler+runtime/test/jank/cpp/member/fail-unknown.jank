@@ -1,10 +1,10 @@
-(cpp/raw "namespace jank::test::cpp::member::fail_unknown
+(cpp/raw "namespace jank::cpp::member::fail_unknown
           {
             struct bar
             {
               int a{};
             };
           }")
-(let* [b (cpp/jank.test.cpp.member.fail_unknown.bar.)
+(let* [b (cpp/jank.cpp.member.fail_unknown.bar.)
        a (cpp/.-not_found b)]
   :success)
