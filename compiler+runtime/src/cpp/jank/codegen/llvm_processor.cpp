@@ -1369,8 +1369,14 @@ namespace jank::codegen
       auto const is_arg_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
       /* If we're constructing a builtin type, we don't have a ctor fn. We know the
        * param type we need though. */
-      jtl::ptr<void> const param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset)
-                                          : expr_type.data };
+      jtl::ptr<void> param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset)
+                                    : expr_type.data };
+      /* If our function is variadic, we won't have a param type for each variadic
+       * param. Instead, we use the arg type. */
+      if(!param_type)
+      {
+        param_type = arg_type;
+      }
       //util::println("gen_aot_call arg {}, arg type {}, param type {}, implicitly convertible {}",
       //              i,
       //              Cpp::GetTypeAsString(arg_type),
