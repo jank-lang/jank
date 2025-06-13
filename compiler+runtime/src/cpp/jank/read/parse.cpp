@@ -370,8 +370,8 @@ namespace jank::read::parse
 
     native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
 
-    auto const build_map([&](auto &ret) -> processor::object_result {
-      using T = std::remove_reference_t<decltype(ret)>;
+    auto const build_map([&](auto &map) -> jtl::result<void, error_ref> {
+      using T = std::remove_reference_t<decltype(map)>;
 
       for(auto item(items.begin()); item != items.end(); ++item)
       {
@@ -409,47 +409,47 @@ namespace jank::read::parse
 
         if constexpr(std::same_as<T, runtime::detail::native_persistent_array_map>)
         {
-          ret.insert_or_assign(key.ptr, value.unwrap().ptr);
+          map.insert_or_assign(key.ptr, value.unwrap().ptr);
         }
         else
         {
-          ret = ret.insert(std::make_pair(key.ptr, value.unwrap().ptr));
+          map = map.insert(std::make_pair(key.ptr, value.unwrap().ptr));
         }
       }
 
-      return jtl::ok(none);
+      return jtl::ok();
     });
 
     /* TODO: use transients to build up maps. */
     if(items.size() <= runtime::detail::native_persistent_array_map::max_size)
     {
-      runtime::detail::native_persistent_array_map ret;
-      auto res = build_map(ret);
+      runtime::detail::native_persistent_array_map map{};
+      auto res = build_map(map);
 
       if(res.is_err())
       {
-        return res;
+        return res.expect_err();
       }
 
       return object_source_info{ make_box<obj::persistent_array_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(ret)),
+                                   std::move(map)),
                                  start_token,
                                  latest_token };
     }
     else
     {
-      runtime::detail::native_persistent_hash_map ret;
-      auto res = build_map(ret);
+      runtime::detail::native_persistent_hash_map map{};
+      auto res = build_map(map);
 
       if(res.is_err())
       {
-        return res;
+        return res.expect_err();
       }
 
       return object_source_info{ make_box<obj::persistent_hash_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(ret)),
+                                   std::move(map)),
                                  start_token,
                                  latest_token };
     }
