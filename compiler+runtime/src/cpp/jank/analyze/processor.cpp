@@ -3139,6 +3139,28 @@ namespace jank::analyze
                                              latest_expansion(macro_expansions));
     }
 
+    if(Cpp::IsTemplatedFunction(scope))
+    {
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_value>(position,
+                                              current_frame,
+                                              needs_box,
+                                              sym,
+                                              nullptr,
+                                              scope,
+                                              expr::cpp_value::value_kind::constructor);
+      }
+
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            nullptr,
+                                            scope,
+                                            expr::cpp_value::value_kind::function);
+    }
+
     auto const type{ Cpp::GetTypeFromScope(scope) };
     if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope) || Cpp::IsEnumType(type))
     {
