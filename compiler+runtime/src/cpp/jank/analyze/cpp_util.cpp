@@ -112,9 +112,16 @@ namespace jank::analyze::cpp_util
     return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
   }
 
-  bool is_non_static_member_function(jtl::ptr<void> scope)
+  bool is_non_static_member_function(jtl::ptr<void> const scope)
   {
     return is_member_function(scope) && !Cpp::IsStaticMethod(scope);
+  }
+
+  bool is_nullptr(jtl::ptr<void> const type)
+  {
+    static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
+      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("std::nullptr_t"))) };
+    return Cpp::GetCanonicalType(type) == ret;
   }
 
   bool is_untyped_object(jtl::ptr<void> const type)
