@@ -1,0 +1,7 @@
+(let* [one (cpp/int. 1)
+       i (cpp/int. 2)
+       l (cpp/long. 5)
+       _ (assert (= 4 (cpp/<< i one)))
+       _ (assert (= 4 (cpp/<< one i)))
+       _ (assert (= 20 (cpp/<< l i)))]
+  :success)
