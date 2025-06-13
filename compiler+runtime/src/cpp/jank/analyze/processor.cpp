@@ -436,7 +436,7 @@ namespace jank::analyze
       {                Cpp::OP_Pipe,                            { { no_unary, no_binary_non_ints } } },
       {               Cpp::OP_Tilde,                                  { { no_binary, no_non_ints } } },
       {             Cpp::OP_Exclaim,                                    { { no_binary }, bool_type } },
-      {               Cpp::OP_Equal,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
+      {               Cpp::OP_Equal,            { { no_unary, no_binary_incompat_ptrs }, left_type } },
       {                Cpp::OP_Less,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
       {             Cpp::OP_Greater,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
       {           Cpp::OP_PlusEqual,                  { { no_unary, no_weird_ptr_math }, left_type } },
