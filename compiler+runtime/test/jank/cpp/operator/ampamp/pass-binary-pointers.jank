@@ -1,0 +1,5 @@
+(let* [&i (cpp/& (cpp/int. 3))
+       &l (cpp/& (cpp/long. 0))
+       _ (assert (= false (cpp/&& &i cpp/nullptr)))]
+  (if (cpp/&& &i &l)
+    :success))

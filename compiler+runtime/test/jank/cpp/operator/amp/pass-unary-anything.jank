@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::operator_::amp::pass_unary_anything
+          {
+            struct foo
+            {
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              float a{ 5.0f };
+            };
+          }")
+(let* [a (cpp/int. -555)
+       &a (cpp/& a)
+       &&a (cpp/& &a)
+       _ (assert (= -555 (cpp/* (cpp/* &&a))))
+
+       foo (cpp/jank.cpp.operator_.amp.pass_unary_anything.foo.)
+       &foo (cpp/& foo)
+       _ (assert (= 5.0 (cpp/.-a (cpp/* &foo))))]
+  :success)

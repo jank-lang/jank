@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::cpp::operator_::star::pass_binary_compatible_types
+(cpp/raw "namespace jank::cpp::operator_::star::pass_binary_overload
           {
             struct foo
             {
@@ -23,8 +23,8 @@
 (let* [i0 (cpp/int.)
        i5 (cpp/int. 5)
        i10 (cpp/int. 10)
-       lhs-foo (cpp/jank.cpp.operator_.star.pass_binary_compatible_types.foo. i0 i5)
-       rhs-foo (cpp/jank.cpp.operator_.star.pass_binary_compatible_types.foo. i0 i10)
+       lhs-foo (cpp/jank.cpp.operator_.star.pass_binary_overload.foo. i0 i5)
+       rhs-foo (cpp/jank.cpp.operator_.star.pass_binary_overload.foo. i0 i10)
 
        ; foo * foo
        foos (cpp/* lhs-foo rhs-foo)

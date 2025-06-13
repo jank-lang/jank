@@ -1,0 +1,4 @@
+(let* [_ (assert (= true (cpp/! cpp/nullptr)))
+       &i (cpp/& (cpp/int. 5))
+       _ (assert (= false (cpp/! &i)))]
+  :success)

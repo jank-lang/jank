@@ -1,0 +1,5 @@
+(let* [i (cpp/int. 3)
+       l (cpp/long. 0)
+       f (cpp/float. 1.0)]
+  (if (and (cpp/&& i f) (cpp/! l))
+    :success))
