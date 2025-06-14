@@ -823,10 +823,20 @@ namespace jank::read::parse
 
       SUBCASE("Promoted maps")
       {
-        lex::processor lp{ "{:k1 1 :k2 2 :k3 3 :k4 4 :k5 5 :k6 6 :k7 7 :k8 8 :k9 9 :k10 10}" };
+        jtl::immutable_string const source{
+          "{:k1 1 :k2 2 :k3 3 :k4 4 :k5 5 :k6 6 :k7 7 :k8 8 :k9 9 :k10 10}"
+        };
+        lex::processor lp{ source };
         processor p{ lp.begin(), lp.end() };
-        auto const r1(p.next());
-        CHECK(r1.is_ok());
+        auto const r(p.next());
+
+        CHECK(r.is_ok());
+
+        auto const t(r.expect_ok().unwrap());
+
+        CHECK(t.ptr.data->type == object_type::persistent_hash_map);
+        CHECK(t.start == lex::token{ 0, 1, lex::token_kind::open_curly_bracket });
+        CHECK(t.end == lex::token{ source.size() - 1, 1, lex::token_kind::close_curly_bracket });
       }
 
       SUBCASE("Duplicate keys")
