@@ -1704,7 +1704,6 @@ namespace jank::analyze
           exprs.emplace_back(k_expr.expect_ok_move(), v_expr.expect_ok_move());
         }
 
-        /* TODO: Uniqueness check. */
         return jtl::make_ref<expr::map>(position,
                                         current_frame,
                                         true,
