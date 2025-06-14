@@ -5,7 +5,7 @@
    [babashka.fs :as fs]
    [babashka.process :as proc]
    [clojure.string :as str]
-   [clojure.test :as t :refer [deftest is run-test testing use-fixtures]]))
+   [clojure.test :as t :refer [deftest is testing use-fixtures]]))
 
 (def this-nsym (ns-name *ns*))
 

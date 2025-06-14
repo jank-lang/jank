@@ -76,13 +76,12 @@ extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_obj
 extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
 
-    /* TODO: Is there a better way to do this then copying? */
-    auto const ordered_modules{ __rt_ctx->loaded_modules_in_order.copy() };
-    for(auto const &m : ordered_modules)
+    auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
+    for(auto const &it : *modules_rlocked)
     {
       util::format_to(sb,
                       R"(extern "C" jank_object_ref {}();)",
-                      module::module_to_load_function(m));
+                      module::module_to_load_function(it));
       sb("\n");
     }
 
@@ -97,9 +96,9 @@ int main(int argc, const char** argv)
 
     )");
 
-    for(auto const &m : ordered_modules)
+    for(auto const &it : *modules_rlocked)
     {
-      util::format_to(sb, "{}();\n", module::module_to_load_function(m));
+      util::format_to(sb, "{}();\n", module::module_to_load_function(it));
     }
 
     sb(R"(auto const apply{ jank_var_intern_c("clojure.core", "apply") };)");
@@ -128,9 +127,6 @@ int main(int argc, const char** argv)
     std::ofstream out(main_file_path);
     out << sb.release();
 
-    out.flush();
-    out.close();
-
     return main_file_path;
   }
 
@@ -138,54 +134,48 @@ int main(int argc, const char** argv)
   {
     auto const entrypoint_path{ gen_entrypoint(module) };
 
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> const diag_opts{
-      new clang::DiagnosticOptions()
-    };
+    auto const diag_opts{ new clang::DiagnosticOptions() };
     auto *diag_client{
       new clang::TextDiagnosticPrinter{ llvm::errs(), &*diag_opts }
     };
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
+    auto const diag_id{ new clang::DiagnosticIDs() };
     clang::DiagnosticsEngine diags{ diag_id, &*diag_opts, diag_client, /*ShouldOwnClient=*/true };
 
-    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> const vfs{ llvm::vfs::getRealFileSystem() };
+    auto const vfs{ llvm::vfs::getRealFileSystem() };
 
-    std::string const target_triple{ llvm::sys::getDefaultTargetTriple() };
+    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
 
-    /* The Driver needs the path to the executable (used for finding related tools/resources)
-     * For this example, we'll use argv[0] or a placeholder. This might need adjustment
-     * depending on how/where your program is run relative to clang resources.
-     * TODO: Ensure correct clang++ version. Will be OS dependent. */
+    /* TODO: Ensure correct clang++ version. */
     auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
     if(!clang_inferred_path)
     {
       return compiler_err{ 1, "clang++ executable not found. Ensure it exists on the path!" };
     }
-    clang::driver::Driver driver(clang_inferred_path.get(),
-                                 target_triple,
-                                 diags,
-                                 "jank_aot_compilation",
-                                 vfs);
+    clang::driver::Driver driver{ clang_inferred_path.get(),
+                                  target_triple,
+                                  diags,
+                                  "jank_aot_compilation",
+                                  vfs };
     driver.setCheckInputsExist(false);
 
-    std::vector<char const *> Args = { strdup(clang_inferred_path.get().c_str()) };
+    std::vector<char const *> compiler_args = { strdup(clang_inferred_path.get().c_str()) };
 
-    /* TODO: Can we avoid copying? */
-    for(auto const &module : __rt_ctx->loaded_modules_in_order.copy())
+    auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
+    for(auto const &it : *modules_rlocked)
     {
-      auto const &module_path{
-        util::format("{}.o", relative_to_cache_dir(module::module_to_path(module)))
-      };
+      auto const &module_path{ util::format("{}.o",
+                                            relative_to_cache_dir(module::module_to_path(it))) };
 
       if(std::filesystem::exists(module_path.c_str()))
       {
-        Args.push_back(strdup(module_path.c_str()));
+        compiler_args.push_back(strdup(module_path.c_str()));
       }
       else
       {
         auto const find_res{ __rt_ctx->module_loader.find(module, module::origin::latest) };
         if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
         {
-          Args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+          compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
         }
         else
         {
@@ -194,18 +184,18 @@ int main(int argc, const char** argv)
       }
     }
 
-    Args.push_back(strdup("-x"));
-    Args.push_back(strdup("c++"));
-    Args.push_back(strdup(entrypoint_path.c_str()));
+    compiler_args.push_back(strdup("-x"));
+    compiler_args.push_back(strdup("c++"));
+    compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
     for(auto const &include_dir : include_dirs)
     {
-      Args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
+      compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
     for(auto const &library_dir : library_dirs)
     {
-      Args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
+      compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
 
     for(auto const &lib : { "-ljank",
@@ -227,61 +217,59 @@ int main(int argc, const char** argv)
                             "-lcpptrace",
                             "-ldwarf" })
     {
-      Args.push_back(strdup(lib));
+      compiler_args.push_back(strdup(lib));
     }
 
     for(auto const &define : define_macros)
     {
-      Args.push_back(strdup(util::format("-D{}", define).c_str()));
+      compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
 
-    Args.push_back(strdup("-std=c++20"));
+    compiler_args.push_back(strdup("-std=c++20"));
 
-    Args.push_back(strdup("-o"));
+    compiler_args.push_back(strdup("-o"));
     auto const output_filepath{ relative_to_cache_dir(output_filename) };
-    Args.push_back(strdup(output_filepath.c_str()));
+    compiler_args.push_back(strdup(output_filepath.c_str()));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
     util::scope_exit const cleanup{ [&]() {
-      for(auto const s : Args)
+      for(auto const s : compiler_args)
       {
         /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
         free(reinterpret_cast<void *>(const_cast<char *>(s)));
       }
     } };
 
-    llvm::ArrayRef<char const *> const Argv(Args);
+    llvm::ArrayRef<char const *> const Argv(compiler_args);
 
-    std::unique_ptr<clang::driver::Compilation> C(driver.BuildCompilation(Argv));
+    auto compilation(driver.BuildCompilation(Argv));
 
-    if(!C || C->containsError())
+    if(!compilation || compilation->containsError())
     {
       return compiler_err{ 1, "Failed to build compilation steps." };
     }
 
     /* Execute the compilation jobs (preprocess, compile, assemble)
      * This actually runs the commands determined by BuildCompilation. */
-    int Result = 0;
-    if(C && !C->containsError())
+    int exit_code = 1;
+    if(compilation && !compilation->containsError())
     {
-      llvm::SmallVector<std::pair<int, clang::driver::Command const *>> FailingCommands;
-      Result = driver.ExecuteCompilation(*C, FailingCommands);
+      llvm::SmallVector<std::pair<int, clang::driver::Command const *>> failing_commands;
+      exit_code = driver.ExecuteCompilation(*compilation, failing_commands);
 
-      for(auto const &P : FailingCommands)
+      for(auto const &failing_command : failing_commands)
       {
         /* Check if command signaled an error */
-        if(P.first < 0)
+        if(failing_command.first < 0)
         {
-          llvm::errs() << "Error executing command: " << P.second->getExecutable() << "\n";
+          util::println(stderr,
+                        "Error executing command: {}",
+                        failing_command.second->getExecutable());
 
           /* TODO: We can print more details about the failing command P.second */
         }
       }
-    }
-    else
-    {
-      Result = 1;
     }
 
     if(diags.hasErrorOccurred())
@@ -289,17 +277,13 @@ int main(int argc, const char** argv)
       return compiler_err{ 1, "Compilation failed with errors.\n" };
     }
 
-    if(Result == 0)
+    if(exit_code)
     {
-      llvm::outs() << util::format("Compilation successful. Find the executable at: `{}`",
-                                   output_filepath)
-                        .c_str();
-    }
-    else
-    {
-      return compiler_err{ Result, "Compilation command execution failed.\n" };
+      return compiler_err{ exit_code, "Compilation command execution failed." };
     }
 
-    return jtl::ok();
+    util::println("Compilation successful. Find the executable at: `{}`", output_filepath);
+
+    return ok();
   }
 }

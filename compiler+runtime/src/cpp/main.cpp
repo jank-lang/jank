@@ -272,6 +272,11 @@ int main(int const argc, char const **argv)
     }
     auto const &opts(parse_result.expect_ok());
 
+    if(opts.gc_incremental)
+    {
+      GC_enable_incremental();
+    }
+
     profile::configure(opts);
     profile::timer const timer{ "main" };
 

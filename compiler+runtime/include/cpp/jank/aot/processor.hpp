@@ -3,7 +3,6 @@
 #include <jtl/immutable_string.hpp>
 #include <jtl/result.hpp>
 
-/* Forward declared */
 namespace jank::util::cli
 {
   struct options;
