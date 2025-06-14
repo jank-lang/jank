@@ -421,7 +421,7 @@ namespace jank::read::parse
     });
 
     /* TODO: use transients to build up maps. */
-    if(items.size() <= runtime::detail::native_persistent_array_map::max_size)
+    if((items.size() / 2) <= runtime::detail::native_persistent_array_map::max_size)
     {
       runtime::detail::native_persistent_array_map map{};
       auto res = build_map(map);
