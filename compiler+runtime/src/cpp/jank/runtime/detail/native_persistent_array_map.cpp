@@ -101,9 +101,11 @@ namespace jank::runtime::detail
                                                  value });
           return ret;
         }
-      // TODO: Convert to hash map.
       default:
-        throw std::runtime_error{ util::format("unsupported array size: {}", length + 2) };
+        throw std::runtime_error{ util::format(
+          "Unable to expand array map to size {}. Be sure to check the size prior to insertion and "
+          "promote to hash map if needed.",
+          (length / 2) + 1) };
     }
   }
 
