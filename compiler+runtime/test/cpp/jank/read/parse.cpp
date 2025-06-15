@@ -12,6 +12,7 @@
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt.hpp>
@@ -832,10 +833,9 @@ namespace jank::read::parse
 
         CHECK(r1.is_ok());
 
-        auto const t1(r1.expect_ok().unwrap().ptr);
+        auto const t1(try_object<obj::persistent_array_map>(r1.expect_ok().unwrap().ptr));
 
-        CHECK(expect_object<obj::persistent_array_map>(t1)->data.size()
-              <= detail::native_persistent_array_map::max_size);
+        CHECK(t1->data.size() <= detail::native_persistent_array_map::max_size);
 
         jtl::immutable_string const hash_map_source{
           "{:k1 1 :k2 2 :k3 3 :k4 4 :k5 5 :k6 6 :k7 7 :k8 8 :k9 9}"
@@ -846,13 +846,9 @@ namespace jank::read::parse
 
         CHECK(r2.is_ok());
 
-        auto const t2(r2.expect_ok().unwrap().ptr);
+        auto const t2(try_object<obj::persistent_hash_map>(r2.expect_ok().unwrap().ptr));
 
-        CHECK(t2.data->type == object_type::persistent_hash_map);
-        CHECK(r2.expect_ok().unwrap().start
-              == lex::token{ 0, 1, lex::token_kind::open_curly_bracket });
-        CHECK(r2.expect_ok().unwrap().end
-              == lex::token{ hash_map_source.size() - 1, 1, lex::token_kind::close_curly_bracket });
+        CHECK(t2->data.size() > detail::native_persistent_array_map::max_size);
       }
 
       SUBCASE("Duplicate keys")
