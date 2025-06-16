@@ -53,6 +53,7 @@ namespace jank::analyze
     throw_,
     try_,
     case_,
+    cpp_raw,
     cpp_type,
     cpp_value,
     cpp_cast,
@@ -111,6 +112,8 @@ namespace jank::analyze
         return "try_";
       case expression_kind::case_:
         return "case_";
+      case expression_kind::cpp_raw:
+        return "cpp_raw";
       case expression_kind::cpp_type:
         return "cpp_type";
       case expression_kind::cpp_value:

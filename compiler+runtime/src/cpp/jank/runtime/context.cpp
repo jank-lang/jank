@@ -49,18 +49,7 @@ namespace jank::runtime
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
     , module_loader{ *this, opts.module_path }
   {
-    auto const cpp(intern_ns(make_box<obj::symbol>("cpp")));
-    auto const cpp_raw{ cpp->intern_var("raw") };
-    cpp_raw->bind_root(make_box<obj::native_function_wrapper>(
-      std::function<object_ref(object_ref)>{ [](object_ref const src) -> object_ref {
-        auto const str{ to_string(src) };
-        if(Cpp::Declare(str.c_str()))
-        {
-          throw std::runtime_error{ "Unable to compile C++ source" };
-        }
-        return jank_nil;
-      } }));
-
+    intern_ns(make_box<obj::symbol>("cpp"));
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 
     auto const file_sym(make_box<obj::symbol>("*file*"));

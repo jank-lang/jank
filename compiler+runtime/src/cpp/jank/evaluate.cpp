@@ -707,6 +707,13 @@ namespace jank::evaluate
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
   }
 
+  object_ref eval(expr::cpp_raw_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_raw", {})));
+  }
+
   object_ref eval(expr::cpp_type_ref const)
   {
     throw make_box("unsupported eval: cpp_type").erase();

@@ -45,6 +45,7 @@
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
 #include <jank/analyze/expr/cpp_cast.hpp>
@@ -1014,6 +1015,7 @@ namespace jank::analyze
       {    make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
       {      make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
       {    make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
+      {  make_box<symbol>("cpp/raw"),  make_fn(&processor::analyze_cpp_raw) },
       { make_box<symbol>("cpp/cast"), make_fn(&processor::analyze_cpp_cast) },
     };
   }
@@ -3272,6 +3274,56 @@ namespace jank::analyze
                           position,
                           needs_box,
                           macro_expansions);
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_raw(obj::persistent_list_ref const l,
+                             local_frame_ptr const current_frame,
+                             expression_position const position,
+                             jtl::option<expr::function_context_ref> const &fn_ctx,
+                             bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count != 2)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure(
+        "A 'cpp/raw' form must take a string literal of C++ code and nothing else.",
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const string_obj(l->data.rest().first().unwrap());
+    auto string_expr_res(
+      analyze(string_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(string_expr_res.is_err())
+    {
+      return string_expr_res.expect_err_move();
+    }
+    auto const string_expr{ string_expr_res.expect_ok() };
+
+    if(string_expr->kind != expression_kind::primitive_literal)
+    {
+      return error::internal_analyze_failure(
+               "The first and only argument to 'cpp/raw' must be a string of C++ code.",
+               object_source(string_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+    auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
+    if(obj->type != runtime::object_type::persistent_string)
+    {
+      return error::internal_analyze_failure(
+               "The first and only argument to 'cpp/raw' must be a string of C++ code.",
+               object_source(string_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    return jtl::make_ref<expr::cpp_raw>(position,
+                                        current_frame,
+                                        needs_box,
+                                        expect_object<runtime::obj::persistent_string>(obj)->data);
   }
 
   processor::expression_result

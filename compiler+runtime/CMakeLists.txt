@@ -276,6 +276,7 @@ add_library(
   src/cpp/jank/analyze/expr/function.cpp
   src/cpp/jank/analyze/expr/try.cpp
   src/cpp/jank/analyze/expr/case.cpp
+  src/cpp/jank/analyze/expr/cpp_raw.cpp
   src/cpp/jank/analyze/expr/cpp_type.cpp
   src/cpp/jank/analyze/expr/cpp_value.cpp
   src/cpp/jank/analyze/expr/cpp_cast.cpp

@@ -1240,6 +1240,23 @@ namespace jank::codegen
     return nullptr;
   }
 
+  llvm::Value *llvm_processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
+  {
+    auto const parse_res{ __rt_ctx->jit_prc.interpreter->Parse(expr->code.c_str()) };
+    llvm::Linker::linkModules(
+      *ctx->module,
+      /* TODO: Will need to share context with interpreter or serialize module to bitcode
+       * in order to avoid context issues. */
+      llvm::CloneModule(*parse_res->TheModule));
+
+    auto const ret{ gen_global(jank_nil) };
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(ret);
+    }
+    return ret;
+  }
+
   llvm::Value *llvm_processor::gen(expr::cpp_type_ref const, expr::function_arity const &)
   {
     throw std::runtime_error{ "cpp_type has no codegen" };

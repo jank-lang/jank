@@ -22,6 +22,7 @@
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
 #include <jank/analyze/expr/cpp_cast.hpp>
@@ -80,6 +81,8 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::try_>(e), std::forward<Args>(args)...);
       case expression_kind::case_:
         return f(jtl::static_ref_cast<expr::case_>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_raw:
+        return f(jtl::static_ref_cast<expr::cpp_raw>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_type:
         return f(jtl::static_ref_cast<expr::cpp_type>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_value:
