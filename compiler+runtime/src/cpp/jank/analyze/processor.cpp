@@ -3162,6 +3162,20 @@ namespace jank::analyze
     }
 
     auto const type{ Cpp::GetTypeFromScope(scope) };
+
+    /* Primitive types through an alias use a scope which needs to be resolved before
+     * we can figure out that we're working with a primitive type. */
+    if(cpp_util::is_primitive(Cpp::GetCanonicalType(type)) && is_ctor)
+    {
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            type,
+                                            scope,
+                                            expr::cpp_value::value_kind::constructor);
+    }
+
     if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope) || Cpp::IsEnumType(type))
     {
       if(is_ctor)
