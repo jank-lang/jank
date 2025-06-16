@@ -1242,7 +1242,11 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
   {
-    auto const parse_res{ __rt_ctx->jit_prc.interpreter->Parse(expr->code.c_str()) };
+    auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(expr->code.c_str()) };
+    if(!parse_res)
+    {
+      throw std::runtime_error{ "Unable to parse 'cpp/raw' expression." };
+    }
     llvm::Linker::linkModules(
       *ctx->module,
       /* TODO: Will need to share context with interpreter or serialize module to bitcode
