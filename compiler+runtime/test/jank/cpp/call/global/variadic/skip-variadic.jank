@@ -1,0 +1,25 @@
+(cpp/raw "#include <cstdarg>")
+(cpp/raw "namespace jank::cpp::call::global::variadic::pass_variadic
+          {
+            int sum(int const n, ...)
+            {
+              va_list args;
+              va_start(args, n);
+
+              int ret{};
+
+              for(int i{}; i < n; ++i)
+              {
+                int const arg{ va_arg(args, int) };
+                ret += arg;
+              }
+
+              va_end(args);
+              return ret;
+            }
+          }")
+(let* [n (cpp/int. 5)
+       i (cpp/int. 2)
+       a (cpp/jank.cpp.call.global.variadic.pass_variadic.sum n i i i i i)]
+  (if (= 10 a)
+    :success))

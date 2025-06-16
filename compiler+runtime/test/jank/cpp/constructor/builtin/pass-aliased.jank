@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::constructor::builtin::pass_aliased
+          {
+            using T = int;
+          }")
+(let* [i500 (cpp/int. 500)
+       a (cpp/jank.cpp.constructor.builtin.pass_aliased.T. i500)]
+  (if (= 500 a)
+    :success))

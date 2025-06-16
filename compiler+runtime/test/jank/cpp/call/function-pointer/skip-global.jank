@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::call::function_pointer::pass_global
+          {
+            int foo(int a)
+            { return a + 2; }
+          }")
+(let* [fp cpp/jank.cpp.call.function_pointer.pass_global.foo
+       r (fp (cpp/int. 5))]
+  (if (= 7 r)
+    :success))
