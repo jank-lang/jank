@@ -55,10 +55,9 @@ namespace jank::read::parse
       iterator &operator++();
       bool operator!=(iterator const &rhs) const;
       bool operator==(iterator const &rhs) const;
-      iterator &operator=(iterator const &);
 
       jtl::option<value_type> latest;
-      processor &p;
+      jtl::ref<processor> p;
     };
 
     processor(lex::processor::iterator const &b, lex::processor::iterator const &e);
