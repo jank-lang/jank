@@ -1,4 +1,4 @@
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -109,14 +109,14 @@ namespace jank::runtime::detail
     }
   }
 
-  void native_persistent_array_map::insert_unique(object_ref const key, object_ref const val)
+  void native_array_map::insert_unique(object_ref const key, object_ref const val)
   {
     data = make_next_array(data, length, key, val);
     length += 2;
     hash = 0;
   }
 
-  void native_persistent_array_map::insert_or_assign(object_ref const key, object_ref const val)
+  void native_array_map::insert_or_assign(object_ref const key, object_ref const val)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -145,7 +145,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  object_ref native_persistent_array_map::find(object_ref const key) const
+  object_ref native_array_map::find(object_ref const key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -170,7 +170,7 @@ namespace jank::runtime::detail
     return {};
   }
 
-  void native_persistent_array_map::erase(object_ref const key)
+  void native_array_map::erase(object_ref const key)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -210,7 +210,7 @@ namespace jank::runtime::detail
     }
   }
 
-  uhash native_persistent_array_map::to_hash() const
+  uhash native_array_map::to_hash() const
   {
     if(hash != 0)
     {
@@ -220,36 +220,35 @@ namespace jank::runtime::detail
     return hash = hash::unordered(begin(), end());
   }
 
-  native_persistent_array_map::iterator::iterator(object_ref const * const data, usize const index)
+  native_array_map::iterator::iterator(object_ref const * const data, usize const index)
     : data{ data }
     , index{ index }
   {
   }
 
-  native_persistent_array_map::iterator::value_type
-  native_persistent_array_map::iterator::operator*() const
+  native_array_map::iterator::value_type native_array_map::iterator::operator*() const
   {
     return { data[index], data[index + 1] };
   }
 
-  native_persistent_array_map::iterator &native_persistent_array_map::iterator::operator++()
+  native_array_map::iterator &native_array_map::iterator::operator++()
   {
     index += 2;
     return *this;
   }
 
-  bool native_persistent_array_map::iterator::operator!=(iterator const &rhs) const
+  bool native_array_map::iterator::operator!=(iterator const &rhs) const
   {
     return data != rhs.data || index != rhs.index;
   }
 
-  bool native_persistent_array_map::iterator::operator==(iterator const &rhs) const
+  bool native_array_map::iterator::operator==(iterator const &rhs) const
   {
     return !(*this != rhs);
   }
 
-  native_persistent_array_map::iterator &
-  native_persistent_array_map::iterator::operator=(native_persistent_array_map::iterator const &rhs)
+  native_array_map::iterator &
+  native_array_map::iterator::operator=(native_array_map::iterator const &rhs)
   {
     if(this == &rhs)
     {
@@ -261,29 +260,29 @@ namespace jank::runtime::detail
     return *this;
   }
 
-  native_persistent_array_map::const_iterator native_persistent_array_map::begin() const
+  native_array_map::const_iterator native_array_map::begin() const
   {
     return const_iterator{ data, 0 };
   }
 
-  native_persistent_array_map::const_iterator native_persistent_array_map::end() const
+  native_array_map::const_iterator native_array_map::end() const
   {
     return const_iterator{ data, length };
   }
 
-  usize native_persistent_array_map::size() const
+  usize native_array_map::size() const
   {
     return length / 2;
   }
 
-  bool native_persistent_array_map::empty() const
+  bool native_array_map::empty() const
   {
     return length == 0;
   }
 
-  native_persistent_array_map native_persistent_array_map::clone() const
+  native_array_map native_array_map::clone() const
   {
-    native_persistent_array_map ret{ *this };
+    native_array_map ret{ *this };
     ret.data = new(GC) object_ref[length];
     memcpy(ret.data, data, length * sizeof(object_ref));
     return ret;

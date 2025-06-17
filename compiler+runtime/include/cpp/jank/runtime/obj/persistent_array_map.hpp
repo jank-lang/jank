@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
@@ -13,14 +13,13 @@ namespace jank::runtime::obj
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
                                        persistent_array_map_sequence,
-                                       runtime::detail::native_persistent_array_map>
+                                       runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
     static constexpr usize max_size{ value_type::max_size };
-    using parent_type
-      = obj::detail::base_persistent_map<persistent_array_map,
-                                         persistent_array_map_sequence,
-                                         runtime::detail::native_persistent_array_map>;
+    using parent_type = obj::detail::base_persistent_map<persistent_array_map,
+                                                         persistent_array_map_sequence,
+                                                         runtime::detail::native_array_map>;
 
 
     persistent_array_map() = default;
