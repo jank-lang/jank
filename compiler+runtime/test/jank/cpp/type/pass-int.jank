@@ -1,0 +1,3 @@
+(let [i (cpp/cast (cpp/type "int") 4)]
+  (if (cpp/== (cpp/int. 4) i)
+    :success))

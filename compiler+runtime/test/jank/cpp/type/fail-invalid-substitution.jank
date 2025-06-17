@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::type::fail_invalid_substitution
+          {
+            template <typename T>
+            struct foo
+            {
+              typename T::value_type data{};
+            };
+          }")
+(let* [_ (cpp/type "jank::cpp::type::fail_invalid_substitution::foo<int>")]
+  :success)
