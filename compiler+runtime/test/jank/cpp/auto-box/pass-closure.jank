@@ -1,0 +1,9 @@
+(let [i (cpp/int. 5)
+      ifn (fn* []
+            (assert (= 5 i)))
+      _ (ifn)
+      f (cpp/float. 5.0)
+      ffn (fn* []
+            (if (= 5 f)
+              :success))]
+  (ffn))
