@@ -835,7 +835,7 @@ namespace jank::read::parse
 
         auto const t1(try_object<obj::persistent_array_map>(r1.expect_ok().unwrap().ptr));
 
-        CHECK(t1->data.size() <= detail::native_persistent_array_map::max_size);
+        CHECK(t1->data.size() <= detail::native_array_map::max_size);
 
         jtl::immutable_string const hash_map_source{
           "{:k1 1 :k2 2 :k3 3 :k4 4 :k5 5 :k6 6 :k7 7 :k8 8 :k9 9}"
@@ -848,7 +848,7 @@ namespace jank::read::parse
 
         auto const t2(try_object<obj::persistent_hash_map>(r2.expect_ok().unwrap().ptr));
 
-        CHECK(t2->data.size() > detail::native_persistent_array_map::max_size);
+        CHECK(t2->data.size() > detail::native_array_map::max_size);
       }
 
       SUBCASE("Duplicate keys")
