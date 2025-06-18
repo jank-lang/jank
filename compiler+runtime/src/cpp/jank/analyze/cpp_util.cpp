@@ -14,9 +14,24 @@
 
 namespace jank::analyze::cpp_util
 {
-  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym)
+  jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
   {
-    return Cpp::GetType(sym);
+    while(ptr_count != 0)
+    {
+      type = Cpp::GetPointerType(type);
+      --ptr_count;
+    }
+    return type;
+  }
+
+  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
+  {
+    auto const type{ Cpp::GetType(sym) };
+    if(type)
+    {
+      return apply_pointers(type, ptr_count);
+    }
+    return type;
   }
 
   /* Resolves the specified dot-separated symbol into its scope.

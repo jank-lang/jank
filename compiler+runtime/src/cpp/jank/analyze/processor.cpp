@@ -3102,7 +3102,14 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::member_call);
     }
 
-    auto const global_type{ cpp_util::resolve_type(name) };
+    u8 ptr_count{};
+    while(name.ends_with('*'))
+    {
+      name = name.substr(0, name.size() - 1);
+      ++ptr_count;
+    }
+
+    auto const global_type{ cpp_util::resolve_type(name, ptr_count) };
 
     /* Find a primitive type first. Then we know it's a cpp_type expression. */
     if(global_type && cpp_util::is_primitive(global_type))
@@ -3144,6 +3151,16 @@ namespace jank::analyze
 
     if(Cpp::IsTemplatedFunction(scope))
     {
+      if(ptr_count)
+      {
+        return error::internal_analyze_failure(
+          util::format("A '*' suffix may only be used on types. Here, it was provided on the "
+                       "function template '{}'.",
+                       Cpp::GetQualifiedName(scope)),
+          object_source(sym),
+          latest_expansion(macro_expansions));
+      }
+
       if(is_ctor)
       {
         return jtl::make_ref<expr::cpp_value>(position,
@@ -3164,7 +3181,7 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::function);
     }
 
-    auto const type{ Cpp::GetTypeFromScope(scope) };
+    auto const type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
 
     /* Primitive types through an alias use a scope which needs to be resolved before
      * we can figure out that we're working with a primitive type. */
@@ -3193,6 +3210,16 @@ namespace jank::analyze
       }
 
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
+    }
+
+    /* We're not a type, but we have a * suffix, so this is an error. */
+    if(ptr_count)
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure(
+        "The '*' suffix for pointers may only be used on types.",
+        object_source(sym),
+        latest_expansion(macro_expansions));
     }
 
     /* We're not a type, but we have a . suffix, so this is an error. */
@@ -3371,8 +3398,15 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    auto const str{ expect_object<runtime::obj::persistent_string>(obj)->data };
-    auto type{ cpp_util::resolve_type(str) };
+    auto str{ expect_object<runtime::obj::persistent_string>(obj)->data };
+
+    u8 ptr_count{};
+    while(str.ends_with('*'))
+    {
+      str = str.substr(0, str.size() - 1);
+      ++ptr_count;
+    }
+    auto type{ cpp_util::resolve_type(str, ptr_count) };
     if(type)
     {
       return jtl::make_ref<expr::cpp_type>(position,

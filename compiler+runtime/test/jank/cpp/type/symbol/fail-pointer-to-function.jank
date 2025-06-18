@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::type::symbol::fail_pointer_to_function
+          {
+            template <typename T>
+            float foo(T&&)
+            {
+              return 0.0f;
+            }
+          }")
+(cpp/cast cpp/jank.cpp.type.symbol.fail_pointer_to_function.foo* nullptr)
+:success

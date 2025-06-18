@@ -1,0 +1,6 @@
+(let* [i (cpp/int. 4)
+       &i (cpp/& i)
+       p (cpp/cast cpp/int* &i)]
+  (if (and (cpp/== p &i)
+           (cpp/== (cpp/* p) i))
+    :success))

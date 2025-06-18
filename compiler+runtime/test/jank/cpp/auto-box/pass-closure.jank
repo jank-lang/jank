@@ -4,6 +4,6 @@
       _ (ifn)
       f (cpp/float. 5.0)
       ffn (fn* []
-            (if (= 5 f)
+            (if (= 5.0 f)
               :success))]
   (ffn))
