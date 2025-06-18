@@ -86,7 +86,7 @@ namespace jank::runtime::detail
     native_array_map clone() const;
 
     object_ref *data{};
-    usize reserved_length{};
+    usize cap{};
     usize length{};
     mutable uhash hash{};
   };
