@@ -76,6 +76,9 @@ namespace jank::runtime::detail
     const_iterator begin() const;
     const_iterator end() const;
 
+    void reserve(usize const size);
+
+    usize capacity() const;
     usize size() const;
 
     bool empty() const;
@@ -83,6 +86,7 @@ namespace jank::runtime::detail
     native_array_map clone() const;
 
     object_ref *data{};
+    usize reserved_length{};
     usize length{};
     mutable uhash hash{};
   };

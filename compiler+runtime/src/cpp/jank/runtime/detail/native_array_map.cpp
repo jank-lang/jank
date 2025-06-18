@@ -5,11 +5,19 @@
 namespace jank::runtime::detail
 {
   /* TODO: Int sequence to clean this up? */
-  static object_ref *make_next_array(object_ref const * const prev,
+  static object_ref *make_next_array(object_ref * const prev,
+                                     usize const reserved_length,
                                      usize const length,
                                      object_ref const key,
                                      object_ref const value)
   {
+    if(reserved_length >= (length + 2))
+    {
+      prev[length] = key;
+      prev[length + 1] = value;
+      return prev;
+    }
+
     switch(length)
     {
       case 0:
@@ -111,8 +119,9 @@ namespace jank::runtime::detail
 
   void native_array_map::insert_unique(object_ref const key, object_ref const val)
   {
-    data = make_next_array(data, length, key, val);
+    data = make_next_array(data, reserved_length, length, key, val);
     length += 2;
+    reserved_length = std::max(length, reserved_length);
     hash = 0;
   }
 
@@ -268,6 +277,41 @@ namespace jank::runtime::detail
   native_array_map::const_iterator native_array_map::end() const
   {
     return const_iterator{ data, length };
+  }
+
+  void native_array_map::reserve(usize const size)
+  {
+    if(size > max_size)
+    {
+      throw std::runtime_error{ util::format(
+        "Unable to reserve an array map of size {}. Be sure "
+        "to check the size prior to requesting reservation and "
+        "use a hash map instead if needed.",
+        size) };
+    }
+
+    auto const new_capacity{ size * 2 };
+
+    if(reserved_length > new_capacity)
+    {
+      return;
+    }
+
+    auto new_data = new(GC) object_ref[new_capacity]{};
+
+    for(usize i{}; i < length; i += 2)
+    {
+      new_data[i] = data[i];
+      new_data[i + 1] = data[i + 1];
+    }
+
+    data = new_data;
+    reserved_length = new_capacity;
+  }
+
+  usize native_array_map::capacity() const
+  {
+    return reserved_length / 2;
   }
 
   usize native_array_map::size() const
