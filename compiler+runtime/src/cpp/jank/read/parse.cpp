@@ -420,10 +420,10 @@ namespace jank::read::parse
       return jtl::ok();
     });
 
-    /* TODO: use transients to build up maps. */
     if((items.size() / 2) <= runtime::detail::native_array_map::max_size)
     {
       runtime::detail::native_array_map map{};
+      map.reserve(items.size() / 2);
       auto res = build_map(map);
 
       if(res.is_err())
@@ -439,6 +439,7 @@ namespace jank::read::parse
     }
     else
     {
+      /* TODO: use transients to build up maps. */
       runtime::detail::native_persistent_hash_map map{};
       auto res = build_map(map);
 
