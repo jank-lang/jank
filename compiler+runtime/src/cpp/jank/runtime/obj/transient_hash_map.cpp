@@ -5,7 +5,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
@@ -25,7 +25,7 @@ namespace jank::runtime::obj
   {
   }
 
-  transient_hash_map::transient_hash_map(runtime::detail::native_persistent_array_map const &m)
+  transient_hash_map::transient_hash_map(runtime::detail::native_array_map const &m)
   {
     for(auto const &e : m)
     {

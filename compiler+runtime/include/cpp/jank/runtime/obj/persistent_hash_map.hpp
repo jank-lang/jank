@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/obj/persistent_hash_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     persistent_hash_map(persistent_hash_map &&) noexcept = default;
     persistent_hash_map(persistent_hash_map const &) = default;
     persistent_hash_map(jtl::option<object_ref> const &meta,
-                        runtime::detail::native_persistent_array_map const &m,
+                        runtime::detail::native_array_map const &m,
                         object_ref key,
                         object_ref val);
     persistent_hash_map(value_type &&d);

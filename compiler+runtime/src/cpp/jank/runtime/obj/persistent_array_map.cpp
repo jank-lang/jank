@@ -66,7 +66,7 @@ namespace jank::runtime::obj
      * promoting to a hash map.
      *
      * TODO: Benchmark if it's faster to have this behavior or to check first. */
-    if(data.size() == runtime::detail::native_persistent_array_map::max_size)
+    if(data.size() == runtime::detail::native_array_map::max_size)
     {
       return make_box<persistent_hash_map>(meta, data, key, val);
     }

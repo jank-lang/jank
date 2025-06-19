@@ -407,7 +407,7 @@ namespace jank::read::parse
 
         parsed_keys.insert({ key.ptr, key });
 
-        if constexpr(std::same_as<T, runtime::detail::native_persistent_array_map>)
+        if constexpr(std::same_as<T, runtime::detail::native_array_map>)
         {
           map.insert_or_assign(key.ptr, value.unwrap().ptr);
         }
@@ -420,11 +420,11 @@ namespace jank::read::parse
       return jtl::ok();
     });
 
-    /* TODO: use transients to build up maps. */
-    if((items.size() / 2) <= runtime::detail::native_persistent_array_map::max_size)
+    if((items.size() / 2) <= runtime::detail::native_array_map::max_size)
     {
-      runtime::detail::native_persistent_array_map map{};
-      auto res = build_map(map);
+      runtime::detail::native_array_map map{};
+      map.reserve(items.size() / 2);
+      auto const res{ build_map(map) };
 
       if(res.is_err())
       {
@@ -439,8 +439,9 @@ namespace jank::read::parse
     }
     else
     {
+      /* TODO: use transients to build up maps. */
       runtime::detail::native_persistent_hash_map map{};
-      auto res = build_map(map);
+      auto const res{ build_map(map) };
 
       if(res.is_err())
       {
