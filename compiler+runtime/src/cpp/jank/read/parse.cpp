@@ -413,7 +413,7 @@ namespace jank::read::parse
         }
         else
         {
-          map = map.insert(std::make_pair(key.ptr, value.unwrap().ptr));
+          map.insert(std::make_pair(key.ptr, value.unwrap().ptr));
         }
       }
 
@@ -439,14 +439,15 @@ namespace jank::read::parse
     }
     else
     {
-      /* TODO: use transients to build up maps. */
-      runtime::detail::native_persistent_hash_map map{};
-      auto const res{ build_map(map) };
+      runtime::detail::native_transient_hash_map transient_map{};
+      auto const res{ build_map(transient_map) };
 
       if(res.is_err())
       {
         return res.expect_err();
       }
+
+      auto map{ transient_map.persistent() };
 
       return object_source_info{ make_box<obj::persistent_hash_map>(
                                    source_to_meta(start_token.start, latest_token.end),
