@@ -6,12 +6,12 @@ namespace jank::runtime::detail
 {
   /* TODO: Int sequence to clean this up? */
   static object_ref *make_next_array(object_ref * const prev,
-                                     usize const reserved_length,
+                                     usize const cap,
                                      usize const length,
                                      object_ref const key,
                                      object_ref const value)
   {
-    if((length + 2) <= reserved_length)
+    if((length + 2) <= cap)
     {
       prev[length] = key;
       prev[length + 1] = value;
