@@ -214,6 +214,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
+  src/cpp/jank/runtime/obj/transient_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/transient_hash_map.cpp
   src/cpp/jank/runtime/obj/persistent_sorted_map.cpp

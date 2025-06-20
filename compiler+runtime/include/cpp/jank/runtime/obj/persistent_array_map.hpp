@@ -8,7 +8,7 @@
 namespace jank::runtime::obj
 {
   using persistent_array_map_ref = oref<struct persistent_array_map>;
-  using transient_hash_map_ref = oref<struct transient_hash_map>;
+  using transient_array_map_ref = oref<struct transient_array_map>;
 
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     object_ref call(object_ref, object_ref) const;
 
     /* behavior::transientable */
-    transient_hash_map_ref to_transient() const;
+    transient_array_map_ref to_transient() const;
 
     value_type data{};
   };

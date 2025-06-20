@@ -219,6 +219,10 @@ namespace jank::runtime
     {
       return expect_object<obj::transient_hash_set>(coll)->disjoin_in_place(o);
     }
+    if(coll->type == object_type::transient_array_map)
+    {
+      return expect_object<obj::transient_array_map>(coll)->dissoc_in_place(o);
+    }
     else if(coll->type == object_type::transient_sorted_set)
     {
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
