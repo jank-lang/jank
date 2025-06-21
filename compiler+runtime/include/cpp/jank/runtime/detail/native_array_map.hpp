@@ -15,25 +15,25 @@ namespace jank::runtime::detail
 
   /* This is a short map, storing a vector of pairs. This is only until immer has proper
    * support for short maps and map transients. */
-  struct native_persistent_array_map
+  struct native_array_map
   {
     /* Array maps are fast only for a small number of keys. Clojure JVM uses a threshold of 8
      * k/v pairs, thus 16 elements. We follow the same. */
     /* TODO: Benchmark difference thresholds. */
     static constexpr usize max_size{ 8 };
 
-    native_persistent_array_map() = default;
-    native_persistent_array_map(native_persistent_array_map const &s) = default;
-    native_persistent_array_map(native_persistent_array_map &&s) noexcept = default;
+    native_array_map() = default;
+    native_array_map(native_array_map const &s) = default;
+    native_array_map(native_array_map &&s) noexcept = default;
 
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
-    native_persistent_array_map(in_place_unique, jtl::ref<object_ref> const kvs, L const l)
+    native_array_map(in_place_unique, jtl::ref<object_ref> const kvs, L const l)
       : data{ std::move(kvs.data) }
       , length{ static_cast<decltype(length)>(l) }
     {
     }
 
-    ~native_persistent_array_map() = default;
+    ~native_array_map() = default;
 
     void insert_unique(object_ref const key, object_ref const val);
 
@@ -76,13 +76,17 @@ namespace jank::runtime::detail
     const_iterator begin() const;
     const_iterator end() const;
 
+    void reserve(usize const size);
+
+    usize capacity() const;
     usize size() const;
 
     bool empty() const;
 
-    native_persistent_array_map clone() const;
+    native_array_map clone() const;
 
     object_ref *data{};
+    usize cap{};
     usize length{};
     mutable uhash hash{};
   };
