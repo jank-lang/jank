@@ -1,0 +1,9 @@
+(ns lib)
+
+(defn greet [name]
+  (println (str "Hello, " name "!")))
+
+(defn bark [name please?]
+  (println (str "Bow Bow, " name (when please? " please!"))))
+
+(println "Loaded 'lib")
