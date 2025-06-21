@@ -247,14 +247,15 @@ namespace jank
     }
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
-    jank::aot::processor const aot_prc{ opts };
-    auto const res{ aot_prc.compile(opts.target_module) };
-    if(res.is_err())
+    auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
+    if(main_var.is_nil())
     {
-      throw std::runtime_error{ util::format("Exitted with code: {}. {}",
-                                             res.expect_err().return_code,
-                                             res.expect_err().err_message) };
+      throw std::runtime_error{ util::format("Could not find #'{}/-main function!",
+                                             opts.target_module) };
     }
+
+    jank::aot::processor const aot_prc{ opts };
+    aot_prc.compile(opts.target_module).expect_ok();
   }
 }
 

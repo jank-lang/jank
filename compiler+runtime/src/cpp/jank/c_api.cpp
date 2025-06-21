@@ -980,10 +980,6 @@ extern "C"
       llvm::InitializeNativeTargetAsmParser();
       llvm::InitializeNativeTargetAsmPrinter();
 
-#ifdef JANK_INCREMENTAL_GC
-      GC_enable_incremental();
-#endif
-
       if(init_default_ctx)
       {
         runtime::__rt_ctx = new(GC) runtime::context{};

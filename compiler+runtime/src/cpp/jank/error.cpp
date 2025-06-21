@@ -135,6 +135,13 @@ namespace jank::error
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
+      case kind::aot_compilation_failure:
+        return "Ahead of Time compilation failure.";
+      case kind::aot_clang_executable_not_found:
+        return "Clang++ executable not found.";
+      case kind::aot_module_not_found:
+        return "Compiled module not found.";
+
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
       case kind::internal_runtime_failure:

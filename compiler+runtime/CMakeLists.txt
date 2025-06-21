@@ -174,6 +174,7 @@ add_library(
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
+  src/cpp/jank/error/aot.cpp
   src/cpp/jank/error/report.cpp
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
@@ -342,12 +343,16 @@ jank_hook_llvm(jank_lib)
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
+set(jank_deps_library_dirs ${LLVM_LIBRARY_DIRS})
+
 target_compile_options(
   jank_lib
   PUBLIC
   -DJANK_VERSION="${jank_version}"
   -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
+  # TODO: add paths to all the dependent libraries
+  -DJANK_DEPS_LIBRARY_DIRS="${LLVM_LIBRARY_DIRS}"
 )
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 

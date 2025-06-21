@@ -19,6 +19,7 @@
 #include <clang/Driver/ToolChain.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
+#include <jank/error/aot.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
@@ -39,6 +40,23 @@ namespace jank::aot
     , libs{ opts.libs }
     , output_filename(opts.output_filename)
   {
+  }
+
+  static jtl::immutable_string clang_executable_path()
+  {
+    jtl::immutable_string cxx{ getenv("CXX") };
+    if(!cxx.empty())
+    {
+      return cxx;
+    }
+
+    auto const llvm_path{ llvm::sys::findProgramByName("clang++") };
+    if(!llvm_path)
+    {
+      return jtl::immutable_string{};
+    }
+
+    return llvm_path.get();
   }
 
   static jtl::immutable_string relative_to_cache_dir(jtl::immutable_string const &file_path)
@@ -130,7 +148,7 @@ int main(int argc, const char** argv)
     return main_file_path;
   }
 
-  jtl::result<void, compiler_err> processor::compile(jtl::immutable_string const &module) const
+  jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
   {
     auto const entrypoint_path{ gen_entrypoint(module) };
 
@@ -146,19 +164,19 @@ int main(int argc, const char** argv)
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
 
     /* TODO: Ensure correct clang++ version. */
-    auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
-    if(!clang_inferred_path)
+    auto clang_inferred_path{ clang_executable_path() };
+    if(clang_inferred_path.empty())
     {
-      return compiler_err{ 1, "clang++ executable not found. Ensure it exists on the path!" };
+      return error::aot_clang_executable_not_found();
     }
-    clang::driver::Driver driver{ clang_inferred_path.get(),
+    clang::driver::Driver driver{ clang_inferred_path.c_str(),
                                   target_triple,
                                   diags,
                                   "jank_aot_compilation",
                                   vfs };
     driver.setCheckInputsExist(false);
 
-    std::vector<char const *> compiler_args = { strdup(clang_inferred_path.get().c_str()) };
+    std::vector<char const *> compiler_args{ strdup(clang_inferred_path.c_str()) };
 
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
@@ -179,7 +197,7 @@ int main(int argc, const char** argv)
         }
         else
         {
-          return compiler_err{ 1, util::format("module '{}' not found", module) };
+          return error::aot_module_not_found(module);
         }
       }
     }
@@ -193,10 +211,12 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
+    compiler_args.push_back(strdup(util::format("-L{}", JANK_DEPS_LIBRARY_DIRS).c_str()));
     for(auto const &library_dir : library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
+
 
     for(auto const &lib : { "-ljank",
                             /* Default libraries that jank depends on. */
@@ -213,9 +233,9 @@ int main(int argc, const char** argv)
                             "-lftxui-component",
                             "-lLLVM",
                             "-lftxui-dom",
+                            "-ldwarf",
                             "-lftxui-screen",
-                            "-lcpptrace",
-                            "-ldwarf" })
+                            "-lcpptrace" })
     {
       compiler_args.push_back(strdup(lib));
     }
@@ -241,13 +261,19 @@ int main(int argc, const char** argv)
       }
     } };
 
+    // TODO: Remove
+    for(auto const st: compiler_args)
+    {
+      util::print("{} ", st);
+    }
+
     llvm::ArrayRef<char const *> const Argv(compiler_args);
 
     auto compilation(driver.BuildCompilation(Argv));
 
     if(!compilation || compilation->containsError())
     {
-      return compiler_err{ 1, "Failed to build compilation steps." };
+      return error::aot_compilation_failure();
     }
 
     /* Execute the compilation jobs (preprocess, compile, assemble)
@@ -267,22 +293,17 @@ int main(int argc, const char** argv)
                         "Error executing command: {}",
                         failing_command.second->getExecutable());
 
-          /* TODO: We can print more details about the failing command P.second */
+          /* TODO: We can print more details about the failing command failing_command.second */
         }
       }
     }
 
-    if(diags.hasErrorOccurred())
+    if(diags.hasErrorOccurred() || exit_code != 0)
     {
-      return compiler_err{ 1, "Compilation failed with errors.\n" };
+      return error::aot_compilation_failure();
     }
 
-    if(exit_code)
-    {
-      return compiler_err{ exit_code, "Compilation command execution failed." };
-    }
-
-    util::println("Compilation successful. Find the executable at: `{}`", output_filepath);
+    util::println("Compilation successful. Find the executable at: '{}'", output_filepath);
 
     return ok();
   }
