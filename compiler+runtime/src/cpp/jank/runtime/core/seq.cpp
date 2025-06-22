@@ -757,11 +757,13 @@ namespace jank::runtime
         {
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
-              auto ret(typed_m);
+              /* TODO: Check for transient_array_map and only use an object_ref in
+               * that case. Otherwise, use full type info. */
+              object_ref ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
                 auto const e(seq->first());
-                ret = ret->assoc_in_place(e->data[0], e->data[1]);
+                ret = assoc_in_place(ret, e->data[0], e->data[1]);
               }
               return ret;
             },

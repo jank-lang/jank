@@ -164,7 +164,7 @@ namespace jank::runtime
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
 
     auto source{ obj::persistent_array_map::empty()->to_transient() };
-    source = source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
+    source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
 
     auto const start_map{ obj::persistent_array_map::create_unique(
       __rt_ctx->intern_keyword("offset").expect_ok(),
@@ -180,8 +180,8 @@ namespace jank::runtime
       make_box(end.line),
       __rt_ctx->intern_keyword("col").expect_ok(),
       make_box(end.col)) };
-    source = source->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
-    source = source->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
+    source->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
+    source->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
 
     return obj::persistent_hash_map::create_unique(std::make_pair(key, source->to_persistent()));
   }

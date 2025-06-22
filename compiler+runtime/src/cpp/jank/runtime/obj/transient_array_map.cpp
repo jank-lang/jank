@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/transient_array_map.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/detail/native_array_map.hpp>
@@ -91,13 +92,27 @@ namespace jank::runtime::obj
     return get(key).is_some();
   }
 
-  transient_array_map_ref
-  transient_array_map::assoc_in_place(object_ref const key, object_ref const value)
+  object_ref transient_array_map::assoc_in_place(object_ref const key, object_ref const value)
   {
     assert_active();
-    /* TODO: potential point for promotion. */
-    data.insert_or_assign(key, value);
-    return this;
+    /* If we've hit the max array map size, it's time to promote to a hash map.
+     *
+     * Note, this currently doesn't check if the assoc is adding a new key or updating an
+     * existing one, so it's possible that updating a key while at the max capacity ends up
+     * promoting to a hash map.
+     *
+     * TODO: Benchmark if it's faster to have this behavior or to check first. */
+    if(data.size() == runtime::detail::native_array_map::max_size)
+    {
+      auto const promoted_map{ make_box<transient_hash_map>(data) };
+      promoted_map->assoc_in_place(key, value);
+      return promoted_map;
+    }
+    else
+    {
+      data.insert_or_assign(key, value);
+      return this;
+    }
   }
 
   transient_array_map_ref transient_array_map::dissoc_in_place(object_ref const key)
@@ -107,7 +122,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  transient_array_map_ref transient_array_map::conj_in_place(object_ref const head)
+  object_ref transient_array_map::conj_in_place(object_ref const head)
   {
     assert_active();
 
@@ -118,7 +133,7 @@ namespace jank::runtime::obj
 
     if(is_map(head))
     {
-      return expect_object<transient_array_map>(runtime::merge_in_place(this, head));
+      return runtime::merge_in_place(this, head);
     }
 
     if(head->type != object_type::persistent_vector)

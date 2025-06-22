@@ -40,11 +40,11 @@ namespace jank::runtime::obj
     bool contains(object_ref key) const;
 
     /* behavior::associatively_writable_in_place */
-    transient_array_map_ref assoc_in_place(object_ref const key, object_ref const val);
+    object_ref assoc_in_place(object_ref const key, object_ref const val);
     transient_array_map_ref dissoc_in_place(object_ref const key);
 
     /* behavior::conjable_in_place */
-    transient_array_map_ref conj_in_place(object_ref head);
+    object_ref conj_in_place(object_ref head);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
