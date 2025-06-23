@@ -102,6 +102,7 @@ namespace jank::runtime::obj
      * promoting to a hash map.
      *
      * TODO: Benchmark if it's faster to have this behavior or to check first. */
+    /* TODO: Benchmark how much does the promotion cost, from transient array map to transient hash map? */
     if(data.size() == runtime::detail::native_array_map::max_size)
     {
       auto const promoted_map{ make_box<transient_hash_map>(data) };

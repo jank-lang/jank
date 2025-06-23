@@ -7,6 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_array_map_ref = oref<struct transient_array_map>;
 
+  /* TODO: Benchmark how fast is the transient array map vs the transient hash map for small maps? */
   struct transient_array_map : gc
   {
     static constexpr object_type obj_type{ object_type::transient_array_map };
