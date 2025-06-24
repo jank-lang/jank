@@ -54,6 +54,8 @@
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/analyze/expr/cpp_member_access.hpp>
 #include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
+#include <jank/analyze/expr/cpp_box.hpp>
+#include <jank/analyze/expr/cpp_unbox.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -1002,22 +1004,24 @@ namespace jank::analyze
     };
     /* TODO: Just use a raw fn pointer. No need for std::function. */
     specials = {
-      {      make_box<symbol>("def"),      make_fn(&processor::analyze_def) },
-      {      make_box<symbol>("fn*"),       make_fn(&processor::analyze_fn) },
-      {    make_box<symbol>("recur"),    make_fn(&processor::analyze_recur) },
-      {       make_box<symbol>("do"),       make_fn(&processor::analyze_do) },
-      {     make_box<symbol>("let*"),      make_fn(&processor::analyze_let) },
-      {   make_box<symbol>("letfn*"),    make_fn(&processor::analyze_letfn) },
-      {    make_box<symbol>("loop*"),     make_fn(&processor::analyze_loop) },
-      {       make_box<symbol>("if"),       make_fn(&processor::analyze_if) },
-      {    make_box<symbol>("quote"),    make_fn(&processor::analyze_quote) },
-      {      make_box<symbol>("var"), make_fn(&processor::analyze_var_call) },
-      {    make_box<symbol>("throw"),    make_fn(&processor::analyze_throw) },
-      {      make_box<symbol>("try"),      make_fn(&processor::analyze_try) },
-      {    make_box<symbol>("case*"),     make_fn(&processor::analyze_case) },
-      {  make_box<symbol>("cpp/raw"),  make_fn(&processor::analyze_cpp_raw) },
-      { make_box<symbol>("cpp/type"), make_fn(&processor::analyze_cpp_type) },
-      { make_box<symbol>("cpp/cast"), make_fn(&processor::analyze_cpp_cast) },
+      {       make_box<symbol>("def"),       make_fn(&processor::analyze_def) },
+      {       make_box<symbol>("fn*"),        make_fn(&processor::analyze_fn) },
+      {     make_box<symbol>("recur"),     make_fn(&processor::analyze_recur) },
+      {        make_box<symbol>("do"),        make_fn(&processor::analyze_do) },
+      {      make_box<symbol>("let*"),       make_fn(&processor::analyze_let) },
+      {    make_box<symbol>("letfn*"),     make_fn(&processor::analyze_letfn) },
+      {     make_box<symbol>("loop*"),      make_fn(&processor::analyze_loop) },
+      {        make_box<symbol>("if"),        make_fn(&processor::analyze_if) },
+      {     make_box<symbol>("quote"),     make_fn(&processor::analyze_quote) },
+      {       make_box<symbol>("var"),  make_fn(&processor::analyze_var_call) },
+      {     make_box<symbol>("throw"),     make_fn(&processor::analyze_throw) },
+      {       make_box<symbol>("try"),       make_fn(&processor::analyze_try) },
+      {     make_box<symbol>("case*"),      make_fn(&processor::analyze_case) },
+      {   make_box<symbol>("cpp/raw"),   make_fn(&processor::analyze_cpp_raw) },
+      {  make_box<symbol>("cpp/type"),  make_fn(&processor::analyze_cpp_type) },
+      {  make_box<symbol>("cpp/cast"),  make_fn(&processor::analyze_cpp_cast) },
+      {   make_box<symbol>("cpp/box"),   make_fn(&processor::analyze_cpp_box) },
+      { make_box<symbol>("cpp/unbox"), make_fn(&processor::analyze_cpp_unbox) },
     };
   }
 
@@ -3460,16 +3464,13 @@ namespace jank::analyze
 
     if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
     {
-      return error::internal_analyze_failure(
-               "The first argument to 'cpp/cast' must be a C++ type. You can either use direct "
-               "'cpp/std.string' form or the indirect '(cpp/type \"std::string\")' form.",
-               object_source(type_obj),
-               latest_expansion(macro_expansions))
+      return error::internal_analyze_failure("The first argument to 'cpp/cast' must be a C++ type.",
+                                             object_source(type_obj),
+                                             latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    /* TODO: Rename to type_expr. */
-    auto const typed_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
     auto const value_obj(l->data.rest().rest().first().unwrap());
     auto value_expr_res(
       analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
@@ -3480,15 +3481,15 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(Cpp::IsConstructible(typed_expr->type, value_type))
+    if(Cpp::IsConstructible(type_expr->type, value_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
         current_frame,
         needs_box,
-        typed_expr->sym,
-        typed_expr->type,
-        Cpp::GetScopeFromType(typed_expr->type),
+        type_expr->sym,
+        type_expr->type,
+        Cpp::GetScopeFromType(type_expr->type),
         expr::cpp_value::value_kind::constructor) };
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
@@ -3496,23 +3497,23 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil)) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    if(cpp_util::is_any_object(typed_expr->type) && cpp_util::is_convertible(value_type))
+    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_convertible(value_type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
                                            needs_box,
-                                           typed_expr->type,
+                                           type_expr->type,
                                            value_type,
                                            conversion_policy::into_object,
                                            value_expr);
     }
-    if(cpp_util::is_any_object(value_type) && cpp_util::is_convertible(typed_expr->type))
+    if(cpp_util::is_any_object(value_type) && cpp_util::is_convertible(type_expr->type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
                                            needs_box,
-                                           typed_expr->type,
-                                           typed_expr->type,
+                                           type_expr->type,
+                                           type_expr->type,
                                            conversion_policy::from_object,
                                            value_expr);
     }
@@ -3522,9 +3523,121 @@ namespace jank::analyze
         "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
         "and any specializations of 'jank::runtime::convert'.",
         Cpp::GetTypeAsString(value_type),
-        Cpp::GetTypeAsString(typed_expr->type)),
+        Cpp::GetTypeAsString(type_expr->type)),
       object_source(l),
       latest_expansion(macro_expansions));
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_box(obj::persistent_list_ref const l,
+                             local_frame_ptr const current_frame,
+                             expression_position const position,
+                             jtl::option<expr::function_context_ref> const &fn_ctx,
+                             bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count != 2)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure("A 'cpp/box' call must have only a C++ pointer value.",
+                                             object_source(l),
+                                             latest_expansion(macro_expansions));
+    }
+
+    auto const value_obj(l->data.rest().first().unwrap());
+    auto value_expr_res(
+      analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(value_expr_res.is_err())
+    {
+      return value_expr_res.expect_err_move();
+    }
+
+    auto const value_expr{ value_expr_res.expect_ok() };
+    auto const value_type{ cpp_util::expression_type(value_expr) };
+    if(!Cpp::IsPointerType(value_type))
+    {
+      return error::internal_analyze_failure(
+        util::format("Unable to create an opaque box from '{}', since it's not a raw pointer type."
+                     " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
+                     "its lifetime.",
+                     Cpp::GetTypeAsString(value_type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+    else if(cpp_util::is_any_object(value_type))
+    {
+      return error::internal_analyze_failure(
+        util::format(
+          "Unable to create an opaque box from '{}', since it's already a boxed jank object."
+          " Opaque boxes are meant to be for native raw pointers only.",
+          Cpp::GetTypeAsString(value_type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_unbox(obj::persistent_list_ref const l,
+                               local_frame_ptr const current_frame,
+                               expression_position const position,
+                               jtl::option<expr::function_context_ref> const &fn_ctx,
+                               bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count != 3)
+    {
+      /* TODO: Error */
+      return error::internal_analyze_failure(
+        "A C++ unbox must have only a C++ type and a value as arguments.",
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const type_obj(l->data.rest().first().unwrap());
+    /* TODO: Add a type expression_position and only allow types there? */
+    auto type_expr_res(analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(type_expr_res.is_err())
+    {
+      return type_expr_res.expect_err_move();
+    }
+
+    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
+    {
+      return error::internal_analyze_failure(
+               "The first argument to 'cpp/unbox' must be a C++ type.",
+               object_source(type_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const value_obj(l->data.rest().rest().first().unwrap());
+    auto value_expr_res(
+      analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(value_expr_res.is_err())
+    {
+      return value_expr_res.expect_err_move();
+    }
+
+    auto const value_expr{ value_expr_res.expect_ok() };
+    if(!Cpp::IsPointerType(type_expr->type))
+    {
+      return error::internal_analyze_failure(
+        util::format("Unable to unbox to '{}', since it's not a raw pointer type."
+                     " The type specified here should be the exact type of the value originally "
+                     "passed to 'cpp/box'.",
+                     Cpp::GetTypeAsString(type_expr->type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    return jtl::make_ref<expr::cpp_unbox>(position,
+                                          current_frame,
+                                          needs_box,
+                                          type_expr->type,
+                                          value_expr);
   }
 
   processor::expression_result

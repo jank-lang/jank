@@ -43,6 +43,9 @@ namespace jank::analyze
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
     using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
     using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
+    using cpp_box_ref = jtl::ref<struct cpp_box>;
+    using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
   }
 }
 
@@ -87,4 +90,7 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::cpp_constructor_call_ref);
   runtime::object_ref eval(analyze::expr::cpp_member_call_ref);
   runtime::object_ref eval(analyze::expr::cpp_member_access_ref);
+  runtime::object_ref eval(analyze::expr::cpp_builtin_operator_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_box_ref);
+  runtime::object_ref eval(analyze::expr::cpp_unbox_ref);
 }

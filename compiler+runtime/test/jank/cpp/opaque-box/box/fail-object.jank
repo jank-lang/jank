@@ -1,0 +1,2 @@
+(let* [b (cpp/box 1)]
+  :success)

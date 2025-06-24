@@ -150,6 +150,9 @@ extern "C"
   jank_object_ref jank_map_create(jank_u64 pairs, ...);
   jank_object_ref jank_set_create(jank_u64 size, ...);
 
+  jank_object_ref jank_box(void const *o);
+  void *jank_unbox(jank_object_ref o);
+
   jank_arity_flags jank_function_build_arity_flags(jank_u8 highest_fixed_arity,
                                                    jank_bool is_variadic,
                                                    jank_bool is_variadic_ambiguous);

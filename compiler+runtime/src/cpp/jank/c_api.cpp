@@ -499,6 +499,17 @@ extern "C"
     return trans.to_persistent().erase();
   }
 
+  jank_object_ref jank_box(void const * const o)
+  {
+    return make_box<obj::opaque_box>(o).erase();
+  }
+
+  void *jank_unbox(jank_object_ref const o)
+  {
+    auto const box_obj(reinterpret_cast<object *>(o));
+    return try_object<obj::opaque_box>(box_obj)->data;
+  }
+
   jank_arity_flags jank_function_build_arity_flags(jank_u8 const highest_fixed_arity,
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)

@@ -1,0 +1,3 @@
+(let* [&i (cpp/& (cpp/int.))
+       b (cpp/box &i &i &i)]
+  :success)

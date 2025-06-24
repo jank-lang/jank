@@ -1,0 +1,4 @@
+(let* [&i (cpp/& (cpp/int.))
+       b (cpp/box &i)
+       &i (cpp/unbox cpp/int* b b)]
+  :success)

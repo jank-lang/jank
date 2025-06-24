@@ -215,6 +215,7 @@ add_library(
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/tagged_literal.cpp
+  src/cpp/jank/runtime/obj/opaque_box.cpp
   src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/big_integer.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
@@ -285,6 +286,8 @@ add_library(
   src/cpp/jank/analyze/expr/cpp_member_call.cpp
   src/cpp/jank/analyze/expr/cpp_member_access.cpp
   src/cpp/jank/analyze/expr/cpp_builtin_operator_call.cpp
+  src/cpp/jank/analyze/expr/cpp_box.cpp
+  src/cpp/jank/analyze/expr/cpp_unbox.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/analyze/cpp_util.cpp

@@ -82,6 +82,8 @@ namespace jank::runtime
     var_unbound_root,
 
     tagged_literal,
+
+    opaque_box,
   };
 
   constexpr char const *object_type_str(object_type const type)
@@ -215,6 +217,9 @@ namespace jank::runtime
 
       case object_type::tagged_literal:
         return "tagged_literal";
+
+      case object_type::opaque_box:
+        return "opaque_box";
     }
     return "unknown";
   }

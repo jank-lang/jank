@@ -709,8 +709,6 @@ namespace jank::evaluate
 
   object_ref eval(expr::cpp_raw_ref const expr)
   {
-    /* TODO: How do we get source info here? Or can we detect this earlier? */
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_raw", {})));
   }
 
@@ -721,40 +719,46 @@ namespace jank::evaluate
 
   object_ref eval(expr::cpp_value_ref const expr)
   {
-    /* TODO: How do we get source info here? Or can we detect this earlier? */
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
   }
 
   object_ref eval(expr::cpp_cast_ref const expr)
   {
-    /* TODO: How do we get source info here? Or can we detect this earlier? */
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
   }
 
   object_ref eval(expr::cpp_call_ref const expr)
   {
-    /* TODO: How do we get source info here? Or can we detect this earlier? */
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_call", {})));
   }
 
   object_ref eval(expr::cpp_constructor_call_ref const expr)
   {
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
   }
 
   object_ref eval(expr::cpp_member_call_ref const expr)
   {
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_member_call", {})));
   }
 
   object_ref eval(expr::cpp_member_access_ref const expr)
   {
-    cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_member_access", {})));
+  }
+
+  object_ref eval(expr::cpp_builtin_operator_call_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_builtin_operator_call", {})));
+  }
+
+  object_ref eval(expr::cpp_box_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_box", {})));
+  }
+
+  object_ref eval(expr::cpp_unbox_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_unbox", {})));
   }
 }

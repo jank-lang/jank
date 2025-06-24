@@ -62,6 +62,8 @@ namespace jank::analyze
     cpp_member_call,
     cpp_member_access,
     cpp_builtin_operator_call,
+    cpp_box,
+    cpp_unbox,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)
@@ -130,6 +132,10 @@ namespace jank::analyze
         return "cpp_member_access";
       case expression_kind::cpp_builtin_operator_call:
         return "cpp_builtin_operator_call";
+      case expression_kind::cpp_box:
+        return "cpp_box";
+      case expression_kind::cpp_unbox:
+        return "cpp_unbox";
     }
     return "unknown";
   }

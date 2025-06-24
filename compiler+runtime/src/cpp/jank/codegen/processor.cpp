@@ -1615,6 +1615,18 @@ namespace jank::codegen
     return none;
   }
 
+  jtl::option<handle>
+  processor::gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &, bool)
+  {
+    return none;
+  }
+
+  jtl::option<handle>
+  processor::gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &, bool)
+  {
+    return none;
+  }
+
   jtl::immutable_string processor::declaration_str()
   {
     if(!generated_declaration)

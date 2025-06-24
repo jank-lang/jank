@@ -69,6 +69,7 @@ namespace jank::codegen
     jank_debug_assert(type);
     jank_debug_assert(Cpp::IsComplete(type));
     auto const size{ Cpp::GetSizeOfType(type) };
+    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
@@ -1566,6 +1567,44 @@ namespace jank::codegen
                         expr->position,
                         expr->kind,
                         arity);
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::cpp_box_ref const expr,
+                                   analyze::expr::function_arity const &arity)
+  {
+    auto const value{ gen(expr->value_expr, arity) };
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+    auto const fn(ctx->module->getOrInsertFunction("jank_box", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 1> const args{ value };
+    auto const call(ctx->builder->CreateCall(fn, args));
+
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+
+    return call;
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::cpp_unbox_ref const expr,
+                                   analyze::expr::function_arity const &arity)
+  {
+    auto const value{ gen(expr->value_expr, arity) };
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+    auto const fn(ctx->module->getOrInsertFunction("jank_unbox", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 1> const args{ value };
+    auto const call(ctx->builder->CreateCall(fn, args));
+
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(call);
+    }
+
+    return call;
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const

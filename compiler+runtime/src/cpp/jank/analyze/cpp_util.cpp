@@ -401,17 +401,4 @@ namespace jank::analyze::cpp_util
     }
     return none;
   }
-
-  jtl::result<void, error_ref> ensure_convertible(expression_ref const expr)
-  {
-    auto const type{ expression_type(expr) };
-    if(!is_any_object(type) && !is_convertible(type))
-    {
-      return error::analyze_invalid_conversion(
-        util::format("This function is returning a native object of type '{}', which is not "
-                     "convertible to a jank runtime object.",
-                     Cpp::GetTypeAsString(type)));
-    }
-    return ok();
-  }
 }
