@@ -377,7 +377,8 @@ jank_object_ref jank_load_clojure_core_native()
   intern_fn("transient", &transient);
   intern_fn("persistent!", &persistent);
   intern_fn("conj-in-place!", &conj_in_place);
-  intern_fn("assoc-in-place!", &assoc_in_place);
+  intern_fn("assoc-in-place!",
+            static_cast<object_ref (*)(object_ref, object_ref, object_ref)>(&assoc_in_place));
   intern_fn("dissoc-in-place!", &dissoc_in_place);
   intern_fn("pop-in-place!", &pop_in_place);
   intern_fn("disj-in-place!", &disj_in_place);
