@@ -163,7 +163,7 @@ namespace jank::runtime
   {
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
 
-    auto source{ obj::persistent_array_map::empty()->to_transient() };
+    auto const source{ obj::persistent_array_map::empty()->to_transient() };
     source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
 
     auto const start_map{ obj::persistent_array_map::create_unique(

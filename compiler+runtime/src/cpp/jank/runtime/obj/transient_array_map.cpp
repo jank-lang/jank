@@ -39,7 +39,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string transient_array_map::to_string() const
   {
-    util::string_builder buff;
+    util::string_builder buff{};
     to_string(buff);
     return buff.release();
   }
