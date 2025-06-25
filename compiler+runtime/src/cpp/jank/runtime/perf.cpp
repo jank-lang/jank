@@ -36,6 +36,7 @@ namespace jank::runtime::perf
           ankerl::nanobench::Bench().config(config).run(static_cast<std::string>(label), [&] {
             auto const res(typed_f->call());
             ankerl::nanobench::doNotOptimizeAway(res);
+            GC_gcollect();
           });
         }
         else
