@@ -27,7 +27,7 @@ nix develop ".#"
 For macOS:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest libzip lbzip2 llvm@19 bdw-gc
+brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest libzip lbzip2 llvm@20 bdw-gc
 
 # Ensure you have this set up in your shell.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
