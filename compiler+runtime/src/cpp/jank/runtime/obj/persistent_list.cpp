@@ -106,7 +106,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
+    return make_box<persistent_list>(data);
   }
 
   usize persistent_list::count() const
@@ -137,7 +137,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<persistent_list_sequence>(this, ++data.begin(), data.end(), data.size() - 1);
+    return make_box<persistent_list>(data.rest());
   }
 
   persistent_list_sequence_ref persistent_list::next_in_place() const

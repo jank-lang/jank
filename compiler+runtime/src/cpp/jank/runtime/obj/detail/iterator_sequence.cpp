@@ -117,8 +117,6 @@ namespace jank::runtime::obj::detail
     return make_box<obj::cons>(head, static_cast<Derived *>(this));
   }
 
-  template struct iterator_sequence<persistent_list_sequence,
-                                    runtime::detail::native_persistent_list::iterator>;
   template struct iterator_sequence<persistent_sorted_set_sequence,
                                     runtime::detail::native_persistent_sorted_set::const_iterator>;
   template struct iterator_sequence<persistent_hash_set_sequence,

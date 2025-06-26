@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using nil_ref = oref<struct nil>;
   using persistent_list_ref = oref<struct persistent_list>;
-  using persistent_list_sequence_ref = oref<struct persistent_list_sequence>;
+  using persistent_list_sequence_ref = oref<struct persistent_list>;
 
   struct persistent_list : gc
   {
