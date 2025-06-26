@@ -32,7 +32,7 @@ namespace jank::runtime
     persistent_vector_sequence,
 
     persistent_array_map,
-    /* TODO: transient_array_map */
+    transient_array_map,
     persistent_array_map_sequence,
 
     persistent_hash_map,
@@ -128,6 +128,8 @@ namespace jank::runtime
 
       case object_type::persistent_array_map:
         return "persistent_array_map";
+      case object_type::transient_array_map:
+        return "transient_array_map";
       case object_type::persistent_array_map_sequence:
         return "persistent_array_map_sequence";
 
