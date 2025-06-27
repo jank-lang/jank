@@ -74,14 +74,14 @@ namespace jank::runtime::obj
     obj::persistent_list_ref next() const;
 
     /* behavior::sequenceable_in_place */
-    obj::persistent_list_ref next_in_place() const;
+    obj::persistent_list_ref next_in_place();
 
     /* behavior::stackable */
     object_ref peek() const;
     persistent_list_ref pop() const;
 
     object base{ obj_type };
-    mutable value_type data;
+    value_type data;
     jtl::option<object_ref> meta;
   };
 }

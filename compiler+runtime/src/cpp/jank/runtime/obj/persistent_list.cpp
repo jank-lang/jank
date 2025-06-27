@@ -140,7 +140,7 @@ namespace jank::runtime::obj
     return make_box<persistent_list>(data.rest());
   }
 
-  persistent_list_ref persistent_list::next_in_place() const
+  persistent_list_ref persistent_list::next_in_place()
   {
     if(data.size() < 2)
     {
