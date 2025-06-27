@@ -25,7 +25,6 @@ namespace jank::runtime
     character,
 
     persistent_list,
-    persistent_list_sequence,
 
     persistent_vector,
     transient_vector,
@@ -116,8 +115,6 @@ namespace jank::runtime
 
       case object_type::persistent_list:
         return "persistent_list";
-      case object_type::persistent_list_sequence:
-        return "persistent_list_sequence";
 
       case object_type::persistent_vector:
         return "persistent_vector";
