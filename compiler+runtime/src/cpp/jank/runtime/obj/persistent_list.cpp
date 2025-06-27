@@ -142,9 +142,13 @@ namespace jank::runtime::obj
 
   persistent_list_ref persistent_list::next_in_place() const
   {
-    /* In-place updates don't make sense for lists, since any call to fresh_seq would return
-     * a list sequence. So we know, principally, that a list itself cannot be considered fresh. */
-    return next();
+    if(data.size() < 2)
+    {
+      return {};
+    }
+
+    data = data.rest();
+    return this;
   }
 
   persistent_list_ref persistent_list::with_meta(object_ref const m) const
