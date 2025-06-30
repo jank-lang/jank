@@ -884,7 +884,7 @@ namespace jank::analyze
     //util::println("apply_implicit_conversion expr type {}, expected type {}",
     //              Cpp::GetTypeAsString(expr_type),
     //              Cpp::GetTypeAsString(expected_type));
-    if(Cpp::GetTypeWithoutCv(expr_type) == Cpp::GetTypeWithoutCv(expected_type)
+    if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return ok(expr);

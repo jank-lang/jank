@@ -1,6 +1,11 @@
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
+namespace Cpp
+{
+  std::string GetName(void *);
+}
+
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
@@ -30,7 +35,16 @@ namespace jank::analyze::expr
 
   object_ref cpp_call::to_runtime_data() const
   {
-    /* TODO: Fill in. */
-    return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
+    auto arg_expr_maps(make_box<obj::persistent_vector>());
+    for(auto const &e : arg_exprs)
+    {
+      arg_expr_maps = arg_expr_maps->conj(e->to_runtime_data());
+    }
+
+    return merge(expression::to_runtime_data(),
+                 obj::persistent_array_map::create_unique(make_box("fn"),
+                                                          make_box(Cpp::GetName(fn)),
+                                                          make_box("arg_exprs"),
+                                                          arg_expr_maps));
   }
 }

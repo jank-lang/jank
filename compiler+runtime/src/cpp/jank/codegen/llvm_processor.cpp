@@ -69,15 +69,13 @@ namespace jank::codegen
     jank_debug_assert(type);
     jank_debug_assert(Cpp::IsComplete(type));
     auto const size{ Cpp::GetSizeOfType(type) };
-    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
+    util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
-    llvm::Type *ir_type{};
-    llvm::ConstantInt *ir_size{ llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1) };
+    llvm::Type *ir_type{ ctx.builder->getInt8Ty() };
+    llvm::ConstantInt *ir_size{ llvm::ConstantInt::get(ctx.builder->getInt64Ty(), 1) };
 
-    ir_type = ctx.builder->getInt8Ty();
-    ir_size = llvm::ConstantInt::get(ctx.builder->getInt8Ty(), 1);
     if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type) || Cpp::IsArrayType(type))
     {
       ir_type = ctx.builder->getPtrTy();
@@ -86,9 +84,7 @@ namespace jank::codegen
     {
       ir_type = llvm_type(ctx, type);
     }
-
-    auto const scope{ Cpp::GetScopeFromType(type) };
-    if(scope && Cpp::IsClass(scope))
+    else if(auto scope = Cpp::GetScopeFromType(type); Cpp::IsClass(scope))
     {
       /* TODO: The struct belongs to another context, so this won't work. */
       ir_type = llvm::StructType::getTypeByName(*ctx.llvm_ctx,
@@ -98,6 +94,13 @@ namespace jank::codegen
         ir_type = ctx.builder->getInt8Ty();
         ir_size = llvm::ConstantInt::get(ctx.builder->getInt32Ty(), size);
       }
+    }
+
+    /* Our special wrapper refs/ptrs are indistinguishable from raw pointers at the byte level. */
+    if(cpp_util::is_any_object(type))
+    {
+      ir_type = ctx.builder->getPtrTy();
+      ir_size = llvm::ConstantInt::get(ctx.builder->getInt64Ty(), 1);
     }
 
     jank_debug_assert_fmt_throw(ir_type,
@@ -120,6 +123,7 @@ namespace jank::codegen
                                      jtl::ptr<void> conversion_type,
                                      llvm::Value * const arg)
   {
+    /* TODO: If output is void, just return nil. */
     conversion_type = Cpp::GetNonReferenceType(conversion_type);
     auto const is_input_ref{ Cpp::IsReferenceType(input_type) };
     //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
@@ -215,12 +219,17 @@ namespace jank::codegen
     //util::println("convert_object ret_type = {}, needs base adjustment by {} bytes",
     //              Cpp::GetTypeAsString(ret_type),
     //              base_offset);
-    auto const ret_base{ ctx.builder->CreateInBoundsGEP(
-      ctx.builder->getInt8Ty(),
-      load_ret,
-      { ctx.builder->getInt32(base_offset) },
-      util::format("{}.base", load_ret->getName().str()).c_str()) };
-    return ret_base;
+    if(0 < base_offset)
+    {
+      auto const ret_base{ ctx.builder->CreateInBoundsGEP(
+        ctx.builder->getInt8Ty(),
+        load_ret,
+        { ctx.builder->getInt64(base_offset) },
+        util::format("{}.base", load_ret->getName().str()).c_str()) };
+      return ret_base;
+    }
+
+    return load_ret;
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name)
@@ -241,7 +250,7 @@ namespace jank::codegen
     , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
     , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
     , si{ std::make_unique<llvm::StandardInstrumentations>(*llvm_ctx,
-                                                           /*DebugLogging*/ true) }
+                                                           /*DebugLogging*/ false) }
   {
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
@@ -1273,7 +1282,7 @@ namespace jank::codegen
     {
       auto const alloc{ ctx->builder->CreateAlloca(
         ctx->builder->getPtrTy(),
-        llvm::ConstantInt::get(ctx->builder->getInt8Ty(), 1)) };
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
       auto const null{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
       ctx->builder->CreateStore(null, alloc);
       if(expr->position == expression_position::tail)
@@ -1586,12 +1595,16 @@ namespace jank::codegen
     {
       arg_types.emplace_back(cpp_util::expression_type(e));
     }
+
+    auto &ast_ctx{ __rt_ctx->jit_prc.interpreter->getCI()->getASTContext() };
+    auto const name{ ast_ctx.DeclarationNames.getCXXOperatorName(
+      static_cast<clang::OverloadedOperatorKind>(expr->op)) };
     return gen_aot_call(Cpp::MakeBuiltinOperatorAotCallable(static_cast<Cpp::Operator>(expr->op),
                                                             expr->type,
                                                             arg_types),
                         nullptr,
                         expr->type,
-                        "",
+                        name.getAsString(),
                         expr->arg_exprs,
                         expr->position,
                         expr->kind,
@@ -1639,6 +1652,9 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_new_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
+    auto const alloc{ ctx->builder->CreateAlloca(
+      ctx->builder->getPtrTy(),
+      llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, false));
     auto const fn(ctx->module->getOrInsertFunction("GC_malloc", fn_type));
@@ -1647,7 +1663,8 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 1> const args{
       llvm::ConstantInt::get(ctx->builder->getInt64Ty(), size)
     };
-    auto const alloc(ctx->builder->CreateCall(fn, args));
+    auto const gc_alloc(ctx->builder->CreateCall(fn, args));
+    ctx->builder->CreateStore(gc_alloc, alloc);
 
     if(!Cpp::IsTriviallyDestructible(expr->type))
     {
@@ -1678,7 +1695,7 @@ namespace jank::codegen
 
       auto const null{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
       llvm::SmallVector<llvm::Value *, 5> const reg_args{
-        alloc,
+        gc_alloc,
         ctx->builder->CreateBitCast(finalizer_fn.getCallee(), ctx->builder->getPtrTy()),
         null,
         null,
@@ -1688,13 +1705,15 @@ namespace jank::codegen
     }
 
     auto const ctor{ llvm::cast<expr::cpp_constructor_call>(expr->value_expr.data) };
-    return gen(ctor, arity, alloc);
+    gen(ctor, arity, gc_alloc);
+    return alloc;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_delete_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
-    auto const val{ gen(expr->value_expr, arity) };
+    auto const val_alloc{ gen(expr->value_expr, arity) };
+    auto const val{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), val_alloc) };
     auto const value_type{ Cpp::GetPointeeType(cpp_util::expression_type(expr->value_expr)) };
 
     /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly

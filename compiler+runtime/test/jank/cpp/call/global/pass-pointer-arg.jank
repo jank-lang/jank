@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_pointer_arg
+          {
+            struct bar
+            {
+              int padding{};
+              int data{ -5 };
+            };
+
+            int foo(bar *b)
+            {
+              return b->data;
+            }
+          }")
+(let* [bar (cpp/new cpp/jank.cpp.call.global.pass_pointer_arg.bar)
+       a (cpp/jank.cpp.call.global.pass_pointer_arg.foo bar)]
+  (if (= -5 a)
+    :success))
