@@ -55,7 +55,7 @@ namespace jank::runtime::obj
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  usize transient_array_map::count() const
+  u8 transient_array_map::count() const
   {
     assert_active();
     return data.size();

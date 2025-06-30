@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::countable */
-    usize count() const;
+    u8 count() const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;

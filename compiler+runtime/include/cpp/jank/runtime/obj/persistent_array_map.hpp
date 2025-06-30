@@ -16,7 +16,7 @@ namespace jank::runtime::obj
                                        runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
-    static constexpr usize max_size{ value_type::max_size };
+    static constexpr u8 max_size{ value_type::max_size };
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
                                                          runtime::detail::native_array_map>;
