@@ -1,4 +1,5 @@
 #include <random>
+#include <limits>
 
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
@@ -313,6 +314,13 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
           [](auto const typed_r, auto const &typed_l) -> object_ref {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+            if(typed_r->data == 0)
+            {
+#pragma clang diagnostic pop
+              throw make_box("Divide by zero").erase();
+            }
             return make_box(typed_l / typed_r->data).erase();
           },
           r,
