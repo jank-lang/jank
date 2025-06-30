@@ -6,8 +6,8 @@ namespace jank::runtime::detail
 {
   /* TODO: Int sequence to clean this up? */
   static object_ref *make_next_array(object_ref * const prev,
-                                     usize const cap,
-                                     usize const length,
+                                     u8 const cap,
+                                     u8 const length,
                                      object_ref const key,
                                      object_ref const value)
   {
@@ -129,7 +129,7 @@ namespace jank::runtime::detail
   {
     if(key->type == runtime::object_type::keyword)
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(data[i] == key)
         {
@@ -141,7 +141,7 @@ namespace jank::runtime::detail
     }
     else
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(runtime::equal(data[i], key))
         {
@@ -158,7 +158,7 @@ namespace jank::runtime::detail
   {
     if(key->type == runtime::object_type::keyword)
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(data[i] == key)
         {
@@ -168,7 +168,7 @@ namespace jank::runtime::detail
     }
     else
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(runtime::equal(data[i], key))
         {
@@ -183,11 +183,11 @@ namespace jank::runtime::detail
   {
     if(key->type == runtime::object_type::keyword)
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(data[i] == key)
         {
-          for(usize k{ i + 2 }; k < length; k += 2)
+          for(u8 k(i + 2); k < length; k += 2)
           {
             data[k - 2] = data[k];
             data[k - 1] = data[k + 1];
@@ -201,11 +201,11 @@ namespace jank::runtime::detail
     }
     else
     {
-      for(usize i{}; i < length; i += 2)
+      for(u8 i{}; i < length; i += 2)
       {
         if(runtime::equal(data[i], key))
         {
-          for(usize k{ i + 2 }; k < length; k += 2)
+          for(u8 k(i + 2); k < length; k += 2)
           {
             data[k - 2] = data[k];
             data[k - 1] = data[k + 1];
@@ -229,7 +229,7 @@ namespace jank::runtime::detail
     return hash = hash::unordered(begin(), end());
   }
 
-  native_array_map::iterator::iterator(object_ref const * const data, usize const index)
+  native_array_map::iterator::iterator(object_ref const * const data, u8 const index)
     : data{ data }
     , index{ index }
   {
@@ -279,7 +279,7 @@ namespace jank::runtime::detail
     return const_iterator{ data, length };
   }
 
-  void native_array_map::reserve(usize const size)
+  void native_array_map::reserve(u8 const size)
   {
     if(max_size < size)
     {
@@ -299,7 +299,7 @@ namespace jank::runtime::detail
 
     auto const new_data{ new(GC) object_ref[new_capacity]{} };
 
-    for(usize i{}; i < length; i += 2)
+    for(u8 i{}; i < length; i += 2)
     {
       new_data[i] = data[i];
       new_data[i + 1] = data[i + 1];
@@ -309,12 +309,12 @@ namespace jank::runtime::detail
     cap = new_capacity;
   }
 
-  usize native_array_map::capacity() const
+  u8 native_array_map::capacity() const
   {
     return cap / 2;
   }
 
-  usize native_array_map::size() const
+  u8 native_array_map::size() const
   {
     return length / 2;
   }
