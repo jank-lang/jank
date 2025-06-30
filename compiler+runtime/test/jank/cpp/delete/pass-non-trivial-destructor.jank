@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::delete_::pass_non_trivial_destructor
+          {
+            int dtor_called{};
+            struct foo
+            {
+              ~foo()
+              { ++dtor_called; }
+            };
+          }")
+(let* [f (cpp/new cpp/jank.cpp.delete_.pass_non_trivial_destructor.foo)
+       _ (assert (= 0 cpp/jank.cpp.delete_.pass_non_trivial_destructor.dtor_called))
+       _ (cpp/delete f)
+       _ (assert (= 1 cpp/jank.cpp.delete_.pass_non_trivial_destructor.dtor_called))]
+  :success)

@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_argument
+          {
+            struct foo
+            {
+              foo(int const v)
+               : a{ v }, b{ v }
+              { }
+
+              int a{}, b{7};
+            };
+          }")
+(let* [arg (cpp/int. 5)
+       f (cpp/new cpp/jank.cpp.new_.complex.pass_argument.foo arg)]
+  (if (and (= 5 (cpp/.-a (cpp/* f))) (= 5 (cpp/.-b (cpp/* f))))
+    :success))

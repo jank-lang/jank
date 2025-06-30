@@ -761,4 +761,14 @@ namespace jank::evaluate
   {
     return dynamic_call(eval(wrap_expression(expr, "cpp_unbox", {})));
   }
+
+  object_ref eval(expr::cpp_new_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_new", {})));
+  }
+
+  object_ref eval(expr::cpp_delete_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_delete", {})));
+  }
 }

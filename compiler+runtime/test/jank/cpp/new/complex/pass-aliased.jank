@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_aliased
+          {
+            struct foo
+            {
+              int padding{};
+              int a{ 333 };
+            };
+            using T = foo;
+          }")
+(let* [foo (cpp/new cpp/jank.cpp.new_.complex.pass_aliased.T)]
+  (if (= 333 (cpp/.-a (cpp/* foo)))
+    :success))

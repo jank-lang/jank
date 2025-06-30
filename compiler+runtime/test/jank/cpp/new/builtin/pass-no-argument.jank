@@ -1,0 +1,4 @@
+(let* [a (cpp/new cpp/int)
+       b (cpp/new cpp/float)]
+  (if (== 0 (cpp/* a) (cpp/* b))
+    :success))

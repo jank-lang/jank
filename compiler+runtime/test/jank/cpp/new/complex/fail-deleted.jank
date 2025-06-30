@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::new_::complex::fail_deleted
+          {
+            struct foo
+            {
+              foo() = delete;
+
+              int a{}, b{7};
+            };
+          }")
+(let* [f (cpp/new cpp/jank.cpp.new_.complex.fail_deleted.foo)]
+  :success)

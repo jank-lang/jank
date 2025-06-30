@@ -33,6 +33,8 @@
 #include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
 #include <jank/analyze/expr/cpp_box.hpp>
 #include <jank/analyze/expr/cpp_unbox.hpp>
+#include <jank/analyze/expr/cpp_new.hpp>
+#include <jank/analyze/expr/cpp_delete.hpp>
 
 namespace jank::analyze
 {
@@ -106,6 +108,10 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::cpp_box>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_unbox:
         return f(jtl::static_ref_cast<expr::cpp_unbox>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_new:
+        return f(jtl::static_ref_cast<expr::cpp_new>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_delete:
+        return f(jtl::static_ref_cast<expr::cpp_delete>(e), std::forward<Args>(args)...);
 
       case expression_kind::uninitialized:
         break;

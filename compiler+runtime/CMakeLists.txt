@@ -288,6 +288,8 @@ add_library(
   src/cpp/jank/analyze/expr/cpp_builtin_operator_call.cpp
   src/cpp/jank/analyze/expr/cpp_box.cpp
   src/cpp/jank/analyze/expr/cpp_unbox.cpp
+  src/cpp/jank/analyze/expr/cpp_new.cpp
+  src/cpp/jank/analyze/expr/cpp_delete.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/analyze/cpp_util.cpp

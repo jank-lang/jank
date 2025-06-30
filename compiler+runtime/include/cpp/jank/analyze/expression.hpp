@@ -64,6 +64,8 @@ namespace jank::analyze
     cpp_builtin_operator_call,
     cpp_box,
     cpp_unbox,
+    cpp_new,
+    cpp_delete,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)
@@ -136,6 +138,10 @@ namespace jank::analyze
         return "cpp_box";
       case expression_kind::cpp_unbox:
         return "cpp_unbox";
+      case expression_kind::cpp_new:
+        return "cpp_new";
+      case expression_kind::cpp_delete:
+        return "cpp_delete";
     }
     return "unknown";
   }

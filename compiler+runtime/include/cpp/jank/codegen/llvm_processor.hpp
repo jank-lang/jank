@@ -69,6 +69,8 @@ namespace jank::analyze
     using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
     using cpp_box_ref = jtl::ref<struct cpp_box>;
     using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_new_ref = jtl::ref<struct cpp_new>;
+    using cpp_delete_ref = jtl::ref<struct cpp_delete>;
   }
 }
 
@@ -164,12 +166,17 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_constructor_call_ref,
+                     analyze::expr::function_arity const &,
+                     llvm::Value *alloc);
     llvm::Value *gen(analyze::expr::cpp_member_call_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_member_access_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_builtin_operator_call_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_box_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_unbox_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_new_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_delete_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
@@ -195,6 +202,15 @@ namespace jank::codegen
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
     llvm::Value *gen_aot_call(Cpp::AotCall const &call,
+                              jtl::ptr<void> const fn,
+                              jtl::ptr<void> const expr_type,
+                              jtl::immutable_string const &name,
+                              native_vector<analyze::expression_ref> const &arg_exprs,
+                              analyze::expression_position const position,
+                              analyze::expression_kind const kind,
+                              analyze::expr::function_arity const &arity);
+    llvm::Value *gen_aot_call(Cpp::AotCall const &call,
+                              llvm::Value *ret_alloc,
                               jtl::ptr<void> const fn,
                               jtl::ptr<void> const expr_type,
                               jtl::immutable_string const &name,

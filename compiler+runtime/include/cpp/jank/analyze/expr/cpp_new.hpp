@@ -4,13 +4,13 @@
 
 namespace jank::analyze::expr
 {
-  using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+  using cpp_new_ref = jtl::ref<struct cpp_new>;
 
-  struct cpp_unbox : expression
+  struct cpp_new : expression
   {
-    static constexpr expression_kind expr_kind{ expression_kind::cpp_unbox };
+    static constexpr expression_kind expr_kind{ expression_kind::cpp_new };
 
-    cpp_unbox(expression_position position,
+    cpp_new(expression_position position,
               local_frame_ptr frame,
               bool needs_box,
               jtl::ptr<void> type,

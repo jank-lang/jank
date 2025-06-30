@@ -165,7 +165,7 @@ namespace jank::codegen
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
       ctx.builder->CreateStore(arg, arg_alloc);
     }
-    else if(is_input_ref)
+    else if(is_input_ref && llvm::isa<llvm::AllocaInst>(arg))
     {
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
@@ -1336,6 +1336,27 @@ namespace jank::codegen
                                             expression_kind const kind,
                                             expr::function_arity const &arity)
   {
+    jank_debug_assert(expr_type);
+    auto const is_void{ Cpp::IsVoid(expr_type) };
+    llvm::Value *ret_alloc{};
+    if(!is_void)
+    {
+      ret_alloc = alloc_type(*ctx, expr_type, util::format("{}.res", name));
+    }
+
+    return gen_aot_call(call, ret_alloc, fn, expr_type, name, arg_exprs, position, kind, arity);
+  }
+
+  llvm::Value *llvm_processor::gen_aot_call(Cpp::AotCall const &call,
+                                            llvm::Value *ret_alloc,
+                                            jtl::ptr<void> const fn,
+                                            jtl::ptr<void> const expr_type,
+                                            jtl::immutable_string const &name,
+                                            native_vector<expression_ref> const &arg_exprs,
+                                            expression_position const position,
+                                            expression_kind const kind,
+                                            expr::function_arity const &arity)
+  {
     llvm::Linker::linkModules(
       *ctx->module,
       /* TODO: Will need to share context with interpreter or serialize module to bitcode
@@ -1344,11 +1365,6 @@ namespace jank::codegen
 
     jank_debug_assert(expr_type);
     auto const is_void{ Cpp::IsVoid(expr_type) };
-    llvm::Value *ctor_alloc{};
-    if(!is_void)
-    {
-      ctor_alloc = alloc_type(*ctx, expr_type, util::format("{}.res", name));
-    }
 
     /* For member function calls, we steal the first argument and use it as
      * the invoking object. Otherwise, we pass null as the invoking object. */
@@ -1380,7 +1396,7 @@ namespace jank::codegen
       if(i == 0 && requires_this_obj)
       {
         this_obj = arg_handle;
-        if(is_arg_ref)
+        if(is_arg_ref && llvm::isa<llvm::AllocaInst>(this_obj))
         {
           this_obj = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
@@ -1416,7 +1432,7 @@ namespace jank::codegen
                                     param_type,
                                     arg_handle);
       }
-      else if(is_arg_ref && !is_param_ref)
+      else if(is_arg_ref && !is_param_ref && llvm::isa<llvm::AllocaInst>(arg_handle))
       {
         arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
       }
@@ -1435,7 +1451,7 @@ namespace jank::codegen
 
     auto const sret{ is_void ? static_cast<llvm::Value *>(
                                  llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()))
-                             : ctor_alloc };
+                             : ret_alloc };
     auto const ctor_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       this_obj,
@@ -1452,7 +1468,7 @@ namespace jank::codegen
         return ctx->builder->CreateRet(gen_global(jank_nil));
       }
 
-      auto const ret_load{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ctor_alloc, "ret") };
+      auto const ret_load{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret_alloc, "ret") };
       return ctx->builder->CreateRet(ret_load);
     }
 
@@ -1460,7 +1476,7 @@ namespace jank::codegen
     {
       return gen_global(jank_nil);
     }
-    return ctor_alloc;
+    return ret_alloc;
   }
 
   llvm::Value *llvm_processor::gen(expr::cpp_call_ref const expr, expr::function_arity const &arity)
@@ -1475,8 +1491,9 @@ namespace jank::codegen
                         arity);
   }
 
-  llvm::Value *
-  llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::gen(expr::cpp_constructor_call_ref const expr,
+                                   expr::function_arity const &arity,
+                                   llvm::Value * const alloc)
   {
     auto const is_primitive{ cpp_util::is_primitive(expr->type) };
     Cpp::AotCall ctor_fn_callable;
@@ -1514,6 +1531,7 @@ namespace jank::codegen
     jank_debug_assert(ctor_fn_callable);
 
     return gen_aot_call(ctor_fn_callable,
+                        alloc,
                         expr->fn,
                         expr->type,
                         Cpp::GetTypeAsString(expr->type),
@@ -1521,6 +1539,12 @@ namespace jank::codegen
                         expr->position,
                         expr->kind,
                         arity);
+  }
+
+  llvm::Value *
+  llvm_processor::gen(expr::cpp_constructor_call_ref const expr, expr::function_arity const &arity)
+  {
+    return gen(expr, arity, alloc_type(*ctx, expr->type));
   }
 
   llvm::Value *
@@ -1552,6 +1576,11 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_builtin_operator_call_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
+    if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1 && Cpp::IsReferenceType(expr->type))
+    {
+      return gen(expr->arg_exprs[0], arity);
+    }
+
     std::vector<Cpp::TemplateArgInfo> arg_types;
     for(auto const e : expr->arg_exprs)
     {
@@ -1605,6 +1634,106 @@ namespace jank::codegen
     }
 
     return call;
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::cpp_new_ref const expr,
+                                   analyze::expr::function_arity const &arity)
+  {
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, false));
+    auto const fn(ctx->module->getOrInsertFunction("GC_malloc", fn_type));
+
+    auto const size{ Cpp::GetSizeOfType(expr->type) };
+    llvm::SmallVector<llvm::Value *, 1> const args{
+      llvm::ConstantInt::get(ctx->builder->getInt64Ty(), size)
+    };
+    auto const alloc(ctx->builder->CreateCall(fn, args));
+
+    if(!Cpp::IsTriviallyDestructible(expr->type))
+    {
+      auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(expr->type)) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor) };
+      llvm::Linker::linkModules(
+        *ctx->module,
+        /* TODO: Will need to share context with interpreter or serialize module to bitcode
+         * in order to avoid context issues. */
+        llvm::CloneModule(*reinterpret_cast<llvm::Module *>(dtor_callable.getModule())));
+
+      auto const reg_fn_type(llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                                     { ctx->builder->getPtrTy(),
+                                                       ctx->builder->getPtrTy(),
+                                                       ctx->builder->getPtrTy(),
+                                                       ctx->builder->getPtrTy(),
+                                                       ctx->builder->getPtrTy() },
+                                                     false));
+      auto const reg_fn(
+        ctx->module->getOrInsertFunction("GC_register_finalizer_ignore_self", reg_fn_type));
+
+      auto const finalizer_fn_type(
+        llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                                false));
+      auto finalizer_fn(
+        ctx->module->getOrInsertFunction(dtor_callable.getName(), finalizer_fn_type));
+
+      auto const null{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
+      llvm::SmallVector<llvm::Value *, 5> const reg_args{
+        alloc,
+        ctx->builder->CreateBitCast(finalizer_fn.getCallee(), ctx->builder->getPtrTy()),
+        null,
+        null,
+        null
+      };
+      ctx->builder->CreateCall(reg_fn, reg_args);
+    }
+
+    auto const ctor{ llvm::cast<expr::cpp_constructor_call>(expr->value_expr.data) };
+    return gen(ctor, arity, alloc);
+  }
+
+  llvm::Value *llvm_processor::gen(analyze::expr::cpp_delete_ref const expr,
+                                   analyze::expr::function_arity const &arity)
+  {
+    auto const val{ gen(expr->value_expr, arity) };
+    auto const value_type{ Cpp::GetPointeeType(cpp_util::expression_type(expr->value_expr)) };
+
+    /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly
+     * documented in bdwgc. So, we'll invoke it manually if needed, prior to GC_free. */
+    if(!Cpp::IsTriviallyDestructible(value_type))
+    {
+      auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(value_type)) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor) };
+      llvm::Linker::linkModules(
+        *ctx->module,
+        /* TODO: Will need to share context with interpreter or serialize module to bitcode
+         * in order to avoid context issues. */
+        llvm::CloneModule(*reinterpret_cast<llvm::Module *>(dtor_callable.getModule())));
+
+      auto const dtor_fn_type(
+        llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                                false));
+      auto const dtor_fn(ctx->module->getOrInsertFunction(dtor_callable.getName(), dtor_fn_type));
+
+      auto const null{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
+      llvm::SmallVector<llvm::Value *, 2> const dtor_args{ val, null };
+      ctx->builder->CreateCall(dtor_fn, dtor_args);
+    }
+
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
+    auto const fn(ctx->module->getOrInsertFunction("GC_free", fn_type));
+
+    llvm::SmallVector<llvm::Value *, 1> const args{ val };
+    ctx->builder->CreateCall(fn, args);
+
+    auto const ret{ gen_global(jank_nil) };
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(ret);
+    }
+
+    return ret;
   }
 
   llvm::Value *llvm_processor::gen_var(obj::symbol_ref const qualified_name) const

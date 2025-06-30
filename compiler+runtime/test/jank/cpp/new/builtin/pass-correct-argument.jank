@@ -1,0 +1,10 @@
+(let* [a (cpp/new cpp/int 500)
+       aa (cpp/new cpp/int (cpp/* a))
+       b (cpp/new cpp/float -7.0)
+       bb (cpp/new cpp/float (cpp/* b))
+       c (cpp/new cpp/bool true)
+       cc (cpp/new cpp/bool (cpp/* c))]
+  (if (and (= 500 (cpp/* a) (cpp/* aa))
+           (= -7.0 (cpp/* b) (cpp/* bb))
+           (= true (cpp/* c) (cpp/* cc)))
+    :success))
