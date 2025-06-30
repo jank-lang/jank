@@ -468,6 +468,13 @@ set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
 
 target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  target_link_options(jank_exe PRIVATE "-Wl,--export-dynamic")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  target_link_options(jank_exe PRIVATE "-Wl,-export_dynamic")
+endif()
+
 target_link_options(jank_exe PRIVATE ${jank_linker_flags})
 
 target_link_libraries(

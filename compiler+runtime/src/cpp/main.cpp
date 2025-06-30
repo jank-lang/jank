@@ -1,3 +1,4 @@
+#include "jank/runtime/rtti.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -287,6 +288,8 @@ int main(int const argc, char const **argv)
     jank_load_clojure_string_native();
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
+    /* Force linker to export symbols needed by the JIT for exception handling. */
+    jank_init_rtti_exports();
 
     switch(opts.command)
     {

@@ -4,6 +4,7 @@
 extern "C"
 {
 #endif
+  void jank_init_rtti_exports();
 
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef void *jank_object_ref;

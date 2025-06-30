@@ -898,6 +898,12 @@ extern "C"
       o_obj);
   }
 
+  void jank_init_rtti_exports()
+  {
+    volatile void const *rtti_obj_ptr = &typeid(jank::runtime::object);
+    (void)rtti_obj_ptr; /* Suppress unused variable warning. */
+  }
+
   void jank_throw(jank_object_ref const o)
   {
     throw runtime::object_ref{ reinterpret_cast<object *>(o) };

@@ -1,3 +1,6 @@
+#include "jank/util/scope_exit.hpp"
+
+
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
@@ -210,7 +213,7 @@ namespace jank::codegen
     }
 
     /* Run our optimization passes on the function, mutating it. */
-    ctx->fpm->run(*fn, *ctx->fam);
+    // ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -362,7 +365,19 @@ namespace jank::codegen
 
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
     auto const fn(ctx->module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-    auto const call(ctx->builder->CreateCall(fn, arg_handles));
+
+    llvm::Value *call{};
+
+    if(eh_landing_pad_stack.empty())
+    {
+      call = ctx->builder->CreateCall(fn, arg_handles);
+    }
+    else
+    {
+      auto const normal_dest = llvm::BasicBlock::Create(*ctx->llvm_ctx, "invoke.normal", this->fn);
+      call = ctx->builder->CreateInvoke(fn, normal_dest, eh_landing_pad_stack.back(), arg_handles);
+      ctx->builder->SetInsertPoint(normal_dest);
+    }
 
     if(expr->position == expression_position::tail)
     {
@@ -826,7 +841,22 @@ namespace jank::codegen
     llvm::Value *last{};
     for(auto const &form : expr->values)
     {
+      /* If the previous expression terminated the block (e.g., via a throw or recur),
+       * we must not generate any more code in this path. */
+      if(ctx->builder->GetInsertBlock()->getTerminator())
+      {
+        /* We return nullptr to signal to our caller that this `do` block as a whole
+         * has a terminating path. */
+        return nullptr;
+      }
+
       last = gen(form, arity);
+    }
+    /* If the very last expression was a terminator, `last` will be nullptr.
+     * In that case, we just propagate the nullptr up. */
+    if(!last)
+    {
+      return nullptr;
     }
 
     switch(expr->position)
@@ -926,54 +956,191 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::throw_ref const expr, expr::function_arity const &arity)
   {
-    /* TODO: Generate direct call to __cxa_throw. */
-    auto const value(gen(expr->value, arity));
-    auto const fn_type(
-      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-    auto fn(ctx->module->getOrInsertFunction("jank_throw", fn_type));
-    llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+    /* This function's job is to initiate the stack unwinding process. It does this
+     * by calling a C++ function that throws an exception. From LLVM's perspective,
+     * this is a function call that never returns. */
+    auto const value{ gen(expr->value, arity) };
+    if(!eh_landing_pad_stack.empty())
+    {
+      auto const unreachable_dest
+        = llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn);
 
-    llvm::SmallVector<llvm::Value *, 1> const args{ value };
-    auto const call(ctx->builder->CreateCall(fn, args));
+      auto const fn_type
+        = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
+      auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
+      llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
+      ctx->builder->CreateInvoke(fn, unreachable_dest, eh_landing_pad_stack.back(), { value });
+
+      /* The normal destination is unreachable, so we mark it as such. */
+      ctx->builder->SetInsertPoint(unreachable_dest);
+      // ctx->builder->CreateUnreachable();
+    }
+    else
+    {
+      /* If not in a try block, a simple call is sufficient. The program will terminate. */
+      auto const fn_type
+        = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
+      auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
+      llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+      ctx->builder->CreateCall(fn, { value });
+      // ctx->builder->CreateUnreachable();
+    }
+
+    /* Since this code path never completes, it doesn't matter what we return.
+     * Using `jank_nil` to satisfy some IR requirements. */
+    auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
     {
-      return ctx->builder->CreateRet(call);
+      return ctx->builder->CreateRet(ret);
     }
-    return call;
+    return ret;
   }
 
   llvm::Value *llvm_processor::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
-    auto const wrapped_body(evaluate::wrap_expression(expr->body, "try_body", {}));
-    auto const wrapped_catch(expr->catch_body.map([](auto const &catch_body) {
-      return evaluate::wrap_expression(catch_body.body, "catch", { catch_body.sym });
-    }));
-    auto const wrapped_finally(expr->finally_body.map(
-      [](auto const &finally) { return evaluate::wrap_expression(finally, "finally", {}); }));
+    auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
 
-    auto const body(gen(wrapped_body, arity));
-    auto const catch_(
-      wrapped_catch.map([&](auto const &catch_body) { return gen(catch_body, arity); }));
-    auto const finally(
-      wrapped_finally.map([&](auto const &finally) { return gen(finally, arity); }));
+    auto personality_fn_type
+      = llvm::FunctionType::get(ctx->builder->getInt32Ty(), /*isVarArg=*/true);
+    auto personality_fn
+      = ctx->module->getOrInsertFunction("__gxx_personality_v0", personality_fn_type);
+    current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
 
-    auto const fn_type(llvm::FunctionType::get(
-      ctx->builder->getPtrTy(),
-      { ctx->builder->getPtrTy(), ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
-      false));
-    auto const fn(ctx->module->getOrInsertFunction("jank_try", fn_type));
+    auto const is_return(expr->position == expression_position::tail);
 
-    llvm::SmallVector<llvm::Value *, 3> const args{ body,
-                                                    catch_.unwrap_or(gen_global(jank_nil)),
-                                                    finally.unwrap_or(gen_global(jank_nil)) };
-    auto const call(ctx->builder->CreateCall(fn, args));
+    auto finally_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "finally");
+    auto cont_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "try.cont");
+    auto catch_lpad_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.lpad", current_fn);
 
-    if(expr->position == expression_position::tail)
+    llvm::BasicBlock *catch_body_bb = nullptr;
+    llvm::BasicBlock *resume_bb = nullptr;
+
+    bool const has_catch = expr->catch_body.is_some();
+    if(has_catch)
     {
-      return ctx->builder->CreateRet(call);
+      catch_body_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.body");
     }
-    return call;
+    else
+    {
+      resume_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "resume");
+    }
+
+    eh_landing_pad_stack.push_back(catch_lpad_bb);
+    util::scope_exit const pop_landing_pad{ [&]() { eh_landing_pad_stack.pop_back(); } };
+
+    auto original_try_pos = expr->body->position;
+    expr->body->propagate_position(expression_position::value);
+    auto try_val = gen(expr->body, arity);
+    expr->body->propagate_position(original_try_pos);
+
+    llvm::BasicBlock *try_end_bb = nullptr;
+    if(try_val)
+    {
+      try_end_bb = ctx->builder->GetInsertBlock();
+      ctx->builder->CreateBr(finally_bb);
+    }
+
+    ctx->builder->SetInsertPoint(catch_lpad_bb);
+    auto const ptr_ty = ctx->builder->getPtrTy();
+    auto const i32_ty = ctx->builder->getInt32Ty();
+    auto lpad_ty = llvm::StructType::get(*ctx->llvm_ctx, { ptr_ty, i32_ty });
+    auto landing_pad = ctx->builder->CreateLandingPad(lpad_ty, 1);
+    landing_pad->setCleanup(true);
+
+    llvm::Value *catch_val = nullptr;
+    llvm::BasicBlock *catch_end_bb = nullptr;
+
+    if(has_catch)
+    {
+      char const *typeinfo_name = typeid(jank::runtime::object_ref).name();
+      auto type_info_global
+        = ctx->module->getOrInsertGlobal(typeinfo_name, ctx->builder->getInt8Ty()->getPointerTo());
+      landing_pad->addClause(type_info_global);
+      ctx->builder->CreateBr(catch_body_bb);
+
+      current_fn->insert(current_fn->end(), catch_body_bb);
+      ctx->builder->SetInsertPoint(catch_body_bb);
+
+      auto const &catch_body = expr->catch_body.unwrap();
+      auto old_locals = locals;
+      auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
+      auto begin_catch_fn = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
+      auto caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
+      locals[catch_body.sym] = caught_ptr;
+
+      auto original_catch_pos = catch_body.body->position;
+      catch_body.body->propagate_position(expression_position::value);
+      catch_val = gen(catch_body.body, arity);
+      catch_body.body->propagate_position(original_catch_pos);
+
+      auto end_catch_fn
+        = ctx->module->getOrInsertFunction("__cxa_end_catch", ctx->builder->getVoidTy());
+      ctx->builder->CreateCall(end_catch_fn, {});
+      locals = std::move(old_locals);
+
+      if(catch_val)
+      {
+        catch_end_bb = ctx->builder->GetInsertBlock();
+        ctx->builder->CreateBr(finally_bb);
+      }
+    }
+    else
+    {
+      ctx->builder->CreateBr(resume_bb);
+      current_fn->insert(current_fn->end(), resume_bb);
+      ctx->builder->SetInsertPoint(resume_bb);
+      ctx->builder->CreateResume(landing_pad);
+    }
+
+    current_fn->insert(current_fn->end(), finally_bb);
+    ctx->builder->SetInsertPoint(finally_bb);
+
+    auto num_paths = (try_val ? 1 : 0) + (catch_val ? 1 : 0);
+    llvm::PHINode *finally_phi = nullptr;
+    if(!is_return && num_paths > 0)
+    {
+      finally_phi = ctx->builder->CreatePHI(ptr_ty, num_paths, "finally.phi");
+      if(try_val)
+      {
+        finally_phi->addIncoming(try_val, try_end_bb);
+      }
+      if(catch_val)
+      {
+        finally_phi->addIncoming(catch_val, catch_end_bb);
+      }
+    }
+
+    if(expr->finally_body.is_some())
+    {
+      auto original_finally_pos = expr->finally_body.unwrap()->position;
+      expr->finally_body.unwrap()->propagate_position(expression_position::statement);
+      gen(expr->finally_body.unwrap(), arity);
+      expr->finally_body.unwrap()->propagate_position(original_finally_pos);
+    }
+
+    if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
+    {
+      ctx->builder->CreateBr(cont_bb);
+    }
+
+    current_fn->insert(current_fn->end(), cont_bb);
+    ctx->builder->SetInsertPoint(cont_bb);
+
+    if(is_return)
+    {
+      ctx->builder->CreateUnreachable();
+      return nullptr;
+    }
+
+    if(finally_phi)
+    {
+      return finally_phi;
+    }
+    else
+    {
+      return gen_global(jank_nil);
+    }
   }
 
   llvm::Value *llvm_processor::gen(expr::case_ref const expr, expr::function_arity const &arity)
