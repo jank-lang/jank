@@ -193,27 +193,29 @@ namespace jank::codegen
 
     for(auto const &arity : root_fn->arities)
     {
-      /* TODO: Add profiling to the fn body? Need to exit on every return. */
       create_function(arity);
+      bool block_terminated = false;
       for(auto const form : arity.body->values)
       {
         gen(form, arity);
+        if(ctx->builder->GetInsertBlock()->getTerminator())
+        {
+          block_terminated = true;
+          break; /* Exit the inner loop */
+        }
       }
 
-      /* If we have an empty function, ensure we're still returning nil. */
-      if(arity.body->values.empty())
+      /* If the inner loop was terminated, we skip the final check. */
+      if(block_terminated)
+      {
+        continue; /* Start the next iteration of the outer loop */
+      }
+
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
       {
         ctx->builder->CreateRet(gen_global(jank_nil));
       }
     }
-
-    if(target == compilation_target::eval)
-    {
-      //to_string();
-    }
-
-    /* Run our optimization passes on the function, mutating it. */
-    // ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -1001,6 +1003,7 @@ namespace jank::codegen
   {
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
 
+    /* A function must have a personality function set to use landing pads. */
     auto personality_fn_type
       = llvm::FunctionType::get(ctx->builder->getInt32Ty(), /*isVarArg=*/true);
     auto personality_fn
@@ -1009,6 +1012,8 @@ namespace jank::codegen
 
     auto const is_return(expr->position == expression_position::tail);
 
+    /* --- Block Setup --- */
+    auto original_insert_bb = ctx->builder->GetInsertBlock();
     auto finally_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "finally");
     auto cont_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "try.cont");
     auto catch_lpad_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.lpad", current_fn);
@@ -1026,10 +1031,22 @@ namespace jank::codegen
       resume_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "resume");
     }
 
+    std::cout << "before pushing, landing pad stack size: " << eh_landing_pad_stack.size()
+              << std::endl;
     eh_landing_pad_stack.push_back(catch_lpad_bb);
-    util::scope_exit const pop_landing_pad{ [&]() { eh_landing_pad_stack.pop_back(); } };
+    std::cout << "after pushing, landing pad stack size: " << eh_landing_pad_stack.size()
+              << std::endl;
+    util::scope_exit const pop_landing_pad{ [&]() {
+      std::cout << "before poping, landing pad stack size: " << eh_landing_pad_stack.size()
+                << std::endl;
+      eh_landing_pad_stack.pop_back();
+      std::cout << "after poping, landing pad stack size: " << eh_landing_pad_stack.size()
+                << std::endl;
+    } };
 
-    auto original_try_pos = expr->body->position;
+    /* --- Try Block --- */
+    ctx->builder->SetInsertPoint(original_insert_bb);
+    auto const original_try_pos = expr->body->position;
     expr->body->propagate_position(expression_position::value);
     auto try_val = gen(expr->body, arity);
     expr->body->propagate_position(original_try_pos);
@@ -1041,6 +1058,7 @@ namespace jank::codegen
       ctx->builder->CreateBr(finally_bb);
     }
 
+    /* --- Landing Pad & Catch/Resume Logic --- */
     ctx->builder->SetInsertPoint(catch_lpad_bb);
     auto const ptr_ty = ctx->builder->getPtrTy();
     auto const i32_ty = ctx->builder->getInt32Ty();
@@ -1053,17 +1071,17 @@ namespace jank::codegen
 
     if(has_catch)
     {
-      char const *typeinfo_name = typeid(jank::runtime::object_ref).name();
-      auto type_info_global
-        = ctx->module->getOrInsertGlobal(typeinfo_name, ctx->builder->getInt8Ty()->getPointerTo());
-      landing_pad->addClause(type_info_global);
+      auto object_ptr_type_info
+        = ctx->module->getOrInsertGlobal(typeid(jank::runtime::object_ref).name(),
+                                         ctx->builder->getInt8Ty()->getPointerTo());
+      landing_pad->addClause(object_ptr_type_info);
       ctx->builder->CreateBr(catch_body_bb);
 
       current_fn->insert(current_fn->end(), catch_body_bb);
       ctx->builder->SetInsertPoint(catch_body_bb);
 
       auto const &catch_body = expr->catch_body.unwrap();
-      auto old_locals = locals;
+      auto old_locals(locals);
       auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
       auto begin_catch_fn = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
       auto caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
@@ -1071,8 +1089,10 @@ namespace jank::codegen
 
       auto original_catch_pos = catch_body.body->position;
       catch_body.body->propagate_position(expression_position::value);
+      util::scope_exit const restore_catch_pos{ [&]() {
+        catch_body.body->propagate_position(original_catch_pos);
+      } };
       catch_val = gen(catch_body.body, arity);
-      catch_body.body->propagate_position(original_catch_pos);
 
       auto end_catch_fn
         = ctx->module->getOrInsertFunction("__cxa_end_catch", ctx->builder->getVoidTy());
@@ -1093,30 +1113,36 @@ namespace jank::codegen
       ctx->builder->CreateResume(landing_pad);
     }
 
+    /* --- Finally Block --- */
     current_fn->insert(current_fn->end(), finally_bb);
     ctx->builder->SetInsertPoint(finally_bb);
 
     auto num_paths = (try_val ? 1 : 0) + (catch_val ? 1 : 0);
-    llvm::PHINode *finally_phi = nullptr;
-    if(!is_return && num_paths > 0)
+    llvm::Value *final_val = nullptr;
+
+    if(num_paths > 0)
     {
-      finally_phi = ctx->builder->CreatePHI(ptr_ty, num_paths, "finally.phi");
+      auto phi = ctx->builder->CreatePHI(ptr_ty, num_paths, "try.phi");
       if(try_val)
       {
-        finally_phi->addIncoming(try_val, try_end_bb);
+        phi->addIncoming(try_val, try_end_bb);
       }
       if(catch_val)
       {
-        finally_phi->addIncoming(catch_val, catch_end_bb);
+        phi->addIncoming(catch_val, catch_end_bb);
       }
+      final_val = phi;
     }
 
     if(expr->finally_body.is_some())
     {
       auto original_finally_pos = expr->finally_body.unwrap()->position;
       expr->finally_body.unwrap()->propagate_position(expression_position::statement);
+      util::scope_exit const restore_finally_pos{ [&]() {
+        expr->finally_body.unwrap()->propagate_position(original_finally_pos);
+      } };
+      /* The result of the finally body is discarded, as per Clojure semantics. */
       gen(expr->finally_body.unwrap(), arity);
-      expr->finally_body.unwrap()->propagate_position(original_finally_pos);
     }
 
     if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
@@ -1124,22 +1150,25 @@ namespace jank::codegen
       ctx->builder->CreateBr(cont_bb);
     }
 
+    /* --- Continuation Block --- */
     current_fn->insert(current_fn->end(), cont_bb);
     ctx->builder->SetInsertPoint(cont_bb);
 
     if(is_return)
     {
-      ctx->builder->CreateUnreachable();
+      if(final_val)
+      {
+        ctx->builder->CreateRet(final_val);
+      }
+      else
+      {
+        ctx->builder->CreateUnreachable();
+      }
       return nullptr;
-    }
-
-    if(finally_phi)
-    {
-      return finally_phi;
     }
     else
     {
-      return gen_global(jank_nil);
+      return final_val ? final_val : gen_global(jank_nil);
     }
   }
 
