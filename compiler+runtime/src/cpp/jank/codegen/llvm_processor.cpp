@@ -1400,12 +1400,12 @@ namespace jank::codegen
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
-      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
+      auto const is_arg_indirect{ Cpp::IsReferenceType(arg_type) || Cpp::IsPointerType(arg_type) };
 
       if(i == 0 && requires_this_obj)
       {
         this_obj = arg_handle;
-        if(is_arg_ref && llvm::isa<llvm::AllocaInst>(this_obj))
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(this_obj))
         {
           this_obj = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
@@ -1429,7 +1429,8 @@ namespace jank::codegen
       //              Cpp::GetTypeAsString(arg_type),
       //              Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)),
       //              Cpp::IsImplicitlyConvertible(arg_type, param_type));
-      auto const is_param_ref{ Cpp::IsReferenceType(param_type) };
+      auto const is_param_indirect{ Cpp::IsReferenceType(param_type)
+                                    || Cpp::IsPointerType(param_type) };
       if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
              || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
@@ -1441,11 +1442,11 @@ namespace jank::codegen
                                     param_type,
                                     arg_handle);
       }
-      else if(is_arg_ref && !is_param_ref && llvm::isa<llvm::AllocaInst>(arg_handle))
+      else if(is_arg_indirect && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
       {
         arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
       }
-      else if(!is_arg_ref && is_param_ref)
+      else if(!is_arg_indirect && is_param_indirect)
       {
         /* TODO: Nothing to do here? */
       }
@@ -1585,9 +1586,21 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_builtin_operator_call_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
-    if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1 && Cpp::IsReferenceType(expr->type))
+    /* If we're doing a deref, there are a couple of special cases. If our output is a
+     * reference, that means we're dereferencing a pointer to a reference, which doesn't actually
+     * change the underlying codegen value, so we don't do any deref. If out output is a
+     * pointer, that means we're dereferencing a pointer to pointer, so we just short circuit
+     * the whole CppInterOp dance and do a load. */
+    if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1)
     {
-      return gen(expr->arg_exprs[0], arity);
+      if(Cpp::IsReferenceType(expr->type))
+      {
+        return gen(expr->arg_exprs[0], arity);
+      }
+      else if(Cpp::IsPointerType(expr->type))
+      {
+        return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->arg_exprs[0], arity));
+      }
     }
 
     std::vector<Cpp::TemplateArgInfo> arg_types;

@@ -919,6 +919,11 @@ namespace jank::analyze
       expr->propagate_position(cast_position);
       return expr;
     }
+    else if(cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
+    {
+      expr->propagate_position(cast_position);
+      return expr;
+    }
     else if(Cpp::IsConstructible(expected_type, expr_type))
     {
       auto const bare_param_type{ Cpp::GetNonReferenceType(Cpp::GetTypeWithoutCv(expected_type)) };
@@ -3497,7 +3502,11 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(Cpp::IsConstructible(type_expr->type, value_type))
+    if(Cpp::GetCanonicalType(type_expr->type) == Cpp::GetCanonicalType(value_type))
+    {
+      return value_expr;
+    }
+    else if(Cpp::IsConstructible(type_expr->type, value_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,

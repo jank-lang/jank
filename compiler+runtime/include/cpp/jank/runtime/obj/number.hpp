@@ -62,9 +62,9 @@ namespace jank::runtime::obj
     i64 to_integer() const;
     f64 to_real() const;
 
+    object base{ obj_type };
     /* TODO: Is it faster to have the data first or the base first? */
     i64 data{};
-    object base{ obj_type };
   };
 
   using real_ref = oref<struct real>;
