@@ -119,9 +119,6 @@ namespace jank::analyze
                              /* Out param. */
                              native_vector<expression_ref> &arg_exprs,
                              std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                             local_frame_ptr const current_frame,
-                             expression_position const position,
-                             bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
   static error_ref invalid_unary(std::vector<Cpp::TemplateArgInfo> const &args,
@@ -722,13 +719,9 @@ namespace jank::analyze
       {
         arg_types.erase(arg_types.begin());
       }
-      auto const conversion_res{ apply_implicit_conversions(match,
-                                                            arg_exprs,
-                                                            arg_types,
-                                                            current_frame,
-                                                            position,
-                                                            needs_box,
-                                                            macro_expansions) };
+      auto const conversion_res{
+        apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
+      };
       if(conversion_res.is_err())
       {
         return conversion_res.expect_err();
@@ -800,13 +793,9 @@ namespace jank::analyze
       {
         arg_types.erase(arg_types.begin());
       }
-      auto const conversion_res{ apply_implicit_conversions(match,
-                                                            arg_exprs,
-                                                            arg_types,
-                                                            current_frame,
-                                                            position,
-                                                            needs_box,
-                                                            macro_expansions) };
+      auto const conversion_res{
+        apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
+      };
       if(conversion_res.is_err())
       {
         return conversion_res.expect_err();
@@ -875,10 +864,6 @@ namespace jank::analyze
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> const expr_type,
                             jtl::ptr<void> const expected_type,
-                            /* TODO: Remove these. */
-                            local_frame_ptr const,
-                            expression_position const,
-                            bool const,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
     //util::println("apply_implicit_conversion expr type {}, expected type {}",
@@ -962,19 +947,10 @@ namespace jank::analyze
   static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> const expected_type,
-                            local_frame_ptr const current_frame,
-                            expression_position const position,
-                            bool const needs_box,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const expr_type{ cpp_util::expression_type(expr) };
-    return apply_implicit_conversion(expr,
-                                     expr_type,
-                                     expected_type,
-                                     current_frame,
-                                     position,
-                                     needs_box,
-                                     macro_expansions);
+    return apply_implicit_conversion(expr, expr_type, expected_type, macro_expansions);
   }
 
   static jtl::result<void, error_ref>
@@ -982,9 +958,6 @@ namespace jank::analyze
                              /* Out param. */
                              native_vector<expression_ref> &arg_exprs,
                              std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                             local_frame_ptr const current_frame,
-                             expression_position const position,
-                             bool const needs_box,
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const member_offset{ cpp_util::is_member_function(fn) ? 1 : 0 };
@@ -995,9 +968,6 @@ namespace jank::analyze
       auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],
                                                 arg_types[i + member_offset].m_Type,
                                                 param_type,
-                                                current_frame,
-                                                position,
-                                                needs_box,
                                                 macro_expansions) };
       if(res.is_err())
       {
@@ -1142,9 +1112,6 @@ namespace jank::analyze
       }
       value_result = apply_implicit_conversion(value_result.expect_ok(),
                                                cpp_util::untyped_object_ptr_type(),
-                                               current_frame,
-                                               expression_position::value,
-                                               true,
                                                macro_expansions);
       if(value_result.is_err())
       {
@@ -1216,9 +1183,6 @@ namespace jank::analyze
     }
     value_expr = apply_implicit_conversion(value_expr.expect_ok(),
                                            cpp_util::untyped_object_ptr_type(),
-                                           current_frame,
-                                           expression_position::value,
-                                           needs_box,
                                            macro_expansions);
     if(value_expr.is_err())
     {
@@ -1572,9 +1536,6 @@ namespace jank::analyze
       auto const new_last_expression{ apply_implicit_conversion(last_expression,
                                                                 last_expression_type,
                                                                 cpp_util::untyped_object_ptr_type(),
-                                                                last_expression->frame,
-                                                                last_expression->position,
-                                                                last_expression->needs_box,
                                                                 macro_expansions) };
       if(new_last_expression.is_err())
       {
@@ -1818,9 +1779,6 @@ namespace jank::analyze
       }
       arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
                                            cpp_util::untyped_object_ptr_type(),
-                                           current_frame,
-                                           expression_position::value,
-                                           true,
                                            macro_expansions);
       if(arg_expr.is_err())
       {
@@ -2262,9 +2220,6 @@ namespace jank::analyze
     /* TODO: Support native types if they're compatible with bool. */
     condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
                                                cpp_util::untyped_object_ptr_type(),
-                                               current_frame,
-                                               expression_position::value,
-                                               false,
                                                macro_expansions);
     if(condition_expr.is_err())
     {
@@ -2279,9 +2234,6 @@ namespace jank::analyze
     }
     then_expr = apply_implicit_conversion(then_expr.expect_ok(),
                                           cpp_util::untyped_object_ptr_type(),
-                                          current_frame,
-                                          position,
-                                          needs_box,
                                           macro_expansions);
     if(then_expr.is_err())
     {
@@ -2299,9 +2251,6 @@ namespace jank::analyze
       }
       else_expr = apply_implicit_conversion(else_expr.expect_ok(),
                                             cpp_util::untyped_object_ptr_type(),
-                                            current_frame,
-                                            position,
-                                            needs_box,
                                             macro_expansions);
       if(else_expr.is_err())
       {
@@ -2420,9 +2369,6 @@ namespace jank::analyze
     }
     arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
                                          cpp_util::untyped_object_ptr_type(),
-                                         current_frame,
-                                         expression_position::value,
-                                         true,
                                          macro_expansions);
     if(arg_expr.is_err())
     {
@@ -2671,9 +2617,6 @@ namespace jank::analyze
       }
       res = apply_implicit_conversion(res.expect_ok(),
                                       cpp_util::untyped_object_ptr_type(),
-                                      current_frame,
-                                      expression_position::value,
-                                      true,
                                       macro_expansions);
       if(res.is_err())
       {
@@ -2743,9 +2686,6 @@ namespace jank::analyze
           }
           k_expr = apply_implicit_conversion(k_expr.expect_ok(),
                                              cpp_util::untyped_object_ptr_type(),
-                                             current_frame,
-                                             expression_position::value,
-                                             true,
                                              macro_expansions);
           if(k_expr.is_err())
           {
@@ -2759,9 +2699,6 @@ namespace jank::analyze
           }
           v_expr = apply_implicit_conversion(v_expr.expect_ok(),
                                              cpp_util::untyped_object_ptr_type(),
-                                             current_frame,
-                                             expression_position::value,
-                                             true,
                                              macro_expansions);
           if(v_expr.is_err())
           {
@@ -2804,9 +2741,6 @@ namespace jank::analyze
           }
           res = apply_implicit_conversion(res.expect_ok(),
                                           cpp_util::untyped_object_ptr_type(),
-                                          current_frame,
-                                          expression_position::value,
-                                          true,
                                           macro_expansions);
           if(res.is_err())
           {
@@ -2990,9 +2924,6 @@ namespace jank::analyze
       }
       arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
                                            cpp_util::untyped_object_ptr_type(),
-                                           current_frame,
-                                           expression_position::value,
-                                           needs_arg_box,
                                            macro_expansions);
       if(arg_expr.is_err())
       {
