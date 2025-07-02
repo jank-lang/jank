@@ -69,7 +69,7 @@ namespace jank::codegen
     jank_debug_assert(type);
     jank_debug_assert(Cpp::IsComplete(type));
     auto const size{ Cpp::GetSizeOfType(type) };
-    util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
+    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
@@ -125,7 +125,8 @@ namespace jank::codegen
   {
     /* TODO: If output is void, just return nil. */
     conversion_type = Cpp::GetNonReferenceType(conversion_type);
-    auto const is_input_ref{ Cpp::IsReferenceType(input_type) };
+    auto const is_input_indirect{ Cpp::IsReferenceType(input_type)
+                                  || Cpp::IsPointerType(input_type) };
     //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
     //              Cpp::GetTypeAsString(input_type),
     //              Cpp::GetTypeAsString(output_type),
@@ -169,7 +170,7 @@ namespace jank::codegen
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
       ctx.builder->CreateStore(arg, arg_alloc);
     }
-    else if(is_input_ref && llvm::isa<llvm::AllocaInst>(arg))
+    else if(is_input_indirect && llvm::isa<llvm::AllocaInst>(arg))
     {
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
@@ -1400,7 +1401,9 @@ namespace jank::codegen
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
-      auto const is_arg_indirect{ Cpp::IsReferenceType(arg_type) || Cpp::IsPointerType(arg_type) };
+      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) || Cpp::IsPointerType(arg_type) };
+      auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) };
+      auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
 
       if(i == 0 && requires_this_obj)
       {
@@ -1412,25 +1415,40 @@ namespace jank::codegen
         continue;
       }
 
-      /* TODO: Need to handle references here? */
       auto const is_arg_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      /* If we're constructing a builtin type, we don't have a ctor fn. We know the
-       * param type we need though. */
-      jtl::ptr<void> param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset)
-                                    : expr_type.data };
+      jtl::ptr<void> param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset) : nullptr };
       /* If our function is variadic, we won't have a param type for each variadic
        * param. Instead, we use the arg type. */
       if(!param_type)
       {
-        param_type = arg_type;
+        /* If we're constructing a builtin type, we don't have a ctor fn. We know the
+         * param type we need though. */
+        if(kind == expression_kind::cpp_constructor_call)
+        {
+          param_type = expr_type.data;
+        }
+        else if(kind == expression_kind::cpp_builtin_operator_call)
+        {
+          param_type = Cpp::GetNonReferenceType(arg_type);
+        }
+        else
+        {
+          param_type = arg_type;
+        }
       }
-      //util::println("gen_aot_call arg {}, arg type {}, param type {}, implicitly convertible {}",
-      //              i,
-      //              Cpp::GetTypeAsString(arg_type),
-      //              Cpp::GetTypeAsString(Cpp::GetFunctionArgType(fn, i - member_offset)),
-      //              Cpp::IsImplicitlyConvertible(arg_type, param_type));
       auto const is_param_indirect{ Cpp::IsReferenceType(param_type)
                                     || Cpp::IsPointerType(param_type) };
+      //util::println(
+      //  "gen_aot_call arg {}, arg type {} {} (indirect {}), param type {} {} (indirect {}), "
+      //  "implicitly convertible {}",
+      //  i,
+      //  arg_type,
+      //  Cpp::GetTypeAsString(arg_type),
+      //  is_arg_indirect,
+      //  param_type,
+      //  Cpp::GetTypeAsString(param_type),
+      //  is_param_indirect,
+      //  Cpp::IsImplicitlyConvertible(arg_type, param_type));
       if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
              || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
@@ -1446,10 +1464,10 @@ namespace jank::codegen
       {
         arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
       }
-      else if(!is_arg_indirect && is_param_indirect)
-      {
-        /* TODO: Nothing to do here? */
-      }
+      //else if(!is_arg_ref && is_param_indirect)
+      //{
+      //  /* TODO: Nothing to do here? */
+      //}
 
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
@@ -1462,14 +1480,14 @@ namespace jank::codegen
     auto const sret{ is_void ? static_cast<llvm::Value *>(
                                  llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()))
                              : ret_alloc };
-    auto const ctor_fn(ctx->module->getFunction(call.getName()));
+    auto const target_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       this_obj,
       llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
       args_array,
       sret
     };
-    ctx->builder->CreateCall(ctor_fn, ctor_args);
+    ctx->builder->CreateCall(target_fn, ctor_args);
 
     if(position == expression_position::tail)
     {
@@ -1588,7 +1606,7 @@ namespace jank::codegen
   {
     /* If we're doing a deref, there are a couple of special cases. If our output is a
      * reference, that means we're dereferencing a pointer to a reference, which doesn't actually
-     * change the underlying codegen value, so we don't do any deref. If out output is a
+     * change the underlying codegen value, so we don't do any deref. If our output is a
      * pointer, that means we're dereferencing a pointer to pointer, so we just short circuit
      * the whole CppInterOp dance and do a load. */
     if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1)
@@ -1599,8 +1617,25 @@ namespace jank::codegen
       }
       else if(Cpp::IsPointerType(expr->type))
       {
-        return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->arg_exprs[0], arity));
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getPtrTy(),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+        auto const value{ ctx->builder->CreateLoad(
+          ctx->builder->getPtrTy(),
+          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->arg_exprs[0], arity))) };
+        ctx->builder->CreateStore(value, alloc);
+        return alloc;
       }
+    }
+    else if(expr->op == Cpp::OP_Amp && expr->arg_exprs.size() == 1)
+    {
+      auto const alloc{ ctx->builder->CreateAlloca(
+        ctx->builder->getPtrTy(),
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+
+      auto const value{ gen(expr->arg_exprs[0], arity) };
+      ctx->builder->CreateStore(value, alloc);
+      return alloc;
     }
 
     std::vector<Cpp::TemplateArgInfo> arg_types;
@@ -1627,7 +1662,8 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_box_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
-    auto const value{ gen(expr->value_expr, arity) };
+    auto const value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
+                                               gen(expr->value_expr, arity)) };
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(ctx->module->getOrInsertFunction("jank_box", fn_type));
@@ -1646,6 +1682,9 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_unbox_ref const expr,
                                    analyze::expr::function_arity const &arity)
   {
+    auto const alloc{ ctx->builder->CreateAlloca(
+      ctx->builder->getPtrTy(),
+      llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
     auto const value{ gen(expr->value_expr, arity) };
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
@@ -1653,13 +1692,14 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::Value *, 1> const args{ value };
     auto const call(ctx->builder->CreateCall(fn, args));
+    ctx->builder->CreateStore(call, alloc);
 
     if(expr->position == expression_position::tail)
     {
       return ctx->builder->CreateRet(call);
     }
 
-    return call;
+    return alloc;
   }
 
   llvm::Value *llvm_processor::gen(analyze::expr::cpp_new_ref const expr,

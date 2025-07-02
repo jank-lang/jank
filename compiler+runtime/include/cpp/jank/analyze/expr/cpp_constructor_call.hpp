@@ -26,7 +26,7 @@ namespace jank::analyze::expr
     jtl::ptr<void> type{};
     /* The matched ctor overload to call. If our type is builtin, this will be null.
      *
-     * Also, if we're doing aggregate initialization, this will be null ans `is_aggregate`
+     * Also, if we're doing aggregate initialization, this will be null and `is_aggregate`
      * will be true.*/
     jtl::ptr<void> fn{};
     native_vector<expression_ref> arg_exprs;

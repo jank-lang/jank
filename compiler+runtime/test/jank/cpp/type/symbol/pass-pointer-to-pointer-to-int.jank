@@ -1,4 +1,4 @@
-(let* [i (cpp/int. 4)
+(let* [i (cpp/int.)
        &i (cpp/& i)
        &&i (cpp/& &i)
        p (cpp/cast cpp/int** &&i)]
