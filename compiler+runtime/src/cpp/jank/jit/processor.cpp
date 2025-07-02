@@ -118,10 +118,7 @@ namespace jank::jit
     args.emplace_back("-emit-pch");
     args.emplace_back("-Xclang");
     args.emplace_back("-fmodules-embed-all-files");
-    args.emplace_back("-Xclang");
     args.emplace_back("-fno-modules-validate-system-headers");
-    args.emplace_back("-Xclang");
-    args.emplace_back("-fno-modules-force-validate-user-headers");
     args.emplace_back("-x");
     args.emplace_back("c++-header");
     args.emplace_back("-o");
