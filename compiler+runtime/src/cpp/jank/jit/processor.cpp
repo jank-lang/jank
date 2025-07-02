@@ -22,8 +22,10 @@
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::jit
 {
@@ -76,6 +78,72 @@ namespace jank::jit
     }
   }
 
+  static jtl::option<std::filesystem::path> find_pch()
+  {
+    auto const jank_path{ util::process_location().unwrap().parent_path() };
+
+    auto dev_path{ jank_path / "incremental.pch" };
+    if(std::filesystem::exists(dev_path))
+    {
+      return dev_path;
+    }
+
+    std::string installed_path{
+      util::format("{}/incremental.pch", util::user_cache_dir(runtime::__rt_ctx->binary_version))
+    };
+    if(std::filesystem::exists(installed_path))
+    {
+      return installed_path;
+    }
+
+    return none;
+  }
+
+  static jtl::result<std::filesystem::path, jtl::immutable_string>
+  build_pch(std::vector<char const *> args)
+  {
+    util::print(stderr,
+                "Note: Looks like your first run with these flags. Building pre-compiled header… ");
+
+    auto const jank_path{ util::process_location().unwrap().parent_path() };
+    auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
+    std::filesystem::path output_path{
+      util::format("{}/incremental.pch", util::user_cache_dir(runtime::__rt_ctx->binary_version))
+    };
+    std::filesystem::create_directories(output_path.parent_path());
+
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fincremental-extensions");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-emit-pch");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fmodules-embed-all-files");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fno-modules-validate-system-headers");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fno-modules-force-validate-user-headers");
+    args.emplace_back("-x");
+    args.emplace_back("c++-header");
+    args.emplace_back("-o");
+    args.emplace_back(strdup(output_path.c_str()));
+    args.emplace_back("-c");
+    args.emplace_back(strdup(include_path.c_str()));
+    /* We need to add this again for it to get through. Not sure why. */
+    args.emplace_back("-std=gnu++20");
+
+    //args.emplace_back("-v");
+    //util::println("args {}", args);
+
+    auto const res{ analyze::cpp_util::invoke_clang(args) };
+    if(res.is_err())
+    {
+      return err(res.expect_err());
+    }
+
+    util::println(stderr, "done!");
+    return ok(output_path);
+  }
+
   processor::processor(util::cli::options const &opts)
     : optimization_level{ opts.optimization_level }
   {
@@ -125,6 +193,37 @@ namespace jank::jit
     }
     args.emplace_back(strdup(O.c_str()));
 
+    std::vector<std::string> sys_includes;
+    /* TODO: Pass in clang binary name as macro define. */
+    Cpp::DetectSystemCompilerIncludePaths(sys_includes, "clang++");
+    for(auto const &i : sys_includes)
+    {
+      args.emplace_back(strdup(util::format("-I{}", i).c_str()));
+    }
+
+    /* TODO: Pass in clang binary name as macro define. */
+    auto const resource_dir{ Cpp::DetectResourceDir("clang++") };
+    args.emplace_back("-resource-dir");
+    args.emplace_back(strdup(resource_dir.c_str()));
+
+    /* We need to include our special runtime PCH. */
+    auto pch_path{ find_pch() };
+    if(pch_path.is_none())
+    {
+      auto const res{ build_pch(args) };
+      if(res.is_err())
+      {
+        util::println(stderr, "{}", res.expect_err());
+        throw std::runtime_error{ "Unable to build PCH." };
+      }
+      pch_path = res.expect_ok();
+    }
+    auto const &pch_path_str{ pch_path.unwrap().string() };
+    args.emplace_back("-include-pch");
+    args.emplace_back(strdup(pch_path_str.c_str()));
+
+    /********* Every flag after this line is user-provided. *********/
+
     for(auto const &include_path : opts.include_dirs)
     {
       args.emplace_back(strdup(util::format("-I{}", include_path).c_str()));
@@ -138,36 +237,6 @@ namespace jank::jit
     for(auto const &define_macro : opts.define_macros)
     {
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
-    }
-
-    /* TODO: Use the jank path to find this again. Find the old code. */
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/include/cpp");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/nanobench/include");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/folly");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/bpptree/include");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/immer");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cli11/include");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/ftxui/include");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/libzippp/src");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cpptrace/include");
-    args.emplace_back(
-      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/include");
-    args.emplace_back("-I/home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/lib");
-    args.emplace_back(
-      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/boost-preprocessor/include");
-    args.emplace_back(
-      "-I/home/jeaye/projects/jank/compiler+runtime/third-party/boost-multiprecision/include");
-
-    /* TODO: Pass in clang binary name as macro define. */
-    auto const resource_dir{ Cpp::DetectResourceDir("clang++") };
-    args.emplace_back("-resource-dir");
-    args.emplace_back(strdup(resource_dir.c_str()));
-
-    std::vector<std::string> sys_includes;
-    Cpp::DetectSystemCompilerIncludePaths(sys_includes, "clang++");
-    for(auto const &i : sys_includes)
-    {
-      args.emplace_back(strdup(util::format("-I{}", i).c_str()));
     }
 
     //util::println("jit flags {}", args);

@@ -146,11 +146,9 @@ set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
   -w
-  # We always JIT compile for the current machine.
-  -march=native
-  # TODO: Loop around all to add -I
-  -I${LLVM_INCLUDE_DIRS}
-  -I${CLANG_INCLUDE_DIRS}
+  -fwrapv
+  -fno-stack-protector
+  -fPIC
   ${LLVM_DEFINITIONS_LIST}
 )
 
@@ -361,8 +359,24 @@ target_link_libraries(
 
 jank_hook_llvm(jank_lib)
 
+# Build a string of all include flags for jank. This will be used for building the PCH at build
+# time as well as building the PCH on first run, after installation.
+get_target_property(jank_lib_includes_prop jank_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes "")
+foreach(dir ${jank_lib_includes_prop})
+  # System includes are just the path, but normal includes have this format:
+  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
+  # We need to strip all of that out.
+  if(${dir} MATCHES "BUILD_INTERFACE:")
+    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
+    list(APPEND jank_lib_includes -I${dir_path})
+  else()
+    list(APPEND jank_lib_includes -I${dir})
+  endif()
+endforeach()
+
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
 
 target_compile_options(
@@ -553,6 +567,45 @@ if(jank_test)
 endif()
 # ---- Tests ----
 
+# ---- Incremental PCH ----
+# jank has two types of pre-compiled headers, since Clang's JIT compiler is picky. The first
+# PCH is handled normally via CMake using `target_precompile_headers` and it's used for AOT builts.
+# However, once we boot up jank, the first thing we do is load a PCH so that the JIT environment
+# can know all of the types and functions within the jank runtime. This second PCH is our
+# "incremental" PCH, named that way since it uses Clang's -fincremental-extensions flag.
+#
+# Here, we set up the incremental PCH to be built whenever the normal PCH is changed or the script
+# for building the incremental PCH changes. Any other changes don't matter.
+
+# Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
+set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
+
+separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
+list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
+add_custom_command(
+  DEPENDS ${CMAKE_BINARY_DIR}/jank
+  OUTPUT ${jank_incremental_pch_flag}
+  COMMAND_EXPAND_LISTS
+  VERBATIM
+  COMMAND ${CMAKE_CXX_COMPILER}
+          #${jank_incremental_pch_cxx_flags}
+          ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes}
+          -Xclang -fincremental-extensions
+          -Xclang -emit-pch
+          -Xclang -fmodules-embed-all-files
+          -fno-modules-validate-system-headers
+          -x c++-header
+          -w
+          -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
+          -o ${jank_incremental_pch_flag}
+)
+add_custom_target(
+  jank_incremental_pch
+  ALL
+  DEPENDS ${jank_incremental_pch_flag}
+)
+# ---- Incremental PCH ----
+
 # ---- Compiled Clojure libraries ----
 # We do a bit of a dance here, to have a custom command generate a file
 # which is a then a dependency of a custom target. This is because custom
@@ -564,7 +617,7 @@ endif()
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank
+  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
   COMMAND touch ${jank_core_libraries_flag}

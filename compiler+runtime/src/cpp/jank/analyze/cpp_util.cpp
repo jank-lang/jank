@@ -1,9 +1,17 @@
 #include <algorithm>
 
 #include <clang/Interpreter/CppInterOp.h>
-#include <Interpreter/Compatibility.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Sema/Sema.h>
+#include <clang/Basic/DiagnosticIDs.h>
+#include <clang/Basic/DiagnosticOptions.h>
+#include <clang/Driver/Compilation.h>
+#include <clang/Driver/Driver.h>
+#include <clang/Driver/ToolChain.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
+#include <Interpreter/Compatibility.h>
+
+#include <llvm/TargetParser/Host.h>
 
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
@@ -404,5 +412,51 @@ namespace jank::analyze::cpp_util
       return op->second;
     }
     return none;
+  }
+
+  jtl::result<void, jtl::immutable_string> invoke_clang(std::vector<char const *> const &args)
+  {
+    std::string buffer;
+    llvm::raw_string_ostream diag_stream{ buffer };
+    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{ new clang::DiagnosticOptions{} };
+    auto * const diag_client{
+      new clang::TextDiagnosticPrinter{ diag_stream, &*diag_opts }
+    };
+    clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
+    clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
+    auto const vfs{ llvm::vfs::getRealFileSystem() };
+    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
+    auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
+    if(!clang_inferred_path)
+    {
+      return err("clang++ executable not found. Ensure it exists on your path.");
+    }
+
+    /* Building the driver doesn't actually run the commands yet. All of the flags will
+     * be checked, though. */
+    clang::driver::Driver driver{ clang_inferred_path.get(), target_triple, diags, "jank", vfs };
+    driver.setCheckInputsExist(true);
+
+    auto const compilation_result{ driver.BuildCompilation(args) };
+    if(!compilation_result || compilation_result->containsError())
+    {
+      return err(util::format("Failed to build Clang steps.\n{}", buffer));
+    }
+
+    /* Execute the compilation jobs (preprocess, compile, assemble).
+     * This actually runs the commands determined by BuildCompilation. */
+    int execution_exit_code{ 1 };
+    if(compilation_result && !compilation_result->containsError())
+    {
+      llvm::SmallVector<std::pair<int, clang::driver::Command const *>> failures;
+      execution_exit_code = driver.ExecuteCompilation(*compilation_result, failures);
+    }
+
+    if(diags.hasErrorOccurred() || execution_exit_code != 0)
+    {
+      return err(util::format("Clang failed with errors.\n{}", buffer));
+    }
+
+    return ok();
   }
 }

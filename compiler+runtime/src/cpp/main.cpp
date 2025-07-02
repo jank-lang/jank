@@ -295,7 +295,6 @@ int main(int const argc, char const **argv)
     jank_load_jank_perf_native();
 
     Cpp::EnableDebugOutput(false);
-    Cpp::Declare("#include <jank/runtime/convert/builtin.hpp>");
 
     switch(opts.command)
     {

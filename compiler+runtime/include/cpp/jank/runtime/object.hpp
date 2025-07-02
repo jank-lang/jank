@@ -86,6 +86,7 @@ namespace jank::runtime
     opaque_box,
   };
 
+  [[gnu::visibility("default")]]
   constexpr char const *object_type_str(object_type const type)
   {
     switch(type)

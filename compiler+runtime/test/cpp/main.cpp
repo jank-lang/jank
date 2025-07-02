@@ -46,7 +46,6 @@ try
     .expect_ok();
 
   Cpp::EnableDebugOutput(false);
-  Cpp::Declare("#include <jank/runtime/convert/builtin.hpp>");
 
   auto const res(context.run());
   if(context.shouldExit())
