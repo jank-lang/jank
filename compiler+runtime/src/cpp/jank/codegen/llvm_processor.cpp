@@ -2492,6 +2492,17 @@ namespace jank::codegen
 
   void llvm_processor::optimize() const
   {
-    ctx->mpm.run(*ctx->module, *ctx->mam);
+    //ctx->module->print(llvm::outs(), nullptr);
+
+#if 0 //JANK_DEBUG
+    if(llvm::verifyModule(*ctx->module, &llvm::errs()))
+    {
+      std::cerr << "----------\n";
+      ctx->module->print(llvm::outs(), nullptr);
+      std::cerr << "----------\n";
+    }
+#endif
+
+    //ctx->mpm.run(*ctx->module, *ctx->mam);
   }
 }

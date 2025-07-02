@@ -253,15 +253,6 @@ namespace jank::jit
                                              static_cast<std::string_view>(m->getName())) };
     //m->print(llvm::outs(), nullptr);
 
-#if JANK_DEBUG
-    if(llvm::verifyModule(*m, &llvm::errs()))
-    {
-      std::cerr << "----------\n";
-      m->print(llvm::outs(), nullptr);
-      std::cerr << "----------\n";
-    }
-#endif
-
     auto const ee(interpreter->getExecutionEngine());
     llvm::cantFail(
       ee->addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
