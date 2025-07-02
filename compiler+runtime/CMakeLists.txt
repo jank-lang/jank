@@ -413,6 +413,12 @@ foreach(dir ${jank_lib_includes_prop})
     string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
     list(APPEND jank_lib_includes -I${dir_path})
   else()
+    # We use -I instead of -isystem here, since the latter causes Clang's JIT to
+    # fail to find important headers, like stdlib.h, even if we're only adding new
+    # system includes.
+    #
+    # Fortunately, this doesn't really matter. The main reason for the system includes
+    # is for static analysis and such to ignore those headers.
     list(APPEND jank_lib_includes -I${dir})
   endif()
 endforeach()
