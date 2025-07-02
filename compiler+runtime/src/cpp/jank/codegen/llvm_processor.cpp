@@ -1001,6 +1001,11 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
+    if(!expr->catch_body.is_some() && !expr->finally_body.is_some())
+    {
+      return gen(expr->body, arity);
+    }
+
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
 
     /* A function must have a personality function set to use landing pads. */
@@ -1031,18 +1036,8 @@ namespace jank::codegen
       resume_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "resume");
     }
 
-    std::cout << "before pushing, landing pad stack size: " << eh_landing_pad_stack.size()
-              << std::endl;
     eh_landing_pad_stack.push_back(catch_lpad_bb);
-    std::cout << "after pushing, landing pad stack size: " << eh_landing_pad_stack.size()
-              << std::endl;
-    util::scope_exit const pop_landing_pad{ [&]() {
-      std::cout << "before poping, landing pad stack size: " << eh_landing_pad_stack.size()
-                << std::endl;
-      eh_landing_pad_stack.pop_back();
-      std::cout << "after poping, landing pad stack size: " << eh_landing_pad_stack.size()
-                << std::endl;
-    } };
+    util::scope_exit const pop_landing_pad{ [this]() { eh_landing_pad_stack.pop_back(); } };
 
     /* --- Try Block --- */
     ctx->builder->SetInsertPoint(original_insert_bb);
@@ -1055,10 +1050,16 @@ namespace jank::codegen
     if(try_val)
     {
       try_end_bb = ctx->builder->GetInsertBlock();
-      ctx->builder->CreateBr(finally_bb);
+      if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
+      {
+        ctx->builder->CreateBr(finally_bb);
+      }
     }
 
     /* --- Landing Pad & Catch/Resume Logic --- */
+    /* Exceptions from inside the catch/finally blocks should not be caught by this same try. */
+    eh_landing_pad_stack.pop_back();
+
     ctx->builder->SetInsertPoint(catch_lpad_bb);
     auto const ptr_ty = ctx->builder->getPtrTy();
     auto const i32_ty = ctx->builder->getInt32Ty();
@@ -1085,7 +1086,7 @@ namespace jank::codegen
       auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
       auto begin_catch_fn = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
       auto caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
-      locals[catch_body.sym] = caught_ptr;
+      locals[catch_body.sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
 
       auto original_catch_pos = catch_body.body->position;
       catch_body.body->propagate_position(expression_position::value);
@@ -1099,8 +1100,14 @@ namespace jank::codegen
       ctx->builder->CreateCall(end_catch_fn, {});
       locals = std::move(old_locals);
 
-      if(catch_val)
+      /* An empty catch body will not produce a value, so `catch_val` will be nullptr. */
+      /* If there's no terminator, we must add one. */
+      if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
       {
+        if(!catch_val)
+        {
+          catch_val = gen_global(jank_nil);
+        }
         catch_end_bb = ctx->builder->GetInsertBlock();
         ctx->builder->CreateBr(finally_bb);
       }
@@ -1149,6 +1156,12 @@ namespace jank::codegen
     {
       ctx->builder->CreateBr(cont_bb);
     }
+
+    /* We pushed the landing pad for our `try` block. It has now been popped, before
+     * generating catch/finally. We must push it back on, so that the scope_exit
+     * guard at the top can correctly pop it later, restoring the stack for the rest
+     * of this function's codegen. */
+    eh_landing_pad_stack.push_back(catch_lpad_bb);
 
     /* --- Continuation Block --- */
     current_fn->insert(current_fn->end(), cont_bb);
