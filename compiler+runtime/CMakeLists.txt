@@ -142,6 +142,46 @@ function(jank_hook_llvm target)
 endfunction()
 # ---- Clang/LLVM ----
 
+# ---- Clang JIT environment ----
+# We need to know some info about Clang, at runtime, which the JIT itself
+# has a hard time finding. Since we're expecting jank to go hand in hand with
+# the Clang which was used to build it, we bake this info into jank.
+#
+# This should greatly simplify distribution, since package maintainers
+# can configure jank correctly during the build phase and then it'll just
+# continue to work with that setup once it's installed.
+execute_process(
+  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^\\s\\+/-I/'"
+  RESULT_VARIABLE clang_system_includes_result
+  OUTPUT_VARIABLE clang_system_includes_unescaped
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT clang_system_includes_result EQUAL 0)
+  message(FATAL_ERROR
+    "Failed to extract include paths from ${CMAKE_CXX_COMPILER}:\n"
+    "  exit code: ${clang_system_includes_result}"
+  )
+endif()
+string(REPLACE "\n" " " clang_system_includes "${clang_system_includes_unescaped}")
+separate_arguments(clang_system_includes)
+
+execute_process(
+  COMMAND ${CMAKE_CXX_COMPILER} -print-resource-dir
+  RESULT_VARIABLE clang_resource_dir_result
+  OUTPUT_VARIABLE clang_resource_dir
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT clang_resource_dir_result EQUAL 0)
+  message(FATAL_ERROR
+    "Failed to extract resource dir ${CMAKE_CXX_COMPILER}:\n"
+    "  exit code: ${clang_resource_dir_result}"
+  )
+endif()
+list(APPEND jank_common_compiler_flags
+  -DJANK_CLANG_PATH="${CMAKE_CXX_COMPILER}"
+  -DJANK_CLANG_RESOURCE_DIR="${clang_resource_dir}"
+)
+
 set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
@@ -150,7 +190,9 @@ set(
   -fno-stack-protector
   -fPIC
   ${LLVM_DEFINITIONS_LIST}
+  ${clang_system_includes}
 )
+# ---- Clang JIT environment ----
 
 # ---- libjank.a ----
 # The sources for jank are used for both the compiler and its tests, so
@@ -377,7 +419,8 @@ endforeach()
 
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
-list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
+list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
+string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
 
 target_compile_options(
   jank_lib

@@ -193,18 +193,8 @@ namespace jank::jit
     }
     args.emplace_back(strdup(O.c_str()));
 
-    std::vector<std::string> sys_includes;
-    /* TODO: Pass in clang binary name as macro define. */
-    Cpp::DetectSystemCompilerIncludePaths(sys_includes, "clang++");
-    for(auto const &i : sys_includes)
-    {
-      args.emplace_back(strdup(util::format("-I{}", i).c_str()));
-    }
-
-    /* TODO: Pass in clang binary name as macro define. */
-    auto const resource_dir{ Cpp::DetectResourceDir("clang++") };
     args.emplace_back("-resource-dir");
-    args.emplace_back(strdup(resource_dir.c_str()));
+    args.emplace_back(JANK_CLANG_RESOURCE_DIR);
 
     /* We need to include our special runtime PCH. */
     auto pch_path{ find_pch() };

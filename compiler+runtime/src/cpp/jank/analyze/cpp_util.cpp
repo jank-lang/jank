@@ -426,15 +426,11 @@ namespace jank::analyze::cpp_util
     clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
     auto const vfs{ llvm::vfs::getRealFileSystem() };
     auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
-    auto const clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
-    if(!clang_inferred_path)
-    {
-      return err("clang++ executable not found. Ensure it exists on your path.");
-    }
+    auto const clang_path{ JANK_CLANG_PATH };
 
     /* Building the driver doesn't actually run the commands yet. All of the flags will
      * be checked, though. */
-    clang::driver::Driver driver{ clang_inferred_path.get(), target_triple, diags, "jank", vfs };
+    clang::driver::Driver driver{ clang_path, target_triple, diags, "jank", vfs };
     driver.setCheckInputsExist(true);
 
     auto const compilation_result{ driver.BuildCompilation(args) };
