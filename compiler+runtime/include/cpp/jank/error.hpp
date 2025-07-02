@@ -346,4 +346,9 @@ namespace jank
   {
     return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
   }
+
+  namespace error
+  {
+    error_ref internal_failure(jtl::immutable_string const &message);
+  }
 }

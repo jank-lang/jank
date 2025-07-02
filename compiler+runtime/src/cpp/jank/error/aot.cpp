@@ -14,11 +14,4 @@ namespace jank::error
   {
     return make_error(kind::aot_clang_executable_not_found, read::source::unknown);
   }
-
-  error_ref aot_module_not_found(jtl::immutable_string module_name)
-  {
-    return make_error(kind::aot_module_not_found,
-                      util::format("Compiled module \"{}\" not found.", module_name),
-                      read::source::unknown);
-  }
 }

@@ -42,28 +42,12 @@ namespace jank::aot
   {
   }
 
-  static jtl::immutable_string clang_executable_path()
-  {
-    jtl::immutable_string cxx{ getenv("CXX") };
-    if(!cxx.empty())
-    {
-      return cxx;
-    }
-
-    auto const llvm_path{ llvm::sys::findProgramByName("clang++") };
-    if(!llvm_path)
-    {
-      return jtl::immutable_string{};
-    }
-
-    return llvm_path.get();
-  }
-
   static jtl::immutable_string relative_to_cache_dir(jtl::immutable_string const &file_path)
   {
     return util::format("{}/{}", __rt_ctx->binary_cache_dir, file_path);
   }
 
+  // TODO: Generate an object file instead of a cpp
   static jtl::immutable_string gen_entrypoint(jtl::immutable_string const &module)
   {
     util::string_builder sb;
@@ -164,19 +148,19 @@ int main(int argc, const char** argv)
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
 
     /* TODO: Ensure correct clang++ version. */
-    auto clang_inferred_path{ clang_executable_path() };
-    if(clang_inferred_path.empty())
+    auto clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
+    if(!clang_inferred_path)
     {
       return error::aot_clang_executable_not_found();
     }
-    clang::driver::Driver driver{ clang_inferred_path.c_str(),
+    clang::driver::Driver driver{ clang_inferred_path.get(),
                                   target_triple,
                                   diags,
                                   "jank_aot_compilation",
                                   vfs };
     driver.setCheckInputsExist(false);
 
-    std::vector<char const *> compiler_args{ strdup(clang_inferred_path.c_str()) };
+    std::vector<char const *> compiler_args{ strdup(clang_inferred_path.get().c_str()) };
 
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
@@ -197,7 +181,7 @@ int main(int argc, const char** argv)
         }
         else
         {
-          return error::aot_module_not_found(module);
+          return error::internal_failure(util::format("Compiled module '{}' not found", module));
         }
       }
     }
@@ -211,31 +195,35 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
+    // TODO: Find library paths for jank's dependencies and add them here instead of
+    // expecting from users
     compiler_args.push_back(strdup(util::format("-L{}", JANK_DEPS_LIBRARY_DIRS).c_str()));
     for(auto const &library_dir : library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
 
-
     for(auto const &lib : { "-ljank",
                             /* Default libraries that jank depends on. */
                             "-lfolly",
-                            "-lstdc++",
-                            "-lm",
-                            "-lzip",
-                            "-lzippp_static",
-                            "-lcrypto",
-                            "-lclang-cpp",
                             "-lgc",
+                            "-lstdc++",
                             "-lgccpp",
+                            "-lm",
+                            "-lzippp_static",
+                            "-lzip",
+                            "-lbz2",
+                            "-lcrypto",
+                            "-lcpptrace",
+                            "-ldwarf",
+                            "-lz",
+                            "-lzstd",
+                            "-lclang-cpp",
+                            "-lLLVM",
                             "-lnanobench",
                             "-lftxui-component",
-                            "-lLLVM",
                             "-lftxui-dom",
-                            "-ldwarf",
-                            "-lftxui-screen",
-                            "-lcpptrace" })
+                            "-lftxui-screen" })
     {
       compiler_args.push_back(strdup(lib));
     }
@@ -261,11 +249,11 @@ int main(int argc, const char** argv)
       }
     } };
 
-    // TODO: Remove
-    for(auto const st: compiler_args)
-    {
-      util::print("{} ", st);
-    }
+    // prints the command used for compilation
+    // for(auto const st : compiler_args)
+    // {
+    //   util::print("{} ", st);
+    // }
 
     llvm::ArrayRef<char const *> const Argv(compiler_args);
 

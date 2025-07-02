@@ -380,4 +380,9 @@ namespace jank::error
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";
   }
+
+  error_ref internal_failure(jtl::immutable_string const &message)
+  {
+    return make_error(kind::internal_failure, message, read::source::unknown);
+  }
 }

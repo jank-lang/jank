@@ -15,11 +15,12 @@
 (def jank-build-dir (fs/parent jank-path))
 
 (def lib-paths
-  ;; TODO: These library paths should ideally be included
-  ;; in the AOT program
+  ;; TODO: These library paths should be included
+  ;; in the jank's aot/processor.cpp
   (let [libs-relative-paths ["/" "/third-party/libzippp"
                              "/third-party/ftxui"
-                             "/third-party/cpptrace"]]
+                             "/third-party/cpptrace"
+                             "/_deps/libdwarf-build/src/lib/libdwarf"]]
     (->> libs-relative-paths
          (map (fn [lib] (str "-L" jank-build-dir lib)))
          (str/join " "))))
@@ -36,11 +37,20 @@
 (defn- get-headers []
   ;; TODO: These headers should be included by default in the AOT program
   ;; As of now, we expect the users to include these
-  (->> (fs/list-dirs [(str jank-build-dir "/../include")
-                      (str jank-build-dir "/../third-party")
-                      (str jank-build-dir "/third-party")]
-                     (constantly true))
-       (concat ["/usr/lib/clang/19/include" (str jank-build-dir "/../third-party/bpptree/include")])
+  (->> ["third-party/nanobench/include"
+        "third-party/folly"
+        "third-party/bpptree/include"
+        "third-party/immer"
+        "third-party/magic_enum/include/magic_enum"
+        "third-party/cli11/include"
+        "third-party/ftxui/include"
+        "third-party/libzippp/src"
+        "third-party/cpptrace/include"
+        "third-party/boost-preprocessor/include"
+        "third-party/boost-multiprecision/include"]
+       (map #(fs/path jank-build-dir "../" %))
+       (concat ["/usr/lib/llvm-19/include"
+                (str (fs/path jank-build-dir "../include/cpp"))])
        (map #(str "--include-dir " %))
        (str/join " ")))
 
@@ -76,7 +86,7 @@
         (println "Compile command: " compile-command)
         (is (= 0 (->> compile-command
                       (proc/sh {:out *out*
-                                :err *err*})
+                                :err *out*})
                       :exit)))
         (is (= expected-output (-> @cli-path (str args)
                                    proc/sh :out))))
@@ -99,7 +109,7 @@
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command
                     (proc/sh {:out *out*
-                              :err *err*})
+                              :err *out*})
                     :exit)))
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
@@ -116,7 +126,7 @@
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command
                     (proc/sh {:out *out*
-                              :err *err*})
+                              :err *out*})
                     :exit)))
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
@@ -134,7 +144,7 @@
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command
                     (proc/sh {:out *out*
-                              :err *err*})
+                              :err *out*})
                     :exit)))
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
