@@ -43,7 +43,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      output << util::format("{} {} enter {}", tag, now(), region);
+      output << util::format("{} {} enter {}\n", tag, now(), region);
     }
   }
 
@@ -51,7 +51,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      output << util::format("{} {} exit {}", tag, now(), region);
+      output << util::format("{} {} exit {}\n", tag, now(), region);
     }
   }
 
@@ -59,7 +59,7 @@ namespace jank::profile
   {
     if(enabled)
     {
-      output << util::format("{} {} report {}", tag, now(), boundary);
+      output << util::format("{} {} report {}\n", tag, now(), boundary);
     }
   }
 
