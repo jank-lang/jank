@@ -194,7 +194,7 @@ add_library(
   src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
-  src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
+  src/cpp/jank/runtime/detail/native_array_map.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
@@ -214,6 +214,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
+  src/cpp/jank/runtime/obj/transient_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/transient_hash_map.cpp
   src/cpp/jank/runtime/obj/persistent_sorted_map.cpp

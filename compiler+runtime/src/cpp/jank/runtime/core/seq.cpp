@@ -219,6 +219,10 @@ namespace jank::runtime
     {
       return expect_object<obj::transient_hash_set>(coll)->disjoin_in_place(o);
     }
+    else if(coll->type == object_type::transient_array_map)
+    {
+      return expect_object<obj::transient_array_map>(coll)->dissoc_in_place(o);
+    }
     else if(coll->type == object_type::transient_sorted_set)
     {
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
@@ -715,11 +719,11 @@ namespace jank::runtime
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
+          using R = decltype(assoc(typed_m, jank_nil, jank_nil));
+
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
-              /* TODO: Check for persistent_array_map and only use an object_ref in
-               * that case. Otherwise, use full type info. */
-              object_ref ret{ typed_m };
+              R ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
                 auto const e(seq->first());
@@ -751,13 +755,15 @@ namespace jank::runtime
         using T = typename decltype(typed_m)::value_type;
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
+          using R = decltype(assoc_in_place(typed_m, jank_nil, jank_nil));
+
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
-              auto ret(typed_m);
+              R ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
                 auto const e(seq->first());
-                ret = ret->assoc_in_place(e->data[0], e->data[1]);
+                ret = assoc_in_place(ret, e->data[0], e->data[1]);
               }
               return ret;
             },

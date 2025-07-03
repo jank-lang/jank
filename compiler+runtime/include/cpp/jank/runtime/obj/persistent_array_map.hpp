@@ -1,26 +1,25 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/obj/persistent_array_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
 
 namespace jank::runtime::obj
 {
   using persistent_array_map_ref = oref<struct persistent_array_map>;
-  using transient_hash_map_ref = oref<struct transient_hash_map>;
+  using transient_array_map_ref = oref<struct transient_array_map>;
 
   struct persistent_array_map
     : obj::detail::base_persistent_map<persistent_array_map,
                                        persistent_array_map_sequence,
-                                       runtime::detail::native_persistent_array_map>
+                                       runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
-    static constexpr usize max_size{ value_type::max_size };
-    using parent_type
-      = obj::detail::base_persistent_map<persistent_array_map,
-                                         persistent_array_map_sequence,
-                                         runtime::detail::native_persistent_array_map>;
+    static constexpr u8 max_size{ value_type::max_size };
+    using parent_type = obj::detail::base_persistent_map<persistent_array_map,
+                                                         persistent_array_map_sequence,
+                                                         runtime::detail::native_array_map>;
 
 
     persistent_array_map() = default;
@@ -83,7 +82,7 @@ namespace jank::runtime::obj
     object_ref call(object_ref, object_ref) const;
 
     /* behavior::transientable */
-    transient_hash_map_ref to_transient() const;
+    transient_array_map_ref to_transient() const;
 
     value_type data{};
   };

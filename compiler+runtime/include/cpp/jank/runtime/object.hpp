@@ -25,14 +25,13 @@ namespace jank::runtime
     character,
 
     persistent_list,
-    persistent_list_sequence,
 
     persistent_vector,
     transient_vector,
     persistent_vector_sequence,
 
     persistent_array_map,
-    /* TODO: transient_array_map */
+    transient_array_map,
     persistent_array_map_sequence,
 
     persistent_hash_map,
@@ -116,8 +115,6 @@ namespace jank::runtime
 
       case object_type::persistent_list:
         return "persistent_list";
-      case object_type::persistent_list_sequence:
-        return "persistent_list_sequence";
 
       case object_type::persistent_vector:
         return "persistent_vector";
@@ -128,6 +125,8 @@ namespace jank::runtime
 
       case object_type::persistent_array_map:
         return "persistent_array_map";
+      case object_type::transient_array_map:
+        return "transient_array_map";
       case object_type::persistent_array_map_sequence:
         return "persistent_array_map_sequence";
 

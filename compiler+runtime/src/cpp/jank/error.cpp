@@ -55,6 +55,10 @@ namespace jank::error
         return "Unterminated set.";
       case kind::parse_odd_entries_in_map:
         return "Odd number of entries in map.";
+      case kind::parse_duplicate_keys_in_map:
+        return "Duplicate keys in map literals are not allowed.";
+      case kind::parse_duplicate_items_in_set:
+        return "Duplicate items in set literals are not allowed.";
       case kind::parse_invalid_quote:
         return "Invalid quote.";
       case kind::parse_invalid_meta_hint_value:
