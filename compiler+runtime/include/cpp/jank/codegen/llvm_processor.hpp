@@ -145,7 +145,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref qualified_name) const;
+      llvm::Value *gen_var_root(obj::symbol_ref qualified_name, bool def = false) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;

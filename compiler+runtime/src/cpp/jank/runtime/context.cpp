@@ -336,7 +336,8 @@ namespace jank::runtime
                               module_path.c_str(),
                               file_error.message()));
     }
-    //codegen_ctx->module->print(llvm::outs(), nullptr);
+    // Turn on printing
+    module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;

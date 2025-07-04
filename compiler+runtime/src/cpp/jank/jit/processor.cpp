@@ -179,8 +179,9 @@ namespace jank::jit
   {
     profile::timer const timer{ util::format("jit ir module {}",
                                              static_cast<std::string_view>(m->getName())) };
-    //m->print(llvm::outs(), nullptr);
-
+    // Print module
+    m->print(llvm::outs(), nullptr);
+    
 #if JANK_DEBUG
     if(llvm::verifyModule(*m, &llvm::errs()))
     {
