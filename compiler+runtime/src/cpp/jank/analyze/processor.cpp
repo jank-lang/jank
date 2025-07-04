@@ -193,7 +193,8 @@ namespace jank::analyze
                                         expr::cpp_value_ref const val,
                                         native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type) || Cpp::IsArrayType(args[0].m_Type))
+    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type)
+       || Cpp::IsArrayType(Cpp::GetNonReferenceType(args[0].m_Type)))
     {
       return ok();
     }
@@ -373,9 +374,9 @@ namespace jank::analyze
     {
       return common_type(args);
     }
-    else if(Cpp::IsArrayType(args[0].m_Type))
+    else if(Cpp::IsArrayType(Cpp::GetNonReferenceType(args[0].m_Type)))
     {
-      return Cpp::GetArrayElementType(args[0].m_Type);
+      return Cpp::GetArrayElementType(Cpp::GetNonReferenceType(args[0].m_Type));
     }
 
     /* We don't want to deref into a value type. We always at least want a reference. However,
@@ -862,14 +863,18 @@ namespace jank::analyze
 
   static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
-                            jtl::ptr<void> const expr_type,
+                            jtl::ptr<void> expr_type,
                             jtl::ptr<void> const expected_type,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
     //util::println("apply_implicit_conversion expr type {}, expected type {}",
     //              Cpp::GetTypeAsString(expr_type),
     //              Cpp::GetTypeAsString(expected_type));
+
+    expr_type = Cpp::GetNonReferenceType(expr_type);
     if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
+       || (Cpp::GetCanonicalType(expr_type)
+           == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return ok(expr);
@@ -3138,7 +3143,7 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::function);
     }
 
-    auto const type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
+    auto type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
 
     /* Primitive types through an alias use a scope which needs to be resolved before
      * we can figure out that we're working with a primitive type. */
@@ -3196,6 +3201,18 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
+      /* TODO: A Clang bug prevents us from supporting references to static members.
+       * https://github.com/llvm/llvm-project/issues/146956
+       */
+      if(!Cpp::IsStaticDatamember(scope))
+      {
+        /* TODO: Error if it's static and non-primitive. */
+        type = Cpp::GetLValueReferenceType(type);
+      }
+      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
+      {
+        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
+      }
     }
     else if(Cpp::IsEnumConstant(scope))
     {

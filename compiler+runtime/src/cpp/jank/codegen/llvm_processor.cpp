@@ -1401,7 +1401,7 @@ namespace jank::codegen
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
-      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) || Cpp::IsPointerType(arg_type) };
+      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
       auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) };
       auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
 
@@ -1460,7 +1460,8 @@ namespace jank::codegen
                                     param_type,
                                     arg_handle);
       }
-      else if(is_arg_indirect && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+      else if((is_arg_ref && llvm::isa<llvm::AllocaInst>(arg_handle))
+              || (is_arg_ptr && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg_handle)))
       {
         arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
       }
