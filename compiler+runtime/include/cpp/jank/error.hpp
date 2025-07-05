@@ -79,6 +79,22 @@ namespace jank::error
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
     analyze_invalid_conversion,
+    analyze_invalid_cpp_operator_call,
+    analyze_invalid_cpp_constructor_call,
+    analyze_invalid_cpp_member_call,
+    analyze_invalid_cpp_function_call,
+    analyze_invalid_cpp_call,
+    analyze_invalid_cpp_conversion,
+    analyze_invalid_cpp_symbol,
+    analyze_unresolved_cpp_symbol,
+    analyze_invalid_cpp_raw,
+    analyze_invalid_cpp_type,
+    analyze_invalid_cpp_cast,
+    analyze_invalid_cpp_box,
+    analyze_invalid_cpp_unbox,
+    analyze_invalid_cpp_new,
+    analyze_invalid_cpp_delete,
+    analyze_invalid_cpp_member_access,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -227,6 +243,38 @@ namespace jank::error
       case kind::system_clang_executable_not_found:
         return "system/clang-executable-not-found";
 
+      case kind::analyze_invalid_cpp_operator_call:
+        return "analyze/invalid-cpp-operator-call";
+      case kind::analyze_invalid_cpp_constructor_call:
+        return "analyze/invalid-cpp-constructor-call";
+      case kind::analyze_invalid_cpp_member_call:
+        return "analyze/invalid-cpp-member-call";
+      case kind::analyze_invalid_cpp_function_call:
+        return "analyze/invalid-cpp-function-call";
+      case kind::analyze_invalid_cpp_call:
+        return "analyze/invalid-cpp-call";
+      case kind::analyze_invalid_cpp_conversion:
+        return "analyze/invalid-cpp-conversion";
+      case kind::analyze_invalid_cpp_symbol:
+        return "analyze/invalid-cpp-symbol";
+      case kind::analyze_unresolved_cpp_symbol:
+        return "analyze/unresolved-cpp-symbol";
+      case kind::analyze_invalid_cpp_raw:
+        return "analyze/invalid-cpp-raw";
+      case kind::analyze_invalid_cpp_type:
+        return "analyze/invalid-cpp-type";
+      case kind::analyze_invalid_cpp_cast:
+        return "analyze/invalid-cpp-cast";
+      case kind::analyze_invalid_cpp_box:
+        return "analyze/invalid-cpp-box";
+      case kind::analyze_invalid_cpp_unbox:
+        return "analyze/invalid-cpp-unbox";
+      case kind::analyze_invalid_cpp_new:
+        return "analyze/invalid-cpp-new";
+      case kind::analyze_invalid_cpp_delete:
+        return "analyze/invalid-cpp-delete";
+      case kind::analyze_invalid_cpp_member_access:
+        return "analyze/invalid-cpp-member-access";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
