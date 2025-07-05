@@ -14,4 +14,9 @@ namespace jank::error
   {
     return make_error(kind::aot_clang_executable_not_found, read::source::unknown);
   }
+
+  error_ref internal_aot_failure(jtl::immutable_string const &message)
+  {
+    return make_error(kind::internal_aot_failure, message, read::source::unknown);
+  }
 }

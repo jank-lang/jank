@@ -78,12 +78,13 @@ namespace jank::error
     analyze_unresolved_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
-    aot_compilation_failure,
-    aot_clang_executable_not_found,
-    aot_module_not_found,
     internal_analyze_failure,
 
     internal_codegen_failure,
+
+    aot_compilation_failure,
+    aot_clang_executable_not_found,
+    internal_aot_failure,
 
     internal_runtime_failure,
 
@@ -215,16 +216,16 @@ namespace jank::error
       case kind::analyze_macro_expansion_exception:
         return "analyze/macro-expansion-exception";
       case kind::aot_compilation_failure:
-        return "aot/compilation_failure";
+        return "aot/compilation-failure";
       case kind::aot_clang_executable_not_found:
-        return "aot/clang_executable_not_found";
-      case kind::aot_module_not_found:
-        return "aot/module_not_found";
+        return "aot/clang-executable-not-found";
 
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
         return "internal/codegen-failure";
+      case kind::internal_aot_failure:
+        return "internal/aot-failure";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
       case kind::internal_failure:
@@ -345,10 +346,5 @@ namespace jank
   error_ref make_error(Args &&...args)
   {
     return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
-  }
-
-  namespace error
-  {
-    error_ref internal_failure(jtl::immutable_string const &message);
   }
 }

@@ -78,9 +78,9 @@ namespace jank::util::cli
     cli_run_main.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     /* compile subcommand. */
-    auto &cli_compile(
-      *cli.add_subcommand("compile",
-                          "Load and compile project with entrypoint module containing -main."));
+    auto &cli_compile(*cli.add_subcommand(
+      "compile",
+      "Ahead of time compile project with entrypoint module containing -main."));
     cli_compile.fallthrough();
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
       ->default_val("a.out");

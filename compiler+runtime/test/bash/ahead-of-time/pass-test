@@ -9,6 +9,8 @@
 
 (def this-nsym (ns-name *ns*))
 
+;; TODO: Remove. This will not be required once we get library dirs 
+;; and headers from cmake config
 (def jank-path
   (-> (proc/sh "which jank") :out str/trim))
 
@@ -25,16 +27,16 @@
          (map (fn [lib] (str "-L" jank-build-dir lib)))
          (str/join " "))))
 
-(def jank_exe
+(def jank-exe
   (str jank-path " -DIMMER_HAS_LIBGC " lib-paths))
 
-(defn- module-path [alias]
+(defn module-path [alias]
   (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
 
-(defn- find-cli []
-  (-> (proc/sh "find ./target -name cli") :out str/trim))
+(defn find-binary [{:keys [name] :or {name "cli"}}]
+  (-> (proc/sh (str "find ./target -name " name)) :out str/trim))
 
-(defn- get-headers []
+(defn get-headers []
   ;; TODO: These headers should be included by default in the AOT program
   ;; As of now, we expect the users to include these
   (->> ["third-party/nanobench/include"
@@ -55,12 +57,14 @@
        (str/join " ")))
 
 (defn compile-command [module-path main-module {:keys [include-headers?
-                                                       optimization-flag]
-                                                :or {optimization-flag "-O0"}}]
-  (str jank_exe " " optimization-flag " --module-path=" module-path
+                                                       optimization-flag
+                                                       output-file]
+                                                :or {optimization-flag "-O0"
+                                                     output-file "cli"}}]
+  (str jank-exe " " optimization-flag " --module-path=" module-path
        " "
        (when include-headers? (get-headers))
-       " compile " main-module " -o cli"))
+       " compile " main-module " -o " output-file))
 
 (use-fixtures
   :each
@@ -69,7 +73,7 @@
     (println "Cleaned up 'target'")
     (f)))
 
-(deftest aot-only-jank-modules
+(deftest aot-single-jank-module
   (let [alias-name  "single-jank-module"
         module-path (module-path alias-name)]
     (doseq [main-with-args? [true false]
@@ -79,9 +83,9 @@
                   args (if main-with-args?
                          " foo bar baz"
                          nil)
-                  expected-output (slurp (str "expected_outputs/" alias-name "/" main-module))
+                  expected-output (slurp (str "expected-output/" alias-name "/" main-module))
                   compile-command (compile-command module-path main-module {})
-                  cli-path (delay (find-cli))]]
+                  cli-path (delay (find-binary {}))]]
       (testing (str alias-name " & " main-module)
         (println "Compile command: " compile-command)
         (is (= 0 (->> compile-command
@@ -102,9 +106,10 @@
         module-path (module-path alias-name)
         module "core"
         args " Admin 3000"
-        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
-        compile-command (compile-command module-path module {})
-        cli-path (delay (find-cli))]
+        output-filename "my-cli"
+        expected-output (slurp (str "expected-output/" alias-name "/" module))
+        compile-command (compile-command module-path module {:output-file output-filename})
+        cli-path (delay (find-binary {:name output-filename}))]
     (testing (str alias-name " & core")
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command
@@ -119,9 +124,9 @@
         module-path (module-path alias-name)
         module "core"
         args " foo bar"
-        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
+        expected-output (slurp (str "expected-output/" alias-name "/" module))
         compile-command (compile-command module-path module {:include-headers? true})
-        cli-path (delay (find-cli))]
+        cli-path (delay (find-binary {}))]
     (testing (str alias-name " & core")
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command
@@ -136,10 +141,10 @@
         module-path (module-path alias-name)
         module "core"
         args " foo bar"
-        expected-output (slurp (str "expected_outputs/" alias-name "/" module))
+        expected-output (slurp (str "expected-output/" alias-name "/" module))
         compile-command (compile-command module-path module {:include-headers? true
                                                              :optimization-flag "-O3"})
-        cli-path (delay (find-cli))]
+        cli-path (delay (find-binary {}))]
     (testing (str alias-name " & core")
       (println "Compile command: " compile-command)
       (is (= 0 (->> compile-command

@@ -158,7 +158,6 @@ int main(int argc, const char** argv)
                                   diags,
                                   "jank_aot_compilation",
                                   vfs };
-    driver.setCheckInputsExist(false);
 
     std::vector<char const *> compiler_args{ strdup(clang_inferred_path.get().c_str()) };
 
@@ -181,7 +180,8 @@ int main(int argc, const char** argv)
         }
         else
         {
-          return error::internal_failure(util::format("Compiled module '{}' not found", module));
+          return error::internal_aot_failure(
+            util::format("Compiled module '{}' not found.", module));
         }
       }
     }
@@ -249,10 +249,9 @@ int main(int argc, const char** argv)
       }
     } };
 
-    // prints the command used for compilation
     // for(auto const st : compiler_args)
     // {
-    //   util::print("{} ", st);
+    //   util::println("compilation command: {} ", compiler_args);
     // }
 
     llvm::ArrayRef<char const *> const Argv(compiler_args);
@@ -266,7 +265,7 @@ int main(int argc, const char** argv)
 
     /* Execute the compilation jobs (preprocess, compile, assemble)
      * This actually runs the commands determined by BuildCompilation. */
-    int exit_code = 1;
+    int exit_code{ 1 };
     if(compilation && !compilation->containsError())
     {
       llvm::SmallVector<std::pair<int, clang::driver::Command const *>> failing_commands;

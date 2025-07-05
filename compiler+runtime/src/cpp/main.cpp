@@ -241,7 +241,7 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    if(opts.target_ns != "clojure.core")
+    if(opts.target_module != "clojure.core")
     {
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }

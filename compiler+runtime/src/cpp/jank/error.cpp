@@ -139,15 +139,16 @@ namespace jank::error
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
+      case kind::internal_codegen_failure:
+        return "Internal codegen failure.";
+
       case kind::aot_compilation_failure:
         return "Ahead of Time compilation failure.";
       case kind::aot_clang_executable_not_found:
-        return "Clang++ executable not found.";
-      case kind::aot_module_not_found:
-        return "Compiled module not found.";
+        return "Could not find clang++ executable.";
+      case kind::internal_aot_failure:
+        return "Internal ahead-of-time compilation failure.";
 
-      case kind::internal_codegen_failure:
-        return "Internal codegen failure.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
       case kind::internal_failure:
@@ -379,10 +380,5 @@ namespace jank::error
   std::ostream &operator<<(std::ostream &os, base const &e)
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";
-  }
-
-  error_ref internal_failure(jtl::immutable_string const &message)
-  {
-    return make_error(kind::internal_failure, message, read::source::unknown);
   }
 }
