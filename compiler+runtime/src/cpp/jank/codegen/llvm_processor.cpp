@@ -147,10 +147,10 @@ namespace jank::codegen
                                 false));
       auto const fn(ctx->module->getOrInsertFunction("jank_ns_set_symbol_counter", fn_type));
 
-      ctx->builder->CreateCall(
-        fn,
-        { gen_c_string(current_ns->name->get_name()),
-          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
+      ctx->builder->CreateCall(fn,
+                               { gen_c_string(current_ns->name->get_name()),
+                                 llvm::ConstantInt::get(ctx->builder->getInt64Ty(),
+                                                        current_ns->symbol_counter.load() + 1) });
     }
 
     for(usize i{}; i < arity.params.size(); ++i)
