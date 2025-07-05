@@ -630,7 +630,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    //log_load(module, module_type_to_load, module_sources);
+    // log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {
@@ -654,6 +654,10 @@ namespace jank::runtime::module
     }
 
     loader::set_is_loaded(module);
+    {
+      auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
+      locked_ordered_modules->push_back(module);
+    }
     return ok();
   }
 

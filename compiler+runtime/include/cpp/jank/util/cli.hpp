@@ -8,6 +8,7 @@ namespace jank::util::cli
   {
     run,
     compile,
+    compile_module,
     repl,
     cpp_repl,
     run_main
@@ -48,8 +49,11 @@ namespace jank::util::cli
      * */
     std::vector<native_transient_string> extra_opts;
 
+    native_transient_string output_filename;
+
     command command{ command::repl };
   };
 
   jtl::result<options, int> parse(int const argc, char const **argv);
+  std::vector<native_transient_string> parse_empty(int const argc, char const **argv);
 }

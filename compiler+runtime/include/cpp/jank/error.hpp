@@ -82,6 +82,10 @@ namespace jank::error
 
     internal_codegen_failure,
 
+    aot_compilation_failure,
+    aot_clang_executable_not_found,
+    internal_aot_failure,
+
     internal_runtime_failure,
 
     internal_failure,
@@ -211,10 +215,17 @@ namespace jank::error
         return "analyze/unresolved-symbol";
       case kind::analyze_macro_expansion_exception:
         return "analyze/macro-expansion-exception";
+      case kind::aot_compilation_failure:
+        return "aot/compilation-failure";
+      case kind::aot_clang_executable_not_found:
+        return "aot/clang-executable-not-found";
+
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
         return "internal/codegen-failure";
+      case kind::internal_aot_failure:
+        return "internal/aot-failure";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
       case kind::internal_failure:
