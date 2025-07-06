@@ -60,7 +60,7 @@ namespace jank::util::cli
       .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
       ->check(CLI::IsMember({ "dynamic", "static" }));
     cli_compile_module
-      .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on module path).")
+      .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
 
     /* REPL subcommand. */
@@ -75,7 +75,11 @@ namespace jank::util::cli
     /* run-main subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main."));
     cli_run_main.fallthrough();
-    cli_run_main.add_option("module", opts.target_module, "The entrypoint module.")->required();
+    cli_run_main
+      .add_option("module",
+                  opts.target_module,
+                  "The entrypoint module (must be on the module path.")
+      ->required();
 
     /* compile subcommand. */
     auto &cli_compile(*cli.add_subcommand(

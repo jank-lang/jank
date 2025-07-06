@@ -102,11 +102,11 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    if(opts.target_ns != "clojure.core")
+    if(opts.target_module != "clojure.core")
     {
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
-    __rt_ctx->compile_module(opts.target_ns).expect_ok();
+    __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
   static void repl(util::cli::options const &opts)

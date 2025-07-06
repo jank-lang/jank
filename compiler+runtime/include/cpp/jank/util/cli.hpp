@@ -35,14 +35,11 @@ namespace jank::util::cli
     native_transient_string target_file;
 
     /* Compile command. */
-    native_transient_string target_ns;
+    native_transient_string target_module;
     native_transient_string target_runtime{ "dynamic" };
 
     /* REPL command. */
     bool repl_server{};
-
-    /* Run main command. */
-    native_transient_string target_module;
 
     /* Extras.
      * TODO: Use a native_persistent_vector instead.
