@@ -22,6 +22,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/analyze/visit.hpp>
 
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
@@ -1397,6 +1398,160 @@ namespace jank::analyze
     return jtl::make_ref<expr::throw_>(position, current_frame, true, arg_expr.unwrap_move());
   }
 
+  // namespace
+  // {
+  //   template <typename F>
+  //   static void walk(expression_ref const expr, F const &f)
+  //   {
+  //     visit_expr([&](auto const typed_expr) { walk(*typed_expr, f); }, expr);
+  //   }
+  //
+  //   template <typename F>
+  //   static void walk(expr::function_arity const &arity, F const &f)
+  //   {
+  //     walk(arity.body, f);
+  //   }
+  //
+  //   template <typename T, typename F>
+  //   requires std::is_base_of_v<expression, T>
+  //   void walk(T &expr, F const &f)
+  //   {
+  //     if constexpr(std::is_same_v<T, expr::call>)
+  //     {
+  //       walk(expr.source_expr, f);
+  //       for(auto const &form : expr.arg_exprs)
+  //       {
+  //         walk(form, f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::def>)
+  //     {
+  //       if(expr.value.is_some())
+  //       {
+  //         walk(expr.value.unwrap(), f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::if_>)
+  //     {
+  //       walk(expr.condition, f);
+  //       walk(expr.then, f);
+  //       if(expr.else_.is_some())
+  //       {
+  //         walk(expr.else_.unwrap(), f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::do_>)
+  //     {
+  //       for(auto const &form : expr.values)
+  //       {
+  //         walk(form, f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::let> || std::is_same_v<T, expr::letfn>)
+  //     {
+  //       for(auto &pair : expr.pairs)
+  //       {
+  //         walk(pair.second, f);
+  //       }
+  //       walk(expr.body, f);
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::throw_>)
+  //     {
+  //       walk(expr.value, f);
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::try_>)
+  //     {
+  //       walk(expr.body, f);
+  //       if(expr.catch_body.is_some())
+  //       {
+  //         walk(expr.catch_body.unwrap().body, f);
+  //       }
+  //       if(expr.finally_body.is_some())
+  //       {
+  //         walk(expr.finally_body.unwrap(), f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::list> || std::is_same_v<T, expr::vector>
+  //                       || std::is_same_v<T, expr::set>)
+  //     {
+  //       for(auto const &form : expr.data_exprs)
+  //       {
+  //         walk(form, f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::map>)
+  //     {
+  //       for(auto &form : expr.data_exprs)
+  //       {
+  //         walk(form.first, f);
+  //         walk(form.second, f);
+  //       }
+  //     }
+  //     else if constexpr(std::is_same_v<T, expr::function>)
+  //     {
+  //       /* Don't walk into nested functions, they handle their own captures. */
+  //     }
+  //
+  //     f(expr);
+  //   }
+  //
+  //   expr::function_ref wrap_try_in_function(expr::try_ref const try_expr)
+  //   {
+  //     using namespace jank::runtime;
+  //     using namespace jank::runtime::obj;
+  //
+  //     auto name = __rt_ctx->unique_string("try_fn_wrapper");
+  //
+  //     auto arity_frame = jtl::make_ref<local_frame>(local_frame::frame_type::fn,
+  //                                                   *__rt_ctx,
+  //                                                   jtl::some(try_expr->frame));
+  //
+  //     auto fn_expr = jtl::make_ref<expr::function>();
+  //     fn_expr->kind = expression_kind::function;
+  //     fn_expr->position = expression_position::value;
+  //     fn_expr->needs_box = true;
+  //     fn_expr->name = name;
+  //     fn_expr->unique_name = name;
+  //     fn_expr->meta = persistent_hash_map::empty();
+  //     fn_expr->frame = arity_frame;
+  //
+  //     auto fn_ctx = jtl::make_ref<expr::function_context>();
+  //     fn_ctx->fn = fn_expr;
+  //     fn_ctx->name = name;
+  //     fn_ctx->unique_name = name;
+  //     fn_ctx->param_count = 0;
+  //     fn_ctx->is_variadic = false;
+  //     fn_ctx->is_tail_recursive = false;
+  //
+  //     arity_frame->fn_ctx = fn_ctx;
+  //
+  //     auto const reparent_frame = [&](expression &e) { e.frame = arity_frame; };
+  //     walk(*try_expr, reparent_frame);
+  //
+  //     auto body_do = jtl::make_ref<expr::do_>(expression_position::tail, arity_frame, true);
+  //     body_do->values.push_back(try_expr);
+  //
+  //     expr::function_arity arity{ {}, body_do, arity_frame, fn_ctx };
+  //
+  //     auto const find_and_register_captures = [&](expression &e) {
+  //       if(auto *local_ref = llvm::dyn_cast<expr::local_reference>(&e))
+  //       {
+  //         auto find_res = arity_frame->find_local_or_capture(local_ref->name);
+  //         if(find_res.is_some() && !find_res.unwrap().crossed_fns.empty())
+  //         {
+  //           local_frame::register_captures(find_res.unwrap());
+  //         }
+  //       }
+  //     };
+  //     walk(*try_expr, find_and_register_captures);
+  //
+  //     fn_expr->arities.push_back(std::move(arity));
+  //     fn_expr->arities[0].body->propagate_position(expression_position::tail);
+  //
+  //     return fn_expr;
+  //   }
+  // }
+  //
   processor::expression_result
   processor::analyze_try(runtime::obj::persistent_list_ref const list,
                          local_frame_ptr const current_frame,
@@ -1598,6 +1753,7 @@ namespace jank::analyze
       ret->finally_body.unwrap()->frame = finally_frame;
     }
 
+    // return wrap_try_in_function(ret);
     return ret;
   }
 

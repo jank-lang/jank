@@ -377,7 +377,10 @@ namespace jank::codegen
     else
     {
       auto const normal_dest = llvm::BasicBlock::Create(*ctx->llvm_ctx, "invoke.normal", this->fn);
-      call = ctx->builder->CreateInvoke(fn, normal_dest, eh_landing_pad_stack.back(), arg_handles);
+      call = ctx->builder->CreateInvoke(fn,
+                                        normal_dest,
+                                        eh_landing_pad_stack.back().lpad_bb,
+                                        arg_handles);
       ctx->builder->SetInsertPoint(normal_dest);
     }
 
@@ -972,7 +975,10 @@ namespace jank::codegen
       auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
       llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
-      ctx->builder->CreateInvoke(fn, unreachable_dest, eh_landing_pad_stack.back(), { value });
+      ctx->builder->CreateInvoke(fn,
+                                 unreachable_dest,
+                                 eh_landing_pad_stack.back().lpad_bb,
+                                 { value });
 
       /* The normal destination is unreachable, so we mark it as such. */
       ctx->builder->SetInsertPoint(unreachable_dest);
@@ -1001,9 +1007,13 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
+    // std::cout << "IR before entering try:" << std::endl;
+    // ctx->module->print(llvm::outs(), nullptr);
     if(!expr->catch_body.is_some() && !expr->finally_body.is_some())
     {
       return gen(expr->body, arity);
+      // std::cout << "IR after try 1:" << std::endl;
+      // ctx->module->print(llvm::outs(), nullptr);
     }
 
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
@@ -1015,35 +1025,32 @@ namespace jank::codegen
       = ctx->module->getOrInsertFunction("__gxx_personality_v0", personality_fn_type);
     current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
 
+    // std::cout << "IR after try 2:" << std::endl;
+    // ctx->module->print(llvm::outs(), nullptr);
     auto const is_return(expr->position == expression_position::tail);
 
     /* --- Block Setup --- */
-    auto original_insert_bb = ctx->builder->GetInsertBlock();
-    auto finally_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "finally");
-    auto cont_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "try.cont");
-    auto catch_lpad_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.lpad", current_fn);
+    auto const original_insert_bb = ctx->builder->GetInsertBlock();
+    auto const finally_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "finally");
+    auto const cont_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "try.cont");
+    auto const lpad_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "lpad", current_fn);
 
     llvm::BasicBlock *catch_body_bb = nullptr;
-    llvm::BasicBlock *resume_bb = nullptr;
 
     bool const has_catch = expr->catch_body.is_some();
     if(has_catch)
     {
       catch_body_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.body");
     }
-    else
-    {
-      resume_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "resume");
-    }
 
-    eh_landing_pad_stack.push_back(catch_lpad_bb);
+    eh_landing_pad_stack.emplace_back(lpad_and_catch_bb(lpad_bb, catch_body_bb));
     util::scope_exit const pop_landing_pad{ [this]() { eh_landing_pad_stack.pop_back(); } };
 
     /* --- Try Block --- */
     ctx->builder->SetInsertPoint(original_insert_bb);
     auto const original_try_pos = expr->body->position;
     expr->body->propagate_position(expression_position::value);
-    auto try_val = gen(expr->body, arity);
+    auto const try_val = gen(expr->body, arity);
     expr->body->propagate_position(original_try_pos);
 
     llvm::BasicBlock *try_end_bb = nullptr;
@@ -1060,42 +1067,44 @@ namespace jank::codegen
     /* Exceptions from inside the catch/finally blocks should not be caught by this same try. */
     eh_landing_pad_stack.pop_back();
 
-    ctx->builder->SetInsertPoint(catch_lpad_bb);
+    ctx->builder->SetInsertPoint(lpad_bb);
     auto const ptr_ty = ctx->builder->getPtrTy();
     auto const i32_ty = ctx->builder->getInt32Ty();
-    auto lpad_ty = llvm::StructType::get(*ctx->llvm_ctx, { ptr_ty, i32_ty });
-    auto landing_pad = ctx->builder->CreateLandingPad(lpad_ty, 1);
+    auto const lpad_ty = llvm::StructType::get(*ctx->llvm_ctx, { ptr_ty, i32_ty });
+    auto const landing_pad = ctx->builder->CreateLandingPad(lpad_ty, 1);
     landing_pad->setCleanup(true);
+    auto const object_ptr_type_info
+      = ctx->module->getOrInsertGlobal(typeid(jank::runtime::object_ref).name(),
+                                       ctx->builder->getInt8Ty()->getPointerTo());
+    landing_pad->addClause(object_ptr_type_info);
 
     llvm::Value *catch_val = nullptr;
     llvm::BasicBlock *catch_end_bb = nullptr;
 
+    // in landing pad
     if(has_catch)
     {
-      auto object_ptr_type_info
-        = ctx->module->getOrInsertGlobal(typeid(jank::runtime::object_ref).name(),
-                                         ctx->builder->getInt8Ty()->getPointerTo());
-      landing_pad->addClause(object_ptr_type_info);
+      // if has catch, landing pad catches the exception and then branch to the catch body
       ctx->builder->CreateBr(catch_body_bb);
-
       current_fn->insert(current_fn->end(), catch_body_bb);
       ctx->builder->SetInsertPoint(catch_body_bb);
 
-      auto const &catch_body = expr->catch_body.unwrap();
+      auto const &[sym, body] = expr->catch_body.unwrap();
       auto old_locals(locals);
       auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
-      auto begin_catch_fn = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
-      auto caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
-      locals[catch_body.sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
+      auto const begin_catch_fn
+        = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
+      auto const caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
+      locals[sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
 
-      auto original_catch_pos = catch_body.body->position;
-      catch_body.body->propagate_position(expression_position::value);
+      auto const original_catch_pos = body->position;
+      body->propagate_position(expression_position::value);
       util::scope_exit const restore_catch_pos{ [&]() {
-        catch_body.body->propagate_position(original_catch_pos);
+        body->propagate_position(original_catch_pos);
       } };
-      catch_val = gen(catch_body.body, arity);
+      catch_val = gen(body, arity);
 
-      auto end_catch_fn
+      auto const end_catch_fn
         = ctx->module->getOrInsertFunction("__cxa_end_catch", ctx->builder->getVoidTy());
       ctx->builder->CreateCall(end_catch_fn, {});
       locals = std::move(old_locals);
@@ -1114,10 +1123,42 @@ namespace jank::codegen
     }
     else
     {
-      ctx->builder->CreateBr(resume_bb);
-      current_fn->insert(current_fn->end(), resume_bb);
-      ctx->builder->SetInsertPoint(resume_bb);
-      ctx->builder->CreateResume(landing_pad);
+      // still in landing pad, no catch but has finally
+      // if no catch, runs finally and then re-throw the execption
+      if(expr->finally_body.is_some())
+      {
+        // The invoke for println will now see the outer pad
+        gen(expr->finally_body.unwrap(), arity);
+      }
+
+      /* After cleanup, resume the exception unwinding. */
+      if(!eh_landing_pad_stack.empty())
+      {
+        // rethrow the exception
+        auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
+        auto const unreachable_dest
+          = llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn);
+
+        auto const fn_type
+          = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
+        auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
+        llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+
+        ctx->builder->CreateInvoke(fn,
+                                   unreachable_dest,
+                                   eh_landing_pad_stack.back().lpad_bb,
+                                   { exception_ptr });
+
+        /* The normal destination is unreachable, so we mark it as such. */
+        ctx->builder->SetInsertPoint(unreachable_dest);
+        ctx->builder->CreateUnreachable();
+
+        // ctx->builder->CreateBr(eh_landing_pad_stack.back().catch_bb);
+      }
+      else
+      {
+        ctx->builder->CreateResume(landing_pad);
+      }
     }
 
     /* --- Finally Block --- */
@@ -1161,7 +1202,7 @@ namespace jank::codegen
      * generating catch/finally. We must push it back on, so that the scope_exit
      * guard at the top can correctly pop it later, restoring the stack for the rest
      * of this function's codegen. */
-    eh_landing_pad_stack.push_back(catch_lpad_bb);
+    eh_landing_pad_stack.emplace_back(lpad_and_catch_bb(lpad_bb, catch_body_bb));
 
     /* --- Continuation Block --- */
     current_fn->insert(current_fn->end(), cont_bb);
