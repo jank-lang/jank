@@ -1,0 +1,11 @@
+(cpp/raw "#include <sstream>")
+(cpp/raw "namespace jank::cpp::call::reference::pass_stream
+          {
+            std::stringstream ss;
+          }")
+(let* [ss cpp/jank.cpp.call.reference.pass_stream.ss
+       hi (cpp/cast cpp/std.string "hi!")
+       _ (cpp/<< ss hi)
+       s (cpp/.str ss)]
+  (if (= "hi!" s)
+    :success))

@@ -103,6 +103,31 @@ namespace jank::analyze::cpp_util
     return ok(scope);
   }
 
+  /* When we're looking up operator usage, for example, we need to look in the scopes for
+   * all of the arguments, including their parent scopes, all the way up to the gobal scope.
+   * The operator could be defined in any of those scopes. This function, given some starting
+   * scopes, will fill in the rest.
+   *
+   * The output may contain duplicates. */
+  native_vector<jtl::ptr<void>> find_adl_scopes(native_vector<jtl::ptr<void>> const &starters)
+  {
+    native_vector<jtl::ptr<void>> ret;
+    for(auto const scope : starters)
+    {
+      if(!scope)
+      {
+        continue;
+      }
+
+      ret.emplace_back(scope);
+      for(auto s{ Cpp::GetParentScope(scope) }; s != nullptr; s = Cpp::GetParentScope(s))
+      {
+        ret.emplace_back(s);
+      }
+    }
+    return ret;
+  }
+
   /* For some scopes, CppInterOp will give an <unnamed> result here. That's not
    * helpful for error reporting, so we turn that into the full type name if
    * needed. */

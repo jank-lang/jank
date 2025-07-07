@@ -580,7 +580,7 @@ namespace jank::analyze
       if(fns.empty())
       {
         return error::internal_analyze_failure(
-          util::format("There is no '{}' member function within '{}'.", parent_name),
+          util::format("There is no '{}' member function within '{}'.", member_name, parent_name),
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
@@ -629,11 +629,8 @@ namespace jank::analyze
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
-      auto const parent_scope{ obj_scope ? Cpp::GetParentScope(obj_scope) : nullptr };
       auto const arg_scope{ arg_count == 2 ? Cpp::GetScopeFromType(arg_types[1].m_Type) : nullptr };
-      auto const arg_parent_scope{ arg_scope ? Cpp::GetParentScope(arg_scope) : nullptr };
-      auto const global_scope{ Cpp::GetGlobalScope() };
-      for(auto const scope : { obj_scope, parent_scope, arg_scope, arg_parent_scope, global_scope })
+      for(auto const scope : cpp_util::find_adl_scopes({ obj_scope, arg_scope }))
       {
         if(!scope)
         {
@@ -652,7 +649,7 @@ namespace jank::analyze
       {
         /* TODO: Show arg types. */
         return error::internal_analyze_failure(
-          util::format("There is no '{}' operator support for '{}'.",
+          util::format("Unable to find '{}' operator support for '{}'.",
                        op_name,
                        Cpp::GetTypeAsString(obj_type)),
           object_source(val->form),
@@ -867,14 +864,22 @@ namespace jank::analyze
                             jtl::ptr<void> const expected_type,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
-    //util::println("apply_implicit_conversion expr type {}, expected type {}",
-    //              Cpp::GetTypeAsString(expr_type),
-    //              Cpp::GetTypeAsString(expected_type));
+    //util::println(
+    //  "apply_implicit_conversion expr type {} (canon {}), expected type {} (canon {}), underlying "
+    //  "subclass {}",
+    //  Cpp::GetTypeAsString(expr_type),
+    //  Cpp::GetTypeAsString(Cpp::GetCanonicalType(expr_type)),
+    //  Cpp::GetTypeAsString(expected_type),
+    //  Cpp::GetTypeAsString(Cpp::GetCanonicalType(expected_type)),
+    //  Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+    //                         Cpp::GetUnderlyingType(expected_type)));
 
     expr_type = Cpp::GetNonReferenceType(expr_type);
     if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
        || (Cpp::GetCanonicalType(expr_type)
            == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
+       || Cpp::IsTypeDerivedFrom(Cpp::GetCanonicalType(expr_type),
+                                 Cpp::GetCanonicalType(expected_type))
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return ok(expr);
@@ -902,6 +907,12 @@ namespace jank::analyze
                                            expected_type,
                                            conversion_policy::from_object,
                                            expr);
+    }
+    else if(Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                                   Cpp::GetUnderlyingType(expected_type)))
+    {
+      expr->propagate_position(cast_position);
+      return expr;
     }
     else if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
             && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
