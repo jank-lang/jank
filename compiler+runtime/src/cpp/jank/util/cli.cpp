@@ -52,14 +52,15 @@ namespace jank::util::cli
       ->check(CLI::ExistingFile)
       ->required();
 
-    /* Compile subcommand. */
-    auto &cli_compile(*cli.add_subcommand("compile", "Compile a file and its dependencies."));
-    cli_compile.fallthrough();
-    cli_compile
+    /* Compile module subcommand. */
+    auto &cli_compile_module(
+      *cli.add_subcommand("compile-module", "Compile a file and its dependencies."));
+    cli_compile_module.fallthrough();
+    cli_compile_module
       .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
       ->check(CLI::IsMember({ "dynamic", "static" }));
-    cli_compile
-      .add_option("ns", opts.target_ns, "The entrypoint namespace (must be on module path).")
+    cli_compile_module
+      .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
 
     /* REPL subcommand. */
@@ -71,10 +72,23 @@ namespace jank::util::cli
     /* C++ REPL subcommand. */
     auto &cli_cpp_repl(*cli.add_subcommand("cpp-repl", "Start up a terminal C++ REPL."));
 
-    /* Run subcommand. */
+    /* run-main subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main."));
     cli_run_main.fallthrough();
-    cli_run_main.add_option("module", opts.target_module, "The entrypoint module.")->required();
+    cli_run_main
+      .add_option("module",
+                  opts.target_module,
+                  "The entrypoint module (must be on the module path.")
+      ->required();
+
+    /* compile subcommand. */
+    auto &cli_compile(*cli.add_subcommand(
+      "compile",
+      "Ahead of time compile project with entrypoint module containing -main."));
+    cli_compile.fallthrough();
+    cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
+      ->default_val("a.out");
+    cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);
@@ -98,9 +112,9 @@ namespace jank::util::cli
     {
       opts.command = command::run;
     }
-    else if(cli.got_subcommand(&cli_compile))
+    else if(cli.got_subcommand(&cli_compile_module))
     {
-      opts.command = command::compile;
+      opts.command = command::compile_module;
     }
     else if(cli.got_subcommand(&cli_repl))
     {
@@ -114,7 +128,20 @@ namespace jank::util::cli
     {
       opts.command = command::run_main;
     }
+    else if(cli.got_subcommand(&cli_compile))
+    {
+      opts.command = command::compile;
+    }
 
     return ok(opts);
+  }
+
+  std::vector<native_transient_string> parse_empty(int const argc, char const **argv)
+  {
+    CLI::App cli{ "jank default cli" };
+    cli.allow_extras();
+    cli.parse(argc, argv);
+
+    return cli.remaining();
   }
 }

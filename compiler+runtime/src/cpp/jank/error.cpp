@@ -141,6 +141,14 @@ namespace jank::error
 
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
+
+      case kind::aot_compilation_failure:
+        return "Ahead of Time compilation failure.";
+      case kind::aot_clang_executable_not_found:
+        return "Could not find clang++ executable.";
+      case kind::internal_aot_failure:
+        return "Internal ahead-of-time compilation failure.";
+
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
       case kind::internal_failure:

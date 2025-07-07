@@ -1,14 +1,10 @@
-#include "jank/runtime/rtti.hpp"
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 
-#include <llvm-c/Target.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/TargetSelect.h>
 #include <llvm/LineEditor/LineEditor.h>
 
+#include <jank/aot/processor.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -18,6 +14,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
+#include <jank/c_api.h>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
@@ -100,16 +97,16 @@ namespace jank
     }
   }
 
-  static void compile(util::cli::options const &opts)
+  static void compile_module(util::cli::options const &opts)
   {
     using namespace jank;
     using namespace jank::runtime;
 
-    if(opts.target_ns != "clojure.core")
+    if(opts.target_module != "clojure.core")
     {
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
-    __rt_ctx->compile_module(opts.target_ns).expect_ok();
+    __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
   static void repl(util::cli::options const &opts)
@@ -238,6 +235,28 @@ namespace jank
       le.setPrompt("native> ");
     }
   }
+
+  static void compile(util::cli::options const &opts)
+  {
+    using namespace jank;
+    using namespace jank::runtime;
+
+    if(opts.target_module != "clojure.core")
+    {
+      __rt_ctx->compile_module("clojure.core").expect_ok();
+    }
+    __rt_ctx->compile_module(opts.target_module).expect_ok();
+
+    auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
+    if(main_var.is_nil())
+    {
+      throw std::runtime_error{ util::format("Could not find #'{}/-main function!",
+                                             opts.target_module) };
+    }
+
+    jank::aot::processor const aot_prc{ opts };
+    aot_prc.compile(opts.target_module).expect_ok();
+  }
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
@@ -246,36 +265,7 @@ int main(int const argc, char const **argv)
   using namespace jank;
   using namespace jank::runtime;
 
-  JANK_TRY
-  {
-    /* To handle UTF-8 Text , we set the locale to the current environment locale
-     * Usage of the local locale allows better localization.
-     * Notably this might make text encoding become more platform dependent.
-     */
-    std::locale::global(std::locale(""));
-
-    /* The GC needs to enabled even before arg parsing, since our native types,
-     * like strings, use the GC for allocations. It can still be configured later. */
-    GC_set_all_interior_pointers(1);
-    GC_enable();
-
-    //obj::symbol_ref r;
-    //r = make_box<obj::symbol>("foo");
-    //if(r)
-    //{
-    //  object_ref o;
-    //  o = erase(r);
-    //  util::println("r {}", r->to_code_string());
-    //}
-
-    //return 0;
-
-    llvm::llvm_shutdown_obj const Y{};
-
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-
+  return jank_init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
     auto const parse_result(util::cli::parse(argc, argv));
     if(parse_result.is_err())
     {
@@ -303,8 +293,8 @@ int main(int const argc, char const **argv)
       case util::cli::command::run:
         run(opts);
         break;
-      case util::cli::command::compile:
-        compile(opts);
+      case util::cli::command::compile_module:
+        compile_module(opts);
         break;
       case util::cli::command::repl:
         repl(opts);
@@ -315,7 +305,10 @@ int main(int const argc, char const **argv)
       case util::cli::command::run_main:
         run_main(opts);
         break;
+      case util::cli::command::compile:
+        compile(opts);
+        break;
     }
-  }
-  JANK_CATCH_THEN(jank::util::print_exception, return 1)
+    return 0;
+  });
 }

@@ -8,6 +8,7 @@ namespace jank::util::cli
   {
     run,
     compile,
+    compile_module,
     repl,
     cpp_repl,
     run_main
@@ -34,22 +35,22 @@ namespace jank::util::cli
     native_transient_string target_file;
 
     /* Compile command. */
-    native_transient_string target_ns;
+    native_transient_string target_module;
     native_transient_string target_runtime{ "dynamic" };
 
     /* REPL command. */
     bool repl_server{};
-
-    /* Run main command. */
-    native_transient_string target_module;
 
     /* Extras.
      * TODO: Use a native_persistent_vector instead.
      * */
     std::vector<native_transient_string> extra_opts;
 
+    native_transient_string output_filename;
+
     command command{ command::repl };
   };
 
   jtl::result<options, int> parse(int const argc, char const **argv);
+  std::vector<native_transient_string> parse_empty(int const argc, char const **argv);
 }

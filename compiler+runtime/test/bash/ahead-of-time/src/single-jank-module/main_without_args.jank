@@ -1,0 +1,4 @@
+(ns main-without-args)
+
+(defn -main []
+  (println "No args"))
