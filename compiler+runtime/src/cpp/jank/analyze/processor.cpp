@@ -3041,6 +3041,19 @@ namespace jank::analyze
                                             scope,
                                             expr::cpp_value::value_kind::null);
     }
+    else if(name == "true" || name == "false")
+    {
+      static auto const type{ Cpp::GetType("bool") };
+      auto const kind{ (name == "true") ? expr::cpp_value::value_kind::bool_true
+                                        : expr::cpp_value::value_kind::bool_false };
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            type,
+                                            nullptr,
+                                            kind);
+    }
 
     auto const op{ cpp_util::match_operator(name) };
     if(op.is_some())

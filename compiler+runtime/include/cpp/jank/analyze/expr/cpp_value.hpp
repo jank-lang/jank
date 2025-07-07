@@ -18,6 +18,8 @@ namespace jank::analyze::expr
     enum class value_kind : u8
     {
       null,
+      bool_true,
+      bool_false,
       constructor,
       variable,
       enum_constant,

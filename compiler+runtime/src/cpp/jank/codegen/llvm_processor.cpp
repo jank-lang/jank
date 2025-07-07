@@ -1292,6 +1292,21 @@ namespace jank::codegen
       }
       return alloc;
     }
+    if(expr->val_kind == expr::cpp_value::value_kind::bool_true
+       || expr->val_kind == expr::cpp_value::value_kind::bool_false)
+    {
+      auto const val{ expr->val_kind == expr::cpp_value::value_kind::bool_true };
+      auto const alloc{ ctx->builder->CreateAlloca(
+        ctx->builder->getInt8Ty(),
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+      auto const ir_val{ llvm::ConstantInt::getSigned(ctx->builder->getInt8Ty(), val) };
+      ctx->builder->CreateStore(ir_val, alloc);
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(alloc);
+      }
+      return alloc;
+    }
 
     auto const callable{ Cpp::MakeAotCallable(expr->scope) };
     /* TODO: Fns are reused, so this could cause a linker issue. */

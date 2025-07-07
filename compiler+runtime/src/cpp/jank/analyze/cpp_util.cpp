@@ -333,6 +333,11 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args)
   {
+    if(fns.empty())
+    {
+      return ok(nullptr);
+    }
+
     auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, args) };
     if(!match)
     {
