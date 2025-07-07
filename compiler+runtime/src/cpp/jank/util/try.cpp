@@ -19,12 +19,6 @@ namespace jank::util
     auto const paren{ frame.symbol.find('(') };
     if(paren == std::string::npos)
     {
-      /* TODO: Remove this once cpptrace supports JIT frames. */
-      if(frame.symbol.empty())
-      {
-        frame.symbol = "<jank jit frame -- not yet supported>";
-      }
-
       return std::move(frame);
     }
 

@@ -42,6 +42,7 @@ namespace jank::analyze::expr
 
     /* The original value form of either the type symbol or the value
      * being casted. We use this mainly for source info. */
+    /* TODO: Just store source info! We don't always have a symbol. */
     runtime::object_ref form;
     /* In general, this represents the type of the value. For constructors,
      * this will represent the type we're constructing. */

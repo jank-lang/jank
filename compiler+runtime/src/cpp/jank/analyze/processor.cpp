@@ -2844,6 +2844,19 @@ namespace jank::analyze
                                 fn_ctx,
                                 needs_box);
       }
+      else if(sym_result.expect_ok()->kind == expression_kind::cpp_type)
+      {
+        auto const type{ llvm::cast<expr::cpp_type>(sym_result.expect_ok().data) };
+        auto const value{ jtl::make_ref<expr::cpp_value>(
+          position,
+          current_frame,
+          needs_box,
+          sym,
+          type->type,
+          nullptr,
+          expr::cpp_value::value_kind::constructor) };
+        return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
+      }
 
       object_ref expanded{ o };
       jtl::ptr<error::base> expansion_error{};
@@ -2921,6 +2934,20 @@ namespace jank::analyze
         return callable_expr;
       }
       source = callable_expr.expect_ok();
+
+      if(source->kind == expression_kind::cpp_type)
+      {
+        auto const type{ llvm::cast<expr::cpp_type>(source.data) };
+        auto const value{ jtl::make_ref<expr::cpp_value>(
+          position,
+          current_frame,
+          needs_box,
+          try_object<obj::symbol>(runtime::first(first)),
+          type->type,
+          Cpp::GetScopeFromType(type->type),
+          expr::cpp_value::value_kind::constructor) };
+        return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
+      }
     }
 
     native_vector<expression_ref> arg_exprs;
