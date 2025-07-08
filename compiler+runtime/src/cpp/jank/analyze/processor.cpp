@@ -829,6 +829,14 @@ namespace jank::analyze
       }
     }
 
+    if(is_ctor && !Cpp::IsComplete(Cpp::GetScopeFromType(val->type)))
+    {
+      return error::internal_analyze_failure(
+        util::format("Unable to construct incomplete type '{}'. Are you missing an include?",
+                     Cpp::GetTypeAsString(val->type)),
+        object_source(val->form),
+        latest_expansion(macro_expansions));
+    }
     if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
     {
       return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -977,8 +985,9 @@ namespace jank::analyze
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const member_offset{ cpp_util::is_member_function(fn) ? 1 : 0 };
-    auto const fn_param_count{ Cpp::GetFunctionNumArgs(fn) };
-    for(usize i{}; i < fn_param_count; ++i)
+    /* We loop through the args rather than the params, since there may be
+     * more params than args, if some of them support default values. */
+    for(usize i{}; i < arg_exprs.size(); ++i)
     {
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
       auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],

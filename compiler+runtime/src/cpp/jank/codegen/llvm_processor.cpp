@@ -193,7 +193,7 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::Value *, 4> const args{
       llvm::ConstantPointerNull::get(ctx.builder->getPtrTy()),
-      llvm::ConstantInt::getSigned(ctx.builder->getInt32Ty(), 0),
+      llvm::ConstantInt::getSigned(ctx.builder->getInt32Ty(), 1),
       args_array,
       ret_alloc
     };
@@ -1499,7 +1499,7 @@ namespace jank::codegen
     auto const target_fn(ctx->module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       this_obj,
-      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
+      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), arg_count),
       args_array,
       sret
     };

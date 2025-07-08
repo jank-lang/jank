@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_default_argument
+          {
+            int foo(int a, int b = 1, int c = 2, int d = 3)
+            {
+              return a + b + c + d;
+            }
+          }")
+(let* [a (cpp/jank.cpp.call.global.pass_default_argument.foo (cpp/int 1))
+       b (cpp/jank.cpp.call.global.pass_default_argument.foo (cpp/int 1) (cpp/int 2))
+       d (cpp/jank.cpp.call.global.pass_default_argument.foo (cpp/int 1) (cpp/int 2) (cpp/int 3) (cpp/int 4))]
+  (if (and (= 7 a)
+           (= 8 b)
+           (= 10 d))
+    :success))
