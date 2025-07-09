@@ -1136,6 +1136,10 @@ namespace jank::codegen
       {
         // rethrow the exception
         auto exception_ptr = ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr");
+        auto const begin_catch_fn
+          = ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty);
+        auto const caught_ptr = ctx->builder->CreateCall(begin_catch_fn, { exception_ptr });
+        auto const ex_val_ptr = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
         auto const unreachable_dest
           = llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn);
 
@@ -1143,11 +1147,14 @@ namespace jank::codegen
           = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
         auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
         llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+        auto const end_catch_fn
+          = ctx->module->getOrInsertFunction("__cxa_end_catch", ctx->builder->getVoidTy());
+        ctx->builder->CreateCall(end_catch_fn, {});
 
         ctx->builder->CreateInvoke(fn,
                                    unreachable_dest,
                                    eh_landing_pad_stack.back().lpad_bb,
-                                   { exception_ptr });
+                                   { ex_val_ptr });
 
         /* The normal destination is unreachable, so we mark it as such. */
         ctx->builder->SetInsertPoint(unreachable_dest);
