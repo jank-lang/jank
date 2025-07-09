@@ -7,7 +7,7 @@ package manager.
 brew install jank-lang/jank/jank
 ```
 
-If you can an error about `git-lfs`, try the following:
+If you get an error about `git-lfs`, try the following:
 
 ```sh
 git lfs install
