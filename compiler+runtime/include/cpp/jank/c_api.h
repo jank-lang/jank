@@ -4,6 +4,7 @@
 extern "C"
 {
 #endif
+
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef void *jank_object_ref;
 

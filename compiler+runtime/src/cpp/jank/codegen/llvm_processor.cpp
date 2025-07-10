@@ -189,6 +189,7 @@ namespace jank::codegen
 
     for(auto const &arity : root_fn->arities)
     {
+      /* TODO: Add profiling to the fn body? Need to exit on every return. */
       create_function(arity);
       bool block_terminated{};
       for(auto const form : arity.body->values)
