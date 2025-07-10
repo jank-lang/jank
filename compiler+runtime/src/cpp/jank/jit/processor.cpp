@@ -163,19 +163,13 @@ namespace jank::jit
     /* Programmatically get the mangled name and address, don't hardcode them. */
     char const *typeinfo_name = typeid(jank::runtime::object_ref).name();
     void const *typeinfo_addr = &typeid(jank::runtime::object_ref);
-    llvm::orc::SymbolStringPtr mangled_symbol_name = Mangle(typeinfo_name);
-    std::cout << "JIT Symbol Debug: Unmangled C++ name: " << typeinfo_name << std::endl;
-    std::cout << "JIT Symbol Debug: Mangled name for JIT: " << std::string(*mangled_symbol_name)
-              << std::endl;
-
     symbols[Mangle(typeinfo_name)] = llvm::orc::ExecutorSymbolDef(
       llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(typeinfo_addr)),
       llvm::JITSymbolFlags());
 
     llvm::cantFail(jd.define(llvm::orc::absoluteSymbols(symbols)));
 
-    auto const &load_result{ load_dynamic_libs(opts.libs) };
-    if(load_result.is_err())
+    if(auto const &load_result{ load_dynamic_libs(opts.libs) }; load_result.is_err())
     {
       throw std::runtime_error{ load_result.expect_err().c_str() };
     }

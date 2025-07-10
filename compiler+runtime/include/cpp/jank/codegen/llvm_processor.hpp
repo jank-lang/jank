@@ -184,6 +184,6 @@ namespace jank::codegen
       llvm::BasicBlock *catch_bb;
     };
 
-    std::vector<lpad_and_catch_bb> eh_landing_pad_stack{};
+    std::vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
   };
 }
