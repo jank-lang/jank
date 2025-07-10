@@ -1,7 +1,3 @@
-#include "jank/util/scope_exit.hpp"
-
-
-#include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
@@ -16,11 +12,11 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/evaluate.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/scope_exit.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -194,7 +190,7 @@ namespace jank::codegen
     for(auto const &arity : root_fn->arities)
     {
       create_function(arity);
-      bool block_terminated = false;
+      bool block_terminated{};
       for(auto const form : arity.body->values)
       {
         gen(form, arity);
@@ -216,6 +212,9 @@ namespace jank::codegen
         ctx->builder->CreateRet(gen_global(jank_nil));
       }
     }
+
+    /* Run our optimization passes on the function, mutating it. */
+    ctx->fpm->run(*fn, *ctx->fam);
 
     if(target != compilation_target::function)
     {
@@ -965,14 +964,16 @@ namespace jank::codegen
      * by calling a C++ function that throws an exception. From LLVM's perspective,
      * this is a function call that never returns. */
     auto const value{ gen(expr->value, arity) };
+    auto const fn_type
+      = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
+    auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
+    llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+
     if(!lpad_and_catch_body_stack.empty())
     {
-      auto const unreachable_dest
-        = llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn);
-      auto const fn_type
-        = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
-      auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
-      llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
+      auto const unreachable_dest{
+        llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn)
+      };
       ctx->builder->CreateInvoke(fn,
                                  unreachable_dest,
                                  lpad_and_catch_body_stack.back().lpad_bb,
@@ -982,10 +983,6 @@ namespace jank::codegen
     else
     {
       /* If not in a try block, a simple call is sufficient. The program will terminate. */
-      auto const fn_type
-        = llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false);
-      auto fn = ctx->module->getOrInsertFunction("jank_throw", fn_type);
-      llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
       ctx->builder->CreateCall(fn, { value });
     }
 

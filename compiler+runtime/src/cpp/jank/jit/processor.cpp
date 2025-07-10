@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <iostream>
 
 #include <clang/AST/Type.h>
@@ -14,13 +13,11 @@
 #include <cpptrace/gdb_jit.hpp>
 
 #include <jank/util/process_location.hpp>
-#include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
-#include <llvm/ExecutionEngine/Orc/ExecutorProcessControl.h>
 #include <llvm/ExecutionEngine/Orc/Mangling.h>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/oref.hpp>
