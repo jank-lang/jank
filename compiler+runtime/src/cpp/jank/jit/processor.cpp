@@ -180,7 +180,7 @@ namespace jank::jit
     profile::timer const timer{ util::format("jit ir module {}",
                                              static_cast<std::string_view>(m->getName())) };
     // Print module
-    m->print(llvm::outs(), nullptr);
+    // m->print(llvm::outs(), nullptr);
     
 #if JANK_DEBUG
     if(llvm::verifyModule(*m, &llvm::errs()))

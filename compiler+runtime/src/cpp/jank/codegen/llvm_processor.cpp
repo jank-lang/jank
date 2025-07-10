@@ -251,9 +251,14 @@ namespace jank::codegen
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const fn(ctx->module->getOrInsertFunction("jank_var_bind_root", fn_type));
-
-      llvm::SmallVector<llvm::Value *, 2> const args{ ref, gen(expr->value.unwrap(), arity) };
+      auto const var_root(gen(expr->value.unwrap(), arity));
+      llvm::SmallVector<llvm::Value *, 2> const args{ ref, var_root };
       ctx->builder->CreateCall(fn, args);
+      if(__rt_ctx->opts.direct_linking && target == compilation_target::module)
+      {
+        auto const global_var_root(gen_var_root_compile(expr->name));
+        ctx->builder->CreateStore(var_root, global_var_root);
+      }
     }
 
     jtl::option<std::reference_wrapper<lifted_constant const>> meta;
@@ -1107,9 +1112,7 @@ namespace jank::codegen
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
       auto const fn_type(
-        llvm::FunctionType::get(ctx->builder->getPtrTy(),
-                                { ctx->builder->getPtrTy() },
-                                false));
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
 
       llvm::SmallVector<llvm::Value *, 1> const args{ gen_var(qualified_name) };
@@ -1121,7 +1124,22 @@ namespace jank::codegen
         return call;
       }
     }
-      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::gen_var_root_compile(obj::symbol_ref qualified_name) const
+  {
+    auto it(ctx->var_root_globals.find(qualified_name));
+    if(it != ctx->var_root_globals.end())
+    {
+      return it->second;
+    }
+    auto const name(util::format("var_root_{}", munge(qualified_name->to_string())));
+    auto const var_root(create_global_var(name));
+    ctx->module->insertGlobalVariable(var_root);
+    auto &global(ctx->var_root_globals[qualified_name]);
+    global = var_root;
+    return global;
   }
 
   llvm::Value *llvm_processor::gen_c_string(jtl::immutable_string const &s) const
