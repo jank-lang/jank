@@ -898,43 +898,9 @@ extern "C"
       o_obj);
   }
 
-  void jank_init_rtti_exports()
-  {
-    volatile void const *rtti_obj_ptr = &typeid(jank::runtime::object);
-    (void)rtti_obj_ptr; /* Suppress unused variable warning. */
-  }
-
   void jank_throw(jank_object_ref const o)
   {
     throw runtime::object_ref{ reinterpret_cast<object *>(o) };
-  }
-
-  jank_object_ref jank_try(jank_object_ref const try_fn,
-                           jank_object_ref const catch_fn,
-                           jank_object_ref const finally_fn)
-  {
-    util::scope_exit const finally{ [=]() {
-      auto const finally_fn_obj(reinterpret_cast<object *>(finally_fn));
-      if(finally_fn_obj != jank_nil)
-      {
-        dynamic_call(finally_fn_obj);
-      }
-    } };
-
-    auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
-    auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
-    if(catch_fn_obj == jank_nil)
-    {
-      return dynamic_call(try_fn_obj).erase();
-    }
-    try
-    {
-      return dynamic_call(try_fn_obj).erase();
-    }
-    catch(object_ref const e)
-    {
-      return dynamic_call(catch_fn_obj, e).erase();
-    }
   }
 
   void jank_profile_enter(char const * const label)
