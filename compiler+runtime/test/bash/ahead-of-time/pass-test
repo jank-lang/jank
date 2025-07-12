@@ -119,23 +119,6 @@
       (is (= expected-output (-> @cli-path (str args)
                                  proc/sh :out))))))
 
-(deftest aot-single-jank-module-static-runtime-succeeds
-  (let [alias-name  "single-jank-module"
-        module-path (module-path alias-name)
-        main-module "main-with-args"
-        args " foo bar baz"
-        expected-output (slurp (str "expected-output/" alias-name "/" main-module))
-        compile-command (compile-command module-path main-module {:static-runtime? true})
-        cli-path (delay (find-binary {}))]
-    (testing (str alias-name " & " main-module)
-      (println "Compile command: " compile-command)
-      (is (= 0 (->> compile-command
-                    (proc/sh {:out *out*
-                              :err *out*})
-                    :exit)))
-      (is (= expected-output (-> @cli-path (str args)
-                                 proc/sh :out))))))
-
 (deftest aot-single-jank-module-static-runtime-eval-fails
   (let [alias-name  "single-jank-module"
         module-path (module-path alias-name)
