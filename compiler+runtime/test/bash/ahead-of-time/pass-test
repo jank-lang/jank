@@ -58,13 +58,14 @@
 
 (defn compile-command [module-path main-module {:keys [include-headers?
                                                        optimization-flag
-                                                       output-file]
+                                                       output-file
+                                                       static-runtime?]
                                                 :or {optimization-flag "-O0"
                                                      output-file "cli"}}]
   (str jank-exe " " optimization-flag " --module-path=" module-path
        " "
        (when include-headers? (get-headers))
-       " compile " main-module " -o " output-file))
+       " compile " main-module (when static-runtime? " --runtime static ") " -o " output-file))
 
 (use-fixtures
   :each
@@ -100,6 +101,54 @@
           (is (= expected-output (->> (str "./cli " args)
                                       (proc/sh {:dir dir})
                                       :out))))))))
+
+(deftest aot-single-jank-module-static-runtime-succeeds
+  (let [alias-name  "single-jank-module"
+        module-path (module-path alias-name)
+        main-module "main-with-args"
+        args " foo bar baz"
+        expected-output (slurp (str "expected-output/" alias-name "/" main-module))
+        compile-command (compile-command module-path main-module {:static-runtime? true})
+        cli-path (delay (find-binary {}))]
+    (testing (str alias-name " & " main-module)
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(deftest aot-single-jank-module-static-runtime-succeeds
+  (let [alias-name  "single-jank-module"
+        module-path (module-path alias-name)
+        main-module "main-with-args"
+        args " foo bar baz"
+        expected-output (slurp (str "expected-output/" alias-name "/" main-module))
+        compile-command (compile-command module-path main-module {:static-runtime? true})
+        cli-path (delay (find-binary {}))]
+    (testing (str alias-name " & " main-module)
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(deftest aot-single-jank-module-static-runtime-eval-fails
+  (let [alias-name  "single-jank-module"
+        module-path (module-path alias-name)
+        main-module "core-with-eval"
+        compile-command (compile-command module-path main-module {:static-runtime? true})
+        cli-path (delay (find-binary {}))]
+    (testing (str alias-name " & " main-module)
+      (println "Compile command: " compile-command)
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (not= 0 (-> @cli-path proc/sh :exit))))))
 
 (deftest aot-multiple-jank-modules
   (let [alias-name "only-jank-modules"

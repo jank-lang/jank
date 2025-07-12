@@ -1,0 +1,4 @@
+(ns core-with-eval)
+
+(defn -main []
+  (eval '(println "Hello world")))

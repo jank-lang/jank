@@ -38,6 +38,7 @@ namespace jank::aot
     , library_dirs{ opts.library_dirs }
     , define_macros{ opts.define_macros }
     , libs{ opts.libs }
+    , runtime{ opts.target_runtime }
     , output_filename(opts.output_filename)
   {
   }
@@ -70,8 +71,6 @@ extern "C" jank_object_ref jank_call0(jank_object_ref f);
     sb(R"(
 extern "C" jank_object_ref jank_load_clojure_core_native();
 extern "C" jank_object_ref jank_load_clojure_string_native();
-extern "C" jank_object_ref jank_load_jank_compiler_native();
-extern "C" jank_object_ref jank_load_clojure_core();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
@@ -94,7 +93,6 @@ int main(int argc, const char** argv)
   auto const fn{ [](int const argc, char const **argv) {
     jank_load_clojure_core_native();
     jank_load_clojure_string_native();
-    jank_load_jank_compiler_native();
 
     )");
 
@@ -203,7 +201,7 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
 
-    for(auto const &lib : { "-ljank",
+    for(auto const &lib : { runtime == "static" ? "-ljank_static_rt" : "-ljank",
                             /* Default libraries that jank depends on. */
                             "-lfolly",
                             "-lgc",

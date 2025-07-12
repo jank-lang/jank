@@ -136,7 +136,9 @@ namespace jank::runtime
      * of previous code. This is essential for REPL use. */
     /* TODO: This needs to be synchronized. */
     analyze::processor an_prc{ *this };
+#ifndef JANK_STATIC_RUNTIME
     jit::processor jit_prc;
+#endif
     /* TODO: This needs to be a dynamic var. */
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;

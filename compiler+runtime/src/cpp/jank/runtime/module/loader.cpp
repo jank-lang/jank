@@ -612,8 +612,12 @@ namespace jank::runtime::module
     util::println("Loading module {} from {}", module, path);
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   jtl::string_result<void> loader::load(jtl::immutable_string const &module, origin const ori)
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     if(ori != origin::source && loader::is_loaded(module))
     {
       return ok();
@@ -659,11 +663,18 @@ namespace jank::runtime::module
       locked_ordered_modules->push_back(module);
     }
     return ok();
+#else
+    return err("Load or eval not allowed in static runtime");
+#endif
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   jtl::string_result<void>
   loader::load_o(jtl::immutable_string const &module, file_entry const &entry) const
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     profile::timer const timer{ util::format("load object {}", module) };
 
     /* While loading an object, if the main ns loading symbol exists, then
@@ -695,11 +706,18 @@ namespace jank::runtime::module
     load();
 
     return ok();
+#else
+    return err("Can't load file in static runtime");
+#endif
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   jtl::string_result<void>
   loader::load_cpp(jtl::immutable_string const &module, file_entry const &entry) const
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &zip_entry) {
@@ -725,10 +743,17 @@ namespace jank::runtime::module
     load();
 
     return ok();
+#else
+    return err("Load or eval not allowed in static runtime");
+#endif
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   jtl::string_result<void> loader::load_jank(file_entry const &entry) const
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     if(entry.archive_path.is_some())
     {
       visit_jar_entry(entry, [&](auto const &zip_entry) {
@@ -747,6 +772,9 @@ namespace jank::runtime::module
     }
 
     return ok();
+#else
+    return err("Load or eval not allowed in static runtime");
+#endif
   }
 
   jtl::string_result<void> loader::load_cljc(file_entry const &entry) const
