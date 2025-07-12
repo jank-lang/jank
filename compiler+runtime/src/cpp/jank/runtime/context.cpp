@@ -39,10 +39,14 @@ namespace jank::runtime
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ opts }
-    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
-                                               opts.include_dirs,
-                                               opts.define_macros) }
+    :
+#ifndef JANK_STATIC_RUNTIME
+    jit_prc{ opts }
+    ,
+#endif
+    binary_cache_dir{
+      util::binary_cache_dir(opts.optimization_level, opts.include_dirs, opts.define_macros)
+    }
     , module_loader{ *this, opts.module_path }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -160,8 +164,12 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   object_ref context::eval_string(native_persistent_string_view const &code)
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -196,10 +204,17 @@ namespace jank::runtime
     }
 
     return ret;
+#else
+    throw std::runtime_error{ "Eval disabled in static runtime." };
+#endif
   }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
   void context::eval_cpp_string(native_persistent_string_view const &code) const
+#pragma clang diagnostic pop
   {
+#ifndef JANK_STATIC_RUNTIME
     profile::timer const timer{ "rt eval_cpp_string" };
 
     /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
@@ -215,6 +230,9 @@ namespace jank::runtime
     }
 
     auto err(jit_prc.interpreter->Execute(partial_tu));
+#else
+    throw std::runtime_error{ "Eval disabled in static runtime." };
+#endif
   }
 
   object_ref context::read_string(native_persistent_string_view const &code)

@@ -54,11 +54,9 @@ namespace jank::util::cli
 
     /* Compile module subcommand. */
     auto &cli_compile_module(
-      *cli.add_subcommand("compile-module", "Compile a file and its dependencies."));
+      *cli.add_subcommand("compile-module",
+                          "Compile a file and its dependencies into object files."));
     cli_compile_module.fallthrough();
-    cli_compile_module
-      .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
-      ->check(CLI::IsMember({ "dynamic", "static" }));
     cli_compile_module
       .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
@@ -86,6 +84,10 @@ namespace jank::util::cli
       "compile",
       "Ahead of time compile project with entrypoint module containing -main."));
     cli_compile.fallthrough();
+    cli_compile
+      .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
+      ->default_val("dynamic")
+      ->check(CLI::IsMember({ "dynamic", "static" }));
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
       ->default_val("a.out");
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
