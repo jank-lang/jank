@@ -40,7 +40,9 @@ namespace jank::analyze::expr
     }
     if(finally_body)
     {
-      finally_body.unwrap()->propagate_position(pos);
+      /* The result of the "finally" body is discarded, as per Clojure semantics. */
+      /* "finally" body should always be in statement position. */
+      finally_body.unwrap()->propagate_position(expression_position::statement);
     }
   }
 

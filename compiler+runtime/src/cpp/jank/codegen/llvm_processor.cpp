@@ -1168,12 +1168,6 @@ namespace jank::codegen
 
     if(expr->finally_body.is_some())
     {
-      auto original_finally_pos{ expr->finally_body.unwrap()->position };
-      expr->finally_body.unwrap()->propagate_position(expression_position::statement);
-      util::scope_exit const restore_finally_pos{ [&]() {
-        expr->finally_body.unwrap()->propagate_position(original_finally_pos);
-      } };
-      /* The result of the "finally" body is discarded, as per Clojure semantics. */
       gen(expr->finally_body.unwrap(), arity);
     }
 
