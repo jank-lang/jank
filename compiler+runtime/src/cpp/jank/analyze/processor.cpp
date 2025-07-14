@@ -684,12 +684,26 @@ namespace jank::analyze
       }
     }
 
-    //util::println("all fns");
+    for(auto &arg : arg_types)
+    {
+      if(!Cpp::IsPointerType(arg.m_Type) && !Cpp::IsReferenceType(arg.m_Type))
+      {
+        arg.m_Type = Cpp::GetLValueReferenceType(arg.m_Type);
+      }
+    }
+
+    //util::println("all fns (ctor {}, member {}, operator {})",
+    //              is_ctor,
+    //              is_member_call,
+    //              is_operator_call);
     //for(auto const fn : fns)
     //{
-    //  util::println("\tfound fn {}, type {}",
-    //                cpp_util::get_qualified_name(fn),
-    //                Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    //  if(cpp_util::get_qualified_name(fn) == "ftxui::Render")
+    //  {
+    //    util::println("\tfound fn {}, type {}",
+    //                  cpp_util::get_qualified_name(fn),
+    //                  Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetTypeFromScope(fn))));
+    //  }
     //}
     //util::println("args");
     //for(auto const arg : arg_types)
@@ -984,10 +998,10 @@ namespace jank::analyze
                              std::vector<Cpp::TemplateArgInfo> const &arg_types,
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
-    auto const member_offset{ cpp_util::is_member_function(fn) ? 1 : 0 };
+    auto const member_offset{ cpp_util::is_non_static_member_function(fn) ? 1 : 0 };
     /* We loop through the args rather than the params, since there may be
      * more params than args, if some of them support default values. */
-    for(usize i{}; i < arg_exprs.size(); ++i)
+    for(usize i{}; i < arg_exprs.size() - member_offset; ++i)
     {
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
       auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],
@@ -3264,7 +3278,7 @@ namespace jank::analyze
       /* TODO: A Clang bug prevents us from supporting references to static members.
        * https://github.com/llvm/llvm-project/issues/146956
        */
-      if(!Cpp::IsStaticDatamember(scope))
+      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
       {
         /* TODO: Error if it's static and non-primitive. */
         type = Cpp::GetLValueReferenceType(type);

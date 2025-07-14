@@ -67,6 +67,7 @@ namespace jank::analyze::cpp_util
          * be found. */
         if(Cpp::IsTemplateSpecialization(scope))
         {
+          /* TODO: Get template arg info and specify all of it? */
           Cpp::InstantiateTemplate(scope);
         }
         auto const old_scope{ scope };
