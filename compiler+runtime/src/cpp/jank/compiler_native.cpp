@@ -30,8 +30,7 @@ namespace jank::compiler_native
     cg_prc.gen().expect_ok();
     cg_prc.optimize();
 
-    /* TODO: Return a string, don't print it. */
-    cg_prc.ctx->module->print(llvm::outs(), nullptr);
+    cg_prc.llvm_module->print(llvm::outs(), nullptr);
     return jank_nil;
   }
 }

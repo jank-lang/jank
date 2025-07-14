@@ -104,7 +104,7 @@ namespace jank::runtime
     object_ref eval(object_ref const o);
 
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
-                                          std::unique_ptr<llvm::Module> const &module) const;
+                                          jtl::ref<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */

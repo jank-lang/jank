@@ -8,6 +8,7 @@
 #include <llvm/Passes/StandardInstrumentations.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 
 #include <jtl/ptr.hpp>
 
@@ -87,13 +88,15 @@ namespace jank::codegen
 
   struct reusable_context
   {
-    reusable_context(jtl::immutable_string const &module_name);
+    reusable_context(jtl::immutable_string const &module_name,
+                     std::unique_ptr<llvm::LLVMContext> llvm_ctx);
 
     jtl::immutable_string module_name;
     jtl::immutable_string ctor_name;
 
-    std::unique_ptr<llvm::LLVMContext> llvm_ctx;
-    std::unique_ptr<llvm::Module> module;
+    llvm::orc::ThreadSafeModule module;
+    //std::unique_ptr<llvm::LLVMContext> llvm_ctx;
+    //std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
     llvm::BasicBlock *global_ctor_block{};
 
@@ -231,5 +234,7 @@ namespace jank::codegen
     native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
     /* TODO: Use gc allocator to avoid leaks. */
     std::list<deferred_init> deferred_inits{};
+    jtl::ref<llvm::LLVMContext> llvm_ctx;
+    jtl::ref<llvm::Module> llvm_module;
   };
 }

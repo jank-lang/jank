@@ -11,6 +11,11 @@ namespace llvm
 {
   class Module;
   class LLVMContext;
+
+  namespace orc
+  {
+    class ThreadSafeModule;
+  }
 }
 
 namespace Cpp
@@ -29,8 +34,7 @@ namespace jank::jit
     void eval_string(jtl::immutable_string const &s) const;
     void load_object(native_persistent_string_view const &path) const;
     void load_dynamic_library(jtl::immutable_string const &path) const;
-    void load_ir_module(std::unique_ptr<llvm::Module> m,
-                        std::unique_ptr<llvm::LLVMContext> llvm_ctx) const;
+    void load_ir_module(llvm::orc::ThreadSafeModule &&m) const;
     void load_bitcode(jtl::immutable_string const &module,
                       native_persistent_string_view const &bitcode) const;
 

@@ -461,9 +461,9 @@ namespace jank::analyze::cpp_util
   {
     std::string buffer;
     llvm::raw_string_ostream diag_stream{ buffer };
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticOptions> diag_opts{ new clang::DiagnosticOptions{} };
+    clang::DiagnosticOptions diag_opts{};
     auto * const diag_client{
-      new clang::TextDiagnosticPrinter{ diag_stream, &*diag_opts }
+      new clang::TextDiagnosticPrinter{ diag_stream, diag_opts }
     };
     clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
     clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };

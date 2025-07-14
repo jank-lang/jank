@@ -205,7 +205,7 @@ namespace jank::runtime
       codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
       cg_prc.gen().expect_ok();
       cg_prc.optimize();
-      write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
+      write_module(cg_prc.ctx->module_name, cg_prc.llvm_module).expect_ok();
 
       //{
       //  codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
@@ -240,7 +240,7 @@ namespace jank::runtime
     if(truthy(compile_files_var->deref()))
     {
       auto module_name{ runtime::to_string(current_module_var->deref()) };
-      write_module(module_name, partial_tu.TheModule).expect_ok();
+      write_module(module_name, partial_tu.TheModule.get()).expect_ok();
     }
 
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
@@ -356,7 +356,7 @@ namespace jank::runtime
   }
 
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
-                                                 std::unique_ptr<llvm::Module> const &module) const
+                                                 jtl::ref<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{

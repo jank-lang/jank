@@ -302,16 +302,15 @@ namespace jank::jit
     register_jit_stack_frames();
   }
 
-  void processor::load_ir_module(std::unique_ptr<llvm::Module> m,
-                                 std::unique_ptr<llvm::LLVMContext> llvm_ctx) const
+  void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
   {
-    profile::timer const timer{ util::format("jit ir module {}",
-                                             static_cast<std::string_view>(m->getName())) };
+    profile::timer const timer{ util::format(
+      "jit ir module {}",
+      static_cast<std::string_view>(m.getModuleUnlocked()->getName())) };
     //m->print(llvm::outs(), nullptr);
 
     auto const ee(interpreter->getExecutionEngine());
-    llvm::cantFail(
-      ee->addIRModule(llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) }));
+    llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
     register_jit_stack_frames();
   }
@@ -332,7 +331,7 @@ namespace jank::jit
       /* TODO: Return a result. */
       throw std::runtime_error{ util::format("unable to load module") };
     }
-    load_ir_module(std::move(ir_module), std::move(ctx));
+    load_ir_module({ std::move(ir_module), std::move(ctx) });
   }
 
   jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
