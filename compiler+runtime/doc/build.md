@@ -95,10 +95,8 @@ depending on your machine. Building jank itself should take a minute or two.
 ```
 cd compiler+runtime
 mkdir -p build
-cd build
 export CC=clang; export CXX=clang++;
-../bin/build-clang
-cd -
+./bin/build-clang
 export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 

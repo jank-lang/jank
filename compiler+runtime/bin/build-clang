@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${here}/../build"
+mkdir -p "${build_dir}"
+cd "${build_dir}"
+
 # We build Clang with Clang for consistency.
 export CC=clang
 export CXX=clang++
@@ -58,7 +63,7 @@ function build()
         -DLLVM_ENABLE_RUNTIMES=all \
         -DLLVM_BUILD_LLVM_DYLIB=ON \
         -DLLVM_LINK_LLVM_DYLIB=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt" \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
         -DLLVM_TARGETS_TO_BUILD="host" \
         -DLLVM_ENABLE_EH=ON \
         -DLLVM_ENABLE_RTTI=ON \
@@ -69,10 +74,10 @@ function build()
         -DLLVM_ENABLE_ZSTD=OFF \
         -DLLVM_BUILD_OCAML_BINDINGS=OFF \
         -DLLVM_ENABLE_OCAMLDOC=OFF \
-        -G "Unix Makefiles" \
+        -G "Ninja" \
         ../llvm/llvm
 
-  DESTDIR="${srcdir}/llvm-install" make clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
+  DESTDIR="${srcdir}/llvm-install" ninja clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
 }
 
 prepare
