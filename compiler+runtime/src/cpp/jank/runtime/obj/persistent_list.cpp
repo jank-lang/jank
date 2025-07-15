@@ -95,18 +95,18 @@ namespace jank::runtime::obj
     return hash::ordered(data.begin(), data.end());
   }
 
-  persistent_list_sequence_ref persistent_list::seq() const
+  persistent_list_ref persistent_list::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_list_sequence_ref persistent_list::fresh_seq() const
+  persistent_list_ref persistent_list::fresh_seq() const
   {
     if(data.empty())
     {
       return {};
     }
-    return make_box<persistent_list_sequence>(this, data.begin(), data.end(), data.size());
+    return make_box<persistent_list>(data);
   }
 
   usize persistent_list::count() const
@@ -131,20 +131,24 @@ namespace jank::runtime::obj
     return first.unwrap();
   }
 
-  persistent_list_sequence_ref persistent_list::next() const
+  persistent_list_ref persistent_list::next() const
   {
     if(data.size() < 2)
     {
       return {};
     }
-    return make_box<persistent_list_sequence>(this, ++data.begin(), data.end(), data.size() - 1);
+    return make_box<persistent_list>(data.rest());
   }
 
-  persistent_list_sequence_ref persistent_list::next_in_place() const
+  persistent_list_ref persistent_list::next_in_place()
   {
-    /* In-place updates don't make sense for lists, since any call to fresh_seq would return
-     * a list sequence. So we know, principally, that a list itself cannot be considered fresh. */
-    return next();
+    if(data.size() < 2)
+    {
+      return {};
+    }
+
+    data = data.rest();
+    return this;
   }
 
   persistent_list_ref persistent_list::with_meta(object_ref const m) const

@@ -7,7 +7,6 @@ namespace jank::runtime::obj
 {
   using nil_ref = oref<struct nil>;
   using persistent_list_ref = oref<struct persistent_list>;
-  using persistent_list_sequence_ref = oref<struct persistent_list_sequence>;
 
   struct persistent_list : gc
   {
@@ -61,8 +60,8 @@ namespace jank::runtime::obj
     persistent_list_ref with_meta(object_ref m) const;
 
     /* behavior::seqable */
-    obj::persistent_list_sequence_ref seq() const;
-    obj::persistent_list_sequence_ref fresh_seq() const;
+    obj::persistent_list_ref seq() const;
+    obj::persistent_list_ref fresh_seq() const;
 
     /* behavior::countable */
     usize count() const;
@@ -72,10 +71,10 @@ namespace jank::runtime::obj
 
     /* behavior::sequenceable */
     object_ref first() const;
-    obj::persistent_list_sequence_ref next() const;
+    obj::persistent_list_ref next() const;
 
     /* behavior::sequenceable_in_place */
-    obj::persistent_list_sequence_ref next_in_place() const;
+    obj::persistent_list_ref next_in_place();
 
     /* behavior::stackable */
     object_ref peek() const;

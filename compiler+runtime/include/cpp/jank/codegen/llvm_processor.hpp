@@ -95,8 +95,6 @@ namespace jank::codegen
     jtl::immutable_string ctor_name;
 
     llvm::orc::ThreadSafeModule module;
-    //std::unique_ptr<llvm::LLVMContext> llvm_ctx;
-    //std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
     llvm::BasicBlock *global_ctor_block{};
 

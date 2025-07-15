@@ -3,7 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/persistent_sorted_map_sequence.hpp>
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
-#include <jank/runtime/detail/native_persistent_array_map.hpp>
+#include <jank/runtime/detail/native_array_map.hpp>
 
 namespace jank::runtime::obj
 {

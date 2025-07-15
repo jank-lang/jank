@@ -12,7 +12,7 @@
             }
 
             bar b{ .data = 50 };
-            bar &p{ &b };
+            bar *p{ &b };
           }")
 (let* [bar (cpp/new cpp/jank.cpp.call.global.pass_pointer_arg.bar)
        a (cpp/jank.cpp.call.global.pass_pointer_arg.foo bar)

@@ -146,9 +146,8 @@ namespace jank::runtime::obj::detail
   template struct base_persistent_map_sequence<
     persistent_hash_map_sequence,
     runtime::detail::native_persistent_hash_map::const_iterator>;
-  template struct base_persistent_map_sequence<
-    persistent_array_map_sequence,
-    runtime::detail::native_persistent_array_map::const_iterator>;
+  template struct base_persistent_map_sequence<persistent_array_map_sequence,
+                                               runtime::detail::native_array_map::const_iterator>;
   template struct base_persistent_map_sequence<
     persistent_sorted_map_sequence,
     runtime::detail::native_persistent_sorted_map::const_iterator>;

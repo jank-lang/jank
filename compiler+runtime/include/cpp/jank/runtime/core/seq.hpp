@@ -95,6 +95,14 @@ namespace jank::runtime
   object_ref persistent(object_ref o);
   object_ref conj_in_place(object_ref coll, object_ref o);
   object_ref disj_in_place(object_ref coll, object_ref o);
+
+  template <typename T>
+  requires behavior::associatively_writable_in_place<T>
+  auto assoc_in_place(oref<T> const m, object_ref const k, object_ref const v)
+  {
+    return m->assoc_in_place(k, v);
+  }
+
   object_ref assoc_in_place(object_ref coll, object_ref k, object_ref v);
   object_ref dissoc_in_place(object_ref coll, object_ref k);
   object_ref pop_in_place(object_ref coll);

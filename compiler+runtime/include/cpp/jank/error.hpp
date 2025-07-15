@@ -37,6 +37,8 @@ namespace jank::error
     parse_unterminated_map,
     parse_unterminated_set,
     parse_odd_entries_in_map,
+    parse_duplicate_keys_in_map,
+    parse_duplicate_items_in_set,
     parse_invalid_quote,
     parse_invalid_meta_hint_value,
     parse_invalid_meta_hint_target,
@@ -80,6 +82,10 @@ namespace jank::error
     internal_analyze_failure,
 
     internal_codegen_failure,
+
+    aot_compilation_failure,
+    aot_clang_executable_not_found,
+    internal_aot_failure,
 
     internal_runtime_failure,
 
@@ -130,6 +136,10 @@ namespace jank::error
         return "parse/unterminated-set";
       case kind::parse_odd_entries_in_map:
         return "parse/odd-entries-in-map";
+      case kind::parse_duplicate_keys_in_map:
+        return "parse/duplicate-keys-in-map";
+      case kind::parse_duplicate_items_in_set:
+        return "parse/duplicate-items-in-set";
       case kind::parse_invalid_quote:
         return "parse/invalid-quote";
       case kind::parse_invalid_meta_hint_value:
@@ -208,10 +218,18 @@ namespace jank::error
         return "analyze/macro-expansion-exception";
       case kind::analyze_invalid_conversion:
         return "analyze/invalid-conversion";
+
+      case kind::aot_compilation_failure:
+        return "aot/compilation-failure";
+      case kind::aot_clang_executable_not_found:
+        return "aot/clang-executable-not-found";
+
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:
         return "internal/codegen-failure";
+      case kind::internal_aot_failure:
+        return "internal/aot-failure";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
       case kind::internal_failure:

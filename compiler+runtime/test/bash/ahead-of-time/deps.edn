@@ -1,0 +1,4 @@
+{:paths ["src/common"]
+ :aliases {:single-jank-module {:extra-paths ["src/single-jank-module"]}
+           :only-jank-modules {:extra-paths ["src/only-jank-modules"]}
+           :jank-and-cpp-modules {:extra-paths ["src/jank-and-cpp-modules"]}}}

@@ -6,7 +6,7 @@
 namespace jank::runtime::obj
 {
   using persistent_list_ref = oref<struct persistent_list>;
-  using persistent_list_sequence_ref = oref<struct persistent_list_sequence>;
+  using persistent_list_sequence_ref = oref<struct persistent_list>;
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 }

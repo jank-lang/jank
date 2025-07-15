@@ -54,3 +54,7 @@ node_modules
 # CI thingies
 /llvm.sh
 /linux-install.sh
+
+# MacOS
+.DS_Store
+

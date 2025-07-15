@@ -298,6 +298,13 @@ extern "C"
   void jank_profile_exit(char const *label);
   void jank_profile_report(char const *label);
 
+  int jank_init(int const argc,
+                char const ** const argv,
+                jank_bool const init_default_ctx,
+                int (*fn)(int const, char const ** const));
+
+  jank_object_ref jank_parse_command_line_args(int const argc, char const **argv);
+
 #ifdef __cplusplus
 }
 #endif

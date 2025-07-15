@@ -221,6 +221,7 @@ add_library(
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
+  src/cpp/jank/error/aot.cpp
   src/cpp/jank/error/report.cpp
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
@@ -241,7 +242,7 @@ add_library(
   src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
-  src/cpp/jank/runtime/detail/native_persistent_array_map.cpp
+  src/cpp/jank/runtime/detail/native_array_map.cpp
   src/cpp/jank/runtime/context.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
@@ -262,6 +263,7 @@ add_library(
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
   src/cpp/jank/runtime/obj/persistent_array_map.cpp
+  src/cpp/jank/runtime/obj/transient_array_map.cpp
   src/cpp/jank/runtime/obj/persistent_hash_map.cpp
   src/cpp/jank/runtime/obj/transient_hash_map.cpp
   src/cpp/jank/runtime/obj/persistent_sorted_map.cpp
@@ -337,6 +339,7 @@ add_library(
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
+  src/cpp/jank/aot/processor.cpp
 
   # Native module sources.
   src/cpp/clojure/core_native.cpp
@@ -428,12 +431,16 @@ set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compile
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
 string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
 
+set(jank_deps_library_dirs ${LLVM_LIBRARY_DIRS})
+
 target_compile_options(
   jank_lib
   PUBLIC
   -DJANK_VERSION="${jank_version}"
   -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
+  # TODO: add paths to all the dependent libraries
+  -DJANK_DEPS_LIBRARY_DIRS="${LLVM_LIBRARY_DIRS}"
 )
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
@@ -668,7 +675,7 @@ set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
-  COMMAND ${CMAKE_BINARY_DIR}/jank compile clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank compile-module clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

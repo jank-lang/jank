@@ -198,7 +198,7 @@ namespace jank::runtime::obj::detail
 
   template struct base_persistent_map<persistent_array_map,
                                       persistent_array_map_sequence,
-                                      runtime::detail::native_persistent_array_map>;
+                                      runtime::detail::native_array_map>;
   template struct base_persistent_map<persistent_hash_map,
                                       persistent_hash_map_sequence,
                                       runtime::detail::native_persistent_hash_map>;

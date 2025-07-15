@@ -55,6 +55,10 @@ namespace jank::error
         return "Unterminated set.";
       case kind::parse_odd_entries_in_map:
         return "Odd number of entries in map.";
+      case kind::parse_duplicate_keys_in_map:
+        return "Duplicate keys in map literals are not allowed.";
+      case kind::parse_duplicate_items_in_set:
+        return "Duplicate items in set literals are not allowed.";
       case kind::parse_invalid_quote:
         return "Invalid quote.";
       case kind::parse_invalid_meta_hint_value:
@@ -139,6 +143,14 @@ namespace jank::error
 
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
+
+      case kind::aot_compilation_failure:
+        return "Ahead of Time compilation failure.";
+      case kind::aot_clang_executable_not_found:
+        return "Could not find clang++ executable.";
+      case kind::internal_aot_failure:
+        return "Internal ahead-of-time compilation failure.";
+
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
       case kind::internal_failure:
