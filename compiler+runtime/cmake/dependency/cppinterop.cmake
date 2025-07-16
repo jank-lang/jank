@@ -11,7 +11,7 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CPPINTEROP_ENABLE_DOXYGEN OFF CACHE BOOL "Disable doxygen")
   set(CPPINTEROP_ENABLE_SPHINX OFF CACHE BOOL "Disable sphinx")
 
-  add_subdirectory(third-party/cppinterop)
+  add_subdirectory(third-party/cppinterop EXCLUDE_FROM_ALL)
 
   unset(CPPINTEROP_ENABLE_TESTING)
   unset(CPPINTEROP_USE_REPL)
