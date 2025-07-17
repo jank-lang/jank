@@ -4,27 +4,14 @@
 
 #include <jtl/result.hpp>
 
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
-#include <llvm/Option/OptTable.h>
-#include <llvm/Support/Program.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/VirtualFileSystem.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/TargetParser/Host.h>
-
-#include <clang/Basic/DiagnosticIDs.h>
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Driver/Compilation.h>
-#include <clang/Driver/Driver.h>
-#include <clang/Driver/ToolChain.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-
 #include <jank/error/aot.hpp>
 #include <jank/aot/processor.hpp>
-#include <jank/util/cli.hpp>
-#include <jank/util/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
+#include <jank/analyze/cpp_util.hpp>
+#include <jank/util/cli.hpp>
+#include <jank/util/process_location.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string_builder.hpp>
@@ -134,34 +121,7 @@ int main(int argc, const char** argv)
 
   jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
   {
-    auto const entrypoint_path{ gen_entrypoint(module) };
-
-    std::string buffer;
-    llvm::raw_string_ostream diag_stream{ buffer };
-    clang::DiagnosticOptions diag_opts{};
-    auto * const diag_client{
-      new clang::TextDiagnosticPrinter{ diag_stream, diag_opts }
-    };
-    clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
-    clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
-
-    auto const vfs{ llvm::vfs::getRealFileSystem() };
-
-    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
-
-    /* TODO: Ensure correct clang++ version. */
-    auto clang_inferred_path{ llvm::sys::findProgramByName("clang++") };
-    if(!clang_inferred_path)
-    {
-      return error::aot_clang_executable_not_found();
-    }
-    clang::driver::Driver driver{ clang_inferred_path.get(),
-                                  target_triple,
-                                  diags,
-                                  "jank_aot_compilation",
-                                  vfs };
-
-    std::vector<char const *> compiler_args{ strdup(clang_inferred_path.get().c_str()) };
+    std::vector<char const *> compiler_args{};
 
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
@@ -188,6 +148,7 @@ int main(int argc, const char** argv)
       }
     }
 
+    auto const entrypoint_path{ gen_entrypoint(module) };
     compiler_args.push_back(strdup("-x"));
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
@@ -197,35 +158,51 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
-    // TODO: Find library paths for jank's dependencies and add them here instead of
-    // expecting from users
-    compiler_args.push_back(strdup(util::format("-L{}", JANK_DEPS_LIBRARY_DIRS).c_str()));
+    {
+      auto const jank_path{ util::process_location().unwrap().parent_path() };
+      compiler_args.emplace_back(strdup("-L"));
+      compiler_args.emplace_back(strdup(jank_path.c_str()));
+
+      std::filesystem::path dir{ JANK_RESOURCE_DIR };
+      if(dir.is_absolute())
+      {
+        compiler_args.emplace_back(strdup("-I"));
+        compiler_args.emplace_back(strdup(util::format("{}/include", dir.c_str()).c_str()));
+
+        compiler_args.emplace_back(strdup("-L"));
+        compiler_args.emplace_back(strdup(util::format("{}/lib", dir.c_str()).c_str()));
+      }
+      else
+      {
+        compiler_args.emplace_back(strdup("-I"));
+        compiler_args.emplace_back(strdup((jank_path / dir / "include").c_str()));
+
+        compiler_args.emplace_back(strdup("-L"));
+        compiler_args.emplace_back(strdup((jank_path / dir / "lib").c_str()));
+      }
+    }
+
+    compiler_args.push_back(strdup(JANK_DEPS_LIBRARY_DIRS));
     for(auto const &library_dir : library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
 
-    for(auto const &lib : { "-ljank",
-                            /* Default libraries that jank depends on. */
-                            "-lfolly",
-                            "-lgc",
-                            "-lstdc++",
-                            "-lgccpp",
-                            "-lm",
-                            "-lzippp_static",
-                            "-lzip",
-                            "-lbz2",
-                            "-lcrypto",
-                            "-lcpptrace",
-                            "-ldwarf",
-                            "-lz",
-                            "-lzstd",
-                            "-lclang-cpp",
-                            "-lLLVM",
-                            "-lnanobench",
-                            "-lftxui-component",
-                            "-lftxui-dom",
-                            "-lftxui-screen" })
+    for(auto const &lib : {
+          "-ljank-standalone",
+          /* Default libraries that jank depends on. */
+          "-lm",
+          "-lstdc++",
+          "-lLLVM",
+          "-lclang-cpp",
+          "-lcrypto",
+          "-lgc",
+          "-lgccpp",
+          "-lz",
+          "-lzstd",
+          "-lzip",
+          "-lbz2",
+        })
     {
       compiler_args.push_back(strdup(lib));
     }
@@ -251,48 +228,14 @@ int main(int argc, const char** argv)
       }
     } };
 
-    // for(auto const st : compiler_args)
-    // {
-    //   util::println("compilation command: {} ", compiler_args);
-    // }
+    util::println("compilation command: {} ", compiler_args);
 
-    llvm::ArrayRef<char const *> const Argv(compiler_args);
-
-    auto compilation(driver.BuildCompilation(Argv));
-
-    if(!compilation || compilation->containsError())
+    auto const res{ analyze::cpp_util::invoke_clang(compiler_args) };
+    if(res.is_err())
     {
+      util::println(stderr, "{}", res.expect_err());
       return error::aot_compilation_failure();
     }
-
-    /* Execute the compilation jobs (preprocess, compile, assemble)
-     * This actually runs the commands determined by BuildCompilation. */
-    int exit_code{ 1 };
-    if(compilation && !compilation->containsError())
-    {
-      llvm::SmallVector<std::pair<int, clang::driver::Command const *>> failing_commands;
-      exit_code = driver.ExecuteCompilation(*compilation, failing_commands);
-
-      for(auto const &failing_command : failing_commands)
-      {
-        /* Check if command signaled an error */
-        if(failing_command.first < 0)
-        {
-          util::println(stderr,
-                        "Error executing command: {}",
-                        failing_command.second->getExecutable());
-
-          /* TODO: We can print more details about the failing command failing_command.second */
-        }
-      }
-    }
-
-    if(diags.hasErrorOccurred() || exit_code != 0)
-    {
-      return error::aot_compilation_failure();
-    }
-
-    util::println("Compilation successful. Find the executable at: '{}'", output_filepath);
 
     return ok();
   }

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# CMake will copy this script into the build directory when configuring
+# and it will replace these variables with the correct values.
+ar="@CMAKE_AR@"
+cache_dir="@CMAKE_CURRENT_BINARY_DIR@/ar-cache"
+merge_output="@CMAKE_CURRENT_BINARY_DIR@/libjank.a"
+
+command="${1}"
+shift
+
+mkdir -p "${cache_dir}"
+
+case "${command}" in
+  # We only use this from ./bin/clean. Generally, this should not be needed.
+  clean)
+    rm -rf "${cache_dir}"
+    mkdir -p "${cache_dir}"
+    ;;
+
+  # We use this prior to building the jank executable, but after building all libraries.
+  merge)
+    object_files="$(cat "${cache_dir}"/*)"
+    rm -f "${merge_output}"
+    # shellcheck disable=SC2086
+    "${ar}" qc "${merge_output}" ${object_files}
+    ;;
+
+  # No custom command, so just pass this onto the original AR but keep track of all of
+  # the object files referenced.
+  *)
+    output="${1}"
+    shift
+    base="${output//\//_}"
+    rm -f "${cache_dir}/${base}.list"
+    echo "$@" > "${cache_dir}/${base}.list"
+    "${ar}" "${command}" "${output}" "$@"
+    ;;
+esac

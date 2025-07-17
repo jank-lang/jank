@@ -470,6 +470,7 @@ namespace jank::analyze::cpp_util
     clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
     auto const vfs{ llvm::vfs::getRealFileSystem() };
     auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
+    /* TODO: If this clang isn't found, look for one with the correct major version. */
     auto const clang_path{ JANK_CLANG_PATH };
 
     /* Building the driver doesn't actually run the commands yet. All of the flags will
