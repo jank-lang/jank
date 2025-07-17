@@ -930,19 +930,11 @@ namespace jank::analyze
                                            conversion_policy::from_object,
                                            expr);
     }
-    else if(Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                                   Cpp::GetUnderlyingType(expected_type)))
-    {
-      expr->propagate_position(cast_position);
-      return expr;
-    }
-    else if(Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
-            && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
-    {
-      expr->propagate_position(cast_position);
-      return expr;
-    }
-    else if(cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
+    else if((Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                                    Cpp::GetUnderlyingType(expected_type)))
+            || (Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+                && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+            || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type)))
     {
       expr->propagate_position(cast_position);
       return expr;

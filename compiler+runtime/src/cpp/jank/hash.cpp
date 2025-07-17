@@ -53,7 +53,7 @@ namespace jank::hash
   {
     h1 ^= k1;
     h1 = rotate_left(h1, 13);
-    h1 = h1 * 5 + 0xe6546b64;
+    h1 = (h1 * 5) + 0xe6546b64;
     return h1;
   }
 
@@ -177,7 +177,7 @@ namespace jank::hash
           u32 hash{ 1 };
           for(auto const e : make_sequence_range(typed_sequence))
           {
-            hash = 31 * hash + visit(e);
+            hash = (31 * hash) + visit(e);
             ++n;
           }
 

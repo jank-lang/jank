@@ -20,6 +20,7 @@ misc-definitions-in-headers,\
 -modernize-avoid-c-arrays,\
 -modernize-use-designated-initializers,\
 -modernize-use-transparent-functors,\
+-modernize-use-scoped-lock,\
 -cppcoreguidelines-non-private-member-variables-in-classes,\
 -cppcoreguidelines-avoid-c-arrays,\
 -cppcoreguidelines-avoid-magic-numbers,\
@@ -39,6 +40,7 @@ misc-definitions-in-headers,\
 -bugprone-reserved-identifier,\
 -bugprone-multi-level-implicit-pointer-conversion,\
 -bugprone-crtp-constructor-accessibility,\
+-bugprone-bitwise-pointer-cast,\
 -readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\

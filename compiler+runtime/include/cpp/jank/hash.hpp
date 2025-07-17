@@ -47,7 +47,7 @@ namespace jank::hash
 
     for(auto it(begin); it != end; ++it)
     {
-      hash = 31 * hash + visit((*it));
+      hash = (31 * hash) + visit((*it));
       ++n;
     }
 
@@ -67,7 +67,7 @@ namespace jank::hash
       /* It's common that we have pairs of data, like with maps. */
       if constexpr(requires(T t) { t.first, t.second; })
       {
-        hash += 31 * visit((*it).first) + visit((*it).second);
+        hash += (31 * visit((*it).first)) + visit((*it).second);
       }
       else
       {

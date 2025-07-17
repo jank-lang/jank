@@ -146,7 +146,7 @@ namespace jank::codegen
     //              Cpp::GetTypeAsString(output_type),
     //              Cpp::GetTypeAsString(conversion_type));
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
+    Cpp::TemplateArgInfo const template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
     jank_debug_assert(instantiation);
     auto const conversion_fns{ Cpp::GetFunctionsUsingName(
@@ -766,7 +766,12 @@ namespace jank::codegen
 
       /* We need to make sure to transfer ownership of the context back, even if an exception
        * is thrown. */
-      util::scope_exit const finally{ [&]() { ctx = std::move(nested.ctx); } };
+      util::scope_exit const finally{ [&]() {
+        if(nested.ctx)
+        {
+          ctx = std::move(nested.ctx);
+        }
+      } };
 
       auto const res{ nested.gen() };
       if(res.is_err())
@@ -774,6 +779,10 @@ namespace jank::codegen
         /* TODO: Return error. */
         res.expect_ok();
       }
+
+      /* This is covered by finally, but clang-tidy can't figure that out, so we have
+       * to make this more clear. */
+      ctx = std::move(nested.ctx);
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
@@ -1047,6 +1056,7 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::gen(expr::do_ref const expr, expr::function_arity const &arity)
   {
+    /* NOLINTNEXTLINE(misc-const-correctness): Cant' be const. */
     llvm::Value *last{};
     for(auto const &form : expr->values)
     {
@@ -1268,6 +1278,7 @@ namespace jank::codegen
     return nullptr;
   }
 
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Affects overload resolution. */
   llvm::Value *llvm_processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
   {
     auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(expr->code.c_str()) };
@@ -1285,11 +1296,13 @@ namespace jank::codegen
     return ret;
   }
 
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Affects overload resolution. */
   llvm::Value *llvm_processor::gen(expr::cpp_type_ref const, expr::function_arity const &)
   {
     throw std::runtime_error{ "cpp_type has no codegen" };
   }
 
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm::Value *llvm_processor::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
   {
     if(expr->val_kind == expr::cpp_value::value_kind::null)
@@ -1404,7 +1417,7 @@ namespace jank::codegen
                                   || kind == expression_kind::cpp_member_access };
     if(requires_this_obj)
     {
-      jank_debug_assert(arg_exprs.size() > 0);
+      jank_debug_assert(!arg_exprs.empty());
     }
     llvm::Value *this_obj{ llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()) };
     auto const member_offset{ requires_this_obj ? 1 : 0 };
@@ -1508,7 +1521,7 @@ namespace jank::codegen
     auto const target_fn(llvm_module->getFunction(call.getName()));
     llvm::SmallVector<llvm::Value *, 4> const ctor_args{
       this_obj,
-      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), arg_count),
+      llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), static_cast<i64>(arg_count)),
       args_array,
       sret
     };

@@ -163,7 +163,7 @@ int main(int argc, const char** argv)
       compiler_args.emplace_back(strdup("-L"));
       compiler_args.emplace_back(strdup(jank_path.c_str()));
 
-      std::filesystem::path dir{ JANK_RESOURCE_DIR };
+      std::filesystem::path const dir{ JANK_RESOURCE_DIR };
       if(dir.is_absolute())
       {
         compiler_args.emplace_back(strdup("-I"));

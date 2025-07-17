@@ -685,7 +685,7 @@ namespace jtl
       auto const ptr(data());
       for(size_type i{}; i != size(); ++i)
       {
-        store.hash = 31 * store.hash + (ptr[i] & 0xff);
+        store.hash = (31 * store.hash) + (ptr[i] & 0xff);
       }
       return store.hash = jank::hash::integer(store.hash);
     }

@@ -371,9 +371,9 @@ namespace jank::analyze::cpp_util
   bool is_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo arg{ Cpp::GetTypeWithoutCv(
+    Cpp::TemplateArgInfo const arg{ Cpp::GetTypeWithoutCv(
       Cpp::GetNonReferenceType(Cpp::GetCanonicalType(type))) };
-    clang::Sema::SFINAETrap trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
+    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
     Cpp::TCppScope_t instantiation{};
     {
       auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };

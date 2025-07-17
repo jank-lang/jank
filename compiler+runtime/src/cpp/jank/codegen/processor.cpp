@@ -1293,6 +1293,7 @@ namespace jank::codegen
     return none;
   }
 
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution. */
   jtl::option<handle> processor::gen(analyze::expr::recursion_reference_ref const,
                                      analyze::expr::function_arity const &,
                                      bool const)
@@ -1963,7 +1964,7 @@ namespace jank::codegen
            * want the binding of the capture within the function; we want the one outside
            * of it, which we're capturing. We need to reach further for that. */
           auto const originating_local(root_fn->frame->find_local_or_capture(v.first));
-          handle h{ originating_local.unwrap().binding };
+          handle const h{ originating_local.unwrap().binding };
           util::format_to(expression_buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
           need_comma = true;
         }

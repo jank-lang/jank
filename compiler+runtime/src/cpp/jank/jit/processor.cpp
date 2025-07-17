@@ -107,7 +107,7 @@ namespace jank::jit
 
     auto const jank_path{ util::process_location().unwrap().parent_path() };
     auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
-    std::filesystem::path output_path{
+    std::filesystem::path const output_path{
       util::format("{}/incremental.pch", util::user_cache_dir(runtime::__rt_ctx->binary_version))
     };
     std::filesystem::create_directories(output_path.parent_path());
@@ -194,7 +194,7 @@ namespace jank::jit
     args.emplace_back(JANK_CLANG_RESOURCE_DIR);
 
     {
-      std::filesystem::path dir{ JANK_RESOURCE_DIR };
+      std::filesystem::path const dir{ JANK_RESOURCE_DIR };
       if(dir.is_absolute())
       {
         args.emplace_back("-I");

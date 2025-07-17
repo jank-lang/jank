@@ -119,7 +119,7 @@ namespace jank::util
      * compiler error output cleaner, since the stack trace isn't
      * actually going to provide any useful info. */
     jtl::ptr<error::base> original{ e };
-    cpptrace::stacktrace *deepest_trace{ original->trace.get() };
+    cpptrace::stacktrace const *deepest_trace{ original->trace.get() };
     while(original->cause)
     {
       original = original->cause;
