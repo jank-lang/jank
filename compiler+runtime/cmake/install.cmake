@@ -23,6 +23,11 @@ function(jank_glob_install_without_prefix)
 endfunction()
 
 jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/bdwgc/"
+  PATTERN "${CMAKE_SOURCE_DIR}/third-party/bdwgc/include/*"
+)
+
+jank_glob_install_without_prefix(
   INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/nanobench/"
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/nanobench/include/*"
 )

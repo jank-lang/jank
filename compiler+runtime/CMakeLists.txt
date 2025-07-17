@@ -430,6 +430,7 @@ target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_
 set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
+include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
@@ -437,7 +438,6 @@ include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(BDWgc REQUIRED)
 
 target_include_directories(
   jank_lib
@@ -448,10 +448,10 @@ target_include_directories(
   jank_lib
   SYSTEM
   PUBLIC
-  ${BDWGC_INCLUDE_DIR}
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
@@ -471,6 +471,7 @@ target_link_libraries(
   ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
+  bdwgc::gc bdwgc::gccpp
 )
 
 jank_hook_llvm(jank_lib)
@@ -602,7 +603,6 @@ target_link_options(jank_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR}
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
-  ${BDWGC_LIBRARIES}
   z zip bz2
   LLVM clang-cpp
   OpenSSL::Crypto
@@ -657,7 +657,6 @@ if(jank_test)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
-    ${BDWGC_LIBRARIES}
     z zip bz2
     LLVM clang-cpp
     OpenSSL::Crypto
