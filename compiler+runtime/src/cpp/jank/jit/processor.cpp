@@ -22,10 +22,10 @@
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::jit
 {
@@ -131,7 +131,7 @@ namespace jank::jit
     //args.emplace_back("-v");
     //util::println("args {}", args);
 
-    auto const res{ analyze::cpp_util::invoke_clang(args) };
+    auto const res{ util::invoke_clang(args) };
     if(res.is_err())
     {
       return err(res.expect_err());

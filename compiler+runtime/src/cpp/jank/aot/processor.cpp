@@ -8,13 +8,13 @@
 #include <jank/aot/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
-#include <jank/analyze/cpp_util.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string_builder.hpp>
+#include <jank/util/clang.hpp>
 
 namespace jank::aot
 {
@@ -230,7 +230,7 @@ int main(int argc, const char** argv)
 
     util::println("compilation command: {} ", compiler_args);
 
-    auto const res{ analyze::cpp_util::invoke_clang(compiler_args) };
+    auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())
     {
       util::println(stderr, "{}", res.expect_err());

@@ -44,6 +44,4 @@ namespace jank::analyze::cpp_util
   jtl::option<Cpp::Operator> match_operator(jtl::immutable_string const &name);
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
-
-  jtl::result<void, jtl::immutable_string> invoke_clang(std::vector<char const *> const &args);
 }
