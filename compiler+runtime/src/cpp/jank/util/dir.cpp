@@ -32,10 +32,10 @@ namespace jank::util
       return res;
     }
 
-    auto const home(getenv("XDG_CACHE_HOME"));
-    if(home)
+    auto const xdg_cache(getenv("XDG_CACHE_HOME"));
+    if(xdg_cache)
     {
-      res = util::format("{}/jank", home);
+      res = util::format("{}/jank/{}", xdg_cache, binary_version);
       return res;
     }
     res = util::format("{}/.cache/jank/{}", user_home_dir(), binary_version);

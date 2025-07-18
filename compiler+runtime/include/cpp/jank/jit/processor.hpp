@@ -28,7 +28,7 @@ namespace jank::jit
 
   struct processor
   {
-    processor(util::cli::options const &opts);
+    processor(util::cli::options const &opts, jtl::immutable_string const &binary_version);
     ~processor();
 
     void eval_string(jtl::immutable_string const &s) const;

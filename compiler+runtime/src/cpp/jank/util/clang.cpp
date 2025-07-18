@@ -14,7 +14,11 @@
 #include <llvm/Support/VirtualFileSystem.h>
 
 #include <jank/util/clang.hpp>
+#include <jank/util/dir.hpp>
+#include <jank/util/process_location.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/error/system.hpp>
 
 namespace jank::util
 {
@@ -87,7 +91,7 @@ namespace jank::util
     return none;
   }
 
-  jtl::result<void, jtl::immutable_string> invoke_clang(std::vector<char const *> const &args)
+  jtl::result<void, error_ref> invoke_clang(std::vector<char const *> const &args)
   {
     std::string buffer;
     llvm::raw_string_ostream diag_stream{ buffer };
@@ -102,7 +106,7 @@ namespace jank::util
     auto const clang_path_res{ find_clang() };
     if(clang_path_res.is_none())
     {
-      return err("Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.");
+      return err(error::system_clang_executable_not_found());
     }
     auto const &clang_path{ clang_path_res.unwrap() };
 
@@ -114,7 +118,8 @@ namespace jank::util
     auto const compilation_result{ driver.BuildCompilation(args) };
     if(!compilation_result || compilation_result->containsError())
     {
-      return err(format("Failed to build Clang steps.\n{}", buffer));
+      return err(
+        error::internal_system_failure(format("Failed to build Clang steps.\n{}", buffer)));
     }
 
     /* Execute the compilation jobs (preprocess, compile, assemble).
@@ -128,9 +133,70 @@ namespace jank::util
 
     if(diags.hasErrorOccurred() || execution_exit_code != 0)
     {
-      return err(format("Clang failed with errors.\n{}", buffer));
+      return err(error::internal_system_failure(format("Clang failed with errors.\n{}", buffer)));
     }
 
     return ok();
+  }
+
+  jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version)
+  {
+    auto const jank_path{ process_location().unwrap().parent_path() };
+
+    auto dev_path{ jank_path / "incremental.pch" };
+    if(std::filesystem::exists(dev_path))
+    {
+      return dev_path.c_str();
+    }
+
+    std::string installed_path{ format("{}/incremental.pch", user_cache_dir(binary_version)) };
+    if(std::filesystem::exists(installed_path))
+    {
+      return installed_path.c_str();
+    }
+
+    return none;
+  }
+
+  jtl::result<jtl::immutable_string, error_ref>
+  build_pch(std::vector<char const *> args, jtl::immutable_string const &binary_version)
+  {
+    /* TODO: Remove these logs for the alpha release. */
+    print(stderr,
+          "Note: Looks like your first run with these flags. Building pre-compiled header… ");
+
+    auto const jank_path{ process_location().unwrap().parent_path() };
+    auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
+    std::filesystem::path const output_path{ format("{}/incremental.pch",
+                                                    user_cache_dir(binary_version)) };
+    std::filesystem::create_directories(output_path.parent_path());
+
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fincremental-extensions");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-emit-pch");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fmodules-embed-all-files");
+    args.emplace_back("-fno-modules-validate-system-headers");
+    args.emplace_back("-x");
+    args.emplace_back("c++-header");
+    args.emplace_back("-o");
+    args.emplace_back(output_path.c_str());
+    args.emplace_back("-c");
+    args.emplace_back(include_path.c_str());
+    /* We need to add this again for it to get through. Not sure why. */
+    args.emplace_back("-std=gnu++20");
+
+    //args.emplace_back("-v");
+    //println("args {}", args);
+
+    auto const res{ invoke_clang(args) };
+    if(res.is_err())
+    {
+      return err(res.expect_err());
+    }
+
+    println(stderr, "done!");
+    return ok(output_path.c_str());
   }
 }

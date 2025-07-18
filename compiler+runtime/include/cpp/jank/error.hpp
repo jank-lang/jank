@@ -84,8 +84,10 @@ namespace jank::error
     internal_codegen_failure,
 
     aot_compilation_failure,
-    aot_clang_executable_not_found,
     internal_aot_failure,
+
+    system_clang_executable_not_found,
+    internal_system_failure,
 
     internal_runtime_failure,
 
@@ -221,8 +223,9 @@ namespace jank::error
 
       case kind::aot_compilation_failure:
         return "aot/compilation-failure";
-      case kind::aot_clang_executable_not_found:
-        return "aot/clang-executable-not-found";
+
+      case kind::system_clang_executable_not_found:
+        return "system/clang-executable-not-found";
 
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
@@ -232,6 +235,8 @@ namespace jank::error
         return "internal/aot-failure";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
+      case kind::internal_system_failure:
+        return "internal/system-failure";
       case kind::internal_failure:
         return "internal/failure";
     }

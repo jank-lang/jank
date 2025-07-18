@@ -42,10 +42,10 @@ namespace jank::runtime
   }
 
   context::context(util::cli::options const &opts)
-    : jit_prc{ opts }
-    , binary_version{ util::binary_version(opts.optimization_level,
+    : binary_version{ util::binary_version(opts.optimization_level,
                                            opts.include_dirs,
                                            opts.define_macros) }
+    , jit_prc{ opts, binary_version }
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
     , module_loader{ *this, opts.module_path }
   {

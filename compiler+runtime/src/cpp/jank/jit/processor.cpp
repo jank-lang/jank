@@ -78,70 +78,7 @@ namespace jank::jit
     }
   }
 
-  static jtl::option<std::filesystem::path> find_pch()
-  {
-    auto const jank_path{ util::process_location().unwrap().parent_path() };
-
-    auto dev_path{ jank_path / "incremental.pch" };
-    if(std::filesystem::exists(dev_path))
-    {
-      return dev_path;
-    }
-
-    std::string installed_path{
-      util::format("{}/incremental.pch", util::user_cache_dir(runtime::__rt_ctx->binary_version))
-    };
-    if(std::filesystem::exists(installed_path))
-    {
-      return installed_path;
-    }
-
-    return none;
-  }
-
-  static jtl::result<std::filesystem::path, jtl::immutable_string>
-  build_pch(std::vector<char const *> args)
-  {
-    util::print(stderr,
-                "Note: Looks like your first run with these flags. Building pre-compiled header… ");
-
-    auto const jank_path{ util::process_location().unwrap().parent_path() };
-    auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
-    std::filesystem::path const output_path{
-      util::format("{}/incremental.pch", util::user_cache_dir(runtime::__rt_ctx->binary_version))
-    };
-    std::filesystem::create_directories(output_path.parent_path());
-
-    args.emplace_back("-Xclang");
-    args.emplace_back("-fincremental-extensions");
-    args.emplace_back("-Xclang");
-    args.emplace_back("-emit-pch");
-    args.emplace_back("-Xclang");
-    args.emplace_back("-fmodules-embed-all-files");
-    args.emplace_back("-fno-modules-validate-system-headers");
-    args.emplace_back("-x");
-    args.emplace_back("c++-header");
-    args.emplace_back("-o");
-    args.emplace_back(strdup(output_path.c_str()));
-    args.emplace_back("-c");
-    args.emplace_back(strdup(include_path.c_str()));
-    /* We need to add this again for it to get through. Not sure why. */
-    args.emplace_back("-std=gnu++20");
-
-    //args.emplace_back("-v");
-    //util::println("args {}", args);
-
-    auto const res{ util::invoke_clang(args) };
-    if(res.is_err())
-    {
-      return err(res.expect_err());
-    }
-
-    util::println(stderr, "done!");
-    return ok(output_path);
-  }
-
-  processor::processor(util::cli::options const &opts)
+  processor::processor(util::cli::options const &opts, jtl::immutable_string const &binary_version)
     : optimization_level{ opts.optimization_level }
   {
     profile::timer const timer{ "jit ctor" };
@@ -216,18 +153,18 @@ namespace jank::jit
     }
 
     /* We need to include our special runtime PCH. */
-    auto pch_path{ find_pch() };
+    auto pch_path{ util::find_pch(binary_version) };
     if(pch_path.is_none())
     {
-      auto const res{ build_pch(args) };
+      auto const res{ util::build_pch(args, binary_version) };
       if(res.is_err())
       {
-        util::println(stderr, "{}", res.expect_err());
-        throw std::runtime_error{ "Unable to build PCH." };
+        throw res.expect_err();
+        ;
       }
       pch_path = res.expect_ok();
     }
-    auto const &pch_path_str{ pch_path.unwrap().string() };
+    auto const &pch_path_str{ pch_path.unwrap() };
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 

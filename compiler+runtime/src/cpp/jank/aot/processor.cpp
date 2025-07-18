@@ -233,8 +233,8 @@ int main(int argc, const char** argv)
     auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())
     {
-      util::println(stderr, "{}", res.expect_err());
-      return error::aot_compilation_failure();
+      return res.expect_err();
+      ;
     }
 
     return ok();
