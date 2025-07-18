@@ -79,4 +79,4 @@ jobs:
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           chmod +x install-bb
           sudo ./install-bb
-          ./bin/jank/check_everything.clj
+          JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj

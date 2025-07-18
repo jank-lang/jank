@@ -17,6 +17,7 @@
     (util/log-info "Not enabled")
     (let [clang (util/find-llvm-tool "clang")
           clang++ (util/find-llvm-tool "clang++")
+          clang-tidy (util/find-llvm-tool "clang-tidy")
           exports (merge {"CC" clang
                           "CXX" clang++
                           "CCACHE_BASEDIR" compiler+runtime-dir
@@ -27,6 +28,7 @@
           configure-flags ["-GNinja"
                            "-Djank_test=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
+                           (str "-DCMAKE_CXX_CLANG_TIDY=" clang-tidy)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
                            (str "-Djank_coverage=" coverage)]
