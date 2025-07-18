@@ -64,9 +64,9 @@ jobs:
           submodules: true
       - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++
+          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
           # Increment this when the package list changes.
-          version: 5
+          version: 4
       - name: Cache object files
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
