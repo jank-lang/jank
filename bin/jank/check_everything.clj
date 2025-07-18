@@ -31,9 +31,9 @@
     (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
     (util/quiet-shell {} "chmod +x clang-tidy-cache")
     (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
-    (spit "clang-tidy-cache-wrapper"
-          "#!/bin/bash
-           clang-tidy-cache clang-tidy \"${@}\"")
+    (let [clang-tidy (util/find-llvm-tool "clang-tidy")]
+      (spit "clang-tidy-cache-wrapper"
+            (str "#!/bin/bash\nclang-tidy-cache " clang-tidy " \"${@}\"")))
     (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
     (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
 
