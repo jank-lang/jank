@@ -26,17 +26,6 @@
     (System/getProperty "os.name")))
 
 (defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
-  ; TODO: Cache this shit.
-  (when (= "on" (util/get-env "JANK_ANALYZE"))
-    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
-    (util/quiet-shell {} "chmod +x clang-tidy-cache")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
-    (let [clang-tidy (util/find-llvm-tool "clang-tidy")]
-      (spit "clang-tidy-cache-wrapper"
-            (str "#!/bin/bash\nclang-tidy-cache " clang-tidy " \"${@}\"")))
-    (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
-
   ; TODO: Enable once we're linting Clojure/jank again.
   ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
 
@@ -47,6 +36,17 @@
   ; The libc++abi headers conflict with the system headers:
   ; https://github.com/llvm/llvm-project/issues/121300
   (util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
+
+  ; TODO: Cache this shit.
+  (when (= "on" (util/get-env "JANK_ANALYZE"))
+    (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
+    (util/quiet-shell {} "chmod +x clang-tidy-cache")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
+    (let [clang-tidy (util/find-llvm-tool "clang-tidy")]
+      (spit "clang-tidy-cache-wrapper"
+            (str "#!/bin/bash\nclang-tidy-cache " clang-tidy " \"${@}\"")))
+    (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
+    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
 
   ; Install the new Clojure CLI.
   (util/quiet-shell {} "curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh")
