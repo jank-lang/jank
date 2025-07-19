@@ -337,7 +337,7 @@ namespace jank::runtime
                               file_error.message()));
     }
     // Turn on printing
-    // module->print(llvm::outs(), nullptr);
+    module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;

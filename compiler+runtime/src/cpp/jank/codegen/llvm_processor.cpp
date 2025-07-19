@@ -18,6 +18,7 @@
 #include <jank/analyze/rtti.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -183,6 +184,7 @@ namespace jank::codegen
   jtl::string_result<void> llvm_processor::gen()
   {
     profile::timer const timer{ "ir gen" };
+    // util::println("MONTY: {}", root_fn->name);    
     if(target != compilation_target::function)
     {
       create_global_ctor();
@@ -304,9 +306,17 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::var_deref_ref const expr, expr::function_arity const &)
   {
     llvm::Value *call{};
+    // for(auto &f : ctx->module->functions())
+    // {
+    //     util::println("[monty]: {}", f.getName().data());
+    // }
     if(__rt_ctx->opts.direct_linking)
     {
-      call = gen_var_root(expr->qualified_name);
+      if(root_fn->name.starts_with("jank_load"))
+      {
+          call = gen_var_root_compiled_module(expr->qualified_name);
+      }
+        call = gen_var_root(expr->qualified_name);
     }
     else
     {
@@ -355,6 +365,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::call_ref const expr, expr::function_arity const &arity)
   {
     auto const callee(gen(expr->source_expr, arity));
+    // util::println("MONTY: {}", ctx->module_name.c_str());
 
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
@@ -1141,7 +1152,31 @@ namespace jank::codegen
     global = var_root;
     return global;
   }
+    
+  
+  llvm::Value *llvm_processor::gen_var_root_compiled_module(obj::symbol_ref qualified_name) const
+  {
+    auto it(ctx->var_root_globals.find(qualified_name));
+    if(it != ctx->var_root_globals.end())
+    {
+      return it->second;
+    }
+    auto const name(util::format("var_root_{}", munge(qualified_name->to_string())));
+    auto const var_root(create_global_var(name));
+    ctx->module->insertGlobalVariable(var_root);
+    auto &global(ctx->var_root_globals[qualified_name]);
+    global = var_root;
+    auto const fn_type(
+                       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+    auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
 
+    llvm::SmallVector<llvm::Value *, 1> const args{ gen_var(qualified_name) };
+    auto const call(ctx->builder->CreateCall(fn, args));
+    ctx->builder->CreateStore(call, global);
+    return global;
+  }
+
+    
   llvm::Value *llvm_processor::gen_c_string(jtl::immutable_string const &s) const
   {
     auto const found(ctx->c_string_globals.find(s));
