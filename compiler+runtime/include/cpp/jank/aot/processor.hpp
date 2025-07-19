@@ -22,6 +22,7 @@ namespace jank::aot
     native_vector<jtl::immutable_string> define_macros;
     native_vector<jtl::immutable_string> libs;
 
+    jtl::immutable_string runtime;
     jtl::immutable_string output_filename;
   };
 

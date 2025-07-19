@@ -153,8 +153,7 @@ endfunction()
 # remains a static lib, since these symbols need to be accessible in the
 # compiler's runtime by the JIT compiler.
 
-add_library(
-  jank_lib STATIC
+set(JANK_LIBRARY_COMMON_SOURCES
   src/cpp/jtl/panic.cpp
   src/cpp/jtl/assert.cpp
   src/cpp/jank/c_api.cpp
@@ -273,16 +272,24 @@ add_library(
   src/cpp/jank/analyze/expr/case.cpp
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
+
+  # Native module sources.
+  src/cpp/clojure/core_native.cpp
+  src/cpp/clojure/string_native.cpp
+  src/cpp/jank/perf_native.cpp
+)
+
+add_library(
+  jank_lib STATIC
+  ${JANK_LIBRARY_COMMON_SOURCES}
+
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
   src/cpp/jank/aot/processor.cpp
 
   # Native module sources.
-  src/cpp/clojure/core_native.cpp
-  src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
-  src/cpp/jank/perf_native.cpp
 )
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
@@ -362,6 +369,75 @@ target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 # Symbol exporting for JIT.
 set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank.a ----
+
+# ---- libjank_static_rt.a ----
+add_library(
+  jank_lib_static_rt STATIC
+  ${JANK_LIBRARY_COMMON_SOURCES}
+
+  src/cpp/jank/evaluate_static_rt.cpp
+)
+
+set_property(TARGET jank_lib_static_rt PROPERTY OUTPUT_NAME jank_static_rt)
+
+target_compile_features(jank_lib_static_rt PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_lib_static_rt PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+
+target_include_directories(
+  jank_lib_static_rt
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+)
+target_include_directories(
+  jank_lib_static_rt
+  SYSTEM
+  PUBLIC
+  ${BDWGC_INCLUDE_DIR}
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/magic_enum/include/magic_enum>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
+)
+
+target_link_libraries(
+  jank_lib_static_rt PRIVATE
+  ${BDWGC_LIBRARIES}
+  libzippp::libzippp
+  cpptrace::cpptrace
+  # clang
+  # clang-cpp
+  # LLVM
+  ftxui::screen ftxui::dom
+  OpenSSL::Crypto
+  Boost::multiprecision
+)
+
+# Build a string of all of our JIT compilation flags so we can load them up in the runtime.
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags})
+list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str)
+
+set(jank_deps_library_dirs ${LLVM_LIBRARY_DIRS})
+
+target_compile_options(
+  jank_lib_static_rt
+  PUBLIC
+  -DJANK_VERSION="${jank_version}"
+  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
+  -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
+  -DJANK_STATIC_RUNTIME
+)
+target_link_options(jank_lib_static_rt PRIVATE ${jank_linker_flags})
+
+# Symbol exporting for JIT.
+set_target_properties(jank_lib_static_rt PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank_static_rt.a ----
 
 # ---- libnanobench.a ----
 # nanobench uses a single header for both .hpp and .cpp inclusion, based on
