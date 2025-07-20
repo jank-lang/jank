@@ -649,7 +649,8 @@ if(jank_test)
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
   target_compile_features(jank_test_exe PRIVATE ${jank_cxx_standard})
-  target_compile_options(jank_test_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+  # A doctest issue causes some warnings: https://github.com/doctest/doctest/issues/900
+  target_compile_options(jank_test_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} "-Wno-#warnings")
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
   target_include_directories(jank_test_exe SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
   target_link_directories(jank_test_exe PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
