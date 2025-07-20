@@ -59,7 +59,6 @@ function build()
   cd "${srcdir}/llvm-build"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_STANDARD=20 \
         -DLLVM_ENABLE_RUNTIMES=all \
         -DLLVM_BUILD_LLVM_DYLIB=ON \
         -DLLVM_LINK_LLVM_DYLIB=ON \
