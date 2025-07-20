@@ -1,3 +1,6 @@
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/codegen/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/visit.hpp>
@@ -50,6 +53,8 @@
 
 namespace jank::codegen
 {
+  using namespace jank::analyze;
+
   namespace detail
   {
     /* Tail recursive fns generate into a while(true) which mutates the params on each loop.
@@ -1565,15 +1570,60 @@ namespace jank::codegen
   }
 
   jtl::option<handle>
-  processor::gen(analyze::expr::cpp_type_ref const, analyze::expr::function_arity const &, bool)
+  processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &, bool)
   {
+    util::format_to(deps_buffer, "{}", expr->code);
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+      return none;
+    }
     return none;
   }
 
   jtl::option<handle>
-  processor::gen(analyze::expr::cpp_value_ref const, analyze::expr::function_arity const &, bool)
+  processor::gen(analyze::expr::cpp_type_ref const, analyze::expr::function_arity const &, bool)
   {
-    return none;
+    throw std::runtime_error{ "cpp_type has no codegen" };
+  }
+
+  jtl::option<handle> processor::gen(analyze::expr::cpp_value_ref const expr,
+                                     analyze::expr::function_arity const &,
+                                     bool)
+  {
+    if(expr->val_kind == expr::cpp_value::value_kind::null)
+    {
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return nullptr;");
+        return none;
+      }
+      util::format_to(body_buffer, "nullptr");
+      return none;
+    }
+    if(expr->val_kind == expr::cpp_value::value_kind::bool_true
+       || expr->val_kind == expr::cpp_value::value_kind::bool_false)
+    {
+      auto const val{ expr->val_kind == expr::cpp_value::value_kind::bool_true };
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", val);
+        return none;
+      }
+      util::format_to(body_buffer, "{}", val);
+      return none;
+    }
+
+    auto const tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", tmp);
+      return none;
+    }
+
+    return tmp;
   }
 
   jtl::option<handle>
