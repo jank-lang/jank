@@ -727,16 +727,16 @@ namespace jank::analyze
         is_member_call = true;
       }
       //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
-      if(is_member_call)
-      {
-        arg_types.erase(arg_types.begin());
-      }
       auto const conversion_res{
         apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
       };
       if(conversion_res.is_err())
       {
         return conversion_res.expect_err();
+      }
+      if(is_member_call)
+      {
+        arg_types.erase(arg_types.begin());
       }
       if(is_ctor)
       {
@@ -801,16 +801,16 @@ namespace jank::analyze
       //  util::println("\t\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
       //}
 
-      if(is_member_call)
-      {
-        arg_types.erase(arg_types.begin());
-      }
       auto const conversion_res{
         apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
       };
       if(conversion_res.is_err())
       {
         return conversion_res.expect_err();
+      }
+      if(is_member_call)
+      {
+        arg_types.erase(arg_types.begin());
       }
       if(is_ctor)
       {

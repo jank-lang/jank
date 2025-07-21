@@ -23,6 +23,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime::module
@@ -287,9 +288,10 @@ namespace jank::runtime::module
   loader::loader()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
     native_transient_string paths{ util::cli::opts.module_path };
-    paths += util::format(":{}", __rt_ctx->binary_cache_dir);
-    paths += util::format(":{}", (jank_path / __rt_ctx->binary_cache_dir.c_str()).native());
+    paths += util::format(":{}", binary_cache_dir);
+    paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
     this->paths = paths;
 
