@@ -2,12 +2,13 @@
 
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/cli.hpp>
 
 namespace jank::profile
 {
+  using util::cli::opts;
+
   static constexpr native_persistent_string_view tag{ "jank::profile" };
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-  static bool enabled{};
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static std::ofstream output;
 
@@ -17,16 +18,14 @@ namespace jank::profile
     return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
   }
 
-  void configure(util::cli::options const &opts)
+  void configure()
   {
-    enabled = opts.profiler_enabled;
-
-    if(enabled)
+    if(opts.profiler_enabled)
     {
       output.open(opts.profiler_file.data());
       if(!output.is_open())
       {
-        enabled = false;
+        opts.profiler_enabled = false;
         util::println(stderr,
                       "Unable to open profile file: {}\nProfiling is now disabled.",
                       opts.profiler_file);
@@ -36,12 +35,12 @@ namespace jank::profile
 
   bool is_enabled()
   {
-    return enabled;
+    return opts.profiler_enabled;
   }
 
   void enter(native_persistent_string_view const &region)
   {
-    if(enabled)
+    if(opts.profiler_enabled)
     {
       output << util::format("{} {} enter {}\n", tag, now(), region);
     }
@@ -49,7 +48,7 @@ namespace jank::profile
 
   void exit(native_persistent_string_view const &region)
   {
-    if(enabled)
+    if(opts.profiler_enabled)
     {
       output << util::format("{} {} exit {}\n", tag, now(), region);
     }
@@ -57,7 +56,7 @@ namespace jank::profile
 
   void report(native_persistent_string_view const &boundary)
   {
-    if(enabled)
+    if(opts.profiler_enabled)
     {
       output << util::format("{} {} report {}\n", tag, now(), boundary);
     }

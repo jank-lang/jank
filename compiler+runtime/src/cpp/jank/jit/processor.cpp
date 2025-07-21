@@ -78,18 +78,17 @@ namespace jank::jit
     }
   }
 
-  processor::processor(util::cli::options const &opts, jtl::immutable_string const &binary_version)
-    : optimization_level{ opts.optimization_level }
+  processor::processor(jtl::immutable_string const &binary_version)
   {
     profile::timer const timer{ "jit ctor" };
 
-    for(auto const &library_dir : opts.library_dirs)
+    for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
     jtl::immutable_string O{ "-O0" };
-    switch(optimization_level)
+    switch(util::cli::opts.optimization_level)
     {
       case 0:
         break;
@@ -104,8 +103,9 @@ namespace jank::jit
         O = "-Ofast";
         break;
       default:
+        /* TODO: Internal error. */
         throw std::runtime_error{ util::format("invalid optimization level {}",
-                                               optimization_level) };
+                                               util::cli::opts.optimization_level) };
     }
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
@@ -120,7 +120,7 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
 
-    if(opts.perf_profiling_enabled)
+    if(util::cli::opts.perf_profiling_enabled)
     {
       O = "-Og";
       args.emplace_back("-ggdb");
@@ -170,17 +170,17 @@ namespace jank::jit
 
     /********* Every flag after this line is user-provided. *********/
 
-    for(auto const &include_path : opts.include_dirs)
+    for(auto const &include_path : util::cli::opts.include_dirs)
     {
       args.emplace_back(strdup(util::format("-I{}", include_path).c_str()));
     }
 
-    for(auto const &library_path : opts.library_dirs)
+    for(auto const &library_path : util::cli::opts.library_dirs)
     {
       args.emplace_back(strdup(util::format("-L{}", library_path).c_str()));
     }
 
-    for(auto const &define_macro : opts.define_macros)
+    for(auto const &define_macro : util::cli::opts.define_macros)
     {
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
@@ -199,7 +199,7 @@ namespace jank::jit
      *
      * https://github.com/mortenpi/julia/blob/1edc6f1b7752ed67059020ba7ce174dffa225954/src/jitlayers.cpp#L2330
      */
-    if(opts.perf_profiling_enabled)
+    if(util::cli::opts.perf_profiling_enabled)
     {
       auto const ee{ interpreter->getExecutionEngine() };
       auto &es{ ee->getExecutionSession() };
@@ -226,7 +226,7 @@ namespace jank::jit
                                                                    true));
     }
 
-    auto const &load_result{ load_dynamic_libs(opts.libs) };
+    auto const &load_result{ load_dynamic_libs(util::cli::opts.libs) };
     if(load_result.is_err())
     {
       throw std::runtime_error{ load_result.expect_err().c_str() };

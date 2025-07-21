@@ -4,6 +4,7 @@
 #include <jank/util/dir.hpp>
 #include <jank/util/sha256.hpp>
 #include <jank/util/string_builder.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::util
@@ -82,9 +83,7 @@ namespace jank::util
    * every module. I think this is much safer than trying to reconcile ABI
    * changes more granularly.
    */
-  jtl::immutable_string const &binary_version(i64 const optimization_level,
-                                              native_vector<jtl::immutable_string> const &includes,
-                                              native_vector<jtl::immutable_string> const &defines)
+  jtl::immutable_string const &binary_version()
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -93,14 +92,14 @@ namespace jank::util
     }
 
     string_builder sb;
-    for(auto const &inc : includes)
+    for(auto const &inc : util::cli::opts.include_dirs)
     {
       sb(inc);
     }
 
     sb(".");
 
-    for(auto const &def : defines)
+    for(auto const &def : util::cli::opts.define_macros)
     {
       sb(def);
     }
@@ -109,7 +108,7 @@ namespace jank::util
                                   JANK_VERSION,
                                   clang::getClangRevision(),
                                   JANK_JIT_FLAGS,
-                                  optimization_level,
+                                  util::cli::opts.optimization_level,
                                   sb.release()));
     res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
 

@@ -59,6 +59,9 @@ namespace jank::util::cli
     command command{ command::repl };
   };
 
-  jtl::result<options, int> parse(int const argc, char const **argv);
+  /* NOLINTNEXTLINE */
+  extern options opts;
+
+  jtl::result<void, int> parse(int const argc, char const **argv);
   std::vector<std::string> parse_empty(int const argc, char const **argv);
 }

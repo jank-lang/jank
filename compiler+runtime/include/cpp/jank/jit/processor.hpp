@@ -4,7 +4,6 @@
 #include <memory>
 
 #include <jtl/result.hpp>
-#include <jank/util/cli.hpp>
 #include <jank/util/string_builder.hpp>
 
 namespace llvm
@@ -28,7 +27,7 @@ namespace jank::jit
 
   struct processor
   {
-    processor(util::cli::options const &opts, jtl::immutable_string const &binary_version);
+    processor(jtl::immutable_string const &binary_version);
     ~processor();
 
     void eval_string(jtl::immutable_string const &s) const;
@@ -46,7 +45,6 @@ namespace jank::jit
     jtl::option<jtl::immutable_string> find_dynamic_lib(jtl::immutable_string const &lib) const;
 
     std::unique_ptr<Cpp::Interpreter> interpreter;
-    i64 optimization_level{};
     native_vector<std::filesystem::path> library_dirs;
   };
 }

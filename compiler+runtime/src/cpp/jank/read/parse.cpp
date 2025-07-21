@@ -1191,10 +1191,8 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    context::binding_scope const scope{ *__rt_ctx,
-                                        obj::persistent_hash_map::create_unique(
-                                          std::make_pair(__rt_ctx->gensym_env_var,
-                                                         obj::persistent_hash_map::empty())) };
+    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->gensym_env_var, obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
     quoted = false;

@@ -6,15 +6,17 @@
 
 namespace jank::util::cli
 {
+  /* NOLINTNEXTLINE */
+  options opts;
+
   static std::string make_default(std::string const &input)
   {
     return "default: " + input;
   }
 
-  jtl::result<options, int> parse(int const argc, char const **argv)
+  jtl::result<void, int> parse(int const argc, char const **argv)
   {
     CLI::App cli{ "jank compiler" };
-    options opts;
 
     cli.set_help_flag("-h,--help", "Print this help message and exit.");
 
@@ -153,7 +155,7 @@ namespace jank::util::cli
       opts.command = command::compile;
     }
 
-    return ok(opts);
+    return ok();
   }
 
   std::vector<std::string> parse_empty(int const argc, char const **argv)

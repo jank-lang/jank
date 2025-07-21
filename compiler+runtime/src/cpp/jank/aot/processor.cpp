@@ -20,15 +20,6 @@ namespace jank::aot
 {
   using namespace jank::runtime;
 
-  processor::processor(util::cli::options const &opts)
-    : include_dirs{ opts.include_dirs }
-    , library_dirs{ opts.library_dirs }
-    , define_macros{ opts.define_macros }
-    , libs{ opts.libs }
-    , output_filename(opts.output_filename)
-  {
-  }
-
   static jtl::immutable_string relative_to_cache_dir(jtl::immutable_string const &file_path)
   {
     return util::format("{}/{}", __rt_ctx->binary_cache_dir, file_path);
@@ -153,7 +144,7 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    for(auto const &include_dir : include_dirs)
+    for(auto const &include_dir : util::cli::opts.include_dirs)
     {
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
@@ -183,7 +174,7 @@ int main(int argc, const char** argv)
     }
 
     compiler_args.push_back(strdup(JANK_DEPS_LIBRARY_DIRS));
-    for(auto const &library_dir : library_dirs)
+    for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
@@ -207,7 +198,7 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(lib));
     }
 
-    for(auto const &define : define_macros)
+    for(auto const &define : util::cli::opts.define_macros)
     {
       compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
@@ -215,7 +206,7 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-std=c++20"));
 
     compiler_args.push_back(strdup("-o"));
-    auto const output_filepath{ relative_to_cache_dir(output_filename) };
+    auto const output_filepath{ relative_to_cache_dir(util::cli::opts.output_filename) };
     compiler_args.push_back(strdup(output_filepath.c_str()));
 
     /* Required because of `strdup` usage and need to manually free the memory.

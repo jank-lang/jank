@@ -41,7 +41,6 @@ namespace jank::runtime
   struct context
   {
     context();
-    context(util::cli::options const &opts);
     context(context &&) = delete;
     ~context();
 
@@ -118,11 +117,9 @@ namespace jank::runtime
 
     struct binding_scope
     {
-      binding_scope(context &rt_ctx);
-      binding_scope(context &rt_ctx, obj::persistent_hash_map_ref const bindings);
+      binding_scope();
+      binding_scope(obj::persistent_hash_map_ref const bindings);
       ~binding_scope();
-
-      context &rt_ctx;
     };
 
     jtl::string_result<void> push_thread_bindings();
@@ -133,8 +130,10 @@ namespace jank::runtime
     jtl::option<thread_binding_frame> current_thread_binding_frame();
 
     /* The analyze processor is reused across evaluations so we can keep the semantic information
-     * of previous code. This is essential for REPL use. */
-    /* TODO: This needs to be synchronized. */
+     * of previous code. This is essential for REPL use.
+     *
+     * TODO: Is it? I think we can remove this. */
+    /* TODO: This needs to be synchronized, if it's kept. */
     analyze::processor an_prc{ *this };
     jtl::immutable_string binary_version;
     jit::processor jit_prc;

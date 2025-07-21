@@ -139,7 +139,7 @@ namespace jank::runtime::module
     static constexpr char const *module_separator_name{ "colon" };
 #endif
 
-    loader(context &rt_ctx, jtl::immutable_string const &ps);
+    loader();
 
     static jtl::string_result<file_view> read_file(jtl::immutable_string const &path);
 
@@ -158,7 +158,6 @@ namespace jank::runtime::module
 
     object_ref to_runtime_data() const;
 
-    context &rt_ctx;
     jtl::immutable_string paths;
     /* TODO: These will need synchonization. */
     /* This maps module strings to entries. Module strings are like fully qualified Java

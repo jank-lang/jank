@@ -37,17 +37,9 @@ namespace jank::runtime
   context *__rt_ctx{};
 
   context::context()
-    : context(util::cli::options{})
-  {
-  }
-
-  context::context(util::cli::options const &opts)
-    : binary_version{ util::binary_version(opts.optimization_level,
-                                           opts.include_dirs,
-                                           opts.define_macros) }
-    , jit_prc{ opts, binary_version }
+    : binary_version{ util::binary_version() }
+    , jit_prc{ binary_version }
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
-    , module_loader{ *this, opts.module_path }
   {
     intern_ns(make_box<obj::symbol>("cpp"));
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -158,9 +150,8 @@ namespace jank::runtime
       };
     }
 
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_file_var, make_box(path))) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, make_box(path))) };
 
     return eval_string(file.expect_ok().view());
   }
@@ -258,9 +249,8 @@ namespace jank::runtime
 
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_file_var, jank_nil)) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, jank_nil)) };
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -323,11 +313,9 @@ namespace jank::runtime
      * current ns to the module being loaded. To avoid overwriting the previous `ns` value, `current_ns_var`
      * binding is pushed in the context, and then `in-ns` sets the value of `*ns*` var in
      * the new binding scope. */
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_ns_var, ns),
-                                    std::make_pair(current_module_var,
-                                                   make_box(absolute_module))) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_ns_var, ns),
+      std::make_pair(current_module_var, make_box(absolute_module))) };
 
     try
     {
@@ -348,9 +336,8 @@ namespace jank::runtime
   {
     module_dependencies.clear();
 
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(compile_files_var, jank_true)) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(compile_files_var, jank_true)) };
 
     return load_module(util::format("/{}", module), module::origin::latest);
   }
@@ -631,24 +618,21 @@ namespace jank::runtime
     return o;
   }
 
-  context::binding_scope::binding_scope(context &rt_ctx)
-    : rt_ctx{ rt_ctx }
+  context::binding_scope::binding_scope()
   {
-    rt_ctx.push_thread_bindings().expect_ok();
+    __rt_ctx->push_thread_bindings().expect_ok();
   }
 
-  context::binding_scope::binding_scope(context &rt_ctx,
-                                        obj::persistent_hash_map_ref const bindings)
-    : rt_ctx{ rt_ctx }
+  context::binding_scope::binding_scope(obj::persistent_hash_map_ref const bindings)
   {
-    rt_ctx.push_thread_bindings(bindings).expect_ok();
+    __rt_ctx->push_thread_bindings(bindings).expect_ok();
   }
 
   context::binding_scope::~binding_scope()
   {
     try
     {
-      rt_ctx.pop_thread_bindings().expect_ok();
+      __rt_ctx->pop_thread_bindings().expect_ok();
     }
     catch(...)
     {

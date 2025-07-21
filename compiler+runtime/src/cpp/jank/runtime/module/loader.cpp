@@ -284,13 +284,12 @@ namespace jank::runtime::module
     }
   }
 
-  loader::loader(context &rt_ctx, jtl::immutable_string const &ps)
-    : rt_ctx{ rt_ctx }
+  loader::loader()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
-    native_transient_string paths{ ps };
-    paths += util::format(":{}", rt_ctx.binary_cache_dir);
-    paths += util::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).native());
+    native_transient_string paths{ util::cli::opts.module_path };
+    paths += util::format(":{}", __rt_ctx->binary_cache_dir);
+    paths += util::format(":{}", (jank_path / __rt_ctx->binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
     this->paths = paths;
 
@@ -724,7 +723,7 @@ namespace jank::runtime::module
      * */
     auto const load_function_name{ module_to_load_function(module) };
 
-    auto const existing_load{ rt_ctx.jit_prc.find_symbol(load_function_name) };
+    auto const existing_load{ __rt_ctx->jit_prc.find_symbol(load_function_name) };
     if(existing_load.is_ok())
     {
       reinterpret_cast<object *(*)()>(existing_load.expect_ok())();
@@ -737,10 +736,10 @@ namespace jank::runtime::module
     }
     else
     {
-      rt_ctx.jit_prc.load_object(entry.path);
+      __rt_ctx->jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol(load_function_name).expect_ok() };
+    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
     reinterpret_cast<object *(*)()>(load)();
 
     return ok();
@@ -753,7 +752,7 @@ namespace jank::runtime::module
     {
       jtl::option<jtl::string_result<void>> res;
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        res = rt_ctx.eval_cpp_string(zip_entry.readAsText());
+        res = __rt_ctx->eval_cpp_string(zip_entry.readAsText());
       });
       if(res.unwrap().is_err())
       {
@@ -768,7 +767,7 @@ namespace jank::runtime::module
         return err(
           util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      auto const res{ rt_ctx.eval_cpp_string(file.expect_ok().view()) };
+      auto const res{ __rt_ctx->eval_cpp_string(file.expect_ok().view()) };
       if(res.is_err())
       {
         return res;
@@ -779,7 +778,7 @@ namespace jank::runtime::module
      * What if load function is defined in another module?
      * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
     auto const load_function_name{ module_to_load_function(module) };
-    auto const load{ rt_ctx.jit_prc.find_symbol(load_function_name).expect_ok() };
+    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
     reinterpret_cast<object *(*)()>(load)();
 
     return ok();
@@ -792,16 +791,14 @@ namespace jank::runtime::module
       visit_jar_entry(entry, [&](auto const &zip_entry) {
         /* TODO: Helper to get a jar file path like this. */
         auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
-        context::binding_scope const preserve{ rt_ctx,
-                                               runtime::obj::persistent_hash_map::create_unique(
-                                                 std::make_pair(rt_ctx.current_file_var,
-                                                                make_box(path))) };
-        rt_ctx.eval_string(zip_entry.readAsText());
+        context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
+          std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
+        __rt_ctx->eval_string(zip_entry.readAsText());
       });
     }
     else
     {
-      rt_ctx.eval_file(entry.path);
+      __rt_ctx->eval_file(entry.path);
     }
 
     return ok();
