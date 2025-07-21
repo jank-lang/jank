@@ -133,8 +133,10 @@ namespace jank::runtime::module
     /* These separators match what the JVM does on each system. */
 #ifdef _WIN32
     static constexpr char module_separator{ ';' };
+    static constexpr char const *module_separator_name{ "semicolon" };
 #else
     static constexpr char module_separator{ ':' };
+    static constexpr char const *module_separator_name{ "colon" };
 #endif
 
     loader(context &rt_ctx, jtl::immutable_string const &ps);
