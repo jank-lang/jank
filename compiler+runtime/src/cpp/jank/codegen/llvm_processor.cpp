@@ -68,7 +68,6 @@ namespace jank::codegen
                                  jtl::immutable_string const &name = "")
   {
     jank_debug_assert(type);
-    jank_debug_assert(Cpp::IsComplete(type));
     auto const size{ Cpp::GetSizeOfType(type) };
     //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
