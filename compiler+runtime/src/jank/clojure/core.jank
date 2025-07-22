@@ -1320,7 +1320,7 @@
    is called, and will cache the result and return it on all subsequent
    seq calls. See also - realized?"
   [& body]
-  (list `lazy-seq* (list* `fn 'lazy-seq# [] body)))
+  (list `lazy-seq* (list* `fn `lazy-seq# [] body)))
 
 (def chunk-buffer
   clojure.core-native/chunk-buffer)
@@ -2544,7 +2544,7 @@
      (with-meta (persistent! (transduce xform conj! (transient to) from)) (meta to))
      (transduce xform conj to from))))
 
-;; Redefine let and loop with destructuring.
+; Redefine let and loop with destructuring.
 (defn destructure
   [bindings]
   (let [bents (partition 2 bindings)
@@ -3916,13 +3916,15 @@
             to-refer)))
 
 ;; TODO: Should be a ref instead of atom
-(defonce ^:dynamic
+(defonce
   ^{:private true
+    :dynamic true
     :doc "An atom holding a sorted set of symbols representing loaded libs"}
   *loaded-libs* (atom (sorted-set)))
 
-(defonce ^:dynamic
+(defonce
   ^{:private true
+    :dynamic true
     :doc "A stack of paths currently being loaded by this thread"}
   *pending-paths* ())
 

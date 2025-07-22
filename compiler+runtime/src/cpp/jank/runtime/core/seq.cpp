@@ -943,6 +943,11 @@ namespace jank::runtime
       o);
   }
 
+  jtl::immutable_string str(object_ref const o)
+  {
+    return runtime::to_string(o);
+  }
+
   jtl::immutable_string str(object_ref const o, object_ref const args)
   {
     util::string_builder buff;

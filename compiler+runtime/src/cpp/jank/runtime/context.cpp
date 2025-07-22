@@ -26,6 +26,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/error/codegen.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime
@@ -191,19 +192,30 @@ namespace jank::runtime
       auto const fn{ static_box_cast<analyze::expr::function>(expr.expect_ok()) };
       fn->unique_name = name;
 
-      codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
-      cg_prc.gen().expect_ok();
-      cg_prc.optimize();
-      write_module(cg_prc.ctx->module_name, cg_prc.llvm_module).expect_ok();
-
-      //{
-      //  codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
-      //  jit_prc.eval_string(cg_prc.declaration_str());
-      //  auto const expr_str{ cg_prc.expression_str(true) };
-      //  clang::Value v;
-      //  auto err(jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
-      //  llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
-      //}
+      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      {
+        codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
+        cg_prc.gen().expect_ok();
+        cg_prc.optimize();
+        write_module(cg_prc.ctx->module_name, cg_prc.llvm_module).expect_ok();
+      }
+      else
+      {
+        codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
+        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+        auto const code{ cg_prc.declaration_str() };
+        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+        if(!parse_res)
+        {
+          /* TODO: Helper to turn an llvm::Error into a string. */
+          jtl::immutable_string res{ "Unable to compile generated C++ source." };
+          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+          throw error::internal_codegen_failure(res);
+        }
+        auto &partial_tu{ parse_res.get() };
+        auto module_name{ runtime::to_string(current_module_var->deref()) };
+        write_module(module_name, partial_tu.TheModule.get()).expect_ok();
+      }
     }
 
     return ret;
@@ -217,9 +229,8 @@ namespace jank::runtime
     if(!parse_res)
     {
       /* TODO: Helper to turn an llvm::Error into a string. */
-      jtl::immutable_string res{ "Unable to compile C++ source" };
-      llvm::handleAllErrors(parse_res.takeError(),
-                            [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
+      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
       return err(res);
     }
     auto &partial_tu{ parse_res.get() };
@@ -233,11 +244,10 @@ namespace jank::runtime
     }
 
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
-    if(!exec_res)
+    if(exec_res)
     {
-      jtl::immutable_string res{ "Unable to compile C++ source" };
-      llvm::handleAllErrors(parse_res.takeError(),
-                            [&](llvm::ErrorInfoBase const &error) { res = error.message(); });
+      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      llvm::logAllUnhandledErrors(std::move(exec_res), llvm::errs(), "error: ");
       return err(res);
     }
     return ok();
@@ -402,10 +412,10 @@ namespace jank::runtime
 
   jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix) const
   {
-    static jtl::immutable_string const dot{ "\\." };
+    //static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
-    return util::format("{}-{}-{}",
-                        runtime::munge_extra(ns->name->get_name(), dot, "_"),
+    return util::format("{}-{}",
+                        //runtime::munge_extra(ns->name->get_name(), dot, "_"),
                         prefix.data(),
                         ++ns->symbol_counter);
   }

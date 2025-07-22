@@ -9,3 +9,4 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/util/scope_exit.hpp>

@@ -35,6 +35,12 @@ namespace jank::util::cli
       ->default_str(make_default(opts.profiler_file));
     cli.add_flag("--perf", opts.perf_profiling_enabled, "Enable Linux perf event sampling.");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
+    cli.add_flag("--debug", opts.debug, "Enable debug symbol generation for generated code.");
+    cli
+      .add_option("-O,--optimization",
+                  opts.optimization_level,
+                  "The optimization level to use for AOT compilation.")
+      ->check(CLI::Range(0, 3));
 
     std::map<std::string, codegen_type> codegen_types{
       { "llvm_ir", codegen_type::llvm_ir },

@@ -227,6 +227,7 @@ namespace jank::codegen
                             "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
             if(typed_o->meta.is_some())
             {
+              /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
               util::format_to(buffer,
                               "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
                               util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
@@ -448,11 +449,6 @@ namespace jank::codegen
       meta = expr->frame->find_lifted_constant(expr->name->meta.unwrap()).unwrap();
     }
 
-    /* TODO: There's a slight difference here between eval and codegen:
-     * During eval, which matches Clojure, we'll always replace the meta. With codegen, we
-     * only replace it if the new def specifies meta. I'd like to clean this up, but the
-     * codegen for it is annoying, so I'm more inclined to leave a TODO like this. */
-
     /* Forward declarations just intern the var and evaluate to it. */
     if(expr->value.is_none())
     {
@@ -464,7 +460,8 @@ namespace jank::codegen
       }
       else
       {
-        return munged_name;
+        return util::format("{}->with_meta(jank::runtime::jank_nil)",
+                            runtime::munge(var.native_name));
       }
     }
 
@@ -482,7 +479,7 @@ namespace jank::codegen
           }
           else
           {
-            return util::format("{}->bind_root({})",
+            return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
                                 runtime::munge(var.native_name),
                                 val.str(true));
           }
@@ -491,7 +488,7 @@ namespace jank::codegen
         {
           util::format_to(body_buffer, "return ");
         }
-      /* Fallthrough */
+        [[fallthrough]];
       case analyze::expression_position::statement:
         {
           if(meta.is_some())
@@ -505,7 +502,7 @@ namespace jank::codegen
           else
           {
             util::format_to(body_buffer,
-                            "{}->bind_root({});",
+                            "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
                             runtime::munge(var.native_name),
                             val.str(true));
           }
@@ -1299,11 +1296,16 @@ namespace jank::codegen
   }
 
   /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution. */
-  jtl::option<handle> processor::gen(analyze::expr::recursion_reference_ref const,
+  jtl::option<handle> processor::gen(analyze::expr::recursion_reference_ref const expr,
                                      analyze::expr::function_arity const &,
                                      bool const)
   {
-    return munge(root_fn->name);
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", munge(expr->fn_ctx->fn->name));
+      return none;
+    }
+    return munge(expr->fn_ctx->fn->name);
   }
 
   jtl::option<handle> processor::gen(analyze::expr::named_recursion_ref const expr,
@@ -1319,6 +1321,12 @@ namespace jank::codegen
                         expr->arg_exprs,
                         fn_arity,
                         true);
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp.str(true));
+      return none;
+    }
 
     return ret_tmp;
   }
@@ -1506,6 +1514,7 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &fn_arity,
                                      bool const box_needed)
   {
+    auto const has_catch{ expr->catch_body.is_some() };
     auto ret_tmp(runtime::munge(__rt_ctx->unique_string("try")));
     util::format_to(body_buffer, "object_ref {}{ };", ret_tmp);
 
@@ -1517,24 +1526,20 @@ namespace jank::codegen
       util::format_to(body_buffer, "} };");
     }
 
-    util::format_to(body_buffer, "try {");
-    auto const &body_tmp(gen(expr->body, fn_arity, box_needed));
-    if(body_tmp.is_some())
+    if(has_catch)
     {
-      util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(box_needed));
-    }
-    if(expr->position == analyze::expression_position::tail)
-    {
-      util::format_to(body_buffer, "return {};", ret_tmp);
-    }
-    util::format_to(body_buffer, "}");
+      util::format_to(body_buffer, "try {");
+      auto const &body_tmp(gen(expr->body, fn_arity, box_needed));
+      if(body_tmp.is_some())
+      {
+        util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(box_needed));
+      }
+      if(expr->position == analyze::expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+      }
+      util::format_to(body_buffer, "}");
 
-    if(expr->catch_body.is_none())
-    {
-      throw std::runtime_error{ "NYI: no catch" };
-    }
-    else
-    {
       /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ref, which
      * means we need to be throwing an object_ref. Since we're not using inheritance, we can't
      * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
@@ -1973,6 +1978,18 @@ namespace jank::codegen
     {
       util::format_to(footer_buffer, "}");
     }
+
+    if(target == compilation_target::module)
+    {
+      util::format_to(footer_buffer,
+                      "extern \"C\" void* {}(){",
+                      runtime::module::module_to_load_function(module));
+      util::format_to(footer_buffer,
+                      "return {}::{}{ }.call().erase();",
+                      runtime::module::module_to_native_ns(module),
+                      runtime::munge(struct_name.name));
+      util::format_to(footer_buffer, "}");
+    }
   }
 
   jtl::immutable_string processor::expression_str(bool const box_needed)
@@ -1998,7 +2015,7 @@ namespace jank::codegen
         close = "}";
       }
 
-      native_set<i64> used_captures;
+      native_set<uhash> used_captures;
       bool need_comma{};
       for(auto const &arity : root_fn->arities)
       {
@@ -2012,10 +2029,29 @@ namespace jank::codegen
 
           /* We're generating the inputs to the function ctor, which means we don't
            * want the binding of the capture within the function; we want the one outside
-           * of it, which we're capturing. We need to reach further for that. */
-          auto const originating_local(root_fn->frame->find_local_or_capture(v.first));
-          handle const h{ originating_local.unwrap().binding };
-          util::format_to(expression_buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
+           * of it, which we're capturing. We need to reach further for that.
+           *
+           * We check for named recursion first, since that takes higher precedence
+           * than locals or captures. */
+          auto const recursion(root_fn->frame->find_named_recursion(v.first));
+          if(recursion.is_some())
+          {
+            util::format_to(expression_buffer,
+                            "{} {}",
+                            (need_comma ? "," : ""),
+                            munge(recursion.unwrap().fn_ctx->name));
+          }
+          else
+          {
+            auto const originating_local(root_fn->frame->find_local_or_capture(v.first));
+            handle const h{ originating_local.unwrap().binding };
+            util::format_to(expression_buffer,
+                            "{} {}",
+                            (need_comma ? "," : ""),
+                            h.str(true),
+                            originating_local.unwrap().binding->name->to_code_string(),
+                            originating_local.unwrap().binding->native_name);
+          }
           need_comma = true;
         }
       }
@@ -2027,6 +2063,8 @@ namespace jank::codegen
     return { expression_buffer.data(), expression_buffer.size() };
   }
 
+  /* TODO: Not sure if we want any of this. The module dependency loading feels wrong,
+   * since it should be tied to calls to require instead. */
   jtl::immutable_string processor::module_init_str(jtl::immutable_string const &module)
   {
     util::string_builder module_buffer;

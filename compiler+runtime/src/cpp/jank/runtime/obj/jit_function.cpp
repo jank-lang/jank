@@ -65,7 +65,7 @@ namespace jank::runtime::obj
   {
     if(!arity_0)
     {
-      throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_0();
   }
@@ -74,7 +74,7 @@ namespace jank::runtime::obj
   {
     if(!arity_1)
     {
-      throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_1(a1.data);
   }
@@ -83,7 +83,7 @@ namespace jank::runtime::obj
   {
     if(!arity_2)
     {
-      throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_2(a1.data, a2.data);
   }
@@ -92,7 +92,7 @@ namespace jank::runtime::obj
   {
     if(!arity_3)
     {
-      throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_3(a1.data, a2.data, a3.data);
   }
@@ -104,7 +104,7 @@ namespace jank::runtime::obj
   {
     if(!arity_4)
     {
-      throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_4(a1.data, a2.data, a3.data, a4.data);
   }
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
   {
     if(!arity_5)
     {
-      throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_5(a1.data, a2.data, a3.data, a4.data, a5.data);
   }
@@ -131,7 +131,7 @@ namespace jank::runtime::obj
   {
     if(!arity_6)
     {
-      throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_6(a1.data, a2.data, a3.data, a4.data, a5.data, a6.data);
   }
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
   {
     if(!arity_7)
     {
-      throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_7(a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data);
   }
@@ -162,7 +162,7 @@ namespace jank::runtime::obj
   {
     if(!arity_8)
     {
-      throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_8(a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data, a8.data);
   }
@@ -179,7 +179,7 @@ namespace jank::runtime::obj
   {
     if(!arity_9)
     {
-      throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_9(a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data, a8.data, a9.data);
   }
@@ -197,7 +197,7 @@ namespace jank::runtime::obj
   {
     if(!arity_10)
     {
-      throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }
     return arity_10(a1.data,
                     a2.data,

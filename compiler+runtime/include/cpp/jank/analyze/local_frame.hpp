@@ -53,10 +53,12 @@ namespace jank::analyze
     runtime::obj::symbol_ref name{};
     jtl::immutable_string native_name{};
     jtl::option<jtl::ref<expression>> value_expr{};
-    jtl::ptr<struct local_frame> originating_frame;
+    jtl::ptr<struct local_frame> originating_frame{};
     bool needs_box{ true };
     bool has_boxed_usage{};
     bool has_unboxed_usage{};
+    /* TODO: This gets stomped when a binding is shadowed. Do we
+     * need to handle shadowing more delicately? */
     jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ptr_type() };
 
     runtime::object_ref to_runtime_data() const;
@@ -111,22 +113,30 @@ namespace jank::analyze
     local_frame &operator=(local_frame const &rhs);
     local_frame &operator=(local_frame &&rhs) noexcept;
 
-    struct find_result
+    struct binding_find_result
     {
       local_binding_ptr binding;
       native_vector<jtl::ptr<local_frame>> crossed_fns;
     };
 
+    struct named_recursion_find_result
+    {
+      expr::function_context_ref fn_ctx;
+      native_vector<jtl::ptr<local_frame>> crossed_fns;
+    };
+
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    jtl::option<find_result> find_local_or_capture(runtime::obj::symbol_ref sym);
-    static void register_captures(find_result const &result);
+    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref sym);
+    static void register_captures(binding_find_result const &result);
+    static void
+    register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
-    jtl::option<find_result> find_originating_local(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref sym);
 
-    jtl::option<expr::function_context_ref> find_named_recursion(runtime::obj::symbol_ref sym);
+    jtl::option<named_recursion_find_result> find_named_recursion(runtime::obj::symbol_ref sym);
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 

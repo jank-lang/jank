@@ -87,27 +87,6 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    jtl::immutable_string O{ "-O0" };
-    switch(util::cli::opts.optimization_level)
-    {
-      case 0:
-        break;
-      case 1:
-        O = "-O1";
-        break;
-      case 2:
-        O = "-O2";
-        break;
-      case 3:
-        /* TODO: Use -O3? */
-        O = "-Ofast";
-        break;
-      default:
-        /* TODO: Internal error. */
-        throw std::runtime_error{ util::format("invalid optimization level {}",
-                                               util::cli::opts.optimization_level) };
-    }
-
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
      * flags used so we can use the same set during JIT compilation. Here we parse these
      * into a vector for Clang. Since Clang wants a vector<char const*>, we need to
@@ -120,12 +99,10 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
 
-    if(util::cli::opts.perf_profiling_enabled)
+    if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
-      O = "-Og";
-      args.emplace_back("-ggdb");
+      args.emplace_back("-g");
     }
-    args.emplace_back(strdup(O.c_str()));
 
     args.emplace_back("-resource-dir");
     args.emplace_back(JANK_CLANG_RESOURCE_DIR);
@@ -244,6 +221,7 @@ namespace jank::jit
     //util::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+    register_jit_stack_frames();
   }
 
   void processor::load_object(native_persistent_string_view const &path) const

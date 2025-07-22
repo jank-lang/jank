@@ -37,6 +37,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
+    bool debug{};
     u8 optimization_level{};
 
     /* Run command. */

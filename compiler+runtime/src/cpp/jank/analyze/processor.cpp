@@ -1392,10 +1392,12 @@ namespace jank::analyze
     auto const found_named_recursion(current_frame->find_named_recursion(sym));
     if(found_named_recursion.is_some())
     {
+      auto &unwrapped_named_recursion(found_named_recursion.unwrap());
+      local_frame::register_captures(current_frame, unwrapped_named_recursion);
       return jtl::make_ref<expr::recursion_reference>(position,
                                                       current_frame,
                                                       needs_box,
-                                                      found_named_recursion.unwrap());
+                                                      unwrapped_named_recursion.fn_ctx);
     }
 
     auto const qualified_sym(rt_ctx.qualify_symbol(sym));
@@ -1707,13 +1709,10 @@ namespace jank::analyze
       }
     }
 
-    auto const meta(runtime::obj::persistent_hash_map::create_unique(
-      std::make_pair(rt_ctx.intern_keyword("source").expect_ok(),
-                     make_box(full_list->to_code_string())),
-      std::make_pair(
-        rt_ctx.intern_keyword("name").expect_ok(),
-        make_box(runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }
-                   .to_string()))));
+    auto const meta(runtime::obj::persistent_hash_map::create_unique(std::make_pair(
+      rt_ctx.intern_keyword("name").expect_ok(),
+      make_box(
+        runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }.to_string()))));
 
     auto ret(jtl::make_ref<expr::function>(position,
                                            current_frame,

@@ -9,6 +9,9 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/processor.hpp>
+#include <jank/util/clang_format.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::compiler_native
 {
@@ -26,11 +29,19 @@ namespace jank::compiler_native
       expect_object<runtime::ns>(__rt_ctx->intern_var("clojure.core", "*ns*").expect_ok()->deref())
         ->to_string());
 
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen().expect_ok();
-    cg_prc.optimize();
+    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+    {
+      codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
+      cg_prc.gen().expect_ok();
+      cg_prc.optimize();
+      cg_prc.llvm_module->print(llvm::outs(), nullptr);
+    }
+    else
+    {
+      codegen::processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
+      util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+    }
 
-    cg_prc.llvm_module->print(llvm::outs(), nullptr);
     return jank_nil;
   }
 }

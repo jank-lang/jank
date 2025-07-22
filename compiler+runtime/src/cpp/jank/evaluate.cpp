@@ -20,6 +20,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::evaluate
 {
@@ -166,6 +167,7 @@ namespace jank::evaluate
     arity.frame->fn_ctx = fn_ctx;
     arity.fn_ctx = fn_ctx;
 
+    arity.frame->lifted_vars = closest_fn_frame.lifted_vars;
     arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
 
     arity.fn_ctx->param_count = arity.params.size();
@@ -582,35 +584,41 @@ namespace jank::evaluate
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
                           munge(expr->unique_name)));
 
-    auto const wrapped_expr(evaluate::wrap_expression(expr, "repl_fn", {}));
-
-    //codegen::processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    //util::println("compiling {} ...\n", module);
-    ////util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-    //auto const start{ std::chrono::high_resolution_clock::now() };
-    //__rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-    //auto const expr_str{ cg_prc.expression_str(true) + ".erase()" };
-    //clang::Value v;
-    //auto err(
-    //  __rt_ctx->jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
-    //llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
-    //auto const end{ std::chrono::high_resolution_clock::now() };
-    //std::chrono::duration<double, std::milli> duration{ end - start };
-    //util::println("done {}ms", duration.count());
-    //return try_object<obj::jit_function>(v.convertTo<runtime::object *>())->call();
-
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen().expect_ok();
-    cg_prc.optimize();
-
+    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
     {
-      profile::timer const timer{ util::format("ir jit compile {}", expr->name) };
+      /* TODO: Remove extra wrapper, if possible. Just create function object directly? */
+      auto const wrapped_expr(wrap_expression(expr, "repl_fn", {}));
+
+      codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
+      cg_prc.gen().expect_ok();
+      cg_prc.optimize();
+
       __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module));
 
       auto const fn(
         __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
           .expect_ok());
       return reinterpret_cast<object *(*)()>(fn)();
+    }
+    else
+    {
+      codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
+      util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+      __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
+      auto const expr_str{ cg_prc.expression_str(true) + ".erase()" };
+      clang::Value v;
+      auto res(
+        __rt_ctx->jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
+      if(res)
+      {
+        /* TODO: Helper to turn an llvm::Error into a string. */
+        jtl::immutable_string msg{ "Unable to compile/eval C++ source." };
+        llvm::logAllUnhandledErrors(std::move(res), llvm::errs(), "error: ");
+        //llvm::handleAllErrors(jtl::move(res),
+        //                      [&](llvm::ErrorInfoBase const &error) { msg = error.message(); });
+        throw error::internal_codegen_failure(msg);
+      }
+      return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
     }
   }
 

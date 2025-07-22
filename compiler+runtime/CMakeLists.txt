@@ -82,9 +82,6 @@ set(
   -frtti
   -fexceptions
   #-ftime-trace
-  $<$<CONFIG:Debug>:-O0 -g>
-  $<$<CONFIG:Release>:-O2>
-  $<$<CONFIG:RelWithDebInfo>:-O2 -g>
 )
 
 set(
@@ -102,9 +99,12 @@ set(
   #-stdlib=libc++ -lc++abi
   )
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG)
+  list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  list(APPEND jank_common_compiler_flags -DJANK_RELEASE)
+  list(APPEND jank_common_compiler_flags -DJANK_RELEASE -O2)
+  if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    list(APPEND jank_common_compiler_flags -g)
+  endif()
 endif()
 
 if(jank_test)
@@ -301,6 +301,7 @@ add_library(
   src/cpp/jank/error/parse.cpp
   src/cpp/jank/error/analyze.cpp
   src/cpp/jank/error/system.cpp
+  src/cpp/jank/error/codegen.cpp
   src/cpp/jank/read/source.cpp
   src/cpp/jank/read/lex.cpp
   src/cpp/jank/read/parse.cpp
