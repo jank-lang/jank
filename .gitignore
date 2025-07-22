@@ -55,3 +55,6 @@ rust/jank
 # MacOS
 .DS_Store
 
+# Direnv
+.envrc
+.direnv/

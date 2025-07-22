@@ -8,15 +8,36 @@
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [inputs.flake-parts.flakeModules.easyOverlay];
       systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
       perSystem = {
         pkgs,
+        self',
         ...
-      }: {
+      }: let
+        llvmSrc = pkgs.fetchgit {
+          url = "https://github.com/jank-lang/llvm-project.git";
+          rev = "jank";
+          hash = "sha256-NnEYQVDHGZJGwS+NaSXiOpeZgDu7gmm6fxiNxt0YE2M=";
+          fetchSubmodules = true;
+        };
+      in {
+        overlayAttrs.llvmPackages_20 = final: prev:
+          prev.llvmPackages_20
+          // {
+            clang = prev.llvmPackages_20.clang.overrideAttrs (old: {src = llvmSrc;});
+            llvm = prev.llvmPackages_20.llvm.overrideAttrs (old: {src = llvmSrc;});
+            libclang = prev.llvmPackages_20.libclang.overrideAttrs (old: {src = llvmSrc;});
+            clang-tools = prev.llvmPackages_20.clang-tools.overrideAttrs (old: {src = llvmSrc;});
+          };
+
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
-        devShells.default = (pkgs.mkShell.override { stdenv = pkgs.llvmPackages.stdenv; }) {
+        devShells.default = (pkgs.mkShell.override { inherit (pkgs.llvmPackages_20) stdenv;}) {
           packages = with pkgs; [
+            # Nix LSP
+            nixd
+
             ## Required tools.
             cmake
             ninja
@@ -36,11 +57,12 @@
             git
             nixd
             shellcheck
+
             # For clangd
-            llvm
-            llvmPackages.libclang
+            llvmPackages_20.libclang
+
             # For clang-tidy.
-            llvmPackages.clang-tools
+            llvmPackages_20.clang-tools
             gdb
             clangbuildanalyzer
             openjdk
@@ -60,7 +82,7 @@
           # Since this shell is used for development, we disabled fortification. It's
           # still enabled for our release builds in build.nix.
           # https://github.com/NixOS/nixpkgs/issues/18995
-          hardeningDisable = [ "fortify" ];
+          hardeningDisable = ["fortify"];
         };
       };
     };
