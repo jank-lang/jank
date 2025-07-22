@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <iostream>
 
 #include <clang/AST/Type.h>
@@ -14,11 +13,14 @@
 #include <cpptrace/gdb_jit.hpp>
 
 #include <jank/util/process_location.hpp>
-#include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
+#include <llvm/ExecutionEngine/Orc/Mangling.h>
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/oref.hpp>
 
 namespace jank::jit
 {
@@ -138,9 +140,33 @@ namespace jank::jit
     compiler_instance->LoadRequestedPlugins();
 
     interpreter = llvm::cantFail(clang::Interpreter::create(std::move(compiler_instance)));
+    /* Add a search generator that can resolve symbols from the main executable itself.
+     * This is essential for the JIT to find runtime functions and RTTI data
+     * (like typeinfo for exceptions) that live in the host process. */
+    auto &lljit = interpreter->getExecutionEngine().get();
+    auto &jd = lljit.getMainJITDylib();
+    auto const &dl = lljit.getDataLayout();
 
-    auto const &load_result{ load_dynamic_libs(opts.libs) };
-    if(load_result.is_err())
+    /* 1. Add the standard dynamic library search generator. This is best practice
+     * and will resolve most symbols from the host process. */
+    jd.addGenerator(llvm::cantFail(
+      llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(dl.getGlobalPrefix())));
+
+    /* 2. Manually define the absolute address of the RTTI symbol. This is the most
+     * robust way to ensure it's found, bypassing any linker visibility issues. */
+    llvm::orc::MangleAndInterner Mangle(lljit.getExecutionSession(), dl);
+    llvm::orc::SymbolMap symbols;
+
+    /* Programmatically get the mangled name and address, don't hardcode them. */
+    char const *typeinfo_name = typeid(jank::runtime::object_ref).name();
+    void const *typeinfo_addr = &typeid(jank::runtime::object_ref);
+    symbols[Mangle(typeinfo_name)] = llvm::orc::ExecutorSymbolDef(
+      llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(typeinfo_addr)),
+      llvm::JITSymbolFlags());
+
+    llvm::cantFail(jd.define(llvm::orc::absoluteSymbols(symbols)));
+
+    if(auto const &load_result{ load_dynamic_libs(opts.libs) }; load_result.is_err())
     {
       throw std::runtime_error{ load_result.expect_err().c_str() };
     }

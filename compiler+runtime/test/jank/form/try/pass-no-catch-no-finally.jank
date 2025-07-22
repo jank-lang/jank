@@ -1,1 +1,3 @@
+(let* [] (try (+ 1 2)))
+
 (try :success)
