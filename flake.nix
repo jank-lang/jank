@@ -13,6 +13,7 @@
       perSystem = {
         pkgs,
         self',
+        system,
         ...
       }: let
         llvmSrc = pkgs.fetchgit {
@@ -22,18 +23,24 @@
           fetchSubmodules = true;
         };
       in {
-        overlayAttrs.llvmPackages_20 = final: prev:
-          prev.llvmPackages_20
-          // {
-            clang = prev.llvmPackages_20.clang.overrideAttrs (old: {src = llvmSrc;});
-            llvm = prev.llvmPackages_20.llvm.overrideAttrs (old: {src = llvmSrc;});
-            libclang = prev.llvmPackages_20.libclang.overrideAttrs (old: {src = llvmSrc;});
-            clang-tools = prev.llvmPackages_20.clang-tools.overrideAttrs (old: {src = llvmSrc;});
-          };
-
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [
+            (final: prev: {
+              llvmPackages_git =
+                prev.llvmPackages_git
+                // {
+                  clang = prev.llvmPackages_git.clang.overrideAttrs (old: {src = llvmSrc;});
+                  llvm = prev.llvmPackages_git.llvm.overrideAttrs (old: {src = llvmSrc;});
+                  libclang = prev.llvmPackages_git.libclang.overrideAttrs (old: {src = llvmSrc;});
+                  clang-tools = prev.llvmPackages_git.clang-tools.overrideAttrs (old: {src = llvmSrc;});
+                };
+            })
+          ];
+        };
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
-        devShells.default = (pkgs.mkShell.override { inherit (pkgs.llvmPackages_20) stdenv;}) {
+        devShells.default = (pkgs.mkShell.override {inherit (pkgs.llvmPackages_git) stdenv;}) {
           packages = with pkgs; [
             # Nix LSP
             nixd
@@ -42,7 +49,7 @@
             cmake
             ninja
             pkg-config
-            llvmPackages_20.clang
+            llvmPackages_git.clang
 
             ## Required libs.
             boehmgc
@@ -59,10 +66,10 @@
             shellcheck
 
             # For clangd
-            llvmPackages_20.libclang
+            llvmPackages_git.libclang
 
             # For clang-tidy.
-            llvmPackages_20.clang-tools
+            llvmPackages_git.clang-tools
             gdb
             clangbuildanalyzer
             openjdk
