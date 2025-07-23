@@ -42,7 +42,7 @@
             cmake
             ninja
             pkg-config
-            clang
+            llvmPackages_20.clang
 
             ## Required libs.
             boehmgc
@@ -71,11 +71,8 @@
             doctest
           ];
 
-          shellHook =
-          ''
-          export CC=clang
-          export CXX=clang++
-          export ASAN_OPTIONS=detect_leaks=0
+          shellHook = ''
+            export ASAN_OPTIONS=detect_leaks=0
           '';
 
           # Nix assumes fortification by default, but that fails with debug builds.
