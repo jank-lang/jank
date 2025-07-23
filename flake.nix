@@ -30,10 +30,15 @@
               llvmPackages_git =
                 prev.llvmPackages_git
                 // {
-                  clang = prev.llvmPackages_git.clang.overrideAttrs (old: {src = llvmSrc;});
-                  llvm = prev.llvmPackages_git.llvm.overrideAttrs (old: {src = llvmSrc;});
-                  libclang = prev.llvmPackages_git.libclang.overrideAttrs (old: {src = llvmSrc;});
-                  clang-tools = prev.llvmPackages_git.clang-tools.overrideAttrs (old: {src = llvmSrc;});
+                  clang = prev.llvmPackages_git.clang.override {
+                    monorepoSrc = llvmSrc;
+                  };
+                  llvm = prev.llvmPackages_git.llvm.override {
+                    monorepoSrc = llvmSrc;
+                  };
+                  libclang = prev.llvmPackages_git.libclang.overrideAttrs {
+                    monorepoSrc = llvmSrc;
+                  };
                 };
             })
           ];
@@ -66,6 +71,7 @@
             shellcheck
 
             # For clangd
+            llvmPackages_git.llvm
             llvmPackages_git.libclang
 
             # For clang-tidy.
