@@ -16,10 +16,11 @@
         system,
         ...
       }: let
-        llvmSrc = pkgs.fetchgit {
-          url = "https://github.com/jank-lang/llvm-project.git";
-          rev = "jank";
-          hash = "sha256-NnEYQVDHGZJGwS+NaSXiOpeZgDu7gmm6fxiNxt0YE2M=";
+        llvmSrc = pkgs.fetchFromGitHub {
+          owner = "jank-lang";
+          repo = "llvm-project";
+          tag = "jank";
+          hash = "sha256-IjcppoKieFJv0ShSB7Y2uPQwcHyMuoY3xJpOqysJ4cQ=";
           fetchSubmodules = true;
         };
       in {
@@ -30,13 +31,14 @@
               llvmPackages_git =
                 prev.llvmPackages_git
                 // {
-                  clang = prev.llvmPackages_git.clang.override {
-                    monorepoSrc = llvmSrc;
-                  };
                   llvm = prev.llvmPackages_git.llvm.override {
+                    version = "22.0.0-git";
+                    release_version = "22.0.0-git";
                     monorepoSrc = llvmSrc;
                   };
-                  libclang = prev.llvmPackages_git.libclang.overrideAttrs {
+                  libclang = prev.llvmPackages_git.libclang.override {
+                    version = "22.0.0-git";
+                    release_version = "22.0.0-git";
                     monorepoSrc = llvmSrc;
                   };
                 };
