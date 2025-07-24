@@ -974,17 +974,6 @@ extern "C"
       GC_set_all_interior_pointers(1);
       GC_enable();
 
-      //obj::symbol_ref r;
-      //r = make_box<obj::symbol>("foo");
-      //if(r)
-      //{
-      //  object_ref o;
-      //  o = erase(r);
-      //  util::println("r {}", r->to_code_string());
-      //}
-
-      //return 0;
-
       llvm::llvm_shutdown_obj const Y{};
 
       llvm::InitializeNativeTarget();

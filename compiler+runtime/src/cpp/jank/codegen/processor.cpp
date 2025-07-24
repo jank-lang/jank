@@ -454,9 +454,12 @@ namespace jank::codegen
     {
       if(meta.is_some())
       {
-        return util::format("{}->with_meta({})",
+        auto const dynamic{ truthy(
+          get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+        return util::format("{}->with_meta({})->set_dynamic({})",
                             runtime::munge(var.native_name),
-                            runtime::munge(meta.unwrap().get().native_name));
+                            runtime::munge(meta.unwrap().get().native_name),
+                            dynamic);
       }
       else
       {
@@ -472,10 +475,13 @@ namespace jank::codegen
         {
           if(meta.is_some())
           {
-            return util::format("{}->bind_root({})->with_meta({})",
+            auto const dynamic{ truthy(
+              get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+            return util::format("{}->bind_root({})->with_meta({})->set_dynamic({})",
                                 runtime::munge(var.native_name),
                                 val.str(true),
-                                runtime::munge(meta.unwrap().get().native_name));
+                                runtime::munge(meta.unwrap().get().native_name),
+                                dynamic);
           }
           else
           {
@@ -493,11 +499,14 @@ namespace jank::codegen
         {
           if(meta.is_some())
           {
+            auto const dynamic{ truthy(
+              get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
             util::format_to(body_buffer,
-                            "{}->bind_root({})->with_meta({});",
+                            "{}->bind_root({})->with_meta({})->set_dynamic({});",
                             runtime::munge(var.native_name),
                             val.str(true),
-                            runtime::munge(meta.unwrap().get().native_name));
+                            runtime::munge(meta.unwrap().get().native_name),
+                            dynamic);
           }
           else
           {
@@ -667,10 +676,11 @@ namespace jank::codegen
     /* TODO: Use the actual var meta to do this, not a hard-coded set of if checks. */
     if(auto const * const ref = dynamic_cast<analyze::expr::var_deref *>(expr->source_expr.data))
     {
-      if(ref->qualified_name->ns != "clojure.core")
+      auto const &name{ ref->var->name->name };
+      if(ref->var->n->name->name != "clojure.core")
       {
       }
-      else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "get" }))
+      else if(name == "get")
       {
         format_elided_var("jank::runtime::get(",
                           ")",
@@ -683,7 +693,7 @@ namespace jank::codegen
       }
       else if(expr->arg_exprs.empty())
       {
-        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "rand" }))
+        if(name == "rand")
         {
           format_elided_var("jank::runtime::rand(",
                             ")",
@@ -698,7 +708,7 @@ namespace jank::codegen
       }
       else if(expr->arg_exprs.size() == 1)
       {
-        //if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "print" }))
+        //if(name == "print")
         //{
         //  format_elided_var("jank::runtime::print(",
         //                    ")",
@@ -709,7 +719,7 @@ namespace jank::codegen
         //                    false);
         //  elided = true;
         //}
-        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "abs" }))
+        if(name == "abs")
         {
           format_elided_var("jank::runtime::abs(",
                             ")",
@@ -721,7 +731,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "sqrt" }))
+        else if(name == "sqrt")
         {
           format_elided_var("jank::runtime::sqrt(",
                             ")",
@@ -733,7 +743,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "int" }))
+        else if(name == "int")
         {
           format_elided_var("jank::runtime::to_int(",
                             ")",
@@ -745,7 +755,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "seq" }))
+        else if(name == "seq")
         {
           format_elided_var("jank::runtime::seq(",
                             ")",
@@ -756,7 +766,7 @@ namespace jank::codegen
                             false);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "fresh_seq" }))
+        else if(name == "fresh-seq")
         {
           format_elided_var("jank::runtime::fresh_seq(",
                             ")",
@@ -767,7 +777,7 @@ namespace jank::codegen
                             false);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "first" }))
+        else if(name == "first")
         {
           format_elided_var("jank::runtime::first(",
                             ")",
@@ -778,7 +788,7 @@ namespace jank::codegen
                             false);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "next" }))
+        else if(name == "next")
         {
           format_elided_var("jank::runtime::next(",
                             ")",
@@ -789,7 +799,7 @@ namespace jank::codegen
                             false);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "next_in_place" }))
+        else if(name == "next-in-place")
         {
           format_elided_var("jank::runtime::next_in_place(",
                             ")",
@@ -800,7 +810,7 @@ namespace jank::codegen
                             false);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "nil?" }))
+        else if(name == "nil?")
         {
           format_elided_var("jank::runtime::is_nil(",
                             ")",
@@ -811,7 +821,7 @@ namespace jank::codegen
                             box_needed);
           elided = true;
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "some?" }))
+        else if(name == "some?")
         {
           format_elided_var("jank::runtime::is_some(",
                             ")",
@@ -825,7 +835,7 @@ namespace jank::codegen
       }
       else if(expr->arg_exprs.size() == 2)
       {
-        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "+" }))
+        if(name == "+")
         {
           format_elided_var("jank::runtime::add(",
                             ")",
@@ -837,7 +847,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "-" }))
+        else if(name == "-")
         {
           format_elided_var("jank::runtime::sub(",
                             ")",
@@ -849,7 +859,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "*" }))
+        else if(name == "*")
         {
           format_elided_var("jank::runtime::mul(",
                             ")",
@@ -861,7 +871,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "/" }))
+        else if(name == "/")
         {
           format_elided_var("jank::runtime::div(",
                             ")",
@@ -873,7 +883,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<" }))
+        else if(name == "<")
         {
           format_elided_var("jank::runtime::lt(",
                             ")",
@@ -885,7 +895,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "<=" }))
+        else if(name == "<=")
         {
           format_elided_var("jank::runtime::lte(",
                             ")",
@@ -897,7 +907,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">" }))
+        else if(name == ">")
         {
           format_elided_var("jank::runtime::lt(",
                             ")",
@@ -909,7 +919,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", ">=" }))
+        else if(name == ">=")
         {
           format_elided_var("jank::runtime::lte(",
                             ")",
@@ -921,7 +931,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "min" }))
+        else if(name == "min")
         {
           format_elided_var("jank::runtime::min(",
                             ")",
@@ -933,7 +943,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "max" }))
+        else if(name == "max")
         {
           format_elided_var("jank::runtime::max(",
                             ")",
@@ -945,7 +955,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "pow" }))
+        else if(name == "pow")
         {
           format_elided_var("jank::runtime::pow(",
                             ")",
@@ -957,7 +967,7 @@ namespace jank::codegen
           elided = true;
           ret_tmp = { ret_tmp.unboxed_name, box_needed };
         }
-        else if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "conj" }))
+        else if(name == "conj")
         {
           format_elided_var("jank::runtime::conj(",
                             ")",
@@ -971,7 +981,7 @@ namespace jank::codegen
       }
       else if(expr->arg_exprs.size() == 3)
       {
-        if(ref->qualified_name->equal(runtime::obj::symbol{ "clojure.core", "assoc" }))
+        if(name == "assoc")
         {
           format_elided_var("jank::runtime::assoc(",
                             ")",
@@ -1561,6 +1571,18 @@ namespace jank::codegen
         util::format_to(body_buffer, "return {};", ret_tmp);
       }
       util::format_to(body_buffer, "}");
+    }
+    else
+    {
+      auto const &body_tmp(gen(expr->body, fn_arity, box_needed));
+      if(body_tmp.is_some())
+      {
+        util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(box_needed));
+      }
+      if(expr->position == analyze::expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+      }
     }
 
     util::format_to(body_buffer, "}");

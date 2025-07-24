@@ -7,11 +7,10 @@
 
 namespace jank::runtime
 {
-  ns::ns(obj::symbol_ref const &name, context &c)
+  ns::ns(obj::symbol_ref const &name)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
-    , rt_ctx{ c }
   {
   }
 
@@ -118,7 +117,7 @@ namespace jank::runtime
       if(found->data->type == object_type::var)
       {
         auto const found_var(expect_object<runtime::var>(found->data));
-        auto const clojure_core(rt_ctx.find_ns(make_box<obj::symbol>("clojure.core")));
+        auto const clojure_core(__rt_ctx->find_ns(make_box<obj::symbol>("clojure.core")));
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
           return err(util::format("{} already refers to {} in ns {}",
@@ -172,13 +171,5 @@ namespace jank::runtime
   bool ns::operator==(ns const &rhs) const
   {
     return name == rhs.name;
-  }
-
-  ns_ref ns::clone(context &new_rt_ctx) const
-  {
-    auto ret(make_box<ns>(name, new_rt_ctx));
-    *ret->vars.wlock() = *vars.rlock();
-    *ret->aliases.wlock() = *aliases.rlock();
-    return ret;
   }
 }

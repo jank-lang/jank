@@ -337,7 +337,7 @@ namespace jank::runtime
     }
     catch(object_ref const &e)
     {
-      return err(runtime::to_string(e));
+      return err(runtime::to_code_string(e));
     }
   }
 
@@ -449,7 +449,7 @@ namespace jank::runtime
       return found->second;
     }
 
-    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
+    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym)));
     return result.first->second;
   }
 
@@ -672,7 +672,7 @@ namespace jank::runtime
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
-                              runtime::to_string(bindings)));
+                              runtime::to_code_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
@@ -696,7 +696,8 @@ namespace jank::runtime
       auto const var(expect_object<var>(entry->data[0]));
       if(!var->dynamic.load())
       {
-        return err(util::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
+        return err(
+          util::format("Can't dynamically bind non-dynamic var: {}", var->to_code_string()));
       }
 
       /* XXX: Once this is set to true, here, it's never unset. */

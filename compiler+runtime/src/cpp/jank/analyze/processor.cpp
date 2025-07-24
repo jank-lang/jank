@@ -1412,7 +1412,7 @@ namespace jank::analyze
 
     /* Macros aren't lifted, since they're not used during runtime. */
     auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
-    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw) == runtime::jank_nil)
+    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw).is_nil())
     {
       current_frame->lift_var(qualified_sym);
     }

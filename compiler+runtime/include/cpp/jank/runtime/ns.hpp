@@ -21,7 +21,7 @@ namespace jank::runtime
     static constexpr bool pointer_free{ false };
 
     ns() = delete;
-    ns(obj::symbol_ref const &name, context &c);
+    ns(obj::symbol_ref const &name);
 
     var_ref intern_var(native_persistent_string_view const &);
     var_ref intern_var(obj::symbol_ref const &);
@@ -46,8 +46,6 @@ namespace jank::runtime
 
     bool operator==(ns const &rhs) const;
 
-    ns_ref clone(context &rt_ctx) const;
-
     object base{ obj_type };
     obj::symbol_ref name{};
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
@@ -55,6 +53,5 @@ namespace jank::runtime
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
 
     std::atomic_uint64_t symbol_counter{};
-    context &rt_ctx;
   };
 }

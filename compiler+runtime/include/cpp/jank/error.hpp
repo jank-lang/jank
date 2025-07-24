@@ -243,6 +243,8 @@ namespace jank::error
     return "unknown";
   }
 
+  /* NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Assign)
+   * This is a clang-tidy bug. https://github.com/llvm/llvm-project/issues/61687 */
   struct note
   {
     enum class kind : u8

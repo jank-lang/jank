@@ -7,7 +7,7 @@
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace clojure::core_native
 {

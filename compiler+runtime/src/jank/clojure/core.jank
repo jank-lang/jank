@@ -6343,9 +6343,10 @@
   ;;         (. clojure.lang.Var (popThreadBindings))))))
   (throw "TODO: port with-loading-context"))
 
-(defonce ^:dynamic
-  ^{:private true :doc
-     "True while a verbose load is pending"}
+(defonce
+  ^{:private true
+    :dynamic true
+    :doc "True while a verbose load is pending"}
   *loading-verbosely* false)
 
 (defn- root-directory

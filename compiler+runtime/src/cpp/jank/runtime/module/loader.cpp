@@ -572,7 +572,11 @@ namespace jank::runtime::module
     };
 
     auto const loaded_libs{ runtime::try_object<runtime::obj::persistent_sorted_set>(atom) };
-    return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
+    auto const ret{ truthy(loaded_libs->contains(make_box<obj::symbol>(module))) };
+
+    //util::println("is module loaded {}: {}", module, ret);
+
+    return ret;
   }
 
   void loader::set_is_loaded(jtl::immutable_string const &module)
@@ -680,7 +684,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    // log_load(module, module_type_to_load, module_sources);
+    //log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {

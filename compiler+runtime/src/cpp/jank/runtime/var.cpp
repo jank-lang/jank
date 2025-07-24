@@ -130,7 +130,7 @@ namespace jank::runtime
     }
     else if(std::this_thread::get_id() != binding->thread_id)
     {
-      return err(util::format("Cannot set {} from a thread different from that which bound it",
+      return err(util::format("Cannot set {} from a thread different from that which bound it.",
                               to_string()));
     }
 
@@ -151,14 +151,14 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
+    auto &tbfs(__rt_ctx->thread_binding_frames[__rt_ctx]);
     if(tbfs.empty())
     {
       return {};
     }
 
     auto const found(tbfs.front().bindings->get_entry(this));
-    if(found == jank_nil)
+    if(found.is_nil())
     {
       return {};
     }
