@@ -34,4 +34,14 @@ namespace jank::analyze::expr
                                                           make_box("arg_exprs"),
                                                           arg_expr_maps));
   }
+
+  void call::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(source_expr);
+    for(auto const arg_expr : arg_exprs)
+    {
+      f(arg_expr);
+    }
+    expression::walk(f);
+  }
 }

@@ -18,12 +18,14 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/pass/optimize.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/error/codegen.hpp>
@@ -168,9 +170,10 @@ namespace jank::runtime
     for(auto const &form : p_prc)
     {
       analyze::processor an_prc{ *this };
-      auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
-      ret = evaluate::eval(expr.expect_ok());
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
+          .expect_ok()));
+      ret = evaluate::eval(expr);
 
       forms.emplace_back(form.expect_ok().unwrap().ptr);
     }
@@ -188,8 +191,9 @@ namespace jank::runtime
                                     obj::persistent_vector::empty()),
                       make_box<obj::symbol>(name)),
         make_box<obj::symbol>("fn*")) };
-      auto const expr(an_prc.analyze(form, analyze::expression_position::statement));
-      auto const fn{ static_box_cast<analyze::expr::function>(expr.expect_ok()) };
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
+      auto const fn{ static_box_cast<analyze::expr::function>(expr) };
       fn->unique_name = name;
 
       if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
@@ -292,12 +296,13 @@ namespace jank::runtime
         {
           util::println("{}", expr.expect_err()->message);
         }
-        evaluate::eval(expr.expect_ok());
+        evaluate::eval(analyze::pass::optimize(expr.expect_ok()));
       }
 
-      auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
-      ret.emplace_back(expr.expect_ok());
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
+          .expect_ok()));
+      ret.emplace_back(expr);
     }
 
     return ret;
@@ -354,8 +359,9 @@ namespace jank::runtime
 
   object_ref context::eval(object_ref const o)
   {
-    auto const expr(an_prc.analyze(o, analyze::expression_position::value));
-    return evaluate::eval(expr.expect_ok());
+    auto const expr(
+      analyze::pass::optimize(an_prc.analyze(o, analyze::expression_position::value).expect_ok()));
+    return evaluate::eval(expr);
   }
 
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,

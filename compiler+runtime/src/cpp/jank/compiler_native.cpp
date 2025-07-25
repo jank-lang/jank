@@ -7,6 +7,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/analyze/pass/optimize.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
@@ -23,7 +24,8 @@ namespace jank::compiler_native
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */
     analyze::processor an_prc{ *__rt_ctx };
-    auto const expr(an_prc.analyze(form, analyze::expression_position::value).expect_ok());
+    auto const expr(analyze::pass::optimize(
+      an_prc.analyze(form, analyze::expression_position::value).expect_ok()));
     auto const wrapped_expr(evaluate::wrap_expression(expr, "native_source", {}));
     auto const &module(
       expect_object<runtime::ns>(__rt_ctx->intern_var("clojure.core", "*ns*").expect_ok()->deref())

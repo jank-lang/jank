@@ -307,7 +307,6 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
           {
-            /* TODO: Expect type? */
             auto const has_meta{ typed_o->meta.is_some() };
             if(has_meta)
             {

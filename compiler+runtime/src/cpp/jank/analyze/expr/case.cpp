@@ -53,4 +53,15 @@ namespace jank::analyze::expr
                    std::make_pair(make_box("mask"), make_box(mask)),
                    std::make_pair(make_box("default_expr"), default_expr->to_runtime_data())));
   }
+
+  void case_::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(value_expr);
+    f(default_expr);
+    for(auto const expr : exprs)
+    {
+      f(expr);
+    }
+    expression::walk(f);
+  }
 }

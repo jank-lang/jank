@@ -26,4 +26,13 @@ namespace jank::analyze::expr
                                                           make_box("value"),
                                                           value_data));
   }
+
+  void def::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    if(value.is_some())
+    {
+      f(value.unwrap());
+    }
+    expression::walk(f);
+  }
 }

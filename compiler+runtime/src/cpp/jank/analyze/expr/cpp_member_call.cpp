@@ -28,4 +28,13 @@ namespace jank::analyze::expr
     /* TODO: Fill in. */
     return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
   }
+
+  void cpp_member_call::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    for(auto const arg_expr : arg_exprs)
+    {
+      f(arg_expr);
+    }
+    expression::walk(f);
+  }
 }

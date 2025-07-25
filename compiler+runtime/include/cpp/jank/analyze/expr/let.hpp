@@ -21,6 +21,7 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     native_vector<pair_type> pairs;
     do_ref body;

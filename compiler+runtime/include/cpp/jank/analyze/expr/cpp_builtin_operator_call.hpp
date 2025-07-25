@@ -23,6 +23,7 @@ namespace jank::analyze::expr
                               jtl::ptr<void> type);
 
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     /* Corresponds with Cpp::Operator. */
     int op{};

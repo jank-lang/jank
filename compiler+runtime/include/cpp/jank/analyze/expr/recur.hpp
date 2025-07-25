@@ -22,6 +22,7 @@ namespace jank::analyze::expr
           native_vector<expression_ref> &&arg_exprs);
 
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     runtime::obj::persistent_list_ref args{};
     native_vector<expression_ref> arg_exprs;

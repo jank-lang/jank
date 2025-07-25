@@ -30,4 +30,10 @@ namespace jank::analyze::expr
     /* TODO: Fill in. */
     return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
   }
+
+  void cpp_cast::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(value_expr);
+    expression::walk(f);
+  }
 }

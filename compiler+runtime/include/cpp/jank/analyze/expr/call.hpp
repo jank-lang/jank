@@ -23,6 +23,7 @@ namespace jank::analyze::expr
          runtime::obj::persistent_list_ref form);
 
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     /* Var, local, or callable. */
     expression_ref source_expr;

@@ -24,11 +24,13 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     expression_ref value_expr;
     i64 shift{};
     i64 mask{};
     expression_ref default_expr;
+    /* TODO: Should be uhash, I think. */
     native_vector<i64> keys{};
     native_vector<expression_ref> exprs{};
   };

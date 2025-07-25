@@ -20,4 +20,10 @@ namespace jank::analyze::expr
                  obj::persistent_array_map::create_unique(make_box("value"),
                                                           jank::detail::to_runtime_data(*value)));
   }
+
+  void throw_::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(value);
+    expression::walk(f);
+  }
 }

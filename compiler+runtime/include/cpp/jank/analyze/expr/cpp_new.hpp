@@ -11,13 +11,14 @@ namespace jank::analyze::expr
     static constexpr expression_kind expr_kind{ expression_kind::cpp_new };
 
     cpp_new(expression_position position,
-              local_frame_ptr frame,
-              bool needs_box,
-              jtl::ptr<void> type,
-              expression_ref value_expr);
+            local_frame_ptr frame,
+            bool needs_box,
+            jtl::ptr<void> type,
+            expression_ref value_expr);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     jtl::ptr<void> type{};
     expression_ref value_expr;

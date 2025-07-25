@@ -32,4 +32,14 @@ namespace jank::analyze::expr
                                                           make_box("meta"),
                                                           jank::detail::to_runtime_data(meta)));
   }
+
+  void map::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    for(auto const &p : data_exprs)
+    {
+      f(p.first);
+      f(p.second);
+    }
+    expression::walk(f);
+  }
 }
