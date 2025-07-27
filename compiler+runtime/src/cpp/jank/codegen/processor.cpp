@@ -1625,8 +1625,7 @@ namespace jank::codegen
         util::format_to(body_buffer, "return nullptr;");
         return none;
       }
-      util::format_to(body_buffer, "nullptr");
-      return none;
+      return "nullptr";
     }
     if(expr->val_kind == expr::cpp_value::value_kind::bool_true
        || expr->val_kind == expr::cpp_value::value_kind::bool_false)
@@ -1637,11 +1636,10 @@ namespace jank::codegen
         util::format_to(body_buffer, "return {};", val);
         return none;
       }
-      util::format_to(body_buffer, "{}", val);
-      return none;
+      return util::format("{}", val);
     }
 
-    auto const tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
+    auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
 
     if(expr->position == expression_position::tail)
     {
@@ -1652,16 +1650,70 @@ namespace jank::codegen
     return tmp;
   }
 
-  jtl::option<handle>
-  processor::gen(analyze::expr::cpp_cast_ref const, analyze::expr::function_arity const &, bool)
+  jtl::option<handle> processor::gen(analyze::expr::cpp_cast_ref const expr,
+                                     analyze::expr::function_arity const &arity,
+                                     bool const box_needed)
   {
-    return none;
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_cast")));
+    auto const value_tmp{ gen(expr->value_expr, arity, box_needed) };
+
+    util::format_to(
+      body_buffer,
+      "auto const {}{ jank::runtime::convert<{}>::{}({}) };",
+      ret_tmp,
+      Cpp::GetTypeAsString(expr->conversion_type),
+      (expr->policy == conversion_policy::into_object ? "into_object" : "from_object"),
+      value_tmp.unwrap().str(true));
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
   }
 
-  jtl::option<handle>
-  processor::gen(analyze::expr::cpp_call_ref const, analyze::expr::function_arity const &, bool)
+  jtl::option<handle> processor::gen(analyze::expr::cpp_call_ref const expr,
+                                     analyze::expr::function_arity const &arity,
+                                     bool const)
   {
-    return none;
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+
+    native_vector<handle> arg_tmps;
+    arg_tmps.reserve(expr->arg_exprs.size());
+    for(auto const &arg_expr : expr->arg_exprs)
+    {
+      arg_tmps.emplace_back(gen(arg_expr, arity, false).unwrap());
+    }
+
+    util::format_to(body_buffer,
+                    "auto const {}{ {}(",
+                    ret_tmp,
+                    Cpp::GetQualifiedCompleteName(expr->fn));
+
+    bool need_comma{};
+    for(auto const &arg_tmp : arg_tmps)
+    {
+      if(need_comma)
+      {
+        util::format_to(body_buffer, ", ");
+      }
+      util::format_to(body_buffer, "{}", arg_tmp.str(false));
+      need_comma = true;
+    }
+
+    util::format_to(body_buffer, ") };");
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    util::println("{}", body_buffer.str());
+
+    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(analyze::expr::cpp_constructor_call_ref const,

@@ -15,8 +15,8 @@ namespace jank::analyze::expr
     : expression{ expr_kind, position, frame, needs_box }
     , type{ type }
     , conversion_type{ conversion_type }
-    , policy{ policy }
     , value_expr{ value_expr }
+    , policy{ policy }
   {
   }
 

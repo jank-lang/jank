@@ -42,7 +42,7 @@ namespace jank::analyze::expr
      * an object, we may need to cast to/from object. That's where the conversion
      * policy comes in. */
     jtl::ptr<void> conversion_type{};
-    conversion_policy policy{};
     expression_ref value_expr;
+    conversion_policy policy{};
   };
 }
