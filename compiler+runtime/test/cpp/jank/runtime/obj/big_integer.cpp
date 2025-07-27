@@ -1,14 +1,14 @@
 #include <limits>
 #include <stdexcept>
-#include <string>
 #include <cmath>
+
+#include <jtl/string_builder.hpp>
 
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/util/string_builder.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -116,15 +116,15 @@ namespace jank::runtime::obj
 
       SUBCASE("to_string(string_builder)")
       {
-        util::string_builder sb1;
+        jtl::string_builder sb1;
         bi_pos.to_string(sb1);
         CHECK_EQ(sb1.view(), "1234567890987654321N");
 
-        util::string_builder sb2;
+        jtl::string_builder sb2;
         bi_neg.to_string(sb2);
         CHECK_EQ(sb2.view(), "-9876543210123456789N");
 
-        util::string_builder sb3;
+        jtl::string_builder sb3;
         bi_zero.to_string(sb3);
         CHECK_EQ(sb3.view(), "0N");
       }

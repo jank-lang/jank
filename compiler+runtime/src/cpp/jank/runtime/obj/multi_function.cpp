@@ -30,12 +30,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string multi_function::to_string()
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void multi_function::to_string(util::string_builder &buff)
+  void multi_function::to_string(jtl::string_builder &buff)
   {
     util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(base.type), &base);
   }

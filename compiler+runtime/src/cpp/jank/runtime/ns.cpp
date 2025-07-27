@@ -158,7 +158,7 @@ namespace jank::runtime
     return to_string();
   }
 
-  void ns::to_string(util::string_builder &buff) const
+  void ns::to_string(jtl::string_builder &buff) const
   {
     name->to_string(buff);
   }

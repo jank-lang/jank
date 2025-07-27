@@ -8,8 +8,8 @@ namespace jank::runtime
 {
   bool is_map(object_ref o);
   bool equal(object_ref l, object_ref r);
-  void to_string(object_ref o, util::string_builder &buff);
-  void to_code_string(object_ref o, util::string_builder &buff);
+  void to_string(object_ref o, jtl::string_builder &buff);
+  void to_code_string(object_ref o, jtl::string_builder &buff);
 
   namespace behavior::detail
   {
@@ -36,9 +36,9 @@ namespace jank::runtime::obj::detail
     bool equal(object const &o) const;
     static void to_string_impl(typename V::const_iterator const &begin,
                                typename V::const_iterator const &end,
-                               util::string_builder &buff,
+                               jtl::string_builder &buff,
                                bool const to_code);
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
 
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;

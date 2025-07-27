@@ -194,11 +194,11 @@ namespace jank::codegen
 
     compilation_target target{};
     runtime::obj::symbol struct_name;
-    util::string_builder deps_buffer;
-    util::string_builder header_buffer;
-    util::string_builder body_buffer;
-    util::string_builder footer_buffer;
-    util::string_builder expression_buffer;
+    jtl::string_builder deps_buffer;
+    jtl::string_builder header_buffer;
+    jtl::string_builder body_buffer;
+    jtl::string_builder footer_buffer;
+    jtl::string_builder expression_buffer;
     jtl::immutable_string expression_fn_name;
     bool generated_declaration{};
     bool generated_expression{};

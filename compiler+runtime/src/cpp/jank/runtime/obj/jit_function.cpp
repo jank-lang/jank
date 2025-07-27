@@ -28,12 +28,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string jit_function::to_string()
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void jit_function::to_string(util::string_builder &buff)
+  void jit_function::to_string(jtl::string_builder &buff)
   {
     auto const name(get(meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(

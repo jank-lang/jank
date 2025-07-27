@@ -20,7 +20,7 @@ namespace jank::runtime::obj::detail
 
     /* behavior::object_like */
     bool equal(object const &o) const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;

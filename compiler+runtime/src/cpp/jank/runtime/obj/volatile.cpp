@@ -16,12 +16,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string volatile_::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void volatile_::to_string(util::string_builder &buff) const
+  void volatile_::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }

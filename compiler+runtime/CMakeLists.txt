@@ -277,6 +277,7 @@ add_library(
   jank_lib STATIC
   src/cpp/jtl/panic.cpp
   src/cpp/jtl/assert.cpp
+  src/cpp/jtl/string_builder.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
@@ -285,7 +286,6 @@ add_library(
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
-  src/cpp/jank/util/string_builder.cpp
   src/cpp/jank/util/string.cpp
   src/cpp/jank/util/fmt.cpp
   src/cpp/jank/util/fmt/print.cpp
@@ -627,7 +627,7 @@ if(jank_test)
     jank_test_exe
     test/cpp/main.cpp
     test/cpp/jtl/immutable_string.cpp
-    test/cpp/jank/util/string_builder.cpp
+    test/cpp/jtl/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp
     test/cpp/jank/read/lex.cpp

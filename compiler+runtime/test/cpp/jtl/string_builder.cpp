@@ -1,9 +1,9 @@
-#include <jank/util/string_builder.hpp>
+#include <jtl/string_builder.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
 
-namespace jank::util
+namespace jtl
 {
   static constexpr usize initial_capacity{ string_builder::initial_capacity };
 
@@ -26,14 +26,14 @@ namespace jank::util
         }
         CHECK_EQ(initial_capacity / 2, sb.pos);
         CHECK_EQ(initial_capacity, sb.capacity);
-        native_transient_string const input(initial_capacity / 2, ' ');
+        jtl::immutable_string const input(initial_capacity / 2, ' ');
         CHECK_EQ(input, sb.view());
       }
 
       SUBCASE("no resize: full")
       {
         string_builder sb;
-        native_transient_string const input(initial_capacity - 1, 'a');
+        jtl::immutable_string const input(initial_capacity - 1, 'a');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity, sb.capacity);
@@ -43,7 +43,7 @@ namespace jank::util
       SUBCASE("resize: full + 1")
       {
         string_builder sb;
-        native_transient_string const input(initial_capacity, 'a');
+        jtl::immutable_string const input(initial_capacity, 'a');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity * 2, sb.capacity);
@@ -53,7 +53,7 @@ namespace jank::util
       SUBCASE("resize: full + a bunch")
       {
         string_builder sb;
-        native_transient_string const input((initial_capacity * 3) + 5, '.');
+        jtl::immutable_string const input((initial_capacity * 3) + 5, '.');
         sb(input);
         CHECK_EQ(input.size(), sb.pos);
         CHECK_EQ(initial_capacity * 4, sb.capacity);

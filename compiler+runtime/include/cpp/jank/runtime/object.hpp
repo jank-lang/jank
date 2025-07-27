@@ -3,7 +3,7 @@
 #include <concepts>
 
 #include <jank/type.hpp>
-#include <jank/util/string_builder.hpp>
+#include <jtl/string_builder.hpp>
 
 namespace jank::runtime
 {
@@ -254,7 +254,7 @@ namespace jank::runtime::behavior
      * is distinct from its code representation, which doesn't yet have a corresponding
      * function in this behavior. */
     { t->to_string() } -> std::convertible_to<jtl::immutable_string>;
-    { t->to_string(std::declval<util::string_builder &>()) } -> std::same_as<void>;
+    { t->to_string(std::declval<jtl::string_builder &>()) } -> std::same_as<void>;
 
     /* Returns the code representation of the object. */
     { t->to_code_string() } -> std::convertible_to<jtl::immutable_string>;

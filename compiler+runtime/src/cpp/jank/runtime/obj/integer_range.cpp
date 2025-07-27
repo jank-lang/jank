@@ -134,7 +134,7 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void integer_range::to_string(util::string_builder &buff) const
+  void integer_range::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }

@@ -29,21 +29,21 @@ namespace jank::runtime::obj
     return runtime::equal(o, arr + index, arr + size);
   }
 
-  void native_array_sequence::to_string(util::string_builder &buff) const
+  void native_array_sequence::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(arr + index, arr + size, "(", ')', buff);
   }
 
   jtl::immutable_string native_array_sequence::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_string(arr + index, arr + size, "(", ')', buff);
     return buff.release();
   }
 
   jtl::immutable_string native_array_sequence::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_code_string(arr + index, arr + size, "(", ')', buff);
     return buff.release();
   }

@@ -863,7 +863,7 @@ namespace jank::analyze
     }
 
     /* TODO: Find a better way to render this. */
-    util::string_builder sb;
+    jtl::string_builder sb;
     for(usize i{}; i != arg_types.size(); ++i)
     {
       util::format_to(sb,

@@ -9,12 +9,12 @@ namespace jank::util
       throw std::runtime_error{ "Format string has extra {} with no matching argument" };
     }
 
-    string_builder sb;
+    jtl::string_builder sb;
     sb(fmt);
     return sb.release();
   }
 
-  void format_to(string_builder &sb, char const * const fmt)
+  void format_to(jtl::string_builder &sb, char const * const fmt)
   {
     if(native_persistent_string_view{ fmt }.find("{}") != native_persistent_string_view::npos)
     {

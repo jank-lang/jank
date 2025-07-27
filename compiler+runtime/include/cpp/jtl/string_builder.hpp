@@ -4,7 +4,7 @@
 
 #include <jank/type.hpp>
 
-namespace jank::util
+namespace jtl
 {
   enum class terminal_color : u8;
 
@@ -33,18 +33,18 @@ namespace jank::util
     string_builder &operator()(int d) &;
     string_builder &operator()(long d) &;
     string_builder &operator()(long long d) &;
-    string_builder &operator()(native_big_integer const &d) &;
     string_builder &operator()(unsigned long d) &;
     string_builder &operator()(unsigned long long d) &;
+    string_builder &operator()(jank::native_big_integer const &d) &;
     string_builder &operator()(char d) &;
     string_builder &operator()(char32_t d) &;
     string_builder &operator()(char const *d) &;
-    string_builder &operator()(native_transient_string const &d) &;
+    string_builder &operator()(std::string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
     string_builder &operator()(terminal_color c) &;
 
     template <template <typename> typename V, typename T>
-    requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, native_vector<T>>)
+    requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, jank::native_vector<T>>)
     string_builder &operator()(V<T> const &d) &
     {
       (*this)("[ ");
@@ -71,10 +71,11 @@ namespace jank::util
     void push_back(long long d) &;
     void push_back(unsigned long d) &;
     void push_back(unsigned long long d) &;
+    void push_back(jank::native_big_integer const& d) &;
     void push_back(char d) &;
     void push_back(char32_t d) &;
     void push_back(char const *d) &;
-    void push_back(native_transient_string const &d) &;
+    void push_back(std::string const &d) &;
     void push_back(jtl::immutable_string const &d) &;
 
     void reserve(usize capacity);
@@ -82,8 +83,8 @@ namespace jank::util
     usize size() const;
 
     jtl::immutable_string release();
-    native_transient_string str() const;
-    native_persistent_string_view view() const &;
+    std::string str() const;
+    jank::native_persistent_string_view view() const &;
 
     value_type *buffer{};
     usize pos{};

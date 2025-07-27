@@ -143,7 +143,7 @@ namespace jank::codegen
     }
 
     static void
-    gen_constant(runtime::object_ref const o, util::string_builder &buffer, bool const boxed)
+    gen_constant(runtime::object_ref const o, jtl::string_builder &buffer, bool const boxed)
     {
       if(!boxed)
       {
@@ -2140,7 +2140,7 @@ namespace jank::codegen
    * since it should be tied to calls to require instead. */
   jtl::immutable_string processor::module_init_str(jtl::immutable_string const &module)
   {
-    util::string_builder module_buffer;
+    jtl::string_builder module_buffer;
 
     util::format_to(module_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
 

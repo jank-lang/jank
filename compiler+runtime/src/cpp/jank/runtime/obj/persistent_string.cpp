@@ -34,14 +34,14 @@ namespace jank::runtime::obj
     return data;
   }
 
-  void persistent_string::to_string(util::string_builder &buff) const
+  void persistent_string::to_string(jtl::string_builder &buff) const
   {
     buff(data);
   }
 
   jtl::immutable_string persistent_string::to_code_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb('"')(util::escape(data))('"').release();
   }
 

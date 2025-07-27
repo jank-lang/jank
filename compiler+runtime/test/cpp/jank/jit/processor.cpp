@@ -3,9 +3,10 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
+#include <jtl/format/color.hpp>
+
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
-#include <jank/util/fmt/color.hpp>
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -74,7 +75,7 @@ namespace jank::jit
 
         if(skip)
         {
-          util::println("{}success{}", util::terminal_color::yellow, util::terminal_color::reset);
+          util::println("{}success{}", jtl::terminal_color::yellow, jtl::terminal_color::reset);
           skips.push_back(dir_entry.path());
           continue;
         }
@@ -156,16 +157,16 @@ namespace jank::jit
         if(allow_failure)
         {
           util::println("{}allowed failure{}",
-                        util::terminal_color::yellow,
-                        util::terminal_color::reset);
+                        jtl::terminal_color::yellow,
+                        jtl::terminal_color::reset);
         }
         else if(passed)
         {
-          util::println("{}success{}", util::terminal_color::green, util::terminal_color::reset);
+          util::println("{}success{}", jtl::terminal_color::green, jtl::terminal_color::reset);
         }
         else
         {
-          util::println("{}failure{}", util::terminal_color::red, util::terminal_color::reset);
+          util::println("{}failure{}", jtl::terminal_color::red, jtl::terminal_color::reset);
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
@@ -177,26 +178,26 @@ namespace jank::jit
       for(auto const &f : skips)
       {
         util::print("{}skip{}: {}\n",
-                    util::terminal_color::yellow,
-                    util::terminal_color::reset,
+                    jtl::terminal_color::yellow,
+                    jtl::terminal_color::reset,
                     f.string());
       }
       for(auto const &f : failures)
       {
         util::print("{}failure{}: {}\n\t{}\n",
-                    util::terminal_color::red,
-                    util::terminal_color::reset,
+                    jtl::terminal_color::red,
+                    jtl::terminal_color::reset,
                     f.path.string(),
                     f.error);
       }
       util::print("tested {} jank files with {}{} skips{} and {}{} failures{}\n",
                   test_count,
-                  (skips.empty() ? util::terminal_color::reset : util::terminal_color::yellow),
+                  (skips.empty() ? jtl::terminal_color::reset : jtl::terminal_color::yellow),
                   skips.size(),
-                  util::terminal_color::reset,
-                  (failures.empty() ? util::terminal_color::reset : util::terminal_color::red),
+                  jtl::terminal_color::reset,
+                  (failures.empty() ? jtl::terminal_color::reset : jtl::terminal_color::red),
                   failures.size(),
-                  util::terminal_color::reset);
+                  jtl::terminal_color::reset);
     }
   }
 }

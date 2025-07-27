@@ -4,12 +4,12 @@
 
 #include <jtl/assert.hpp>
 
-#include <jank/util/string_builder.hpp>
-#include <jank/util/fmt/color.hpp>
+#include <jtl/string_builder.hpp>
+#include <jtl/format/color.hpp>
 
-namespace jank::util
+namespace jtl
 {
-  using allocator_type = native_allocator<string_builder::value_type>;
+  using allocator_type = jank::native_allocator<string_builder::value_type>;
   using allocator_traits = std::allocator_traits<allocator_type>;
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
@@ -207,11 +207,6 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_big_integer const &d) &
-  {
-    return (*this)(d.str());
-  }
-
   string_builder &string_builder::operator()(unsigned long const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -236,6 +231,11 @@ namespace jank::util
     pos += required;
 
     return *this;
+  }
+
+  string_builder &string_builder::operator()(jank::native_big_integer const &d) &
+  {
+    return (*this)(d.str());
   }
 
   string_builder &string_builder::operator()(char const d) &
@@ -267,7 +267,7 @@ namespace jank::util
     return *this;
   }
 
-  string_builder &string_builder::operator()(native_transient_string const &d) &
+  string_builder &string_builder::operator()(std::string const &d) &
   {
     auto const required{ d.size() };
     maybe_realloc(*this, required);
@@ -342,6 +342,11 @@ namespace jank::util
     (*this)(d);
   }
 
+  void string_builder::push_back(jank::native_big_integer const &d) &
+  {
+    (*this)(d);
+  }
+
   void string_builder::push_back(char const d) &
   {
     (*this)(d);
@@ -357,7 +362,7 @@ namespace jank::util
     (*this)(d);
   }
 
-  void string_builder::push_back(native_transient_string const &d) &
+  void string_builder::push_back(std::string const &d) &
   {
     (*this)(d);
   }
@@ -405,14 +410,14 @@ namespace jank::util
     return ret;
   }
 
-  native_transient_string string_builder::str() const
+  std::string string_builder::str() const
   {
     jank_debug_assert(pos < capacity);
     buffer[pos] = 0;
     return { buffer, pos };
   }
 
-  native_persistent_string_view string_builder::view() const &
+  jank::native_persistent_string_view string_builder::view() const &
   {
     jank_debug_assert(pos < capacity);
     buffer[pos] = 0;

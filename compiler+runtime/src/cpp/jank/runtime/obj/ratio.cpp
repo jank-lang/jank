@@ -110,14 +110,14 @@ namespace jank::runtime::obj
     return data.to_integer();
   }
 
-  void ratio::to_string(util::string_builder &buff) const
+  void ratio::to_string(jtl::string_builder &buff) const
   {
     buff(data.numerator)('/')(data.denominator);
   }
 
   jtl::immutable_string ratio::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }

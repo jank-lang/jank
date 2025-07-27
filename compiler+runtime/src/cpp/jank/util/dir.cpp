@@ -1,9 +1,10 @@
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
 
+#include <jtl/string_builder.hpp>
+
 #include <jank/util/dir.hpp>
 #include <jank/util/sha256.hpp>
-#include <jank/util/string_builder.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -91,7 +92,7 @@ namespace jank::util
       return res;
     }
 
-    string_builder sb;
+    jtl::string_builder sb;
     for(auto const &inc : util::cli::opts.include_dirs)
     {
       sb(inc);

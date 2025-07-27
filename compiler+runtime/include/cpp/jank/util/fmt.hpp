@@ -1,15 +1,15 @@
 #pragma once
 
-#include <jank/util/string_builder.hpp>
+#include <jtl/string_builder.hpp>
 
 namespace jank::util
 {
   jtl::immutable_string format(char const * const fmt);
-  void format_to(string_builder &sb, char const * const fmt);
+  void format_to(jtl::string_builder &sb, char const * const fmt);
 
   /* TODO: We can extern template all common usages here, if they show up in the trace. */
   template <typename T>
-  void format_to(string_builder &sb, char const *&fmt, T &&arg)
+  void format_to(jtl::string_builder &sb, char const *&fmt, T &&arg)
   {
     for(; *fmt != '\0'; ++fmt)
     {
@@ -26,7 +26,7 @@ namespace jank::util
   template <typename... Args>
   jtl::immutable_string format(char const *fmt, Args &&...args)
   {
-    string_builder sb;
+    jtl::string_builder sb;
     [[maybe_unused]]
     int const dummy[sizeof...(Args)]{ (format_to(sb, fmt, std::forward<Args>(args)), 0)... };
     sb(fmt);
@@ -34,7 +34,7 @@ namespace jank::util
   }
 
   template <typename... Args>
-  void format_to(string_builder &sb, char const *fmt, Args &&...args)
+  void format_to(jtl::string_builder &sb, char const *fmt, Args &&...args)
   {
     [[maybe_unused]]
     int const dummy[sizeof...(Args)]{ (format_to(sb, fmt, std::forward<Args>(args)), 0)... };

@@ -2,7 +2,7 @@
 
 #include <jtl/primitive.hpp>
 
-namespace jank::util
+namespace jtl
 {
   enum class terminal_color : u8
   {

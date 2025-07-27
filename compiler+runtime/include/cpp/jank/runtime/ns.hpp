@@ -41,7 +41,7 @@ namespace jank::runtime
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     uhash to_hash() const;
 
     bool operator==(ns const &rhs) const;

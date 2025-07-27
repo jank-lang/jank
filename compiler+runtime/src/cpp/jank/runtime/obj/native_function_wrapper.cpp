@@ -23,14 +23,14 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  void native_function_wrapper::to_string(util::string_builder &buff) const
+  void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string native_function_wrapper::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }

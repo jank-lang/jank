@@ -27,7 +27,7 @@ namespace jank::runtime::obj
   }
 
   static void
-  to_string_impl(object_ref const &tag, object_ref const &form, util::string_builder &buff)
+  to_string_impl(object_ref const &tag, object_ref const &form, jtl::string_builder &buff)
   {
     buff('#');
     runtime::to_string(tag, buff);
@@ -35,14 +35,14 @@ namespace jank::runtime::obj
     runtime::to_string(form, buff);
   }
 
-  void tagged_literal::to_string(util::string_builder &buff) const
+  void tagged_literal::to_string(jtl::string_builder &buff) const
   {
     to_string_impl(tag, form, buff);
   }
 
   jtl::immutable_string tagged_literal::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(tag, form, buff);
     return buff.release();
   }

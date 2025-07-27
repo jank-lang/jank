@@ -200,7 +200,7 @@ namespace jank::runtime
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
       default:
         {
-          util::string_builder sb;
+          jtl::string_builder sb;
           sb("invalid object type: ");
           sb(object_type_str(erased->type));
           sb(" raw value ");

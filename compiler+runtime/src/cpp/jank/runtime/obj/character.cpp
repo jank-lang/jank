@@ -54,7 +54,7 @@ namespace jank::runtime::obj
     return data == c->data;
   }
 
-  void character::to_string(util::string_builder &buff) const
+  void character::to_string(jtl::string_builder &buff) const
   {
     buff(data);
   }

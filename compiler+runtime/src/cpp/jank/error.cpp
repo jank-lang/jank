@@ -164,7 +164,7 @@ namespace jank::error
 
   jtl::immutable_string note::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb("note(\"")(message)("\", ")(source.to_string())(", ")(note::kind_str(kind))(")")
       .release();
   }

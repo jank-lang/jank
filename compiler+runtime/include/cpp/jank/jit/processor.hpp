@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <jtl/result.hpp>
-#include <jank/util/string_builder.hpp>
+#include <jtl/string_builder.hpp>
 
 namespace llvm
 {

@@ -1198,7 +1198,7 @@ namespace jank::read::lex
                 case 'v':
                   break;
                 default:
-                  util::string_builder sb;
+                  jtl::string_builder sb;
                   return error::lex_invalid_string_escape(
                     util::format("Unsupported string escape character '{}'.",
                                  sb(oc.expect_ok().character).view()),

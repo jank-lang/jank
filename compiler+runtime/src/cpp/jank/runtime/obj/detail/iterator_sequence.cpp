@@ -33,7 +33,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  void iterator_sequence<Derived, It>::to_string(util::string_builder &buff) const
+  void iterator_sequence<Derived, It>::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(begin, end, "(", ')', buff);
   }
@@ -41,7 +41,7 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   jtl::immutable_string iterator_sequence<Derived, It>::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_string(begin, end, "(", ')', buff);
     return buff.release();
   }
@@ -49,7 +49,7 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   jtl::immutable_string iterator_sequence<Derived, It>::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_code_string(begin, end, "(", ')', buff);
     return buff.release();
   }

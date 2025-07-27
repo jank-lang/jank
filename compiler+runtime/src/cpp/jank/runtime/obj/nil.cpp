@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  void nil::to_string(util::string_builder &buff) const
+  void nil::to_string(jtl::string_builder &buff) const
   {
     buff("nil");
   }

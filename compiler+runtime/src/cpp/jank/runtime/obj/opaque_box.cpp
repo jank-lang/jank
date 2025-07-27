@@ -20,14 +20,14 @@ namespace jank::runtime::obj
     return b->data == data;
   }
 
-  void opaque_box::to_string(util::string_builder &buff) const
+  void opaque_box::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string opaque_box::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }

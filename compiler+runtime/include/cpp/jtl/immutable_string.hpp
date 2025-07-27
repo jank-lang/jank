@@ -13,15 +13,12 @@ namespace jank
   {
     u32 integer(uhash const input);
   }
-
-  namespace util
-  {
-    struct string_builder;
-  }
 }
 
 namespace jtl
 {
+  struct string_builder;
+
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
@@ -72,7 +69,7 @@ namespace jtl
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-    friend struct jank::util::string_builder;
+    friend struct jtl::string_builder;
 
     constexpr immutable_string() noexcept
     {

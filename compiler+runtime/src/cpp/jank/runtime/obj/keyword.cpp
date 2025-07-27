@@ -23,20 +23,20 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  static void to_string_impl(symbol const &sym, util::string_builder &buff)
+  static void to_string_impl(symbol const &sym, jtl::string_builder &buff)
   {
     std::back_inserter(buff) = ':';
     sym.to_string(buff);
   }
 
-  void keyword::to_string(util::string_builder &buff) const
+  void keyword::to_string(jtl::string_builder &buff) const
   {
     to_string_impl(*sym, buff);
   }
 
   jtl::immutable_string keyword::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(*sym, buff);
     return buff.release();
   }

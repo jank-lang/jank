@@ -70,21 +70,21 @@ namespace jank::runtime::obj
     return runtime::equal(o, data.begin(), data.end());
   }
 
-  void persistent_list::to_string(util::string_builder &buff) const
+  void persistent_list::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
   }
 
   jtl::immutable_string persistent_list::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_string(data.begin(), data.end(), "(", ')', buff);
     return buff.release();
   }
 
   jtl::immutable_string persistent_list::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_code_string(data.begin(), data.end(), "(", ')', buff);
     return buff.release();
   }
