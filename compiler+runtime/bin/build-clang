@@ -2,11 +2,18 @@
 
 set -euo pipefail
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${here}/../build"
+mkdir -p "${build_dir}"
+cd "${build_dir}"
+
 # We build Clang with Clang for consistency.
 export CC=clang
 export CXX=clang++
 
-make_j="$(nproc || echo 4)"
+set +e
+  make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
+set -e
 
 while getopts ":hj:" opt; do
   case "${opt}" in
@@ -38,7 +45,7 @@ echo "Using ${make_j} cores to build"
 srcdir="${PWD}"
 
 llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_branch="main"
+llvm_branch="jank"
 
 function prepare()
 {
@@ -54,7 +61,6 @@ function build()
   cd "${srcdir}/llvm-build"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_STANDARD=20 \
         -DLLVM_ENABLE_RUNTIMES=all \
         -DLLVM_BUILD_LLVM_DYLIB=ON \
         -DLLVM_LINK_LLVM_DYLIB=ON \
@@ -69,10 +75,10 @@ function build()
         -DLLVM_ENABLE_ZSTD=OFF \
         -DLLVM_BUILD_OCAML_BINDINGS=OFF \
         -DLLVM_ENABLE_OCAMLDOC=OFF \
-        -G "Unix Makefiles" \
+        -G "Ninja" \
         ../llvm/llvm
 
-  DESTDIR="${srcdir}/llvm-install" make clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
+  DESTDIR="${srcdir}/llvm-install" ninja clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
 }
 
 prepare

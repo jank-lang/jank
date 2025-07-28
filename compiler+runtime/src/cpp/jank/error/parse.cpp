@@ -1,5 +1,6 @@
+#include <jtl/string_builder.hpp>
+
 #include <jank/error/parse.hpp>
-#include <jank/util/string_builder.hpp>
 
 namespace jank::error
 {
@@ -53,10 +54,10 @@ namespace jank::error
 
   error_ref parse_invalid_character(read::lex::token const &token)
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_error(
       kind::parse_invalid_character,
-      sb("Invalid character '")(std::get<native_persistent_string_view>(token.data))("'.")
+      sb("Invalid character '")(std::get<jtl::immutable_string_view>(token.data))("'.")
         .release(),
       read::source{ token.start, token.end });
   }
@@ -64,7 +65,7 @@ namespace jank::error
   error_ref parse_unexpected_closing_character(read::lex::token const &token)
   {
     /* TODO: Add a note to show last open token. */
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_error(
       kind::parse_unexpected_closing_character,
       sb("Unexpected closing character '")(delim_char_for_token_kind(token.kind))("'.").release(),

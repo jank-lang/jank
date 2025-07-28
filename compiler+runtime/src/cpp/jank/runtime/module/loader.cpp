@@ -23,6 +23,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/dir.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime::module
@@ -78,6 +79,55 @@ namespace jank::runtime::module
   bool is_nested_module(jtl::immutable_string const &module)
   {
     return module.find('$') != module.rfind('$');
+  }
+
+  /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
+   * we return a native namespace name. So foo.bar will become foo::bar. But we also strip off
+   * the last nested module, since the way the codegen works is that foo.bar$spam lives in the
+   * native namespace foo::bar. Lastly, we need to split the module into parts and munge each
+   * individually, since we can have a module like clojure.template which will munge cleanly
+   * on its own, but template is a C++ keyword and the resulting clojure::template namespace
+   * will be a problem. So we split the module on each ., munge, and put it back together
+   * using ::. */
+  jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module)
+  {
+    static std::regex const dollar{ "\\$" };
+
+    native_transient_string module{ munge(orig_module) };
+
+    native_vector<native_transient_string> module_parts;
+    for(size_t dot_pos{}; (dot_pos = module.find('.')) != jtl::immutable_string::npos;)
+    {
+      module_parts.emplace_back(munge(module.substr(0, dot_pos)));
+      module.erase(0, dot_pos + 1);
+    }
+
+    if(module.find('$') != native_transient_string::npos)
+    {
+      for(size_t dollar_pos{}; (dollar_pos = module.find('$')) != jtl::immutable_string::npos;)
+      {
+        module_parts.emplace_back(munge(module.substr(0, dollar_pos)));
+        module.erase(0, dollar_pos + 1);
+      }
+    }
+    else
+    {
+      module_parts.emplace_back(munge(module));
+    }
+
+    std::string ret;
+    for(auto &part : module_parts)
+    {
+      part = std::regex_replace(part, dollar, "::");
+
+      if(!ret.empty())
+      {
+        ret += "::";
+      }
+      ret += part;
+    }
+
+    return ret;
   }
 
   /* TODO: We can patch libzippp to not copy strings around so much. */
@@ -208,16 +258,18 @@ namespace jank::runtime::module
   }
 
   static void register_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
-                            native_persistent_string_view const &path)
+                            jtl::immutable_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the module path, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
-    if(path.empty() || !std::filesystem::exists(path))
+    if(path.empty() || !std::filesystem::exists(std::string_view{ path }))
     {
       return;
     }
 
-    std::filesystem::path const p{ std::filesystem::canonical(path).lexically_normal() };
+    std::filesystem::path const p{
+      std::filesystem::canonical(std::string_view{ path }).lexically_normal()
+    };
     if(std::filesystem::is_directory(p))
     {
       register_directory(entries, p);
@@ -235,13 +287,13 @@ namespace jank::runtime::module
     }
   }
 
-  loader::loader(context &rt_ctx, jtl::immutable_string const &ps)
-    : rt_ctx{ rt_ctx }
+  loader::loader()
   {
     auto const jank_path(jank::util::process_location().unwrap().parent_path());
-    native_transient_string paths{ ps };
-    paths += util::format(":{}", rt_ctx.binary_cache_dir);
-    paths += util::format(":{}", (jank_path / rt_ctx.binary_cache_dir.c_str()).native());
+    auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
+    native_transient_string paths{ util::cli::opts.module_path };
+    paths += util::format(":{}", binary_cache_dir);
+    paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
     this->paths = paths;
 
@@ -353,7 +405,7 @@ namespace jank::runtime::module
     return buff.empty() ? len : buff.size();
   }
 
-  native_persistent_string_view file_view::view() const
+  jtl::immutable_string_view file_view::view() const
   {
     return { data(), size() };
   }
@@ -522,7 +574,11 @@ namespace jank::runtime::module
     };
 
     auto const loaded_libs{ runtime::try_object<runtime::obj::persistent_sorted_set>(atom) };
-    return truthy(loaded_libs->contains(make_box<obj::symbol>(module)));
+    auto const ret{ truthy(loaded_libs->contains(make_box<obj::symbol>(module))) };
+
+    //util::println("is module loaded {}: {}", module, ret);
+
+    return ret;
   }
 
   void loader::set_is_loaded(jtl::immutable_string const &module)
@@ -630,7 +686,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    // log_load(module, module_type_to_load, module_sources);
+    //log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {
@@ -675,10 +731,10 @@ namespace jank::runtime::module
      * */
     auto const load_function_name{ module_to_load_function(module) };
 
-    auto const existing_load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name) };
+    auto const existing_load{ __rt_ctx->jit_prc.find_symbol(load_function_name) };
     if(existing_load.is_ok())
     {
-      existing_load.expect_ok()();
+      reinterpret_cast<object *(*)()>(existing_load.expect_ok())();
       return ok();
     }
 
@@ -688,11 +744,11 @@ namespace jank::runtime::module
     }
     else
     {
-      rt_ctx.jit_prc.load_object(entry.path);
+      __rt_ctx->jit_prc.load_object(entry.path);
     }
 
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
-    load();
+    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
+    reinterpret_cast<object *(*)()>(load)();
 
     return ok();
   }
@@ -702,9 +758,14 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
+      jtl::option<jtl::string_result<void>> res;
       visit_jar_entry(entry, [&](auto const &zip_entry) {
-        rt_ctx.eval_cpp_string(zip_entry.readAsText());
+        res = __rt_ctx->eval_cpp_string(zip_entry.readAsText());
       });
+      if(res.unwrap().is_err())
+      {
+        return res.unwrap();
+      }
     }
     else
     {
@@ -714,15 +775,19 @@ namespace jank::runtime::module
         return err(
           util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
       }
-      rt_ctx.eval_cpp_string(file.expect_ok().view());
+      auto const res{ __rt_ctx->eval_cpp_string(file.expect_ok().view()) };
+      if(res.is_err())
+      {
+        return res;
+      }
     }
 
     /* TODO: What if there is no load function?
      * What if load function is defined in another module?
      * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
     auto const load_function_name{ module_to_load_function(module) };
-    auto const load{ rt_ctx.jit_prc.find_symbol<object *(*)()>(load_function_name).expect_ok() };
-    load();
+    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
+    reinterpret_cast<object *(*)()>(load)();
 
     return ok();
   }
@@ -734,16 +799,14 @@ namespace jank::runtime::module
       visit_jar_entry(entry, [&](auto const &zip_entry) {
         /* TODO: Helper to get a jar file path like this. */
         auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
-        context::binding_scope const preserve{ rt_ctx,
-                                               runtime::obj::persistent_hash_map::create_unique(
-                                                 std::make_pair(rt_ctx.current_file_var,
-                                                                make_box(path))) };
-        rt_ctx.eval_string(zip_entry.readAsText());
+        context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
+          std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
+        __rt_ctx->eval_string(zip_entry.readAsText());
       });
     }
     else
     {
-      rt_ctx.eval_file(entry.path);
+      __rt_ctx->eval_file(entry.path);
     }
 
     return ok();

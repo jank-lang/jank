@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::boolean::pass_function
+          {
+            int foo(bool const b)
+            {
+              if(b)
+              { return 3; }
+              else
+              { return -500; }
+            }
+          }")
+(let* [_ (assert (= 3 (cpp/jank.cpp.boolean.pass_function.foo cpp/true)))
+       _ (assert (= -500 (cpp/jank.cpp.boolean.pass_function.foo cpp/false)))]
+  :success)

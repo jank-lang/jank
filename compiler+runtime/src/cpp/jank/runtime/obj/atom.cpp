@@ -18,12 +18,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string atom::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void atom::to_string(util::string_builder &buff) const
+  void atom::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
   }
@@ -177,6 +177,7 @@ namespace jank::runtime::obj
 
   object_ref atom::compare_and_set(object_ref const old_val, object_ref const new_val)
   {
+    /* NOLINTNEXTLINE(misc-const-correctness): Can't actually be const. */
     object *old{ old_val.data };
     return make_box(val.compare_exchange_weak(old, new_val.data));
   }

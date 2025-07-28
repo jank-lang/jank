@@ -14,13 +14,21 @@ namespace jank::util::cli
     run_main
   };
 
+  enum class codegen_type : u8
+  {
+    llvm_ir,
+    cpp
+  };
+
   struct options
   {
     /* Runtime. */
-    native_transient_string module_path;
+    std::string module_path;
+    std::string profiler_file{ "jank.profile" };
     bool profiler_enabled{};
-    native_transient_string profiler_file{ "jank.profile" };
+    bool perf_profiling_enabled{};
     bool gc_incremental{};
+    codegen_type codegen{ codegen_type::llvm_ir };
 
     /* Native dependencies. */
     native_vector<jtl::immutable_string> include_dirs;
@@ -29,14 +37,15 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    i64 optimization_level{};
+    bool debug{};
+    u8 optimization_level{};
 
     /* Run command. */
-    native_transient_string target_file;
+    std::string target_file;
 
     /* Compile command. */
-    native_transient_string target_module;
-    native_transient_string target_runtime{ "dynamic" };
+    std::string target_module;
+    std::string target_runtime{ "dynamic" };
 
     /* REPL command. */
     bool repl_server{};
@@ -44,13 +53,16 @@ namespace jank::util::cli
     /* Extras.
      * TODO: Use a native_persistent_vector instead.
      * */
-    std::vector<native_transient_string> extra_opts;
+    std::vector<std::string> extra_opts;
 
-    native_transient_string output_filename;
+    std::string output_filename;
 
     command command{ command::repl };
   };
 
-  jtl::result<options, int> parse(int const argc, char const **argv);
-  std::vector<native_transient_string> parse_empty(int const argc, char const **argv);
+  /* NOLINTNEXTLINE */
+  extern options opts;
+
+  jtl::result<void, int> parse(int const argc, char const **argv);
+  std::vector<std::string> parse_empty(int const argc, char const **argv);
 }

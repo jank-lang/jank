@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::operator_::exclaim::pass_overload
+          {
+            struct foo
+            {
+              bool operator !()
+              {
+                return !a;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+          }")
+(let* [i0 (cpp/int.)
+       i5 (cpp/int. 5)
+       foo (cpp/jank.cpp.operator_.exclaim.pass_overload.foo. i0 i5)
+       _ (assert (= false (cpp/! foo)))]
+  :success)

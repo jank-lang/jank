@@ -6,10 +6,17 @@
 
 namespace jank::util::cli
 {
-  jtl::result<options, int> parse(int const argc, char const **argv)
+  /* NOLINTNEXTLINE */
+  options opts;
+
+  static std::string make_default(std::string const &input)
+  {
+    return "default: " + input;
+  }
+
+  jtl::result<void, int> parse(int const argc, char const **argv)
   {
     CLI::App cli{ "jank compiler" };
-    options opts;
 
     cli.set_help_flag("-h,--help", "Print this help message and exit.");
 
@@ -19,14 +26,29 @@ namespace jank::util::cli
       opts.module_path,
       util::format(
         "A {} separated list of directories, JAR files, and ZIP files to search for modules.",
-        runtime::module::loader::module_separator));
+        runtime::module::loader::module_separator_name));
     cli.add_flag("--profile", opts.profiler_enabled, "Enable compiler and runtime profiling.");
-    cli.add_option("--profile-output",
-                   opts.profiler_file,
-                   "The file to write profile entries (will be overwritten).");
+    cli
+      .add_option("--profile-output",
+                  opts.profiler_file,
+                  "The file to write profile entries (will be overwritten).")
+      ->default_str(make_default(opts.profiler_file));
+    cli.add_flag("--perf", opts.perf_profiling_enabled, "Enable Linux perf event sampling.");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
-    cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use.")
+    cli.add_flag("--debug", opts.debug, "Enable debug symbol generation for generated code.");
+    cli
+      .add_option("-O,--optimization",
+                  opts.optimization_level,
+                  "The optimization level to use for AOT compilation.")
       ->check(CLI::Range(0, 3));
+
+    std::map<std::string, codegen_type> codegen_types{
+      { "llvm_ir", codegen_type::llvm_ir },
+      {     "cpp",     codegen_type::cpp }
+    };
+    cli.add_option("--codegen", opts.codegen, "The type of code generation to use.")
+      ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm_ir,cpp}"))
+      ->default_str(make_default("llvm_ir"));
 
     /* Native dependencies. */
     cli.add_option("-I,--include-dir",
@@ -54,11 +76,13 @@ namespace jank::util::cli
 
     /* Compile module subcommand. */
     auto &cli_compile_module(
-      *cli.add_subcommand("compile-module", "Compile a file and its dependencies."));
+      *cli.add_subcommand("compile-module",
+                          "Compile a module (given its namespace) and its dependencies."));
     cli_compile_module.fallthrough();
     cli_compile_module
       .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
-      ->check(CLI::IsMember({ "dynamic", "static" }));
+      ->check(CLI::IsMember({ "dynamic", "static" }))
+      ->default_str(make_default("dynamic"));
     cli_compile_module
       .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
@@ -86,8 +110,12 @@ namespace jank::util::cli
       "compile",
       "Ahead of time compile project with entrypoint module containing -main."));
     cli_compile.fallthrough();
+    cli_compile
+      .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
+      ->check(CLI::IsMember({ "dynamic", "static" }))
+      ->default_str(make_default("dynamic"));
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
-      ->default_val("a.out");
+      ->default_str("default: a.out");
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     cli.require_subcommand(1);
@@ -133,10 +161,10 @@ namespace jank::util::cli
       opts.command = command::compile;
     }
 
-    return ok(opts);
+    return ok();
   }
 
-  std::vector<native_transient_string> parse_empty(int const argc, char const **argv)
+  std::vector<std::string> parse_empty(int const argc, char const **argv)
   {
     CLI::App cli{ "jank default cli" };
     cli.allow_extras();

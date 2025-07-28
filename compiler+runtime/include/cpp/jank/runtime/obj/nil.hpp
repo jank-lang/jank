@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     bool equal(object const &) const;
     jtl::immutable_string const &to_string() const;
     jtl::immutable_string const &to_code_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     uhash to_hash() const;
 
     /* behavior::comparable */

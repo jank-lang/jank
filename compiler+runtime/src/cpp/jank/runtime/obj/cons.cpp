@@ -41,7 +41,7 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void cons::to_string(util::string_builder &buff) const
+  void cons::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }

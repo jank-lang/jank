@@ -205,7 +205,7 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void range::to_string(util::string_builder &buff)
+  void range::to_string(jtl::string_builder &buff)
   {
     runtime::to_string(seq(), buff);
   }

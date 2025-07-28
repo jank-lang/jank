@@ -19,7 +19,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
@@ -62,9 +62,9 @@ namespace jank::runtime::obj
     i64 to_integer() const;
     f64 to_real() const;
 
+    object base{ obj_type };
     /* TODO: Is it faster to have the data first or the base first? */
     i64 data{};
-    object base{ obj_type };
   };
 
   using real_ref = oref<struct real>;
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 

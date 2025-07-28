@@ -77,6 +77,20 @@ namespace jank::runtime
   };
 
   template <>
+  struct convert<jtl::nullptr_t>
+  {
+    static constexpr obj::nil_ref into_object(jtl::nullptr_t)
+    {
+      return jank_nil;
+    }
+
+    static constexpr jtl::nullptr_t from_object(object_ref)
+    {
+      return nullptr;
+    }
+  };
+
+  template <>
   struct convert<bool>
   {
     static constexpr obj::boolean_ref into_object(bool const o)
@@ -158,9 +172,29 @@ namespace jank::runtime
     }
   };
 
+  /* C strings. */
+  template <>
+  struct convert<char const *>
+  {
+    static constexpr obj::persistent_string_ref into_object(char const * const o)
+    {
+      return make_box(o);
+    }
+
+    static constexpr char const *from_object(object_ref const o)
+    {
+      return try_object<obj::persistent_string>(o)->data.c_str();
+    }
+
+    static constexpr char const *from_object(obj::persistent_string_ref const o)
+    {
+      return o->data.c_str();
+    }
+  };
+
   /* Native strings. */
   template <typename T>
-  requires(jtl::is_any_same<T, jtl::immutable_string, native_persistent_string_view, std::string>)
+  requires(jtl::is_any_same<T, jtl::immutable_string, jtl::immutable_string_view, std::string>)
   struct convert<T>
   {
     static constexpr obj::persistent_string_ref into_object(T const &o)

@@ -1,0 +1,38 @@
+(cpp/raw "namespace jank::cpp::operator_::star::pass_unary_overload
+          {
+            struct foo
+            {
+              int operator *()
+              {
+                return a;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+
+            struct bar
+            {
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+
+            int operator*(bar const &lhs)
+            { return lhs.a; }
+          }")
+(let* [i0 (cpp/int.)
+       i5 (cpp/int. 5)
+       i10 (cpp/int. 10)
+
+       ; *foo
+       foo (cpp/jank.cpp.operator_.star.pass_unary_overload.foo. i0 i5)
+       *foo (cpp/* foo)
+       _ (assert (= 5 *foo))
+
+       ; *bar
+       bar (cpp/jank.cpp.operator_.star.pass_unary_overload.bar. i0 i10)
+       *bar (cpp/* bar)
+       _ (assert (= 10 *bar))]
+  :success)

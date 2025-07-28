@@ -489,7 +489,15 @@ namespace jank::error
       {
         case line::kind::file_data:
           line_num = line_number(max_line_number_width, std::to_string(l.number));
-          line_content = highlighted_lines.at(l.number);
+          /* TODO:There's a bug here. We should always contain this line number. */
+          if(highlighted_lines.contains(l.number))
+          {
+            line_content = highlighted_lines.at(l.number);
+          }
+          else
+          {
+            line_content = text(" ");
+          }
           break;
         case line::kind::note:
           line_num = line_number(max_line_number_width, "");

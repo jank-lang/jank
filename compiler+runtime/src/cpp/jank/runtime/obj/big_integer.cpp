@@ -238,7 +238,7 @@ namespace jank::runtime::obj
     return data.str() + 'N';
   }
 
-  void big_integer::to_string(util::string_builder &buff) const
+  void big_integer::to_string(jtl::string_builder &buff) const
   {
     buff(to_string());
   }

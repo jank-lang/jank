@@ -21,9 +21,9 @@ namespace jank::runtime
     static constexpr bool pointer_free{ false };
 
     ns() = delete;
-    ns(obj::symbol_ref const &name, context &c);
+    ns(obj::symbol_ref const &name);
 
-    var_ref intern_var(native_persistent_string_view const &);
+    var_ref intern_var(jtl::immutable_string_view const &);
     var_ref intern_var(obj::symbol_ref const &);
     var_ref find_var(obj::symbol_ref const &);
     jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ref const &sym);
@@ -41,12 +41,10 @@ namespace jank::runtime
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     uhash to_hash() const;
 
     bool operator==(ns const &rhs) const;
-
-    ns_ref clone(context &rt_ctx) const;
 
     object base{ obj_type };
     obj::symbol_ref name{};
@@ -55,6 +53,5 @@ namespace jank::runtime
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
 
     std::atomic_uint64_t symbol_counter{};
-    context &rt_ctx;
   };
 }

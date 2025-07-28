@@ -1,8 +1,11 @@
 #pragma once
 
-#include <cstdint>
-
 #include <jank/type.hpp>
+
+namespace jtl
+{
+  struct immutable_string_view;
+}
 
 namespace jank::runtime
 {
@@ -33,7 +36,7 @@ namespace jank::hash
 
   u32 real(f64 const input);
 
-  u32 string(native_persistent_string_view const &input);
+  u32 string(jtl::immutable_string_view const &input);
 
   u32 visit(runtime::oref<runtime::object> const o);
   u32 visit(char const ch);
@@ -49,7 +52,7 @@ namespace jank::hash
 
     for(auto it(begin); it != end; ++it)
     {
-      hash = 31 * hash + visit((*it));
+      hash = (31 * hash) + visit((*it));
       ++n;
     }
 
@@ -69,7 +72,7 @@ namespace jank::hash
       /* It's common that we have pairs of data, like with maps. */
       if constexpr(requires(T t) { t.first, t.second; })
       {
-        hash += 31 * visit((*it).first) + visit((*it).second);
+        hash += (31 * visit((*it).first)) + visit((*it).second);
       }
       else
       {

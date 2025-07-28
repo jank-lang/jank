@@ -10,7 +10,7 @@ namespace jank::error
 {
   static constexpr auto default_note_message{ "Found here." };
 
-  static constexpr native_persistent_string_view kind_to_message(kind const k)
+  static constexpr jtl::immutable_string_view kind_to_message(kind const k)
   {
     switch(k)
     {
@@ -136,6 +136,8 @@ namespace jank::error
         return "Unresolved symbol.";
       case kind::analyze_macro_expansion_exception:
         return "Macro expansion exception.";
+      case kind::analyze_invalid_conversion:
+        return "Invalid conversion.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
@@ -143,11 +145,14 @@ namespace jank::error
         return "Internal codegen failure.";
 
       case kind::aot_compilation_failure:
-        return "Ahead of Time compilation failure.";
-      case kind::aot_clang_executable_not_found:
-        return "Could not find clang++ executable.";
+        return "Ahead-of-time compilation failure.";
       case kind::internal_aot_failure:
         return "Internal ahead-of-time compilation failure.";
+
+      case kind::system_clang_executable_not_found:
+        return "Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.";
+      case kind::internal_system_failure:
+        return "Internal system failure.";
 
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
@@ -159,7 +164,7 @@ namespace jank::error
 
   jtl::immutable_string note::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb("note(\"")(message)("\", ")(source.to_string())(", ")(note::kind_str(kind))(")")
       .release();
   }

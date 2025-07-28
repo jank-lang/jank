@@ -21,7 +21,9 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
+    /* TODO: Rename to have _expr suffixes. */
     expression_ref condition;
     expression_ref then;
     jtl::option<expression_ref> else_;

@@ -1,0 +1,5 @@
+(let* [i (cpp/int. 1)
+       p (cpp/& i)
+       f (cpp/float. 1.0)
+       np (cpp/+ p f)]
+  :success)

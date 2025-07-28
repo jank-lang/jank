@@ -188,6 +188,22 @@ namespace jank::runtime
 
   object_ref strip_source_from_meta(object_ref const meta)
   {
-    return dissoc(meta, __rt_ctx->intern_keyword("jank/source").expect_ok());
+    auto const kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
+    return dissoc(meta, kw);
+  }
+
+  jtl::option<object_ref> strip_source_from_meta_opt(jtl::option<object_ref> const &meta)
+  {
+    if(meta.is_none())
+    {
+      return meta;
+    }
+
+    auto const stripped{ strip_source_from_meta(meta.unwrap()) };
+    if(is_empty(stripped))
+    {
+      return none;
+    }
+    return stripped;
   }
 }

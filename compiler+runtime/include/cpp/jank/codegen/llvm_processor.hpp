@@ -8,10 +8,16 @@
 #include <llvm/Passes/StandardInstrumentations.h>
 #include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 
 #include <jtl/ptr.hpp>
 
 #include <jank/analyze/processor.hpp>
+
+namespace Cpp
+{
+  class AotCall;
+}
 
 namespace jank::runtime::obj
 {
@@ -53,6 +59,19 @@ namespace jank::analyze
     using throw_ref = jtl::ref<struct throw_>;
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
+    using cpp_raw_ref = jtl::ref<struct cpp_raw>;
+    using cpp_type_ref = jtl::ref<struct cpp_type>;
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_call_ref = jtl::ref<struct cpp_call>;
+    using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+    using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
+    using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
+    using cpp_box_ref = jtl::ref<struct cpp_box>;
+    using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_new_ref = jtl::ref<struct cpp_new>;
+    using cpp_delete_ref = jtl::ref<struct cpp_delete>;
   }
 }
 
@@ -69,15 +88,14 @@ namespace jank::codegen
 
   struct reusable_context
   {
-    reusable_context(jtl::immutable_string const &module_name);
+    reusable_context(jtl::immutable_string const &module_name,
+                     std::unique_ptr<llvm::LLVMContext> llvm_ctx);
 
     jtl::immutable_string module_name;
     jtl::immutable_string ctor_name;
 
-    std::unique_ptr<llvm::LLVMContext> llvm_ctx;
-    std::unique_ptr<llvm::Module> module;
+    llvm::orc::ThreadSafeModule module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
-    llvm::Value *nil{};
     llvm::BasicBlock *global_ctor_block{};
 
     /* TODO: Is this needed, given lifted constants? */
@@ -90,13 +108,13 @@ namespace jank::codegen
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
 
     /* Optimization details. */
-    std::unique_ptr<llvm::FunctionPassManager> fpm;
     std::unique_ptr<llvm::LoopAnalysisManager> lam;
     std::unique_ptr<llvm::FunctionAnalysisManager> fam;
     std::unique_ptr<llvm::CGSCCAnalysisManager> cgam;
     std::unique_ptr<llvm::ModuleAnalysisManager> mam;
     std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
     std::unique_ptr<llvm::StandardInstrumentations> si;
+    llvm::ModulePassManager mpm;
   };
 
   struct deferred_init
@@ -142,6 +160,24 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::throw_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::try_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_raw_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *
+    gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_constructor_call_ref,
+                     analyze::expr::function_arity const &,
+                     llvm::Value *alloc);
+    llvm::Value *gen(analyze::expr::cpp_member_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_member_access_ref, analyze::expr::function_arity const &);
+    llvm::Value *
+    gen(analyze::expr::cpp_builtin_operator_call_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_box_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_unbox_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_new_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_delete_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
@@ -166,16 +202,37 @@ namespace jank::codegen
     llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
+    llvm::Value *gen_aot_call(Cpp::AotCall const &call,
+                              jtl::ptr<void> const fn,
+                              jtl::ptr<void> const expr_type,
+                              jtl::immutable_string const &name,
+                              native_vector<analyze::expression_ref> const &arg_exprs,
+                              analyze::expression_position const position,
+                              analyze::expression_kind const kind,
+                              analyze::expr::function_arity const &arity);
+    llvm::Value *gen_aot_call(Cpp::AotCall const &call,
+                              llvm::Value *ret_alloc,
+                              jtl::ptr<void> const fn,
+                              jtl::ptr<void> const expr_type,
+                              jtl::immutable_string const &name,
+                              native_vector<analyze::expression_ref> const &arg_exprs,
+                              analyze::expression_position const position,
+                              analyze::expression_kind const kind,
+                              analyze::expr::function_arity const &arity);
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
+
+    void optimize() const;
 
     compilation_target target{};
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> fn{};
     std::unique_ptr<reusable_context> ctx;
-    native_unordered_map<obj::symbol_ref, llvm::Value *> locals;
+    native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
     /* TODO: Use gc allocator to avoid leaks. */
     std::list<deferred_init> deferred_inits{};
+    jtl::ref<llvm::LLVMContext> llvm_ctx;
+    jtl::ref<llvm::Module> llvm_module;
   };
 }

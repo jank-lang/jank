@@ -25,6 +25,11 @@ namespace jank::runtime
 
 namespace jank::analyze
 {
+  namespace expr
+  {
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+  }
+
   enum class source_type : u8
   {
     repl,
@@ -153,6 +158,58 @@ namespace jank::analyze
                                    expression_position,
                                    jtl::option<expr::function_context_ref> const &,
                                    bool needs_box);
+    expression_result analyze_cpp_symbol(runtime::obj::symbol_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool needs_box);
+    expression_result analyze_cpp_call(runtime::obj::persistent_list_ref const,
+                                       expr::cpp_value_ref,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_raw(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_type(runtime::obj::persistent_list_ref const,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_cast(runtime::obj::persistent_list_ref const,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_box(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_unbox(runtime::obj::persistent_list_ref const,
+                                        local_frame_ptr,
+                                        expression_position,
+                                        jtl::option<expr::function_context_ref> const &,
+                                        bool needs_box);
+    expression_result analyze_cpp_new(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_delete(runtime::obj::persistent_list_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool needs_box);
+    expression_result analyze_cpp_member_access(runtime::obj::persistent_list_ref const,
+                                                expr::cpp_value_ref,
+                                                local_frame_ptr,
+                                                expression_position,
+                                                jtl::option<expr::function_context_ref> const &,
+                                                bool needs_box);
 
     /* Returns whether the form is a special symbol. */
     bool is_special(runtime::object_ref form);

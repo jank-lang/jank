@@ -4,7 +4,9 @@
 
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <jank/aot/processor.hpp>
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -17,6 +19,7 @@
 #include <jank/c_api.h>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/aot/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
@@ -31,7 +34,9 @@
 
 namespace jank
 {
-  static void run(util::cli::options const &opts)
+  using util::cli::opts;
+
+  static void run()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -43,7 +48,8 @@ namespace jank
 
     {
       profile::timer const timer{ "eval user code" };
-      std::cout << runtime::to_code_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
+      std::cout << runtime::to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file))
+                << "\n";
     }
 
     //ankerl::nanobench::Config config;
@@ -63,7 +69,7 @@ namespace jank
     //);
   }
 
-  static void run_main(util::cli::options const &opts)
+  static void run_main()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -97,7 +103,7 @@ namespace jank
     }
   }
 
-  static void compile_module(util::cli::options const &opts)
+  static void compile_module()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -109,7 +115,7 @@ namespace jank
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
-  static void repl(util::cli::options const &opts)
+  static void repl()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -124,6 +130,10 @@ namespace jank
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+
+    dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
+    dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
+                 make_box<obj::symbol>("clojure.core"));
 
     if(!opts.target_module.empty())
     {
@@ -185,7 +195,7 @@ namespace jank
     }
   }
 
-  static void cpp_repl(util::cli::options const &opts)
+  static void cpp_repl()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -236,7 +246,7 @@ namespace jank
     }
   }
 
-  static void compile(util::cli::options const &opts)
+  static void compile()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -254,7 +264,7 @@ namespace jank
                                              opts.target_module) };
     }
 
-    jank::aot::processor const aot_prc{ opts };
+    jank::aot::processor const aot_prc{};
     aot_prc.compile(opts.target_module).expect_ok();
   }
 }
@@ -262,6 +272,9 @@ namespace jank
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
 {
+  /* TODO: We need an init fn in libjank which sets all of this up so we don't
+   * need to duplicate it between here and the tests and so that anyone embedding
+   * jank doesn't need to duplicate it in their setup. */
   using namespace jank;
   using namespace jank::runtime;
 
@@ -271,42 +284,43 @@ int main(int const argc, char const **argv)
     {
       return parse_result.expect_err();
     }
-    auto const &opts(parse_result.expect_ok());
 
-    if(opts.gc_incremental)
+    if(jank::util::cli::opts.gc_incremental)
     {
       GC_enable_incremental();
     }
 
-    profile::configure(opts);
+    profile::configure();
     profile::timer const timer{ "main" };
 
-    __rt_ctx = new(GC) runtime::context{ opts };
+    __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
     jank_load_clojure_string_native();
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 
-    switch(opts.command)
+    Cpp::EnableDebugOutput(false);
+
+    switch(jank::util::cli::opts.command)
     {
       case util::cli::command::run:
-        run(opts);
+        run();
         break;
       case util::cli::command::compile_module:
-        compile_module(opts);
+        compile_module();
         break;
       case util::cli::command::repl:
-        repl(opts);
+        repl();
         break;
       case util::cli::command::cpp_repl:
-        cpp_repl(opts);
+        cpp_repl();
         break;
       case util::cli::command::run_main:
-        run_main(opts);
+        run_main();
         break;
       case util::cli::command::compile:
-        compile(opts);
+        compile();
         break;
     }
     return 0;

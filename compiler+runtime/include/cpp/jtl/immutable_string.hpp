@@ -4,24 +4,19 @@
 
 #include <jtl/primitive.hpp>
 #include <jtl/assert.hpp>
+#include <jtl/immutable_string_view.hpp>
 
 #include <jank/type.hpp>
 
-namespace jank
+namespace jank::hash
 {
-  namespace hash
-  {
-    u32 integer(uhash const input);
-  }
-
-  namespace util
-  {
-    struct string_builder;
-  }
+  u32 integer(uhash const input);
 }
 
 namespace jtl
 {
+  struct string_builder;
+
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
@@ -72,7 +67,7 @@ namespace jtl
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-    friend struct jank::util::string_builder;
+    friend struct jtl::string_builder;
 
     constexpr immutable_string() noexcept
     {
@@ -157,7 +152,7 @@ namespace jtl
       }
     }
 
-    constexpr immutable_string(jank::native_persistent_string_view const &s)
+    constexpr immutable_string(immutable_string_view const &s)
       : immutable_string{ s.data(), s.size() }
     {
     }
@@ -266,6 +261,12 @@ namespace jtl
     constexpr value_type operator[](size_type const index) const noexcept
     {
       return data()[index];
+    }
+
+    [[gnu::const]]
+    constexpr immutable_string_view view() const noexcept
+    {
+      return { data(), size() };
     }
 
     /*** Searches. ***/
@@ -429,7 +430,7 @@ namespace jtl
     }
 
     [[gnu::const]]
-    constexpr bool starts_with(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool starts_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -461,7 +462,7 @@ namespace jtl
     }
 
     [[gnu::const]]
-    constexpr bool ends_with(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool ends_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -486,7 +487,7 @@ namespace jtl
     }
 
     [[gnu::const]]
-    constexpr bool contains(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool contains(jtl::immutable_string_view const &s) const noexcept
     {
       return find(s) != npos;
     }
@@ -579,7 +580,7 @@ namespace jtl
     }
 
     [[gnu::const]]
-    constexpr bool operator!=(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool operator!=(jtl::immutable_string_view const &s) const noexcept
     {
       auto const length(s.size());
       /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
@@ -587,7 +588,7 @@ namespace jtl
     }
 
     [[gnu::const]]
-    constexpr bool operator==(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool operator==(jtl::immutable_string_view const &s) const noexcept
     {
       return !(*this != s);
     }
@@ -654,7 +655,7 @@ namespace jtl
     }
 
     /*** Conversions. ***/
-    constexpr operator jank::native_persistent_string_view() const
+    constexpr operator jtl::immutable_string_view() const
     {
       return { data(), size() };
     }
@@ -685,7 +686,7 @@ namespace jtl
       auto const ptr(data());
       for(size_type i{}; i != size(); ++i)
       {
-        store.hash = 31 * store.hash + (ptr[i] & 0xff);
+        store.hash = (31 * store.hash) + (ptr[i] & 0xff);
       }
       return store.hash = jank::hash::integer(store.hash);
     }
@@ -919,7 +920,7 @@ namespace jtl
 
   [[gnu::const]]
   constexpr bool
-  operator==(jank::native_persistent_string_view const &lhs, immutable_string const &rhs) noexcept
+  operator==(jtl::immutable_string_view const &lhs, immutable_string const &rhs) noexcept
   {
     return !(rhs != lhs);
   }
@@ -956,7 +957,7 @@ namespace jtl
 
   constexpr std::ostream &operator<<(std::ostream &os, immutable_string const &s)
   {
-    return os << static_cast<jank::native_persistent_string_view>(s);
+    return os << std::string_view{ s.data(), s.size() };
   }
 }
 

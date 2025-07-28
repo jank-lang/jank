@@ -1,0 +1,4 @@
+(let* [a (cpp/int.)
+       b (cpp/float.)]
+  (if (== 0 a b)
+    :success))

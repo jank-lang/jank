@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_default
+          {
+            struct foo
+            {
+              int a{}, b{7};
+            };
+          }")
+(let* [f (cpp/new cpp/jank.cpp.new_.complex.pass_default.foo)]
+  (if (and (= 0 (cpp/.-a (cpp/* f))) (= 7 (cpp/.-b (cpp/* f))))
+    :success))

@@ -1,5 +1,7 @@
 #include <exception>
 
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Target/TargetMachine.h>
@@ -16,13 +18,17 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
+#include <jank/analyze/pass/optimize.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/process_location.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/processor.hpp>
+#include <jank/error/codegen.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime
@@ -34,17 +40,11 @@ namespace jank::runtime
   context *__rt_ctx{};
 
   context::context()
-    : context(util::cli::options{})
+    : binary_version{ util::binary_version() }
+    , jit_prc{ binary_version }
+    , binary_cache_dir{ util::binary_cache_dir(binary_version) }
   {
-  }
-
-  context::context(util::cli::options const &opts)
-    : jit_prc{ opts }
-    , binary_cache_dir{ util::binary_cache_dir(opts.optimization_level,
-                                               opts.include_dirs,
-                                               opts.define_macros) }
-    , module_loader{ *this, opts.module_path }
-  {
+    intern_ns(make_box<obj::symbol>("cpp"));
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 
     auto const file_sym(make_box<obj::symbol>("*file*"));
@@ -153,79 +153,118 @@ namespace jank::runtime
       };
     }
 
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_file_var, make_box(path))) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, make_box(path))) };
 
     return eval_string(file.expect_ok().view());
   }
 
-  object_ref context::eval_string(native_persistent_string_view const &code)
+  object_ref context::eval_string(jtl::immutable_string_view const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     object_ref ret{ jank_nil };
-    native_vector<analyze::expression_ref> exprs{};
+    native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
-      auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
-      ret = evaluate::eval(expr.expect_ok());
-      exprs.emplace_back(expr.expect_ok());
+      analyze::processor an_prc{ *this };
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
+          .expect_ok()));
+      ret = evaluate::eval(expr);
+
+      forms.emplace_back(form.expect_ok().unwrap().ptr);
     }
 
+    /* When compiling, we analyze twice. This is because eval will modify its expression
+     * in order to wrap it in a function. Undoing this is arduous and error prone, so
+     * we just don't bother. */
     if(truthy(compile_files_var->deref()))
     {
       auto const &module(runtime::to_string(current_module_var->deref()));
-      /* No matter what's in the fn, we'll return nil. */
-      exprs.emplace_back(
-        make_ref<analyze::expr::primitive_literal>(analyze::expression_position::tail,
-                                                   an_prc.root_frame,
-                                                   true,
-                                                   jank_nil));
-      /* TODO: Pass in module_to_load_function result */
-      auto wrapped_exprs(evaluate::wrap_expressions(exprs, an_prc, module));
-      auto fn(static_ref_cast<analyze::expr::function>(wrapped_exprs));
-      fn->name = module::module_to_load_function(module);
-      fn->unique_name = fn->name;
-      codegen::llvm_processor cg_prc{ wrapped_exprs, module, codegen::compilation_target::module };
-      cg_prc.gen().expect_ok();
-      write_module(cg_prc.ctx->module_name, cg_prc.ctx->module).expect_ok();
+      auto const name{ module::module_to_load_function(module) };
+
+      auto const form{ runtime::conj(
+        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(std::move(forms)),
+                                    obj::persistent_vector::empty()),
+                      make_box<obj::symbol>(name)),
+        make_box<obj::symbol>("fn*")) };
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
+      auto const fn{ static_box_cast<analyze::expr::function>(expr) };
+      fn->unique_name = name;
+
+      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      {
+        codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
+        cg_prc.gen().expect_ok();
+        cg_prc.optimize();
+        write_module(cg_prc.ctx->module_name, cg_prc.llvm_module).expect_ok();
+      }
+      else
+      {
+        codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
+        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+        auto const code{ cg_prc.declaration_str() };
+        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+        if(!parse_res)
+        {
+          /* TODO: Helper to turn an llvm::Error into a string. */
+          jtl::immutable_string res{ "Unable to compile generated C++ source." };
+          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+          throw error::internal_codegen_failure(res);
+        }
+        auto &partial_tu{ parse_res.get() };
+        auto module_name{ runtime::to_string(current_module_var->deref()) };
+        write_module(module_name, partial_tu.TheModule.get()).expect_ok();
+      }
     }
 
     return ret;
   }
 
-  void context::eval_cpp_string(native_persistent_string_view const &code) const
+  jtl::string_result<void> context::eval_cpp_string(jtl::immutable_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
-    /* TODO: Handle all the errors here to avoid exceptions. Also, return a message that
-     * is valuable to the user. */
-    auto &partial_tu{ jit_prc.interpreter->Parse({ code.data(), code.size() }).get() };
+    auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+    if(!parse_res)
+    {
+      /* TODO: Helper to turn an llvm::Error into a string. */
+      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+      return err(res);
+    }
+    auto &partial_tu{ parse_res.get() };
 
     /* Writing the module before executing it because `llvm::Interpreter::Execute`
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
       auto module_name{ runtime::to_string(current_module_var->deref()) };
-      write_module(module_name, partial_tu.TheModule).expect_ok();
+      write_module(module_name, partial_tu.TheModule.get()).expect_ok();
     }
 
-    auto err(jit_prc.interpreter->Execute(partial_tu));
+    auto exec_res(jit_prc.interpreter->Execute(partial_tu));
+    if(exec_res)
+    {
+      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      llvm::logAllUnhandledErrors(std::move(exec_res), llvm::errs(), "error: ");
+      return err(res);
+    }
+    return ok();
   }
 
-  object_ref context::read_string(native_persistent_string_view const &code)
+  object_ref context::read_string(jtl::immutable_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
 
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_file_var, jank_nil)) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, jank_nil)) };
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
@@ -240,7 +279,7 @@ namespace jank::runtime
   }
 
   native_vector<analyze::expression_ref>
-  context::analyze_string(native_persistent_string_view const &code, bool const eval)
+  context::analyze_string(jtl::immutable_string_view const &code, bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -249,24 +288,28 @@ namespace jank::runtime
     native_vector<analyze::expression_ref> ret{};
     for(auto const &form : p_prc)
     {
-      auto const expr(
-        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
       if(eval)
       {
+        auto const expr(
+          an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement));
         if(expr.is_err())
         {
           util::println("{}", expr.expect_err()->message);
         }
-        evaluate::eval(expr.expect_ok());
+        evaluate::eval(analyze::pass::optimize(expr.expect_ok()));
       }
-      ret.emplace_back(expr.expect_ok());
+
+      auto const expr(analyze::pass::optimize(
+        an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
+          .expect_ok()));
+      ret.emplace_back(expr);
     }
 
     return ret;
   }
 
   jtl::result<void, jtl::immutable_string>
-  context::load_module(native_persistent_string_view const &module, module::origin const ori)
+  context::load_module(jtl::immutable_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -285,11 +328,9 @@ namespace jank::runtime
      * current ns to the module being loaded. To avoid overwriting the previous `ns` value, `current_ns_var`
      * binding is pushed in the context, and then `in-ns` sets the value of `*ns*` var in
      * the new binding scope. */
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(current_ns_var, ns),
-                                    std::make_pair(current_module_var,
-                                                   make_box(absolute_module))) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_ns_var, ns),
+      std::make_pair(current_module_var, make_box(absolute_module))) };
 
     try
     {
@@ -301,30 +342,30 @@ namespace jank::runtime
     }
     catch(object_ref const &e)
     {
-      return err(runtime::to_string(e));
+      return err(runtime::to_code_string(e));
     }
   }
 
   jtl::result<void, jtl::immutable_string>
-  context::compile_module(native_persistent_string_view const &module)
+  context::compile_module(jtl::immutable_string_view const &module)
   {
     module_dependencies.clear();
 
-    binding_scope const preserve{ *this,
-                                  obj::persistent_hash_map::create_unique(
-                                    std::make_pair(compile_files_var, jank_true)) };
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(compile_files_var, jank_true)) };
 
     return load_module(util::format("/{}", module), module::origin::latest);
   }
 
   object_ref context::eval(object_ref const o)
   {
-    auto const expr(an_prc.analyze(o, analyze::expression_position::value));
-    return evaluate::eval(expr.expect_ok());
+    auto const expr(
+      analyze::pass::optimize(an_prc.analyze(o, analyze::expression_position::value).expect_ok()));
+    return evaluate::eval(expr);
   }
 
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
-                                                 std::unique_ptr<llvm::Module> const &module) const
+                                                 jtl::ref<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
@@ -341,7 +382,7 @@ namespace jank::runtime
                               module_path.c_str(),
                               file_error.message()));
     }
-    //codegen_ctx->module->print(llvm::outs(), nullptr);
+    //module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;
@@ -375,12 +416,12 @@ namespace jank::runtime
     return unique_string("G_");
   }
 
-  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix) const
+  jtl::immutable_string context::unique_string(jtl::immutable_string_view const &prefix) const
   {
-    static jtl::immutable_string const dot{ "\\." };
+    //static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
-    return util::format("{}-{}-{}",
-                        runtime::munge_extra(ns->name->get_name(), dot, "_"),
+    return util::format("{}-{}",
+                        //runtime::munge_extra(ns->name->get_name(), dot, "_"),
                         prefix.data(),
                         ++ns->symbol_counter);
   }
@@ -390,7 +431,7 @@ namespace jank::runtime
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(native_persistent_string_view const &prefix) const
+  obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
   {
     return { "", unique_string(prefix) };
   }
@@ -414,7 +455,7 @@ namespace jank::runtime
       return found->second;
     }
 
-    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym, *this)));
+    auto const result(locked_namespaces->emplace(sym, make_box<ns>(sym)));
     return result.first->second;
   }
 
@@ -593,24 +634,21 @@ namespace jank::runtime
     return o;
   }
 
-  context::binding_scope::binding_scope(context &rt_ctx)
-    : rt_ctx{ rt_ctx }
+  context::binding_scope::binding_scope()
   {
-    rt_ctx.push_thread_bindings().expect_ok();
+    __rt_ctx->push_thread_bindings().expect_ok();
   }
 
-  context::binding_scope::binding_scope(context &rt_ctx,
-                                        obj::persistent_hash_map_ref const bindings)
-    : rt_ctx{ rt_ctx }
+  context::binding_scope::binding_scope(obj::persistent_hash_map_ref const bindings)
   {
-    rt_ctx.push_thread_bindings(bindings).expect_ok();
+    __rt_ctx->push_thread_bindings(bindings).expect_ok();
   }
 
   context::binding_scope::~binding_scope()
   {
     try
     {
-      rt_ctx.pop_thread_bindings().expect_ok();
+      __rt_ctx->pop_thread_bindings().expect_ok();
     }
     catch(...)
     {
@@ -640,7 +678,7 @@ namespace jank::runtime
     if(bindings->type != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
-                              runtime::to_string(bindings)));
+                              runtime::to_code_string(bindings)));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
@@ -664,7 +702,8 @@ namespace jank::runtime
       auto const var(expect_object<var>(entry->data[0]));
       if(!var->dynamic.load())
       {
-        return err(util::format("Can't dynamically bind non-dynamic var: {}", var->to_string()));
+        return err(
+          util::format("Can't dynamically bind non-dynamic var: {}", var->to_code_string()));
       }
 
       /* XXX: Once this is set to true, here, it's never unset. */

@@ -9,6 +9,9 @@
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
 
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/c_api.h>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>

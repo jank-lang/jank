@@ -489,7 +489,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
 
     if(character.is_none())
@@ -1191,10 +1191,8 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    context::binding_scope const scope{ *__rt_ctx,
-                                        obj::persistent_hash_map::create_unique(
-                                          std::make_pair(__rt_ctx->gensym_env_var,
-                                                         obj::persistent_hash_map::empty())) };
+    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->gensym_env_var, obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
     quoted = false;
@@ -1287,7 +1285,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const slash(sv.find('/'));
     jtl::immutable_string ns, name;
     if(slash != jtl::immutable_string::npos)
@@ -1382,7 +1380,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     bool const resolved{ sv[0] != ':' };
@@ -1472,7 +1470,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(token.data));
     return object_source_info{ make_box<obj::persistent_string>(
                                  jtl::immutable_string{ sv.data(), sv.size() }),
                                token,
@@ -1483,7 +1481,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(token.data));
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {

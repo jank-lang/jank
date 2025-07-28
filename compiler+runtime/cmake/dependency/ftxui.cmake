@@ -7,7 +7,7 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CMAKE_CXX_CLANG_TIDY "")
   set(FTXUI_QUIET ON CACHE BOOL "Disable noisy CMake output")
 
-  add_subdirectory(third-party/ftxui)
+  add_subdirectory(third-party/ftxui EXCLUDE_FROM_ALL)
 
   unset(FTXUI_QUIET)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_OLD}")

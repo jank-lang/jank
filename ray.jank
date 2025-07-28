@@ -35,10 +35,10 @@
                                   (conj (vec body) (list 'recur (list 'next '__gen_acc)))))))
           binding-seq)))
 
-(defn println [& args]
+#_(defn println [& args]
   )
 
-(defn print [& args]
+#_(defn print [& args]
   )
 
 (defn print+space [data]

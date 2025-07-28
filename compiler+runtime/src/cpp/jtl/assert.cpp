@@ -5,15 +5,15 @@
 
 namespace jtl
 {
-  void do_assertion_panic(immutable_string const &msg)
+  void do_assertion_panic(immutable_string_view const &msg)
   {
     jank::util::println(stderr, "{}", msg);
     cpptrace::generate_trace().print();
     ::abort();
   }
 
-  void do_assertion_throw(immutable_string const &msg)
+  void do_assertion_throw(immutable_string_view const &msg)
   {
-    throw std::runtime_error{ msg };
+    throw std::runtime_error{ std::string{ msg } };
   }
 }

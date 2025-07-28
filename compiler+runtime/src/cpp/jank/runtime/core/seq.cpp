@@ -943,16 +943,21 @@ namespace jank::runtime
       o);
   }
 
+  jtl::immutable_string str(object_ref const o)
+  {
+    return runtime::to_string(o);
+  }
+
   jtl::immutable_string str(object_ref const o, object_ref const args)
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     buff.reserve(16);
     if(!is_nil(o))
     {
       runtime::to_string(o, buff);
     }
     return visit_seqable(
-      [](auto const typed_args, util::string_builder &buff) -> jtl::immutable_string {
+      [](auto const typed_args, jtl::string_builder &buff) -> jtl::immutable_string {
         for(auto const e : make_sequence_range(typed_args))
         {
           if(is_nil(e))

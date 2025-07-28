@@ -66,7 +66,7 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {
@@ -97,7 +97,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_string(typed_more->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_more).skip(1))
           {
@@ -125,7 +125,7 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {
@@ -156,7 +156,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {

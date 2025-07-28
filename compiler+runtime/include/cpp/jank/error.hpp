@@ -78,13 +78,16 @@ namespace jank::error
     analyze_unresolved_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
+    analyze_invalid_conversion,
     internal_analyze_failure,
 
     internal_codegen_failure,
 
     aot_compilation_failure,
-    aot_clang_executable_not_found,
     internal_aot_failure,
+
+    system_clang_executable_not_found,
+    internal_system_failure,
 
     internal_runtime_failure,
 
@@ -215,10 +218,14 @@ namespace jank::error
         return "analyze/unresolved-symbol";
       case kind::analyze_macro_expansion_exception:
         return "analyze/macro-expansion-exception";
+      case kind::analyze_invalid_conversion:
+        return "analyze/invalid-conversion";
+
       case kind::aot_compilation_failure:
         return "aot/compilation-failure";
-      case kind::aot_clang_executable_not_found:
-        return "aot/clang-executable-not-found";
+
+      case kind::system_clang_executable_not_found:
+        return "system/clang-executable-not-found";
 
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
@@ -228,12 +235,16 @@ namespace jank::error
         return "internal/aot-failure";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
+      case kind::internal_system_failure:
+        return "internal/system-failure";
       case kind::internal_failure:
         return "internal/failure";
     }
     return "unknown";
   }
 
+  /* NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Assign)
+   * This is a clang-tidy bug. https://github.com/llvm/llvm-project/issues/61687 */
   struct note
   {
     enum class kind : u8

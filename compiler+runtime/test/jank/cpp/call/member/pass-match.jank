@@ -1,0 +1,22 @@
+(cpp/raw "namespace jank::cpp::call::member::pass_match
+          {
+            struct bar
+            {
+              int foo(int i)
+              {
+                return i + 1;
+              }
+
+              float foo(float i)
+              {
+                return i;
+              }
+            };
+
+            int a{ 7 };
+          }")
+(let* [b (cpp/jank.cpp.call.member.pass_match.bar.)
+       a (cpp/.foo b cpp/jank.cpp.call.member.pass_match.a)
+       f (cpp/.foo b (cpp/float. 3.0))]
+  (if (and (= 8 a) (= 3.0 f))
+    :success))

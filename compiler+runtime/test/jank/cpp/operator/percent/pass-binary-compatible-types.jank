@@ -1,0 +1,5 @@
+(let* [i (cpp/int. 2)
+       l (cpp/long. 5)
+       _ (assert (= 0 (cpp/% i i)))
+       _ (assert (= 1 (cpp/% l i)))]
+  :success)

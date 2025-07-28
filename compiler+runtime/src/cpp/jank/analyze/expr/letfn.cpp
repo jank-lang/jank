@@ -38,4 +38,14 @@ namespace jank::analyze::expr
                                                           make_box("body"),
                                                           body->to_runtime_data()));
   }
+
+  void letfn::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    for(auto const &p : pairs)
+    {
+      f(p.second);
+    }
+    f(body);
+    expression::walk(f);
+  }
 }

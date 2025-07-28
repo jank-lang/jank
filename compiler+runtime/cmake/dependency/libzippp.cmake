@@ -5,7 +5,8 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
   set(CMAKE_CXX_CLANG_TIDY "")
 
-  add_subdirectory(third-party/libzippp)
+  add_subdirectory(third-party/libzippp EXCLUDE_FROM_ALL)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_OLD}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_OLD}")
 set(CMAKE_CXX_CLANG_TIDY ${CMAKE_CXX_CLANG_TIDY_OLD})

@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::call::global::template_::pass_variadic
+          {
+            template <typename ...Args>
+            int foo(Args ...args)
+            {
+              int sum{};
+              int const dummy[]{ (sum += args, 0)... };
+              return sum;
+            }
+          }")
+(let* [i (cpp/int. 5)
+       a (cpp/jank.cpp.call.global.template_.pass_variadic.foo i i i i i)]
+  (if (= 25 a)
+    :success))

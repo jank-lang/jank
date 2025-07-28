@@ -37,4 +37,8 @@ namespace jank::analyze
                                                     make_box("needs_box"),
                                                     make_box(needs_box));
   }
+
+  void expression::walk(std::function<void(jtl::ref<expression>)> const &)
+  {
+  }
 }

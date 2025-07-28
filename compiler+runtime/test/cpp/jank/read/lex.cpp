@@ -27,11 +27,6 @@ namespace jank::read::lex
     }
   }
 
-  static constexpr std::array<token, 0> make_tokens()
-  {
-    return {};
-  }
-
   template <usize N>
   static constexpr std::array<token, N> make_tokens(token const (&arr)[N])
   {
@@ -94,6 +89,8 @@ namespace jank::read::lex
         return lhs_token == rhs_token;
       }
     }
+
+    return true;
   }
 
   /* This really helps with doctest comparison outputs. */
@@ -184,8 +181,8 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { { 0, 1, 1 }, { 1, 1, 2 }, token_kind::comment, ""sv },
-                { { 2, 2, 1 }, { 3, 2, 2 }, token_kind::comment, ""sv }
+                { { { 0, 1, 1 } }, { { 1, 1, 2 } }, token_kind::comment, ""sv },
+                { { { 2, 2, 1 } }, { { 3, 2, 2 } }, token_kind::comment, ""sv }
         }));
       }
 
@@ -195,7 +192,7 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { { 0, 1, 1 }, { 13, 1, 14 }, token_kind::comment, " Hello hello"sv }
+                { { { 0, 1, 1 } }, { { 13, 1, 14 } }, token_kind::comment, " Hello hello"sv }
         }));
       }
 
@@ -203,10 +200,12 @@ namespace jank::read::lex
       {
         processor p{ "; Hello hello ; \"hi hi\"" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(
-          tokens
-          == make_tokens({
-            { { 0, 1, 1 }, { 23, 1, 24 }, token_kind::comment, " Hello hello ; \"hi hi\""sv }
+        CHECK(tokens
+              == make_tokens({
+                { { { 0, 1, 1 } },
+                 { { 23, 1, 24 } },
+                 token_kind::comment,
+                 " Hello hello ; \"hi hi\""sv }
         }));
       }
 
@@ -214,9 +213,10 @@ namespace jank::read::lex
       {
         processor p{ ";;; Hello hello 12" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { { 0, 1, 1 }, { 18, 1, 19 }, token_kind::comment, " Hello hello 12"sv }
+        CHECK(
+          tokens
+          == make_tokens({
+            { { { 0, 1, 1 } }, { { 18, 1, 19 } }, token_kind::comment, " Hello hello 12"sv }
         }));
       }
 
@@ -226,9 +226,9 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {           0,             1, token_kind::integer,       1ll },
-                {           2,             1, token_kind::integer,       2ll },
-                { { 4, 1, 5 }, { 10, 1, 11 }, token_kind::comment, " meow"sv }
+                {               0,                 1, token_kind::integer,       1ll },
+                {               2,                 1, token_kind::integer,       2ll },
+                { { { 4, 1, 5 } }, { { 10, 1, 11 } }, token_kind::comment, " meow"sv }
         }));
       }
 
@@ -238,9 +238,9 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                {           0,            1, token_kind::integer,       1ll },
-                { { 2, 1, 3 },  { 8, 1, 9 }, token_kind::comment, " meow"sv },
-                { { 9, 2, 1 }, { 10, 2, 2 }, token_kind::integer,       2ll }
+                {               0,                1, token_kind::integer,       1ll },
+                { { { 2, 1, 3 } },  { { 8, 1, 9 } }, token_kind::comment, " meow"sv },
+                { { { 9, 2, 1 } }, { { 10, 2, 2 } }, token_kind::integer,       2ll }
         }));
       }
     }
@@ -673,8 +673,8 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { { 0, 1, 1 },
-                 { 39, 1, 40 },
+                { { { 0, 1, 1 } },
+                 { { 39, 1, 40 } },
                  token_kind::big_integer,
                  { .number_literal = "0123456789abcdefghijklmnopqrstuvwxyz",
                     .radix = 36,
@@ -1696,7 +1696,7 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { { 0, 1, 1 }, { 15, 3, 7 }, token_kind::string, "foo\nbar\nspam\t"sv }
+                { { { 0, 1, 1 } }, { { 15, 3, 7 } }, token_kind::string, "foo\nbar\nspam\t"sv }
         }));
       }
 
@@ -1756,8 +1756,8 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { { 0, 1, 1 }, { 1, 1, 2 }, token_kind::meta_hint },
-                { { 2, 2, 1 }, { 6, 2, 5 }, token_kind::keyword, "foo"sv }
+                { { { 0, 1, 1 } }, { { 1, 1, 2 } }, token_kind::meta_hint },
+                { { { 2, 2, 1 } }, { { 6, 2, 5 } }, token_kind::keyword, "foo"sv }
         }));
       }
     }
@@ -1817,8 +1817,8 @@ namespace jank::read::lex
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  {           0,           2, token_kind::comment, ""sv },
-                  { { 3, 2, 1 }, { 5, 2, 3 }, token_kind::comment, ""sv }
+                  {               0,               2, token_kind::comment, ""sv },
+                  { { { 3, 2, 1 } }, { { 5, 2, 3 } }, token_kind::comment, ""sv }
           }));
         }
 
@@ -1880,9 +1880,9 @@ namespace jank::read::lex
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  {           0,           1, token_kind::integer,     1ll },
-                  {           2,           5, token_kind::comment, "foo"sv },
-                  { { 8, 2, 1 }, { 9, 2, 2 }, token_kind::integer,     2ll }
+                  {               0,               1, token_kind::integer,     1ll },
+                  {               2,               5, token_kind::comment, "foo"sv },
+                  { { { 8, 2, 1 } }, { { 9, 2, 2 } }, token_kind::integer,     2ll }
           }));
         }
 
@@ -1892,8 +1892,8 @@ namespace jank::read::lex
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  {           0,            5, token_kind::comment, "foo"sv },
-                  { { 6, 2, 1 }, { 11, 2, 6 }, token_kind::comment, "bar"sv },
+                  {               0,                5, token_kind::comment, "foo"sv },
+                  { { { 6, 2, 1 } }, { { 11, 2, 6 } }, token_kind::comment, "bar"sv },
           }));
         }
 
@@ -2007,9 +2007,9 @@ namespace jank::read::lex
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  {           0,           1,        token_kind::reader_macro },
-                  { { 2, 2, 1 }, { 3, 2, 2 },  token_kind::open_curly_bracket },
-                  { { 3, 2, 2 }, { 4, 2, 3 }, token_kind::close_curly_bracket }
+                  {               0,               1,        token_kind::reader_macro },
+                  { { { 2, 2, 1 } }, { { 3, 2, 2 } },  token_kind::open_curly_bracket },
+                  { { { 3, 2, 2 } }, { { 4, 2, 3 } }, token_kind::close_curly_bracket }
           }));
         }
       }
@@ -2034,7 +2034,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 { 0, 1, token_kind::syntax_quote },
-                { { 2, 2, 1 }, { 6, 2, 5 }, token_kind::keyword, "foo"sv }
+                { { { 2, 2, 1 } }, { { 6, 2, 5 } }, token_kind::keyword, "foo"sv }
         }));
       }
 
@@ -2057,7 +2057,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 1, token_kind::unquote },
-                  { { 2, 2, 1 }, { 6, 2, 5 }, token_kind::keyword, "foo"sv }
+                  { { { 2, 2, 1 } }, { { 6, 2, 5 } }, token_kind::keyword, "foo"sv }
           }));
         }
       }
@@ -2081,8 +2081,8 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 1, token_kind::unquote },
-                  { { 2, 2, 1 }, { 3, 2, 2 }, token_kind::deref },
-                  { { 3, 2, 2 }, { 7, 2, 6 }, token_kind::keyword, "foo"sv }
+                  { { { 2, 2, 1 } }, { { 3, 2, 2 } }, token_kind::deref },
+                  { { { 3, 2, 2 } }, { { 7, 2, 6 } }, token_kind::keyword, "foo"sv }
           }));
         }
 
@@ -2093,7 +2093,7 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 2, token_kind::unquote_splice },
-                  { { 3, 2, 1 }, { 7, 2, 5 }, token_kind::keyword, "foo"sv }
+                  { { { 3, 2, 1 } }, { { 7, 2, 5 } }, token_kind::keyword, "foo"sv }
           }));
         }
       }
@@ -2260,14 +2260,22 @@ namespace jank::read::lex
                 { 0, 16, token_kind::keyword, "ありがとう"sv }
         }));
       }
-      SUBCASE("Whitespace Characters")
+
+      /* We disable this test on macOS because it behaves differently. I suspect the
+       * issue is the same as what's reported here. https://github.com/evanj/isspace_locale
+       *
+       * Altogether not a big problem. */
+      if constexpr(jtl::current_platform != jtl::platform::macos_like)
       {
-        processor p{ ":  " };
-        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens({
-                { 0, 7, token_kind::keyword, "  "sv }
-        }));
+        SUBCASE("Whitespace Characters")
+        {
+          processor p{ ":  " };
+          native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 7, token_kind::keyword, "  "sv }
+          }));
+        }
       }
 
 

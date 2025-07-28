@@ -7,7 +7,7 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CMAKE_CXX_CLANG_TIDY "")
   set(BOOST_MP_STANDALONE ON CACHE BOOL "Build a standalone MP lib, with no other deps")
 
-  add_subdirectory(third-party/boost-multiprecision)
+  add_subdirectory(third-party/boost-multiprecision EXCLUDE_FROM_ALL)
 
   unset(CPPTRACE_STD_FORMAT)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_OLD}")

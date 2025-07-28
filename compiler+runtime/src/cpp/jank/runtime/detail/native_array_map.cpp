@@ -290,7 +290,7 @@ namespace jank::runtime::detail
         size) };
     }
 
-    auto const new_capacity{ size * 2 };
+    auto const new_capacity{ static_cast<u8>(size * 2) };
 
     if(new_capacity < cap)
     {

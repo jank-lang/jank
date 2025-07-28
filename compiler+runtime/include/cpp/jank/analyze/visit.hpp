@@ -22,6 +22,19 @@
 #include <jank/analyze/expr/throw.hpp>
 #include <jank/analyze/expr/try.hpp>
 #include <jank/analyze/expr/case.hpp>
+#include <jank/analyze/expr/cpp_raw.hpp>
+#include <jank/analyze/expr/cpp_type.hpp>
+#include <jank/analyze/expr/cpp_value.hpp>
+#include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_call.hpp>
+#include <jank/analyze/expr/cpp_constructor_call.hpp>
+#include <jank/analyze/expr/cpp_member_call.hpp>
+#include <jank/analyze/expr/cpp_member_access.hpp>
+#include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
+#include <jank/analyze/expr/cpp_box.hpp>
+#include <jank/analyze/expr/cpp_unbox.hpp>
+#include <jank/analyze/expr/cpp_new.hpp>
+#include <jank/analyze/expr/cpp_delete.hpp>
 
 namespace jank::analyze
 {
@@ -72,6 +85,33 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::try_>(e), std::forward<Args>(args)...);
       case expression_kind::case_:
         return f(jtl::static_ref_cast<expr::case_>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_raw:
+        return f(jtl::static_ref_cast<expr::cpp_raw>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_type:
+        return f(jtl::static_ref_cast<expr::cpp_type>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_value:
+        return f(jtl::static_ref_cast<expr::cpp_value>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_cast:
+        return f(jtl::static_ref_cast<expr::cpp_cast>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_call:
+        return f(jtl::static_ref_cast<expr::cpp_call>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_constructor_call:
+        return f(jtl::static_ref_cast<expr::cpp_constructor_call>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_member_call:
+        return f(jtl::static_ref_cast<expr::cpp_member_call>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_member_access:
+        return f(jtl::static_ref_cast<expr::cpp_member_access>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_builtin_operator_call:
+        return f(jtl::static_ref_cast<expr::cpp_builtin_operator_call>(e),
+                 std::forward<Args>(args)...);
+      case expression_kind::cpp_box:
+        return f(jtl::static_ref_cast<expr::cpp_box>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_unbox:
+        return f(jtl::static_ref_cast<expr::cpp_unbox>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_new:
+        return f(jtl::static_ref_cast<expr::cpp_new>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_delete:
+        return f(jtl::static_ref_cast<expr::cpp_delete>(e), std::forward<Args>(args)...);
 
       case expression_kind::uninitialized:
         break;

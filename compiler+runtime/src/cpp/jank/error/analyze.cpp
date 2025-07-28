@@ -222,6 +222,11 @@ namespace jank::error
                       std::make_unique<cpptrace::stacktrace>(trace));
   }
 
+  error_ref analyze_invalid_conversion(jtl::immutable_string const &message)
+  {
+    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown);
+  }
+
   error_ref internal_analyze_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion)
   {

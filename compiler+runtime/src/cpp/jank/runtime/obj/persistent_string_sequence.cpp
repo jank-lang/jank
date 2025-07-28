@@ -25,21 +25,21 @@ namespace jank::runtime::obj
     return runtime::equal(o, str->data.begin() + index, str->data.end());
   }
 
-  void persistent_string_sequence::to_string(util::string_builder &buff) const
+  void persistent_string_sequence::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
   }
 
   jtl::immutable_string persistent_string_sequence::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return buff.release();
   }
 
   jtl::immutable_string persistent_string_sequence::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_code_string(str->data.begin() + index, str->data.end(), "(", ')', buff);
     return buff.release();
   }

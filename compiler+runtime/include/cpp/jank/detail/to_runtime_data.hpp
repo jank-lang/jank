@@ -33,21 +33,21 @@ namespace jank::detail
   template <typename T>
   object_ref to_runtime_data(jtl::ref<T> const &d)
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_box(sb("ref(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 
   template <typename T>
   object_ref to_runtime_data(oref<T> const &d)
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_box(sb("oref(")(d.data)(")").release());
   }
 
   template <typename T>
   object_ref to_runtime_data(jtl::ptr<T> const &d)
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_box(sb("ptr(")(reinterpret_cast<void const *>(d.data))(")").release());
   }
 

@@ -12,4 +12,5 @@ pushd "${here}/../build"
   then
     make clean
   fi
+  rm -rf ar-cache
 popd

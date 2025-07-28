@@ -505,6 +505,17 @@ extern "C"
     return trans.to_persistent().erase();
   }
 
+  jank_object_ref jank_box(void const * const o)
+  {
+    return make_box<obj::opaque_box>(o).erase();
+  }
+
+  void *jank_unbox(jank_object_ref const o)
+  {
+    auto const box_obj(reinterpret_cast<object *>(o));
+    return try_object<obj::opaque_box>(box_obj)->data;
+  }
+
   jank_arity_flags jank_function_build_arity_flags(jank_u8 const highest_fixed_arity,
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)
@@ -962,17 +973,6 @@ extern "C"
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
       GC_enable();
-
-      //obj::symbol_ref r;
-      //r = make_box<obj::symbol>("foo");
-      //if(r)
-      //{
-      //  object_ref o;
-      //  o = erase(r);
-      //  util::println("r {}", r->to_code_string());
-      //}
-
-      //return 0;
 
       llvm::llvm_shutdown_obj const Y{};
 

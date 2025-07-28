@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::call::global::template_::pass_argument
+          {
+            template <typename T>
+            T foo(T t)
+            {
+              return t;
+            }
+          }")
+(let* [i (cpp/int. 42)
+       a (cpp/jank.cpp.call.global.template_.pass_argument.foo i)]
+  (if (= 42 a)
+    :success))

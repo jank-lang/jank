@@ -46,4 +46,13 @@ namespace jank::analyze::expr
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("body"), body_maps));
   }
+
+  void do_::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    for(auto const expr : values)
+    {
+      f(expr);
+    }
+    expression::walk(f);
+  }
 }

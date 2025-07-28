@@ -16,10 +16,12 @@ namespace jank::analyze::expr
         local_frame_ptr frame,
         bool needs_box,
         native_vector<expression_ref> &&values);
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
 
+    /* TODO: Rename to value_exprs. */
     native_vector<expression_ref> values{};
   };
 }

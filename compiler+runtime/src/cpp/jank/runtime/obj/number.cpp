@@ -23,14 +23,14 @@ namespace jank::runtime::obj
     return data == b->data;
   }
 
-  void boolean::to_string(util::string_builder &buff) const
+  void boolean::to_string(jtl::string_builder &buff) const
   {
     buff(data);
   }
 
   jtl::immutable_string boolean::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     buff(data);
     return buff.release();
   }
@@ -79,11 +79,11 @@ namespace jank::runtime::obj
 
   jtl::immutable_string integer::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb(data).release();
   }
 
-  void integer::to_string(util::string_builder &buff) const
+  void integer::to_string(jtl::string_builder &buff) const
   {
     buff(data);
   }
@@ -143,12 +143,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string real::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     to_string(sb);
     return sb.release();
   }
 
-  void real::to_string(util::string_builder &buff) const
+  void real::to_string(jtl::string_builder &buff) const
   {
     if(std::isinf(data))
     {
