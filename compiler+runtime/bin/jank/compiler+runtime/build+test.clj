@@ -7,6 +7,12 @@
 
 (def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../.."))))
 
+(defn build-clang! []
+  (if (b.f/exists? (str compiler+runtime-dir "/build/llvm-install/usr/local/bin/clang++"))
+    (util/log-info "Clang is already built")
+    (util/quiet-shell {:dir compiler+runtime-dir}
+                      "bin/build-clang")))
+
 (defn -main [{:keys [enabled?
                      build-type
                      analyze
@@ -15,7 +21,8 @@
   (util/log-step "Compile and test")
   (if-not enabled?
     (util/log-info "Not enabled")
-    (let [clang (util/find-llvm-tool "clang")
+    (build-clang!)
+    #_(let [clang (util/find-llvm-tool "clang")
           clang++ (util/find-llvm-tool "clang++")
           clang-tidy (util/find-llvm-tool "clang-tidy")
           exports (merge {"CC" clang

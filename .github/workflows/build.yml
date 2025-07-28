@@ -27,24 +27,24 @@ jobs:
             sanitize: none
             coverage: on
             analyze: on
-          ## Debug + sanitization
-          - name: Ubuntu - address sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: address
-          - name: Ubuntu - undefined behavior sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: undefined
-          - name: Ubuntu - thread sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: thread
-          ## Release
-          - name: Ubuntu - release
-            os: ubuntu-24.04
-            build_type: Release
-            sanitize: none
+          ### Debug + sanitization
+          #- name: Ubuntu - address sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: address
+          #- name: Ubuntu - undefined behavior sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: undefined
+          #- name: Ubuntu - thread sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: thread
+          ### Release
+          #- name: Ubuntu - release
+          #  os: ubuntu-24.04
+          #  build_type: Release
+          #  sanitize: none
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:

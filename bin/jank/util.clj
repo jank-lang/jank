@@ -4,7 +4,10 @@
             [clojure.string]
             [jank.summary :as summary]))
 
-(def llvm-version 19)
+(def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../compiler+runtime"))))
+(def llvm-bin-dir (str compiler+runtime-dir "/build/llvm-install/usr/local/bin"))
+
+(def llvm-version 21)
 
 (defn get-env
   ([s]
@@ -92,7 +95,7 @@
     major-version))
 
 (defn find-llvm-tool [tool]
-  (loop [names [(str tool "-" llvm-version) tool]]
+  (loop [names [(str llvm-bin-dir "/" tool) (str tool "-" llvm-version) tool]]
     (if (empty? names)
       (do
         (log-error "Unable to find a suitable " tool " for LLVM " llvm-version)
