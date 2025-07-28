@@ -2152,9 +2152,8 @@ namespace jank::codegen
 
     util::format_to(module_buffer, "static void __init(){");
     //util::format_to(module_buffer, "jank::profile::timer __timer{ \"ns __init\" };");
-    util::format_to(
-      module_buffer,
-      "constexpr auto const deps(jank::util::make_array<jtl::immutable_string>(");
+    util::format_to(module_buffer,
+                    "constexpr auto const deps(jank::util::make_array<jtl::immutable_string>(");
     bool needs_comma{};
     for(auto const &dep : __rt_ctx->module_dependencies[module])
     {

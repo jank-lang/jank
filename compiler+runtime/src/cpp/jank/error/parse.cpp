@@ -57,8 +57,7 @@ namespace jank::error
     jtl::string_builder sb;
     return make_error(
       kind::parse_invalid_character,
-      sb("Invalid character '")(std::get<jtl::immutable_string_view>(token.data))("'.")
-        .release(),
+      sb("Invalid character '")(std::get<jtl::immutable_string_view>(token.data))("'.").release(),
       read::source{ token.start, token.end });
   }
 

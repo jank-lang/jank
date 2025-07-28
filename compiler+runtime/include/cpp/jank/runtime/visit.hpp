@@ -106,8 +106,7 @@ namespace jank::runtime
         return fn(expect_object<obj::persistent_array_map_sequence>(erased),
                   std::forward<Args>(args)...);
       case object_type::transient_array_map:
-        return fn(expect_object<obj::transient_array_map>(erased),
-                  std::forward<Args>(args)...);
+        return fn(expect_object<obj::transient_array_map>(erased), std::forward<Args>(args)...);
       case object_type::persistent_hash_map:
         return fn(expect_object<obj::persistent_hash_map>(erased), std::forward<Args>(args)...);
       case object_type::persistent_hash_map_sequence:

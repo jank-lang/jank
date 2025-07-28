@@ -71,7 +71,7 @@ namespace jtl
     void push_back(long long d) &;
     void push_back(unsigned long d) &;
     void push_back(unsigned long long d) &;
-    void push_back(jank::native_big_integer const& d) &;
+    void push_back(jank::native_big_integer const &d) &;
     void push_back(char d) &;
     void push_back(char32_t d) &;
     void push_back(char const *d) &;

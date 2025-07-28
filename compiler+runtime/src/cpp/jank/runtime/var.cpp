@@ -55,8 +55,7 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  static void
-  to_string_impl(ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
+  static void to_string_impl(ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
   {
     buff("#'")(n->name->name)('/')(name->name);
   }
