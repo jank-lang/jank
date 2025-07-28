@@ -11,7 +11,9 @@ cd "${build_dir}"
 export CC=clang
 export CXX=clang++
 
-make_j="$(nproc || echo 4)"
+set +e
+  make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
+set -e
 
 while getopts ":hj:" opt; do
   case "${opt}" in
