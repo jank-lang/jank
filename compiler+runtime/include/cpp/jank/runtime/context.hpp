@@ -76,11 +76,11 @@ namespace jank::runtime
     object_ref macroexpand(object_ref o);
 
     object_ref eval_file(jtl::immutable_string const &path);
-    object_ref eval_string(native_persistent_string_view const &code);
-    jtl::string_result<void> eval_cpp_string(native_persistent_string_view const &code) const;
-    object_ref read_string(native_persistent_string_view const &code);
+    object_ref eval_string(jtl::immutable_string_view const &code);
+    jtl::string_result<void> eval_cpp_string(jtl::immutable_string_view const &code) const;
+    object_ref read_string(jtl::immutable_string_view const &code);
     native_vector<analyze::expression_ref>
-    analyze_string(native_persistent_string_view const &code, bool const eval = true);
+    analyze_string(jtl::immutable_string_view const &code, bool const eval = true);
 
     /* Finds the specified module on the module path and loads it. If
      * the module is already loaded, nothing is done.
@@ -94,11 +94,11 @@ namespace jank::runtime
      * Module meow.cat refers to foo.bar$meow.cat
      */
     jtl::result<void, jtl::immutable_string>
-    load_module(native_persistent_string_view const &module, module::origin ori);
+    load_module(jtl::immutable_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
     jtl::result<void, jtl::immutable_string>
-    compile_module(native_persistent_string_view const &module);
+    compile_module(jtl::immutable_string_view const &module);
 
     object_ref eval(object_ref const o);
 
@@ -108,9 +108,9 @@ namespace jank::runtime
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. */
     jtl::immutable_string unique_string() const;
-    jtl::immutable_string unique_string(native_persistent_string_view const &prefix) const;
+    jtl::immutable_string unique_string(jtl::immutable_string_view const &prefix) const;
     obj::symbol unique_symbol() const;
-    obj::symbol unique_symbol(native_persistent_string_view const &prefix) const;
+    obj::symbol unique_symbol(jtl::immutable_string_view const &prefix) const;
 
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;

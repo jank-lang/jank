@@ -75,7 +75,7 @@ namespace jank::jit
 
         if(skip)
         {
-          util::println("{}success{}", jtl::terminal_color::yellow, jtl::terminal_color::reset);
+          util::println("{}skipped{}", jtl::terminal_color::yellow, jtl::terminal_color::reset);
           skips.push_back(dir_entry.path());
           continue;
         }

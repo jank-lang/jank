@@ -159,7 +159,7 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  object_ref context::eval_string(native_persistent_string_view const &code)
+  object_ref context::eval_string(jtl::immutable_string_view const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
@@ -225,7 +225,7 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::string_result<void> context::eval_cpp_string(native_persistent_string_view const &code) const
+  jtl::string_result<void> context::eval_cpp_string(jtl::immutable_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
@@ -257,7 +257,7 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(native_persistent_string_view const &code)
+  object_ref context::read_string(jtl::immutable_string_view const &code)
   {
     profile::timer const timer{ "rt read_string" };
 
@@ -279,7 +279,7 @@ namespace jank::runtime
   }
 
   native_vector<analyze::expression_ref>
-  context::analyze_string(native_persistent_string_view const &code, bool const eval)
+  context::analyze_string(jtl::immutable_string_view const &code, bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -309,7 +309,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, jtl::immutable_string>
-  context::load_module(native_persistent_string_view const &module, module::origin const ori)
+  context::load_module(jtl::immutable_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -347,7 +347,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, jtl::immutable_string>
-  context::compile_module(native_persistent_string_view const &module)
+  context::compile_module(jtl::immutable_string_view const &module)
   {
     module_dependencies.clear();
 
@@ -416,7 +416,7 @@ namespace jank::runtime
     return unique_string("G_");
   }
 
-  jtl::immutable_string context::unique_string(native_persistent_string_view const &prefix) const
+  jtl::immutable_string context::unique_string(jtl::immutable_string_view const &prefix) const
   {
     //static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
@@ -431,7 +431,7 @@ namespace jank::runtime
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(native_persistent_string_view const &prefix) const
+  obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
   {
     return { "", unique_string(prefix) };
   }

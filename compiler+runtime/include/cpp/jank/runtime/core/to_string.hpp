@@ -26,7 +26,7 @@ namespace jank::runtime
   template <typename It>
   void to_string(It const &begin,
                  It const &end,
-                 native_persistent_string_view const open,
+                 jtl::immutable_string_view const open,
                  char const close,
                  jtl::string_builder &buff)
   {
@@ -104,7 +104,7 @@ namespace jank::runtime
   template <typename It>
   void to_code_string(It const &begin,
                       It const &end,
-                      native_persistent_string_view const open,
+                      jtl::immutable_string_view const open,
                       char const close,
                       jtl::string_builder &buff)
   {

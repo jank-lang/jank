@@ -67,7 +67,7 @@ namespace jank::runtime
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
-  inline auto make_box(native_persistent_string_view const &s)
+  inline auto make_box(jtl::immutable_string_view const &s)
   {
     return make_box<obj::persistent_string>(s);
   }

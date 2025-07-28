@@ -224,10 +224,10 @@ namespace jank::jit
     register_jit_stack_frames();
   }
 
-  void processor::load_object(native_persistent_string_view const &path) const
+  void processor::load_object(jtl::immutable_string_view const &path) const
   {
     auto const ee{ interpreter->getExecutionEngine() };
-    auto file{ llvm::MemoryBuffer::getFile(path) };
+    auto file{ llvm::MemoryBuffer::getFile(std::string_view{ path }) };
     if(!file)
     {
       throw std::runtime_error{ util::format("failed to load object file: {}", path) };
@@ -241,9 +241,10 @@ namespace jank::jit
 
   void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
   {
+    auto const &module_name{ m.getModuleUnlocked()->getName() };
     profile::timer const timer{ util::format(
       "jit ir module {}",
-      static_cast<std::string_view>(m.getModuleUnlocked()->getName())) };
+      jtl::immutable_string_view{ module_name.data(), module_name.size() }) };
     //m->print(llvm::outs(), nullptr);
 
     auto const ee(interpreter->getExecutionEngine());
@@ -253,7 +254,7 @@ namespace jank::jit
   }
 
   void processor::load_bitcode(jtl::immutable_string const &module,
-                               native_persistent_string_view const &bitcode) const
+                               jtl::immutable_string_view const &bitcode) const
   {
     auto ctx{ std::make_unique<llvm::LLVMContext>() };
     llvm::SMDiagnostic err{};

@@ -1,5 +1,6 @@
 #include <jank/analyze/pass/optimize.hpp>
 #include <jank/analyze/pass/strip_source_meta.hpp>
+#include <jank/profile/time.hpp>
 
 namespace jank::analyze::pass
 {
@@ -11,6 +12,8 @@ namespace jank::analyze::pass
    * same as the input expression. */
   expression_ref optimize(expression_ref expr)
   {
+    profile::timer const timer{ "optimize ast" };
+
     expr = strip_source_meta(expr);
 
     /* TODO: Port force_boxed to use this system. */

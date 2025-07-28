@@ -126,7 +126,7 @@ namespace jank::hash
     }
   }
 
-  u32 string(native_persistent_string_view const &input)
+  u32 string(jtl::immutable_string_view const &input)
   {
     auto const length(input.size());
     u32 h1{ seed };

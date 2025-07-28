@@ -417,7 +417,7 @@ namespace jtl
     return { buffer, pos };
   }
 
-  jank::native_persistent_string_view string_builder::view() const &
+  jtl::immutable_string_view string_builder::view() const &
   {
     jank_debug_assert(pos < capacity);
     buffer[pos] = 0;

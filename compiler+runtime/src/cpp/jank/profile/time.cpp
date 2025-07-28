@@ -8,7 +8,7 @@ namespace jank::profile
 {
   using util::cli::opts;
 
-  static constexpr native_persistent_string_view tag{ "jank::profile" };
+  static constexpr jtl::immutable_string_view tag{ "jank::profile" };
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static std::ofstream output;
 
@@ -38,7 +38,7 @@ namespace jank::profile
     return opts.profiler_enabled;
   }
 
-  void enter(native_persistent_string_view const &region)
+  void enter(jtl::immutable_string_view const &region)
   {
     if(opts.profiler_enabled)
     {
@@ -46,7 +46,7 @@ namespace jank::profile
     }
   }
 
-  void exit(native_persistent_string_view const &region)
+  void exit(jtl::immutable_string_view const &region)
   {
     if(opts.profiler_enabled)
     {
@@ -54,7 +54,7 @@ namespace jank::profile
     }
   }
 
-  void report(native_persistent_string_view const &boundary)
+  void report(jtl::immutable_string_view const &boundary)
   {
     if(opts.profiler_enabled)
     {
@@ -62,7 +62,7 @@ namespace jank::profile
     }
   }
 
-  timer::timer(native_persistent_string_view const &region)
+  timer::timer(jtl::immutable_string_view const &region)
     : region{ region }
   {
     enter(region);
@@ -79,7 +79,7 @@ namespace jank::profile
     std::printf("Exception caught while destructing timer");
   }
 
-  void timer::report(native_persistent_string_view const &boundary) const
+  void timer::report(jtl::immutable_string_view const &boundary) const
   {
     jank::profile::report(boundary);
   }

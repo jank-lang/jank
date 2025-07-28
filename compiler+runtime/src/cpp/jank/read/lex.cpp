@@ -6,7 +6,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 using namespace std::string_view_literals;
 
@@ -19,9 +19,9 @@ namespace jank::read::lex
       [&](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr(std::is_same_v<T, jtl::immutable_string>
-                     || std::is_same_v<T, native_persistent_string_view>)
+                     || std::is_same_v<T, jtl::immutable_string_view>)
         {
-          os << std::quoted(arg);
+          os << std::quoted(std::string_view{ arg.data(), arg.size() });
         }
         else
         {
@@ -77,7 +77,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_persistent_string_view const d)
+               jtl::immutable_string_view const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -92,7 +92,7 @@ namespace jank::read::lex
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
-    , data{ native_persistent_string_view{ d } }
+    , data{ jtl::immutable_string_view{ d } }
   {
   }
 
@@ -156,7 +156,7 @@ namespace jank::read::lex
   token::token(usize const offset,
                usize const width,
                token_kind const k,
-               native_persistent_string_view const d)
+               jtl::immutable_string_view const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -168,7 +168,7 @@ namespace jank::read::lex
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
-    , data{ native_persistent_string_view{ d } }
+    , data{ jtl::immutable_string_view{ d } }
   {
   }
 
@@ -298,13 +298,13 @@ namespace jank::read::lex
     return os;
   }
 
-  processor::processor(native_persistent_string_view const &f)
+  processor::processor(jtl::immutable_string_view const &f)
     : pos{ .proc = this }
     , file{ f }
   {
   }
 
-  processor::processor(native_persistent_string_view const &f, usize const offset)
+  processor::processor(jtl::immutable_string_view const &f, usize const offset)
     : pos{ .proc = this }
     , file{ f }
   {
@@ -417,7 +417,7 @@ namespace jank::read::lex
   }
 
   static jtl::result<codepoint, error_ref>
-  convert_to_codepoint(native_persistent_string_view const sv, movable_position const &pos)
+  convert_to_codepoint(jtl::immutable_string_view const sv, movable_position const &pos)
   {
     std::mbstate_t state{};
     wchar_t wc{};
@@ -590,8 +590,7 @@ namespace jank::read::lex
             pos += pt.expect_ok().len;
           }
 
-          native_persistent_string_view const data{ file.data() + token_start,
-                                                    ++pos - token_start };
+          jtl::immutable_string_view const data{ file.data() + token_start, ++pos - token_start };
           return ok(token{ token_start, pos, token_kind::character, data });
         }
       case ';':
@@ -628,8 +627,8 @@ namespace jank::read::lex
           else
           {
             ++pos;
-            native_persistent_string_view const comment{ file.data() + token_start + leading_semis,
-                                                         pos - token_start - leading_semis };
+            jtl::immutable_string_view const comment{ file.data() + token_start + leading_semis,
+                                                      pos - token_start - leading_semis };
             return ok(token{ token_start, pos, token_kind::comment, comment });
           }
         }
@@ -649,7 +648,7 @@ namespace jank::read::lex
           bool expecting_exponent{};
           bool expecting_more_digits{};
           bool found_N{};
-          int radix{ 10 };
+          i8 radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           bool found_beginning_negative{};
 
@@ -843,11 +842,12 @@ namespace jank::read::lex
                 if(radix == 8 && *(file.data() + token_start) == '0')
                 {
                   numerator.assign(
-                    std::string(file.data() + token_start + 1, slash_pos - token_start - 1));
+                    std::string_view{ file.data() + token_start + 1, slash_pos - token_start - 1 });
                 }
                 else
                 {
-                  numerator.assign(std::string(file.data() + token_start, slash_pos - token_start));
+                  numerator.assign(
+                    std::string_view{ file.data() + token_start, slash_pos - token_start });
                 }
                 if(denominator.expect_ok().kind == token_kind::integer)
                 {
@@ -865,8 +865,10 @@ namespace jank::read::lex
                     pos,
                     token_kind::ratio,
                     { .numerator = numerator,
-                      .denominator = native_big_integer(
-                        std::get<lex::big_integer>(denominator_token.data).number_literal) }));
+                      /* We need to explicitly construct a string_view here or boost does
+                       * some weird shit with our number.  */
+                      .denominator = native_big_integer(std::string_view{
+                        std::get<lex::big_integer>(denominator_token.data).number_literal }) }));
                 }
               }
               return denominator.expect_err();
@@ -1008,9 +1010,10 @@ namespace jank::read::lex
             if(!invalid_digits.empty())
             {
               return error::lex_invalid_number(
-                util::format("Characters '{}' are invalid for a base {} number.",
-                             std::string(invalid_digits.begin(), invalid_digits.end()),
-                             radix),
+                util::format(
+                  "Characters '{}' are invalid for a base {} number.",
+                  jtl::immutable_string_view{ invalid_digits.begin(), invalid_digits.end() },
+                  radix),
                 { token_start, pos });
             }
             /* Real numbers. */
@@ -1028,9 +1031,8 @@ namespace jank::read::lex
                                    * (found_beginning_negative ? -1 : 1) };
             if(errno == ERANGE || found_N)
             {
-              native_persistent_string_view const number_literal{ file.data() + number_start,
-                                                                  number_end - number_start };
-
+              jtl::immutable_string_view const number_literal{ file.data() + number_start,
+                                                               number_end - number_start };
               return ok(token{
                 token_start,
                 pos,
@@ -1079,8 +1081,7 @@ namespace jank::read::lex
             pos += size;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start,
-                                                    ++pos - token_start };
+          jtl::immutable_string_view const name{ file.data() + token_start, ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           {
             return error::lex_invalid_symbol("A symbol may not start with a '/'.",
@@ -1141,8 +1142,8 @@ namespace jank::read::lex
             pos += codepoint.len;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start + 1,
-                                                    ++pos - token_start - 1 };
+          jtl::immutable_string_view const name{ file.data() + token_start + 1,
+                                                 ++pos - token_start - 1 };
 
           if(name[0] == '/' && name.size() > 1)
           {
@@ -1223,7 +1224,7 @@ namespace jank::read::lex
             token_start,
             pos,
             kind,
-            native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2) });
+            jtl::immutable_string_view(file.data() + token_start + 1, pos - token_start - 2) });
         }
         /* Meta hints. */
       case '^':
@@ -1297,8 +1298,7 @@ namespace jank::read::lex
                 else
                 {
                   auto const length{ pos - token_start - 2 };
-                  native_persistent_string_view const comment{ file.data() + token_start + 2,
-                                                               length };
+                  jtl::immutable_string_view const comment{ file.data() + token_start + 2, length };
                   return ok(token{ token_start, pos, token_kind::comment, comment });
                 }
               }
@@ -1381,7 +1381,7 @@ namespace jank::read::lex
             pos += result.expect_ok().len;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start, pos - token_start };
+          jtl::immutable_string_view const name{ file.data() + token_start, pos - token_start };
 
           return ok(token{ token_start, pos, token_kind::symbol, name });
         }

@@ -61,7 +61,7 @@ namespace jank::codegen
      * But our runtime requires params to be const&, so we can't mutate them; we need to shadow
      * them. So, for tail recursive fns, we name the params with this suffix and then define
      * the actual param names as mutable locals outside of the while loop. */
-    constexpr native_persistent_string_view const recur_suffix{ "__recur" };
+    constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
     /* TODO: Consider making this a on the typed object: the C++ name. */
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
@@ -1769,10 +1769,10 @@ namespace jank::codegen
     native_transient_string ret;
     ret.reserve(deps_buffer.size() + header_buffer.size() + body_buffer.size()
                 + footer_buffer.size());
-    ret += native_persistent_string_view{ deps_buffer.data(), deps_buffer.size() };
-    ret += native_persistent_string_view{ header_buffer.data(), header_buffer.size() };
-    ret += native_persistent_string_view{ body_buffer.data(), body_buffer.size() };
-    ret += native_persistent_string_view{ footer_buffer.data(), footer_buffer.size() };
+    ret += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
+    ret += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
+    ret += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
+    ret += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
 
     //ret = util::format_cpp_source(ret).expect_ok();
 
@@ -2154,7 +2154,7 @@ namespace jank::codegen
     //util::format_to(module_buffer, "jank::profile::timer __timer{ \"ns __init\" };");
     util::format_to(
       module_buffer,
-      "constexpr auto const deps(jank::util::make_array<jank::jtl::immutable_string>(");
+      "constexpr auto const deps(jank::util::make_array<jtl::immutable_string>(");
     bool needs_comma{};
     for(auto const &dep : __rt_ctx->module_dependencies[module])
     {
@@ -2182,7 +2182,7 @@ namespace jank::codegen
 
     native_transient_string ret;
     ret.reserve(module_buffer.size());
-    ret += native_persistent_string_view{ module_buffer.data(), module_buffer.size() };
+    ret += jtl::immutable_string_view{ module_buffer.data(), module_buffer.size() };
     return ret;
   }
 }

@@ -14,7 +14,7 @@ namespace jank::runtime
   {
   }
 
-  var_ref ns::intern_var(native_persistent_string_view const &name)
+  var_ref ns::intern_var(jtl::immutable_string_view const &name)
   {
     return intern_var(make_box<obj::symbol>(name));
   }

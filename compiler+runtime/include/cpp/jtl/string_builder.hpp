@@ -84,7 +84,7 @@ namespace jtl
 
     jtl::immutable_string release();
     std::string str() const;
-    jank::native_persistent_string_view view() const &;
+    jtl::immutable_string_view view() const &;
 
     value_type *buffer{};
     usize pos{};

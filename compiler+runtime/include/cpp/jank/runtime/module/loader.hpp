@@ -75,7 +75,7 @@ namespace jank::runtime::module
     char const *data() const;
     usize size() const;
 
-    native_persistent_string_view view() const;
+    jtl::immutable_string_view view() const;
 
   private:
     /* In the case where we map a file, we track this information so we can read it and

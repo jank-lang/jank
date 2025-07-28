@@ -20,10 +20,10 @@ namespace jank::runtime::obj
     keyword() = default;
     keyword(keyword &&) noexcept = default;
     keyword(keyword const &) = default;
-    keyword(runtime::detail::must_be_interned, native_persistent_string_view const &s);
+    keyword(runtime::detail::must_be_interned, jtl::immutable_string_view const &s);
     keyword(runtime::detail::must_be_interned,
-            native_persistent_string_view const &ns,
-            native_persistent_string_view const &n);
+            jtl::immutable_string_view const &ns,
+            jtl::immutable_string_view const &n);
 
     /* behavior::object_like */
     bool equal(object const &) const;

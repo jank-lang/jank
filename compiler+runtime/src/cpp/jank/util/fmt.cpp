@@ -4,7 +4,7 @@ namespace jank::util
 {
   jtl::immutable_string format(char const * const fmt)
   {
-    if(native_persistent_string_view{ fmt }.find("{}") != native_persistent_string_view::npos)
+    if(jtl::immutable_string_view{ fmt }.find("{}") != jtl::immutable_string_view::npos)
     {
       throw std::runtime_error{ "Format string has extra {} with no matching argument" };
     }
@@ -16,7 +16,7 @@ namespace jank::util
 
   void format_to(jtl::string_builder &sb, char const * const fmt)
   {
-    if(native_persistent_string_view{ fmt }.find("{}") != native_persistent_string_view::npos)
+    if(jtl::immutable_string_view{ fmt }.find("{}") != jtl::immutable_string_view::npos)
     {
       throw std::runtime_error{ "Format string has extra {} with no matching argument" };
     }

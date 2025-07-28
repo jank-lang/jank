@@ -1,9 +1,9 @@
 ; Metadatable
-(assert (map? (meta {})))
-(assert (map? (meta [])))
-(assert (map? (meta '())))
-(assert (map? (meta 'foo)))
-(assert (map? (meta #{})))
+(assert (:foo (meta ^:foo {})))
+(assert (:foo (meta ^:foo [])))
+(assert (:foo (meta ^:foo ())))
+(assert (:foo (meta (quote ^:foo bar))))
+(assert (:foo (meta ^:foo #{})))
 
 ; Non-metadatable
 (assert (= nil (meta "")))

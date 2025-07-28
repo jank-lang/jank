@@ -10,12 +10,12 @@ namespace jank::ui
   using namespace ftxui;
 
   /* TODO: Also support core fns? */
-  static std::set<native_persistent_string_view> const specials{
+  static std::set<jtl::immutable_string_view> const specials{
     "def", "fn*",   "fn",  "let*", "let",   "loop*",   "loop",  "do",
     "if",  "quote", "var", "try",  "catch", "finally", "throw", "letfn*",
   };
 
-  static Decorator symbol_color(native_persistent_string_view const &sym)
+  static Decorator symbol_color(jtl::immutable_string_view const &sym)
   {
     if(specials.contains(sym))
     {
@@ -63,7 +63,7 @@ namespace jank::ui
       case token_kind::escaped_string:
         return color(Color::GreenLight);
       case token_kind::symbol:
-        return symbol_color(std::get<native_persistent_string_view>(token.data));
+        return symbol_color(std::get<jtl::immutable_string_view>(token.data));
       case token_kind::eof:
         return color(Color::Default);
     }
@@ -135,15 +135,14 @@ namespace jank::ui
       auto const token_size(std::max(token.end.offset - token.start.offset, 1llu));
       if(!skip)
       {
-        native_persistent_string_view const code_range{ code.data() + token.start.offset,
-                                                        token_size };
+        jtl::immutable_string_view const code_range{ code.data() + token.start.offset, token_size };
         /* Multi-line tokens can't just be added to the current line. We need to walk through
          * all of the new lines and build things up accordingly. We just use the same
          * `fill_in_lines` fn for this, but we give it the token color.
          *
          * This only adds lines if it finds a new line character, though, so the normal
          * case of a single-line token is handled below. */
-        if(code_range.find('\n') != native_persistent_string_view::npos)
+        if(code_range.find('\n') != jtl::immutable_string_view::npos)
         {
           fill_in_lines(skip, token.start.offset + token_size, token_color(token));
         }

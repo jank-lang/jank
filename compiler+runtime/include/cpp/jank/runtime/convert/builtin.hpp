@@ -194,7 +194,7 @@ namespace jank::runtime
 
   /* Native strings. */
   template <typename T>
-  requires(jtl::is_any_same<T, jtl::immutable_string, native_persistent_string_view, std::string>)
+  requires(jtl::is_any_same<T, jtl::immutable_string, jtl::immutable_string_view, std::string>)
   struct convert<T>
   {
     static constexpr obj::persistent_string_ref into_object(T const &o)

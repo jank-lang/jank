@@ -98,11 +98,11 @@ namespace jank::read
 
   std::ostream &operator<<(std::ostream &os, source_position const &p)
   {
-    return os << p.to_string();
+    return os << p.to_string().c_str();
   }
 
   std::ostream &operator<<(std::ostream &os, source const &s)
   {
-    return os << s.to_string();
+    return os << s.to_string().c_str();
   }
 }

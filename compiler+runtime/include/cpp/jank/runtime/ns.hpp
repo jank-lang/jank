@@ -23,7 +23,7 @@ namespace jank::runtime
     ns() = delete;
     ns(obj::symbol_ref const &name);
 
-    var_ref intern_var(native_persistent_string_view const &);
+    var_ref intern_var(jtl::immutable_string_view const &);
     var_ref intern_var(obj::symbol_ref const &);
     var_ref find_var(obj::symbol_ref const &);
     jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ref const &sym);

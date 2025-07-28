@@ -258,16 +258,18 @@ namespace jank::runtime::module
   }
 
   static void register_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
-                            native_persistent_string_view const &path)
+                            jtl::immutable_string_view const &path)
   {
     /* It's entirely possible to have empty entries in the module path, mainly due to lazy string
      * concatenation. We just ignore them. This means something like "::::" is valid. */
-    if(path.empty() || !std::filesystem::exists(path))
+    if(path.empty() || !std::filesystem::exists(std::string_view{ path }))
     {
       return;
     }
 
-    std::filesystem::path const p{ std::filesystem::canonical(path).lexically_normal() };
+    std::filesystem::path const p{
+      std::filesystem::canonical(std::string_view{ path }).lexically_normal()
+    };
     if(std::filesystem::is_directory(p))
     {
       register_directory(entries, p);
@@ -403,7 +405,7 @@ namespace jank::runtime::module
     return buff.empty() ? len : buff.size();
   }
 
-  native_persistent_string_view file_view::view() const
+  jtl::immutable_string_view file_view::view() const
   {
     return { data(), size() };
   }
