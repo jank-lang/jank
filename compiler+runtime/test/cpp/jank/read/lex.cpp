@@ -2264,7 +2264,7 @@ namespace jank::read::lex
       /* We disable this test on macOS because it behaves differently. I suspect the
        * issue is the same as what's reported here. https://github.com/evanj/isspace_locale
        *
-       * Altogher not a big problem. */
+       * Altogether not a big problem. */
       if constexpr(jtl::current_platform != jtl::platform::macos_like)
       {
         SUBCASE("Whitespace Characters")
