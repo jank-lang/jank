@@ -155,7 +155,7 @@ endfunction()
 # can configure jank correctly during the build phase and then it'll just
 # continue to work with that setup once it's installed.
 execute_process(
-  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^\\s\\+/-I/'"
+  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^\\s\\+/-I/' | sed 's/ (framework directory)//'"
   RESULT_VARIABLE clang_system_includes_result
   OUTPUT_VARIABLE clang_system_includes_unescaped
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -166,8 +166,13 @@ if(NOT clang_system_includes_result EQUAL 0)
     "  exit code: ${clang_system_includes_result}"
   )
 endif()
-string(REPLACE "\n" " " clang_system_includes "${clang_system_includes_unescaped}")
-separate_arguments(clang_system_includes)
+string(REPLACE "\n" " " clang_system_include_dirs "${clang_system_includes_unescaped}")
+separate_arguments(clang_system_include_dirs)
+
+set(clang_system_include_flags "")
+foreach(dir ${clang_system_include_dirs})
+  list(APPEND clang_system_include_flags -I${dir})
+endforeach()
 
 execute_process(
   COMMAND ${CMAKE_CXX_COMPILER} -print-resource-dir
@@ -196,7 +201,7 @@ set(
   -fno-stack-protector
   -fPIC
   ${LLVM_DEFINITIONS_LIST}
-  ${clang_system_includes}
+  ${clang_system_include_flags}
 )
 # ---- Clang JIT environment ----
 
@@ -443,6 +448,7 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
+find_package(LibZip REQUIRED)
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 
 target_include_directories(
@@ -467,6 +473,8 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
+  ${OPENSSL_INCLUDE_DIR}
+  ${LIBZIP_INCLUDE_DIR}
 )
 
 target_link_libraries(
@@ -609,7 +617,7 @@ target_link_options(jank_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR}
 target_link_libraries(
   jank_exe PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
-  z zip bz2
+  libzip::zip z
   LLVM clang-cpp
   OpenSSL::Crypto
 )
@@ -664,7 +672,7 @@ if(jank_test)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
-    z zip bz2
+    libzip::zip z
     LLVM clang-cpp
     OpenSSL::Crypto
     doctest::doctest
