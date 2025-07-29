@@ -12,7 +12,7 @@
 
   ; Formatting
   ; TODO: Have a reusable fn here for other projects.
-  #_(jank.compiler+runtime.validate-formatting/-main {:enabled? validate-formatting?})
+  (jank.compiler+runtime.validate-formatting/-main {:enabled? validate-formatting?})
 
   ; Compile and test
   (jank.compiler+runtime.build+test/-main {:enabled? build?

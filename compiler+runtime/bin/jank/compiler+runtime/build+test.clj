@@ -21,8 +21,8 @@
   (util/log-step "Compile and test")
   (if-not enabled?
     (util/log-info "Not enabled")
-    (build-clang!)
-    #_(let [clang (util/find-llvm-tool "clang")
+    (let [_ (build-clang!)
+          clang (util/find-llvm-tool "clang")
           clang++ (util/find-llvm-tool "clang++")
           clang-tidy (util/find-llvm-tool "clang-tidy")
           exports (merge {"CC" clang
