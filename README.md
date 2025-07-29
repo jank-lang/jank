@@ -53,8 +53,8 @@ use yet. Check back in a few months!**
 
 ; Interop with C++ can happen *seamlessly*.
 (defn sleep [ms]
-  (let [duration (c++/std.chrono.milliseconds ms)]
-    (c++/std.this_thread.sleep_for duration)))
+  (let [duration (cpp/std.chrono.milliseconds ms)]
+    (cpp/std.this_thread.sleep_for duration)))
 ```
 
 ## Sponsors
