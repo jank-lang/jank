@@ -39,7 +39,7 @@
   ;(util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
 
   ; TODO: Cache this shit.
-  (when (= "on" (util/get-env "JANK_ANALYZE"))
+  #_(when (= "on" (util/get-env "JANK_ANALYZE"))
     (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
     (util/quiet-shell {} "chmod +x clang-tidy-cache")
     (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
