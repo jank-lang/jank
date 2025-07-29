@@ -306,12 +306,8 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::var_deref_ref const expr, expr::function_arity const &)
   {
     llvm::Value *call{};
-    // for(auto &f : ctx->module->functions())
-    // {
-    //     util::println("[monty]: {}", f.getName().data());
-    // }
     auto const var_qualified_name (make_box<obj::symbol>(expr->var->n, expr->var->name));
-    if(__rt_ctx->opts.direct_linking)
+    if(__rt_ctx->opts.direct_linking && !(expr->var->dynamic))
     {
       if(root_fn->name.starts_with("jank_load"))
       {
