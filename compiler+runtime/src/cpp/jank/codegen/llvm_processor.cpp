@@ -310,17 +310,18 @@ namespace jank::codegen
     // {
     //     util::println("[monty]: {}", f.getName().data());
     // }
+    auto const var_qualified_name (make_box<obj::symbol>(expr->var->n, expr->var->name));
     if(__rt_ctx->opts.direct_linking)
     {
       if(root_fn->name.starts_with("jank_load"))
       {
-          call = gen_var_root_compiled_module(expr->qualified_name);
+          call = gen_var_root_compiled_module(var_qualified_name);
       }
-        call = gen_var_root(expr->qualified_name);
+        call = gen_var_root(var_qualified_name);
     }
     else
     {
-      auto const ref(gen_var(make_box<obj::symbol>(expr->var->n, expr->var->name)));
+      auto const ref(gen_var(var_qualified_name));
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const fn(ctx->module->getOrInsertFunction("jank_deref", fn_type));
