@@ -293,7 +293,7 @@ namespace jank::read::lex
     }
     else
     {
-      os << r.radix << "r" << r.number_literal;
+      os << static_cast<int>(r.radix) << "r" << r.number_literal;
     }
     return os;
   }
@@ -976,10 +976,10 @@ namespace jank::read::lex
             }
             if(found_r)
             {
-              radix = std::stoi(file.data() + token_start, nullptr);
+              radix = static_cast<i8>(std::stoi(file.data() + token_start, nullptr));
               if(radix < 0)
               {
-                radix = -radix;
+                radix = static_cast<i8>(-radix);
                 found_beginning_negative = true;
               }
               if(radix < 2 || radix > 36)

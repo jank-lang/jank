@@ -42,7 +42,7 @@ namespace jank::util::cli
                   "The optimization level to use for AOT compilation.")
       ->check(CLI::Range(0, 3));
 
-    std::map<std::string, codegen_type> codegen_types{
+    std::map<std::string, codegen_type> const codegen_types{
       { "llvm_ir", codegen_type::llvm_ir },
       {     "cpp",     codegen_type::cpp }
     };

@@ -187,7 +187,7 @@ namespace jank::environment
     auto const terminal_width{ Terminal::Size().dimx };
     auto const max_width{ std::min(terminal_width, 100) };
 
-    std::vector<Element> doc_body{
+    std::vector<Element> const doc_body{
       header("jank install", max_width),
       jank_version(),
       jank_resource_dir(),

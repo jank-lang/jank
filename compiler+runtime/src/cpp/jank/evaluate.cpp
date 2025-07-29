@@ -612,10 +612,8 @@ namespace jank::evaluate
       if(res)
       {
         /* TODO: Helper to turn an llvm::Error into a string. */
-        jtl::immutable_string msg{ "Unable to compile/eval C++ source." };
+        jtl::immutable_string const msg{ "Unable to compile/eval C++ source." };
         llvm::logAllUnhandledErrors(std::move(res), llvm::errs(), "error: ");
-        //llvm::handleAllErrors(jtl::move(res),
-        //                      [&](llvm::ErrorInfoBase const &error) { msg = error.message(); });
         throw error::internal_codegen_failure(msg);
       }
       return try_object<obj::jit_function>(v.convertTo<runtime::object *>());

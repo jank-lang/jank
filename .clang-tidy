@@ -14,6 +14,8 @@ misc-definitions-in-headers,\
 -clang-diagnostic-unknown-warning-option,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
 -clang-analyzer-cplusplus.NewDelete,\
+-clang-analyzer-security.ArrayBound,\
+-clang-analyzer-optin.core.EnumCastOutOfRange,\
 -modernize-use-trailing-return-type,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\

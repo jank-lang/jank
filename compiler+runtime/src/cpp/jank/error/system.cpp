@@ -1,5 +1,5 @@
 #include <jank/error.hpp>
-#include <jank/error/aot.hpp>
+#include <jank/error/system.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::error

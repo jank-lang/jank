@@ -70,7 +70,7 @@ namespace jank::util
       std::string path_tmp{ tmp / "jank-clang-XXXXXX" };
       mkstemp(path_tmp.data());
       auto const proc_code{ llvm::sys::ExecuteAndWait(*unversioned_path,
-                                                      { (*unversioned_path).c_str(), "--version" },
+                                                      { *unversioned_path, "--version" },
                                                       std::nullopt,
                                                       { std::nullopt, path_tmp, std::nullopt }) };
       if(proc_code < 0)
@@ -149,7 +149,8 @@ namespace jank::util
       return dev_path.c_str();
     }
 
-    std::string installed_path{ format("{}/incremental.pch", user_cache_dir(binary_version)) };
+    std::string const installed_path{ format("{}/incremental.pch",
+                                             user_cache_dir(binary_version)) };
     if(std::filesystem::exists(installed_path))
     {
       return installed_path.c_str();

@@ -212,7 +212,7 @@ namespace jank::runtime
         if(!parse_res)
         {
           /* TODO: Helper to turn an llvm::Error into a string. */
-          jtl::immutable_string res{ "Unable to compile generated C++ source." };
+          jtl::immutable_string const res{ "Unable to compile generated C++ source." };
           llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
           throw error::internal_codegen_failure(res);
         }
@@ -233,7 +233,7 @@ namespace jank::runtime
     if(!parse_res)
     {
       /* TODO: Helper to turn an llvm::Error into a string. */
-      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      jtl::immutable_string const res{ "Unable to compile provided C++ source." };
       llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
       return err(res);
     }
@@ -250,7 +250,7 @@ namespace jank::runtime
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
     if(exec_res)
     {
-      jtl::immutable_string res{ "Unable to compile provided C++ source." };
+      jtl::immutable_string const res{ "Unable to compile provided C++ source." };
       llvm::logAllUnhandledErrors(std::move(exec_res), llvm::errs(), "error: ");
       return err(res);
     }
