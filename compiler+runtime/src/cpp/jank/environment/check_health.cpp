@@ -162,15 +162,44 @@ namespace jank::environment
     });
   }
 
+  static Element header(std::string const &title, usize const max_width)
+  {
+    auto const padding_count(max_width - 3 - title.size());
+    std::string padding;
+    for(usize i{}; i < padding_count; ++i)
+    {
+      padding.insert(padding.size(), "─");
+    }
+    return hbox({
+      text("─ ") | color(Color::GrayDark),
+      text(title) | color(Color::BlueLight),
+      text(" "),
+      text(padding) | color(Color::GrayDark),
+    });
+  }
+
   /* Runs through the various jank systems and outputs to stdout various status reports.
    * This is meant to be useful for debugging distribution/installation issues.
    *
    * Returns whether or not jank is healthy. */
   bool check_health()
   {
+    auto const terminal_width{ Terminal::Size().dimx };
+    auto const max_width{ std::min(terminal_width, 100) };
+
     std::vector<Element> doc_body{
-      jank_version(),        jank_resource_dir(), jank_user_cache_dir(), text(" "), clang_path(),
-      clang_resource_root(), text(" "),           pch_location(),
+      header("jank install", max_width),
+      jank_version(),
+      jank_resource_dir(),
+      jank_user_cache_dir(),
+      text(" "),
+
+      header("clang install", max_width),
+      clang_path(),
+      clang_resource_root(),
+      text(" "),
+      header("jank runtime", max_width),
+      pch_location(),
     };
 
     auto document{ vbox(doc_body) };
