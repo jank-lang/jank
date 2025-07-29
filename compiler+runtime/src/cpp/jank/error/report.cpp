@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <deque>
 
 #include <ftxui/dom/elements.hpp>

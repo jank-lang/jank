@@ -26,6 +26,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/environment/check_health.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
@@ -321,6 +322,12 @@ int main(int const argc, char const **argv)
         break;
       case util::cli::command::compile:
         compile();
+        break;
+      case util::cli::command::check_health:
+        if(!jank::environment::check_health())
+        {
+          return 1;
+        }
         break;
     }
     return 0;

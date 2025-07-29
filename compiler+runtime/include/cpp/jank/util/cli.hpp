@@ -11,7 +11,8 @@ namespace jank::util::cli
     compile_module,
     repl,
     cpp_repl,
-    run_main
+    run_main,
+    check_health
   };
 
   enum class codegen_type : u8

@@ -96,7 +96,7 @@ namespace jank::util::cli
     /* C++ REPL subcommand. */
     auto &cli_cpp_repl(*cli.add_subcommand("cpp-repl", "Start up a terminal C++ REPL."));
 
-    /* run-main subcommand. */
+    /* Run-main subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main."));
     cli_run_main.fallthrough();
     cli_run_main
@@ -105,7 +105,7 @@ namespace jank::util::cli
                   "The entrypoint module (must be on the module path.")
       ->required();
 
-    /* compile subcommand. */
+    /* Compile subcommand. */
     auto &cli_compile(*cli.add_subcommand(
       "compile",
       "Ahead of time compile project with entrypoint module containing -main."));
@@ -117,6 +117,11 @@ namespace jank::util::cli
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
       ->default_str("default: a.out");
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
+
+    /* Health check subcommand. */
+    auto &cli_check_health(
+      *cli.add_subcommand("check-health", "Provide a status report on the jank installation."));
+    cli_check_health.fallthrough();
 
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);
@@ -159,6 +164,10 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_compile))
     {
       opts.command = command::compile;
+    }
+    else if(cli.got_subcommand(&cli_check_health))
+    {
+      opts.command = command::check_health;
     }
 
     return ok();

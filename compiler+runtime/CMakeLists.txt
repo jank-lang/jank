@@ -285,6 +285,7 @@ add_library(
   src/cpp/jtl/string_builder.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
+  src/cpp/jank/environment/check_health.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/dir.cpp
