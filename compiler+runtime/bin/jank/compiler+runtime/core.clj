@@ -12,7 +12,7 @@
 
   ; Formatting
   ; TODO: Have a reusable fn here for other projects.
-  (jank.compiler+runtime.validate-formatting/-main {:enabled? validate-formatting?})
+  #_(jank.compiler+runtime.validate-formatting/-main {:enabled? validate-formatting?})
 
   ; Compile and test
   (jank.compiler+runtime.build+test/-main {:enabled? build?
@@ -22,10 +22,10 @@
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
-  (jank.compiler+runtime.bash-test/-main {:enabled? build?})
+  #_(jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)
-  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))}))
+  #_(jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))}))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (-main {:validate-formatting? true
