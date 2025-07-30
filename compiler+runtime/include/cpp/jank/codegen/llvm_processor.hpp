@@ -67,6 +67,13 @@ namespace jank::codegen
     eval
   };
 
+  enum class var_root_kind : u8
+  {
+    runtime_value,
+    raw_global,
+    raw_global_init
+  };
+
   struct reusable_context
   {
     reusable_context(jtl::immutable_string const &module_name);
@@ -145,9 +152,8 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root_compile(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root_compiled_module(obj::symbol_ref qualified_name) const;
+    llvm::Value *gen_var_root(obj::symbol_ref qualified_name,
+                              var_root_kind kind = var_root_kind::runtime_value) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;
