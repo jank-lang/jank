@@ -1,8 +1,8 @@
 #include <filesystem>
 
-#include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
-#include <ftxui/screen/string.hpp>
+
+#include <jtl/format/color.hpp>
 
 #include <jank/environment/check_health.hpp>
 #include <jank/util/process_location.hpp>
@@ -12,8 +12,6 @@
 
 namespace jank::environment
 {
-  using namespace ftxui;
-
   /* Each status report must start with one of:
    *
    * - ✅ for expected behavior
@@ -22,18 +20,15 @@ namespace jank::environment
    *
    * Colors for these should be green, yellow, and red. All paths should be blue. */
 
-  static Element jank_version()
+  static jtl::immutable_string jank_version()
   {
-    return vbox({
-      hbox({
-        text("─ ✅ ") | color(Color::Green),
-        text("jank version: "),
-        text(JANK_VERSION),
-      }),
-    });
+    return util::format("{}─ ✅{} jank version: {}",
+                        jtl::terminal_color::green,
+                        jtl::terminal_color::reset,
+                        JANK_VERSION);
   }
 
-  static Element jank_resource_dir()
+  static jtl::immutable_string jank_resource_dir()
   {
     std::filesystem::path dir{ JANK_RESOURCE_DIR };
     bool relative{};
@@ -49,55 +44,73 @@ namespace jank::environment
     auto const icon{ exists ? "✅"
                             /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
                             : (dev_build ? "✅" : "❌") };
-    /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
-    auto const col{ exists ? Color::Green : (dev_build ? Color::Yellow : Color::Red) };
+    auto const col{ exists ? jtl::terminal_color::green
+                           /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+                           : (dev_build ? jtl::terminal_color::yellow : jtl::terminal_color::red) };
 
-    Elements res{ hbox({
-      text(util::format("─ {} ", icon)) | color(col),
-      text("jank resource dir: "),
-      text(JANK_RESOURCE_DIR) | color(Color::Blue),
-      text(exists ? " (found)" : " (not found)") | color(Color::GrayDark),
-    }) };
+    jtl::string_builder sb;
+    util::format_to(sb,
+                    "{}─ {}{} jank resource dir: {}{}{} {}{}{}",
+                    col,
+                    icon,
+                    jtl::terminal_color::reset,
+                    jtl::terminal_color::blue,
+                    JANK_RESOURCE_DIR,
+                    jtl::terminal_color::reset,
+                    jtl::terminal_color::bright_black,
+                    (exists ? " (found)" : " (not found)"),
+                    jtl::terminal_color::reset);
 
     if(relative)
     {
-      res.emplace_back(hbox({
-        text(util::format("─ {} ", icon)) | color(col),
-        text(util::format("jank resolved resource dir: ")),
-        text(dir.c_str()) | color(Color::Blue),
-        text(dev_build ? " (ignored for dev build)" : " (not found)") | color(Color::GrayDark),
-      }));
+      util::format_to(sb,
+                      "\n{}─ {}{} jank resolved resource dir: {}{}{}",
+                      col,
+                      icon,
+                      jtl::terminal_color::reset,
+                      jtl::terminal_color::blue,
+                      dir.c_str(),
+                      jtl::terminal_color::reset,
+                      jtl::terminal_color::bright_black,
+                      dev_build ? " (ignored for dev build)" : " (not found)",
+                      jtl::terminal_color::reset);
     }
 
-    return vbox(res);
+    return sb.release();
   }
 
-  static Element jank_user_cache_dir()
+  static jtl::immutable_string jank_user_cache_dir()
   {
     auto const path{ util::user_cache_dir(util::binary_version()) };
     auto const configured_path_exists{ std::filesystem::exists(path.c_str()) };
-    return hbox({
-      text("─ ✅ ") | color(configured_path_exists ? Color::Green : Color::Yellow),
-      text("jank user cache dir: "),
-      text(path.c_str()) | color(Color::Blue),
-      text(util::format("{}", configured_path_exists ? " (found)" : " (not found)"))
-        | color(Color::GrayDark),
-    });
+    return util::format("{}─ ✅{} jank user cache dir: {}{}{} {}{}{}",
+                        configured_path_exists ? jtl::terminal_color::green
+                                               : jtl::terminal_color::yellow,
+                        jtl::terminal_color::reset,
+                        jtl::terminal_color::blue,
+                        path,
+                        jtl::terminal_color::reset,
+                        jtl::terminal_color::bright_black,
+                        configured_path_exists ? " (found)" : " (not found)",
+                        jtl::terminal_color::reset);
   }
 
-  static Element clang_path()
+  static jtl::immutable_string clang_path()
   {
     auto const configured_path_exists{ std::filesystem::exists(JANK_CLANG_PATH) };
-    Elements res{
-      hbox({
-        text(util::format("─ {} ", configured_path_exists ? "✅" : "⚠️ "))
-          | color(configured_path_exists ? Color::Green : Color::Yellow),
-        text("configured clang path: "),
-        text(JANK_CLANG_PATH) | color(Color::Blue),
-        text(util::format("{}", configured_path_exists ? " (found)" : " (not found)"))
-          | color(Color::GrayDark),
-      }),
-    };
+    jtl::string_builder sb;
+    util::format_to(sb,
+                    "{}─ {}{} configured clang path: {}{}{} {}{}{}",
+                    configured_path_exists ? jtl::terminal_color::green
+                                           : jtl::terminal_color::yellow,
+                    configured_path_exists ? "✅" : "⚠️ ",
+                    jtl::terminal_color::reset,
+                    jtl::terminal_color::blue,
+                    JANK_CLANG_PATH,
+                    jtl::terminal_color::reset,
+                    jtl::terminal_color::bright_black,
+                    configured_path_exists ? "(found)" : "(not found)",
+                    jtl::terminal_color::reset);
 
     auto const found_clang{ util::find_clang() };
     auto const found_path_exists{ found_clang.is_some()
@@ -105,64 +118,72 @@ namespace jank::environment
                                     : false };
     if(found_path_exists && found_clang.unwrap() != JANK_CLANG_PATH)
     {
-      res.emplace_back(hbox({
-        text("─ ✅ ") | color(Color::Green),
-        text("runtime clang path: "),
-        text(found_clang.unwrap()) | color(Color::Blue),
-        text(" (found)") | color(Color::GrayDark),
-      }));
+      util::format_to(sb,
+                      "\n{}─ ✅{} runtime clang path: {}{}{} {}(found){}",
+                      jtl::terminal_color::green,
+                      jtl::terminal_color::reset,
+                      jtl::terminal_color::blue,
+                      found_clang.unwrap(),
+                      jtl::terminal_color::reset,
+                      jtl::terminal_color::bright_black,
+                      jtl::terminal_color::reset);
     }
     else if(!found_path_exists)
     {
-      res.emplace_back(hbox({
-        text("─ ❌ ") | color(Color::Red),
-        text(util::format("clang version {} not found in configured location or on PATH",
-                          JANK_CLANG_MAJOR_VERSION))
-          | color(Color::Red),
-      }));
+      util::format_to(sb,
+                      "\n{}─ ❌ clang version {} not found in configured location or on PATH{}",
+                      jtl::terminal_color::red,
+                      JANK_CLANG_MAJOR_VERSION,
+                      jtl::terminal_color::reset);
     }
 
-    return vbox(res);
+    return sb.release();
   }
 
-  static Element clang_resource_root()
+  static jtl::immutable_string clang_resource_root()
   {
     /* TODO: Runtime resource root. */
     auto const configured_path_exists{ std::filesystem::exists(JANK_CLANG_RESOURCE_DIR) };
-    return hbox({
-      text(util::format("─ {} ", configured_path_exists ? "✅" : "⚠️ "))
-        | color(configured_path_exists ? Color::Green : Color::Yellow),
-      text("configured clang resource dir: "),
-      text(JANK_CLANG_RESOURCE_DIR) | color(Color::Blue),
-      text(util::format("{}", configured_path_exists ? " (found)" : " (not found)"))
-        | color(Color::GrayDark),
-    });
+    return util::format("{}─ {}{} configured clang resource dir: {}{}{} {}{}{}",
+                        configured_path_exists ? jtl::terminal_color::green
+                                               : jtl::terminal_color::yellow,
+                        configured_path_exists ? "✅" : "⚠️ ",
+                        jtl::terminal_color::reset,
+                        jtl::terminal_color::blue,
+                        JANK_CLANG_RESOURCE_DIR,
+                        jtl::terminal_color::reset,
+                        jtl::terminal_color::bright_black,
+                        configured_path_exists ? " (found)" : " (not found)",
+                        jtl::terminal_color::reset);
   }
 
-  /* TODO: Run health check before runtime context is created, so we don't try to make
-   * PCH shit. */
-  static Element pch_location()
+  static jtl::immutable_string pch_location()
   {
     auto const pch_path{ util::find_pch(util::binary_version()) };
     if(pch_path.is_some())
     {
-      return hbox({
-        text("─ ✅ ") | color(Color::Green),
-        text("jank pch path: "),
-        text(pch_path.unwrap()) | color(Color::Blue),
-        text(" (found)") | color(Color::GrayDark),
-      });
+      return util::format("{}─ ✅{} jank pch path: {}{}{} {}(found){}",
+                          jtl::terminal_color::green,
+                          jtl::terminal_color::reset,
+                          jtl::terminal_color::blue,
+                          util::user_cache_dir(util::binary_version()),
+                          jtl::terminal_color::reset,
+                          jtl::terminal_color::bright_black,
+                          jtl::terminal_color::reset);
     }
 
-    return hbox({
-      text("─ ✅ ") | color(Color::Green),
-      text("jank pch dir: "),
-      text(util::user_cache_dir(util::binary_version())) | color(Color::Blue),
-      text(" (no pch found, should be built automatically)") | color(Color::GrayDark),
-    });
+    return util::format(
+      "{}─ ✅{} jank pch dir: {}{}{} {}(no pch found, should be built automatically){}",
+      jtl::terminal_color::yellow,
+      jtl::terminal_color::reset,
+      jtl::terminal_color::blue,
+      util::user_cache_dir(util::binary_version()),
+      jtl::terminal_color::reset,
+      jtl::terminal_color::bright_black,
+      jtl::terminal_color::reset);
   }
 
-  static Element header(std::string const &title, usize const max_width)
+  static jtl::immutable_string header(std::string const &title, usize const max_width)
   {
     auto const padding_count(max_width - 3 - title.size());
     std::string padding;
@@ -170,12 +191,13 @@ namespace jank::environment
     {
       padding.insert(padding.size(), "─");
     }
-    return hbox({
-      text("─ ") | color(Color::GrayDark),
-      text(title) | color(Color::BlueLight),
-      text(" "),
-      text(padding) | color(Color::GrayDark),
-    });
+    return util::format("{}─ {}{} {}{}{}",
+                        jtl::terminal_color::bright_black,
+                        jtl::terminal_color::bright_blue,
+                        title,
+                        jtl::terminal_color::bright_black,
+                        padding,
+                        jtl::terminal_color::reset);
   }
 
   /* Runs through the various jank systems and outputs to stdout various status reports.
@@ -184,29 +206,22 @@ namespace jank::environment
    * Returns whether or not jank is healthy. */
   bool check_health()
   {
-    auto const terminal_width{ Terminal::Size().dimx };
+    auto const terminal_width{ ftxui::Terminal::Size().dimx };
     auto const max_width{ std::min(terminal_width, 100) };
 
-    std::vector<Element> const doc_body{
-      header("jank install", max_width),
-      jank_version(),
-      jank_resource_dir(),
-      jank_user_cache_dir(),
-      text(" "),
+    util::println("{}", header("jank install", max_width));
+    util::println("{}", jank_version());
+    util::println("{}", jank_resource_dir());
+    util::println("{}", jank_user_cache_dir());
+    util::println("{}", pch_location());
+    util::println("");
 
-      header("clang install", max_width),
-      clang_path(),
-      clang_resource_root(),
-      text(" "),
-      header("jank runtime", max_width),
-      pch_location(),
-    };
+    util::println("{}", header("clang install", max_width));
+    util::println("{}", clang_path());
+    util::println("{}", clang_resource_root());
+    util::println("");
 
-    auto document{ vbox(doc_body) };
-    auto screen{ Screen::Create(Dimension::Full(), Dimension::Fit(document)) };
-    Render(screen, document);
-    screen.Print();
-    util::print("\n");
+    //util::println("{}", header("jank runtime", max_width));
 
     return true;
   }

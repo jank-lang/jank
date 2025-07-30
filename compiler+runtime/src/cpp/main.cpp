@@ -294,6 +294,11 @@ int main(int const argc, char const **argv)
     profile::configure();
     profile::timer const timer{ "main" };
 
+    if(util::cli::opts.command == util::cli::command::check_health)
+    {
+      return jank::environment::check_health() ? 0 : 1;
+    }
+
     __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
@@ -324,10 +329,6 @@ int main(int const argc, char const **argv)
         compile();
         break;
       case util::cli::command::check_health:
-        if(!jank::environment::check_health())
-        {
-          return 1;
-        }
         break;
     }
     return 0;
