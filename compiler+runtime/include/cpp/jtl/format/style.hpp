@@ -4,9 +4,12 @@
 
 namespace jtl
 {
-  enum class terminal_color : u8
+  enum class terminal_style : u8
   {
     reset = 0,
+    bold,
+    underline = 4,
+    no_underline = 24,
     black = 30,
     red,
     green,
@@ -23,11 +26,5 @@ namespace jtl
     bright_magenta,
     bright_cyan,
     bright_white
-  };
-
-  enum class terminal_style : u8
-  {
-    reset = 0,
-    underline = 4
   };
 }

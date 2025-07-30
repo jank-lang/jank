@@ -5,7 +5,7 @@
 #include <jtl/assert.hpp>
 
 #include <jtl/string_builder.hpp>
-#include <jtl/format/color.hpp>
+#include <jtl/format/style.hpp>
 
 namespace jtl
 {
@@ -41,58 +41,52 @@ namespace jtl
     sb.pos += size;
   }
 
-  static constexpr char const *fg(terminal_color const col)
-  {
-    /* TODO: No need for a switch. Just build string. */
-    switch(col)
-    {
-      case terminal_color::reset:
-        return "\u001b[0m";
-      case terminal_color::black:
-        return "\u001b[0;30m";
-      case terminal_color::red:
-        return "\u001b[0;31m";
-      case terminal_color::green:
-        return "\u001b[0;32m";
-      case terminal_color::yellow:
-        return "\u001b[0;33m";
-      case terminal_color::blue:
-        return "\u001b[0;34m";
-      case terminal_color::magenta:
-        return "\u001b[0;35m";
-      case terminal_color::cyan:
-        return "\u001b[0;36m";
-      case terminal_color::white:
-        return "\u001b[0;37m";
-      case terminal_color::bright_black:
-        return "\u001b[0;90m";
-      case terminal_color::bright_red:
-        return "\u001b[0;91m";
-      case terminal_color::bright_green:
-        return "\u001b[0;92m";
-      case terminal_color::bright_yellow:
-        return "\u001b[0;93m";
-      case terminal_color::bright_blue:
-        return "\u001b[0;94m";
-      case terminal_color::bright_magenta:
-        return "\u001b[0;95m";
-      case terminal_color::bright_cyan:
-        return "\u001b[0;96m";
-      case terminal_color::bright_white:
-        return "\u001b[0;97m";
-      default:
-        return "";
-    }
-  }
-
   static constexpr char const *style(terminal_style const s)
   {
     switch(s)
     {
       case terminal_style::reset:
         return "\u001b[0m";
+      case terminal_style::bold:
+        return "\u001b[1m";
       case terminal_style::underline:
-        return "\u001b[0;4m";
+        return "\u001b[4m";
+      case terminal_style::no_underline:
+        return "\u001b[24m";
+      case terminal_style::black:
+        return "\u001b[0;30m";
+      case terminal_style::red:
+        return "\u001b[0;31m";
+      case terminal_style::green:
+        return "\u001b[0;32m";
+      case terminal_style::yellow:
+        return "\u001b[0;33m";
+      case terminal_style::blue:
+        return "\u001b[0;34m";
+      case terminal_style::magenta:
+        return "\u001b[0;35m";
+      case terminal_style::cyan:
+        return "\u001b[0;36m";
+      case terminal_style::white:
+        return "\u001b[0;37m";
+      case terminal_style::bright_black:
+        return "\u001b[0;90m";
+      case terminal_style::bright_red:
+        return "\u001b[0;91m";
+      case terminal_style::bright_green:
+        return "\u001b[0;92m";
+      case terminal_style::bright_yellow:
+        return "\u001b[0;93m";
+      case terminal_style::bright_blue:
+        return "\u001b[0;94m";
+      case terminal_style::bright_magenta:
+        return "\u001b[0;95m";
+      case terminal_style::bright_cyan:
+        return "\u001b[0;96m";
+      case terminal_style::bright_white:
+        return "\u001b[0;97m";
+      default:
+        return "";
     }
   }
 
@@ -297,11 +291,6 @@ namespace jtl
     write(*this, d.data(), required);
 
     return *this;
-  }
-
-  string_builder &string_builder::operator()(terminal_color const c) &
-  {
-    return (*this)(fg(c));
   }
 
   string_builder &string_builder::operator()(terminal_style const s) &

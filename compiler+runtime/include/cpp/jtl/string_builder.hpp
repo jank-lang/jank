@@ -6,7 +6,6 @@
 
 namespace jtl
 {
-  enum class terminal_color : u8;
   enum class terminal_style : u8;
 
   struct string_builder
@@ -42,8 +41,7 @@ namespace jtl
     string_builder &operator()(char const *d) &;
     string_builder &operator()(std::string const &d) &;
     string_builder &operator()(jtl::immutable_string const &d) &;
-    string_builder &operator()(terminal_color c) &;
-    string_builder &operator()(terminal_style c) &;
+    string_builder &operator()(terminal_style s) &;
 
     template <template <typename> typename V, typename T>
     requires(std::same_as<V<T>, std::vector<T>> || std::same_as<V<T>, jank::native_vector<T>>)
