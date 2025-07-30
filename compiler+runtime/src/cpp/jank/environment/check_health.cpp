@@ -216,7 +216,7 @@ namespace jank::environment
       else
       {
         auto const s{ v.convertTo<std::string *>() };
-        error = (*s != "healthy");
+        error = (s == nullptr || *s != "healthy");
       }
     }
 
