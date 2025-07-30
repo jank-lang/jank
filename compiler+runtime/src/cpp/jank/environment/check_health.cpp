@@ -224,11 +224,11 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot JIT compile C++",
+      return util::format("{}─ ✅{} jank cannot jit compile c++",
                           terminal_style::red,
                           terminal_style::reset);
     }
-    return util::format("{}─ ✅{} jank can JIT compile C++",
+    return util::format("{}─ ✅{} jank can jit compile c++",
                         terminal_style::green,
                         terminal_style::reset);
   }
@@ -260,11 +260,11 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot JIT compile IR",
+      return util::format("{}─ ✅{} jank cannot jit compile llvm ir",
                           terminal_style::red,
                           terminal_style::reset);
     }
-    return util::format("{}─ ✅{} jank can JIT compile IR",
+    return util::format("{}─ ✅{} jank can jit compile llvm ir",
                         terminal_style::green,
                         terminal_style::reset);
   }
