@@ -220,6 +220,7 @@ namespace jank::jit
     profile::timer const timer{ "jit eval_string" };
     //util::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
+    /* TODO: Throw on errors. */
     llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
     register_jit_stack_frames();
   }

@@ -24,4 +24,10 @@ namespace jtl
     bright_cyan,
     bright_white
   };
+
+  enum class terminal_style : u8
+  {
+    reset = 0,
+    underline = 4
+  };
 }

@@ -43,6 +43,7 @@ namespace jtl
 
   static constexpr char const *fg(terminal_color const col)
   {
+    /* TODO: No need for a switch. Just build string. */
     switch(col)
     {
       case terminal_color::reset:
@@ -81,6 +82,17 @@ namespace jtl
         return "\u001b[0;97m";
       default:
         return "";
+    }
+  }
+
+  static constexpr char const *style(terminal_style const s)
+  {
+    switch(s)
+    {
+      case terminal_style::reset:
+        return "\u001b[0m";
+      case terminal_style::underline:
+        return "\u001b[0;4m";
     }
   }
 
@@ -290,6 +302,11 @@ namespace jtl
   string_builder &string_builder::operator()(terminal_color const c) &
   {
     return (*this)(fg(c));
+  }
+
+  string_builder &string_builder::operator()(terminal_style const s) &
+  {
+    return (*this)(style(s));
   }
 
   void string_builder::push_back(bool const d) &
