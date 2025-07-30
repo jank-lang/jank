@@ -11,7 +11,11 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(enable_docs OFF CACHE BOOL "Enable docs")
   set(enable_throw_bad_alloc_library OFF CACHE BOOL "Enable C++ gctba library build")
 
-  cmake_policy(SET CMP0077 OLD)
+  # BDWGC redefines BUILD_SHARED_LIBS as an option. The old policy behavior here
+  # is to reset the value to the new default defined, which is ON. However, we
+  # want it to keep the value we've already specified, to force BDWGC to build
+  # as a static lib, so we choose the new behavior.
+  cmake_policy(SET CMP0077 NEW)
 
   add_subdirectory(third-party/bdwgc EXCLUDE_FROM_ALL)
 
