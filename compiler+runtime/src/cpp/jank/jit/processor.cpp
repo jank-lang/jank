@@ -104,8 +104,13 @@ namespace jank::jit
       args.emplace_back("-g");
     }
 
+    auto const clang_resource_dir{ util::find_clang_resource_dir() };
+    if(clang_resource_dir.is_none())
+    {
+      throw std::runtime_error{ "Unable to find Clang resource dir." };
+    }
     args.emplace_back("-resource-dir");
-    args.emplace_back(JANK_CLANG_RESOURCE_DIR);
+    args.emplace_back(clang_resource_dir.unwrap().c_str());
 
     {
       std::filesystem::path const dir{ JANK_RESOURCE_DIR };

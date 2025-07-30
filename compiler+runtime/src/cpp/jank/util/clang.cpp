@@ -20,6 +20,11 @@
 #include <jank/runtime/context.hpp>
 #include <jank/error/system.hpp>
 
+namespace Cpp
+{
+  std::string DetectResourceDir(char const *ClangBinaryName = "clang");
+}
+
 namespace jank::util
 {
   /* Whenever we need to invoke Clang, at run time, we need to make sure we're using
@@ -89,6 +94,42 @@ namespace jank::util
     }
 
     return none;
+  }
+
+  /* Just like we have a configured Clang, we have a configured Clang resource dir, which
+   * matches our configured Clang. When we find a different Clang, we need to invoke it with
+   * -print-resource-dir in order to get the new resource dir. For some reason, the JIT
+   * runtime sometimes struggles to figure this out on its own, so we always provide it. */
+  jtl::option<jtl::immutable_string> find_clang_resource_dir()
+  {
+    static jtl::immutable_string result;
+    if(!result.empty())
+    {
+      return result;
+    }
+
+    auto const clang_path{ find_clang() };
+    if(clang_path.is_none())
+    {
+      return none;
+    }
+
+    /* Short circuit the process creation in the scenario where we find our
+     * configured clang. We can always assume that our configuration is correct,
+     * even though it may not be, simply because it's not sane to operate otherwise. So
+     * we can use the configured resource dir in this case. */
+    if(clang_path.unwrap() == JANK_CLANG_PATH)
+    {
+      return JANK_CLANG_RESOURCE_DIR;
+    }
+
+    auto resource_dir{ Cpp::DetectResourceDir(clang_path.unwrap().c_str()) };
+
+    if(resource_dir.empty())
+    {
+      return none;
+    }
+    return resource_dir;
   }
 
   jtl::result<void, error_ref> invoke_clang(std::vector<char const *> const &args)

@@ -9,6 +9,7 @@
 namespace jank::util
 {
   jtl::option<jtl::immutable_string> find_clang();
+  jtl::option<jtl::immutable_string> find_clang_resource_dir();
   jtl::result<void, error_ref> invoke_clang(std::vector<char const *> const &args);
 
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version);
