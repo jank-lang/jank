@@ -184,7 +184,6 @@ namespace jank::codegen
   jtl::string_result<void> llvm_processor::gen()
   {
     profile::timer const timer{ "ir gen" };
-    // util::println("MONTY: {}", root_fn->name);    
     if(target != compilation_target::function)
     {
       create_global_ctor();
@@ -362,7 +361,6 @@ namespace jank::codegen
   llvm::Value *llvm_processor::gen(expr::call_ref const expr, expr::function_arity const &arity)
   {
     auto const callee(gen(expr->source_expr, arity));
-    // util::println("MONTY: {}", ctx->module_name.c_str());
 
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
