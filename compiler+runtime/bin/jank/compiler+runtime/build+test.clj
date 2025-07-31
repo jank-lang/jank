@@ -10,8 +10,10 @@
 (defn build-clang! []
   (if (b.f/exists? (str compiler+runtime-dir "/build/llvm-install/usr/local/bin/clang++"))
     (util/log-info "Clang is already built")
-    (util/quiet-shell {:dir compiler+runtime-dir}
-                      "bin/build-clang")))
+    (util/with-elapsed-time duration
+      (util/quiet-shell {:dir compiler+runtime-dir}
+                        "bin/build-clang")
+      (util/log-info-with-time duration "Build Clang/LLVM"))))
 
 (defn -main [{:keys [enabled?
                      build-type
