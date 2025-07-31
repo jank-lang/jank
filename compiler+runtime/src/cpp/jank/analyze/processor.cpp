@@ -332,9 +332,10 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      auto const arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
-      if((arg0_ptr && arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
-         || !Cpp::IsImplicitlyConvertible(args[0].m_Type, args[1].m_Type))
+      auto const is_arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
+      if((is_arg0_ptr && is_arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
+         || !Cpp::IsImplicitlyConvertible(Cpp::GetNonReferenceType(args[0].m_Type),
+                                          Cpp::GetNonReferenceType(args[1].m_Type)))
       {
         return invalid(args, op_name, val, macro_expansions);
       }
