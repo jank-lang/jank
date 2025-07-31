@@ -52,10 +52,11 @@
                          :extra-env exports}
                         (str stats-cmd " --zero-stats"))
 
-      (util/quiet-shell {:dir compiler+runtime-dir
-                         :extra-env exports}
-                        configure-cmd)
-      (util/log-info "Configured")
+      (util/with-elapsed-time duration
+        (util/quiet-shell {:dir compiler+runtime-dir
+                           :extra-env exports}
+                          configure-cmd)
+        (util/log-info-with-time duration "Configured"))
 
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
