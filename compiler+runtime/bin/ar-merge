@@ -13,6 +13,17 @@ shift
 
 mkdir -p "${cache_dir}"
 
+# https://stackoverflow.com/a/65240685
+function logged_cmd()
+{
+  local rc
+  rc=0
+  set -x
+  "$@"
+  { { rc=$?; set +x; }; } 2>/dev/null
+  return "$rc"
+}
+
 case "${command}" in
   # We only use this from ./bin/clean. Generally, this should not be needed.
   clean)
@@ -25,7 +36,7 @@ case "${command}" in
     object_files="$(cat "${cache_dir}"/*)"
     rm -f "${merge_output}"
     # shellcheck disable=SC2086
-    "${ar}" qc "${merge_output}" ${object_files}
+    logged_cmd "${ar}" qc "${merge_output}" ${object_files}
     ;;
 
   # No custom command, so just pass this onto the original AR but keep track of all of
@@ -36,6 +47,6 @@ case "${command}" in
     base="${output//\//_}"
     rm -f "${cache_dir}/${base}.list"
     echo "$@" > "${cache_dir}/${base}.list"
-    "${ar}" "${command}" "${output}" "$@"
+    logged_cmd "${ar}" "${command}" "${output}" "$@"
     ;;
 esac
