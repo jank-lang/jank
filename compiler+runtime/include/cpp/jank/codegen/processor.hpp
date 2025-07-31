@@ -127,6 +127,8 @@ namespace jank::codegen
     jtl::option<handle>
     gen(analyze::expr::let_ref const, analyze::expr::function_arity const &, bool box_needed);
     jtl::option<handle>
+    gen(analyze::expr::letfn_ref const, analyze::expr::function_arity const &, bool box_needed);
+    jtl::option<handle>
     gen(analyze::expr::do_ref const, analyze::expr::function_arity const &, bool box_needed);
     jtl::option<handle>
     gen(analyze::expr::if_ref const, analyze::expr::function_arity const &, bool box_needed);
