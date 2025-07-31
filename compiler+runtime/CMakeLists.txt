@@ -274,6 +274,13 @@ configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
 set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge")
 add_custom_command(
   DEPENDS jank_lib
+          libzippp::libzippp
+          cpptrace::cpptrace
+          ftxui::screen ftxui::dom
+          Boost::multiprecision
+          nanobench_lib
+          bdwgc::gc bdwgc::gccpp
+          folly_lib
   OUTPUT ${CMAKE_BINARY_DIR}/libjank.a
   COMMAND_EXPAND_LISTS
   VERBATIM
