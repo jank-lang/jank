@@ -28,6 +28,12 @@ project(
     LANGUAGES C CXX
 )
 
+# BDWGC redefines BUILD_SHARED_LIBS as an option. The old policy behavior here
+# is to reset the value to the new default defined, which is ON. However, we
+# want it to keep the value we've already specified, to force BDWGC to build
+# as a static lib, so we choose the new behavior.
+cmake_policy(SET CMP0077 NEW)
+
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_coverage "Enable code coverage measurement" OFF)
