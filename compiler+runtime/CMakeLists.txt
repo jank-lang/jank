@@ -32,6 +32,7 @@ project(
 # is to reset the value to the new default defined, which is ON. However, we
 # want it to keep the value we've already specified, to force BDWGC to build
 # as a static lib, so we choose the new behavior.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 cmake_policy(SET CMP0077 NEW)
 
 # All options are available here.
