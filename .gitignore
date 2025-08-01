@@ -58,3 +58,6 @@ node_modules
 # MacOS
 .DS_Store
 
+# Direnv
+.envrc
+.direnv/

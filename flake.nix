@@ -8,20 +8,55 @@
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
+      imports = [inputs.flake-parts.flakeModules.easyOverlay];
       systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
       perSystem = {
         pkgs,
+        self',
+        system,
         ...
-      }: {
+      }: let
+        llvmSrc = pkgs.fetchFromGitHub {
+          owner = "jank-lang";
+          repo = "llvm-project";
+          tag = "jank";
+          hash = "sha256-IjcppoKieFJv0ShSB7Y2uPQwcHyMuoY3xJpOqysJ4cQ=";
+          fetchSubmodules = true;
+        };
+      in {
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          overlays = [
+            (final: prev: {
+              llvmPackages_git =
+                prev.llvmPackages_git
+                // {
+                  llvm = prev.llvmPackages_git.llvm.override {
+                    version = "22.0.0-git";
+                    release_version = "22.0.0-git";
+                    monorepoSrc = llvmSrc;
+                  };
+                  libclang = prev.llvmPackages_git.libclang.override {
+                    version = "22.0.0-git";
+                    release_version = "22.0.0-git";
+                    monorepoSrc = llvmSrc;
+                  };
+                };
+            })
+          ];
+        };
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
-        devShells.default = (pkgs.mkShell.override { stdenv = pkgs.llvmPackages.stdenv; }) {
+        devShells.default = (pkgs.mkShell.override {inherit (pkgs.llvmPackages_git) stdenv;}) {
           packages = with pkgs; [
+            # Nix LSP
+            nixd
+
             ## Required tools.
             cmake
             ninja
             pkg-config
-            clang
+            llvmPackages_git.clang
 
             ## Required libs.
             boehmgc
@@ -36,11 +71,13 @@
             git
             nixd
             shellcheck
+
             # For clangd
-            llvm
-            llvmPackages.libclang
+            llvmPackages_git.llvm
+            llvmPackages_git.libclang
+
             # For clang-tidy.
-            llvmPackages.clang-tools
+            llvmPackages_git.clang-tools
             gdb
             clangbuildanalyzer
             openjdk
@@ -49,18 +86,15 @@
             doctest
           ];
 
-          shellHook =
-          ''
-          export CC=clang
-          export CXX=clang++
-          export ASAN_OPTIONS=detect_leaks=0
+          shellHook = ''
+            export ASAN_OPTIONS=detect_leaks=0
           '';
 
           # Nix assumes fortification by default, but that fails with debug builds.
           # Since this shell is used for development, we disabled fortification. It's
           # still enabled for our release builds in build.nix.
           # https://github.com/NixOS/nixpkgs/issues/18995
-          hardeningDisable = [ "fortify" ];
+          hardeningDisable = ["fortify"];
         };
       };
     };
