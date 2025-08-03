@@ -1485,9 +1485,8 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return error::internal_parse_failure(
-        util::format("Unable to unescape string: {}", res.expect_err().message),
-        { token.start, latest_token.end });
+      return error::internal_parse_failure(res.expect_err().message,
+                                           { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

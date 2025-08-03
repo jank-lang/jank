@@ -25,20 +25,22 @@
           (if skip?
             (util/log-warning "Skipped " relative-dirname)
             (util/with-elapsed-time duration
-              (let [res @(b.p/process {:out :string
-                                       :err :out
-                                       :dir dirname
-                                       :extra-env extra-env}
-                                      test-file)]
-                (when (or (and (zero? (:exit res)) expect-failure?)
-                          (and (not (zero? (:exit res))) (not expect-failure?)))
-                  (vreset! unexpected-result res)))
+              (do
+                (util/log-info "Testing " relative-dirname)
+                (let [res @(b.p/process {:out :string
+                                         :err :out
+                                         :dir dirname
+                                         :extra-env extra-env}
+                                        test-file)]
+                  (when (or (and (zero? (:exit res)) expect-failure?)
+                            (and (not (zero? (:exit res))) (not expect-failure?)))
+                    (vreset! unexpected-result res))))
               (if-some [res @unexpected-result]
                 (do
                   (vreset! passed? false)
                   (println (:out res))
-                  (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))
-                (util/log-info-with-time duration "Tested " relative-dirname))))))
+                  (util/log-error-with-time duration "Failed with exit code " (:exit res)))
+                (util/log-info-with-time duration "Done"))))))
 
       (when-not @passed?
         (System/exit 1)))))

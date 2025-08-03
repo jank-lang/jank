@@ -3,7 +3,8 @@
 (ns jank.test.error-reporting
   (:require [babashka.process :as b.p]
             [babashka.fs :as b.f]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [jank.util :as util]))
 
 ; This test suite finds `input.jank` files, each in their own directory,
 ; and runs them. They're all expected to fail and the stdout is captured
