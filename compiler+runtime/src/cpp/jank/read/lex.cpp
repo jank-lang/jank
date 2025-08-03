@@ -1182,29 +1182,9 @@ namespace jank::read::lex
               break;
             }
 
+            /* Escape sequences will be validated during parsing. */
             if(escaped)
             {
-              switch(oc.expect_ok().character)
-              {
-                case '"':
-                case '?':
-                case '\'':
-                case '\\':
-                case 'a':
-                case 'b':
-                case 'f':
-                case 'n':
-                case 'r':
-                case 't':
-                case 'v':
-                  break;
-                default:
-                  jtl::string_builder sb;
-                  return error::lex_invalid_string_escape(
-                    util::format("Unsupported string escape character '{}'.",
-                                 sb(oc.expect_ok().character).view()),
-                    { pos, pos + 2llu });
-              }
               escaped = false;
             }
             else if(oc.expect_ok().character == '\\')

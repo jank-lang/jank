@@ -1717,6 +1717,19 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("With invalid escapes")
+      {
+        processor p{ R"({1 "foo\pbar"})" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 1, token_kind::open_curly_bracket },
+                { 1, 1, token_kind::integer, 1ll },
+                { 3, 10, token_kind::escaped_string, "foo\\pbar"sv },
+                { 13, 1, token_kind::close_curly_bracket },
+        }));
+      }
+
       SUBCASE("Unicode characters")
       {
         processor p{ R"("ሴ 你好")" };

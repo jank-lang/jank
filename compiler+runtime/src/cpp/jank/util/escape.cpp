@@ -59,7 +59,8 @@ namespace jank::util
             sb('\b');
             break;
           default:
-            return err(unescape_error{ util::format("Invalid escape sequence '\\{}'", c) });
+            return err(
+              unescape_error{ util::format("String contains invalid escape sequence '\\{}'.", c) });
         }
         escape = false;
       }
