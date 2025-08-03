@@ -2028,7 +2028,7 @@
   [coll n]
   ;; TODO add support for IDrop
   (if (pos? n)
-    (if-let [xs (and (pos? n) (seq coll))]
+    (if-let [xs (seq coll)]
       (recur (rest xs) (dec n))
       (or (seq coll) ()))
     coll))
