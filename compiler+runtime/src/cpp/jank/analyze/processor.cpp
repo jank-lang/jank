@@ -1865,6 +1865,20 @@ namespace jank::analyze
       ret.values.emplace_back(form.expect_ok());
     }
 
+    if(ret.values.empty())
+    {
+      auto const nil{ analyze_primitive_literal(jank_nil,
+                                                current_frame,
+                                                expression_position::tail,
+                                                fn_ctx,
+                                                needs_box) };
+      if(nil.is_err())
+      {
+        return nil.expect_err();
+      }
+      ret.values.emplace_back(nil.expect_ok());
+    }
+
     return jtl::make_ref<expr::do_>(std::move(ret));
   }
 
@@ -1966,6 +1980,20 @@ namespace jank::analyze
       }
 
       ret->body->values.emplace_back(res.expect_ok());
+    }
+
+    if(ret->body->values.empty())
+    {
+      auto const nil{ analyze_primitive_literal(jank_nil,
+                                                ret->frame,
+                                                expression_position::tail,
+                                                fn_ctx,
+                                                needs_box) };
+      if(nil.is_err())
+      {
+        return nil.expect_err();
+      }
+      ret->body->values.emplace_back(nil.expect_ok());
     }
 
     return ret;
@@ -2087,6 +2115,20 @@ namespace jank::analyze
       }
 
       ret->body->values.emplace_back(res.expect_ok());
+    }
+
+    if(ret->body->values.empty())
+    {
+      auto const nil{ analyze_primitive_literal(jank_nil,
+                                                ret->frame,
+                                                expression_position::tail,
+                                                fn_ctx,
+                                                needs_box) };
+      if(nil.is_err())
+      {
+        return nil.expect_err();
+      }
+      ret->body->values.emplace_back(nil.expect_ok());
     }
 
     return ret;

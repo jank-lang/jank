@@ -1062,26 +1062,8 @@ namespace jank::codegen
       last = gen(form, arity);
     }
 
-    switch(expr->position)
-    {
-      case expression_position::statement:
-      case expression_position::value:
-        {
-          return last;
-        }
-      case expression_position::tail:
-        {
-          if(expr->values.empty())
-          {
-            return ctx->builder->CreateRet(gen_global(jank_nil));
-          }
-          else
-          {
-            /* Codegen for this already generated a return. */
-            return last;
-          }
-        }
-    }
+    /* Codegen for this already generated a return. */
+    return last;
   }
 
   llvm::Value *llvm_processor::gen(expr::if_ref const expr, expr::function_arity const &arity)
