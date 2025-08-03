@@ -1,0 +1,34 @@
+;; Credit: Adapted from https://github.com/clojure/clojure/blob/da1c748123c80fa3e82e24fc8e24a950a3ebccd9/test/clojure/test_clojure/sequences.clj#L431-L458
+(def in
+  ;coll                    n  nthnext  nthrest
+  [[nil                    1  nil      ()]
+   ["abc"                  1  '(\b \c) '(\b \c)]
+   ["abc"                  3  nil      ()]
+   ["abc"                  4  nil      ()]
+   [()                     1  nil      ()]
+   ['(1)                   1  nil      ()]
+   ['(1)                   2  nil      ()]
+   ['(())                  1  nil      ()]
+   [#{}                    1  nil      ()]
+   [{:a 1}                 1  nil      ()]
+   [[]                     1  nil      ()]
+   [[0]                    1  nil      ()]
+   [[0]                    2  nil      ()]
+   [[[] 2 nil]             1 '(2 nil)  '(2 nil)]
+   [[[] 2 nil]             2 '(nil)    '(nil)]
+   [[[] 2 nil]             3 nil       ()]
+   [(sorted-set 1 2 3)     2 '(3)      '(3)]
+   [(sorted-map :a 1 :b 2) 1 '([:b 2]) '([:b 2])]
+   ;; TODO: Test into-array when implemented
+   ; [(into-array [])        1 nil       ()]
+   ; [(into-array [1])       1 nil       ()]
+   [(range 5)              3 '(3 4)    '(3 4)]
+   [(range 5)              5 nil       ()]])
+
+(doseq [[coll n nthnext-expected nthrest-expected] in]
+  (assert (= nthnext-expected (nthnext coll n))
+          "nthnext did not return expected output")
+  (assert (= nthrest-expected (nthrest coll n))
+          "nthrest did not return expected output"))
+
+:success
