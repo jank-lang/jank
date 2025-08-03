@@ -1346,6 +1346,7 @@ namespace jank::codegen
                                      bool const)
   {
     handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("let")), expr->needs_box };
+    bool used_option{};
 
     if(expr->needs_box)
     {
@@ -1357,10 +1358,25 @@ namespace jank::codegen
       auto const last_expr_type{ cpp_util::expression_type(
         expr->body->values[expr->body->values.size() - 1]) };
 
-      util::format_to(body_buffer,
-                      "{} {}{ }; {",
-                      Cpp::GetTypeAsString(last_expr_type),
-                      ret_tmp.str(expr->needs_box));
+      jtl::immutable_string type_name;
+      /* In analysis, we treat untyped objects as object*, since that's easier for IR.
+       * However, for C++, we want to normalize that to object_ref to take full advantage
+       * of richer types. */
+      if(cpp_util::is_untyped_object(last_expr_type))
+      {
+        type_name = "object_ref";
+        util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp.str(expr->needs_box));
+      }
+      else
+      {
+        used_option = true;
+        type_name = Cpp::GetTypeAsString(Cpp::GetNonReferenceType(last_expr_type));
+        /* TODO: Test for this with something non-default constructible. */
+        util::format_to(body_buffer,
+                        "jtl::option<{}> {}{ }; {",
+                        type_name,
+                        ret_tmp.str(expr->needs_box));
+      }
     }
     else
     {
@@ -1436,11 +1452,14 @@ namespace jank::codegen
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return {};", ret_tmp.str(expr->needs_box));
+      util::format_to(body_buffer,
+                      "return {}{};",
+                      ret_tmp.str(expr->needs_box),
+                      (used_option ? ".unwrap()" : ""));
       return none;
     }
 
-    return ret_tmp;
+    return util::format("{}{}", ret_tmp.str(expr->needs_box), (used_option ? ".unwrap()" : ""));
   }
 
   jtl::option<handle>
@@ -1883,16 +1902,49 @@ namespace jank::codegen
     return ret_tmp;
   }
 
-  jtl::option<handle>
-  processor::gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &, bool)
+  jtl::option<handle> processor::gen(analyze::expr::cpp_box_ref const expr,
+                                     analyze::expr::function_arity const &arity,
+                                     bool)
   {
-    return none;
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_box")) };
+    auto value_tmp{ gen(expr->value_expr, arity, false) };
+
+    util::format_to(body_buffer,
+                    "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}) };",
+                    ret_tmp,
+                    value_tmp.unwrap().str(false));
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
   }
 
-  jtl::option<handle>
-  processor::gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &, bool)
+  jtl::option<handle> processor::gen(analyze::expr::cpp_unbox_ref const expr,
+                                     analyze::expr::function_arity const &arity,
+                                     bool)
   {
-    return none;
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_unbox")) };
+    auto value_tmp{ gen(expr->value_expr, arity, false) };
+
+    util::format_to(body_buffer,
+                    "auto {}{ "
+                    "static_cast<{}>(jank::runtime::try_object<jank::runtime::obj::opaque_box>({})-"
+                    ">data.data) };",
+                    ret_tmp,
+                    Cpp::GetTypeAsString(expr->type),
+                    value_tmp.unwrap().str(false));
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
   }
 
   jtl::immutable_string processor::declaration_str()
