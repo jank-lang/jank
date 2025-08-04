@@ -145,7 +145,7 @@ namespace jank::evaluate
     auto expr{ make_ref<E>(orig_expr) };
     ret->kind = analyze::expression_kind::function;
     ret->name = name;
-    ret->unique_name = __rt_ctx->unique_string(ret->name);
+    ret->unique_name = __rt_ctx->unique_namespaced_string(ret->name);
     ret->meta = obj::persistent_hash_map::empty();
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));

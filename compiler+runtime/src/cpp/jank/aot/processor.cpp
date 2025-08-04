@@ -180,7 +180,7 @@ int main(int argc, const char** argv)
     }
 
     for(auto const &lib : {
-          "-ljank-standalone",
+          "-ljank",
           /* Default libraries that jank depends on. */
           "-lm",
           "-lstdc++",

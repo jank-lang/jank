@@ -201,9 +201,7 @@ namespace jank::runtime
         codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
         cg_prc.gen().expect_ok();
         cg_prc.optimize();
-        write_module(cg_prc.get_module().getModuleUnlocked()->getName().str(),
-                     cg_prc.get_module().getModuleUnlocked())
-          .expect_ok();
+        write_module(cg_prc.get_module_name(), cg_prc.get_module().getModuleUnlocked()).expect_ok();
       }
       else
       {
@@ -422,10 +420,17 @@ namespace jank::runtime
 
   jtl::immutable_string context::unique_string(jtl::immutable_string_view const &prefix) const
   {
-    //static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
-    return util::format("{}-{}",
-                        //runtime::munge_extra(ns->name->get_name(), dot, "_"),
+    return util::format("{}-{}", prefix.data(), ++ns->symbol_counter);
+  }
+
+  jtl::immutable_string
+  context::unique_namespaced_string(jtl::immutable_string_view const &prefix) const
+  {
+    static jtl::immutable_string const dot{ "\\." };
+    auto const ns{ current_ns() };
+    return util::format("{}-{}-{}",
+                        runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
                         prefix.data(),
                         ++ns->symbol_counter);
   }

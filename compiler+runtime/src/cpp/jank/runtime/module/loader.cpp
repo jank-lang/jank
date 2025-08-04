@@ -47,13 +47,13 @@ namespace jank::runtime::module
   jtl::immutable_string module_to_path(jtl::immutable_string const &module)
   {
     static jtl::immutable_string const dot{ "\\." };
-    return runtime::munge_extra(module, dot, "/");
+    return runtime::munge_and_replace(module, dot, "/");
   }
 
   jtl::immutable_string module_to_load_function(jtl::immutable_string const &module)
   {
     static jtl::immutable_string const dot{ "\\." };
-    auto const &ret{ runtime::munge_extra(module, dot, "_") };
+    auto const &ret{ runtime::munge_and_replace(module, dot, "_") };
 
     return util::format("jank_load_{}", ret);
   }

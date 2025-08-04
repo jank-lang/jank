@@ -2711,6 +2711,11 @@ namespace jank::codegen
     return _impl->ctx->module;
   }
 
+  jtl::immutable_string const &llvm_processor::get_module_name() const
+  {
+    return _impl->ctx->module_name;
+  }
+
   jtl::immutable_string llvm_processor::get_root_fn_name() const
   {
     return _impl->root_fn->unique_name;

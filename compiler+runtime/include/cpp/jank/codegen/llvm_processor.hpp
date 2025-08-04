@@ -102,7 +102,7 @@ namespace jank::codegen
     void print() const;
 
     llvm::orc::ThreadSafeModule &get_module();
-    jtl::immutable_string get_module_name() const;
+    jtl::immutable_string const &get_module_name() const;
     jtl::immutable_string get_root_fn_name() const;
 
     jtl::ptr<impl> _impl{};
