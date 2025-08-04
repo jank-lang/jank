@@ -112,7 +112,8 @@ namespace jank::util
                                   util::cli::opts.optimization_level,
                                   static_cast<int>(util::cli::opts.codegen),
                                   sb.release()));
-    res = util::format("{}-{}", util::default_target_triple(), util::sha256(input));
+    /* TODO: Actual target triple. */
+    res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
 
     //util::println("binary_version {}", res);
 

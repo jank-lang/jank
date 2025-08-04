@@ -154,7 +154,7 @@ namespace jank::util
 
     /* Building the driver doesn't actually run the commands yet. All of the flags will
      * be checked, though. */
-    clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
+    clang::driver::Driver driver{ clang_path.c_str(), target_triple.c_str(), diags, "jank", vfs };
     driver.setCheckInputsExist(true);
 
     auto const compilation_result{ driver.BuildCompilation(args) };
@@ -251,6 +251,7 @@ namespace jank::util
       return result;
     }
 
+    jank_debug_assert(runtime::__rt_ctx);
     return result
       = runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple().str();
   }

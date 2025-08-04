@@ -25,6 +25,7 @@
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/util/clang.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -268,7 +269,7 @@ namespace jank::codegen
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     auto const raw_module{ module.getModuleUnlocked() };
-    raw_module->setTargetTriple(util::default_target_triple());
+    raw_module->setTargetTriple(llvm::Triple{ util::default_target_triple().c_str() });
     raw_module->setDataLayout(__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getDataLayout());
 
     /* TODO: Add more passes and measure the order of the passes. */

@@ -387,15 +387,17 @@ namespace jank::runtime
 
     auto const target_triple{ util::default_target_triple() };
     std::string target_error;
-    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple, target_error) };
+    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple.c_str(), target_error) };
     if(!target)
     {
       return err(target_error);
     }
     llvm::TargetOptions const opt;
-    auto const target_machine{
-      target->createTargetMachine(target_triple, "generic", "", opt, llvm::Reloc::PIC_)
-    };
+    auto const target_machine{ target->createTargetMachine(llvm::Triple{ target_triple.c_str() },
+                                                           "generic",
+                                                           "",
+                                                           opt,
+                                                           llvm::Reloc::PIC_) };
     if(!target_machine)
     {
       return err(util::format("failed to create target machine for {}", target_triple));
