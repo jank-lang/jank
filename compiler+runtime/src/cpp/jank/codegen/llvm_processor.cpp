@@ -268,7 +268,8 @@ namespace jank::codegen
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     auto const raw_module{ module.getModuleUnlocked() };
-    raw_module->setTargetTriple(llvm::Triple{ llvm::sys::getDefaultTargetTriple() });
+    raw_module->setTargetTriple(
+      __rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple());
     raw_module->setDataLayout(__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getDataLayout());
 
     /* TODO: Add more passes and measure the order of the passes. */
