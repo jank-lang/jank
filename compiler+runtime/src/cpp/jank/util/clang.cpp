@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <Interpreter/Compatibility.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/DiagnosticOptions.h>
@@ -143,7 +144,7 @@ namespace jank::util
     clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
     clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
     auto const vfs{ llvm::vfs::getRealFileSystem() };
-    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
+    auto const &target_triple{ default_target_triple() };
     auto const clang_path_res{ find_clang() };
     if(clang_path_res.is_none())
     {
@@ -240,5 +241,17 @@ namespace jank::util
 
     println(stderr, "done!");
     return ok(output_path.c_str());
+  }
+
+  jtl::immutable_string default_target_triple()
+  {
+    static jtl::immutable_string result;
+    if(!result.empty())
+    {
+      return result;
+    }
+
+    return result
+      = runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple().str();
   }
 }

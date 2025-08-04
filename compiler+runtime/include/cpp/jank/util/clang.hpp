@@ -15,4 +15,6 @@ namespace jank::util
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version);
   jtl::result<jtl::immutable_string, error_ref>
   build_pch(std::vector<char const *> args, jtl::immutable_string const &binary_version);
+
+  jtl::immutable_string default_target_triple();
 }

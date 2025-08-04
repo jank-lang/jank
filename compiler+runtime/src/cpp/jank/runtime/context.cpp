@@ -22,6 +22,7 @@
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/process_location.hpp>
+#include <jank/util/clang.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -384,7 +385,7 @@ namespace jank::runtime
     }
     //module->print(llvm::outs(), nullptr);
 
-    auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
+    auto const target_triple{ util::default_target_triple() };
     std::string target_error;
     auto const target{ llvm::TargetRegistry::lookupTarget(target_triple, target_error) };
     if(!target)

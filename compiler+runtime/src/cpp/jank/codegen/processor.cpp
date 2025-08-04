@@ -1345,7 +1345,7 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &fn_arity,
                                      bool const)
   {
-    handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("let")), expr->needs_box };
+    handle const ret_tmp{ runtime::munge(__rt_ctx->unique_string("let")), expr->needs_box };
     bool used_option{};
 
     if(expr->needs_box)
