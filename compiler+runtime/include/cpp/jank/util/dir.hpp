@@ -13,4 +13,6 @@ namespace jank::util
 
   jtl::immutable_string process_path();
   jtl::immutable_string process_dir();
+
+  jtl::immutable_string resource_dir();
 }

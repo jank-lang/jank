@@ -153,4 +153,19 @@ namespace jank::util
   {
     return std::filesystem::path{ process_path().c_str() }.parent_path().c_str();
   }
+
+  jtl::immutable_string resource_dir()
+  {
+    std::filesystem::path const dir{ JANK_RESOURCE_DIR };
+    if(dir.is_absolute())
+    {
+      return dir.c_str();
+    }
+    else
+    {
+      std::filesystem::path const jank_path{ util::process_dir().c_str() };
+
+      return (jank_path / dir).c_str();
+    }
+  }
 }

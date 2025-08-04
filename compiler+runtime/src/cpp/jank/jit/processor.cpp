@@ -111,27 +111,12 @@ namespace jank::jit
     args.emplace_back("-resource-dir");
     args.emplace_back(clang_resource_dir.unwrap().c_str());
 
-    {
-      std::filesystem::path const dir{ JANK_RESOURCE_DIR };
-      if(dir.is_absolute())
-      {
-        args.emplace_back("-I");
-        args.emplace_back(strdup(util::format("{}/include", dir.c_str()).c_str()));
+    auto const jank_resource_dir{ util::resource_dir() };
+    args.emplace_back("-I");
+    args.emplace_back(strdup(util::format("{}/include", jank_resource_dir).c_str()));
 
-        args.emplace_back("-L");
-        args.emplace_back(strdup(util::format("{}/lib", dir.c_str()).c_str()));
-      }
-      else
-      {
-        std::filesystem::path const jank_path{ util::process_dir().c_str() };
-
-        args.emplace_back("-I");
-        args.emplace_back(strdup((jank_path / dir / "include").c_str()));
-
-        args.emplace_back("-L");
-        args.emplace_back(strdup((jank_path / dir / "lib").c_str()));
-      }
-    }
+    args.emplace_back("-L");
+    args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
     /* We need to include our special runtime PCH. */
     auto pch_path{ util::find_pch(binary_version) };

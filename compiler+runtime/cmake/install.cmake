@@ -23,6 +23,17 @@ function(jank_glob_install_without_prefix)
 endfunction()
 
 jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/include/cpp/"
+  OUTPUT_PREFIX "include/"
+  PATTERN "${CMAKE_SOURCE_DIR}/include/cpp/*"
+)
+
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/"
+  PATTERN "${CMAKE_SOURCE_DIR}/src/jank/*"
+)
+
+jank_glob_install_without_prefix(
   INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/bdwgc/"
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/bdwgc/include/*"
 )
@@ -91,8 +102,24 @@ jank_glob_install_without_prefix(
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/boost-multiprecision/include/*"
 )
 
+# This is used for formatting C++ code at runtime.
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
 
+if(jank_local_clang)
+  # When the compiler is installed, it needs to be relinked to its shared objects.
+  # We know where they'll be, relative to the compiler, though.
+  set(CMAKE_SKIP_INSTALL_RPATH OFF)
+  set_target_properties(jank_exe PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
+
+  install(
+    FILES
+    ${llvm_dir}/lib/libLLVM.so.${LLVM_VERSION_MAJOR}.0git
+    ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git
+    DESTINATION lib/jank/${PROJECT_VERSION}/lib
+  )
+endif()
+
+# This is included for distro packagers and anyone else packaging jank who wants to use it.
 if(PROJECT_IS_TOP_LEVEL)
   include(CPack)
 endif()

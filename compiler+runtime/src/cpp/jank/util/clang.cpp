@@ -143,7 +143,7 @@ namespace jank::util
     clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
     clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
     auto const vfs{ llvm::vfs::getRealFileSystem() };
-    auto const &target_triple{ default_target_triple() };
+    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
     auto const clang_path_res{ find_clang() };
     if(clang_path_res.is_none())
     {
@@ -153,7 +153,7 @@ namespace jank::util
 
     /* Building the driver doesn't actually run the commands yet. All of the flags will
      * be checked, though. */
-    clang::driver::Driver driver{ clang_path.c_str(), target_triple.c_str(), diags, "jank", vfs };
+    clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
     driver.setCheckInputsExist(true);
 
     auto const compilation_result{ driver.BuildCompilation(args) };
@@ -208,7 +208,21 @@ namespace jank::util
           "Note: Looks like your first run with these flags. Building pre-compiled header… ");
 
     std::filesystem::path const jank_path{ process_dir().c_str() };
-    auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
+    auto include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
+    if(!std::filesystem::exists(include_path))
+    {
+      auto const install_path{ util::resource_dir() + "/include/jank/prelude.hpp" };
+      if(!std::filesystem::exists(install_path.c_str()))
+      {
+        println(stderr, "failed!");
+        return err(error::internal_system_failure(
+          util::format("Unable to find PCH entrypoint. Tried these paths:\n\n{}\n{}",
+                       include_path.c_str(),
+                       install_path)));
+      }
+      include_path = install_path;
+    }
+
     std::filesystem::path const output_path{ format("{}/incremental.pch",
                                                     user_cache_dir(binary_version)) };
     std::filesystem::create_directories(output_path.parent_path());
@@ -235,6 +249,7 @@ namespace jank::util
     auto const res{ invoke_clang(args) };
     if(res.is_err())
     {
+      println(stderr, "failed!");
       return err(res.expect_err());
     }
 
