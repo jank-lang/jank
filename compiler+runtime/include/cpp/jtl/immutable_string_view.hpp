@@ -65,13 +65,11 @@ namespace jtl
       jank_debug_assert(ptr);
     }
 
-    [[gnu::const]]
     constexpr bool empty() const noexcept
     {
       return size() == 0;
     }
 
-    [[gnu::const]]
     constexpr size_type size() const noexcept
     {
       return len;
@@ -79,13 +77,12 @@ namespace jtl
 
     /* XXX: The contents returned may not be null-terminated. If you require
      * that, build a jtl::immutable_string and use c_str() on it. */
-    [[gnu::returns_nonnull, gnu::const]]
+    [[gnu::returns_nonnull]]
     constexpr const_pointer_type data() const noexcept
     {
       return ptr;
     }
 
-    [[gnu::const]]
     constexpr value_type operator[](size_type const index) const noexcept
     {
       jank_debug_assert(index < len);
@@ -93,33 +90,30 @@ namespace jtl
     }
 
     /*** Comparisons. ***/
-    [[gnu::const]]
     constexpr bool operator!=(immutable_string_view const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
 
-    [[gnu::const]]
     constexpr bool operator==(immutable_string_view const &s) const noexcept
     {
       return !(*this != s);
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr bool operator!=(const_pointer_type const s) const noexcept
     {
       auto const length(traits_type::length(s));
       return size() != length || traits_type::compare(data(), s, length);
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr bool operator==(const_pointer_type const s) const noexcept
     {
       return !(*this != s);
     }
 
-    [[gnu::const]]
     constexpr int compare(immutable_string_view const &s) const
     {
       auto const length(size());
@@ -132,70 +126,61 @@ namespace jtl
     }
 
     /*** Iterators. ***/
-    [[gnu::const]]
     constexpr const_iterator begin() const noexcept
     {
       return data();
     }
 
-    [[gnu::const]]
     constexpr const_iterator cbegin() const noexcept
     {
       return begin();
     }
 
-    [[gnu::const]]
     constexpr const_iterator end() const noexcept
     {
       return data() + size();
     }
 
-    [[gnu::const]]
     constexpr const_iterator cend() const
     {
       return end();
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator rbegin() const noexcept
     {
       return const_reverse_iterator(end());
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator crbegin() const noexcept
     {
       return rbegin();
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator rend() const noexcept
     {
       return const_reverse_iterator(begin());
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator crend() const noexcept
     {
       return rend();
     }
 
     /*** Searches. ***/
-    [[gnu::const]]
     constexpr size_type
     find(immutable_string_view const &pattern, size_type const pos = 0) const noexcept
     {
       return find(pattern.data(), pos, pattern.size());
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type
     find(const_pointer_type const pattern, size_type const pos = 0) const noexcept
     {
       return find(pattern, pos, traits_type::length(pattern));
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type find(const_pointer_type const pattern,
                              size_type const pos,
                              size_type const pattern_length) const noexcept
@@ -237,7 +222,6 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr size_type find(value_type c, size_type pos = 0) const noexcept
     {
       size_type ret{ npos };
@@ -256,20 +240,19 @@ namespace jtl
       return ret;
     }
 
-    [[gnu::const]]
     constexpr size_type
     rfind(immutable_string_view const &s, size_type const pos = npos) const noexcept
     {
       return rfind(s.data(), pos, s.size());
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type rfind(const_pointer_type const s, size_type const pos = npos) const noexcept
     {
       return rfind(s, pos, traits_type::length(s));
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type
     rfind(const_pointer_type const s, size_type pos, size_type const n) const noexcept
     {
@@ -301,7 +284,6 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr size_type rfind(value_type const c, size_type const pos = npos) const noexcept
     {
       auto length(size());
@@ -323,13 +305,11 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr bool starts_with(value_type const c) const noexcept
     {
       return len > 0 && ptr[0] == c;
     }
 
-    [[gnu::const]]
     constexpr bool starts_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
@@ -341,7 +321,6 @@ namespace jtl
       return traits_type::compare(data(), s, s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool starts_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
@@ -354,14 +333,12 @@ namespace jtl
       return traits_type::compare(data(), s.data(), s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool ends_with(value_type const c) const noexcept
     {
       auto const s(size());
       return s > 0 && data()[s - 1] == c;
     }
 
-    [[gnu::const]]
     constexpr bool ends_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
@@ -373,7 +350,6 @@ namespace jtl
       return traits_type::compare(data() + this_sz - s_sz, s, s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool ends_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
@@ -386,13 +362,11 @@ namespace jtl
       return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool contains(value_type const c) const noexcept
     {
       return find(c) != npos;
     }
 
-    [[gnu::const]]
     constexpr bool contains(const_pointer_type const s) const noexcept
     {
       return find(s) != npos;
