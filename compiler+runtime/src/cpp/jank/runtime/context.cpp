@@ -202,7 +202,9 @@ namespace jank::runtime
         codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
         cg_prc.gen().expect_ok();
         cg_prc.optimize();
-        write_module(cg_prc.ctx->module_name, cg_prc.llvm_module).expect_ok();
+        write_module(cg_prc.get_module().getModuleUnlocked()->getName().str(),
+                     cg_prc.get_module().getModuleUnlocked())
+          .expect_ok();
       }
       else
       {

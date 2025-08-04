@@ -154,7 +154,7 @@ namespace jank::evaluate
       jtl::make_ref<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent)
     };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
-    expr::function_arity arity{ std::move(params),
+    expr::function_arity arity{ jtl::move(params),
                                 jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
                                 frame,
                                 fn_ctx };
@@ -205,7 +205,7 @@ namespace jank::evaluate
       }
     });
 
-    ret->arities.emplace_back(std::move(arity));
+    ret->arities.emplace_back(jtl::move(arity));
 
     /* We can't just assign the position here, since we need the position to propagate
      * downward. For example, if this expr is a let, setting its position to tail
@@ -262,7 +262,7 @@ namespace jank::evaluate
                                      native_vector<obj::symbol_ref> params)
   {
     return visit_expr(
-      [&](auto const typed_expr) { return wrap_expression(typed_expr, name, std::move(params)); },
+      [&](auto const typed_expr) { return wrap_expression(typed_expr, name, jtl::move(params)); },
       expr);
   }
 
@@ -484,11 +484,11 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(expr->meta.unwrap(), std::move(npl));
+      return make_box<obj::persistent_list>(expr->meta.unwrap(), jtl::move(npl));
     }
     else
     {
-      return make_box<obj::persistent_list>(std::move(npl));
+      return make_box<obj::persistent_list>(jtl::move(npl));
     }
   }
 
@@ -564,11 +564,11 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), std::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), jtl::move(ret).persistent());
     }
     else
     {
-      return make_box<obj::persistent_hash_set>(std::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(jtl::move(ret).persistent());
     }
   }
 
@@ -593,10 +593,10 @@ namespace jank::evaluate
       cg_prc.gen().expect_ok();
       cg_prc.optimize();
 
-      __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module));
+      __rt_ctx->jit_prc.load_ir_module(jtl::move(cg_prc.get_module()));
 
       auto const fn(
-        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
+        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.get_root_fn_name())))
           .expect_ok());
       return reinterpret_cast<object *(*)()>(fn)();
     }
@@ -613,7 +613,7 @@ namespace jank::evaluate
       {
         /* TODO: Helper to turn an llvm::Error into a string. */
         jtl::immutable_string const msg{ "Unable to compile/eval C++ source." };
-        llvm::logAllUnhandledErrors(std::move(res), llvm::errs(), "error: ");
+        llvm::logAllUnhandledErrors(jtl::move(res), llvm::errs(), "error: ");
         throw error::internal_codegen_failure(msg);
       }
       return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
