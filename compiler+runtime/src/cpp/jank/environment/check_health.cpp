@@ -10,7 +10,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/util/process_location.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -44,7 +43,7 @@ namespace jank::environment
   {
     std::filesystem::path dir{ JANK_RESOURCE_DIR };
     bool relative{};
-    auto const jank_path{ util::process_location().unwrap().parent_path() };
+    std::filesystem::path const jank_path{ util::process_dir().c_str() };
     if(!dir.is_absolute())
     {
       dir = (jank_path / dir);

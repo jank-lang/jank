@@ -7,7 +7,6 @@
 
 #include <libzippp.h>
 
-#include <jank/util/process_location.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
@@ -289,7 +288,7 @@ namespace jank::runtime::module
 
   loader::loader()
   {
-    auto const jank_path(jank::util::process_location().unwrap().parent_path());
+    std::filesystem::path const jank_path(jank::util::process_dir().c_str());
     auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
     native_transient_string paths{ util::cli::opts.module_path };
     paths += util::format(":{}", binary_cache_dir);

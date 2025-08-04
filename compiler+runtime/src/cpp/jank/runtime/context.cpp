@@ -21,7 +21,6 @@
 #include <jank/analyze/pass/optimize.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/util/process_location.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/dir.hpp>

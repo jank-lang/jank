@@ -10,4 +10,7 @@ namespace jank::util
   jtl::immutable_string const &binary_cache_dir(jtl::immutable_string const &binary_version);
 
   jtl::immutable_string const &binary_version();
+
+  jtl::immutable_string process_path();
+  jtl::immutable_string process_dir();
 }

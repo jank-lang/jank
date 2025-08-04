@@ -1,9 +1,9 @@
 #include <fstream>
+#include <filesystem>
 
 #include <clang/Format/Format.h>
 
 #include <jank/util/clang_format.hpp>
-#include <jank/util/process_location.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -20,7 +20,7 @@ namespace jank::util
       return ret;
     }
 
-    auto const jank_path(process_location().unwrap().parent_path());
+    std::filesystem::path const jank_path(process_dir().c_str());
     auto path(jank_path / ".clang-format");
 
     if(!std::filesystem::exists(path))

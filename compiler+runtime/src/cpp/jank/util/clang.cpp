@@ -16,7 +16,6 @@
 
 #include <jank/util/clang.hpp>
 #include <jank/util/dir.hpp>
-#include <jank/util/process_location.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/error/system.hpp>
@@ -183,7 +182,7 @@ namespace jank::util
 
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version)
   {
-    auto const jank_path{ process_location().unwrap().parent_path() };
+    std::filesystem::path const jank_path{ process_dir().c_str() };
 
     auto dev_path{ jank_path / "incremental.pch" };
     if(std::filesystem::exists(dev_path))
@@ -208,7 +207,7 @@ namespace jank::util
     print(stderr,
           "Note: Looks like your first run with these flags. Building pre-compiled header… ");
 
-    auto const jank_path{ process_location().unwrap().parent_path() };
+    std::filesystem::path const jank_path{ process_dir().c_str() };
     auto const include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
     std::filesystem::path const output_path{ format("{}/incremental.pch",
                                                     user_cache_dir(binary_version)) };

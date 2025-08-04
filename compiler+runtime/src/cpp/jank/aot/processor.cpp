@@ -10,11 +10,11 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/util/cli.hpp>
-#include <jank/util/process_location.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/clang.hpp>
+#include <jank/util/dir.hpp>
 
 namespace jank::aot
 {
@@ -150,7 +150,7 @@ int main(int argc, const char** argv)
     }
 
     {
-      auto const jank_path{ util::process_location().unwrap().parent_path() };
+      std::filesystem::path const jank_path{ util::process_dir().c_str() };
       compiler_args.emplace_back(strdup("-L"));
       compiler_args.emplace_back(strdup(jank_path.c_str()));
 

@@ -18,7 +18,6 @@
 
 #include <cpptrace/gdb_jit.hpp>
 
-#include <jank/util/process_location.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -124,7 +123,7 @@ namespace jank::jit
       }
       else
       {
-        auto const jank_path{ util::process_location().unwrap().parent_path() };
+        std::filesystem::path const jank_path{ util::process_dir().c_str() };
 
         args.emplace_back("-I");
         args.emplace_back(strdup((jank_path / dir / "include").c_str()));

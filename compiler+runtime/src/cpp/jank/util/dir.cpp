@@ -1,3 +1,10 @@
+#if defined(__APPLE__)
+  #include <mach-o/dyld.h>
+  #include <string>
+#endif
+
+#include <filesystem>
+
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
 
@@ -118,5 +125,32 @@ namespace jank::util
     //util::println("binary_version {}", res);
 
     return res;
+  }
+
+  jtl::immutable_string process_path()
+  {
+#if defined(__APPLE__)
+    u32 path_length{};
+    if(_NSGetExecutablePath(nullptr, &path_length) != -1 || path_length <= 1)
+    {
+      return "";
+    }
+
+    std::string path(path_length, std::string::value_type{});
+    if(_NSGetExecutablePath(path.data(), &path_length) != 0)
+    {
+      return "";
+    }
+    return std::filesystem::canonical(path).string();
+#elif defined(__linux__)
+    return std::filesystem::canonical("/proc/self/exe").string();
+#else
+    static_assert(false, "Unsupported platform");
+#endif
+  }
+
+  jtl::immutable_string process_dir()
+  {
+    return std::filesystem::path{ process_path().c_str() }.parent_path().c_str();
   }
 }
