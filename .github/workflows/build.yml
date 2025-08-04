@@ -36,10 +36,14 @@ jobs:
             os: ubuntu-24.04
             build_type: Debug
             sanitize: undefined
-          - name: Ubuntu - thread sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: thread
+
+          # TODO: Fix this. Causes linker issues.
+          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
+          #- name: Ubuntu - thread sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: thread
+
           ## Release
           - name: Ubuntu - release
             os: ubuntu-24.04
