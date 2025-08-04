@@ -2026,10 +2026,12 @@
 (defn nthrest
   "Returns the nth rest of coll, coll when n is 0."
   [coll n]
-  (let [xs (and (pos? n) (seq coll))]
-    (if xs
-      (recur (rest coll) (dec n))
-      coll)))
+  ;; TODO add support for IDrop
+  (if (pos? n)
+    (if-let [xs (seq coll)]
+      (recur (rest xs) (dec n))
+      (or (seq coll) ()))
+    coll))
 
 (defn take-nth
   "Returns a lazy seq of every nth item in coll.  Returns a stateful
