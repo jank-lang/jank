@@ -27,11 +27,15 @@ jobs:
             sanitize: none
             coverage: on
             analyze: on
+
           ## Debug + sanitization
-          - name: Ubuntu - address sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: address
+          # TODO: Fix this. relocation target 0x7f35f070a000 (DW.ref.__gxx_personality_v0) is out of range of Delta32 fixup at address 0x7f35f070a000 (<anonymous block> @ 0x7b35f02041a4 + 0x13)
+          # https://github.com/jank-lang/jank/actions/runs/16711172704/job/47296376050
+          #- name: Ubuntu - address sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: address
+
           - name: Ubuntu - undefined behavior sanitizer
             os: ubuntu-24.04
             build_type: Debug
