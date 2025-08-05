@@ -278,7 +278,7 @@ add_custom_command(
           ftxui::screen ftxui::dom
           Boost::multiprecision
           nanobench_lib
-          bdwgc::gc bdwgc::gccpp
+          bdwgc::gc bdwgc::gctba
           folly_lib
   OUTPUT ${CMAKE_BINARY_DIR}/libjank.a
   COMMAND_EXPAND_LISTS
@@ -499,7 +499,7 @@ target_link_libraries(
   ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
-  bdwgc::gc bdwgc::gccpp
+  bdwgc::gc bdwgc::gctba
 )
 
 jank_hook_llvm(jank_lib)
