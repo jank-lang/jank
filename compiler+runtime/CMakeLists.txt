@@ -206,6 +206,8 @@ set(
   -fwrapv
   -fno-stack-protector
   -fPIC
+  -Xclang -fno-validate-pch
+  -Xclang -fno-pch-timestamp
   ${LLVM_DEFINITIONS_LIST}
   ${clang_system_include_flags}
 )
@@ -728,6 +730,7 @@ add_custom_command(
           -Xclang -emit-pch
           -Xclang -fmodules-embed-all-files
           -fno-modules-validate-system-headers
+          -fpch-instantiate-templates
           -x c++-header
           -w
           -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp

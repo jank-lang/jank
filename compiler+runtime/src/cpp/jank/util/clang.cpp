@@ -234,6 +234,11 @@ namespace jank::util
     args.emplace_back("-Xclang");
     args.emplace_back("-fmodules-embed-all-files");
     args.emplace_back("-fno-modules-validate-system-headers");
+    args.emplace_back("-fpch-instantiate-templates");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fno-validate-pch");
+    args.emplace_back("-Xclang");
+    args.emplace_back("-fno-pch-timestamp");
     args.emplace_back("-x");
     args.emplace_back("c++-header");
     args.emplace_back("-o");
