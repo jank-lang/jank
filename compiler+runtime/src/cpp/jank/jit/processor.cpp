@@ -103,9 +103,20 @@ namespace jank::jit
       args.emplace_back("-g");
     }
 
+    auto const clang_path_str{ util::find_clang() };
+    if(clang_path_str.is_none())
+    {
+      /* TODO: Internal system error. */
+      throw std::runtime_error{ "Unable to find Clang." };
+    }
+    auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
+    args.emplace_back("-I");
+    args.emplace_back(strdup((clang_dir / "../include").c_str()));
+
     auto const clang_resource_dir{ util::find_clang_resource_dir() };
     if(clang_resource_dir.is_none())
     {
+      /* TODO: Internal system error. */
       throw std::runtime_error{ "Unable to find Clang resource dir." };
     }
     args.emplace_back("-resource-dir");
@@ -126,7 +137,6 @@ namespace jank::jit
       if(res.is_err())
       {
         throw res.expect_err();
-        ;
       }
       pch_path = res.expect_ok();
     }
@@ -195,6 +205,7 @@ namespace jank::jit
     auto const &load_result{ load_dynamic_libs(util::cli::opts.libs) };
     if(load_result.is_err())
     {
+      /* TODO: Internal system error. */
       throw std::runtime_error{ load_result.expect_err().c_str() };
     }
   }
@@ -324,7 +335,7 @@ namespace jank::jit
         auto const result{ processor::find_dynamic_lib(lib) };
         if(result.is_none())
         {
-          return err(util::format("Failed to load dynamic library `{}`", lib));
+          return err(util::format("Failed to load dynamic library '{}'.", lib));
         }
         else
         {

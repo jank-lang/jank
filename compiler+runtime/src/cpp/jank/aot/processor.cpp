@@ -6,6 +6,7 @@
 #include <jtl/string_builder.hpp>
 
 #include <jank/error/aot.hpp>
+#include <jank/error/system.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
@@ -149,6 +150,15 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
+    auto const clang_path_str{ util::find_clang() };
+    if(clang_path_str.is_none())
+    {
+      return error::internal_system_failure("Unable to find Clang.");
+    }
+    auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
+    compiler_args.emplace_back("-I");
+    compiler_args.emplace_back(strdup((clang_dir / "../include").c_str()));
+
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(jank_path.c_str()));
@@ -211,7 +221,6 @@ int main(int argc, const char** argv)
     if(res.is_err())
     {
       return res.expect_err();
-      ;
     }
 
     return ok();
