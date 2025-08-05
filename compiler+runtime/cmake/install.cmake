@@ -105,17 +105,44 @@ jank_glob_install_without_prefix(
 # This is used for formatting C++ code at runtime.
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
 
-if(jank_local_clang)
+# If we've built jank with a local Clang/LLVM, we can't reasonably expect the target system
+# to have our custom Clang. In this case, the default behavior is to install Clang alongside
+# jank, within jank's resource dir. We copy Clang as well as Clang's resource dir and jank
+# has custom logic to find Clang in that installed location.
+#
+# This makes the jank install significantly larger, but it's really our only sane distribution
+# approach for local Clang builds. If desired, this can be disabled via jank_install_local_clang.
+# For example, if you're installing jank on the current machine, rather than some other machine,
+# you could just install jank and its configured Clang will be the Clang used to build jank.
+if(jank_local_clang AND jank_install_local_clang)
   # When the compiler is installed, it needs to be relinked to its shared objects.
   # We know where they'll be, relative to the compiler, though.
   set(CMAKE_SKIP_INSTALL_RPATH OFF)
   set_target_properties(jank_exe PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
 
   install(
+    PROGRAMS
+    ${llvm_dir}/bin/clang
+    ${llvm_dir}/bin/clang++
+    ${llvm_dir}/bin/clang-${LLVM_VERSION_MAJOR}
+    DESTINATION lib/jank/${PROJECT_VERSION}/bin
+  )
+
+  install(
     FILES
     ${llvm_dir}/lib/libLLVM.so.${LLVM_VERSION_MAJOR}.0git
     ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
+  )
+
+  jank_glob_install_without_prefix(
+    INPUT_PREFIX "${llvm_dir}/"
+    PATTERN "${llvm_dir}/include/*"
+  )
+  jank_glob_install_without_prefix(
+    INPUT_PREFIX "${clang_resource_dir}/"
+    OUTPUT_PREFIX "lib/clang/${LLVM_VERSION_MAJOR}/"
+    PATTERN "${clang_resource_dir}/*"
   )
 endif()
 

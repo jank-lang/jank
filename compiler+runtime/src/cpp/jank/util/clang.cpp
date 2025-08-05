@@ -27,19 +27,49 @@ namespace Cpp
 
 namespace jank::util
 {
+  static bool is_clang_correct_version(std::filesystem::path const &path)
+  {
+    auto const tmp{ std::filesystem::temp_directory_path() };
+    std::string path_tmp{ tmp / "jank-clang-XXXXXX" };
+    mkstemp(path_tmp.data());
+    auto const proc_code{ llvm::sys::ExecuteAndWait(path.c_str(),
+                                                    { path.c_str(), "--version" },
+                                                    std::nullopt,
+                                                    { std::nullopt, path_tmp, std::nullopt }) };
+    if(proc_code < 0)
+    {
+      return false;
+    }
+
+    std::string version_line;
+    std::ifstream ifs{ path_tmp };
+    std::getline(ifs, version_line);
+    auto const found{ version_line.find("version " JANK_CLANG_MAJOR_VERSION) };
+    return found != std::string::npos;
+  }
+
   /* Whenever we need to invoke Clang, at run time, we need to make sure we're using
-   * a matching Clang to what was used to build jank. We give this three attempts.
+   * a matching Clang to what was used to build jank. We give this multiple attempts.
    *
    * 1. jank is configured with a JANK_CLANG_PATH which says the path to the exact
    *    Clang which was used to build jank. In most cases of installing jank on
    *    someone's machine, this should work well.
    *
-   * 2. jank is configured with a JANK_CLANG_MAJOR_VERSION which says the major
+   * 2. When installing jank with a local Clang/LLVM build, we also install Clang
+   *    in jank's resource dir. In this case, JANK_CLANG_PATH won't be correct
+   *    so this will be the default case.
+   *
+   * 3. If neither of the above is found, before we start guessing, we check the
+   *    CXX environment variable. This is a standard across any POSIX-based
+   *    systems. However, if CXX is defined, we invoke the provided compiler
+   *    to match the version to JANK_CLANG_MAJOR_VERSION.
+   *
+   * 4. jank is configured with a JANK_CLANG_MAJOR_VERSION which says the major
    *    Clang version which was used to build jank. At this point, we don't care
    *    about minor version differences. So, if we were built with Clang 20, we
    *    will look for clang++-20 on the user's PATH.
    *
-   * 3. Finally, if neither of the above is found, we'll look for clang++ on the
+   * 5. Finally, if neither of the above is found, we'll look for clang++ on the
    *    user's PATH and we'll invoke it to find out which version it is. If it
    *    matches the JANK_CLANG_MAJOR_VERSION, we're good.
    *
@@ -62,6 +92,19 @@ namespace jank::util
       return result = configured_path.c_str();
     }
 
+    std::filesystem::path const resource_dir{ util::resource_dir().c_str() };
+    std::filesystem::path const installed_path{ resource_dir / "bin/clang++" };
+    if(std::filesystem::exists(installed_path))
+    {
+      return result = installed_path.c_str();
+    }
+
+    std::filesystem::path const cxx_path{ getenv("CXX") ?: "" };
+    if(std::filesystem::exists(cxx_path) && is_clang_correct_version(cxx_path))
+    {
+      return result = cxx_path.c_str();
+    }
+
     auto const versioned_path{ llvm::sys::findProgramByName("clang++-" JANK_CLANG_MAJOR_VERSION) };
     if(versioned_path)
     {
@@ -69,28 +112,9 @@ namespace jank::util
     }
 
     auto const unversioned_path{ llvm::sys::findProgramByName("clang++") };
-    if(unversioned_path)
+    if(unversioned_path && is_clang_correct_version(*unversioned_path))
     {
-      auto const tmp{ std::filesystem::temp_directory_path() };
-      std::string path_tmp{ tmp / "jank-clang-XXXXXX" };
-      mkstemp(path_tmp.data());
-      auto const proc_code{ llvm::sys::ExecuteAndWait(*unversioned_path,
-                                                      { *unversioned_path, "--version" },
-                                                      std::nullopt,
-                                                      { std::nullopt, path_tmp, std::nullopt }) };
-      if(proc_code < 0)
-      {
-        return none;
-      }
-
-      std::string version_line;
-      std::ifstream ifs{ path_tmp };
-      std::getline(ifs, version_line);
-      auto const found{ version_line.find("version " JANK_CLANG_MAJOR_VERSION) };
-      if(found != std::string::npos)
-      {
-        return result = unversioned_path->c_str();
-      }
+      return result = unversioned_path->c_str();
     }
 
     return none;

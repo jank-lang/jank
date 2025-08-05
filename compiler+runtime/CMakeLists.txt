@@ -37,6 +37,7 @@ cmake_policy(SET CMP0077 NEW)
 
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
+option(jank_install_local_clang "Whether or not to install the local Clang/LLVM alongside jank" ON)
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
 option(jank_test "Enable jank's test suite" OFF)

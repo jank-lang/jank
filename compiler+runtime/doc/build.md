@@ -12,7 +12,7 @@ sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev lib
 For Arch:
 
 ```bash
-sudo pacman -S git git-lfs pkg-config cmake ninja make python3 libffi entr doctest libzip lbzip2
+sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr doctest libzip lbzip2 libxml2 libedit
 ```
 
 For Nix:
