@@ -149,29 +149,15 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
     }
 
-    {
-      std::filesystem::path const jank_path{ util::process_dir().c_str() };
-      compiler_args.emplace_back(strdup("-L"));
-      compiler_args.emplace_back(strdup(jank_path.c_str()));
+    std::filesystem::path const jank_path{ util::process_dir().c_str() };
+    compiler_args.emplace_back(strdup("-L"));
+    compiler_args.emplace_back(strdup(jank_path.c_str()));
 
-      std::filesystem::path const dir{ JANK_RESOURCE_DIR };
-      if(dir.is_absolute())
-      {
-        compiler_args.emplace_back(strdup("-I"));
-        compiler_args.emplace_back(strdup(util::format("{}/include", dir.c_str()).c_str()));
-
-        compiler_args.emplace_back(strdup("-L"));
-        compiler_args.emplace_back(strdup(util::format("{}/lib", dir.c_str()).c_str()));
-      }
-      else
-      {
-        compiler_args.emplace_back(strdup("-I"));
-        compiler_args.emplace_back(strdup((jank_path / dir / "include").c_str()));
-
-        compiler_args.emplace_back(strdup("-L"));
-        compiler_args.emplace_back(strdup((jank_path / dir / "lib").c_str()));
-      }
-    }
+    std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
+    compiler_args.emplace_back(strdup("-I"));
+    compiler_args.emplace_back(strdup(util::format("{}/include", jank_resource_dir).c_str()));
+    compiler_args.emplace_back(strdup("-L"));
+    compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
     compiler_args.push_back(strdup(JANK_DEPS_LIBRARY_DIRS));
     for(auto const &library_dir : util::cli::opts.library_dirs)
