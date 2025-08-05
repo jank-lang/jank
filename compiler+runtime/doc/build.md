@@ -41,10 +41,10 @@ export CPPFLAGS="-I/opt/homebrew/opt/llvm/include ${CPPFLAGS}"
 Clone the repo as follows:
 
 ```bash
-git clone --recurse-submodules https://github.com/jank-lang/jank.git
+git clone --depth 1 --single-branch --shallow-submodules --recurse-submodules https://github.com/jank-lang/jank.git
 
 # If you didn't recurse submodules when cloning, you'll need to run this.
-git submodule update --recursive --init
+git submodule update --init --recursive --depth 1 --jobs 8
 ```
 
 ## Compiling Clang/LLVM

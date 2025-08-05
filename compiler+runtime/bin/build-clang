@@ -51,7 +51,7 @@ function prepare()
 {
   if [[ ! -d "${srcdir}/llvm" ]];
   then
-    git clone -b "${llvm_branch}" --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
+    git clone -b "${llvm_branch}" --depth 1 --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
   fi
 }
 
