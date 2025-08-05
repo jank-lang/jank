@@ -153,18 +153,48 @@ namespace jank::environment
 
   static jtl::immutable_string clang_resource_root()
   {
-    /* TODO: Runtime resource root. */
     auto const configured_path_exists{ std::filesystem::exists(JANK_CLANG_RESOURCE_DIR) };
-    return util::format("{}─ {}{} configured clang resource dir: {}{}{} {}{}{}",
-                        configured_path_exists ? terminal_style::green : terminal_style::yellow,
-                        configured_path_exists ? "✅" : "⚠️ ",
-                        terminal_style::reset,
-                        terminal_style::blue,
-                        JANK_CLANG_RESOURCE_DIR,
-                        terminal_style::reset,
-                        terminal_style::bright_black,
-                        configured_path_exists ? " (found)" : " (not found)",
-                        terminal_style::reset);
+    jtl::string_builder sb;
+    util::format_to(sb,
+                    "{}─ {}{} configured clang resource dir: {}{}{} {}{}{}",
+                    configured_path_exists ? terminal_style::green : terminal_style::yellow,
+                    configured_path_exists ? "✅" : "⚠️ ",
+                    terminal_style::reset,
+                    terminal_style::blue,
+                    JANK_CLANG_PATH,
+                    terminal_style::reset,
+                    terminal_style::bright_black,
+                    configured_path_exists ? "(found)" : "(not found)",
+                    terminal_style::reset);
+
+    auto const found_clang_resource_dir{ util::find_clang_resource_dir() };
+    auto const found_path_exists{ found_clang_resource_dir.is_some()
+                                    ? std::filesystem::exists(
+                                        found_clang_resource_dir.unwrap().c_str())
+                                    : false };
+    if(found_path_exists && found_clang_resource_dir.unwrap() != JANK_CLANG_RESOURCE_DIR)
+    {
+      util::format_to(sb,
+                      "\n{}─ ✅{} runtime clang resource dir: {}{}{} {}(found){}",
+                      terminal_style::green,
+                      terminal_style::reset,
+                      terminal_style::blue,
+                      found_clang_resource_dir.unwrap(),
+                      terminal_style::reset,
+                      terminal_style::bright_black,
+                      terminal_style::reset);
+    }
+    else if(!found_path_exists)
+    {
+      fatal_error = true;
+      util::format_to(sb,
+                      "\n{}─ ❌ no viable clang version {} resource dir found{}",
+                      terminal_style::red,
+                      JANK_CLANG_MAJOR_VERSION,
+                      terminal_style::reset);
+    }
+
+    return sb.release();
   }
 
   static jtl::immutable_string pch_location()
