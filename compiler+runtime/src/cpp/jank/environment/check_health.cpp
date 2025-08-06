@@ -39,6 +39,17 @@ namespace jank::environment
                         JANK_VERSION);
   }
 
+  static jtl::immutable_string jank_asserts()
+  {
+#ifndef NDEBUG
+    return util::format("{}─ ✅ jank assertions are enabled; performance will be impacted {}\n",
+                        terminal_style::yellow,
+                        terminal_style::reset);
+#else
+    return "";
+#endif
+  }
+
   static jtl::immutable_string jank_resource_dir()
   {
     std::filesystem::path dir{ JANK_RESOURCE_DIR };
@@ -326,6 +337,7 @@ namespace jank::environment
 
     util::println("{}", header("jank install", max_width));
     util::println("{}", jank_version());
+    util::print("{}", jank_asserts());
     util::println("{}", jank_resource_dir());
     util::println("{}", jank_user_cache_dir());
     util::println("{}", pch_location());

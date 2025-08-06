@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef JANK_DEBUG
+#ifdef JANK_ASSERTIONS_ENABLED
   /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
   #define jank_debug_assert(expr)                          \
     if(!static_cast<bool>(expr))                           \

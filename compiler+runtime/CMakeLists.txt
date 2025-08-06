@@ -106,12 +106,20 @@ set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
   )
+
+# If the user opts into a specific build type, we will provide sane defaults. However, for
+# packaging, we can expect that CMAKE_BUILD_TYPE=None will be used and packagers will provide
+# the exact flags they desire.
+#
+# https://wiki.archlinux.org/title/CMake_package_guidelines
+#
+# Aside from setting these defaults, we don't rely on any CMAKE_BUILD_TYPE being set.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND jank_common_compiler_flags -Werror -DJANK_DEBUG -O0 -g)
+  list(APPEND jank_common_compiler_flags -Werror -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  list(APPEND jank_common_compiler_flags -DJANK_RELEASE -O2)
+  list(APPEND jank_common_compiler_flags -O2)
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  list(APPEND jank_common_compiler_flags -DJANK_RELEASE -Og -g)
+  list(APPEND jank_common_compiler_flags -Og -g)
 endif()
 
 if(jank_test)

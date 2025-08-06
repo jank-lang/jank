@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NDEBUG
+  #define JANK_ASSERTIONS_ENABLED
+#endif
+
 namespace jtl
 {
   using i8 = signed char;

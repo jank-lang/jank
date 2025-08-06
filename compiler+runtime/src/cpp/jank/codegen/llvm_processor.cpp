@@ -2689,7 +2689,7 @@ namespace jank::codegen
       _impl->llvm_module->print(llvm::outs(), nullptr);
     }
 
-#if JANK_DEBUG
+#ifdef JANK_ASSERTIONS_ENABLED
     if(llvm::verifyModule(*_impl->llvm_module, &llvm::errs()))
     {
       std::cerr << "----------\n";
