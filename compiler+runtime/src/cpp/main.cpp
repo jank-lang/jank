@@ -167,6 +167,12 @@ namespace jank
       auto &line(*buf);
       util::trim(line);
 
+      if(line.empty())
+      {
+        std::cout << "\n";
+        continue;
+      }
+
       if(line.ends_with("\\"))
       {
         input.append(line.substr(0, line.size() - 1));
