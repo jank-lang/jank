@@ -31,6 +31,7 @@ jobs:
               ./bin/build-clang
             popd
           fi
+          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
   build-jank:
     needs:
