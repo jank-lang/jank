@@ -97,11 +97,11 @@ namespace jank::codegen
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
 
-    jtl::string_result<void> gen();
+    jtl::string_result<void> gen() const;
     void optimize() const;
     void print() const;
 
-    llvm::orc::ThreadSafeModule &get_module();
+    llvm::orc::ThreadSafeModule &get_module() const;
     jtl::immutable_string const &get_module_name() const;
     jtl::immutable_string get_root_fn_name() const;
 
