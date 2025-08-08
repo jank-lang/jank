@@ -25,7 +25,10 @@
   #_(jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)
-  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))}))
+  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))})
+
+  ; Distro packaging
+  (jank.compiler+runtime.package/-main {:enabled? (= "on" (util/get-env "JANK_PACKAGE" "off"))}))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (-main {:validate-formatting? true

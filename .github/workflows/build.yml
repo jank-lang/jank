@@ -78,6 +78,7 @@ jobs:
             os: ubuntu-24.04
             build_type: Release
             sanitize: none
+            package: true
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:
@@ -87,6 +88,7 @@ jobs:
       JANK_COVERAGE: ${{ matrix.coverage }}
       JANK_ANALYZE: ${{ matrix.analyze }}
       JANK_SANITIZE: ${{ matrix.sanitize }}
+      JANK_PACKAGE: ${{ matrix.package }}
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -114,9 +116,30 @@ jobs:
             ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ${{ env.JANK_MATRIX_ID }}
       - name: Build and test jank
+        id: jank-build-step
         run: |
-          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           chmod +x install-bb
           sudo ./install-bb
           JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
+      - name: Upload .deb for publishing
+        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
+        uses: actions/upload-artifact@v5
+        with:
+          name: jank-deb
+          path: ${{ steps.jank-build-step.outputs.deb }}
+
+  publish-deb:
+    if: github.ref == 'refs/heads/main'
+    needs: build-jank
+    name: Publish .deb
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: jank-deb
+          path: ${{ github.workspace }}/compiler+runtime
+      - name: Commit to PPA repo
+        run: |
+          ls -lh ${{ github.workspace }}/compiler+runtime
