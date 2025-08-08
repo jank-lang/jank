@@ -13,6 +13,8 @@ jobs:
   # Rather than having every job in the matrix try to build its own Clang, we built it once
   # before running the matrix. Then we can just restore it from the cache in each job.
   build-clang:
+    name: Build Clang
+    runs-on: ubuntu-24.04
     timeout-minutes: 150
     steps:
       - name: Cache Clang/LLVM
