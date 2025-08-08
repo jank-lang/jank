@@ -10,7 +10,28 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # Rather than having every job in the matrix try to build its own Clang, we built it once
+  # before running the matrix. Then we can just restore it from the cache in each job.
+  build-clang:
+    timeout-minutes: 150
+    steps:
+      - name: Cache Clang/LLVM
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+          key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Build Clang/LLVM
+        run: |
+          if [[ -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+            pushd ${{ github.workspace }}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+
+  build-jank:
+    needs:
+      - build-clang
     strategy:
       fail-fast: false
       matrix:
@@ -65,7 +86,7 @@ jobs:
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    timeout-minutes: 150
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,7 +97,7 @@ jobs:
           # Increment this when the package list changes.
           version: 8
       - name: Cache Clang/LLVM
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
@@ -88,7 +109,13 @@ jobs:
             ${{ github.workspace }}/compiler+runtime/.ccache
             ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ${{ env.JANK_MATRIX_ID }}
-      - name: Build and test
+      - name: Build Clang/LLVM
+        run: |
+          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install-bb
+          sudo ./install-bb
+          JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
+      - name: Build and test jank
         run: |
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           chmod +x install-bb
