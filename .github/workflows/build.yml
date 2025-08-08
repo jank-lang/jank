@@ -124,7 +124,7 @@ jobs:
           JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
       - name: Upload .deb for publishing
         if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: jank-deb
           path: ${{ steps.jank-build-step.outputs.deb }}
