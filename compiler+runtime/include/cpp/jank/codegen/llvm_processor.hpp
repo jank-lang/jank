@@ -66,7 +66,11 @@ namespace jank::codegen
     function,
     eval
   };
-
+  /* There are three places where a var-root could be generated depending on different circumstances.
+   * 1. Initialized and derefed in the global ctor.
+   * 2. Initialized right after the call to jank_var_bind_root, using the value as the value of the global var-root.
+   * 3. Initialized and derefed in the "jank_load" IR function.
+   */
   enum class var_root_kind : u8
   {
     runtime_value,
@@ -152,8 +156,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref qualified_name,
-                              var_root_kind kind = var_root_kind::runtime_value) const;
+    llvm::Value *gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;

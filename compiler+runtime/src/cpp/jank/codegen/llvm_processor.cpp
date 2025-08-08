@@ -18,7 +18,6 @@
 #include <jank/analyze/rtti.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/fmt.hpp>
-#include <jank/util/fmt/print.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -255,7 +254,10 @@ namespace jank::codegen
       auto const var_root(gen(expr->value.unwrap(), arity));
       llvm::SmallVector<llvm::Value *, 2> const args{ ref, var_root };
       ctx->builder->CreateCall(fn, args);
-      if(__rt_ctx->opts.direct_linking && target == compilation_target::module)
+      /* Here if compiling into a jank module, a var-root can be initialized directly with the parameter
+       * being used by the call to "jank_var_bind_root". There is no deref needed.
+       */
+      if(__rt_ctx->opts.direct_calls && target == compilation_target::module)
       {
         auto const global_var_root(gen_var_root(expr->name, var_root_kind::raw_global));
         ctx->builder->CreateStore(var_root, global_var_root);
@@ -306,13 +308,22 @@ namespace jank::codegen
   {
     llvm::Value *call{};
     auto const var_qualified_name(make_box<obj::symbol>(expr->var->n, expr->var->name));
-    if(__rt_ctx->opts.direct_linking && !(expr->var->dynamic))
+    /*
+     * For direct-calls, when derefing a var we need to handle two different types of var-derefs.
+     * First, we only direct-call vars that are not dynamic.
+     * When generating the IR for a var-root, if the function is a jank_load function, the var_root is derefed directly in the jank_load functoin.
+     * If it is any other function, the var_root is initialized and derefed in the global ctor.
+     */
+    if(__rt_ctx->opts.direct_calls && !(expr->var->dynamic))
     {
       if(root_fn->name.starts_with("jank_load"))
       {
         call = gen_var_root(var_qualified_name, var_root_kind::raw_global_init);
       }
-      call = gen_var_root(var_qualified_name);
+      else
+      {
+        call = gen_var_root(var_qualified_name, var_root_kind::runtime_value);
+      }
     }
     else
     {
@@ -1107,6 +1118,9 @@ namespace jank::codegen
     auto it(ctx->var_root_globals.find(qualified_name));
     if(it != ctx->var_root_globals.end())
     {
+      /* If the var-root already exists, and is part of a normal var-deref, create a load in the IR
+       * Else if part of the special cases, just return the value of the var-root directly
+       */
       if(kind == var_root_kind::runtime_value)
       {
         return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), it->second);

@@ -44,7 +44,7 @@ namespace jank::runtime
                                                opts.include_dirs,
                                                opts.define_macros) }
     , module_loader{ *this, opts.module_path }
-    , opts { opts }
+    , opts{ opts }
   {
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
 
@@ -336,8 +336,7 @@ namespace jank::runtime
                               module_path.c_str(),
                               file_error.message()));
     }
-    // Turn on printing
-    // module->print(llvm::outs(), nullptr);
+    //codegen_ctx->module->print(llvm::outs(), nullptr);
 
     auto const target_triple{ llvm::sys::getDefaultTargetTriple() };
     std::string target_error;
