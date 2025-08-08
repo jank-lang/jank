@@ -25,7 +25,8 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build Clang/LLVM
         run: |
-          if [[ -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
             pushd ${{ github.workspace }}/compiler+runtime
               ./bin/build-clang
             popd
