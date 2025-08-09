@@ -198,7 +198,7 @@ namespace jank::runtime
 
       if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
       {
-        codegen::llvm_processor cg_prc{ fn, module, codegen::compilation_target::module };
+        codegen::llvm_processor const cg_prc{ fn, module, codegen::compilation_target::module };
         cg_prc.gen().expect_ok();
         cg_prc.optimize();
         write_module(cg_prc.get_module_name(), cg_prc.get_module().getModuleUnlocked()).expect_ok();
