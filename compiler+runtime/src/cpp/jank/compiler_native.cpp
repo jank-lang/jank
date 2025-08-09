@@ -33,7 +33,9 @@ namespace jank::compiler_native
 
     if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
     {
-      codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
+      codegen::llvm_processor const cg_prc{ wrapped_expr,
+                                            module,
+                                            codegen::compilation_target::eval };
       cg_prc.gen().expect_ok();
       cg_prc.optimize();
       cg_prc.print();
