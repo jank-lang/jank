@@ -73,9 +73,9 @@ namespace jank::codegen
    */
   enum class var_root_kind : u8
   {
-    runtime_value,
-    raw_global,
-    raw_global_init
+    global_init,
+    binded_def,
+    load_init
   };
 
   struct reusable_context

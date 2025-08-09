@@ -259,7 +259,7 @@ namespace jank::codegen
        */
       if(__rt_ctx->opts.direct_calls && target == compilation_target::module)
       {
-        auto const global_var_root(gen_var_root(expr->name, var_root_kind::raw_global));
+        auto const global_var_root(gen_var_root(expr->name, var_root_kind::binded_def));
         ctx->builder->CreateStore(var_root, global_var_root);
       }
     }
@@ -318,11 +318,11 @@ namespace jank::codegen
     {
       if(root_fn->name.starts_with("jank_load"))
       {
-        call = gen_var_root(var_qualified_name, var_root_kind::raw_global_init);
+        call = gen_var_root(var_qualified_name, var_root_kind::load_init);
       }
       else
       {
-        call = gen_var_root(var_qualified_name, var_root_kind::runtime_value);
+        call = gen_var_root(var_qualified_name, var_root_kind::global_init);
       }
     }
     else
@@ -1121,7 +1121,7 @@ namespace jank::codegen
       /* If the var-root already exists, and is part of a normal var-deref, create a load in the IR
        * Else if part of the special cases, just return the value of the var-root directly
        */
-      if(kind == var_root_kind::runtime_value)
+      if(kind == var_root_kind::global_init)
       {
         return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), it->second);
       }
@@ -1133,11 +1133,13 @@ namespace jank::codegen
     auto &global(ctx->var_root_globals[qualified_name]);
     global = var_root;
 
-    if(kind == var_root_kind::raw_global)
+    /* When generating a var-root in a context where we are already calling var_bind_root, we can just return the global var-root */
+    if(kind == var_root_kind::binded_def)
     {
       return global;
     }
-    if(kind == var_root_kind::raw_global_init)
+    /* Directly derefing the var in the jank_load function */
+    if(kind == var_root_kind::load_init)
     {
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
