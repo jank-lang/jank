@@ -122,12 +122,7 @@ namespace jank::codegen
      * 3. load_init: Initialized and derefed in the "jank_load" IR function.
      *    This like 2. applies to ahead-of-time compiled modules.
      */
-    enum class var_root_kind : u8
-    {
-      global_init,
-      binded_def,
-      load_init
-    };
+    enum class var_root_kind : u8;
 
     llvm_processor() = delete;
     llvm_processor(analyze::expr::function_ref const expr,

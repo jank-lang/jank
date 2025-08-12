@@ -68,6 +68,13 @@ namespace jank::codegen
     pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
   }
 
+  enum class llvm_processor::var_root_kind : u8
+  {
+    global_init,
+    binded_def,
+    load_init
+  };
+
   llvm_processor::llvm_processor(expr::function_ref const expr,
                                  jtl::immutable_string const &module_name,
                                  compilation_target const target)
