@@ -66,17 +66,6 @@ namespace jank::codegen
     function,
     eval
   };
-  /* There are three places where a var-root could be generated depending on different circumstances.
-   * 1. Initialized and derefed in the global ctor.
-   * 2. Initialized right after the call to jank_var_bind_root, using the value as the value of the global var-root.
-   * 3. Initialized and derefed in the "jank_load" IR function.
-   */
-  enum class var_root_kind : u8
-  {
-    global_init,
-    binded_def,
-    load_init
-  };
 
   struct reusable_context
   {
@@ -121,6 +110,25 @@ namespace jank::codegen
 
   struct llvm_processor
   {
+    /* There are three places where a var-root could be generated depending on different circumstances.
+     * 1. global_init: Initialized and derefed in the global ctor.
+     *    This represents the "eval" case. When evaling a jank form at the top level
+     *    with direct calls enabled, the var-root is initialized in the global ctor.
+     *
+     * 2. binded_def: Initialized right after the call to jank_var_bind_root,
+     *    using the value as the value of the global var-root.
+     *    This applies to ahead-of-time compiled modules.
+     *
+     * 3. load_init: Initialized and derefed in the "jank_load" IR function.
+     *    This like 2. applies to ahead-of-time compiled modules.
+     */
+    enum class var_root_kind : u8
+    {
+      global_init,
+      binded_def,
+      load_init
+    };
+
     llvm_processor() = delete;
     llvm_processor(analyze::expr::function_ref const expr,
                    jtl::immutable_string const &module,
@@ -156,7 +164,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const;
+    llvm::Value *gen_var_root(obj::symbol_ref const qualified_name, var_root_kind const kind) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     jtl::immutable_string to_string() const;

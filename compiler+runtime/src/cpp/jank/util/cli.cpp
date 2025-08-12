@@ -25,7 +25,7 @@ namespace jank::util::cli
                    opts.profiler_file,
                    "The file to write profile entries (will be overwritten).");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
-    cli.add_flag("--fdirect-call", opts.direct_calls, "Compile with direct calls.");
+    cli.add_flag("--direct-call", opts.direct_call, "Elides the derefing of vars in function calls for improved performance.");
     cli.add_option("-O,--optimization", opts.optimization_level, "The optimization level to use.")
       ->check(CLI::Range(0, 3));
 

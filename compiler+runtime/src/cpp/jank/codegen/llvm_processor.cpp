@@ -254,10 +254,11 @@ namespace jank::codegen
       auto const var_root(gen(expr->value.unwrap(), arity));
       llvm::SmallVector<llvm::Value *, 2> const args{ ref, var_root };
       ctx->builder->CreateCall(fn, args);
+
       /* Here if compiling into a jank module, a var-root can be initialized directly with the parameter
        * being used by the call to "jank_var_bind_root". There is no deref needed.
        */
-      if(__rt_ctx->opts.direct_calls && target == compilation_target::module)
+      if(__rt_ctx->opts.direct_call && target == compilation_target::module)
       {
         auto const global_var_root(gen_var_root(expr->name, var_root_kind::binded_def));
         ctx->builder->CreateStore(var_root, global_var_root);
@@ -308,13 +309,15 @@ namespace jank::codegen
   {
     llvm::Value *call{};
     auto const var_qualified_name(make_box<obj::symbol>(expr->var->n, expr->var->name));
+
     /*
      * For direct-calls, when derefing a var we need to handle two different types of var-derefs.
-     * First, we only direct-call vars that are not dynamic.
-     * When generating the IR for a var-root, if the function is a jank_load function, the var_root is derefed directly in the jank_load functoin.
+     * We only direct-call vars that are not dynamic.
+     * When generating the IR for a var-root, if the function is a jank_load function,
+     * the var_root is derefed directly in the "jank_load" function.
      * If it is any other function, the var_root is initialized and derefed in the global ctor.
      */
-    if(__rt_ctx->opts.direct_calls && !(expr->var->dynamic))
+    if(__rt_ctx->opts.direct_call && !(expr->var->dynamic))
     {
       if(root_fn->name.starts_with("jank_load"))
       {
@@ -1113,13 +1116,14 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const
+  llvm_processor::gen_var_root(obj::symbol_ref const qualified_name, var_root_kind const kind) const
   {
     auto it(ctx->var_root_globals.find(qualified_name));
     if(it != ctx->var_root_globals.end())
     {
-      /* If the var-root already exists, and is part of a normal var-deref, create a load in the IR
-       * Else if part of the special cases, just return the value of the var-root directly
+      /* In the global ctor, we want to return a load of the var-root if the global var-root
+       * already exists. In other contexts, the load is unnecessary so we can
+       * just return the var-root value directly.
        */
       if(kind == var_root_kind::global_init)
       {
@@ -1133,12 +1137,17 @@ namespace jank::codegen
     auto &global(ctx->var_root_globals[qualified_name]);
     global = var_root;
 
-    /* When generating a var-root in a context where we are already calling var_bind_root, we can just return the global var-root */
+    /* When generating a var-root in a context where we are already calling var_bind_root,
+     * we can just return the global var-root.
+     */
     if(kind == var_root_kind::binded_def)
     {
       return global;
     }
-    /* Directly derefing the var in the jank_load function */
+
+    /* When generating a var-root in the "jank_load" function, we just need to directly deref
+     * the global var and return the global var-root.
+     */
     if(kind == var_root_kind::load_init)
     {
       auto const fn_type(
@@ -1150,6 +1159,11 @@ namespace jank::codegen
       ctx->builder->CreateStore(call, global);
       return global;
     }
+
+    /* Similar to generating a var, we set the var-root in the global ctor block by derefing
+     * the global var and return a load to the var-root unless the previous
+     * block was the global ctor.
+     */
     auto const prev_block(ctx->builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
