@@ -1166,8 +1166,9 @@ namespace jank::read::parse
             auto const seq(typed_form->seq());
             if(seq.is_nil())
             {
-              return make_box<obj::persistent_list>(std::in_place,
-                                                    make_box<obj::symbol>("clojure.core", "hash-set"));
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "hash-set"));
             }
             auto expanded(syntax_quote_expand_seq(seq));
             if(expanded.is_err())
