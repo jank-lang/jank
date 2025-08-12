@@ -138,6 +138,38 @@ namespace jank::error
         return "Macro expansion exception.";
       case kind::analyze_invalid_conversion:
         return "Invalid conversion.";
+      case kind::analyze_invalid_cpp_operator_call:
+        return "Invalid C++ operator call.";
+      case kind::analyze_invalid_cpp_constructor_call:
+        return "Invalid C++ constructor call.";
+      case kind::analyze_invalid_cpp_member_call:
+        return "Invalid C++ member function call.";
+      case kind::analyze_invalid_cpp_function_call:
+        return "Invalid C++ function call.";
+      case kind::analyze_invalid_cpp_call:
+        return "Invalid C++ call.";
+      case kind::analyze_invalid_cpp_conversion:
+        return "Invalid C++ type returned.";
+      case kind::analyze_invalid_cpp_symbol:
+        return "Invalid C++ symbol.";
+      case kind::analyze_unresolved_cpp_symbol:
+        return "Unresolvable C++ symbol.";
+      case kind::analyze_invalid_cpp_raw:
+        return "Invalid C++ raw.";
+      case kind::analyze_invalid_cpp_type:
+        return "Invalid C++ type.";
+      case kind::analyze_invalid_cpp_cast:
+        return "Invalid C++ cast.";
+      case kind::analyze_invalid_cpp_box:
+        return "Invalid C++ box.";
+      case kind::analyze_invalid_cpp_unbox:
+        return "Invalid C++ unbox.";
+      case kind::analyze_invalid_cpp_new:
+        return "Invalid C++ new.";
+      case kind::analyze_invalid_cpp_delete:
+        return "Invalid C++ delete.";
+      case kind::analyze_invalid_cpp_member_access:
+        return "Invalid C++ member access.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
