@@ -95,6 +95,7 @@ namespace jank::environment
                       dir.c_str(),
                       terminal_style::reset,
                       terminal_style::bright_black,
+                      /* TODO: Logic is not right here. */
                       dev_build ? " (ignored for dev build)" : " (not found)",
                       terminal_style::reset);
     }
@@ -172,7 +173,7 @@ namespace jank::environment
                     configured_path_exists ? "✅" : "⚠️ ",
                     terminal_style::reset,
                     terminal_style::blue,
-                    JANK_CLANG_PATH,
+                    JANK_CLANG_RESOURCE_DIR,
                     terminal_style::reset,
                     terminal_style::bright_black,
                     configured_path_exists ? "(found)" : "(not found)",

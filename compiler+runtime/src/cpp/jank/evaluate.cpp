@@ -589,7 +589,9 @@ namespace jank::evaluate
       /* TODO: Remove extra wrapper, if possible. Just create function object directly? */
       auto const wrapped_expr(wrap_expression(expr, "repl_fn", {}));
 
-      codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
+      codegen::llvm_processor const cg_prc{ wrapped_expr,
+                                            module,
+                                            codegen::compilation_target::eval };
       cg_prc.gen().expect_ok();
       cg_prc.optimize();
 

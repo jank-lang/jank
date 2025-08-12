@@ -566,7 +566,7 @@ namespace jank::codegen
     }
   }
 
-  jtl::string_result<void> llvm_processor::gen()
+  jtl::string_result<void> llvm_processor::gen() const
   {
     return _impl->gen();
   }
@@ -685,8 +685,8 @@ namespace jank::codegen
     return ref;
   }
 
-  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm::Value *
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm_processor::impl::gen(expr::var_deref_ref const expr, expr::function_arity const &)
   {
     auto const ref(gen_var(make_box<obj::symbol>(expr->var->n, expr->var->name)));
@@ -1466,8 +1466,8 @@ namespace jank::codegen
     throw std::runtime_error{ "cpp_type has no codegen" };
   }
 
-  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm::Value *
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution ambiguities. */
   llvm_processor::impl::gen(expr::cpp_value_ref const expr, expr::function_arity const &)
   {
     if(expr->val_kind == expr::cpp_value::value_kind::null)
@@ -2706,7 +2706,7 @@ namespace jank::codegen
     _impl->llvm_module->print(llvm::outs(), nullptr);
   }
 
-  llvm::orc::ThreadSafeModule &llvm_processor::get_module()
+  llvm::orc::ThreadSafeModule &llvm_processor::get_module() const
   {
     return _impl->ctx->module;
   }

@@ -2913,7 +2913,7 @@ namespace jank::analyze
           needs_box,
           sym,
           type->type,
-          nullptr,
+          Cpp::GetScopeFromType(type->type),
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }

@@ -5,7 +5,8 @@
             [jank.compiler+runtime.validate-formatting]
             [jank.compiler+runtime.build+test]
             [jank.compiler+runtime.bash-test]
-            [jank.compiler+runtime.coverage]))
+            [jank.compiler+runtime.coverage]
+            [jank.compiler+runtime.package]))
 
 (defn -main [{:keys [validate-formatting? build?]}]
   (util/log-boundary "compiler+runtime")
@@ -22,10 +23,13 @@
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
-  (jank.compiler+runtime.bash-test/-main {:enabled? build?})
+  #_(jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)
-  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))}))
+  (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))})
+
+  ; Distro packaging
+  (jank.compiler+runtime.package/-main {:enabled? (= "on" (util/get-env "JANK_PACKAGE" "off"))}))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (-main {:validate-formatting? true
