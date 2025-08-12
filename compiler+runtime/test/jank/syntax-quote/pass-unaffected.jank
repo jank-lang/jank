@@ -13,6 +13,7 @@
   (assert (= :syntax-quote.pass-unaffected/bar `::c/bar) `::c/bar)
   (assert (= [] `[]) `[])
   (assert (= {} `{}) `{})
+  (assert (= #{} `#{}) `#{})
   (assert (= '() `()) `())
   (assert (= "meow" `"meow") `"meow")
   (assert (= 'foo/meow `foo/meow) `foo/meow)
