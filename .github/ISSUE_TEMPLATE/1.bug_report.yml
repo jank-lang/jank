@@ -1,0 +1,78 @@
+name: Report a bug / crash
+description: A bug is when the program is not behaving as you'd expect while a crash is defined as the case where the program exits unexpectedly (Segmentation fault, etc.).
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: jank health check
+      description: |
+        Output from the `jank check-health` command.
+
+        While not required in all cases, including this in bug reports can help save everyone time 🙂.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Environment information
+      description: |
+        Details about your operating system, distribution, and architecture.
+      render: bash
+      placeholder: |
+        Operating System:
+        Arch:
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Bug reproduction steps
+      description: |
+        Provide a step-by-step guide on how to reproduce the issue.
+
+        The more context, the better:
+        - The exact `jank` command you ran.
+        - The code being executed.
+        - Any additional setup details (e.g., third-party dependencies) not covered above.
+
+        Be as descriptive as needed—more detail helps us reproduce and fix the issue faster.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Backtrace
+      description: |
+        If the crash involves a segmentation fault, please include a backtrace.
+
+        > For accurate debugger output, `jank` must be [built locally](https://github.com/jank-lang/jank/blob/main/compiler%2Bruntime/doc/build.md#debug) with the `debug` flag enabled.
+        
+        > The current `jank` runtime depends on changes that have not yet been upstreamed to LLVM.  
+        > LLVM must also be built locally—follow [these instructions](https://github.com/jank-lang/jank/blob/main/compiler%2Bruntime/doc/build.md#compiling-clangllvm) to build LLVM.
+
+        The steps differ slightly between `lldb` (commonly used on macOS) and `gdb` (commonly used on Linux).
+        - Run the `jank` binary inside the debugger:
+          - For the REPL:
+            ```sh
+            lldb -- jank repl
+            ```
+            or
+            ```sh
+            gdb --args jank repl
+            ```
+          - For running a `.jank` file:
+            ```sh
+            lldb -- jank run <file-name>.jank
+            ```
+            or
+            ```sh
+            gdb --args jank run <file-name>.jank
+            ```
+        - The debugger REPL will start.
+        - Run the program by typing `r` in the debugger REPL.
+        - Follow your reproduction steps until the program crashes.
+        - When it crashes, you will return to the debugger REPL.
+        - Type `bt` and paste the output here.
+          - Ensure the output is properly formatted, with all stack frames (`frame #<n>`) listed in ascending order.
+    validations:
+      required: true
