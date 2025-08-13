@@ -23,6 +23,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/util/string.hpp>
 #include <jank/error/analyze.hpp>
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
@@ -693,24 +694,24 @@ namespace jank::analyze
       }
     }
 
-    //util::println("all fns (ctor {}, member {}, operator {})",
-    //              is_ctor,
-    //              is_member_call,
-    //              is_operator_call);
-    //for(auto const fn : fns)
-    //{
-    //  if(cpp_util::get_qualified_name(fn) == "ftxui::Render")
-    //  {
-    //    util::println("\tfound fn {}, type {}",
-    //                  cpp_util::get_qualified_name(fn),
-    //                  Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetTypeFromScope(fn))));
-    //  }
-    //}
-    //util::println("args");
-    //for(auto const arg : arg_types)
-    //{
-    //  util::println("\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
-    //}
+    util::println("all fns (ctor {}, member {}, operator {})",
+                  is_ctor,
+                  is_member_call,
+                  is_operator_call);
+    for(auto const fn : fns)
+    {
+      if(cpp_util::get_qualified_name(fn) == "ftxui::Render")
+      {
+        util::println("\tfound fn {}, type {}",
+                      cpp_util::get_qualified_name(fn),
+                      Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetTypeFromScope(fn))));
+      }
+    }
+    util::println("args");
+    for(auto const arg : arg_types)
+    {
+      util::println("\targ type {}", Cpp::GetTypeAsString(arg.m_Type));
+    }
 
     //util::println("looking for normal match");
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types) };
@@ -1041,6 +1042,7 @@ namespace jank::analyze
       {      make_box<symbol>("case*"),       make_fn(&processor::analyze_case) },
       {    make_box<symbol>("cpp/raw"),    make_fn(&processor::analyze_cpp_raw) },
       {   make_box<symbol>("cpp/type"),   make_fn(&processor::analyze_cpp_type) },
+      {  make_box<symbol>("cpp/value"),  make_fn(&processor::analyze_cpp_value) },
       {   make_box<symbol>("cpp/cast"),   make_fn(&processor::analyze_cpp_cast) },
       {    make_box<symbol>("cpp/box"),    make_fn(&processor::analyze_cpp_box) },
       {  make_box<symbol>("cpp/unbox"),  make_fn(&processor::analyze_cpp_unbox) },
@@ -2904,6 +2906,20 @@ namespace jank::analyze
                                 fn_ctx,
                                 needs_box);
       }
+      else if(sym_result.expect_ok()->kind == expression_kind::local_reference
+              && !cpp_util::is_any_object(cpp_util::expression_type(sym_result.expect_ok())))
+      {
+        return analyze_cpp_call(
+          o,
+          /* TODO: Check for cpp_value. Otherwise, error since it's not callable. */
+          llvm::cast<expr::cpp_value>(llvm::cast<expr::local_reference>(sym_result.expect_ok().data)
+                                        ->binding->value_expr.unwrap()
+                                        .data),
+          current_frame,
+          position,
+          fn_ctx,
+          needs_box);
+      }
       else if(sym_result.expect_ok()->kind == expression_kind::cpp_type)
       {
         auto const type{ llvm::cast<expr::cpp_type>(sym_result.expect_ok().data) };
@@ -3008,6 +3024,15 @@ namespace jank::analyze
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
+      else if(source->kind == expression_kind::cpp_value)
+      {
+        return analyze_cpp_call(o,
+                                llvm::cast<expr::cpp_value>(source.data),
+                                current_frame,
+                                position,
+                                fn_ctx,
+                                needs_box);
+      }
     }
 
     native_vector<expression_ref> arg_exprs;
@@ -3084,6 +3109,159 @@ namespace jank::analyze
                                        std::move(arg_exprs),
                                        o);
     }
+  }
+
+  static processor::expression_result
+  build_cpp_value(runtime::obj::symbol_ref const sym,
+                  jtl::ptr<void> const scope,
+                  bool const is_ctor,
+                  u8 const ptr_count,
+                  bool const allow_types,
+                  local_frame_ptr const current_frame,
+                  expression_position const position,
+                  bool const needs_box,
+                  native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    if(Cpp::IsNamespace(scope))
+    {
+      return error::internal_analyze_failure("Taking a C++ namespace by value is not permitted.",
+                                             object_source(sym),
+                                             latest_expansion(macro_expansions));
+    }
+
+    if(Cpp::IsTemplatedFunction(scope))
+    {
+      if(ptr_count)
+      {
+        return error::internal_analyze_failure(
+          util::format("A '*' suffix may only be used on types. Here, it was provided on the "
+                       "function template '{}'.",
+                       Cpp::GetQualifiedName(scope)),
+          object_source(sym),
+          latest_expansion(macro_expansions));
+      }
+
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_value>(position,
+                                              current_frame,
+                                              needs_box,
+                                              sym,
+                                              nullptr,
+                                              scope,
+                                              expr::cpp_value::value_kind::constructor);
+      }
+
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            nullptr,
+                                            scope,
+                                            expr::cpp_value::value_kind::function);
+    }
+
+    auto type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
+
+    /* Primitive types through an alias use a scope which needs to be resolved before
+     * we can figure out that we're working with a primitive type. */
+    if(cpp_util::is_primitive(Cpp::GetCanonicalType(type)) && is_ctor)
+    {
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            type,
+                                            scope,
+                                            expr::cpp_value::value_kind::constructor);
+    }
+
+    if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope)
+       || (allow_types && Cpp::IsEnumType(type)))
+    {
+      if(is_ctor)
+      {
+        return jtl::make_ref<expr::cpp_value>(position,
+                                              current_frame,
+                                              needs_box,
+                                              sym,
+                                              type,
+                                              scope,
+                                              expr::cpp_value::value_kind::constructor);
+      }
+
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
+    }
+
+    /* We're not a type, but we have a * suffix, so this is an error. */
+    if(ptr_count)
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure(
+        "The '*' suffix for pointers may only be used on types.",
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
+    /* We're not a type, but we have a . suffix, so this is an error. */
+    if(is_ctor)
+    {
+      /* TODO: Error. */
+      return error::internal_analyze_failure(
+        util::format("The '.' suffix for constructors may only be used on types. In this case, "
+                     "'{}' is a value of type '{}'.",
+                     cpp_util::get_qualified_name(scope),
+                     Cpp::GetTypeAsString(type)),
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
+    jtl::option<expr::cpp_value::value_kind> vk;
+    if(Cpp::IsVariable(scope))
+    {
+      vk = expr::cpp_value::value_kind::variable;
+      /* TODO: A Clang bug prevents us from supporting references to static members.
+       * https://github.com/llvm/llvm-project/issues/146956
+       */
+      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
+      {
+        /* TODO: Error if it's static and non-primitive. */
+        type = Cpp::GetLValueReferenceType(type);
+      }
+      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
+      {
+        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
+      }
+    }
+    else if(Cpp::IsEnumConstant(scope))
+    {
+      vk = expr::cpp_value::value_kind::enum_constant;
+    }
+    else if(Cpp::IsFunction(scope))
+    {
+      vk = expr::cpp_value::value_kind::function;
+      type = Cpp::GetPointerType(type);
+    }
+
+    if(vk.is_some())
+    {
+      return jtl::make_ref<expr::cpp_value>(position,
+                                            current_frame,
+                                            needs_box,
+                                            sym,
+                                            type,
+                                            scope,
+                                            vk.unwrap());
+    }
+
+    if(allow_types)
+    {
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
+    }
+
+    return error::internal_analyze_failure("Unable to resolve this to a value which jank can use.",
+                                           object_source(sym),
+                                           latest_expansion(macro_expansions));
   }
 
   processor::expression_result
@@ -3215,137 +3393,15 @@ namespace jank::analyze
      * out. */
     auto const scope{ Cpp::GetUnderlyingScope(scope_res.expect_ok()) };
 
-    if(Cpp::IsNamespace(scope))
-    {
-      return error::internal_analyze_failure("Taking a C++ namespace by value is not permitted.",
-                                             object_source(sym),
-                                             latest_expansion(macro_expansions));
-    }
-
-    if(Cpp::IsTemplatedFunction(scope))
-    {
-      if(ptr_count)
-      {
-        return error::internal_analyze_failure(
-          util::format("A '*' suffix may only be used on types. Here, it was provided on the "
-                       "function template '{}'.",
-                       Cpp::GetQualifiedName(scope)),
-          object_source(sym),
-          latest_expansion(macro_expansions));
-      }
-
-      if(is_ctor)
-      {
-        return jtl::make_ref<expr::cpp_value>(position,
-                                              current_frame,
-                                              needs_box,
-                                              sym,
-                                              nullptr,
-                                              scope,
-                                              expr::cpp_value::value_kind::constructor);
-      }
-
-      return jtl::make_ref<expr::cpp_value>(position,
-                                            current_frame,
-                                            needs_box,
-                                            sym,
-                                            nullptr,
-                                            scope,
-                                            expr::cpp_value::value_kind::function);
-    }
-
-    auto type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
-
-    /* Primitive types through an alias use a scope which needs to be resolved before
-     * we can figure out that we're working with a primitive type. */
-    if(cpp_util::is_primitive(Cpp::GetCanonicalType(type)) && is_ctor)
-    {
-      return jtl::make_ref<expr::cpp_value>(position,
-                                            current_frame,
-                                            needs_box,
-                                            sym,
-                                            type,
-                                            scope,
-                                            expr::cpp_value::value_kind::constructor);
-    }
-
-    if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope) || Cpp::IsEnumType(type))
-    {
-      if(is_ctor)
-      {
-        return jtl::make_ref<expr::cpp_value>(position,
-                                              current_frame,
-                                              needs_box,
-                                              sym,
-                                              type,
-                                              scope,
-                                              expr::cpp_value::value_kind::constructor);
-      }
-
-      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
-    }
-
-    /* We're not a type, but we have a * suffix, so this is an error. */
-    if(ptr_count)
-    {
-      /* TODO: Error. */
-      return error::internal_analyze_failure(
-        "The '*' suffix for pointers may only be used on types.",
-        object_source(sym),
-        latest_expansion(macro_expansions));
-    }
-
-    /* We're not a type, but we have a . suffix, so this is an error. */
-    if(is_ctor)
-    {
-      /* TODO: Error. */
-      return error::internal_analyze_failure(
-        util::format("The '.' suffix for constructors may only be used on types. In this case, "
-                     "'{}' is a value of type '{}'.",
-                     name,
-                     Cpp::GetTypeAsString(type)),
-        object_source(sym),
-        latest_expansion(macro_expansions));
-    }
-
-    jtl::option<expr::cpp_value::value_kind> vk;
-    if(Cpp::IsVariable(scope))
-    {
-      vk = expr::cpp_value::value_kind::variable;
-      /* TODO: A Clang bug prevents us from supporting references to static members.
-       * https://github.com/llvm/llvm-project/issues/146956
-       */
-      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
-      {
-        /* TODO: Error if it's static and non-primitive. */
-        type = Cpp::GetLValueReferenceType(type);
-      }
-      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
-      {
-        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
-      }
-    }
-    else if(Cpp::IsEnumConstant(scope))
-    {
-      vk = expr::cpp_value::value_kind::enum_constant;
-    }
-    else if(Cpp::IsFunction(scope))
-    {
-      vk = expr::cpp_value::value_kind::function;
-    }
-
-    if(vk.is_some())
-    {
-      return jtl::make_ref<expr::cpp_value>(position,
-                                            current_frame,
-                                            needs_box,
-                                            sym,
-                                            type,
-                                            scope,
-                                            vk.unwrap());
-    }
-
-    return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
+    return build_cpp_value(sym,
+                           scope,
+                           is_ctor,
+                           ptr_count,
+                           true,
+                           current_frame,
+                           position,
+                           needs_box,
+                           macro_expansions);
   }
 
   processor::expression_result
@@ -3437,21 +3493,28 @@ namespace jank::analyze
                                         expect_object<runtime::obj::persistent_string>(obj)->data);
   }
 
+  enum class literal_kind : u8
+  {
+    type,
+    value
+  };
+
   processor::expression_result
-  processor::analyze_cpp_type(obj::persistent_list_ref const l,
-                              local_frame_ptr const current_frame,
-                              expression_position const position,
-                              jtl::option<expr::function_context_ref> const &fn_ctx,
-                              bool const needs_box)
+  processor::analyze_cpp_literal(obj::persistent_list_ref const l,
+                                 local_frame_ptr const current_frame,
+                                 expression_position const position,
+                                 jtl::option<expr::function_context_ref> const &fn_ctx,
+                                 bool const needs_box,
+                                 literal_kind const kind)
   {
     auto const count(l->count());
     if(count != 2)
     {
       /* TODO: Error */
-      return error::internal_analyze_failure(
-        "A 'cpp/type' form must take a string literal containing a C++ type and nothing else.",
-        object_source(l),
-        latest_expansion(macro_expansions));
+      return error::internal_analyze_failure("A 'cpp/type' form must take a string literal "
+                                             "containing a C++ expression and nothing else.",
+                                             object_source(l),
+                                             latest_expansion(macro_expansions));
     }
 
     auto const string_obj(l->data.rest().first().unwrap());
@@ -3465,55 +3528,108 @@ namespace jank::analyze
 
     if(string_expr->kind != expression_kind::primitive_literal)
     {
-      return error::internal_analyze_failure(
-               "The first and only argument to 'cpp/type' must be a string containing a C++ type.",
-               object_source(string_obj),
-               latest_expansion(macro_expansions))
+      return error::internal_analyze_failure("The first and only argument to 'cpp/type' must be "
+                                             "a string containing a C++ expression.",
+                                             object_source(string_obj),
+                                             latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
     auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
     if(obj->type != runtime::object_type::persistent_string)
     {
-      return error::internal_analyze_failure(
-               "The first and only argument to 'cpp/type' must be a string containing a C++ type.",
-               object_source(string_obj),
-               latest_expansion(macro_expansions))
+      return error::internal_analyze_failure("The first and only argument to 'cpp/type' must be "
+                                             "a string containing a C++ expression.",
+                                             object_source(string_obj),
+                                             latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto str{ expect_object<runtime::obj::persistent_string>(obj)->data };
-
-    u8 ptr_count{};
-    while(str.ends_with('*'))
+    str = util::trim(str);
+    if(str.empty())
     {
-      str = str.substr(0, str.size() - 1);
-      ++ptr_count;
+      return error::internal_analyze_failure("The string argument to 'cpp/type' must contain"
+                                             "a valid C++ expression.",
+                                             object_source(string_obj),
+                                             latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
-    auto type{ cpp_util::resolve_type(str, ptr_count) };
-    if(type)
+
+    if(kind == literal_kind::type)
     {
+      u8 ptr_count{};
+      while(str.ends_with('*'))
+      {
+        str = str.substr(0, str.size() - 1);
+        ++ptr_count;
+      }
+      auto type{ cpp_util::resolve_type(str, ptr_count) };
+      if(type)
+      {
+        return jtl::make_ref<expr::cpp_type>(position,
+                                             current_frame,
+                                             needs_box,
+                                             try_object<obj::symbol>(l->first()),
+                                             type);
+      }
+
+      auto const literal_type{ cpp_util::resolve_literal_type(str) };
+      if(literal_type.is_err())
+      {
+        return error::internal_analyze_failure(literal_type.expect_err(),
+                                               object_source(string_obj),
+                                               latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 1));
+      }
+
+      type = cpp_util::apply_pointers(literal_type.expect_ok(), ptr_count);
       return jtl::make_ref<expr::cpp_type>(position,
                                            current_frame,
                                            needs_box,
                                            try_object<obj::symbol>(l->first()),
                                            type);
     }
-    auto const scope{ Cpp::GetScopeFromCompleteName(str) };
-    if(scope)
+    else
     {
-      type = Cpp::GetTypeFromScope(scope);
-      return jtl::make_ref<expr::cpp_type>(position,
-                                           current_frame,
-                                           needs_box,
-                                           try_object<obj::symbol>(l->first()),
-                                           type);
-    }
+      auto const literal_value{ cpp_util::resolve_literal_value(str) };
+      if(literal_value.is_ok())
+      {
+        return build_cpp_value(try_object<obj::symbol>(l->first()),
+                               literal_value.expect_ok(),
+                               Cpp::IsConstructor(literal_value.expect_ok()),
+                               0,
+                               false,
+                               current_frame,
+                               position,
+                               needs_box,
+                               macro_expansions);
+      }
 
-    return error::internal_analyze_failure(
-             util::format("Unable to resolve type '{}' to something jank can use.", str),
-             object_source(string_obj),
-             latest_expansion(macro_expansions))
-      ->add_usage(read::parse::reparse_nth(l, 1));
+      return error::internal_analyze_failure(literal_value.expect_err(),
+                                             object_source(string_obj),
+                                             latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_type(obj::persistent_list_ref const l,
+                              local_frame_ptr const current_frame,
+                              expression_position const position,
+                              jtl::option<expr::function_context_ref> const &fn_ctx,
+                              bool const needs_box)
+  {
+    return analyze_cpp_literal(l, current_frame, position, fn_ctx, needs_box, literal_kind::type);
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_value(obj::persistent_list_ref const l,
+                               local_frame_ptr const current_frame,
+                               expression_position const position,
+                               jtl::option<expr::function_context_ref> const &fn_ctx,
+                               bool const needs_box)
+  {
+    return analyze_cpp_literal(l, current_frame, position, fn_ctx, needs_box, literal_kind::value);
   }
 
   processor::expression_result

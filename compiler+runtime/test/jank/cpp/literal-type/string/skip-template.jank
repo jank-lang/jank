@@ -8,6 +8,7 @@
             };
           }")
 (let* [i (cpp/int. 444)
-       foo (cpp/cast (cpp/type "jank::cpp::type::pass_template::foo<int, long>") i)]
-  (if (= 444 (cpp/.-data foo))
+       foo ((cpp/type "jank::cpp::type::pass_template::foo<int, long>") i)]
+  (if (and (= 444 (cpp/.-d1 foo))
+           (= 777 (cpp/.-d2 foo)))
     :success))

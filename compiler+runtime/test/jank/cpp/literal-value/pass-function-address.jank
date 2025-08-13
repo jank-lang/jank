@@ -1,0 +1,8 @@
+(let* [;f (cpp/value "sqrt")
+       i (cpp/int 100)
+       f (cpp/value "sqrt")
+       r (f i)
+       ]
+  (println r)
+  #_(if (= i 10)
+    :success))

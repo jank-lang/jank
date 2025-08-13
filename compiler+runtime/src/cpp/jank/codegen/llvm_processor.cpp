@@ -183,8 +183,16 @@ namespace jank::codegen
     jtl::ref<llvm::Module> llvm_module;
   };
 
-  static llvm::Type *
-  llvm_type(reusable_context &ctx, jtl::ref<llvm::LLVMContext> const llvm_ctx, jtl::ptr<void> type)
+  struct llvm_type_info
+  {
+    jtl::ref<llvm::Type> type;
+    usize size{};
+    usize alignment{};
+  };
+
+  static llvm::Type *llvm_builtin_type(reusable_context &ctx,
+                                       jtl::ref<llvm::LLVMContext> const llvm_ctx,
+                                       jtl::ptr<void> const type)
   {
     auto &interp{ __rt_ctx->jit_prc.interpreter };
     auto const ci{ interp->getCI() };
@@ -214,19 +222,17 @@ namespace jank::codegen
                           Cpp::GetTypeAsString(type));
   }
 
-  static llvm::Value *alloc_type(reusable_context &ctx,
-                                 jtl::ref<llvm::LLVMContext> const llvm_ctx,
-                                 jtl::ptr<void> const type,
-                                 jtl::immutable_string const &name = "")
+  static llvm_type_info llvm_type(reusable_context &ctx,
+                                  jtl::ref<llvm::LLVMContext> const llvm_ctx,
+                                  jtl::ptr<void> const type)
   {
     jank_debug_assert(type);
     auto const size{ Cpp::GetSizeOfType(type) };
-    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
+    util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
     llvm::Type *ir_type{ ctx.builder->getInt8Ty() };
-    llvm::ConstantInt *ir_size{ llvm::ConstantInt::get(ctx.builder->getInt64Ty(), 1) };
 
     if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type) || Cpp::IsArrayType(type))
     {
@@ -234,17 +240,19 @@ namespace jank::codegen
     }
     else if(Cpp::IsBuiltin(type))
     {
-      ir_type = llvm_type(ctx, llvm_ctx, type);
+      ir_type = llvm_builtin_type(ctx, llvm_ctx, type);
     }
-    else if(auto scope = Cpp::GetScopeFromType(type); Cpp::IsClass(scope))
+    else if(Cpp::IsEnumType(type))
     {
-      /* TODO: The struct belongs to another context, so this won't work. */
-      ir_type = llvm::StructType::getTypeByName(*llvm_ctx,
-                                                Cpp::GetQualifiedName(Cpp::GetScopeFromType(type)));
+      ir_type = llvm_builtin_type(ctx, llvm_ctx, Cpp::GetIntegerTypeFromEnumType(type));
+    }
+    else if(auto scope = Cpp::GetScopeFromType(type); scope && Cpp::IsClass(scope))
+    {
+      /* TODO: We need the IR name, not the C++ name. */
+      ir_type = llvm::StructType::getTypeByName(*llvm_ctx, Cpp::GetQualifiedName(scope));
       if(!ir_type)
       {
         ir_type = ctx.builder->getInt8Ty();
-        ir_size = llvm::ConstantInt::get(ctx.builder->getInt32Ty(), size);
       }
     }
 
@@ -252,15 +260,24 @@ namespace jank::codegen
     if(cpp_util::is_any_object(type))
     {
       ir_type = ctx.builder->getPtrTy();
-      ir_size = llvm::ConstantInt::get(ctx.builder->getInt64Ty(), 1);
     }
 
     jank_debug_assert_fmt_throw(ir_type,
                                 "Unable to find LLVM IR primitive to use for allocating type '{}'.",
                                 Cpp::GetTypeAsString(type));
 
-    auto const alloc{ ctx.builder->CreateAlloca(ir_type, ir_size, name.c_str()) };
-    alloc->setAlignment(llvm::Align{ alignment });
+    return { ir_type, size, alignment };
+  }
+
+  static llvm::Value *alloc_type(reusable_context &ctx,
+                                 jtl::ref<llvm::LLVMContext> const llvm_ctx,
+                                 jtl::ptr<void> const type,
+                                 jtl::immutable_string const &name = "")
+  {
+    auto const type_info{ llvm_type(ctx, llvm_ctx, type) };
+    auto const ir_size{ llvm::ConstantInt::get(ctx.builder->getInt64Ty(), type_info.size) };
+    auto const alloc{ ctx.builder->CreateAlloca(type_info.type.data, ir_size, name.c_str()) };
+    alloc->setAlignment(llvm::Align{ type_info.alignment });
     return alloc;
   }
 
@@ -741,21 +758,39 @@ namespace jank::codegen
     arg_handles.reserve(expr->arg_exprs.size() + 1);
     arg_types.reserve(expr->arg_exprs.size() + 1);
 
-    arg_handles.emplace_back(callee);
-    arg_types.emplace_back(ctx->builder->getPtrTy());
-
-    for(auto const &arg_expr : expr->arg_exprs)
+    llvm::CallInst *call{};
+    if(cpp_util::is_any_object(cpp_util::expression_type(expr->source_expr)))
     {
-      auto const arg_handle{ gen(arg_expr, arity) };
-      arg_handles.emplace_back(arg_handle);
+      arg_handles.emplace_back(callee);
       arg_types.emplace_back(ctx->builder->getPtrTy());
+
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        auto const arg_handle{ gen(arg_expr, arity) };
+        arg_handles.emplace_back(arg_handle);
+        arg_types.emplace_back(ctx->builder->getPtrTy());
+      }
+
+      auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      call = ctx->builder->CreateCall(fn, arg_handles);
     }
+    /* TODO: This can be deleted, I'm pretty sure. */
+    else
+    {
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        auto const arg_handle{ gen(arg_expr, arity) };
+        arg_handles.emplace_back(arg_handle);
+        arg_types.emplace_back(
+          llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(arg_expr)).type.data);
+      }
 
-    auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
-
-    auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-    auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-    auto const call(ctx->builder->CreateCall(fn, arg_handles));
+      auto const ret_type{ llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(expr)) };
+      auto const fn_type(llvm::FunctionType::get(ret_type.type.data, arg_types, false));
+      call = ctx->builder->CreateCall(fn_type, callee, arg_handles);
+    }
 
     if(expr->position == expression_position::tail)
     {
@@ -1499,7 +1534,9 @@ namespace jank::codegen
       return alloc;
     }
 
-    auto const callable{ Cpp::MakeAotCallable(expr->scope) };
+    auto const callable{ Cpp::IsFunctionPointerType(expr->type)
+                           ? Cpp::MakeFunctionValueAotCallable(expr->scope)
+                           : Cpp::MakeAotCallable(expr->scope) };
     link_module(*ctx, reinterpret_cast<llvm::Module *>(callable.getModule()));
 
     auto const alloc{ alloc_type(*ctx, llvm_ctx, expr->type) };
@@ -2686,14 +2723,14 @@ namespace jank::codegen
   {
     if(getenv("JANK_PRINT_IR"))
     {
-      _impl->llvm_module->print(llvm::outs(), nullptr);
+      print();
     }
 
 #ifdef JANK_ASSERTIONS_ENABLED
     if(llvm::verifyModule(*_impl->llvm_module, &llvm::errs()))
     {
       std::cerr << "----------\n";
-      _impl->llvm_module->print(llvm::outs(), nullptr);
+      print();
       std::cerr << "----------\n";
     }
 #endif
