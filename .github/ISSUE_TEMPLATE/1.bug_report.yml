@@ -6,11 +6,9 @@ body:
     attributes:
       label: jank health check
       description: |
-        Output from the `jank check-health` command.
-
-        While not required in all cases, including this in bug reports can help save everyone time 🙂.
+        Output from the `jank check-health` command. Also include details about your operating system, distribution, and architecture.
     validations:
-      required: false
+      required: true
 
   - type: textarea
     attributes:
@@ -41,38 +39,16 @@ body:
 
   - type: textarea
     attributes:
-      label: Backtrace
+      label: Stack trace
       description: |
-        If the crash involves a segmentation fault, please include a backtrace.
-
-        > For accurate debugger output, `jank` must be [built locally](https://github.com/jank-lang/jank/blob/main/compiler%2Bruntime/doc/build.md#debug) with the `debug` flag enabled.
-        
-        > The current `jank` runtime depends on changes that have not yet been upstreamed to LLVM.  
-        > LLVM must also be built locally—follow [these instructions](https://github.com/jank-lang/jank/blob/main/compiler%2Bruntime/doc/build.md#compiling-clangllvm) to build LLVM.
+        If the crash involves a segmentation fault, please include a stack trace.
 
         The steps differ slightly between `lldb` (commonly used on macOS) and `gdb` (commonly used on Linux).
-        - Run the `jank` binary inside the debugger:
-          - For the REPL:
-            ```sh
-            lldb -- jank repl
-            ```
-            or
-            ```sh
-            gdb --args jank repl
-            ```
-          - For running a `.jank` file:
-            ```sh
-            lldb -- jank run <file-name>.jank
-            ```
-            or
-            ```sh
-            gdb --args jank run <file-name>.jank
-            ```
-        - The debugger REPL will start.
+        - Run the `jank` binary inside the debugger.
         - Run the program by typing `r` in the debugger REPL.
         - Follow your reproduction steps until the program crashes.
         - When it crashes, you will return to the debugger REPL.
         - Type `bt` and paste the output here.
           - Ensure the output is properly formatted, with all stack frames (`frame #<n>`) listed in ascending order.
     validations:
-      required: true
+      required: false
