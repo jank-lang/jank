@@ -6,7 +6,7 @@ body:
     attributes:
       label: jank health check
       description: |
-        Output from the `jank check-health` command. Also include details about your operating system, distribution, and architecture.
+        Output from the `jank check-health` command.
     validations:
       required: true
 
