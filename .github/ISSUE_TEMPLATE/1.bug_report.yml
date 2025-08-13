@@ -12,18 +12,6 @@ body:
 
   - type: textarea
     attributes:
-      label: Environment information
-      description: |
-        Details about your operating system, distribution, and architecture.
-      render: bash
-      placeholder: |
-        Operating System:
-        Arch:
-    validations:
-      required: true
-
-  - type: textarea
-    attributes:
       label: Bug reproduction steps
       description: |
         Provide a step-by-step guide on how to reproduce the issue.
