@@ -3402,7 +3402,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_raw(
         "A 'cpp/raw' form must take a string literal of C++ code and nothing else.",
-        object_source(l),
+        count < 2 ? object_source(l) : read::parse::reparse_nth(l, 2),
         latest_expansion(macro_expansions));
     }
 
@@ -3451,7 +3451,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_type(
         "A 'cpp/type' form must take a string literal containing a C++ type and nothing else.",
-        object_source(l),
+        count < 2 ? object_source(l) : read::parse::reparse_nth(l, 2),
         latest_expansion(macro_expansions));
     }
 
@@ -3623,7 +3623,8 @@ namespace jank::analyze
     if(count != 2)
     {
       return error::analyze_invalid_cpp_box("A 'cpp/box' call must have only a C++ pointer value.",
-                                            object_source(l),
+                                            count < 2 ? object_source(l)
+                                                      : read::parse::reparse_nth(l, 2),
                                             latest_expansion(macro_expansions));
     }
 
@@ -3676,7 +3677,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_unbox(
         "A C++ unbox must have only a C++ type and a value as arguments.",
-        object_source(l),
+        count < 3 ? object_source(l) : read::parse::reparse_nth(l, 3),
         latest_expansion(macro_expansions));
     }
 
@@ -3811,7 +3812,7 @@ namespace jank::analyze
       /* TODO: Error */
       return error::analyze_invalid_cpp_delete(
         "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
-        object_source(l),
+        read::parse::reparse_nth(l, 2),
         latest_expansion(macro_expansions));
     }
 
@@ -3861,10 +3862,11 @@ namespace jank::analyze
       return error::analyze_invalid_cpp_member_access(
         util::format("Excess arguments provided for '{}' member access. Only one is expected.",
                      name),
-        object_source(l),
+        read::parse::reparse_nth(l, 2),
         latest_expansion(macro_expansions));
     }
 
+    auto const member(l->first());
     auto const obj(l->data.rest().first().unwrap());
     auto const obj_res(analyze(obj, current_frame, expression_position::value, fn_ctx, false));
     if(obj_res.is_err())
@@ -3890,7 +3892,7 @@ namespace jank::analyze
           "The '{}' member within '{}' is private. It can only be accessed if it's public.",
           name,
           Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
+        object_source(member),
         latest_expansion(macro_expansions));
     }
     if(member_scope && Cpp::IsProtectedVariable(member_scope))
@@ -3900,7 +3902,7 @@ namespace jank::analyze
           "The '{}' member within '{}' is protected. It can only be accessed if it's public.",
           name,
           Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
+        object_source(member),
         latest_expansion(macro_expansions));
     }
     else if(!member_scope)
@@ -3925,7 +3927,7 @@ namespace jank::analyze
           util::format("There is no '{}' member within '{}'.",
                        name,
                        cpp_util::get_qualified_name(parent_scope)),
-          object_source(l),
+          object_source(member),
           latest_expansion(macro_expansions));
       }
 

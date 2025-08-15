@@ -287,11 +287,7 @@ namespace jank::error
                                     read::source const &source,
                                     runtime::object_ref expansion)
   {
-    return make_error(kind::analyze_invalid_cpp_raw,
-                      message,
-                      source,
-                      "Pass a string of C++ code here.",
-                      expansion);
+    return make_error(kind::analyze_invalid_cpp_raw, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_type(jtl::immutable_string const &message,
