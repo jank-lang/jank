@@ -3640,22 +3640,25 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_box(
-        util::format("Unable to create an opaque box from '{}', since it's not a raw pointer type."
-                     " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
-                     "its lifetime.",
-                     Cpp::GetTypeAsString(value_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to create an opaque box from '{}', since it's not a raw pointer type."
+                 " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
+                 "its lifetime.",
+                 Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
     else if(cpp_util::is_any_object(value_type))
     {
       return error::analyze_invalid_cpp_box(
-        util::format(
-          "Unable to create an opaque box from '{}', since it's already a boxed jank object."
-          " Opaque boxes are meant to be for native raw pointers only.",
-          Cpp::GetTypeAsString(value_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to create an opaque box from '{}', since it's already a boxed jank object."
+                 " Opaque boxes are meant to be for native raw pointers only.",
+                 Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
@@ -3708,12 +3711,14 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(type_expr->type))
     {
       return error::analyze_invalid_cpp_unbox(
-        util::format("Unable to unbox to '{}', since it's not a raw pointer type."
-                     " The type specified here should be the exact type of the value originally "
-                     "passed to 'cpp/box'.",
-                     Cpp::GetTypeAsString(type_expr->type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to unbox to '{}', since it's not a raw pointer type."
+                 " The type specified here should be the exact type of the value originally "
+                 "passed to 'cpp/box'.",
+                 Cpp::GetTypeAsString(type_expr->type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     return jtl::make_ref<expr::cpp_unbox>(position,
@@ -3825,7 +3830,7 @@ namespace jank::analyze
       return error::analyze_invalid_cpp_delete(
         util::format("Unable to delete '{}', since it's not a raw pointer type.",
                      Cpp::GetTypeAsString(value_type)),
-        object_source(l),
+        object_source(value_obj),
         latest_expansion(macro_expansions));
     }
 
