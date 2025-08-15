@@ -403,7 +403,7 @@ namespace jank::analyze
       return common_type(args);
     }
 
-    return Cpp::GetPointerType(args[0].m_Type);
+    return Cpp::GetPointerType(Cpp::GetNonReferenceType(args[0].m_Type));
   }
 
   static jtl::ptr<void> bool_type(std::vector<Cpp::TemplateArgInfo> const &)

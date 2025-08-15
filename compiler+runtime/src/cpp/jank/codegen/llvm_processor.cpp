@@ -1834,6 +1834,17 @@ namespace jank::codegen
     }
     else if(expr->op == Cpp::OP_Amp && expr->arg_exprs.size() == 1)
     {
+      /* Getting the address of a reference should just yield the same reference, at the IR
+       * level. This is the case for two reasons.
+       *
+       * 1. References don't have their own storage, in C++.
+       * 2. References are implemented as pointers behind the scenes.
+       */
+      if(Cpp::IsReferenceType(cpp_util::expression_type(expr->arg_exprs[0])))
+      {
+        return gen(expr->arg_exprs[0], arity);
+      }
+
       auto const alloc{ ctx->builder->CreateAlloca(
         ctx->builder->getPtrTy(),
         llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
