@@ -1286,7 +1286,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_tokens({
                 { 0, 2, token_kind::character, "\\ "sv }
-        }))
+        }));
       }
 
       SUBCASE("Dangling \\")
