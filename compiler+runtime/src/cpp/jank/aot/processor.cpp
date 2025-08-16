@@ -35,22 +35,13 @@ namespace jank::aot
 using jank_object_ref = void*;
 using jank_bool = char;
 
-    )");
-
-    sb(R"(
 extern "C" int jank_init(int const argc,
                      char const **argv,
                      jank_bool init_default_ctx,
                      int (*fn)(int const, char const **));
-extern "C" jank_object_ref jank_var_intern(jank_object_ref ns, jank_object_ref var);
-extern "C" jank_object_ref jank_call0(jank_object_ref f);
-    )");
-
-    sb(R"(
 extern "C" jank_object_ref jank_load_clojure_core_native();
 extern "C" jank_object_ref jank_load_clojure_string_native();
 extern "C" jank_object_ref jank_load_jank_compiler_native();
-extern "C" jank_object_ref jank_load_clojure_core();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
@@ -127,15 +118,14 @@ int main(int argc, const char** argv)
       }
       else
       {
-        auto const find_res{ __rt_ctx->module_loader.find(module, module::origin::latest) };
+        auto const find_res{ __rt_ctx->module_loader.find(it, module::origin::latest) };
         if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
         {
           compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
         }
         else
         {
-          return error::internal_aot_failure(
-            util::format("Compiled module '{}' not found.", module));
+          return error::internal_aot_failure(util::format("Compiled module '{}' not found.", it));
         }
       }
     }
@@ -156,8 +146,10 @@ int main(int argc, const char** argv)
       return error::internal_system_failure("Unable to find Clang.");
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
-    compiler_args.emplace_back("-I");
+    compiler_args.emplace_back(strdup("-I"));
     compiler_args.emplace_back(strdup((clang_dir / "../include").c_str()));
+    compiler_args.emplace_back(
+      strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib")).c_str()));
 
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
     compiler_args.emplace_back(strdup("-L"));
@@ -201,10 +193,6 @@ int main(int argc, const char** argv)
 
     compiler_args.push_back(strdup("-std=c++20"));
 
-    compiler_args.push_back(strdup("-o"));
-    auto const output_filepath{ relative_to_cache_dir(util::cli::opts.output_filename) };
-    compiler_args.push_back(strdup(output_filepath.c_str()));
-
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
     util::scope_exit const cleanup{ [&]() {
@@ -214,6 +202,10 @@ int main(int argc, const char** argv)
         free(reinterpret_cast<void *>(const_cast<char *>(s)));
       }
     } };
+
+    compiler_args.push_back(strdup("-o"));
+    auto const output_filepath{ relative_to_cache_dir(util::cli::opts.output_filename) };
+    compiler_args.push_back(strdup(output_filepath.c_str()));
 
     util::println("compilation command: {} ", compiler_args);
 
