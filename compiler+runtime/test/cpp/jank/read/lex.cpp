@@ -1281,7 +1281,7 @@ namespace jank::read::lex
     {
       SUBCASE("Whitespace after \\")
       {
-        processor p{ R"(\\ )" };
+        processor p{ R"(\ )" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
