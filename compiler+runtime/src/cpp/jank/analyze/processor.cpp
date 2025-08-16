@@ -3111,11 +3111,10 @@ namespace jank::analyze
 
     if(name.ends_with('.') || name.contains(".."))
     {
-      /* TODO: Error. */
-      return error::analyze_invalid_cpp_symbol(
-        "Name must not contain consecutive '.' dots. Each '.' corresponds with a '::' in C++.",
-        object_source(sym),
-        latest_expansion(macro_expansions));
+      return error::analyze_invalid_cpp_symbol("Name must not contain consecutive '.' dots. Each "
+                                               "'.' corresponds with a '::' in C++.",
+                                               object_source(sym),
+                                               latest_expansion(macro_expansions));
     }
 
     if(name == "nullptr")
@@ -3207,10 +3206,8 @@ namespace jank::analyze
     auto const scope_res{ cpp_util::resolve_scope(name) };
     if(scope_res.is_err())
     {
-      /* TODO: Error. */
       return error::analyze_unresolved_cpp_symbol(util::format("{}", scope_res.expect_err()),
                                                   object_source(sym),
-                                                  "Unresolvable namespace.",
                                                   latest_expansion(macro_expansions));
     }
 
@@ -3292,7 +3289,6 @@ namespace jank::analyze
     /* We're not a type, but we have a * suffix, so this is an error. */
     if(ptr_count)
     {
-      /* TODO: Error. * */
       return error::analyze_invalid_cpp_symbol(
         "The '*' suffix for pointers may only be used on types.",
         object_source(sym),
@@ -3302,7 +3298,6 @@ namespace jank::analyze
     /* We're not a type, but we have a . suffix, so this is an error. */
     if(is_ctor)
     {
-      /* TODO: Error. * */
       return error::analyze_invalid_cpp_symbol(
         util::format("The '.' suffix for constructors may only be used on types. In this case, "
                      "'{}' is a value of type '{}'.",
@@ -3399,12 +3394,21 @@ namespace jank::analyze
                              bool const needs_box)
   {
     auto const count(l->count());
-    if(count != 2)
+    if(count < 2)
     {
       return error::analyze_invalid_cpp_raw(
-        "A 'cpp/raw' form must take a string literal of C++ code and nothing else.",
-        object_source(l),
-        latest_expansion(macro_expansions));
+               "This call to 'cpp/raw' is missing the value string literal of C++ code.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(2 < count)
+    {
+      return error::analyze_invalid_cpp_raw(
+               "A call to 'cpp/raw' must take a string literal of C++ code and nothing else.",
+               object_source(l->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     auto const string_obj(l->data.rest().first().unwrap());
@@ -3448,12 +3452,21 @@ namespace jank::analyze
                               bool const needs_box)
   {
     auto const count(l->count());
-    if(count != 2)
+    if(count < 2)
     {
       return error::analyze_invalid_cpp_type(
-        "A 'cpp/type' form must take a string literal containing a C++ type and nothing else.",
-        object_source(l),
-        latest_expansion(macro_expansions));
+               "This call to 'cpp/type' is missing the string literal containing a C++ type.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(2 < count)
+    {
+      return error::analyze_invalid_cpp_type("A call to 'cpp/type' must take a string literal "
+                                             "containing a C++ type and nothing else.",
+                                             object_source(l->next()->next()->first()),
+                                             latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     auto const string_obj(l->data.rest().first().unwrap());
@@ -3514,7 +3527,6 @@ namespace jank::analyze
     return error::analyze_invalid_cpp_type(
              util::format("Unable to resolve type '{}' to something jank can use.", str),
              object_source(string_obj),
-             "Unresolvable type passed here.",
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 1));
   }
@@ -3527,13 +3539,29 @@ namespace jank::analyze
                               bool const needs_box)
   {
     auto const count(l->count());
-    if(count != 3)
+    if(count < 2)
     {
       return error::analyze_invalid_cpp_cast(
-        "A C++ cast must have only a C++ type and a value as arguments.",
-        object_source(l),
-        "Pass a C++ type and a value to cast here.",
-        latest_expansion(macro_expansions));
+               "This call to 'cpp/cast' is missing a C++ type and a value as arguments.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(count < 3)
+    {
+      return error::analyze_invalid_cpp_cast(
+               "This call to 'cpp/cast' is missing a value to cast as an argument.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(3 < count)
+    {
+      return error::analyze_invalid_cpp_cast("A call to 'cpp/cast' must only have a C++ type and a "
+                                             "value as arguments and nothing else.",
+                                             object_source(l->next()->next()->next()->first()),
+                                             latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 3));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
@@ -3549,7 +3577,6 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_cast("The first argument to 'cpp/cast' must be a C++ type.",
                                              object_source(type_obj),
-                                             "Passed in argument is not a C++ type.",
                                              latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
@@ -3607,14 +3634,14 @@ namespace jank::analyze
     }
 
     return error::analyze_invalid_cpp_cast(
-      util::format(
-        "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
-        "and any specializations of 'jank::runtime::convert'.",
-        Cpp::GetTypeAsString(value_type),
-        Cpp::GetTypeAsString(type_expr->type)),
-      object_source(l),
-      "Failed conversion here.",
-      latest_expansion(macro_expansions));
+             util::format(
+               "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
+               "and any specializations of 'jank::runtime::convert'.",
+               Cpp::GetTypeAsString(value_type),
+               Cpp::GetTypeAsString(type_expr->type)),
+             object_source(l->next()->next()->first()),
+             latest_expansion(macro_expansions))
+      ->add_usage(read::parse::reparse_nth(l, 2));
   }
 
   processor::expression_result
@@ -3625,13 +3652,23 @@ namespace jank::analyze
                              bool const needs_box)
   {
     auto const count(l->count());
-    if(count != 2)
+    if(count < 2)
     {
-      return error::analyze_invalid_cpp_box("A 'cpp/box' call must have only a C++ pointer value.",
-                                            object_source(l),
-                                            "Pass a C++ pointer value here.",
-                                            latest_expansion(macro_expansions));
+      return error::analyze_invalid_cpp_box(
+               "This call to 'cpp/box' is missing a C++ pointer value.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
+    else if(2 < count)
+    {
+      return error::analyze_invalid_cpp_box("A call to 'cpp/box' must only have a C++ pointer "
+                                            "value as argument and nothing else.",
+                                            object_source(l->next()->next()->first()),
+                                            latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
 
     auto const value_obj(l->data.rest().first().unwrap());
     auto const value_expr_res(
@@ -3646,24 +3683,25 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_box(
-        util::format("Unable to create an opaque box from '{}', since it's not a raw pointer type."
-                     " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
-                     "its lifetime.",
-                     Cpp::GetTypeAsString(value_type)),
-        object_source(l),
-        "Passed in value is not a raw pointer.",
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to create an opaque box from '{}', since it's not a raw pointer type."
+                 " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
+                 "its lifetime.",
+                 Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
     else if(cpp_util::is_any_object(value_type))
     {
       return error::analyze_invalid_cpp_box(
-        util::format(
-          "Unable to create an opaque box from '{}', since it's already a boxed jank object."
-          " Opaque boxes are meant to be for native raw pointers only.",
-          Cpp::GetTypeAsString(value_type)),
-        object_source(l),
-        "Passed in value is already a boxed jank object.",
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to create an opaque box from '{}', since it's already a boxed jank object."
+                 " Opaque boxes are meant to be for native raw pointers only.",
+                 Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
@@ -3677,13 +3715,30 @@ namespace jank::analyze
                                bool const needs_box)
   {
     auto const count(l->count());
-    if(count != 3)
+    if(count < 2)
     {
-      return error::analyze_invalid_cpp_unbox(
-        "A C++ unbox must have only a C++ type and a value as arguments.",
-        object_source(l),
-        "Pass a C++ type and a value to unbox here.",
-        latest_expansion(macro_expansions));
+      return error::analyze_invalid_cpp_cast(
+               "This call to 'cpp/unbox' is missing a C++ type and a value as arguments.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(count < 3)
+    {
+      return error::analyze_invalid_cpp_cast(
+               "This call to 'cpp/unbox' is missing a value to unbox as an argument.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(3 < count)
+    {
+      return error::analyze_invalid_cpp_cast(
+               "A call to 'cpp/unbox' must only have a C++ type and a "
+               "value as arguments and nothing else.",
+               object_source(l->next()->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 3));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
@@ -3700,7 +3755,6 @@ namespace jank::analyze
       return error::analyze_invalid_cpp_unbox(
                "The first argument to 'cpp/unbox' must be a C++ type.",
                object_source(type_obj),
-               "Passed in value is not a C++ type.",
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
@@ -3718,13 +3772,14 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(type_expr->type))
     {
       return error::analyze_invalid_cpp_unbox(
-        util::format("Unable to unbox to '{}', since it's not a raw pointer type."
-                     " The type specified here should be the exact type of the value originally "
-                     "passed to 'cpp/box'.",
-                     Cpp::GetTypeAsString(type_expr->type)),
-        object_source(l),
-        "Passed in value is not a raw pointer.",
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Unable to unbox to '{}', since it's not a raw pointer type."
+                 " The type specified here should be the exact type of the value originally "
+                 "passed to 'cpp/box'.",
+                 Cpp::GetTypeAsString(type_expr->type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     return jtl::make_ref<expr::cpp_unbox>(position,
@@ -3744,10 +3799,10 @@ namespace jank::analyze
     auto const count(l->count());
     if(count < 2)
     {
-      return error::analyze_invalid_cpp_new("The type to allocate is missing from this 'cpp/new'.",
-                                            object_source(l),
-                                            "Pass the type to allocate here.",
-                                            latest_expansion(macro_expansions));
+      return error::analyze_invalid_cpp_new("The call to 'cpp/new' is missing a type to allocate.",
+                                            object_source(l->first()),
+                                            latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
@@ -3763,7 +3818,6 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_new("The first argument to 'cpp/new' must be a C++ type.",
                                             object_source(type_obj),
-                                            "Passed in value is not a C++ type.",
                                             latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
@@ -3810,19 +3864,18 @@ namespace jank::analyze
     if(count < 2)
     {
       return error::analyze_invalid_cpp_delete(
-        "This call to 'cpp/delete' is missing the value to delete.",
-        object_source(l),
-        "Pass the value to delete here.",
-        latest_expansion(macro_expansions));
+               "This call to 'cpp/delete' is missing the value to delete.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     else if(2 < count)
     {
-      /* TODO: Error */
       return error::analyze_invalid_cpp_delete(
-        "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
-        object_source(l),
-        "Only pass the value to delete here.",
-        latest_expansion(macro_expansions));
+               "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
+               object_source(l->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     auto const value_obj(l->data.rest().first().unwrap());
@@ -3838,11 +3891,11 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_delete(
-        util::format("Unable to delete '{}', since it's not a raw pointer type.",
-                     Cpp::GetTypeAsString(value_type)),
-        object_source(l),
-        "Passed in value is not a raw pointer.",
-        latest_expansion(macro_expansions));
+               util::format("Unable to delete '{}', since it's not a raw pointer type.",
+                            Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     return jtl::make_ref<expr::cpp_delete>(position, current_frame, needs_box, value_expr);
@@ -3860,22 +3913,24 @@ namespace jank::analyze
     auto const count(l->count());
     if(count < 2)
     {
-      /* TODO: Error */
       return error::analyze_invalid_cpp_member_access(
-        util::format("Missing value from which to access '{}' member.", name),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format("Missing value from which to access '{}' member.", name),
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
-    else if(count >= 3)
+    else if(2 < count)
     {
-      /* TODO: Error */
       return error::analyze_invalid_cpp_member_access(
-        util::format("Excess arguments provided for '{}' member access. Only one is expected.",
-                     name),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Excess arguments provided for '{}' member access. Only one is expected.",
+                 name),
+               object_source(l->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
+    auto const member(l->first());
     auto const obj(l->data.rest().first().unwrap());
     auto const obj_res(analyze(obj, current_frame, expression_position::value, fn_ctx, false));
     if(obj_res.is_err())
@@ -3890,29 +3945,33 @@ namespace jank::analyze
     if(!parent_scope)
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format("Unable to find any members within '{}'.", Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format("Unable to find any members within '{}'.",
+                            Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     if(member_scope && Cpp::IsPrivateVariable(member_scope))
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format(
-          "The '{}' member within '{}' is private. It can only be accessed if it's public.",
-          name,
-          Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "The '{}' member within '{}' is private. It can only be accessed if it's public.",
+                 name,
+                 Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     if(member_scope && Cpp::IsProtectedVariable(member_scope))
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format(
-          "The '{}' member within '{}' is protected. It can only be accessed if it's public.",
-          name,
-          Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format("The '{}' member within '{}' is protected. It can only be accessed if "
+                            "it's public.",
+                            name,
+                            Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     else if(!member_scope)
     {
@@ -3933,11 +3992,12 @@ namespace jank::analyze
       if(!member_scope)
       {
         return error::analyze_invalid_cpp_member_access(
-          util::format("There is no '{}' member within '{}'.",
-                       name,
-                       cpp_util::get_qualified_name(parent_scope)),
-          object_source(l),
-          latest_expansion(macro_expansions));
+                 util::format("There is no '{}' member within '{}'.",
+                              name,
+                              cpp_util::get_qualified_name(parent_scope)),
+                 object_source(member),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 0));
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
