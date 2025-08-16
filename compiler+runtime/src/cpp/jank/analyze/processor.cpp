@@ -3111,10 +3111,10 @@ namespace jank::analyze
 
     if(name.ends_with('.') || name.contains(".."))
     {
-      return error::analyze_invalid_cpp_symbol(
-        "Name must not contain consecutive '.' dots. Each '.' corresponds with a '::' in C++.",
-        object_source(sym),
-        latest_expansion(macro_expansions));
+      return error::analyze_invalid_cpp_symbol("Name must not contain consecutive '.' dots. Each "
+                                               "'.' corresponds with a '::' in C++.",
+                                               object_source(sym),
+                                               latest_expansion(macro_expansions));
     }
 
     if(name == "nullptr")
@@ -3655,7 +3655,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_box(
                "This call to 'cpp/box' is missing a C++ pointer value.",
-               object_source(l),
+               object_source(l->first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
     }
@@ -3863,17 +3863,18 @@ namespace jank::analyze
     if(count < 2)
     {
       return error::analyze_invalid_cpp_delete(
-        "This call to 'cpp/delete' is missing the value to delete.",
-        object_source(l),
-        latest_expansion(macro_expansions));
+               "This call to 'cpp/delete' is missing the value to delete.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     else if(2 < count)
     {
-      /* TODO: Error */
       return error::analyze_invalid_cpp_delete(
-        "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
-        read::parse::reparse_nth(l, 2),
-        latest_expansion(macro_expansions));
+               "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
+               object_source(l->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     auto const value_obj(l->data.rest().first().unwrap());
@@ -3889,10 +3890,11 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_delete(
-        util::format("Unable to delete '{}', since it's not a raw pointer type.",
-                     Cpp::GetTypeAsString(value_type)),
-        object_source(value_obj),
-        latest_expansion(macro_expansions));
+               util::format("Unable to delete '{}', since it's not a raw pointer type.",
+                            Cpp::GetTypeAsString(value_type)),
+               object_source(value_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     return jtl::make_ref<expr::cpp_delete>(position, current_frame, needs_box, value_expr);
@@ -3911,17 +3913,20 @@ namespace jank::analyze
     if(count < 2)
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format("Missing value from which to access '{}' member.", name),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format("Missing value from which to access '{}' member.", name),
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     else if(2 < count)
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format("Excess arguments provided for '{}' member access. Only one is expected.",
-                     name),
-        read::parse::reparse_nth(l, 2),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "Excess arguments provided for '{}' member access. Only one is expected.",
+                 name),
+               object_source(l->next()->next()->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
     auto const member(l->first());
@@ -3939,29 +3944,33 @@ namespace jank::analyze
     if(!parent_scope)
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format("Unable to find any members within '{}'.", Cpp::GetTypeAsString(parent_type)),
-        object_source(l),
-        latest_expansion(macro_expansions));
+               util::format("Unable to find any members within '{}'.",
+                            Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     if(member_scope && Cpp::IsPrivateVariable(member_scope))
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format(
-          "The '{}' member within '{}' is private. It can only be accessed if it's public.",
-          name,
-          Cpp::GetTypeAsString(parent_type)),
-        object_source(member),
-        latest_expansion(macro_expansions));
+               util::format(
+                 "The '{}' member within '{}' is private. It can only be accessed if it's public.",
+                 name,
+                 Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     if(member_scope && Cpp::IsProtectedVariable(member_scope))
     {
       return error::analyze_invalid_cpp_member_access(
-        util::format(
-          "The '{}' member within '{}' is protected. It can only be accessed if it's public.",
-          name,
-          Cpp::GetTypeAsString(parent_type)),
-        object_source(member),
-        latest_expansion(macro_expansions));
+               util::format("The '{}' member within '{}' is protected. It can only be accessed if "
+                            "it's public.",
+                            name,
+                            Cpp::GetTypeAsString(parent_type)),
+               object_source(member),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
     else if(!member_scope)
     {
@@ -3982,11 +3991,12 @@ namespace jank::analyze
       if(!member_scope)
       {
         return error::analyze_invalid_cpp_member_access(
-          util::format("There is no '{}' member within '{}'.",
-                       name,
-                       cpp_util::get_qualified_name(parent_scope)),
-          object_source(member),
-          latest_expansion(macro_expansions));
+                 util::format("There is no '{}' member within '{}'.",
+                              name,
+                              cpp_util::get_qualified_name(parent_scope)),
+                 object_source(member),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 0));
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
