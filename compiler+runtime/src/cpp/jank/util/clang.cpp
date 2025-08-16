@@ -17,6 +17,7 @@
 #include <jank/util/clang.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/error/system.hpp>
 
@@ -180,7 +181,26 @@ namespace jank::util
     clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
     driver.setCheckInputsExist(true);
 
-    auto const compilation_result{ driver.BuildCompilation(args) };
+    /* The first argument should be the clang executable. */
+    std::vector<char const *> final_args{};
+    final_args.push_back(strdup(clang_path.c_str()));
+    for(auto arg : args)
+    {
+      final_args.push_back(strdup(arg));
+    }
+
+    /* Required because of `strdup` usage and need to manually free the memory.
+     * Clang expects C strings that we own. */
+    scope_exit const cleanup{ [&]() {
+      for(auto const s : final_args)
+      {
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        free(reinterpret_cast<void *>(const_cast<char *>(s)));
+      }
+    } };
+
+
+    auto const compilation_result{ driver.BuildCompilation(final_args) };
     if(!compilation_result || compilation_result->containsError())
     {
       return err(
