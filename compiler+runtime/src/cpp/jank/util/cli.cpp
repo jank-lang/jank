@@ -120,7 +120,7 @@ namespace jank::util::cli
       ->check(CLI::IsMember({ "dynamic", "static" }))
       ->default_str(make_default("dynamic"));
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
-      ->default_str("default: a.out");
+      ->default_str(make_default("a.out"));
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     /* Health check subcommand. */

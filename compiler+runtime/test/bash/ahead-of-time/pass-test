@@ -1,0 +1,118 @@
+#!/usr/bin/env bb
+
+(ns jank.test.ahead-of-time
+  (:require
+   [babashka.fs :as fs]
+   [babashka.process :as proc]
+   [clojure.string :as str]
+   [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(defn module-path [alias]
+  (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
+
+(defn find-binary [{:keys [name] :or {name "cli"}}]
+  (-> (proc/sh (str "find ./target -name " name)) :out str/trim))
+
+(defn compile-command [module-path main-module {:keys [optimization-flag
+                                                       output-file]
+                                                :or {optimization-flag "-O0"
+                                                     output-file "cli"}}]
+  (str "jank " optimization-flag
+       " --module-path=" module-path
+       " compile " main-module
+       " -o " output-file))
+
+(use-fixtures
+  :each
+  (fn [f]
+    (fs/delete-tree "./target")
+    (println "Cleaned up 'target'")
+    (f)))
+
+(deftest aot-single-jank-module
+  (let [alias-name  "single-jank-module"
+        module-path (module-path alias-name)]
+    (doseq [main-with-args? [true false]
+            :let [main-module (if main-with-args?
+                                "main-with-args"
+                                "main-without-args")
+                  args (if main-with-args?
+                         " foo bar baz"
+                         nil)
+                  expected-output (slurp (str "expected-output/" alias-name "/" main-module))
+                  compile-command (compile-command module-path main-module {})
+                  cli-path (delay (find-binary {}))]]
+      (testing (str alias-name " & " main-module)
+        (is (= 0 (->> compile-command
+                      (proc/sh {:out *out*
+                                :err *out*})
+                      :exit)))
+        (is (= expected-output (->> args (str @cli-path)
+                                    proc/sh :out))))
+      (testing "Executable in temp directory"
+        (fs/with-temp-dir [dir {}]
+          (fs/move @cli-path dir)
+          (is (= expected-output (->> (str "./cli " args)
+                                      (proc/sh {:dir dir})
+                                      :out))))))))
+
+(deftest aot-multiple-jank-modules
+  (let [alias-name "only-jank-modules"
+        module-path (module-path alias-name)
+        module "core"
+        args " Admin 3000"
+        output-filename "my-cli"
+        expected-output (slurp (str "expected-output/" alias-name "/" module))
+        compile-command (compile-command module-path module {:output-file output-filename})
+        cli-path (delay (find-binary {:name output-filename}))]
+    (testing (str alias-name " & core")
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (= expected-output (-> @cli-path (str args)
+                                 proc/sh :out))))))
+
+(deftest aot-jank-and-cpp-modules
+    (let [alias-name "jank-and-cpp-modules"
+          module-path (module-path alias-name)
+          module "core"
+          args " foo bar"
+          expected-output (slurp (str "expected-output/" alias-name "/" module))
+          compile-command (compile-command module-path module {:include-headers? true})
+          cli-path (delay (find-binary {}))]
+      (testing (str alias-name " & core")
+        (println "Compile command: " compile-command)
+        (is (= 0 (->> compile-command proc/sh :exit)))
+        (is (= expected-output (-> @cli-path (str args)
+                                   proc/sh :out))))))
+
+(deftest aot-jank-and-cpp-modules-release-build
+    (let [alias-name "jank-and-cpp-modules"
+          module-path (module-path alias-name)
+          module "core"
+          args " foo bar"
+          expected-output (slurp (str "expected-output/" alias-name "/" module))
+          compile-command (compile-command module-path module {:include-headers? true
+                                                               :optimization-flag "-O3"})
+          cli-path (delay (find-binary {}))]
+      (testing (str alias-name " & core")
+        (println "Compile command: " compile-command)
+        (is (= 0 (->> compile-command
+                      (proc/sh {:out *out*
+                                :err *out*})
+                      :exit)))
+        (is (= expected-output (-> @cli-path (str args)
+                                   proc/sh :out))))))
+
+(defn -main []
+  (proc/sh {:out *out* :err *out*} "jank check-health")
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
