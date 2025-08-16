@@ -6,13 +6,13 @@ body:
     attributes:
       label: jank health check
       description: |
-        Output from the `jank check-health` command.
+        Output from the `jank check-health` command. Ensure that you wrap the output in three backticks.
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: Bug reproduction steps
+      label: Description of the issue with reproduction steps
       description: |
         Provide a step-by-step guide on how to reproduce the issue.
 
@@ -21,7 +21,7 @@ body:
         - The code being executed.
         - Any additional setup details (e.g., third-party dependencies) not covered above.
 
-        Be as descriptive as needed—more detail helps us reproduce and fix the issue faster.
+        Be as descriptive as needed. More detail helps us reproduce and fix the issue faster.
     validations:
       required: true
 
