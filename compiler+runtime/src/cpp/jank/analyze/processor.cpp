@@ -3634,13 +3634,14 @@ namespace jank::analyze
     }
 
     return error::analyze_invalid_cpp_cast(
-      util::format(
-        "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
-        "and any specializations of 'jank::runtime::convert'.",
-        Cpp::GetTypeAsString(value_type),
-        Cpp::GetTypeAsString(type_expr->type)),
-      object_source(l),
-      latest_expansion(macro_expansions));
+             util::format(
+               "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
+               "and any specializations of 'jank::runtime::convert'.",
+               Cpp::GetTypeAsString(value_type),
+               Cpp::GetTypeAsString(type_expr->type)),
+             object_source(l->next()->next()->first()),
+             latest_expansion(macro_expansions))
+      ->add_usage(read::parse::reparse_nth(l, 2));
   }
 
   processor::expression_result
