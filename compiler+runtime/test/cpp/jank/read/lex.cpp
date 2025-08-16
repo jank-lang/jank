@@ -1281,9 +1281,12 @@ namespace jank::read::lex
     {
       SUBCASE("Whitespace after \\")
       {
-        processor p{ R"(\ )" };
+        processor p{ R"(\\ )" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(tokens == make_results({ { make_error(kind::lex_incomplete_character, 0, 1) } }));
+        CHECK(tokens
+              == make_tokens({
+                { 0, 2, token_kind::character, "\\ "sv }
+        }))
       }
 
       SUBCASE("Dangling \\")
