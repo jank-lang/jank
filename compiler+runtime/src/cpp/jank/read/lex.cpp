@@ -574,7 +574,7 @@ namespace jank::read::lex
           {
             return ch.expect_err();
           }
-          else if(std::iswspace(static_cast<int>(ch.expect_ok().character)))
+          else if(ch.expect_ok().character != ' ' && std::iswspace(static_cast<int>(ch.expect_ok().character)))
           {
             return error::lex_incomplete_character("A \\ must be followed by a character value.",
                                                    { token_start, pos });
