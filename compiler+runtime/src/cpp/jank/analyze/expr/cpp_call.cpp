@@ -10,20 +10,15 @@ namespace jank::analyze::expr
 {
   using namespace jank::runtime;
 
-  cpp_call::cpp_call()
-    : expression{ expr_kind }
-  {
-  }
-
   cpp_call::cpp_call(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
                      jtl::ptr<void> const type,
-                     jtl::ptr<void> const fn,
+                     expression_ref const source_expr,
                      native_vector<expression_ref> &&arg_exprs)
     : expression{ expr_kind, position, frame, needs_box }
     , type{ type }
-    , fn{ fn }
+    , source_expr{ source_expr }
     , arg_exprs{ jtl::move(arg_exprs) }
   {
   }
@@ -42,8 +37,8 @@ namespace jank::analyze::expr
     }
 
     return merge(expression::to_runtime_data(),
-                 obj::persistent_array_map::create_unique(make_box("fn"),
-                                                          make_box(Cpp::GetName(fn)),
+                 obj::persistent_array_map::create_unique(make_box("source"),
+                                                          source_expr->to_runtime_data(),
                                                           make_box("arg_exprs"),
                                                           arg_expr_maps));
   }

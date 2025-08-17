@@ -166,7 +166,7 @@ namespace jank::analyze
                                          jtl::option<expr::function_context_ref> const &,
                                          bool needs_box);
     expression_result analyze_cpp_call(runtime::obj::persistent_list_ref const,
-                                       expr::cpp_value_ref,
+                                       expression_ref,
                                        local_frame_ptr,
                                        expression_position,
                                        jtl::option<expr::function_context_ref> const &,

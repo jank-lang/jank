@@ -227,8 +227,8 @@ namespace jank::codegen
                                   jtl::ptr<void> const type)
   {
     jank_debug_assert(type);
-    auto const size{ Cpp::GetSizeOfType(type) };
-    util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
+    usize size{ 1 };
+    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
@@ -253,6 +253,7 @@ namespace jank::codegen
       if(!ir_type)
       {
         ir_type = ctx.builder->getInt8Ty();
+        size = Cpp::GetSizeOfType(type);
       }
     }
 
@@ -1751,14 +1752,38 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::cpp_call_ref const expr, expr::function_arity const &arity)
   {
-    return gen_aot_call(Cpp::MakeAotCallable(expr->fn),
-                        expr->fn,
-                        expr->type,
-                        Cpp::GetName(expr->fn),
-                        expr->arg_exprs,
-                        expr->position,
-                        expr->kind,
-                        arity);
+    if(expr->source_expr->kind == expression_kind::cpp_value)
+    {
+      auto const source{ llvm::cast<expr::cpp_value>(expr->source_expr.data) };
+      return gen_aot_call(Cpp::MakeAotCallable(source->scope),
+                          source->scope,
+                          expr->type,
+                          Cpp::GetName(source->scope),
+                          expr->arg_exprs,
+                          expr->position,
+                          expr->kind,
+                          arity);
+    }
+    else
+    {
+      auto const source_type{ cpp_util::expression_type(expr->source_expr) };
+      std::vector<Cpp::TCppType_t> arg_types;
+      arg_types.reserve(expr->arg_exprs.size());
+      for(auto const arg_expr : expr->arg_exprs)
+      {
+        arg_types.emplace_back(cpp_util::expression_type(arg_expr));
+      }
+      auto arg_exprs{ expr->arg_exprs };
+      arg_exprs.insert(arg_exprs.begin(), expr->source_expr);
+      return gen_aot_call(Cpp::MakeApplyCallable(source_type, arg_types),
+                          nullptr,
+                          expr->type,
+                          "call",
+                          jtl::move(arg_exprs),
+                          expr->position,
+                          expr->kind,
+                          arity);
+    }
   }
 
   llvm::Value *llvm_processor::impl::gen(expr::cpp_constructor_call_ref const expr,

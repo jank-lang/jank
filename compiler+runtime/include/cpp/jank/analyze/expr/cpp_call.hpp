@@ -10,12 +10,11 @@ namespace jank::analyze::expr
   {
     static constexpr expression_kind expr_kind{ expression_kind::cpp_call };
 
-    cpp_call();
     cpp_call(expression_position position,
              local_frame_ptr frame,
              bool needs_box,
              jtl::ptr<void> type,
-             jtl::ptr<void> fn,
+             expression_ref source_expr,
              native_vector<expression_ref> &&arg_exprs);
 
     void propagate_position(expression_position const pos) override;
@@ -24,8 +23,7 @@ namespace jank::analyze::expr
 
     /* The return type of the call. */
     jtl::ptr<void> type{};
-    /* The matched function overload to call. */
-    jtl::ptr<void> fn{};
+    expression_ref source_expr;
     native_vector<expression_ref> arg_exprs;
   };
 }
