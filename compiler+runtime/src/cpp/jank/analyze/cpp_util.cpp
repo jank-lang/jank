@@ -533,7 +533,9 @@ namespace jank::analyze::cpp_util
       {  "|=",           Cpp::OP_PipeEqual },
       {  "^=",          Cpp::OP_CaretEqual },
       { "<<=",       Cpp::OP_LessLessEqual },
-      { ">>=", Cpp::OP_GreaterGreaterEqual }
+      { ">>=", Cpp::OP_GreaterGreaterEqual },
+      /* This is not accessible through jank's syntax, but we use it internally. */
+      {  "()",                Cpp::OP_Call }
     };
 
     auto const op{ operators.find(name) };

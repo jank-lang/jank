@@ -889,8 +889,14 @@ namespace jank::analyze
                                            latest_expansion(macro_expansions));
   }
 
+  /* Most of our C++ calls are just straight up grabbing the function name from its
+   * scope, looking for overloads, and then finding the best fit. However, some cases
+   * are more complex and indirect than that. These cases include calls through
+   * function pointers and custom functor objects. Function pointers have no
+   * overloads and no Clang decl/scope. Custom functors use the call operator. */
   static processor::expression_result
-  build_indirect_cpp_call(expression_ref const source,
+  build_indirect_cpp_call(obj::persistent_list_ref const o,
+                          expression_ref const source,
                           native_vector<expression_ref> arg_exprs,
                           std::vector<Cpp::TemplateArgInfo> arg_types,
                           local_frame_ptr const current_frame,
@@ -901,8 +907,35 @@ namespace jank::analyze
     auto const source_type{ cpp_util::expression_type(source) };
     if(!Cpp::IsFunctionPointerType(source_type))
     {
-      /* TODO: Source. */
+      /* If we get to this function but we don't have a function pointer, we assume
+       * that we must have some callable object type. This could be a custom functor, a
+       * std::function, a lambda, etc. So, to call this, we rely on finding the operator()
+       * overloads for that type. */
+      auto const scope{ Cpp::GetScopeFromType(source_type) };
+      if(scope)
+      {
+        auto const value{ jtl::make_ref<expr::cpp_value>(
+          position,
+          current_frame,
+          needs_box,
+          /* TODO: This works, but it has no source info. */
+          make_box<obj::symbol>("()"),
+          source_type,
+          scope,
+          expr::cpp_value::value_kind::operator_call) };
+
+        arg_exprs.insert(arg_exprs.begin(), source);
+        arg_types.insert(arg_types.begin(), { source_type });
+        return build_cpp_call(value,
+                              jtl::move(arg_exprs),
+                              jtl::move(arg_types),
+                              current_frame,
+                              position,
+                              needs_box,
+                              macro_expansions);
+      }
       return error::internal_analyze_failure("The source of this call is not a function pointer.",
+                                             object_source(o),
                                              latest_expansion(macro_expansions));
     }
 
@@ -3493,7 +3526,8 @@ namespace jank::analyze
     }
     else
     {
-      return build_indirect_cpp_call(source,
+      return build_indirect_cpp_call(o,
+                                     source,
                                      jtl::move(arg_exprs),
                                      jtl::move(arg_types),
                                      current_frame,
