@@ -23,7 +23,7 @@
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
-  #_(jank.compiler+runtime.bash-test/-main {:enabled? build?})
+  (jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)
   (jank.compiler+runtime.coverage/-main {:enabled? (= "on" (util/get-env "JANK_COVERAGE" "off"))})
