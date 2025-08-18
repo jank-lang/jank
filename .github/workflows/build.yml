@@ -139,13 +139,15 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           name: jank-deb
-          path: ${{ github.workspace }}
+          path: ~/
       - name: Commit to PPA repo
         run: |
-          git clone https://jeaye:${{ secrets.JANK_GITHUB_TOKEN }}@github.com/jank-lang/ppa.git
-          pushd ppa
-            cp -f ../${{ steps.jank-build-step.outputs.deb }} .
-            git add ${{ steps.jank-build-step.outputs.deb }}
-            git commit -m "[automated] Publish new deb"
-            git push origin main
+          pushd ~/
+            git clone https://jeaye:${{ secrets.JANK_GITHUB_TOKEN }}@github.com/jank-lang/ppa.git
+            pushd ppa
+              cp -f ~/*.deb .
+              git add *.deb
+              git commit -m "[automated] Publish new deb"
+              git push origin main
+            popd
           popd
