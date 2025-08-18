@@ -2191,16 +2191,14 @@ namespace jank::codegen
     global = var_root;
 
     /* When generating a var-root in a context where we are already calling var_bind_root,
-     * we can just return the global var-root.
-     */
+     * we can just return the global var-root. */
     if(kind == var_root_kind::binded_def)
     {
       return global;
     }
 
     /* When generating a var-root in the "jank_load" function, we just need to directly deref
-     * the global var and return the global var-root.
-     */
+     * the global var and return the global var-root. */
     if(kind == var_root_kind::load_init)
     {
       auto const fn_type(
@@ -2215,8 +2213,7 @@ namespace jank::codegen
 
     /* Similar to generating a var, we set the var-root in the global ctor block by derefing
      * the global var and return a load to the var-root unless the previous
-     * block was the global ctor.
-     */
+     * block was the global ctor. */
     auto const prev_block(ctx->builder->GetInsertBlock());
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };

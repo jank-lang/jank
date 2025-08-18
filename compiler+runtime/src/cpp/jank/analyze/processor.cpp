@@ -3339,7 +3339,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
 
-    return error::analyze_invalid_cpp_type(
+    return error::analyze_invalid_cpp_value(
       "Unable to resolve this to something which jank can use.",
       /* TODO: Source of original string value. */
       object_source(sym),

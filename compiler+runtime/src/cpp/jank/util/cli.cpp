@@ -36,7 +36,9 @@ namespace jank::util::cli
     cli.add_flag("--perf", opts.perf_profiling_enabled, "Enable Linux perf event sampling.");
     cli.add_flag("--gc-incremental", opts.gc_incremental, "Enable incremental GC collection.");
     cli.add_flag("--debug", opts.debug, "Enable debug symbol generation for generated code.");
-    cli.add_flag("--direct-call", opts.direct_call, "Elides the dereferencing of vars for improved performance.");
+    cli.add_flag("--direct-call",
+                 opts.direct_call,
+                 "Elides the dereferencing of vars for improved performance.");
     cli
       .add_option("-O,--optimization",
                   opts.optimization_level,
