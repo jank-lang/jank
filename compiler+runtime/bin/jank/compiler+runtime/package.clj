@@ -21,8 +21,9 @@ Architecture: amd64
 Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
 Depends: libssl-dev, gcc, libzip-dev, libxml2-dev, libstdc++-14-dev
 Description: The native Clojure dialect hosted on LLVM with seamless C++ interop." version)]
-        (util/quiet-shell {:dir compiler+runtime-dir}
-                          (format "DESTDIR=%s ./bin/install" dir))
+        (util/quiet-shell {:dir compiler+runtime-dir
+                           :extra-env {"DESTDIR" dir}}
+                          "./bin/install")
         (b.f/create-dir (str compiler+runtime-dir "/" dir "/DEBIAN"))
         (spit (str compiler+runtime-dir "/" dir "/DEBIAN/control") control)
         (util/quiet-shell {:dir compiler+runtime-dir}
