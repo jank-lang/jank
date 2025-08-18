@@ -40,6 +40,7 @@ namespace jank::util::cli
     /* Compilation. */
     bool debug{};
     u8 optimization_level{};
+    bool direct_call{};
 
     /* Run command. */
     std::string target_file;

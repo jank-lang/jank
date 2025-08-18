@@ -80,6 +80,7 @@ namespace jank::codegen
     function,
     eval
   };
+  enum class var_root_kind : u8;
 
   struct reusable_context;
 
