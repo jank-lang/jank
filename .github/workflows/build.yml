@@ -78,7 +78,7 @@ jobs:
             os: ubuntu-24.04
             build_type: Release
             sanitize: none
-            package: true
+            package: on
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:

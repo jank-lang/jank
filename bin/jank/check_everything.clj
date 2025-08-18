@@ -15,7 +15,8 @@
   (util/log-info "JANK_LINT: " (System/getenv "JANK_LINT"))
   (util/log-info "JANK_COVERAGE: " (System/getenv "JANK_COVERAGE"))
   (util/log-info "JANK_ANALYZE: " (System/getenv "JANK_ANALYZE"))
-  (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE")))
+  (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE"))
+  (util/log-info "JANK_PACKAGE: " (System/getenv "JANK_PACKAGE")))
 
 ; Most Linux deps are installed by a Github action. We need to manually install
 ; boost for some reason. Otherwise, its headers aren't found by clang.
