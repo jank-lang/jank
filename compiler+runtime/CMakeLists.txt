@@ -41,6 +41,7 @@ option(jank_install_local_clang "Whether or not to install the local Clang/LLVM 
 option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
 option(jank_test "Enable jank's test suite" OFF)
+option(jank_unity_build "Optimize translation unit compilation for the number of cores" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
@@ -456,6 +457,7 @@ add_library(
   src/cpp/jank/compiler_native.cpp
   src/cpp/jank/perf_native.cpp
 )
+set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
 set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank-sans-deps)
 

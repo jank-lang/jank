@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     : start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
-    , bounds_check{ positive_step_bounds_check }
+    , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
@@ -30,7 +30,7 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ make_box(1) }
-    , bounds_check{ positive_step_bounds_check }
+    , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
@@ -38,7 +38,8 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ is_pos(step) ? positive_step_bounds_check : negative_step_bounds_check }
+    , bounds_check{ is_pos(step) ? static_cast<bounds_check_t>(positive_step_bounds_check)
+                                 : static_cast<bounds_check_t>(negative_step_bounds_check) }
   {
   }
 
@@ -72,7 +73,10 @@ namespace jank::runtime::obj
   {
     if(is_pos(end))
     {
-      return make_box<range>(make_box(0), end, make_box(1), positive_step_bounds_check);
+      return make_box<range>(make_box(0),
+                             end,
+                             make_box(1),
+                             static_cast<bounds_check_t>(positive_step_bounds_check));
     }
     return persistent_list::empty();
   }
@@ -94,7 +98,8 @@ namespace jank::runtime::obj
     return make_box<range>(start,
                            end,
                            step,
-                           is_pos(step) ? positive_step_bounds_check : negative_step_bounds_check);
+                           is_pos(step) ? static_cast<bounds_check_t>(positive_step_bounds_check)
+                                        : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
   range_ptr range::seq()

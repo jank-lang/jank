@@ -27,6 +27,7 @@
           configure-flags ["-GNinja"
                            "-Djank_local_clang=on"
                            "-Djank_test=on"
+                           "-Djank_unity_build=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)

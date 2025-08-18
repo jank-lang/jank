@@ -14,8 +14,6 @@ namespace jank::runtime
 
 namespace jank::analyze::expr
 {
-  using var_ref_ref = jtl::ref<struct var_ref>;
-
   struct var_ref : expression
   {
     static constexpr expression_kind expr_kind{ expression_kind::var_ref };
@@ -31,4 +29,6 @@ namespace jank::analyze::expr
     runtime::obj::symbol_ref qualified_name{};
     runtime::var_ref var{};
   };
+
+  using var_ref_ref = jtl::ref<var_ref>;
 }
