@@ -30,6 +30,7 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
         (util/quiet-shell {:dir compiler+runtime-dir}
                           (format "dpkg-deb --build --root-owner-group %s" dir))
         (when-some [gh-output (util/get-env "GITHUB_OUTPUT")]
+          (b.f/copy (format "%s/%s.deb" compiler+runtime-dir dir) (format "%s.deb" dir))
           (spit gh-output (format "deb=%s.deb" dir))))
       (util/log-info-with-time duration "Created"))))
 
