@@ -1,0 +1,12 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.handlers.describe)
+
+(defn handle [_]
+  {:aux      {}
+   :ops      {:clone     {}
+              :describe  {}
+              :eval      {}
+              :load-file {}}
+   :versions {}
+   :status   '(:done)})

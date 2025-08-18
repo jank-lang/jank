@@ -1,0 +1,68 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.eval)
+
+(cpp/raw "
+namespace nrepl_server::eval {
+  struct eval_result {
+    bool success{false};
+    std::string pr;
+    std::string type;
+    jank::u64 hash;
+
+    std::string exception;
+  };
+
+  eval_result safe_eval(std::string code) {
+    eval_result result;
+    try
+    {
+      auto val = jank::runtime::__rt_ctx->eval_string(code);
+      result.success = true;
+      result.pr = jank::runtime::to_code_string(val);
+      result.type = jank::runtime::object_type_str(val->type);
+      result.hash = jank::hash::visit(val);
+
+      auto var_1 = jank::runtime::__rt_ctx->find_var(\"clojure.core\", \"*1\");
+      var_1->bind_root(val);
+    }
+    catch(std::exception const &e)
+    {
+      result.exception = e.what();
+    }
+    catch (jank::error_ref const &e)
+    {
+      result.exception = jank::error::kind_str(e->kind) + std::string(\": \") + std::string(e->message);
+    }
+    catch (...) { }
+
+    return result;
+  }
+}")
+
+(defn safe-eval [code]
+  ;; TODO(jank): Some jank printing functions bypass std::cout/std::cerr which
+  ;; means we can't as easily intercept them. This is unlike java where
+  ;; everything goes through System.out/System.err.
+
+  ;; TODO(jank): We can't catch cpp exceptions from jank code, so any evaluation
+  ;; error will crash the server. Instead we create a safe evaluation wrapper in
+  ;; C++ and catch the exceptions there.
+
+  (let [result (cpp/nrepl_server.eval.safe_eval (cpp/cast cpp/std.string code))]
+    ;; TODO(jank): Use (def) here until we can (set-var)
+    ;; TODO(jank): We don't get a value out of safe_eval, so we can't really set
+    ;; these. For now we set them from C++.
+    ;; (def *3 *1)
+    ;; (def *2 *1)
+    ;; (def *1 result)
+
+    {:success?  (cpp/.-success result)
+     :pr-str    (cpp/.-pr result)
+     :type-str  (cpp/.-type result)
+     :hash      (cpp/.-hash result)
+     :exception (cpp/.-exception result)
+     ;; TODO
+     ;; :stdout    (capture/read stdout-capture)
+     ;; :stderr    (capture/read stderr-capture)
+     }))

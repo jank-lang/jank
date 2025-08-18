@@ -1,0 +1,39 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.capture)
+
+(cpp/raw "
+namespace nrepl_server::capture {
+  struct stream_capture
+  {
+    stream_capture(std::ostream &stream)
+      : stream_(stream)
+      , original_(stream_.rdbuf(capture_.rdbuf()))
+    {
+    }
+
+    std::string str() const
+    {
+      return capture_.str();
+    }
+
+    ~stream_capture()
+    {
+      stream_.rdbuf(original_);
+    }
+
+  private:
+    std::ostream &stream_;
+    std::stringstream capture_;
+    std::streambuf *original_;
+  };
+}
+")
+
+(defn start [stream]
+  ;; TODO
+  nil)
+
+(defn read [capture]
+  ;; TODO
+  "")

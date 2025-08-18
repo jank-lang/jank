@@ -1,0 +1,21 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.util)
+
+(defn replace-all [s a b]
+  ;; TODO: use clojure.string/replace once it's ported
+  (->> (seq s)
+   (replace {a b})
+   (flatten)
+   (apply str)))
+
+(defn escape-quotes [s]
+  (replace-all s \" '(\\ \")))
+
+(defn rand-str [n]
+  (let [alphanum "abcdefghijklmnopqrstuvwxyz0123456789"]
+    (apply str (repeatedly n #(rand-nth alphanum)))))
+
+(defn generate-uuid []
+  ;; TODO: use clojure.core/random-uuid once it's ported
+  (str (rand-str 8) "-" (rand-str 4) "-" (rand-str 4) "-" (rand-str 4) "-" (rand-str 12)))

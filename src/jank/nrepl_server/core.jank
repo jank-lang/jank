@@ -1,0 +1,94 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.core
+  (:require [jank.data.bencode :as bencode]
+            [nrepl-server.eval :refer [safe-eval]]
+            [nrepl-server.inspect :refer [inspect-str]]
+            [nrepl-server.util :refer [generate-uuid]]))
+
+(cpp/raw "#include <nrepl_server/nrepl_server.hpp>")
+
+(defn read-message [client-ptr]
+  (let [client (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)]
+    ;; TODO: There is no guarantee that we read an entire message. We should
+    ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
+    ;; until more data arrives.
+    (bencode/parse (cpp/.read_some client))))
+
+(defn write-message [client-ptr msg]
+  (let [client  (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)
+        msg-str (bencode/write msg)]
+    (cpp/.write_some client (cpp/cast cpp/std.string msg-str))))
+
+(defn handle-message [msg]
+  (case (get msg "op")
+    "clone"
+    {:new-session (generate-uuid)
+     :status      [:done]}
+
+    "describe"
+    ;; TODO(jank): causes compiler crash
+    ;; (nrepl-server.handlers.describe/handle msg)
+    {:aux      {}
+     :ops      {:clone     {}
+                :describe  {}
+                :eval      {}
+                :load-file {}}
+     :versions {}
+     :status   '(:done)}
+
+    "eval"
+    ;; TODO: evaluate in the requested namespace
+    (let [result     (safe-eval (get msg "code"))
+          exception? (seq (:exception result))
+          inspect?   (= "true" (get msg "inspect"))]
+      (cond
+        exception?
+        ;; For now, just report the value. If we report :exception then CIDER
+        ;; will try to load clojure.stacktrace.
+        {:value  (str (:exception result))
+         :status [:eval-error]}
+
+        inspect?
+        {:value  (inspect-str result)
+         :status [:done]}
+
+        :else
+        {:value  (:pr-str result)
+         :ns     (str *ns*)
+         :status [:done]}))
+
+    "load-file"
+    {:value  (:pr-str (safe-eval (get msg "file")))
+     :status [:done]}
+
+    "close"
+    ;; TODO(jank): causes compiler crash
+    ;; (nrepl-server.handlers.close/handle msg)
+    {:status [:done]}
+
+    ;; default
+    {:status [:done]}))
+
+(defn handle-client [client-ptr]
+  ;; TODO(jank): changing this to (loop recur) causes compiler crash
+  (while true
+    (when-let [msg (read-message client-ptr)]
+      (println "<-" msg)
+      (when-not (empty? msg)
+        (let [resp (assoc (handle-message msg)
+                          ;; TODO(jank): not casting str here causes compiler crash
+                          :id (str (get msg "id"))
+                          :session (str (get msg "session")))]
+          (println "->" resp)
+          (write-message client-ptr resp))))))
+
+(defn -main []
+  (let [listen-port 4200
+        server      (cpp/nrepl_server.nrepl_server. listen-port)]
+    (println (str "jank-nrepl listening for connections on port " listen-port "..."))
+    (while true
+      ;; TODO(jank): Once we can spawn threads, we can spin out each client to a
+      ;; background thread. Currently we can only handle one client at a time.
+      (let [client (cpp/box (cpp/.accept server))]
+        (handle-client client)))))

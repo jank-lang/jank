@@ -1,0 +1,20 @@
+;; -*- mode: clojurec -*-
+
+(ns nrepl-server.inspect
+  (:require [nrepl-server.util :refer [escape-quotes]]))
+
+(defn nl []
+  "(:newline)")
+
+(defn inspect-str [x]
+  (str
+   "("
+   "\"--- Type\" " (nl)
+   "(:value \"" (escape-quotes (:type-str x)) "\") "
+   (nl) (nl)
+   "\"--- Contents\" " (nl)
+   "(:value \"" (escape-quotes (:pr-str x)) "\") "
+   (nl) (nl)
+   "\"--- Hash\" " (nl)
+   "(:value \"" (:hash x) "\") "
+   ")"))
