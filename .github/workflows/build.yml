@@ -140,13 +140,23 @@ jobs:
         with:
           name: jank-deb
           path: ~/
+      - name: Import GPG key
+        run: |
+          gpg_tmp="$(mktemp).gpg"
+          echo "${{ secrets.GPG_SIGNING_KEY }}" > "${gpg_tmp}"
+          gpg --import "${gpg_tmp}"
+          rm -f "${gpg_tmp}"
+          unset gpg_tmp
       - name: Commit to PPA repo
         run: |
           pushd ~/
             git clone https://jeaye:${{ secrets.JANK_GITHUB_TOKEN }}@github.com/jank-lang/ppa.git
             pushd ppa
-              cp -f ~/*.deb .
+              cp -fv ~/*.deb .
               git add *.deb
+              git config --global user.email "jeaye@jank-lang.org"
+              git config --global user.name "Jeaye Wilkerson"
+              git config --global commit.gpgsign true
               git commit -m "[automated] Publish new deb"
               git push origin main
             popd
