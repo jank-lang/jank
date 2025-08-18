@@ -96,6 +96,7 @@ namespace jank::read::parse
   private:
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref form);
     jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_seq(runtime::object_ref seq);
+    jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_set(runtime::object_ref seq);
     static jtl::result<runtime::object_ref, error_ref>
     syntax_quote_flatten_map(runtime::object_ref seq);
     static bool syntax_quote_is_unquote(runtime::object_ref form, bool splice);

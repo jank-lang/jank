@@ -983,6 +983,51 @@ namespace jank::read::parse
       seq);
   }
 
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const seq)
+  {
+    if(seq.is_nil())
+    {
+      return seq;
+    }
+
+    return visit_seqable(
+      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
+        runtime::detail::native_transient_vector ret;
+        for(auto const item : make_sequence_range(typed_seq))
+        {
+          if(syntax_quote_is_unquote(item, false))
+          {
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             second(item)));
+          }
+          else if(syntax_quote_is_unquote(item, true))
+          {
+            ret.push_back(second(item));
+          }
+          else
+          {
+            auto quoted_item(syntax_quote(item));
+            if(quoted_item.is_err())
+            {
+              return quoted_item;
+            }
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             quoted_item.expect_ok()));
+          }
+        }
+        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        return vec;
+      },
+      []() -> jtl::result<object_ref, error_ref> {
+        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
+      },
+      seq);
+  }
+
   bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
   {
     return visit_seqable(
@@ -1118,7 +1163,27 @@ namespace jank::read::parse
           }
           if constexpr(behavior::set_like<T>)
           {
-            return err(error::internal_parse_failure("nyi: set"));
+            auto const seq(typed_form->seq());
+            if(seq.is_nil())
+            {
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "hash-set"));
+            }
+            auto expanded(syntax_quote_expand_seq(seq));
+            if(expanded.is_err())
+            {
+              return expanded;
+            }
+
+            return make_box<obj::persistent_list>(
+              std::in_place,
+              make_box<obj::symbol>("clojure.core", "apply*"),
+              make_box<obj::symbol>("clojure.core", "hash-set"),
+              make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "seq"),
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
           }
           if constexpr(behavior::sequenceable<T>)
           {

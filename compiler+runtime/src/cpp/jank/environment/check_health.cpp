@@ -2,6 +2,8 @@
 
 #include <Interpreter/Compatibility.h>
 
+#include <llvm/TargetParser/Host.h>
+
 #include <ftxui/screen/screen.hpp>
 
 #include <jtl/format/style.hpp>
@@ -30,6 +32,41 @@ namespace jank::environment
    * - ❌ for errors
    *
    * Colors for these should be green, yellow, and red. All paths should be blue. */
+
+  static jtl::immutable_string system_os()
+  {
+    jtl::immutable_string os{ "unknown" };
+    switch(jtl::current_platform)
+    {
+      case jtl::platform::linux_like:
+        os = "linux";
+        break;
+      case jtl::platform::macos_like:
+        os = "macos";
+        break;
+      case jtl::platform::windows_like:
+        os = "windows";
+        break;
+      case jtl::platform::other_unix_like:
+        os = "unix";
+        break;
+    }
+
+    return util::format("{}─ ✅{} operating system: {}",
+                        terminal_style::green,
+                        terminal_style::reset,
+                        os);
+  }
+
+  static jtl::immutable_string system_triple()
+  {
+    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
+
+    return util::format("{}─ ✅{} default triple: {}",
+                        terminal_style::green,
+                        terminal_style::reset,
+                        target_triple);
+  }
 
   static jtl::immutable_string jank_version()
   {
@@ -335,6 +372,11 @@ namespace jank::environment
   {
     auto const terminal_width{ ftxui::Terminal::Size().dimx };
     auto const max_width{ std::min(terminal_width, 100) };
+
+    util::println("{}", header("system", max_width));
+    util::println("{}", system_os());
+    util::println("{}", system_triple());
+    util::println("");
 
     util::println("{}", header("jank install", max_width));
     util::println("{}", jank_version());

@@ -93,6 +93,71 @@ namespace jank::error
                                               read::source const &source,
                                               runtime::object_ref expansion);
   error_ref analyze_invalid_conversion(jtl::immutable_string const &message);
+  error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
+                                              read::source const &source,
+                                              runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_constructor_call(jtl::immutable_string const &message,
+                                                 read::source const &source,
+                                                 runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_member_call(jtl::immutable_string const &message,
+                                            read::source const &source,
+                                            runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_function_call(jtl::immutable_string const &message,
+                                              read::source const &source,
+                                              runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,
+                                           read::source const &source,
+                                           runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_symbol(jtl::immutable_string const &message,
+                                       read::source const &source,
+                                       runtime::object_ref expansion);
+  error_ref analyze_unresolved_cpp_symbol(jtl::immutable_string const &message,
+                                          read::source const &source,
+                                          jtl::immutable_string const &note_message,
+                                          runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_raw(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_type(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     jtl::immutable_string const &note_message,
+                                     runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_type(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
+                                      read::source const &source,
+                                      jtl::immutable_string const &note_message,
+                                      runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
+                                      read::source const &source,
+                                      runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_cast(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     jtl::immutable_string const &note_message,
+                                     runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_box(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    jtl::immutable_string const &note_message,
+                                    runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_unbox(jtl::immutable_string const &message,
+                                      read::source const &source,
+                                      jtl::immutable_string const &note_message,
+                                      runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_new(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    jtl::immutable_string const &note_message,
+                                    runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_delete(jtl::immutable_string const &message,
+                                       read::source const &source,
+                                       jtl::immutable_string const &note_message,
+                                       runtime::object_ref expansion);
+  error_ref analyze_invalid_cpp_member_access(jtl::immutable_string const &message,
+                                              read::source const &source,
+                                              runtime::object_ref expansion);
   error_ref
   internal_analyze_failure(jtl::immutable_string const &message, runtime::object_ref expansion);
   error_ref internal_analyze_failure(jtl::immutable_string const &message,
