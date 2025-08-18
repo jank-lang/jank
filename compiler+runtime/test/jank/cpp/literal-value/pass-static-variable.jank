@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::literal_value::pass_static_variable
+          {
+            struct foo
+            {
+              static constexpr int bar = 100;
+            };
+          }")
+(let* [i (cpp/value "jank::cpp::literal_value::pass_static_variable::foo::bar")]
+  (if (= i 100)
+    :success))

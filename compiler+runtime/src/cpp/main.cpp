@@ -312,7 +312,7 @@ int main(int const argc, char const **argv)
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 
-    Cpp::EnableDebugOutput(false);
+    Cpp::EnableDebugOutput(true);
 
     switch(jank::util::cli::opts.command)
     {

@@ -314,6 +314,21 @@ namespace jank::error
     return analyze_invalid_cpp_type(message, source, "Pass a string of C++ code here.", expansion);
   }
 
+  error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
+                                      read::source const &source,
+                                      jtl::immutable_string const &note_message,
+                                      runtime::object_ref expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_value, message, source, note_message, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
+                                      read::source const &source,
+                                      runtime::object_ref expansion)
+  {
+    return analyze_invalid_cpp_value(message, source, "Pass a string of C++ code here.", expansion);
+  }
+
   error_ref analyze_invalid_cpp_cast(jtl::immutable_string const &message,
                                      read::source const &source,
                                      jtl::immutable_string const &note_message,

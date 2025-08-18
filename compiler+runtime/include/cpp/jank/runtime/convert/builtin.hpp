@@ -109,10 +109,49 @@ namespace jank::runtime
     }
   };
 
+  template <>
+  struct convert<char>
+  {
+    static constexpr obj::character_ref into_object(char const o)
+    {
+      return make_box(o);
+    }
+
+    static constexpr char from_object(object_ref const o)
+    {
+      return try_object<obj::character>(o)->data[0];
+    }
+
+    static constexpr char from_object(obj::character_ref const o)
+    {
+      return o->data[0];
+    }
+  };
+
+  template <typename T>
+  requires std::is_enum_v<T>
+  struct convert<T>
+  {
+    static constexpr obj::integer_ref into_object(T const o)
+    {
+      return make_box(static_cast<i64>(o));
+    }
+
+    static constexpr T from_object(object_ref const o)
+    {
+      return try_object<obj::integer>(o);
+    }
+
+    static constexpr T from_object(obj::integer_ref const o)
+    {
+      return o->data;
+    }
+  };
+
   /* Native integer primitives. */
   template <typename T>
   requires(std::is_integral_v<T>
-           && !jtl::is_any_same<bool, char, char8_t, char16_t, char32_t, wchar_t>)
+           && !jtl::is_any_same<T, bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<T>
   {
     static constexpr obj::integer_ref into_object(T const o)

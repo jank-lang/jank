@@ -53,7 +53,9 @@ namespace jank::analyze
     throw_,
     try_,
     case_,
-    cpp_raw,
+    /* We use min/max to easily group interop expressions. */
+    cpp_value_min,
+    cpp_raw = cpp_value_min,
     cpp_type,
     cpp_value,
     cpp_cast,
@@ -66,6 +68,7 @@ namespace jank::analyze
     cpp_unbox,
     cpp_new,
     cpp_delete,
+    cpp_value_max = cpp_delete,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)

@@ -7,12 +7,24 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/error/analyze.hpp>
 
 namespace jank::analyze::cpp_util
 {
+  /* Even with a SFINAE trap, Clang can get into a bad state when failing to instantiate
+   * templates. In that bad state, whatever the next thing is that we parse fails. So, we
+   * hack around this by trying to detect that state and them just giving Clang something
+   * very easy to parse and being ok with it failing.
+   *
+   * After that failure, Clang gets back into a good state. */
+  static void reset_sfinae_state()
+  {
+    static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
+  }
+
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
   {
     while(ptr_count != 0)
@@ -59,7 +71,11 @@ namespace jank::analyze::cpp_util
         if(Cpp::IsTemplateSpecialization(scope))
         {
           /* TODO: Get template arg info and specify all of it? */
-          Cpp::InstantiateTemplate(scope);
+          if(Cpp::InstantiateTemplate(scope))
+          {
+            reset_sfinae_state();
+            return err("Unable to instantiate template.");
+          }
         }
         auto const old_scope{ scope };
         auto const subs{ sym.substr(new_start) };
@@ -93,6 +109,98 @@ namespace jank::analyze::cpp_util
     }
 
     return ok(scope);
+  }
+
+  jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
+  {
+    /* TODO: silent_sfinae_trap */
+    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
+    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto old_client{ diag.takeClient() };
+    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+
+    auto const alias{ runtime::__rt_ctx->unique_string() };
+    auto const code{ util::format("using {} = {};", runtime::munge(alias), literal) };
+    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!res)
+    {
+      reset_sfinae_state();
+      return err("Unable to parse C++ literal.");
+    }
+
+    auto const * const translation_unit{ res->TUPart };
+    auto const size{ std::distance(translation_unit->decls_begin(),
+                                   translation_unit->decls_end()) };
+    if(size == 0)
+    {
+      return err("Invalid C++ literal.");
+    }
+    if(size != 1)
+    {
+      return err("Extra expressions found in C++ literal.");
+    }
+    auto const alias_decl{ llvm::cast<clang::TypeAliasDecl>(*translation_unit->decls_begin()) };
+    auto const type{ alias_decl->getUnderlyingType().getAsOpaquePtr() };
+    auto const scope{ Cpp::GetScopeFromType(type) };
+
+    if(Cpp::IsTemplateSpecialization(scope))
+    {
+      /* TODO: Get template arg info and specify all of it? */
+      if(Cpp::InstantiateTemplate(scope))
+      {
+        reset_sfinae_state();
+        return err("Unable to instantiate template.");
+      }
+    }
+
+    return type;
+  }
+
+  jtl::string_result<jtl::ptr<void>> resolve_literal_value(jtl::immutable_string const &literal)
+  {
+    /* TODO: Need a call to instantiate in here? */
+    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
+    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto old_client{ diag.takeClient() };
+    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+
+    auto const alias{ runtime::__rt_ctx->unique_string() };
+    auto const code{ util::format("auto && {} = {};", runtime::munge(alias), literal) };
+    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!res)
+    {
+      return err("Unable to parse C++ literal.");
+    }
+
+    auto const * const translation_unit{ res->TUPart };
+    auto const size{ std::distance(translation_unit->decls_begin(),
+                                   translation_unit->decls_end()) };
+    if(size == 0)
+    {
+      return err("Invalid C++ literal.");
+    }
+    if(size != 1)
+    {
+      return err("Extra expressions found in C++ literal.");
+    }
+
+    auto const var_decl{ llvm::cast<clang::VarDecl>(*translation_unit->decls_begin()) };
+    auto const init{ var_decl->getInit() };
+
+    if(auto const decl_ref = llvm::dyn_cast<clang::DeclRefExpr>(init->IgnoreParenImpCasts()))
+    {
+      auto const decl{ decl_ref->getDecl() };
+      if(llvm::isa<clang::VarDecl>(decl) || llvm::isa<clang::EnumConstantDecl>(decl)
+         || llvm::isa<clang::FunctionDecl>(decl) || llvm::isa<clang::FunctionTemplateDecl>(decl))
+      {
+        return decl;
+      }
+    }
+
+    return err("Unable to resolve this to a value which jank can use. jank supports literal "
+               "variable, enum, and function values.");
   }
 
   /* When we're looking up operator usage, for example, we need to look in the scopes for
@@ -364,7 +472,7 @@ namespace jank::analyze::cpp_util
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo const arg{ Cpp::GetTypeWithoutCv(
       Cpp::GetNonReferenceType(Cpp::GetCanonicalType(type))) };
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema() };
+    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     Cpp::TCppScope_t instantiation{};
     {
       auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
@@ -425,7 +533,9 @@ namespace jank::analyze::cpp_util
       {  "|=",           Cpp::OP_PipeEqual },
       {  "^=",          Cpp::OP_CaretEqual },
       { "<<=",       Cpp::OP_LessLessEqual },
-      { ">>=", Cpp::OP_GreaterGreaterEqual }
+      { ">>=", Cpp::OP_GreaterGreaterEqual },
+      /* This is not accessible through jank's syntax, but we use it internally. */
+      {  "()",                Cpp::OP_Call }
     };
 
     auto const op{ operators.find(name) };

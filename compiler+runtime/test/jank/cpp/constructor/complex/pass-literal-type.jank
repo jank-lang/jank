@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_literal_type
+          {
+            struct foo
+            {
+              int a{}, b{7};
+            };
+          }")
+(let* [f1 (cpp/jank.cpp.constructor.complex.pass_literal_type.foo)
+       f2 ((cpp/type "jank::cpp::constructor::complex::pass_literal_type::foo") (cpp/int. 5) (cpp/int. 55))]
+  (if (and (and (= 0 (cpp/.-a f1)) (= 7 (cpp/.-b f1)))
+           (and (= 5 (cpp/.-a f2)) (= 55 (cpp/.-b f2))))
+    :success))

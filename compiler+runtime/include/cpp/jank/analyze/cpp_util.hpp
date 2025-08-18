@@ -13,6 +13,8 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count);
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 ptr_count);
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym);
+  jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
+  jtl::string_result<jtl::ptr<void>> resolve_literal_value(jtl::immutable_string const &literal);
   native_vector<jtl::ptr<void>> find_adl_scopes(native_vector<jtl::ptr<void>> const &starters);
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);

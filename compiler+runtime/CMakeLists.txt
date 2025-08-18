@@ -117,8 +117,8 @@ set(
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  list(APPEND jank_common_compiler_flags -O2)
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  list(APPEND jank_common_compiler_flags -O2 -DNDEBUG)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" -DNDEBUG)
   list(APPEND jank_common_compiler_flags -Og -g)
 endif()
 

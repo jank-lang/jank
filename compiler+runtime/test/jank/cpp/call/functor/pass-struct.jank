@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::call::functor::pass_struct
+          {
+            struct foo
+            {
+              int operator ()(int i)
+              { return i + 1; }
+              std::string operator ()(std::string const &s)
+              { return s + \" meow\"; }
+            };
+          }")
+(let* [f (cpp/jank.cpp.call.functor.pass_struct.foo)
+       i (f (cpp/int 100))
+       s (f (cpp/cast cpp/std.string "meow"))]
+  (if (and (= 101 i) (= s "meow meow"))
+    :success))

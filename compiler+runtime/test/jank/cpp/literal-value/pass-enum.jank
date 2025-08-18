@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::literal_value::pass_enum
+          {
+            enum class foo
+            {
+              bar,
+              meow
+            };
+          }")
+(let* [i (cpp/value "jank::cpp::literal_value::pass_enum::foo::meow")]
+  (if (= i 1)
+    :success))

@@ -1,0 +1,18 @@
+; This test is specifically for C++ codegen, which needs to be
+; able to handle C++ types without default ctors.
+(cpp/raw "namespace jank::form::let::pass_native_no_default_ctor
+          {
+            struct foo
+            {
+              foo() = delete;
+              foo(int a)
+               : a{ a }
+              { }
+
+              int a{ 5 };
+            };
+          } ")
+(let* [f (let* [f (cpp/jank.form.let.pass_native_no_default_ctor.foo. (cpp/int. 10))]
+           f)]
+  (if (= 10 (cpp/.-a f))
+    :success))

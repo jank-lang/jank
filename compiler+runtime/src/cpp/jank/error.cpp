@@ -158,6 +158,8 @@ namespace jank::error
         return "Invalid C++ raw.";
       case kind::analyze_invalid_cpp_type:
         return "Invalid C++ type.";
+      case kind::analyze_invalid_cpp_value:
+        return "Invalid C++ value.";
       case kind::analyze_invalid_cpp_cast:
         return "Invalid C++ cast.";
       case kind::analyze_invalid_cpp_box:

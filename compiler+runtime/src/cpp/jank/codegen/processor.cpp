@@ -1717,40 +1717,49 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &arity,
                                      bool const)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
-
-    native_vector<handle> arg_tmps;
-    arg_tmps.reserve(expr->arg_exprs.size());
-    for(auto const &arg_expr : expr->arg_exprs)
+    if(expr->source_expr->kind == expression_kind::cpp_value)
     {
-      arg_tmps.emplace_back(gen(arg_expr, arity, false).unwrap());
-    }
+      auto const source{ static_cast<expr::cpp_value *>(expr->source_expr.data) };
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
 
-    util::format_to(body_buffer,
-                    "auto const {}{ {}(",
-                    ret_tmp,
-                    Cpp::GetQualifiedCompleteName(expr->fn));
-
-    bool need_comma{};
-    for(auto const &arg_tmp : arg_tmps)
-    {
-      if(need_comma)
+      native_vector<handle> arg_tmps;
+      arg_tmps.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
       {
-        util::format_to(body_buffer, ", ");
+        arg_tmps.emplace_back(gen(arg_expr, arity, false).unwrap());
       }
-      util::format_to(body_buffer, "{}", arg_tmp.str(false));
-      need_comma = true;
+
+      util::format_to(body_buffer,
+                      "auto const {}{ {}(",
+                      ret_tmp,
+                      Cpp::GetQualifiedCompleteName(source->scope));
+
+      bool need_comma{};
+      for(auto const &arg_tmp : arg_tmps)
+      {
+        if(need_comma)
+        {
+          util::format_to(body_buffer, ", ");
+        }
+        util::format_to(body_buffer, "{}", arg_tmp.str(false));
+        need_comma = true;
+      }
+
+      util::format_to(body_buffer, ") };");
+
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+        return none;
+      }
+
+      return ret_tmp;
     }
-
-    util::format_to(body_buffer, ") };");
-
-    if(expr->position == expression_position::tail)
+    else
     {
-      util::format_to(body_buffer, "return {};", ret_tmp);
+      jank_debug_assert(false);
       return none;
     }
-
-    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(analyze::expr::cpp_constructor_call_ref const expr,
