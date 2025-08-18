@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     : start{ make_box<integer>(0) }
     , end{ end }
     , step{ make_box<integer>(1) }
-    , bounds_check{ positive_step_bounds_check }
+    , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ make_box<integer>(1) }
-    , bounds_check{ positive_step_bounds_check }
+    , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
@@ -39,8 +39,9 @@ namespace jank::runtime::obj
     : start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ lt(static_cast<i64>(0), step.erase()) ? positive_step_bounds_check
-                                                          : negative_step_bounds_check }
+    , bounds_check{ lt(static_cast<i64>(0), step.erase())
+                      ? static_cast<bounds_check_t>(positive_step_bounds_check)
+                      : static_cast<bounds_check_t>(negative_step_bounds_check) }
   {
   }
 
@@ -62,7 +63,7 @@ namespace jank::runtime::obj
       return make_box<integer_range>(make_box<integer>(0),
                                      end,
                                      make_box<integer>(1),
-                                     positive_step_bounds_check);
+                                     static_cast<bounds_check_t>(positive_step_bounds_check));
     }
     return persistent_list::empty();
   }
@@ -86,8 +87,9 @@ namespace jank::runtime::obj
     return make_box<integer_range>(start,
                                    end,
                                    step,
-                                   is_pos(step) ? positive_step_bounds_check
-                                                : negative_step_bounds_check);
+                                   is_pos(step)
+                                     ? static_cast<bounds_check_t>(positive_step_bounds_check)
+                                     : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
   integer_range_ref integer_range::seq() const

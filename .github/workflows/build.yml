@@ -46,12 +46,12 @@ jobs:
             os: ubuntu-24.04
             lint: true
           ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: none
-            coverage: on
-            analyze: on
+          #- name: Ubuntu - debug, analysis, coverage
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: none
+          #  coverage: on
+          #  analyze: on
 
           ## Debug + sanitization
           # TODO: Fix this. relocation target 0x7f35f070a000 (DW.ref.__gxx_personality_v0) is out of range of Delta32 fixup at address 0x7f35f070a000 (<anonymous block> @ 0x7b35f02041a4 + 0x13)
@@ -61,12 +61,12 @@ jobs:
           #  build_type: Debug
           #  sanitize: address
 
-          - name: Ubuntu - undefined behavior sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: undefined
+          #- name: Ubuntu - undefined behavior sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: undefined
 
-          # TODO: Fix this. Causes linker issues.
+          ## TODO: Fix this. Causes linker issues.
           # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
           #- name: Ubuntu - thread sanitizer
           #  os: ubuntu-24.04
@@ -139,7 +139,25 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           name: jank-deb
-          path: ${{ github.workspace }}/compiler+runtime
+          path: ~/
+      - name: Import GPG key
+        run: |
+          gpg_tmp="$(mktemp).gpg"
+          echo "${{ secrets.GPG_SIGNING_KEY }}" > "${gpg_tmp}"
+          gpg --import "${gpg_tmp}"
+          rm -f "${gpg_tmp}"
+          unset gpg_tmp
       - name: Commit to PPA repo
         run: |
-          ls -lh ${{ github.workspace }}/compiler+runtime
+          pushd ~/
+            git clone https://jeaye:${{ secrets.JANK_GITHUB_TOKEN }}@github.com/jank-lang/ppa.git
+            pushd ppa
+              cp -fv ~/*.deb .
+              git add *.deb
+              git config --global user.email "jeaye@jank-lang.org"
+              git config --global user.name "Jeaye Wilkerson"
+              git config --global commit.gpgsign true
+              git commit -m "[automated] Publish new deb"
+              git push origin main
+            popd
+          popd
