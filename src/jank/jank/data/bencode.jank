@@ -48,7 +48,6 @@
   []
   (p/choice (bint) (bstring) (blist) (bdict)))
 
-
 (defn parse
   "Parse a bencode value from a string, returning jank data."
   [s]

@@ -23,11 +23,14 @@ namespace nrepl_server::inspect {
   to build a display string for CIDER."
   [x]
   (pr-str
-   `("--- Type" (:newline)
+   `("--- Type"
+     (:newline)
      (:value ~(:type-str x))
      (:newline) (:newline)
-     "--- Contents" (:newline)
+     "--- Contents"
+     (:newline)
      (:value ~(:pr-str x))
      (:newline) (:newline)
-     "--- Hash" (:newline)
+     "--- Hash"
+     (:newline)
      (:value ~(int->hex-string (:hash x))))))
