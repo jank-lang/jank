@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Only allow one build per branch at a time. New builds will cancel existing builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Rather than having every job in the matrix try to build its own Clang, we built it once
   # before running the matrix. Then we can just restore it from the cache in each job.
