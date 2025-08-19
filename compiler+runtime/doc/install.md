@@ -3,6 +3,9 @@ If you're on any of the below systems, you can install jank using your system's
 package manager.
 
 ## Homebrew (macOS or Linux)
+There is no binary package for Homebrew yet, but there's a source package which
+builds from git.
+
 ```sh
 brew install jank-lang/jank/jank
 ```
@@ -28,7 +31,7 @@ sudo apt install -y jank
 To update, just reinstall.
 
 ## Arch Linux (AUR)
-There is no binary AUR package yet, but there's a source package to build from
+There is no binary AUR package yet, but there's a source package which builds from
 git.
 
 ```bash
