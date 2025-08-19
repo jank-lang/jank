@@ -1,7 +1,5 @@
 #include "nrepl_server.hpp"
 
-#include <iostream>
-
 #include <boost/asio.hpp>
 
 namespace nrepl_server
@@ -97,13 +95,11 @@ namespace nrepl_server
   std::string nrepl_client::read_some()
   {
     auto data = impl_->read_some();
-    std::cout << "<- " << data << std::endl;
     return data;
   }
 
   void nrepl_client::write_some(std::string const &data)
   {
-    std::cout << "-> " << data << std::endl;
     impl_->write_some(data);
   }
 
