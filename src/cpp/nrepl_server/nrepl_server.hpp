@@ -17,7 +17,7 @@ namespace nrepl_server
   {
   public:
     /* Indicates that reading and writing may be performed on this client. */
-    bool is_open();
+    bool is_connected();
 
     /* Block until one or more bytes of data is read from the client. */
     std::string read_some();
@@ -39,10 +39,10 @@ namespace nrepl_server
   {
   public:
     nrepl_server(int port);
+    ~nrepl_server();
 
     /* Block until a client connects. */
     nrepl_client *accept();
-
 
   private:
     std::unique_ptr<detail::nrepl_server_impl> impl_;

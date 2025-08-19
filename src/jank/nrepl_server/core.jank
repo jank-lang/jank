@@ -1,24 +1,10 @@
 ;; -*- mode: clojurec -*-
 
 (ns nrepl-server.core
-  (:require [jank.data.bencode :as bencode]
+  (:require [nrepl-server.server :refer [read-message write-message connected?]]
             [nrepl-server.eval :refer [safe-eval]]
             [nrepl-server.inspect :refer [inspect-str]]
             [nrepl-server.util :refer [generate-uuid]]))
-
-(cpp/raw "#include <nrepl_server/nrepl_server.hpp>")
-
-(defn read-message [client-ptr]
-  (let [client (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)]
-    ;; TODO: There is no guarantee that we read an entire message. We should
-    ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
-    ;; until more data arrives.
-    (bencode/parse (cpp/.read_some client))))
-
-(defn write-message [client-ptr msg]
-  (let [client  (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)
-        msg-str (bencode/write msg)]
-    (cpp/.write_some client (cpp/cast cpp/std.string msg-str))))
 
 (defn handle-message [msg]
   (case (get msg "op")
@@ -71,8 +57,7 @@
     {:status [:done]}))
 
 (defn handle-client [client-ptr]
-  ;; TODO(jank): changing this to (loop recur) causes compiler crash
-  (while true
+  (while (connected? client-ptr)
     (when-let [msg (read-message client-ptr)]
       (println "<-" msg)
       (when-not (empty? msg)

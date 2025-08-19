@@ -23,17 +23,25 @@ namespace nrepl_server
       void accept(tcp::acceptor &acceptor)
       {
         acceptor.accept(socket_);
+        connected_ = true;
       }
 
-      bool is_open()
+      bool is_connected()
       {
-        return socket_.is_open();
+        return connected_;
       }
 
       std::string read_some()
       {
-        boost::system::error_code error_code;
-        std::size_t length = socket_.read_some(buffer(rx_buf_, rx_capacity), error_code);
+        boost::system::error_code error;
+
+        std::size_t length = socket_.read_some(buffer(rx_buf_, rx_capacity), error);
+        if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset)
+        {
+          connected_ = false;
+          return { rx_buf_, 0 };
+        }
+
         return { rx_buf_, length };
       }
 
@@ -45,6 +53,7 @@ namespace nrepl_server
 
     private:
       tcp::socket socket_;
+      bool connected_{ false };
 
       static constexpr std::size_t rx_capacity = 1024 * 1024; // 1MiB
       char rx_buf_[rx_capacity];
@@ -80,9 +89,9 @@ namespace nrepl_server
   {
   }
 
-  bool nrepl_client::is_open()
+  bool nrepl_client::is_connected()
   {
-    return impl_->is_open();
+    return impl_->is_connected();
   }
 
   std::string nrepl_client::read_some()
@@ -102,6 +111,10 @@ namespace nrepl_server
   nrepl_server::nrepl_server(int port)
     : impl_(std::make_unique<detail::nrepl_server_impl>(
         tcp::endpoint(ip::address_v4::loopback(), port)))
+  {
+  }
+
+  nrepl_server::~nrepl_server()
   {
   }
 
