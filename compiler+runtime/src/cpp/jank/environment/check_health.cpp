@@ -413,7 +413,7 @@ namespace jank::environment
     util::println("─ Slack: {}https://clojurians.slack.com/archives/C03SRH97FDK{}",
                   terminal_style::underline,
                   terminal_style::no_underline);
-    util::println("─ Github: {}https://github.com/jank-lang/jank{}",
+    util::println("─ Github: {}https://github.com/jank-lang/jank{} (cookie)",
                   terminal_style::underline,
                   terminal_style::no_underline);
 
