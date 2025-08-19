@@ -1,5 +1,3 @@
-;; -*- mode: clojurec -*-
-
 (ns jank.data.bencode
   (:require [jank.data.parsec :as p]))
 

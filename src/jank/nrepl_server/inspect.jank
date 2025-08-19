@@ -1,5 +1,3 @@
-;; -*- mode: clojurec -*-
-
 (ns nrepl-server.inspect
   ;; TODO(jank): removing this import crashes the compiler
   (:require [nrepl-server.util]))

@@ -1,5 +1,3 @@
-;; -*- mode: clojurec -*-
-
 (ns nrepl-server.capture)
 
 (cpp/raw "

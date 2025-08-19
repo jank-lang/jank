@@ -1,5 +1,3 @@
-;; -*- mode: clojurec -*-
-
 (ns nrepl-server.util)
 
 (def alpha-num  "abcdefghijklmnopqrstuvwxyz0123456789")

@@ -1,5 +1,3 @@
-;; -*- mode: clojurec -*-
-
 (ns nrepl-server.core
   (:require [nrepl-server.server :refer [read-message write-message connected?]]
             [nrepl-server.eval :refer [safe-eval]]
