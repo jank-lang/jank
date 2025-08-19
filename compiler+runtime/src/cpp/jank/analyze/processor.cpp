@@ -530,7 +530,7 @@ namespace jank::analyze
           latest_expansion(macro_expansions));
       }
       if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
-         && !cpp_util::is_convertible(val->type))
+         && !cpp_util::is_trait_convertible(val->type))
       {
         return error::analyze_invalid_cpp_constructor_call(
           util::format("'{}' cannot be constructed from a '{}'.",
@@ -961,7 +961,7 @@ namespace jank::analyze
     {
       /* TODO: Also check jank conversions. */
       auto const param_type{ Cpp::GetFunctionArgTypeFromType(source_type, i) };
-      if(!Cpp::IsImplicitlyConvertible(arg_types[i].m_Type, param_type))
+      if(!cpp_util::is_implicitly_convertible(arg_types[i].m_Type, param_type))
       {
         return error::analyze_invalid_cpp_call(
           util::format(
@@ -1012,7 +1012,7 @@ namespace jank::analyze
     auto const cast_position{ expr->position };
     expr->propagate_position(expression_position::value);
 
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
+    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
     {
       return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
@@ -1022,7 +1022,7 @@ namespace jank::analyze
                                            conversion_policy::into_object,
                                            expr);
     }
-    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_convertible(expected_type))
+    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
     {
       return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
@@ -1662,7 +1662,7 @@ namespace jank::analyze
       auto const last_expression{ body_do->values.back() };
       auto const last_expression_type{ cpp_util::expression_type(last_expression) };
       if(!cpp_util::is_any_object(last_expression_type)
-         && !cpp_util::is_convertible(last_expression_type))
+         && !cpp_util::is_trait_convertible(last_expression_type))
       {
         /* TODO: Error. */
         return error::analyze_invalid_cpp_conversion(
@@ -3229,7 +3229,7 @@ namespace jank::analyze
                                               current_frame,
                                               needs_box,
                                               sym,
-                                              nullptr,
+                                              Cpp::GetFunctionReturnType(scope),
                                               scope,
                                               expr::cpp_value::value_kind::constructor);
       }
@@ -3238,7 +3238,7 @@ namespace jank::analyze
                                             current_frame,
                                             needs_box,
                                             sym,
-                                            nullptr,
+                                            Cpp::GetPointerType(Cpp::GetTypeFromScope(scope)),
                                             scope,
                                             expr::cpp_value::value_kind::function);
     }
@@ -3750,9 +3750,10 @@ namespace jank::analyze
       auto const literal_value{ cpp_util::resolve_literal_value(str) };
       if(literal_value.is_ok())
       {
+        auto const result{ literal_value.expect_ok() };
         return build_cpp_value(try_object<obj::symbol>(l->first()),
-                               literal_value.expect_ok(),
-                               Cpp::IsConstructor(literal_value.expect_ok()),
+                               result.scope,
+                               Cpp::IsConstructor(result.scope),
                                0,
                                false,
                                current_frame,
@@ -3869,7 +3870,7 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil)) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_convertible(value_type))
+    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
@@ -3879,7 +3880,7 @@ namespace jank::analyze
                                            conversion_policy::into_object,
                                            value_expr);
     }
-    if(cpp_util::is_any_object(value_type) && cpp_util::is_convertible(type_expr->type))
+    if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type_expr->type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
@@ -4214,7 +4215,7 @@ namespace jank::analyze
                util::format(
                  "The '{}' member within '{}' is private. It can only be accessed if it's public.",
                  name,
-                 Cpp::GetTypeAsString(parent_type)),
+                 cpp_util::get_qualified_name(parent_scope)),
                object_source(member),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4225,7 +4226,7 @@ namespace jank::analyze
                util::format("The '{}' member within '{}' is protected. It can only be accessed if "
                             "it's public.",
                             name,
-                            Cpp::GetTypeAsString(parent_type)),
+                            cpp_util::get_qualified_name(parent_scope)),
                object_source(member),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4244,7 +4245,6 @@ namespace jank::analyze
           break;
         }
       }
-
 
       if(!member_scope)
       {

@@ -25,6 +25,23 @@ namespace jank::analyze::cpp_util
     static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
   }
 
+  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope)
+  {
+    /* If we have a template specialization and we want to access one of its members, we
+     * need to be sure that it's fully instantiated. If we don't, the member won't
+     * be found. */
+    if(Cpp::IsTemplateSpecialization(scope))
+    {
+      /* TODO: Get template arg info and specify all of it? */
+      if(Cpp::InstantiateTemplate(scope))
+      {
+        reset_sfinae_state();
+        return err("Unable to instantiate template.");
+      }
+    }
+    return ok();
+  }
+
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
   {
     while(ptr_count != 0)
@@ -65,17 +82,9 @@ namespace jank::analyze::cpp_util
       auto const dot{ sym.find('.', new_start) };
       if(dot == jtl::immutable_string::npos)
       {
-        /* If we have a template specialization and we want to access one of its members, we
-         * need to be sure that it's fully instantiated. If we don't, the member won't
-         * be found. */
-        if(Cpp::IsTemplateSpecialization(scope))
+        if(auto const res = instantiate_if_needed(scope); res.is_err())
         {
-          /* TODO: Get template arg info and specify all of it? */
-          if(Cpp::InstantiateTemplate(scope))
-          {
-            reset_sfinae_state();
-            return err("Unable to instantiate template.");
-          }
+          return res.expect_err();
         }
         auto const old_scope{ scope };
         auto const subs{ sym.substr(new_start) };
@@ -144,20 +153,16 @@ namespace jank::analyze::cpp_util
     auto const type{ alias_decl->getUnderlyingType().getAsOpaquePtr() };
     auto const scope{ Cpp::GetScopeFromType(type) };
 
-    if(Cpp::IsTemplateSpecialization(scope))
+    if(auto const res = instantiate_if_needed(scope); res.is_err())
     {
-      /* TODO: Get template arg info and specify all of it? */
-      if(Cpp::InstantiateTemplate(scope))
-      {
-        reset_sfinae_state();
-        return err("Unable to instantiate template.");
-      }
+      return res.expect_err();
     }
 
     return type;
   }
 
-  jtl::string_result<jtl::ptr<void>> resolve_literal_value(jtl::immutable_string const &literal)
+  jtl::string_result<literal_value_result>
+  resolve_literal_value(jtl::immutable_string const &literal)
   {
     /* TODO: Need a call to instantiate in here? */
     clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
@@ -188,14 +193,59 @@ namespace jank::analyze::cpp_util
 
     auto const var_decl{ llvm::cast<clang::VarDecl>(*translation_unit->decls_begin()) };
     auto const init{ var_decl->getInit() };
+    jtl::ptr<void> type;
+    auto decl_ref_expr{ llvm::dyn_cast<clang::DeclRefExpr>(init->IgnoreParenImpCasts()) };
 
-    if(auto const decl_ref = llvm::dyn_cast<clang::DeclRefExpr>(init->IgnoreParenImpCasts()))
+    if(auto const cast_expr = llvm::dyn_cast<clang::CXXStaticCastExpr>(init->IgnoreParenImpCasts()))
     {
-      auto const decl{ decl_ref->getDecl() };
+      type = cast_expr->getType().getAsOpaquePtr();
+      auto const sub_expr{ cast_expr->getSubExpr()->IgnoreParenImpCasts() };
+      if(auto const dre = llvm::dyn_cast<clang::DeclRefExpr>(sub_expr))
+      {
+        decl_ref_expr = dre;
+      }
+    }
+
+    if(decl_ref_expr)
+    {
+      auto const decl{ decl_ref_expr->getDecl() };
+      Cpp::DumpScope(decl);
       if(llvm::isa<clang::VarDecl>(decl) || llvm::isa<clang::EnumConstantDecl>(decl)
          || llvm::isa<clang::FunctionDecl>(decl) || llvm::isa<clang::FunctionTemplateDecl>(decl))
       {
-        return decl;
+        if(!type)
+        {
+          type = Cpp::GetTypeFromScope(decl);
+        }
+        if(auto const res = instantiate_if_needed(decl); res.is_err())
+        {
+          return res.expect_err();
+        }
+
+        if(auto const f_decl = llvm::dyn_cast<clang::FunctionDecl>(decl))
+        {
+          auto const scope{ Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(f_decl)) };
+          if(scope)
+          {
+            if(auto const res = instantiate_if_needed(scope); res.is_err())
+            {
+              return res.expect_err();
+            }
+          }
+        }
+        if(auto const f_decl = llvm::dyn_cast<clang::FunctionTemplateDecl>(decl))
+        {
+          auto const scope{ Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(f_decl)) };
+          if(scope)
+          {
+            if(auto const res = instantiate_if_needed(scope); res.is_err())
+            {
+              return res.expect_err();
+            }
+          }
+        }
+
+        return literal_value_result{ decl, type };
       }
     }
 
@@ -233,7 +283,7 @@ namespace jank::analyze::cpp_util
    * needed. */
   jtl::immutable_string get_qualified_name(jtl::ptr<void> const scope)
   {
-    auto res{ Cpp::GetQualifiedName(scope) };
+    auto res{ Cpp::GetQualifiedCompleteName(scope) };
     if(res == "<unnamed>")
     {
       res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
@@ -270,6 +320,18 @@ namespace jank::analyze::cpp_util
     static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
       Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("std::nullptr_t"))) };
     return Cpp::GetCanonicalType(type) == ret;
+  }
+
+  bool is_implicitly_convertible(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    auto const from_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(from)) };
+    auto const to_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to)) };
+    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref))
+    {
+      return true;
+    }
+
+    return Cpp::IsImplicitlyConvertible(from, to);
   }
 
   bool is_untyped_object(jtl::ptr<void> const type)
@@ -356,6 +418,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> non_void_expression_type(expression_ref const expr)
   {
     auto const type{ expression_type(expr) };
+    jank_debug_assert(type);
     if(Cpp::IsVoid(type))
     {
       return untyped_object_ptr_type();
@@ -410,12 +473,12 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        if(Cpp::IsImplicitlyConvertible(args[arg_idx + member_offset].m_Type, param_type))
+        if(is_implicitly_convertible(args[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
         }
 
-        if(is_convertible(param_type))
+        if(is_trait_convertible(param_type))
         {
           if(needed_conversion.is_some())
           {
@@ -467,7 +530,7 @@ namespace jank::analyze::cpp_util
   }
 
   /* TODO: Cache result. */
-  bool is_convertible(jtl::ptr<void> const type)
+  bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo const arg{ Cpp::GetTypeWithoutCv(
@@ -596,7 +659,7 @@ namespace jank::analyze::cpp_util
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr)
   {
     auto const type{ expression_type(expr) };
-    if(!is_any_object(type) && !is_convertible(type))
+    if(!is_any_object(type) && !is_trait_convertible(type))
     {
       return error::analyze_invalid_conversion(
         util::format("This function is returning a native object of type '{}', which is not "
