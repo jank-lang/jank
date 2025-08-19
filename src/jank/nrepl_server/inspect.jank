@@ -1,20 +1,35 @@
 ;; -*- mode: clojurec -*-
 
 (ns nrepl-server.inspect
-  (:require [nrepl-server.util :refer [escape-quotes]]))
+  ;; TODO(jank): removing this import crashes the compiler
+  (:require [nrepl-server.util]))
 
-(defn nl []
-  "(:newline)")
+(cpp/raw "
+namespace nrepl_server::inspect {
+  std::string int_to_hex_string(int i) {
+    std::stringstream sstream;
+    sstream << std::hex << i;
+    return sstream.str();
+  }
+}
+")
 
-(defn inspect-str [x]
-  (str
-   "("
-   "\"--- Type\" " (nl)
-   "(:value \"" (escape-quotes (:type-str x)) "\") "
-   (nl) (nl)
-   "\"--- Contents\" " (nl)
-   "(:value \"" (escape-quotes (:pr-str x)) "\") "
-   (nl) (nl)
-   "\"--- Hash\" " (nl)
-   "(:value \"" (:hash x) "\") "
-   ")"))
+(defn int->hex-string [i]
+  (str "0x" (cpp/nrepl_server.inspect.int_to_hex_string i)))
+
+;; TODO(jank): this causes the compiler to segfault
+;; (cpp/std.format (cpp/cast cpp/std.string "{:x}") 123)
+
+(defn inspect-str
+  "Inspect an evaluation result (a map with keys :type-str, :pr-str, and :hash)
+  to build a display string for CIDER."
+  [x]
+  (pr-str
+   `("--- Type" (:newline)
+     (:value ~(:type-str x))
+     (:newline) (:newline)
+     "--- Contents" (:newline)
+     (:value ~(:pr-str x))
+     (:newline) (:newline)
+     "--- Hash" (:newline)
+     (:value ~(int->hex-string (:hash x))))))
