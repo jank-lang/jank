@@ -623,38 +623,72 @@ target_link_libraries(
 )
 # ---- libfolly.a ----
 
-# ---- jank executable ----
+# ---- jank phase 1 executable ----
 add_executable(
-  jank_exe
+  jank_exe_phase_1
   src/cpp/main.cpp
 )
-add_executable(jank::exe ALIAS jank_exe)
+add_executable(jank::exe ALIAS jank_exe_phase_1)
 
-set_property(TARGET jank_exe PROPERTY OUTPUT_NAME jank)
+set_property(TARGET jank_exe_phase_1 PROPERTY OUTPUT_NAME jank-phase-1)
 
 # Symbol exporting for JIT.
-set_target_properties(jank_exe PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(jank_exe_phase_1 PROPERTIES ENABLE_EXPORTS 1)
 
-target_compile_features(jank_exe PRIVATE ${jank_cxx_standard})
-target_compile_options(jank_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
-target_include_directories(jank_exe SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
-target_link_directories(jank_exe PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
-target_link_options(jank_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
+target_compile_features(jank_exe_phase_1 PRIVATE ${jank_cxx_standard})
+target_compile_options(jank_exe_phase_1 PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+target_include_directories(jank_exe_phase_1 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
+target_link_directories(jank_exe_phase_1 PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
+target_link_options(jank_exe_phase_1 PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
 
 target_link_libraries(
-  jank_exe PUBLIC
+  jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
   libzip::zip z
   LLVM clang-cpp
   OpenSSL::Crypto
 )
 
-jank_hook_llvm(jank_exe)
+jank_hook_llvm(jank_exe_phase_1)
 
-add_dependencies(jank_exe jank_lib_standalone)
+add_dependencies(jank_exe_phase_1 jank_lib_standalone)
 
-#set_target_properties(jank_exe PROPERTIES LINK_FLAGS_RELEASE "-s")
-# ---- jank executable ----
+#set_target_properties(jank_exe_phase_1 PROPERTIES LINK_FLAGS_RELEASE "-s")
+# ---- jank phase 1 executable ----
+
+# ---- jank phase 2 executable ----
+add_executable(
+  jank_exe_phase_2
+  src/cpp/main.cpp
+)
+add_executable(jank::exe ALIAS jank_exe_phase_2)
+
+set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
+
+# Symbol exporting for JIT.
+set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
+
+target_compile_features(jank_exe_phase_2 PRIVATE ${jank_cxx_standard})
+target_compile_options(jank_exe_phase_2 PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -DJANK_PHASE_2)
+target_include_directories(jank_exe_phase_2 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
+target_link_directories(jank_exe_phase_2 PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
+target_link_options(jank_exe_phase_2 PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
+
+target_link_libraries(
+  jank_exe_phase_2 PUBLIC
+  ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
+  libzip::zip z
+  LLVM clang-cpp
+  OpenSSL::Crypto
+  ${CMAKE_BINARY_DIR}/clojure.core.o
+)
+
+jank_hook_llvm(jank_exe_phase_2)
+
+add_dependencies(jank_exe_phase_2 jank_lib_standalone jank_core_libraries)
+
+#set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
+# ---- jank phase 2 executable ----
 
 # ---- Tests ----
 if(jank_test)
@@ -683,7 +717,7 @@ if(jank_test)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
-  add_dependencies(jank_test_exe jank_exe jank_core_libraries)
+  add_dependencies(jank_test_exe jank_exe_phase_1 jank_core_libraries)
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
@@ -730,7 +764,7 @@ set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
 list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1
   OUTPUT ${jank_incremental_pch_flag}
   COMMAND_EXPAND_LISTS
   VERBATIM
@@ -765,9 +799,10 @@ add_custom_target(
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
-  COMMAND ${CMAKE_BINARY_DIR}/jank compile-module clojure.core
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/clojure.core.o
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -o ${CMAKE_BINARY_DIR}/clojure.core.o clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

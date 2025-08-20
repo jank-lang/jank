@@ -1,6 +1,6 @@
 # We don't have any dynamic lib deps which are installed alongside jank.
 set(CMAKE_SKIP_INSTALL_RPATH ON)
-install(TARGETS jank_exe DESTINATION bin)
+install(TARGETS jank_exe_phase_2 DESTINATION bin)
 install(FILES ${CMAKE_BINARY_DIR}/libjank.a DESTINATION lib/jank/${PROJECT_VERSION}/lib)
 
 # This is a helper which recursively takes headers from one directory
@@ -118,7 +118,7 @@ if(jank_local_clang AND jank_install_local_clang)
   # When the compiler is installed, it needs to be relinked to its shared objects.
   # We know where they'll be, relative to the compiler, though.
   set(CMAKE_SKIP_INSTALL_RPATH OFF)
-  set_target_properties(jank_exe PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
+  set_target_properties(jank_exe_phase_2 PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
 
   install(
     PROGRAMS
