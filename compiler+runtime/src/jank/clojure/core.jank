@@ -4142,8 +4142,8 @@
 (defmacro ns
   "Sets *ns* to the namespace named by name (unevaluated), creating it
    if needed. References can be zero or more of: (:refer-clojure ...)
-   (:require ...) (:use ...) (:import ...) (:load ...)
-   with the syntax of refer-clojure/require/use/import/load respectively."
+   (:require ...) (:use ...) (:load ...)
+   with the syntax of refer-clojure/require/use/load respectively."
   [name & references]
   (let [process-reference (fn [reference]
                             (let [kname (first reference)
@@ -5101,22 +5101,10 @@
     ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
   (throw "TODO: port await-for"))
 
-(defmacro import
-  "import-list => (package-symbol class-name-symbols*)
-
-  For each name in class-name-symbols, adds a mapping from name to the
-  class named by package.name to the current namespace. Use :import in the ns
-  macro in preference to calling this directly."
-  [& import-symbols-or-lists]
-  (let [specs (map #(if (and (seq? %) (= 'quote (first %))) (second %) %)
-                   import-symbols-or-lists)]
-    `(do ~@(map #(list 'clojure.core/import* %)
-                (reduce (fn [v spec]
-                          (if (symbol? spec)
-                            (conj v (name spec))
-                            (let [p (first spec) cs (rest spec)]
-                              (into v (map #(str p "." %) cs)))))
-                        [] specs)))))
+(defn import
+  "import is not implemented for jank, but a var is still bound to its symbol for portability. import always throws an exception"
+  [& _]
+  (throw "import is not supported in jank, for C/C++ dependency interoperability use cpp/raw with #include, e.g. (cpp/raw \"#include \"dependency.h\")\")"))
 
 (defn into-array
   "Returns an array with components set to the values in aseq. The array's
@@ -5419,8 +5407,6 @@
   ;;      (. ~t (~name ~@args))))
   (throw "TODO: port memfn"))
 
-;; (import '(java.lang.reflect Array))
-
 (defn alength
   "Returns the length of the Java array. Works on arrays of all
   types."
@@ -5501,9 +5487,8 @@
 (defn make-array
   "Creates and returns an array of instances of the specified class of
   the specified dimension(s).  Note that a class object is required.
-  Class objects can be obtained by using their imported or
-  fully-qualified name.  Class objects for the primitive types can be
-  obtained using, e.g., Integer/TYPE."
+  Class objects can be obtained by using their name.
+  Class objects for the primitive types can be obtained using, e.g., Integer/TYPE."
   ([#_Class type len]
   ;;  (. Array (newInstance type (int len)))
    (throw "TODO: port make-array"))
