@@ -5102,7 +5102,7 @@
   (throw "TODO: port await-for"))
 
 (defn import
-  "import is not implemented for jank, but var is still bound for portability. import always throws an exception"
+  "import is not implemented for jank, but a var is still bound to its symbol for portability. import always throws an exception"
   [& _]
   (throw "import is not supported in jank, for C/C++ dependency interoperability use cpp/raw with #include, e.g. (cpp/raw \"#include \"dependency.h\")\")"))
 
@@ -5487,9 +5487,8 @@
 (defn make-array
   "Creates and returns an array of instances of the specified class of
   the specified dimension(s).  Note that a class object is required.
-  Class objects can be obtained by using their imported or
-  fully-qualified name.  Class objects for the primitive types can be
-  obtained using, e.g., Integer/TYPE."
+  Class objects can be obtained by using their name.
+  Class objects for the primitive types can be obtained using, e.g., Integer/TYPE."
   ([#_Class type len]
   ;;  (. Array (newInstance type (int len)))
    (throw "TODO: port make-array"))
