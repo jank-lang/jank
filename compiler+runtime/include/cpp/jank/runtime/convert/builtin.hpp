@@ -212,8 +212,9 @@ namespace jank::runtime
   };
 
   /* C strings. */
-  template <>
-  struct convert<char const *>
+  template <typename T>
+  requires(jtl::is_same<char const *, std::decay_t<T>>)
+  struct convert<T>
   {
     static constexpr obj::persistent_string_ref into_object(char const * const o)
     {

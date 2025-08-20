@@ -30,7 +30,7 @@ namespace jank::analyze::cpp_util
     /* If we have a template specialization and we want to access one of its members, we
      * need to be sure that it's fully instantiated. If we don't, the member won't
      * be found. */
-    if(Cpp::IsTemplateSpecialization(scope))
+    if(Cpp::IsTemplateSpecialization(scope) || Cpp::IsTemplatedFunction(scope))
     {
       /* TODO: Get template arg info and specify all of it? */
       if(Cpp::InstantiateTemplate(scope))

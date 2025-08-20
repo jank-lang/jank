@@ -1032,10 +1032,13 @@ namespace jank::analyze
                                            conversion_policy::from_object,
                                            expr);
     }
-    else if((Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+    else if(/* Up cast. */
+            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
                                     Cpp::GetUnderlyingType(expected_type)))
+            /* Same type or adding reference. */
             || (Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
                 && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+            /* Matching nullptr to any pointer type. */
             || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type)))
     {
       expr->propagate_position(cast_position);
