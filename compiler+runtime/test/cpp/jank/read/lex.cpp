@@ -1279,14 +1279,41 @@ namespace jank::read::lex
 
     TEST_CASE("Character")
     {
-      SUBCASE("Whitespace after \\")
+      SUBCASE("Whitespace")
       {
-        processor p{ R"(\ )" };
+        processor p{ R"(\tab \newline \ \formfeed \return \ \ \ \ \space \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \　)" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\ "sv }
-        }));
+                { 0, 4, token_kind::character, "\tab"sv },
+                { 5, 8, token_kind::character, "\newline"sv },
+                { 14, 2, token_kind::character, "\"sv },
+                { 17, 9, token_kind::character, "\formfeed"sv },
+                { 27, 7, token_kind::character, "\return"sv },
+                { 35, 2, token_kind::character, "\"sv },
+                { 38, 2, token_kind::character, "\"sv },
+                { 41, 2, token_kind::character, "\"sv },
+                { 44, 2, token_kind::character, "\"sv },
+                { 47, 6, token_kind::character, "\space"sv },
+                { 54, 2, token_kind::character, "\ "sv },
+                { 57, 2, token_kind::character, "\ "sv },
+                { 60, 2, token_kind::character, "\ "sv },
+                { 63, 2, token_kind::character, "\ "sv },
+                { 66, 2, token_kind::character, "\ "sv },
+                { 69, 2, token_kind::character, "\ "sv },
+                { 72, 2, token_kind::character, "\ "sv },
+                { 75, 2, token_kind::character, "\ "sv },
+                { 78, 2, token_kind::character, "\ "sv },
+                { 81, 2, token_kind::character, "\ "sv },
+                { 84, 2, token_kind::character, "\ "sv },
+                { 87, 2, token_kind::character, "\ "sv },
+                { 90, 2, token_kind::character, "\ "sv },
+                { 93, 2, token_kind::character, "\ "sv },
+                { 96, 2, token_kind::character, "\ "sv },
+                { 99, 2, token_kind::character, "\ "sv },
+                { 102, 2, token_kind::character, "\ "sv },
+                { 105, 2, token_kind::character, "\　"sv }
+              }));
       }
 
       SUBCASE("Dangling \\")
