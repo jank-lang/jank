@@ -1217,16 +1217,14 @@ namespace jank::codegen
     llvm::Value *call{};
     if(expr->recursion_ref.fn_ctx->is_variadic)
     {
-      util::println("Chicken Jockey!");
       auto const call_fn_name(
         util::format("{}_{}", munge(fn_expr.unique_name), expr->recursion_ref.fn_ctx->param_count));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
       auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
       call = ctx->builder->CreateCall(fn, arg_handles);
     }
-    else if(arity.fn_ctx->is_variadic) 
+    else if(arity.fn_ctx->is_variadic)
     {
-      util::println("Taco!");
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
       auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
@@ -1234,7 +1232,6 @@ namespace jank::codegen
     }
     else
     {
-      util::println("Burrito!");
       auto const call_fn_name(
         util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
