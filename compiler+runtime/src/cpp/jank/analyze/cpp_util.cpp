@@ -161,6 +161,21 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  /* Resolving arbitrary literal C++ values is a difficult task. Firstly, we need to handle
+   * invalid input gracefully and detect common issues. Secondly, we need to handle all sorts
+   * of values, include functions, enums, class types, as well as primitives. Thirdly, we need
+   * to maintain the reference/pointer/cv info of the original value.
+   *
+   * We accomplish this in two steps.
+   *
+   * The first step happens here, which is to take the arbitrary C++ string and build a
+   * function around it. We then compile that function so we can later build a call to it and
+   * know its final type. This is sufficient for evaluation.
+   *
+   * The second steps happens in codegen, where we need to copy the function code for this
+   * value literal into the module we're building. We only do this during AOT compilation, since
+   * it would otherwise cause an ODR violation. However, AOT builds still need that code, so
+   * it has to be there. */
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {

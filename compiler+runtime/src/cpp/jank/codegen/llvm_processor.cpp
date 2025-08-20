@@ -1804,6 +1804,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::cpp_call_ref const expr, expr::function_arity const &arity)
   {
+    /* This is the second step for `cpp/value` literals. */
     if(target == compilation_target::module && !expr->function_code.empty())
     {
       auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(expr->function_code.c_str()) };

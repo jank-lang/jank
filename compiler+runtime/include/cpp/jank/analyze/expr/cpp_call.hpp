@@ -32,6 +32,8 @@ namespace jank::analyze::expr
     jtl::ptr<void> type{};
     expression_ref source_expr;
     native_vector<expression_ref> arg_exprs;
+    /* Literals from `cpp/value` will have code which needs to be compiled into the
+     * IR module. We hang onto it here. Most of the time, this will be empty. */
     jtl::immutable_string function_code;
   };
 }
