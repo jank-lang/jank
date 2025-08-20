@@ -33,6 +33,11 @@
 #include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 
+
+#ifdef JANK_PHASE_2
+extern "C" jank_object_ref jank_load_clojure_core();
+#endif
+
 namespace jank
 {
   using util::cli::opts;
@@ -312,7 +317,12 @@ int main(int const argc, char const **argv)
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 
-    Cpp::EnableDebugOutput(true);
+#ifdef JANK_PHASE_2
+    jank_load_clojure_core();
+    __rt_ctx->module_loader.set_is_loaded("/clojure.core");
+#endif
+
+    Cpp::EnableDebugOutput(false);
 
     switch(jank::util::cli::opts.command)
     {
