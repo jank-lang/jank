@@ -3749,7 +3749,7 @@ namespace jank::analyze
       auto const literal_value{ cpp_util::resolve_literal_value(str) };
       if(literal_value.is_ok())
       {
-        auto const result{ literal_value.expect_ok() };
+        auto const &result{ literal_value.expect_ok() };
         auto const source{ jtl::make_ref<expr::cpp_value>(position,
                                                           current_frame,
                                                           needs_box,

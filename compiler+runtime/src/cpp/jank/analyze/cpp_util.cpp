@@ -215,7 +215,7 @@ namespace jank::analyze::cpp_util
       return err("Unable to load C++ literal.");
     }
 
-    auto const f_decl{ llvm::dyn_cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
+    auto const f_decl{ llvm::cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
     auto const body{ f_decl->getBody() };
     auto const body_size{ std::distance(body->child_begin(), body->child_end()) };
     if(body_size != 1)
