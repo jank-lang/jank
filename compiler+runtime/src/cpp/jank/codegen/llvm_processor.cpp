@@ -1804,6 +1804,16 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::cpp_call_ref const expr, expr::function_arity const &arity)
   {
+    if(target == compilation_target::module && !expr->function_code.empty())
+    {
+      auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(expr->function_code.c_str()) };
+      if(!parse_res)
+      {
+        throw std::runtime_error{ "Unable to parse C++ literal." };
+      }
+      link_module(*ctx, parse_res->TheModule.get());
+    }
+
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ llvm::cast<expr::cpp_value>(expr->source_expr.data) };

@@ -3238,7 +3238,7 @@ namespace jank::analyze
                                             current_frame,
                                             needs_box,
                                             sym,
-                                            Cpp::GetPointerType(Cpp::GetTypeFromScope(scope)),
+                                            Cpp::GetTypeFromScope(scope),
                                             scope,
                                             expr::cpp_value::value_kind::function);
     }
@@ -3320,7 +3320,6 @@ namespace jank::analyze
     else if(Cpp::IsFunction(scope))
     {
       vk = expr::cpp_value::value_kind::function;
-      type = Cpp::GetPointerType(type);
     }
 
     if(vk.is_some())
@@ -3698,13 +3697,13 @@ namespace jank::analyze
     {
       if(kind == literal_kind::type)
       {
-        return error::analyze_invalid_cpp_type("The string argument to 'cpp/type' must contain"
-                                               "a valid C++ expression.",
+        return error::analyze_invalid_cpp_type("The string argument to 'cpp/type' must contain "
+                                               "a valid C++ type.",
                                                object_source(string_obj),
                                                latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 1));
       }
-      return error::analyze_invalid_cpp_value("The string argument to 'cpp/value' must contain"
+      return error::analyze_invalid_cpp_value("The string argument to 'cpp/value' must contain "
                                               "a valid C++ expression.",
                                               object_source(string_obj),
                                               latest_expansion(macro_expansions))
@@ -3751,15 +3750,22 @@ namespace jank::analyze
       if(literal_value.is_ok())
       {
         auto const result{ literal_value.expect_ok() };
-        return build_cpp_value(try_object<obj::symbol>(l->first()),
-                               result.scope,
-                               Cpp::IsConstructor(result.scope),
-                               0,
-                               false,
-                               current_frame,
-                               position,
-                               needs_box,
-                               macro_expansions);
+        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+                                                          current_frame,
+                                                          needs_box,
+                                                          /* TODO: Is symbol needed? */
+                                                          try_object<obj::symbol>(l->first()),
+                                                          Cpp::GetTypeFromScope(result.fn_scope),
+                                                          result.fn_scope,
+                                                          expr::cpp_value::value_kind::function) };
+        auto const res{
+          build_cpp_call(source, {}, {}, current_frame, position, needs_box, macro_expansions)
+        };
+        if(res.is_ok())
+        {
+          llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
+        }
+        return res;
       }
 
       return error::analyze_invalid_cpp_value(literal_value.expect_err(),

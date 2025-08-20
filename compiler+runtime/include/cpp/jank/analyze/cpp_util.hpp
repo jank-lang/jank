@@ -12,8 +12,9 @@ namespace jank::analyze::cpp_util
 {
   struct literal_value_result
   {
-    jtl::ptr<void> scope;
-    jtl::ptr<void> type;
+    jtl::ptr<void> fn_scope{};
+    jtl::ptr<void> ret_type{};
+    jtl::immutable_string function_code{};
   };
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope);

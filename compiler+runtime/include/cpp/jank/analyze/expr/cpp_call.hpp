@@ -16,6 +16,13 @@ namespace jank::analyze::expr
              jtl::ptr<void> type,
              expression_ref source_expr,
              native_vector<expression_ref> &&arg_exprs);
+    cpp_call(expression_position position,
+             local_frame_ptr frame,
+             bool needs_box,
+             jtl::ptr<void> type,
+             expression_ref source_expr,
+             native_vector<expression_ref> &&arg_exprs,
+             jtl::immutable_string const &function_code);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
@@ -25,5 +32,6 @@ namespace jank::analyze::expr
     jtl::ptr<void> type{};
     expression_ref source_expr;
     native_vector<expression_ref> arg_exprs;
+    jtl::immutable_string function_code;
   };
 }

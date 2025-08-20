@@ -18,7 +18,7 @@
             bar<T> meow()
             { return {}; }
           }")
-(let* [meow (cpp/value "jank::cpp::call::member::pass_base_template::meow<int>")
+(let* [meow (cpp/value "&jank::cpp::call::member::pass_base_template::meow<int>")
        bar (meow)
        a (cpp/.get_a bar)
        b (cpp/.get_b bar)]

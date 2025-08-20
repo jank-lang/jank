@@ -23,6 +23,21 @@ namespace jank::analyze::expr
   {
   }
 
+  cpp_call::cpp_call(expression_position const position,
+                     local_frame_ptr const frame,
+                     bool const needs_box,
+                     jtl::ptr<void> const type,
+                     expression_ref const source_expr,
+                     native_vector<expression_ref> &&arg_exprs,
+                     jtl::immutable_string const &function_code)
+    : expression{ expr_kind, position, frame, needs_box }
+    , type{ type }
+    , source_expr{ source_expr }
+    , arg_exprs{ jtl::move(arg_exprs) }
+    , function_code{ function_code }
+  {
+  }
+
   void cpp_call::propagate_position(expression_position const pos)
   {
     position = pos;

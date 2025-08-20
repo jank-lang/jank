@@ -171,86 +171,53 @@ namespace jank::analyze::cpp_util
     diag.setClient(new clang::IgnoringDiagConsumer{}, true);
     util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
-    auto const alias{ runtime::__rt_ctx->unique_string() };
-    auto const code{ util::format("auto && {} = {};", runtime::munge(alias), literal) };
-    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!res)
+    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    auto const code{
+      util::format("inline decltype(auto) {}(){ return {}; }", runtime::munge(alias), literal)
+    };
+    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!parse_res)
     {
       return err("Unable to parse C++ literal.");
     }
 
-    auto const * const translation_unit{ res->TUPart };
+    auto const * const translation_unit{ parse_res->TUPart };
+    translation_unit->dump();
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)
     {
       return err("Invalid C++ literal.");
     }
-    if(size != 1)
+    else if(size != 1)
     {
       return err("Extra expressions found in C++ literal.");
     }
 
-    auto const var_decl{ llvm::cast<clang::VarDecl>(*translation_unit->decls_begin()) };
-    auto const init{ var_decl->getInit() };
-    jtl::ptr<void> type;
-    auto decl_ref_expr{ llvm::dyn_cast<clang::DeclRefExpr>(init->IgnoreParenImpCasts()) };
-
-    if(auto const cast_expr = llvm::dyn_cast<clang::CXXStaticCastExpr>(init->IgnoreParenImpCasts()))
+    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
+    if(exec_res)
     {
-      type = cast_expr->getType().getAsOpaquePtr();
-      auto const sub_expr{ cast_expr->getSubExpr()->IgnoreParenImpCasts() };
-      if(auto const dre = llvm::dyn_cast<clang::DeclRefExpr>(sub_expr))
+      return err("Unable to load C++ literal.");
+    }
+
+    auto const f_decl{ llvm::dyn_cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
+    auto const body{ f_decl->getBody() };
+    auto const body_size{ std::distance(body->child_begin(), body->child_end()) };
+    if(body_size != 1)
+    {
+      return err("Extra expressions found in C++ literal.");
+    }
+
+    auto const ret_type{ Cpp::GetFunctionReturnType(f_decl) };
+    if(auto const ret_scope = Cpp::GetScopeFromType(ret_type))
+    {
+      if(auto const res = instantiate_if_needed(ret_scope); res.is_err())
       {
-        decl_ref_expr = dre;
+        return res.expect_err();
       }
     }
 
-    if(decl_ref_expr)
-    {
-      auto const decl{ decl_ref_expr->getDecl() };
-      Cpp::DumpScope(decl);
-      if(llvm::isa<clang::VarDecl>(decl) || llvm::isa<clang::EnumConstantDecl>(decl)
-         || llvm::isa<clang::FunctionDecl>(decl) || llvm::isa<clang::FunctionTemplateDecl>(decl))
-      {
-        if(!type)
-        {
-          type = Cpp::GetTypeFromScope(decl);
-        }
-        if(auto const res = instantiate_if_needed(decl); res.is_err())
-        {
-          return res.expect_err();
-        }
-
-        if(auto const f_decl = llvm::dyn_cast<clang::FunctionDecl>(decl))
-        {
-          auto const scope{ Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(f_decl)) };
-          if(scope)
-          {
-            if(auto const res = instantiate_if_needed(scope); res.is_err())
-            {
-              return res.expect_err();
-            }
-          }
-        }
-        if(auto const f_decl = llvm::dyn_cast<clang::FunctionTemplateDecl>(decl))
-        {
-          auto const scope{ Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(f_decl)) };
-          if(scope)
-          {
-            if(auto const res = instantiate_if_needed(scope); res.is_err())
-            {
-              return res.expect_err();
-            }
-          }
-        }
-
-        return literal_value_result{ decl, type };
-      }
-    }
-
-    return err("Unable to resolve this to a value which jank can use. jank supports literal "
-               "variable, enum, and function values.");
+    return literal_value_result{ f_decl, ret_type, code };
   }
 
   /* When we're looking up operator usage, for example, we need to look in the scopes for
