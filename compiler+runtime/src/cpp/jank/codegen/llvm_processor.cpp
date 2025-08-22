@@ -1164,7 +1164,8 @@ namespace jank::codegen
 
     if(expr->recursion_ref.fn_ctx->is_variadic)
     {
-      arg_handles.emplace_back(gen_function_instance(arity.fn_ctx->fn.as_ref(), arity));
+      arg_handles.emplace_back(
+        gen_function_instance(expr->recursion_ref.fn_ctx->fn.as_ref(), arity));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
     else if(is_closure)
