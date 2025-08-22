@@ -721,6 +721,14 @@ namespace jank::analyze
       {
         is_member_call = true;
       }
+
+      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
+      {
+        return error::analyze_invalid_cpp_function_call(res.expect_err(),
+                                                        object_source(val->form),
+                                                        latest_expansion(macro_expansions));
+      }
+
       //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       auto const conversion_res{
         apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
@@ -1002,6 +1010,8 @@ namespace jank::analyze
     if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
        || (Cpp::GetCanonicalType(expr_type)
            == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
+       || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expr_type))
+           == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type)))
        || Cpp::IsTypeDerivedFrom(Cpp::GetCanonicalType(expr_type),
                                  Cpp::GetCanonicalType(expected_type))
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
@@ -1036,7 +1046,8 @@ namespace jank::analyze
             (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
                                     Cpp::GetUnderlyingType(expected_type)))
             /* Same type or adding reference. */
-            || (Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+            || (Cpp::GetCanonicalType(expr_type)
+                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
                 && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
             /* Matching nullptr to any pointer type. */
             || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type)))

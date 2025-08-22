@@ -197,7 +197,6 @@ namespace jank::analyze::cpp_util
     }
 
     auto const * const translation_unit{ parse_res->TUPart };
-    translation_unit->dump();
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)

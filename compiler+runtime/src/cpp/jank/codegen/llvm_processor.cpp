@@ -310,8 +310,13 @@ namespace jank::codegen
   {
     /* TODO: If output is void, just return nil. */
     conversion_type = Cpp::GetNonReferenceType(conversion_type);
-    auto const is_input_indirect{ Cpp::IsReferenceType(input_type)
-                                  || Cpp::IsPointerType(input_type) };
+
+    /* References to arrays are just treated as pointers, since that's the decayed type.
+     * That requires a bit of a dance here, though. */
+    auto const is_arg_ref{ Cpp::IsReferenceType(input_type)
+                           && !(Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
+    auto const is_arg_ptr{ Cpp::IsPointerType(input_type)
+                           || (Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
     //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
     //              Cpp::GetTypeAsString(input_type),
     //              Cpp::GetTypeAsString(output_type),
@@ -339,8 +344,12 @@ namespace jank::codegen
         Cpp::GetTypeAsString(input_type)) };
     }
     auto const match_name{ Cpp::GetCompleteName(match) };
-    auto const fn_callable{ Cpp::MakeAotCallable(match) };
+    auto const param_type{ Cpp::GetFunctionArgType(match, 0) };
+    auto const is_param_indirect{
+      param_type && (Cpp::IsReferenceType(param_type) || Cpp::IsPointerType(param_type))
+    };
 
+    auto const fn_callable{ Cpp::MakeAotCallable(match) };
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
 
     llvm::Value *arg_alloc{ arg };
@@ -350,7 +359,8 @@ namespace jank::codegen
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
       ctx.builder->CreateStore(arg, arg_alloc);
     }
-    else if(is_input_indirect && llvm::isa<llvm::AllocaInst>(arg))
+    else if((is_arg_ref && llvm::isa<llvm::AllocaInst>(arg))
+            || (is_arg_ptr && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg)))
     {
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
