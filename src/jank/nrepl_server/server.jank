@@ -12,11 +12,11 @@
 ;;     (cpp/box (cpp/.accept server))))
 
 (defn connected? [client-ptr]
-  (let [client (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)]
+  (let [client (cpp/unbox cpp/nrepl_server.client* client-ptr)]
     (cpp/.is_connected client)))
 
 (defn read-message [client-ptr]
-  (let [client (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)
+  (let [client (cpp/unbox cpp/nrepl_server.client* client-ptr)
         msg-str (cpp/.read_some client)]
     (println "<-" msg-str)
     ;; TODO: There is no guarantee that we read an entire message. We should
@@ -25,7 +25,7 @@
     (bencode/parse msg-str)))
 
 (defn write-message [client-ptr msg]
-  (let [client  (cpp/unbox cpp/nrepl_server.nrepl_client* client-ptr)
+  (let [client  (cpp/unbox cpp/nrepl_server.client* client-ptr)
         msg-str (bencode/write msg)]
     (println "->" msg-str)
     (cpp/.write_some client (cpp/cast cpp/std.string msg-str))))

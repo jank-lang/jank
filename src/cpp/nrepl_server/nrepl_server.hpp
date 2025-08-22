@@ -7,16 +7,12 @@ namespace nrepl_server
 {
   // Hide the implementation details behind a PIMPL so that we don't need to
   // expose ASIO in the header file.
-  //
-  // fwd-decl
-  namespace detail
-  {
-    class nrepl_server_impl;
-    class nrepl_client_impl;
-  }
 
-  class nrepl_client final
+  class client final
   {
+  private:
+    struct impl;
+
   public:
     /* Indicates that reading and writing may be performed on this client. */
     bool is_connected();
@@ -28,25 +24,28 @@ namespace nrepl_server
     void write_some(std::string const &data);
 
   protected:
-    nrepl_client(std::unique_ptr<detail::nrepl_client_impl> impl);
+    client(std::unique_ptr<client::impl> impl);
 
   private:
-    std::unique_ptr<detail::nrepl_client_impl> impl_;
+    std::unique_ptr<client::impl> impl_;
 
     // for protected ctor access
-    friend class nrepl_server;
+    friend class server;
   };
 
-  class nrepl_server final
+  class server final
   {
+  private:
+    struct impl;
+
   public:
-    nrepl_server(int port);
-    ~nrepl_server();
+    server(int port);
 
     /* Block until a client connects. */
-    nrepl_client *accept();
+    client *accept();
+
 
   private:
-    std::unique_ptr<detail::nrepl_server_impl> impl_;
+    std::unique_ptr<impl> impl_;
   };
 } // namespace nrepl_server

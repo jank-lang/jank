@@ -72,7 +72,7 @@
 
 (defn -main []
   (let [listen-port 4200
-        server      (cpp/nrepl_server.nrepl_server. listen-port)]
+        server      (cpp/nrepl_server.server. listen-port)]
     (println (str "jank-nrepl listening for connections on port " listen-port "..."))
     (while true
       ;; TODO(jank): Once we can spawn threads, we can spin out each client to a
