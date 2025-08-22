@@ -7,9 +7,9 @@
   "Parser for an integer encoded as `i<base 10 integer>e`."
   []
   (fn [input]
-    (when-let [[[_ v _] remaining] ((p/sequence (p/char \i)
-                                                (p/number)
-                                                (p/char \e))
+    (when-let [[[_ v _] remaining] ((p/sequencep (p/one-char \i)
+                                                 (p/number)
+                                                 (p/one-char \e))
                                     input)]
       [v remaining])))
 
@@ -17,8 +17,8 @@
   "Parser for a byte string encoded as `<length>:<contents>`."
   []
   (fn [input]
-    (when-let [[[n _] remaining] ((p/sequence (p/number)
-                                              (p/char \:))
+    (when-let [[[n _] remaining] ((p/sequencep (p/number)
+                                               (p/one-char \:))
                                   input)]
       (let [[s remaining] ((p/n-times n (p/any-char)) remaining)]
         [(apply str s) remaining]))))
@@ -27,9 +27,9 @@
   "Parser for a list encoded as `l<items>e`."
   []
   (fn [input]
-    (when-let [[[_ items _] remaining] ((p/sequence (p/char \l)
-                                                    (p/many (bencode))
-                                                    (p/char \e))
+    (when-let [[[_ items _] remaining] ((p/sequencep (p/one-char \l)
+                                                     (p/many (bencode))
+                                                     (p/one-char \e))
                                         input)]
       [items remaining])))
 
@@ -37,9 +37,9 @@
   "Parser for a dictionary encoded as `d<pairs>e`."
   []
   (fn [input]
-    (when-let [[[_ items _] remaining] ((p/sequence (p/char \d)
-                                                    (p/many (p/sequence (bencode) (bencode)))
-                                                    (p/char \e))
+    (when-let [[[_ items _] remaining] ((p/sequencep (p/one-char \d)
+                                                     (p/many (p/sequencep (bencode) (bencode)))
+                                                     (p/one-char \e))
                                         input)]
       [(into {} items) remaining])))
 

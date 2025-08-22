@@ -13,7 +13,7 @@
       [(parse-long (str (first input)))
        (rest input)])))
 
-(defn char
+(defn one-char
   [ch]
   (fn [input]
     (when (= (first input) ch)
@@ -56,7 +56,7 @@
       (when n
         [(parse-long (apply str n)) remaining]))))
 
-(defn sequence
+(defn sequencep
   [& parsers]
   (fn [input]
     (loop [matches []
