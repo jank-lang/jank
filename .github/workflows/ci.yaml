@@ -13,12 +13,12 @@ jobs:
       - name: Install dependencies
         run: sudo apt update && sudo apt install libboost-system-dev
 
-      # TODO: install via add-apt-repository
       - name: Install jank
-        continue-on-error: true
         run: |
-          wget https://github.com/jank-lang/ppa/raw/refs/heads/main/jank_0.1-1_amd64.deb
-          sudo apt install -y ./jank_0.1-1_amd64.deb
+          curl -s "https://jank-lang.github.io/ppa/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://jank-lang.github.io/ppa/jank.list"
+          sudo apt update
+          sudo apt install -y jank
 
       - name: Build library
         run: |
