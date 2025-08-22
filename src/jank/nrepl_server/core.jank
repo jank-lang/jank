@@ -19,7 +19,7 @@
                 :eval      {}
                 :load-file {}}
      :versions {}
-     :status   '(:done)}
+     :status   [:done]}
 
     "eval"
     ;; TODO: evaluate in the requested namespace
@@ -54,9 +54,9 @@
     ;; default
     {:status [:done]}))
 
-(defn handle-client [client-ptr]
-  (while (connected? client-ptr)
-    (when-let [msg (read-message client-ptr)]
+(defn handle-client [client*]
+  (while (connected? client*)
+    (when-let [msg (read-message client*)]
       (println "<-" msg)
       (when-not (empty? msg)
         (let [resp (assoc (handle-message msg)
@@ -64,7 +64,7 @@
                           :id (str (get msg "id"))
                           :session (str (get msg "session")))]
           (println "->" resp)
-          (write-message client-ptr resp))))))
+          (write-message client* resp))))))
 
 (defn -main []
   (let [listen-port 4200
@@ -73,5 +73,5 @@
     (while true
       ;; TODO(jank): Once we can spawn threads, we can spin out each client to a
       ;; background thread. Currently we can only handle one client at a time.
-      (let [client (cpp/box (cpp/.accept server))]
-        (handle-client client)))))
+      (let [client* (cpp/box (cpp/.accept server))]
+        (handle-client client*)))))
