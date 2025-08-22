@@ -1,0 +1,30 @@
+name: Build and Load
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install libboost-system-dev
+
+      # TODO: install via add-apt-repository
+      - name: Install jank
+        continue-on-error: true
+        run: |
+          wget https://github.com/jank-lang/ppa/raw/refs/heads/main/jank_0.1-1_amd64.deb
+          sudo apt install -y ./jank_0.1-1_amd64.deb
+
+      - name: Build library
+        run: |
+          cmake -Bbuild
+          cmake --build build
+
+      - name: Load jank code
+        run: |
+          echo "(require 'nrepl-server.core)" | jank -Isrc/cpp/ -Lbuild/ -lnrepl_server -L/usr/lib/x86_64-linux-gnu/ repl --module-path src/jank/
