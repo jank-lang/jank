@@ -19,18 +19,17 @@ namespace nrepl_server::inspect {
 ;; (cpp/std.format (cpp/cast cpp/std.string "{:x}") 123)
 
 (defn inspect-str
-  "Inspect an evaluation result (a map with keys :type-str, :pr-str, and :hash)
-  to build a display string for CIDER."
+  "Inspect a value to build a display string for CIDER."
   [x]
   (pr-str
    `("--- Type"
      (:newline)
-     (:value ~(:type-str x))
+     (:value ~(type x))
      (:newline) (:newline)
      "--- Contents"
      (:newline)
-     (:value ~(:pr-str x))
+     (:value ~(pr-str x))
      (:newline) (:newline)
      "--- Hash"
      (:newline)
-     (:value ~(int->hex-string (:hash x))))))
+     (:value ~(int->hex-string (hash x))))))

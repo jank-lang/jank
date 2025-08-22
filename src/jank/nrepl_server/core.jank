@@ -23,8 +23,12 @@
 
     "eval"
     ;; TODO: evaluate in the requested namespace
-    (let [result     (safe-eval (get msg "code"))
-          exception? (seq (:exception result))
+    (let [target-ns  (find-ns (symbol (or (get msg "ns") "clojure.core")))
+          result     (binding [*ns* target-ns]
+                       (safe-eval (get msg "code")))
+          value      (:value result)
+          success    (:success? result)
+          exception? (not success)
           inspect?   (= "true" (get msg "inspect"))]
       (cond
         exception?
@@ -34,11 +38,11 @@
          :status [:eval-error]}
 
         inspect?
-        {:value  (inspect-str result)
+        {:value  (inspect-str value)
          :status [:done]}
 
         :else
-        {:value  (:pr-str result)
+        {:value  (pr-str value)
          :ns     (str *ns*)
          :status [:done]}))
 
