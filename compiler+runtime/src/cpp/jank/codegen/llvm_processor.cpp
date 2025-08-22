@@ -1162,7 +1162,7 @@ namespace jank::codegen
     arg_handles.reserve(expr->arg_exprs.size() + is_closure);
     arg_types.reserve(expr->arg_exprs.size() + is_closure);
 
-    if(arity.fn_ctx->is_variadic)
+    if(expr->recursion_ref.fn_ctx->is_variadic)
     {
       arg_handles.emplace_back(gen_function_instance(arity.fn_ctx->fn.as_ref(), arity));
       arg_types.emplace_back(ctx->builder->getPtrTy());
@@ -1215,7 +1215,7 @@ namespace jank::codegen
     }
 
     llvm::Value *call{};
-    if(arity.fn_ctx->is_variadic)
+    if(expr->recursion_ref.fn_ctx->is_variadic)
     {
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
@@ -1224,11 +1224,8 @@ namespace jank::codegen
     }
     else
     {
-      auto const call_fn_name(util::format("{}_{}",
-                                           munge(fn_expr.unique_name),
-                                           expr->recursion_ref.fn_ctx->is_variadic
-                                             ? expr->recursion_ref.fn_ctx->param_count
-                                             : expr->arg_exprs.size()));
+      auto const call_fn_name(
+        util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
       auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
       call = ctx->builder->CreateCall(fn, arg_handles);
