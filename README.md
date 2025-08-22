@@ -16,5 +16,5 @@ bb run server
 cmake -DCMAKE_BUILD_TYPE=Release -Bbuild
 cmake --build build
 
-./build/jank-nrepl-server
+./build/jank-wrapper run-main nrepl-server.core
 ```
