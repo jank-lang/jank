@@ -3,6 +3,7 @@ If you're on any of the below systems, you can install jank using your system's
 package manager.
 
 ## Homebrew (macOS or Linux)
+### Install
 There is no binary package for Homebrew yet, but there's a source package which
 builds from git.
 
@@ -17,9 +18,16 @@ git lfs install
 sudo ln -s "$(which git-lfs)" "$(git --exec-path)/git-lfs"
 ```
 
-To update, just reinstall.
+### Update
+```bash
+brew update
+brew reinstall jank-lang/jank/jank
+```
 
 ## Ubuntu Linux (24.04, 24.10)
+### Install
+We have binary jank packages in our PPA, so installation is quick and easy.
+
 ```bash
 sudo apt install -y curl gnupg
 curl -s "https://jank-lang.github.io/ppa/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
@@ -28,9 +36,14 @@ sudo apt update
 sudo apt install -y jank
 ```
 
-To update, just reinstall.
+### Update
+```bash
+sudo apt update
+sudo apt reinstall jank
+```
 
 ## Arch Linux (AUR)
+### Install
 There is no binary AUR package yet, but there's a source package which builds from
 git.
 
@@ -38,7 +51,11 @@ git.
 yay -S jank-git
 ```
 
-To update, just reinstall.
+### Update
+```bash
+yay -Syy
+yay -S jank-git
+```
 
 ## Anything else
 If nothing above matches what you have, you can still build jank by following
