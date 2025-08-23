@@ -47,7 +47,10 @@
          :status [:done]}))
 
     "load-file"
-    {:value  (:pr-str (safe-eval (get msg "file")))
+    {:value  (->> (get msg "file")
+                  identity ;; TODO(jank): do not remove, causes crash
+                  safe-eval
+                  pr-str)
      :status [:done]}
 
     "close"
