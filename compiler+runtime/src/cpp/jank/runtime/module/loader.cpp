@@ -292,10 +292,16 @@ namespace jank::runtime::module
     std::filesystem::path const resource_dir{ jank::util::resource_dir().c_str() };
     auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
     native_transient_string paths{ util::cli::opts.module_path };
+
+    /* These paths are used by an installed jank. */
     paths += util::format(":{}", binary_cache_dir);
+    paths += util::format(":{}", (resource_dir / "src/jank").native());
+
+    /* These paths below are only used during development. */
+    paths += util::format(":{}", (jank_path / "core-libs").native());
     paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
-    paths += util::format(":{}", (resource_dir / "src/jank").native());
+
     this->paths = paths;
 
     //util::println("module paths: {}", paths);

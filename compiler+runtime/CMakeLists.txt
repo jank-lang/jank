@@ -47,6 +47,7 @@ set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
   CACHE STRING
   "Where jank's runtime files are installed. Relative paths are based on the runtime jank binary path")
+set(jank_clojure_core_o "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
 
 find_package(Git REQUIRED)
 execute_process(
@@ -121,6 +122,10 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_common_compiler_flags -O2 -DNDEBUG)
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" -DNDEBUG)
   list(APPEND jank_common_compiler_flags -Og -g)
+endif()
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(jank_enable_phase_2 ON)
 endif()
 
 if(jank_test)
@@ -657,37 +662,48 @@ add_dependencies(jank_exe_phase_1 jank_lib_standalone)
 # ---- jank phase 1 executable ----
 
 # ---- jank phase 2 executable ----
-add_executable(
-  jank_exe_phase_2
-  src/cpp/main.cpp
-)
-add_executable(jank::exe ALIAS jank_exe_phase_2)
+if(jank_enable_phase_2)
+  add_executable(
+    jank_exe_phase_2
+    src/cpp/main.cpp
+  )
+  add_executable(jank::exe ALIAS jank_exe_phase_2)
 
-set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
+  set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
 
-# Symbol exporting for JIT.
-set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
+  # Symbol exporting for JIT.
+  set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
 
-target_compile_features(jank_exe_phase_2 PRIVATE ${jank_cxx_standard})
-target_compile_options(jank_exe_phase_2 PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -DJANK_PHASE_2)
-target_include_directories(jank_exe_phase_2 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
-target_link_directories(jank_exe_phase_2 PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
-target_link_options(jank_exe_phase_2 PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
+  target_compile_features(jank_exe_phase_2 PRIVATE ${jank_cxx_standard})
+  target_compile_options(jank_exe_phase_2 PUBLIC "$<TARGET_PROPERTY:jank_exe_phase_1,COMPILE_OPTIONS>" -DJANK_PHASE_2)
+  target_include_directories(jank_exe_phase_2 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_exe_phase_1,INCLUDE_DIRECTORIES>")
+  target_link_directories(jank_exe_phase_2 PRIVATE "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_DIRECTORIES>")
+  target_link_options(jank_exe_phase_2 PRIVATE "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_OPTIONS>")
 
-target_link_libraries(
-  jank_exe_phase_2 PUBLIC
-  ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank.a ${jank_link_whole_end}
-  libzip::zip z
-  LLVM clang-cpp
-  OpenSSL::Crypto
-  ${CMAKE_BINARY_DIR}/clojure.core.o
-)
+  target_link_libraries(
+    jank_exe_phase_2 PUBLIC
+    "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
+    ${jank_clojure_core_o}
+  )
 
-jank_hook_llvm(jank_exe_phase_2)
+  jank_hook_llvm(jank_exe_phase_2)
 
-add_dependencies(jank_exe_phase_2 jank_lib_standalone jank_core_libraries)
+  add_dependencies(jank_exe_phase_2 jank_lib_standalone jank_core_libraries)
 
-#set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
+  #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
+else()
+  add_custom_command(
+    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_o} ${jank_incremental_pch_flag}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    OUTPUT ${CMAKE_BINARY_DIR}/jank
+    COMMAND ln -sf jank-phase-1 jank
+  )
+  add_custom_target(
+    jank_exe_phase_2
+    ALL
+    DEPENDS ${CMAKE_BINARY_DIR}/jank
+  )
+endif()
 # ---- jank phase 2 executable ----
 
 # ---- Tests ----
@@ -799,12 +815,12 @@ add_custom_target(
 # With this setup, we'll compile when the flag file doesn't exist (i.e. on
 # first build or after a clean), when any of the jank sources for these libs
 # change, or whenever the jank binary changes.
-set(jank_core_libraries_flag ${CMAKE_BINARY_DIR}/classes/core-libraries)
+set(jank_core_libraries_flag "${CMAKE_BINARY_DIR}/classes/core-libraries")
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
-  BYPRODUCTS ${CMAKE_BINARY_DIR}/clojure.core.o
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -o ${CMAKE_BINARY_DIR}/clojure.core.o clojure.core
+  BYPRODUCTS ${jank_clojure_core_o}
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -o ${jank_clojure_core_o} clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
@@ -821,7 +837,7 @@ file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
 # ---- Clang format YAML ----
 
 # ---- Install rules ----
-if(NOT CMAKE_SKIP_INSTALL_RULES)
+if(NOT CMAKE_SKIP_INSTALL_RULES AND jank_enable_phase_2)
   include(cmake/install.cmake)
 endif()
 # ---- Install rules ----
