@@ -700,6 +700,10 @@ namespace jank::analyze
     //              is_ctor,
     //              is_member_call,
     //              is_operator_call);
+    //for(auto const fn : fns)
+    //{
+    //  util::println("\tfn {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    //}
     //util::println("args");
     //for(auto const arg : arg_types)
     //{
@@ -873,6 +877,7 @@ namespace jank::analyze
     }
     if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
     {
+      //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                        current_frame,
                                                        needs_box,
@@ -3294,6 +3299,17 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_symbol(
         "The '*' suffix for pointers may only be used on types.",
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
+    if(Cpp::IsClassTemplate(scope) && is_ctor)
+    {
+      /* TODO: Specify what's missing, where the template is defined, etc. */
+      return error::analyze_invalid_cpp_constructor_call(
+        util::format("'{}' cannot be constructed because it's missing the necessary type "
+                     "parameters. You may want 'cpp/value' in order to specify them.",
+                     cpp_util::get_qualified_name(scope)),
         object_source(sym),
         latest_expansion(macro_expansions));
     }

@@ -27,6 +27,11 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope)
   {
+    if(!scope)
+    {
+      return ok();
+    }
+
     /* If we have a template specialization and we want to access one of its members, we
      * need to be sure that it's fully instantiated. If we don't, the member won't
      * be found. */
@@ -37,6 +42,11 @@ namespace jank::analyze::cpp_util
       {
         reset_sfinae_state();
         return err("Unable to instantiate template.");
+      }
+
+      if(Cpp::IsTemplatedFunction(scope))
+      {
+        return instantiate_if_needed(Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(scope)));
       }
     }
     return ok();

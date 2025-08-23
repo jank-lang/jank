@@ -744,6 +744,8 @@ if(jank_test)
   # Symbol exporting for JIT.
   set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
 
+  add_dependencies(jank_test_exe jank_exe_phase_2)
+
   add_test(NAME "Test" COMMAND jank_test_exe)
 endif()
 # ---- Tests ----
