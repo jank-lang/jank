@@ -15,13 +15,15 @@
       }: {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
-        devShells.default = (pkgs.mkShell.override { stdenv = pkgs.llvmPackages.stdenv; }) {
+        devShells.default = pkgs.mkShell {
           packages = with pkgs; [
+            stdenv.cc.cc.lib
+
             ## Required tools.
             cmake
             ninja
             pkg-config
-            clang
+            (pkgs.callPackage ./llvm.nix { })
 
             ## Required libs.
             boehmgc
@@ -36,11 +38,8 @@
             git
             nixd
             shellcheck
-            # For clangd
-            llvm
-            llvmPackages.libclang
-            # For clang-tidy.
-            llvmPackages.clang-tools
+            # For clangd & clang-tidy.
+            clang-tools
             gdb
             clangbuildanalyzer
             openjdk

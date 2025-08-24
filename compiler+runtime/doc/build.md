@@ -24,6 +24,8 @@ Simply enter the provided development shell which provides all necessary depende
 nix develop ".#"
 ```
 
+This will automatically compile Clang/LLVM, so you can skip directly to compiling jank.
+
 For macOS:
 
 ```bash

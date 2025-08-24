@@ -192,7 +192,7 @@ separate_arguments(clang_system_include_dirs)
 
 set(clang_system_include_flags "")
 foreach(dir ${clang_system_include_dirs})
-  list(APPEND clang_system_include_flags -I${dir})
+  list(APPEND clang_system_include_flags ${dir})
 endforeach()
 
 execute_process(
