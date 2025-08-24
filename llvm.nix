@@ -2,6 +2,7 @@
   stdenv,
   lib,
   pkgs,
+  wrapCC,
   ...
 }: let
   gccForLibs = stdenv.cc.cc;
@@ -27,7 +28,7 @@
     "-L${stdenv.cc.libc}/lib"
   ];
 in
-  stdenv.mkDerivation {
+  wrapCC (stdenv.mkDerivation {
     pname = "llvm-jank";
     version = "21.0.0-git";
 
@@ -79,10 +80,5 @@ in
       )
     '';
 
-    # Create wrapped clang/clang++ executables for compiling the jank compiler,
-    # and for in turn compiling jank code.
-    postInstall = ''
-      wrapProgram $out/bin/clang --add-flags "${runtimeCompileFlags + " " + runtimeLinkFlags}"
-      wrapProgram $out/bin/clang++ --add-flags "${runtimeCompileFlags + " " + runtimeLinkFlags}"
-    '';
-  }
+    passthru.isClang = true;
+  })
