@@ -1,5 +1,5 @@
 (ns nrepl-server.server
-  (:require [jank.data.bencode :as bencode]))
+  (:require [nrepl-server.bencode :as bencode]))
 
 (cpp/raw "#include <nrepl_server/nrepl_server.hpp>")
 
