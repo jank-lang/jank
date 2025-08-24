@@ -2,6 +2,7 @@
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
+#include <Interpreter/Compatibility.h>
 
 #include <jtl/format/style.hpp>
 
@@ -46,6 +47,14 @@ namespace jank::jit
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
       native_vector<std::filesystem::path> skips;
+
+      /* We will intentionally introduce some bad C++ code and we don't want Clang outputting
+       * compiler errors to stderr. If there are actual test issues which cause diagnostic
+       * issues, the test will fail anyway and we can run it separately to see the errors. */
+      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {

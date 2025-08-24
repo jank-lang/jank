@@ -180,7 +180,10 @@ namespace jank::runtime
 
     /* When compiling, we analyze twice. This is because eval will modify its expression
      * in order to wrap it in a function. Undoing this is arduous and error prone, so
-     * we just don't bother. */
+     * we just don't bother.
+     *
+     * Furthermore, module compilation may be different from JIT compilation, since it's
+     * targeted at AOT and doesn't have access to what's loaded in the JIT runtime. */
     if(truthy(compile_files_var->deref()))
     {
       auto const &module(runtime::to_string(current_module_var->deref()));
@@ -424,6 +427,11 @@ namespace jank::runtime
   {
     auto const ns{ current_ns() };
     return util::format("{}-{}", prefix.data(), ++ns->symbol_counter);
+  }
+
+  jtl::immutable_string context::unique_namespaced_string() const
+  {
+    return unique_namespaced_string("G_");
   }
 
   jtl::immutable_string

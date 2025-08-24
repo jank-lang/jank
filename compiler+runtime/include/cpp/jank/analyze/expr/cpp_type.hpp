@@ -15,7 +15,6 @@ namespace jank::analyze::expr
   {
     static constexpr expression_kind expr_kind{ expression_kind::cpp_type };
 
-    cpp_type();
     cpp_type(expression_position position,
              local_frame_ptr frame,
              bool needs_box,

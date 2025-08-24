@@ -27,6 +27,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
 #include <jank/environment/check_health.hpp>
+#include <jank/runtime/convert/builtin.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>

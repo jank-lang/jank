@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::fail_template_instantiation
+          {
+            struct foo
+            {
+              template <typename T>
+              foo(T t)
+                : a{ t }
+              { }
+
+              std::string a{};
+            };
+          }")
+(let* [arg (cpp/int 5)
+       _ (cpp/jank.cpp.constructor.complex.fail_template_instantiation.foo arg)]
+  :success)
