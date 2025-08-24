@@ -2,6 +2,6 @@
 
 (defmulti handle-message #(some-> (get % "op") keyword))
 
-(defmethod handle-message :default [msg]
-  (println "Unhandled nREPL message op:" (get msg "op"))
-  {:status [:unsupported-op]})
+(defmethod handle-message :default [_]
+  ;; Behavior from: https://github.com/nrepl/nrepl/blob/3cc751a/src/clojure/nrepl/server.clj#L111
+  {:status [:error :unknown-op :done]})
