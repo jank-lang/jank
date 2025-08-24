@@ -105,6 +105,8 @@ namespace nrepl_server
   {
   }
 
+  server::~server() = default;
+
   client *server::accept()
   {
     auto impl = impl_->accept();

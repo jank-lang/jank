@@ -1,7 +1,6 @@
 {:tasks
  {build
-  (do (shell "cmake -Bbuild -DCMAKE_BUILD_TYPE=Release")
-      (shell "cmake --build build"))
+  (shell "cmake --workflow --preset release")
 
   repl
   {:override-builtin true

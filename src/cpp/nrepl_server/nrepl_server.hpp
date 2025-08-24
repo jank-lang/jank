@@ -40,6 +40,7 @@ namespace nrepl_server
 
   public:
     server(int port);
+    ~server();
 
     /* Block until a client connects. */
     client *accept();

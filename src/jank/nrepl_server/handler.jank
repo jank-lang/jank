@@ -1,0 +1,7 @@
+(ns nrepl-server.handler)
+
+(defmulti handle-message #(some-> (get % "op") keyword))
+
+(defmethod handle-message :default [msg]
+  (println "Unhandled nREPL message op:" (get msg "op"))
+  {:status [:unsupported-op]})

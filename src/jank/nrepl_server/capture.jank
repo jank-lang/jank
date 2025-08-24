@@ -1,37 +1,73 @@
 (ns nrepl-server.capture)
 
-(cpp/raw "
-namespace nrepl_server::capture {
-  struct stream_capture
-  {
-    stream_capture(std::ostream &stream)
-      : stream_(stream)
-      , original_(stream_.rdbuf(capture_.rdbuf()))
-    {
-    }
+(cpp/raw "#include <unistd.h>")
+(cpp/raw "#include <stdio.h>")
+(cpp/raw "#include <fcntl.h>")
+(cpp/raw "#include <filesystem>")
 
-    std::string str() const
-    {
-      return capture_.str();
-    }
+(def out-file-template "/tmp/jank-nrepl-XXXXXX")
 
-    ~stream_capture()
-    {
-      stream_.rdbuf(original_);
-    }
+(defn- make-temp-file []
+  (let [out-file-name (cpp/cast cpp/std.string out-file-template)
+        fd            (cpp/mkstemp (cpp/.data out-file-name))]
+    [out-file-name fd]))
 
-  private:
-    std::ostream &stream_;
-    std::stringstream capture_;
-    std::streambuf *original_;
-  };
-}
-")
+(defn- file-size [path]
+  (cpp/std.filesystem.file_size (cpp/cast cpp/std.string path)))
 
-(defn start [stream]
-  ;; TODO
-  nil)
+(defn start
+  "Redirect the given file stream to a capture sink, available by `readback`.
+  Returns a capture handle."
+  [fp*]
+  (let [fp                  (cpp/unbox cpp/FILE* fp*)
+        fd                  (cpp/fileno fp)
+        bak-fd              (cpp/dup fd)
+        [temp-name temp-fd] (make-temp-file)]
+    ;; First flush the stream to ensure any data from before we start capturing
+    ;; is written.
+    (cpp/fflush fp)
 
-(defn read [capture]
-  ;; TODO
-  "")
+    ;; Redirect the stream to a temporary file which we can later read back.
+    (cpp/dup2 temp-fd fd)
+    (cpp/close temp-fd)
+
+    ;; Return a handle of what we've changed so that we can revert it later.
+    {:fp*       fp*
+     :fd        fd
+     :bak-fd    bak-fd
+     :file-name temp-name
+     :file-fd   temp-fd}))
+
+;; TODO(jank): map destructuring syntax doesn't work here? {:keys [fp* fd]}
+(defn end
+  "End the capture. Make sure to pair this with every `start` call or else the
+  stream will remain permanently redirected."
+  [capture-handle]
+  ;; Flush any remaining data that we want to be included in the capture.
+  (cpp/fflush (cpp/unbox cpp/FILE* (:fp* capture-handle)))
+
+  ;; Bring it all back to its original state.
+  (cpp/dup2 (:bak-fd capture-handle) (:fd capture-handle))
+  (cpp/close (:bak-fd capture-handle))
+
+  (cpp/close (:file-fd capture-handle)))
+
+(defn readback
+  "Read back the data which was captured by the handle."
+  [capture-handle]
+  (let [temp-fd (cpp/fopen (:file-name capture-handle) "r")
+        size    (cpp/long (file-size (:file-name capture-handle)))
+        buf     (doto (cpp/std.string.) (cpp/.resize size))]
+    (cpp/fread (cpp/& (cpp/.front buf)) 1 size temp-fd)
+    (cpp/fclose temp-fd)
+    buf))
+
+(comment
+  (let [capture-handle (start (cpp/box cpp/stdout))]
+    (println "A message")
+    (println "captured from stdout")
+    (end capture-handle)
+
+    ;; Always make sure to clean up the file descriptors or else we will have
+    ;; no more stdout!!
+    (readback capture-handle)))

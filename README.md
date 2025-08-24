@@ -13,8 +13,7 @@ bb run server
 ### Manual
 
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Release -Bbuild
-cmake --build build
+cmake --workflow --preset release
 
 ./build/jank-wrapper run-main nrepl-server.core
 ```

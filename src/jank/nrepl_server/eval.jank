@@ -44,7 +44,10 @@ namespace nrepl_server::eval
   }
 }")
 
-(defn safe-eval [code]
+(defn safe-eval
+  "Evaluate code similar to `eval`, but catch any errors. Returns whether the
+  eval completed successfully. Results can be read on *1 or *e."
+  [code]
   ;; TODO(jank): Some jank printing functions bypass std::cout/std::cerr which
   ;; means we can't as easily intercept them. This is unlike java where
   ;; everything goes through System.out/System.err.
@@ -53,13 +56,7 @@ namespace nrepl_server::eval
   ;; error will crash the server. Instead we create a safe evaluation wrapper in
   ;; C++ and catch the exceptions there.
 
-  (let [success (cpp/nrepl_server.eval.safe_eval code)]
-    (identity success) ;; don't remove, crashes
-    (merge
-     {:success? success}
-     (if success
-       {:value clojure.core/*1}
-       {:exception clojure.core/*e}))))
+  (cpp/nrepl_server.eval.safe_eval code))
 
 (comment
   (+ 1 2)

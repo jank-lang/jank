@@ -1,84 +1,45 @@
 (ns nrepl-server.core
-  (:require [nrepl-server.server :refer [read-message write-message connected?]]
-            [nrepl-server.eval :refer [safe-eval]]
-            [nrepl-server.inspect :refer [inspect-str]]
-            [nrepl-server.util :refer [generate-uuid]]))
+  (:require
+   [nrepl-server.server :as server :refer [read-message write-message connected?]]
+   [nrepl-server.handler :refer [handle-message]]
+   [nrepl-server.util :refer [abbreviate]]
+   ;; handler implementations
+   [nrepl-server.handler.clone]
+   [nrepl-server.handler.close]
+   [nrepl-server.handler.describe]
+   [nrepl-server.handler.eval]))
 
-(defn handle-message [msg]
-  (case (get msg "op")
-    "clone"
-    {:new-session (generate-uuid)
-     :status      [:done]}
+(defn response-for
+  "Given a request/response pair, copy the session identification data from the
+  request over to the response."
+  [req resp]
+  (merge resp (select-keys req ["id" "session"])))
 
-    "describe"
-    ;; TODO(jank): causes compiler crash
-    ;; (nrepl-server.handlers.describe/handle msg)
-    {:aux      {}
-     :ops      {:clone     {}
-                :describe  {}
-                :eval      {}
-                :load-file {}}
-     :versions {}
-     :status   [:done]}
+(defn responses-for
+  "Like `response-for` but accept one or multiple responses."
+  [req resp-or-resps]
+  (let [resps (if (sequential? resp-or-resps)
+                resp-or-resps
+                [resp-or-resps])]
+    (map #(response-for req %) resps)))
 
-    "eval"
-    ;; TODO: evaluate in the requested namespace
-    (let [target-ns  (find-ns (symbol (or (get msg "ns") "clojure.core")))
-          result     (binding [*ns* target-ns]
-                       (safe-eval (get msg "code")))
-          value      (:value result)
-          success    (:success? result)
-          exception? (not success)
-          inspect?   (= "true" (get msg "inspect"))]
-      (cond
-        exception?
-        ;; For now, just report the value. If we report :exception then CIDER
-        ;; will try to load clojure.stacktrace.
-        {:value  (str (:exception result))
-         :status [:eval-error]}
-
-        inspect?
-        {:value  (inspect-str value)
-         :status [:done]}
-
-        :else
-        {:value  (pr-str value)
-         :ns     (str *ns*)
-         :status [:done]}))
-
-    "load-file"
-    {:value  (->> (get msg "file")
-                  identity ;; TODO(jank): do not remove, causes crash
-                  safe-eval
-                  pr-str)
-     :status [:done]}
-
-    "close"
-    ;; TODO(jank): causes compiler crash
-    ;; (nrepl-server.handlers.close/handle msg)
-    {:status [:done]}
-
-    ;; default
-    {:status [:done]}))
-
-(defn handle-client [client*]
+(defn handle-client
+  "For as long as the client is connected, read requests and write replies."
+  [client*]
   (while (connected? client*)
-    (when-let [msg (read-message client*)]
-      (println "<-" msg)
-      (when-not (empty? msg)
-        (let [resp (assoc (handle-message msg)
-                          ;; TODO(jank): not casting str here causes compiler crash
-                          :id (str (get msg "id"))
-                          :session (str (get msg "session")))]
-          (println "->" resp)
+    (when-let [req (read-message client*)]
+      (println "<-" (pr-str (abbreviate req 20)))
+      (let [resps (responses-for req (handle-message req))]
+        (doseq [resp resps]
+          (println "->" (pr-str (abbreviate resp 20)))
           (write-message client* resp))))))
 
 (defn -main []
   (let [listen-port 4200
-        server      (cpp/nrepl_server.server. listen-port)]
-    (println (str "jank-nrepl listening for connections on port " listen-port "..."))
+        server      (server/listen listen-port)]
+    (println (str "jank-nrepl listening for connections on port " listen-port "…"))
     (while true
       ;; TODO(jank): Once we can spawn threads, we can spin out each client to a
       ;; background thread. Currently we can only handle one client at a time.
-      (let [client* (cpp/box (cpp/.accept server))]
+      (let [client* (server/accept server)]
         (handle-client client*)))))

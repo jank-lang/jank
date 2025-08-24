@@ -3,29 +3,32 @@
 
 (cpp/raw "#include <nrepl_server/nrepl_server.hpp>")
 
-;; TODO(jank): these cause the compiler to crash
-;; (defn start [listen-port]
-;;   (cpp/box (cpp/new cpp/nrepl_server.nrepl_server listen-port)))
+(defn listen [listen-port]
+  (cpp/box (cpp/new cpp/nrepl_server.server listen-port)))
 
-;; (defn accept [server-ptr]
-;;   (let [server (cpp/unbox cpp/nrepl_server.nrepl_server* server-ptr)]
-;;     (cpp/box (cpp/.accept server))))
+(defn accept [server*]
+  (let [server (cpp/unbox cpp/nrepl_server.server* server*)]
+    (cpp/box (cpp/.accept server))))
 
-(defn connected? [client-ptr]
-  (let [client (cpp/unbox cpp/nrepl_server.client* client-ptr)]
+(defn connected?
+  "Is the client socket connected and available for reading/writing?"
+  [client*]
+  (let [client (cpp/unbox cpp/nrepl_server.client* client*)]
     (cpp/.is_connected client)))
 
-(defn read-message [client-ptr]
-  (let [client (cpp/unbox cpp/nrepl_server.client* client-ptr)
+(defn read-message
+  "Read a complete message (TODO) from the client and decode it."
+  [client*]
+  (let [client (cpp/unbox cpp/nrepl_server.client* client*)
         msg-str (cpp/.read_some client)]
-    (println "<-" msg-str)
     ;; TODO: There is no guarantee that we read an entire message. We should
     ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
     ;; until more data arrives.
     (bencode/parse msg-str)))
 
-(defn write-message [client-ptr msg]
-  (let [client  (cpp/unbox cpp/nrepl_server.client* client-ptr)
+(defn write-message
+  "Encode the given message and write it to the client socket."
+  [client* msg]
+  (let [client  (cpp/unbox cpp/nrepl_server.client* client*)
         msg-str (bencode/write msg)]
-    (println "->" msg-str)
     (cpp/.write_some client (cpp/cast cpp/std.string msg-str))))

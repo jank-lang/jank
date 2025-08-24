@@ -1,0 +1,49 @@
+(ns nrepl-server.handler.eval
+  (:require
+   [nrepl-server.handler :refer [handle-message]]
+   [nrepl-server.eval :refer [safe-eval]]
+   [nrepl-server.capture :as capture]
+   [nrepl-server.inspect :refer [inspect-str]]))
+
+(def default-ns
+  "The namespace in which evaluation will occur when an invalid or no ns
+  parameter is specified."
+  (create-ns 'clojure.core))
+
+(defn- do-eval [ns code inspect?]
+  ;; TODO: Clean up capturing logic (maybe a with-capture macro?). Once we have
+  ;; threads, we can spawn a background thread to capture and send interleaved
+  ;; output during a long eval.
+  (let [target-ns      (or (some-> ns symbol find-ns) default-ns)
+        ;; do the eval, capturing anything on stdout
+        capture-handle (capture/start (cpp/box cpp/stdout))
+        success        (binding [*ns* target-ns]
+                         (safe-eval code))
+        stdout         (do (capture/end capture-handle)
+                           (capture/readback capture-handle))]
+    (cond
+      (not success)
+      ;; For now, just report the value. If we report :exception then CIDER
+      ;; will try to load clojure.stacktrace.
+      {:value  (str *e)
+       :status [:eval-error]}
+
+      inspect?
+      {:value  (inspect-str *1)
+       :status [:done]}
+
+      :else
+      [{:out stdout}
+       {:value  (pr-str *1)
+        :ns     (str *ns*)
+        :status [:done]}])))
+
+(defmethod handle-message :eval [msg]
+  (do-eval (get msg "ns")
+           (get msg "code" "")
+           (some-> (get msg "inspect") parse-boolean)))
+
+(defmethod handle-message :load-file [msg]
+  (do-eval (get msg "ns")
+           (get msg "file" "")
+           false))

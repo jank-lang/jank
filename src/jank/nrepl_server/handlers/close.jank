@@ -1,4 +1,0 @@
-(ns nrepl-server.handlers.close)
-
-(defn handle [_]
-  {:status '("done")})

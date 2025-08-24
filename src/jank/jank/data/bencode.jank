@@ -6,12 +6,11 @@
 (defn bint
   "Parser for an integer encoded as `i<base 10 integer>e`."
   []
-  (fn [input]
-    (when-let [[[_ v _] remaining] ((p/sequencep (p/one-char \i)
-                                                 (p/number)
-                                                 (p/one-char \e))
-                                    input)]
-      [v remaining])))
+  (p/mapp
+   (fn [[_ n _]] n)
+   (p/sequencep (p/one-char \i)
+                (p/number)
+                (p/one-char \e))))
 
 (defn bstring
   "Parser for a byte string encoded as `<length>:<contents>`."

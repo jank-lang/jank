@@ -1,12 +1,15 @@
-(ns nrepl-server.inspect
-  ;; TODO(jank): removing this import crashes the compiler
-  (:require [nrepl-server.util]))
+(ns nrepl-server.inspect)
 
 (cpp/raw "
-namespace nrepl_server::inspect {
-  std::string int_to_hex_string(int i) {
+#include <iomanip>
+#include <sstream>
+
+namespace nrepl_server::inspect
+{
+  std::string int_to_hex_string(int i)
+  {
     std::stringstream sstream;
-    sstream << std::hex << i;
+    sstream << std::setfill('0') << std::setw(8) << std::hex << i;
     return sstream.str();
   }
 }
