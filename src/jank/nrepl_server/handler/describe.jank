@@ -7,6 +7,7 @@
    :ops      {:clone     {}
               :describe  {}
               :eval      {}
-              :load-file {}}
+              :load-file {}
+              :lookup    {}}
    :versions {}
    :status   [:done]})
