@@ -19,7 +19,7 @@
 (defn read-message
   "Read a complete message (TODO) from the client and decode it."
   [client*]
-  (let [client (cpp/unbox cpp/nrepl_server.client* client*)
+  (let [client  (cpp/unbox cpp/nrepl_server.client* client*)
         msg-str (cpp/.read_some client)]
     ;; TODO: There is no guarantee that we read an entire message. We should
     ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
