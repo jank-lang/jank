@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::cpp::member::fail_private
+(cpp/raw "namespace jank::cpp::member::fail_protected
           {
             class bar
             {
