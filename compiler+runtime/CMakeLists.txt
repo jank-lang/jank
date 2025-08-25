@@ -120,8 +120,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_common_compiler_flags -O2 -DNDEBUG)
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" -DNDEBUG)
-  list(APPEND jank_common_compiler_flags -Og -g)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -192,7 +192,7 @@ separate_arguments(clang_system_include_dirs)
 
 set(clang_system_include_flags "")
 foreach(dir ${clang_system_include_dirs})
-  list(APPEND clang_system_include_flags -I${dir})
+  list(APPEND clang_system_include_flags ${dir})
 endforeach()
 
 execute_process(
