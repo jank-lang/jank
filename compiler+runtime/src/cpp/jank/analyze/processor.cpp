@@ -516,6 +516,7 @@ namespace jank::analyze
                  bool const needs_box,
                  native_vector<runtime::object_ref> const &macro_expansions)
   {
+    /* TODO: Make this a set. */
     std::vector<void *> fns;
 
     auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
@@ -632,22 +633,7 @@ namespace jank::analyze
 
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
-      auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
-      auto const arg_scope{ arg_count == 2 ? Cpp::GetScopeFromType(arg_types[1].m_Type) : nullptr };
-      for(auto const scope : cpp_util::find_adl_scopes({ obj_scope, arg_scope }))
-      {
-        if(!scope)
-        {
-          continue;
-        }
-
-        std::vector<void *> scope_fns;
-        Cpp::GetOperator(scope, op, scope_fns, arity);
-        for(auto const f : scope_fns)
-        {
-          fns.emplace_back(f);
-        }
-      }
+      Cpp::GetOperator(op, arg_types, fns, arity);
 
       if(fns.empty())
       {
@@ -702,7 +688,9 @@ namespace jank::analyze
     //              is_operator_call);
     //for(auto const fn : fns)
     //{
-    //  util::println("\tfn {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    //  util::println("\tfn {}: {}",
+    //                cpp_util::get_qualified_name(fn),
+    //                Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
     //}
     //util::println("args");
     //for(auto const arg : arg_types)
