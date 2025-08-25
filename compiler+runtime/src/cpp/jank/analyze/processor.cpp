@@ -1030,7 +1030,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
                                            expr->needs_box,
-                                           expected_type,
+                                           Cpp::GetNonReferenceType(expected_type),
                                            expected_type,
                                            conversion_policy::from_object,
                                            expr);
