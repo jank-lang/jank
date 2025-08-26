@@ -37,6 +37,7 @@ namespace jank::analyze::cpp_util
      * be found. */
     if(Cpp::IsTemplateSpecialization(scope) || Cpp::IsTemplatedFunction(scope))
     {
+      //util::println("instantiating {}", get_qualified_name(scope));
       /* TODO: Get template arg info and specify all of it? */
       if(Cpp::InstantiateTemplate(scope))
       {
@@ -49,6 +50,11 @@ namespace jank::analyze::cpp_util
         return instantiate_if_needed(Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(scope)));
       }
     }
+    else
+    {
+      //util::println("not instantiating {}", get_qualified_name(scope));
+    }
+
     return ok();
   }
 
@@ -109,6 +115,11 @@ namespace jank::analyze::cpp_util
                                     subs,
                                     Cpp::GetQualifiedName(old_scope)));
           }
+          if(auto const res = instantiate_if_needed(fns[0]); res.is_err())
+          {
+            return res.expect_err();
+          }
+
           return fns[0];
         }
         break;
@@ -125,6 +136,11 @@ namespace jank::analyze::cpp_util
                        Cpp::GetQualifiedName(old_scope),
                        sym));
       }
+    }
+
+    if(auto const res = instantiate_if_needed(scope); res.is_err())
+    {
+      return res.expect_err();
     }
 
     return ok(scope);
@@ -405,6 +421,24 @@ namespace jank::analyze::cpp_util
       expr);
   }
 
+  jtl::ptr<void> expression_scope(expression_ref const expr)
+  {
+    return visit_expr(
+      [](auto const typed_expr) -> jtl::ptr<void> {
+        using T = typename decltype(typed_expr)::value_type;
+
+        if constexpr(jtl::is_same<T, expr::cpp_value>)
+        {
+          return typed_expr->scope;
+        }
+        else
+        {
+          return nullptr;
+        }
+      },
+      expr);
+  }
+
   /* Void is a special case which gets turned into nil, but only in some circumstances. */
   jtl::ptr<void> non_void_expression_type(expression_ref const expr)
   {
@@ -419,11 +453,11 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
-                                       std::vector<Cpp::TemplateArgInfo> const &args,
+                                       std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool const is_member_call)
   {
     auto const member_offset{ (is_member_call ? 1 : 0) };
-    auto const arg_count{ args.size() - member_offset };
+    auto const arg_count{ arg_types.size() - member_offset };
     usize max_arg_count{};
     std::vector<void *> matching_fns;
 
@@ -439,7 +473,7 @@ namespace jank::analyze::cpp_util
       }
     }
 
-    std::vector<Cpp::TemplateArgInfo> converted_args{ args };
+    std::vector<Cpp::TemplateArgInfo> converted_args{ arg_types };
 
     /* If any arg can be implicitly converted to multiple functions, we have an ambiguity.
      * The user will need to specify the correct type by using a cast. */
@@ -449,7 +483,7 @@ namespace jank::analyze::cpp_util
 
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
-      auto const is_untyped_obj{ is_untyped_object(args[arg_idx + member_offset].m_Type) };
+      auto const is_untyped_obj{ is_untyped_object(arg_types[arg_idx + member_offset].m_Type) };
       /* TODO: Check the other way, too, if we're calling a fn taking objects. */
       if(!is_untyped_obj)
       {
@@ -464,7 +498,7 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        if(is_implicitly_convertible(args[arg_idx + member_offset].m_Type, param_type))
+        if(is_implicitly_convertible(arg_types[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
         }
@@ -485,20 +519,27 @@ namespace jank::analyze::cpp_util
   }
 
   jtl::string_result<jtl::ptr<void>>
-  find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args)
+  find_best_overload(std::vector<void *> const &fns,
+                     std::vector<Cpp::TemplateArgInfo> &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
     if(fns.empty())
     {
       return ok(nullptr);
     }
+    jank_debug_assert(arg_types.size() == arg_scopes.size());
 
-    auto match{ Cpp::BestOverloadFunctionMatch(fns, {}, args) };
-    if(!match)
+    auto matches{ Cpp::BestOverloadMatch(fns, arg_types, arg_scopes) };
+    if(!matches.empty())
     {
-      match = Cpp::BestMemberOverloadFunctionMatch(fns, args);
-    }
-    if(match)
-    {
+      auto const match{ matches[0] };
+      if(matches.size() != 1)
+      {
+        /* TODO: Show all matches. */
+        return err("This call is ambiguous.");
+      }
+
+      auto const member{ is_non_static_member_function(match) };
       if(Cpp::IsFunctionDeleted(match))
       {
         /* TODO: Would be great to point at the C++ source for where it's deleted. */
@@ -516,8 +557,30 @@ namespace jank::analyze::cpp_util
           util::format("The '{}' function is protected. It can only be accessed if it's public.",
                        Cpp::GetName(match)));
       }
+
+      /* It's possible that we instantiated some unresolved templates during overload resolution.
+       * To handle this, we modify the input arg types to convey their new type. Most cases, this
+       * won't be different, but some design patterns require this.
+       *
+       * An example is `std::cout << std::endl`, since `endl` is actually a function template
+       * which is parameterized on the char type and char traits. We don't have those until we
+       * try to find an overload. */
+      for(size_t i{ 0 }; i < arg_types.size() - member; ++i)
+      {
+        auto const scope{ arg_scopes[i + member] };
+        if(scope)
+        {
+          if(Cpp::IsTemplate(scope))
+          {
+            auto const new_type{ Cpp::GetFunctionArgType(match, i) };
+            arg_types[i + member].m_Type = new_type;
+          }
+        }
+      }
+
+      return match;
     }
-    return match;
+    return ok(nullptr);
   }
 
   /* TODO: Cache result. */
