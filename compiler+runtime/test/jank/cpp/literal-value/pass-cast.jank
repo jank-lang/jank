@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::literal_value::pass_cast
+          {
+            double n{ 7.0 };
+
+            bool check(double n)
+            { return false; }
+            bool check(int n)
+            { return n == 7; }
+          }")
+(let* [n (cpp/value "static_cast<int>(jank::cpp::literal_value::pass_cast::n)")
+       r (cpp/jank.cpp.literal_value.pass_cast.check n)]
+  (if (true? r)
+    :success))

@@ -516,6 +516,7 @@ namespace jank::analyze
                  bool const needs_box,
                  native_vector<runtime::object_ref> const &macro_expansions)
   {
+    /* TODO: Make this a set. */
     std::vector<void *> fns;
 
     auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
@@ -530,7 +531,7 @@ namespace jank::analyze
           latest_expansion(macro_expansions));
       }
       if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
-         && !cpp_util::is_convertible(val->type))
+         && !cpp_util::is_trait_convertible(val->type))
       {
         return error::analyze_invalid_cpp_constructor_call(
           util::format("'{}' cannot be constructed from a '{}'.",
@@ -632,22 +633,7 @@ namespace jank::analyze
 
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
-      auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
-      auto const arg_scope{ arg_count == 2 ? Cpp::GetScopeFromType(arg_types[1].m_Type) : nullptr };
-      for(auto const scope : cpp_util::find_adl_scopes({ obj_scope, arg_scope }))
-      {
-        if(!scope)
-        {
-          continue;
-        }
-
-        std::vector<void *> scope_fns;
-        Cpp::GetOperator(scope, op, scope_fns, arity);
-        for(auto const f : scope_fns)
-        {
-          fns.emplace_back(f);
-        }
-      }
+      Cpp::GetOperator(op, arg_types, fns, arity);
 
       if(fns.empty())
       {
@@ -700,6 +686,12 @@ namespace jank::analyze
     //              is_ctor,
     //              is_member_call,
     //              is_operator_call);
+    //for(auto const fn : fns)
+    //{
+    //  util::println("\tfn {}: {}",
+    //                cpp_util::get_qualified_name(fn),
+    //                Cpp::GetTypeAsString(Cpp::GetTypeFromScope(fn)));
+    //}
     //util::println("args");
     //for(auto const arg : arg_types)
     //{
@@ -721,6 +713,14 @@ namespace jank::analyze
       {
         is_member_call = true;
       }
+
+      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
+      {
+        return error::analyze_invalid_cpp_function_call(res.expect_err(),
+                                                        object_source(val->form),
+                                                        latest_expansion(macro_expansions));
+      }
+
       //util::println("\tmatch found: {}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       auto const conversion_res{
         apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
@@ -865,6 +865,7 @@ namespace jank::analyze
     }
     if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
     {
+      //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                        current_frame,
                                                        needs_box,
@@ -961,7 +962,7 @@ namespace jank::analyze
     {
       /* TODO: Also check jank conversions. */
       auto const param_type{ Cpp::GetFunctionArgTypeFromType(source_type, i) };
-      if(!Cpp::IsImplicitlyConvertible(arg_types[i].m_Type, param_type))
+      if(!cpp_util::is_implicitly_convertible(arg_types[i].m_Type, param_type))
       {
         return error::analyze_invalid_cpp_call(
           util::format(
@@ -1002,6 +1003,8 @@ namespace jank::analyze
     if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
        || (Cpp::GetCanonicalType(expr_type)
            == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
+       || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expr_type))
+           == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type)))
        || Cpp::IsTypeDerivedFrom(Cpp::GetCanonicalType(expr_type),
                                  Cpp::GetCanonicalType(expected_type))
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
@@ -1012,7 +1015,7 @@ namespace jank::analyze
     auto const cast_position{ expr->position };
     expr->propagate_position(expression_position::value);
 
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_convertible(expr_type))
+    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
     {
       return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
@@ -1022,20 +1025,24 @@ namespace jank::analyze
                                            conversion_policy::into_object,
                                            expr);
     }
-    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_convertible(expected_type))
+    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
     {
       return jtl::make_ref<expr::cpp_cast>(cast_position,
                                            expr->frame,
                                            expr->needs_box,
-                                           expected_type,
+                                           Cpp::GetNonReferenceType(expected_type),
                                            expected_type,
                                            conversion_policy::from_object,
                                            expr);
     }
-    else if((Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+    else if(/* Up cast. */
+            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
                                     Cpp::GetUnderlyingType(expected_type)))
-            || (Cpp::GetUnderlyingType(expr_type) == Cpp::GetUnderlyingType(expected_type)
+            /* Same type or adding reference. */
+            || (Cpp::GetCanonicalType(expr_type)
+                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
                 && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+            /* Matching nullptr to any pointer type. */
             || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type)))
     {
       expr->propagate_position(cast_position);
@@ -1662,7 +1669,7 @@ namespace jank::analyze
       auto const last_expression{ body_do->values.back() };
       auto const last_expression_type{ cpp_util::expression_type(last_expression) };
       if(!cpp_util::is_any_object(last_expression_type)
-         && !cpp_util::is_convertible(last_expression_type))
+         && !cpp_util::is_trait_convertible(last_expression_type))
       {
         /* TODO: Error. */
         return error::analyze_invalid_cpp_conversion(
@@ -3229,7 +3236,7 @@ namespace jank::analyze
                                               current_frame,
                                               needs_box,
                                               sym,
-                                              nullptr,
+                                              Cpp::GetFunctionReturnType(scope),
                                               scope,
                                               expr::cpp_value::value_kind::constructor);
       }
@@ -3238,7 +3245,7 @@ namespace jank::analyze
                                             current_frame,
                                             needs_box,
                                             sym,
-                                            nullptr,
+                                            Cpp::GetTypeFromScope(scope),
                                             scope,
                                             expr::cpp_value::value_kind::function);
     }
@@ -3284,6 +3291,17 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
+    if(Cpp::IsClassTemplate(scope) && is_ctor)
+    {
+      /* TODO: Specify what's missing, where the template is defined, etc. */
+      return error::analyze_invalid_cpp_constructor_call(
+        util::format("'{}' cannot be constructed because it's missing the necessary type "
+                     "parameters. You may want 'cpp/value' in order to specify them.",
+                     cpp_util::get_qualified_name(scope)),
+        object_source(sym),
+        latest_expansion(macro_expansions));
+    }
+
     /* We're not a type, but we have a . suffix, so this is an error. */
     if(is_ctor)
     {
@@ -3320,7 +3338,6 @@ namespace jank::analyze
     else if(Cpp::IsFunction(scope))
     {
       vk = expr::cpp_value::value_kind::function;
-      type = Cpp::GetPointerType(type);
     }
 
     if(vk.is_some())
@@ -3698,13 +3715,13 @@ namespace jank::analyze
     {
       if(kind == literal_kind::type)
       {
-        return error::analyze_invalid_cpp_type("The string argument to 'cpp/type' must contain"
-                                               "a valid C++ expression.",
+        return error::analyze_invalid_cpp_type("The string argument to 'cpp/type' must contain "
+                                               "a valid C++ type.",
                                                object_source(string_obj),
                                                latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 1));
       }
-      return error::analyze_invalid_cpp_value("The string argument to 'cpp/value' must contain"
+      return error::analyze_invalid_cpp_value("The string argument to 'cpp/value' must contain "
                                               "a valid C++ expression.",
                                               object_source(string_obj),
                                               latest_expansion(macro_expansions))
@@ -3750,15 +3767,23 @@ namespace jank::analyze
       auto const literal_value{ cpp_util::resolve_literal_value(str) };
       if(literal_value.is_ok())
       {
-        return build_cpp_value(try_object<obj::symbol>(l->first()),
-                               literal_value.expect_ok(),
-                               Cpp::IsConstructor(literal_value.expect_ok()),
-                               0,
-                               false,
-                               current_frame,
-                               position,
-                               needs_box,
-                               macro_expansions);
+        auto const &result{ literal_value.expect_ok() };
+        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+                                                          current_frame,
+                                                          needs_box,
+                                                          /* TODO: Is symbol needed? */
+                                                          try_object<obj::symbol>(l->first()),
+                                                          Cpp::GetTypeFromScope(result.fn_scope),
+                                                          result.fn_scope,
+                                                          expr::cpp_value::value_kind::function) };
+        auto const res{
+          build_cpp_call(source, {}, {}, current_frame, position, needs_box, macro_expansions)
+        };
+        if(res.is_ok())
+        {
+          llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
+        }
+        return res;
       }
 
       return error::analyze_invalid_cpp_value(literal_value.expect_err(),
@@ -3869,7 +3894,7 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil)) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_convertible(value_type))
+    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
@@ -3879,7 +3904,7 @@ namespace jank::analyze
                                            conversion_policy::into_object,
                                            value_expr);
     }
-    if(cpp_util::is_any_object(value_type) && cpp_util::is_convertible(type_expr->type))
+    if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type_expr->type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
@@ -4214,7 +4239,7 @@ namespace jank::analyze
                util::format(
                  "The '{}' member within '{}' is private. It can only be accessed if it's public.",
                  name,
-                 Cpp::GetTypeAsString(parent_type)),
+                 cpp_util::get_qualified_name(parent_scope)),
                object_source(member),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4225,7 +4250,7 @@ namespace jank::analyze
                util::format("The '{}' member within '{}' is protected. It can only be accessed if "
                             "it's public.",
                             name,
-                            Cpp::GetTypeAsString(parent_type)),
+                            cpp_util::get_qualified_name(parent_scope)),
                object_source(member),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4244,7 +4269,6 @@ namespace jank::analyze
           break;
         }
       }
-
 
       if(!member_scope)
       {

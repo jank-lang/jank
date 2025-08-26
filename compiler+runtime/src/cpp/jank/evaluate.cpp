@@ -180,7 +180,7 @@ namespace jank::evaluate
     expression_ref expr_to_add{ expr };
     if(!cpp_util::is_untyped_object(expr_type))
     {
-      jank_debug_assert(cpp_util::is_convertible(expr_type));
+      jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
       expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
                                                   expr->frame,
                                                   expr->needs_box,
