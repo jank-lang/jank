@@ -200,7 +200,7 @@ namespace jank::read::parse
 
       SUBCASE("Whitespace")
       {
-        lex::processor lp{ R"(\  \space)"};
+        lex::processor lp{ R"(\ \space)"};
         processor p{lp.begin(), lp.end()};
 
         usize offset{};

@@ -587,7 +587,8 @@ namespace jank::read::lex
 
           jtl::immutable_string_view const data{ file.data() + token_start, ++pos - token_start };
 
-          if(data == "\\ ") {
+          if(data == "\\ ")
+          {
             return ok(token{token_start, pos, token_kind::character, "\\space" });
           }
 
