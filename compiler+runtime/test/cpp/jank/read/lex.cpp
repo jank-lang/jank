@@ -1287,10 +1287,9 @@ namespace jank::read::lex
           R"(\ )"
         };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-        CHECK(tokens
-              == make_tokens(
+        CHECK(tokens == make_tokens(
 {
-                {    0, 2, token_kind::character,    "\\ "sv },
+                {    0, 2, token_kind::character,    "\\space"sv },
                 // {    2, 4, token_kind::character,      "\\tab"sv },
                 // {    5, 8, token_kind::character,  "\\newline"sv },
         //         {  110, 2, token_kind::character,        "\"sv },
