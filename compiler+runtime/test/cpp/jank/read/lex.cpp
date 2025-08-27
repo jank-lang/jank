@@ -1281,76 +1281,56 @@ namespace jank::read::lex
     {
       SUBCASE("Whitespace")
       {
+        SUBCASE("ASCII")
+        {
         processor p{
-        // TODO FIXME
-          // R"(\  \tab \newline \ \formfeed \return \ \ \ \ \space \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \  \　)"
-          R"(\ )"
+          R"(\ \tab \newline \ \formfeed \return \ \ \ \ \space)"
         };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens == make_tokens(
 {
                 {    0, 2, token_kind::character,    "\\space"sv },
-                // {    2, 4, token_kind::character,      "\\tab"sv },
-                // {    5, 8, token_kind::character,  "\\newline"sv },
-        //         {  110, 2, token_kind::character,        "\"sv },
-        //        {  115, 9, token_kind::character, "\formfeed"sv },
-        //         {  217, 7, token_kind::character,   "\return"sv },
-        //         {  317, 2, token_kind::character,        "\"sv },
-        //         {  322, 2, token_kind::character,        "\"sv },
-        //         {  417, 2, token_kind::character,        "\"sv },
-        //         {  422, 2, token_kind::character,        "\"sv },
-        //         {  427, 6, token_kind::character,    "\space"sv },
-        //         {  526, 2, token_kind::character,        "\ "sv },
-        //         {  531, 2, token_kind::character,        "\ "sv },
-        //         {  626, 2, token_kind::character,        "\ "sv },
-        //         {  631, 2, token_kind::character,        "\ "sv },
-        //         {  636, 2, token_kind::character,        "\ "sv },
-        //         {  641, 2, token_kind::character,        "\ "sv },
-        //         {  736, 2, token_kind::character,        "\ "sv },
-        //         {  741, 2, token_kind::character,        "\ "sv },
-        //         {  746, 2, token_kind::character,        "\ "sv },
-        //         {  841, 2, token_kind::character,        "\ "sv },
-        //         {  846, 2, token_kind::character,        "\ "sv },
-        //         {  851, 2, token_kind::character,        "\ "sv },
-        //         {  946, 2, token_kind::character,        "\ "sv },
-        //         {  951, 2, token_kind::character,      "\ "sv },
-        //         {  956, 2, token_kind::character,      "\ "sv },
-        //         {  961, 2, token_kind::character,        "\ "sv },
-        //         { 1056, 2, token_kind::character,        "\ "sv },
-        //         { 1061, 2, token_kind::character,       "\　"sv }
-        // }
-                // {
-        //         {    0, 2, token_kind::character,    "\space"sv },
-        //         {    2, 4, token_kind::character,      "\tab"sv },
-        //         {    9, 8, token_kind::character,  "\newline"sv },
-        //         {  110, 2, token_kind::character,        "\"sv },
-        //         {  115, 9, token_kind::character, "\formfeed"sv },
-        //         {  217, 7, token_kind::character,   "\return"sv },
-        //         {  317, 2, token_kind::character,        "\"sv },
-        //         {  322, 2, token_kind::character,        "\"sv },
-        //         {  417, 2, token_kind::character,        "\"sv },
-        //         {  422, 2, token_kind::character,        "\"sv },
-        //         {  427, 6, token_kind::character,    "\space"sv },
-        //         {  526, 2, token_kind::character,        "\ "sv },
-        //         {  531, 2, token_kind::character,        "\ "sv },
-        //         {  626, 2, token_kind::character,        "\ "sv },
-        //         {  631, 2, token_kind::character,        "\ "sv },
-        //         {  636, 2, token_kind::character,        "\ "sv },
-        //         {  641, 2, token_kind::character,        "\ "sv },
-        //         {  736, 2, token_kind::character,        "\ "sv },
-        //         {  741, 2, token_kind::character,        "\ "sv },
-        //         {  746, 2, token_kind::character,        "\ "sv },
-        //         {  841, 2, token_kind::character,        "\ "sv },
-        //         {  846, 2, token_kind::character,        "\ "sv },
-        //         {  851, 2, token_kind::character,        "\ "sv },
-        //         {  946, 2, token_kind::character,        "\ "sv },
-        //         {  951, 2, token_kind::character,      "\ "sv },
-        //         {  956, 2, token_kind::character,      "\ "sv },
-        //         {  961, 2, token_kind::character,        "\ "sv },
-        //         { 1056, 2, token_kind::character,        "\ "sv },
-        //         { 1061, 2, token_kind::character,       "\　"sv }
-        // }
+                {    2, 4, token_kind::character,      "\\tab"sv },
+                {    7, 8, token_kind::character,  "\\newline"sv },
+                {   16, 2, token_kind::character,        "\\"sv },
+                {   19, 9, token_kind::character, "\\formfeed"sv },
+                {   29, 7, token_kind::character,   "\\return"sv },
+                {   37, 2, token_kind::character,        "\\"sv },
+                {   40, 2, token_kind::character,        "\\"sv },
+                {   43, 2, token_kind::character,        "\\"sv },
+                {   46, 2, token_kind::character,        "\\"sv },
+               {   49, 6, token_kind::character,     "\\space"sv }
 }));
+      }
+
+SUBCASE("Unicode")
+        {
+        processor p{
+          R"(\u00a0 \u1680 \u2000 \u2001 \u2002 \u2003 \u2004 \u2005 \u2006 \u2007 \u2008 \u2009 \u200a \u2028 \u2029 \u202f \u205f \u3000)"
+        };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens == make_tokens(
+{
+                {  0, 6, token_kind::character,        "\\u00a0"sv },
+               {  7, 6, token_kind::character,        "\\u1680"sv },
+                {  14, 6, token_kind::character,        "\\u2000"sv },
+                {  21, 6, token_kind::character,        "\\u2001"sv },
+                {  28, 6, token_kind::character,        "\\u2002"sv },
+                {  35, 6, token_kind::character,        "\\u2003"sv },
+                {  42, 6, token_kind::character,        "\\u2004"sv },
+                {  49, 6, token_kind::character,        "\\u2005"sv },
+                {  56, 6, token_kind::character,        "\\u2006"sv },
+                {  63, 6, token_kind::character,        "\\u2007"sv },
+                {  70, 6, token_kind::character,        "\\u2008"sv },
+                {  77, 6, token_kind::character,        "\\u2009"sv },
+                {  84, 6, token_kind::character,        "\\u200a"sv },
+                {  91, 6, token_kind::character,        "\\u2028"sv },
+                {  98, 6, token_kind::character,        "\\u2029"sv },
+                {  105, 6, token_kind::character,        "\\u202f"sv },
+                {  112, 6, token_kind::character,        "\\u205f"sv },
+                {  119, 6, token_kind::character,        "\\u3000"sv }
+}));
+      }
       }
 
       SUBCASE("Dangling \\")
