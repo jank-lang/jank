@@ -202,8 +202,8 @@ namespace jank::read::parse
       {
         SUBCASE("\\ ")
         {
-          lex::processor lp{ R"(\ )"};
-          processor p{lp.begin(), lp.end()};
+          lex::processor lp{ R"(\ )" };
+          processor p{ lp.begin(), lp.end() };
 
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
@@ -215,8 +215,8 @@ namespace jank::read::parse
         }
         SUBCASE("\\space")
         {
-          lex::processor lp{ R"(\space)"};
-          processor p{lp.begin(), lp.end()};
+          lex::processor lp{ R"(\space)" };
+          processor p{ lp.begin(), lp.end() };
 
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,

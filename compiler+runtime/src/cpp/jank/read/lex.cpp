@@ -589,7 +589,7 @@ namespace jank::read::lex
 
           if(data == "\\ ")
           {
-            return ok(token{token_start, pos, token_kind::character, "\\space" });
+            return ok(token{ token_start, pos, token_kind::character, "\\space" });
           }
 
           return ok(token{ token_start, pos, token_kind::character, data });
