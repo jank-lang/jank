@@ -226,7 +226,31 @@ namespace jank::read::parse
                 == lex::token{ 0, 6, lex::token_kind::character, "\\space" });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
         }
-        // SUBCASE("unicode")
+        SUBCASE("Unicode")
+        {
+          lex::processor lp{
+            R"(\u00a0 \u1680 \u2000 \u2001 \u2002 \u2003 \u2004 \u2005 \u2006 \u2007 \u2008 \u2009 \u200a \u2028 \u2029 \u202f \u205f \u3000)"
+          };
+          processor p { lp.begin(), lp.end() };
+
+          usize offset{};
+          for(jtl::immutable_string const &ch :
+              { "\\u00a0", "\\u1680", "\\u2000", "\\u2001", "\\u2002", "\\u2003", "\\u2004", "\\u2005", "\\u2006", "\\u2007", "\\u2008", "\\u2009", "\\u200a", "\\u2028", "\\u2029", "\\u202f", "\\u205f", "\\u3000" })
+          {
+            auto const r(p.next());
+            CHECK(equal(
+              r.expect_ok().unwrap().ptr,
+              make_box<obj::character>(parse_character_in_base(ch.substr(2), 16).expect_ok())));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
       }
 
       SUBCASE("Invalid character literal")
