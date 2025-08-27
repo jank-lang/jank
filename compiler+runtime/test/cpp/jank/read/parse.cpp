@@ -200,23 +200,33 @@ namespace jank::read::parse
 
       SUBCASE("Whitespace")
       {
-        lex::processor lp{ R"(\ \space)"};
-        processor p{lp.begin(), lp.end()};
-
-        usize offset{};
-        for(jtl::immutable_string const &ch : { "\\space", "\\space"})
+        SUBCASE("\\ ")
         {
+          lex::processor lp{ R"(\ )"};
+          processor p{lp.begin(), lp.end()};
+
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr,
-                      make_box<obj::character>(get_char_from_literal(ch).unwrap())));
+                      make_box<obj::character>(get_char_from_literal("\\space").unwrap())));
 
-          auto const len(ch.size());
           CHECK(r.expect_ok().unwrap().start
-                == lex::token{ offset, len, lex::token_kind::character, ch });
+                == lex::token{ 0, 2, lex::token_kind::character, "\\space" });
           CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
-
-          offset += len;
         }
+        SUBCASE("\\space")
+        {
+          lex::processor lp{ R"(\space)"};
+          processor p{lp.begin(), lp.end()};
+
+          auto const r(p.next());
+          CHECK(equal(r.expect_ok().unwrap().ptr,
+                      make_box<obj::character>(get_char_from_literal("\\space").unwrap())));
+
+          CHECK(r.expect_ok().unwrap().start
+                == lex::token{ 0, 6, lex::token_kind::character, "\\space" });
+          CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+        }
+        // SUBCASE("unicode")
       }
 
       SUBCASE("Invalid character literal")
