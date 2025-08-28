@@ -28,6 +28,9 @@ jobs:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
           key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
       - name: Build Clang/LLVM
         run: |
           if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
