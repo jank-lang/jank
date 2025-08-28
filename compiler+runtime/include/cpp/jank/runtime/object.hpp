@@ -81,6 +81,7 @@ namespace jank::runtime
     var_unbound_root,
 
     tagged_literal,
+    uuid,
 
     opaque_box,
   };
@@ -217,6 +218,8 @@ namespace jank::runtime
 
       case object_type::tagged_literal:
         return "tagged_literal";
+      case object_type::uuid:
+        return "uuid";
 
       case object_type::opaque_box:
         return "opaque_box";
