@@ -789,10 +789,10 @@ namespace jank::codegen
   {
     /* We generate bindings left-to-right, so for mutually recursive letfn bindings
      * we must defer some initialization via `deferred_inits`.
-     *
+     * 
      * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
      * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
-     *
+     * 
      *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
      *   =>
      *   1 | %1 = call ptr @GC_malloc(i64 8)
@@ -1057,11 +1057,18 @@ namespace jank::codegen
     auto const i32_ty{ ctx->builder->getInt32Ty() };
     auto const lpad_ty{ llvm::StructType::get(*ctx->llvm_ctx, { ptr_ty, i32_ty }) };
     auto const landing_pad{ ctx->builder->CreateLandingPad(lpad_ty, 1) };
-    landing_pad->setCleanup(true);
-    auto const object_ptr_type_info{ ctx->module->getOrInsertGlobal(
-      typeid(object_ref).name(),
-      llvm::PointerType::get(ctx->builder->getInt8Ty(), 0)) };
-    landing_pad->addClause(object_ptr_type_info);
+    if(expr->finally_body.is_some())
+    {
+      landing_pad->setCleanup(true);
+    }
+
+    if(has_catch)
+    {
+      auto const object_ptr_type_info{ ctx->module->getOrInsertGlobal(
+        typeid(object_ref).name(),
+        llvm::PointerType::get(ctx->builder->getInt8Ty(), 0)) };
+      landing_pad->addClause(object_ptr_type_info);
+    }
 
     llvm::Value *catch_val{};
     llvm::BasicBlock *catch_end_bb{};
@@ -1114,7 +1121,7 @@ namespace jank::codegen
 
       if(!lpad_and_catch_body_stack.empty())
       {
-        /* rethrow the exception to the outer catch if one is available.*/
+        /* rethrow the exception to the outer catch if one is available. */
         auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
         auto const begin_catch_fn{
           ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
