@@ -131,11 +131,11 @@ namespace jank::codegen
       /* This dance is performed to keep symbol names unique across all the modules.
        * Considering LLVM JIT symbols to be global, we need to define them with
        * unique names to avoid conflicts during JIT recompilation/reloading.
-       *
+       * 
        * The approach, right now, is for each namespace, we will keep a counter
        * and will increase it every time we define a new symbol. When we JIT reload
        * the same namespace again, we will define new symbols.
-       *
+       * 
        * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
        * on intial load.
        */
@@ -629,7 +629,7 @@ namespace jank::codegen
     /* With each recursion reference, we generate a new function instance. This is different
      * from what Clojure does, but is functionally the same so long as one doesn't rely on
      * identity checks for this sort of thing.
-     *
+     * 
      * We generate a new fn instance because the C fns generated for a jank fn don't belong
      * inside of a class which has a `this` which can just be used. They're standalone. So,
      * if you want an instance of that fn within the fn itself, we need to make one. For
@@ -653,7 +653,7 @@ namespace jank::codegen
     /* Named recursion is a special kind of call. We can't go always through a var, since there
      * may not be one. We can't just use the fn's name, since we could be recursing into a
      * different arity. Finally, we need to keep in account whether or not this fn is a closure.
-     *
+     * 
      * For named recursion calls, we don't use dynamic_call. We just call the generated C fn
      * directly. This doesn't impede interactivity, since the whole thing will be redefined
      * if a new fn is created. */
@@ -661,7 +661,7 @@ namespace jank::codegen
 
     /* We may have a named recursion in a closure which crosses another function in order to
      * recurse. For example:
-     *
+     * 
      * ```clojure
      * (let [a 1]
      *   (fn foo []
@@ -669,12 +669,12 @@ namespace jank::codegen
      *       (boop a)
      *       (foo))))
      * ```
-     *
+     * 
      * Here, the `(foo)` call is a named recursion, but we're not actually in the `foo` fn.
      * We need to "cross" `bar` in order to get back into `foo`. This is an important
      * distinction, since the closure context for `foo` and `bar` may be different, such
      * as if `bar` closes over more data than `foo` does.
-     *
+     * 
      * In this case of a named recursion which crosses a fn, we can't use the current fn's
      * closure context. We need to build a new one. */
     auto const crosses_fn(expr->recursion_ref.fn_ctx->fn != arity.fn_ctx->fn);
@@ -1075,6 +1075,11 @@ namespace jank::codegen
 
     if(has_catch)
     {
+      auto const cleanup_lpad_bb
+        = llvm::BasicBlock::Create(*ctx->llvm_ctx, "cleanup.lpad", current_fn);
+      lpad_and_catch_body_stack.emplace_back(lpad_and_catch_bb(cleanup_lpad_bb, nullptr));
+      util::scope_exit const pop_cleanup_lpad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
+
       ctx->builder->CreateBr(catch_body_bb);
       current_fn->insert(current_fn->end(), catch_body_bb);
       ctx->builder->SetInsertPoint(catch_body_bb);
@@ -1111,6 +1116,15 @@ namespace jank::codegen
         catch_end_bb = ctx->builder->GetInsertBlock();
         ctx->builder->CreateBr(finally_bb);
       }
+
+      ctx->builder->SetInsertPoint(cleanup_lpad_bb);
+      auto const cleanup_lpad = ctx->builder->CreateLandingPad(lpad_ty, 0);
+      cleanup_lpad->setCleanup(true);
+      if(expr->finally_body.is_some())
+      {
+        gen(expr->finally_body.unwrap(), arity);
+      }
+      ctx->builder->CreateResume(cleanup_lpad);
     }
     else
     {
