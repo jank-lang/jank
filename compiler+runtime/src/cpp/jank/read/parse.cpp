@@ -815,7 +815,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_tagged()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto sym_result(next());
+    auto const sym_result(next());
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
@@ -829,16 +829,18 @@ namespace jank::read::parse
       }
       else if(str_result.expect_ok().is_none())
       {
-        return error::parse_invalid_reader_symbolic_value("value after #uuid must be present",
-                                                          { start_token.start, latest_token.end });
+        return error::parse_invalid_reader_symbolic_value(
+          "A string literal value after '#uuid' must be present.",
+          { start_token.start, latest_token.end });
       }
 
       auto const str_end(str_result.expect_ok().unwrap().end);
 
       if(str_end.kind != lex::token_kind::string)
       {
-        return error::parse_invalid_reader_symbolic_value("value after #uuid must be a string",
-                                                          { start_token.start, latest_token.end });
+        return error::parse_invalid_reader_symbolic_value(
+          "A string literal value after '#uuid' must be present.",
+          { start_token.start, latest_token.end });
       }
 
       auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
