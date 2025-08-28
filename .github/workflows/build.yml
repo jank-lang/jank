@@ -21,24 +21,37 @@ jobs:
     name: Build Clang
     runs-on: ubuntu-24.04
     timeout-minutes: 150
+    outputs:
+      sha: ${{ steps.cache-clang-key.outputs.sha }}
     steps:
+      - name: Get latest commit on jank-lang/llvm-project@jank
+        id: cache-clang-key
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const { data } = await github.rest.repos.getBranch({
+              owner: 'jank-lang',
+              repo: 'llvm-project',
+              branch: 'jank'
+            });
+            core.setOutput('sha', data.commit.sha);
       - name: Cache Clang/LLVM
+        id: cache-clang
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+          key: ${{ runner.os }}+jank-lang/llvm-project@jank-${{ steps.cache-clang-key.outputs.sha }}
       - uses: actions/checkout@v4
+        if: steps.cache-clang.outputs.cache-hit != 'true'
         with:
           submodules: false
       - name: Build Clang/LLVM
+        if: steps.cache-clang.outputs.cache-hit != 'true'
         run: |
-          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
-          then
-            pushd ${{ github.workspace }}/compiler+runtime
-              ./bin/build-clang
-            popd
-          fi
+          pushd ${{ github.workspace }}/compiler+runtime
+            ./bin/build-clang
+          popd
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
   build-jank:
@@ -53,6 +66,7 @@ jobs:
           - name: Ubuntu - lint
             os: ubuntu-24.04
             lint: true
+
           ## Debug + clang-tidy + coverage
           - name: Ubuntu - debug, analysis, coverage
             os: ubuntu-24.04
@@ -115,14 +129,14 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+          key: ${{ runner.os }}+jank-lang/llvm-project@jank-${{ needs.build-clang.outputs.sha }}
       - name: Cache object files
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/.ccache
             ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ${{ env.JANK_MATRIX_ID }}
+          key: ${{ env.JANK_MATRIX_ID }}+object-files
       - name: Build and test jank
         id: jank-build-step
         run: |
