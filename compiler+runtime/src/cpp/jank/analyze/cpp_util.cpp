@@ -25,6 +25,33 @@ namespace jank::analyze::cpp_util
     static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
   }
 
+  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope)
+  {
+    if(!scope)
+    {
+      return ok();
+    }
+
+    /* If we have a template specialization and we want to access one of its members, we
+     * need to be sure that it's fully instantiated. If we don't, the member won't
+     * be found. */
+    if(Cpp::IsTemplateSpecialization(scope) || Cpp::IsTemplatedFunction(scope))
+    {
+      /* TODO: Get template arg info and specify all of it? */
+      if(Cpp::InstantiateTemplate(scope))
+      {
+        reset_sfinae_state();
+        return err("Unable to instantiate template.");
+      }
+
+      if(Cpp::IsTemplatedFunction(scope))
+      {
+        return instantiate_if_needed(Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(scope)));
+      }
+    }
+    return ok();
+  }
+
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
   {
     while(ptr_count != 0)
@@ -65,17 +92,9 @@ namespace jank::analyze::cpp_util
       auto const dot{ sym.find('.', new_start) };
       if(dot == jtl::immutable_string::npos)
       {
-        /* If we have a template specialization and we want to access one of its members, we
-         * need to be sure that it's fully instantiated. If we don't, the member won't
-         * be found. */
-        if(Cpp::IsTemplateSpecialization(scope))
+        if(auto const res = instantiate_if_needed(scope); res.is_err())
         {
-          /* TODO: Get template arg info and specify all of it? */
-          if(Cpp::InstantiateTemplate(scope))
-          {
-            reset_sfinae_state();
-            return err("Unable to instantiate template.");
-          }
+          return res.expect_err();
         }
         auto const old_scope{ scope };
         auto const subs{ sym.substr(new_start) };
@@ -144,20 +163,31 @@ namespace jank::analyze::cpp_util
     auto const type{ alias_decl->getUnderlyingType().getAsOpaquePtr() };
     auto const scope{ Cpp::GetScopeFromType(type) };
 
-    if(Cpp::IsTemplateSpecialization(scope))
+    if(auto const res = instantiate_if_needed(scope); res.is_err())
     {
-      /* TODO: Get template arg info and specify all of it? */
-      if(Cpp::InstantiateTemplate(scope))
-      {
-        reset_sfinae_state();
-        return err("Unable to instantiate template.");
-      }
+      return res.expect_err();
     }
 
     return type;
   }
 
-  jtl::string_result<jtl::ptr<void>> resolve_literal_value(jtl::immutable_string const &literal)
+  /* Resolving arbitrary literal C++ values is a difficult task. Firstly, we need to handle
+   * invalid input gracefully and detect common issues. Secondly, we need to handle all sorts
+   * of values, include functions, enums, class types, as well as primitives. Thirdly, we need
+   * to maintain the reference/pointer/cv info of the original value.
+   *
+   * We accomplish this in two steps.
+   *
+   * The first step happens here, which is to take the arbitrary C++ string and build a
+   * function around it. We then compile that function so we can later build a call to it and
+   * know its final type. This is sufficient for evaluation.
+   *
+   * The second steps happens in codegen, where we need to copy the function code for this
+   * value literal into the module we're building. We only do this during AOT compilation, since
+   * it would otherwise cause an ODR violation. However, AOT builds still need that code, so
+   * it has to be there. */
+  jtl::string_result<literal_value_result>
+  resolve_literal_value(jtl::immutable_string const &literal)
   {
     /* TODO: Need a call to instantiate in here? */
     clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
@@ -166,41 +196,52 @@ namespace jank::analyze::cpp_util
     diag.setClient(new clang::IgnoringDiagConsumer{}, true);
     util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
-    auto const alias{ runtime::__rt_ctx->unique_string() };
-    auto const code{ util::format("auto && {} = {};", runtime::munge(alias), literal) };
-    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!res)
+    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    auto const code{
+      util::format("inline decltype(auto) {}(){ return {}; }", runtime::munge(alias), literal)
+    };
+    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!parse_res)
     {
       return err("Unable to parse C++ literal.");
     }
 
-    auto const * const translation_unit{ res->TUPart };
+    auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)
     {
       return err("Invalid C++ literal.");
     }
-    if(size != 1)
+    else if(size != 1)
     {
       return err("Extra expressions found in C++ literal.");
     }
 
-    auto const var_decl{ llvm::cast<clang::VarDecl>(*translation_unit->decls_begin()) };
-    auto const init{ var_decl->getInit() };
-
-    if(auto const decl_ref = llvm::dyn_cast<clang::DeclRefExpr>(init->IgnoreParenImpCasts()))
+    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
+    if(exec_res)
     {
-      auto const decl{ decl_ref->getDecl() };
-      if(llvm::isa<clang::VarDecl>(decl) || llvm::isa<clang::EnumConstantDecl>(decl)
-         || llvm::isa<clang::FunctionDecl>(decl) || llvm::isa<clang::FunctionTemplateDecl>(decl))
+      return err("Unable to load C++ literal.");
+    }
+
+    auto const f_decl{ llvm::cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
+    auto const body{ f_decl->getBody() };
+    auto const body_size{ std::distance(body->child_begin(), body->child_end()) };
+    if(body_size != 1)
+    {
+      return err("Extra expressions found in C++ literal.");
+    }
+
+    auto const ret_type{ Cpp::GetFunctionReturnType(f_decl) };
+    if(auto const ret_scope = Cpp::GetScopeFromType(ret_type))
+    {
+      if(auto const res = instantiate_if_needed(ret_scope); res.is_err())
       {
-        return decl;
+        return res.expect_err();
       }
     }
 
-    return err("Unable to resolve this to a value which jank can use. jank supports literal "
-               "variable, enum, and function values.");
+    return literal_value_result{ f_decl, ret_type, code };
   }
 
   /* When we're looking up operator usage, for example, we need to look in the scopes for
@@ -233,7 +274,7 @@ namespace jank::analyze::cpp_util
    * needed. */
   jtl::immutable_string get_qualified_name(jtl::ptr<void> const scope)
   {
-    auto res{ Cpp::GetQualifiedName(scope) };
+    auto res{ Cpp::GetQualifiedCompleteName(scope) };
     if(res == "<unnamed>")
     {
       res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
@@ -270,6 +311,18 @@ namespace jank::analyze::cpp_util
     static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
       Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("std::nullptr_t"))) };
     return Cpp::GetCanonicalType(type) == ret;
+  }
+
+  bool is_implicitly_convertible(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    auto const from_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(from)) };
+    auto const to_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to)) };
+    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref))
+    {
+      return true;
+    }
+
+    return Cpp::IsImplicitlyConvertible(from, to);
   }
 
   bool is_untyped_object(jtl::ptr<void> const type)
@@ -356,6 +409,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> non_void_expression_type(expression_ref const expr)
   {
     auto const type{ expression_type(expr) };
+    jank_debug_assert(type);
     if(Cpp::IsVoid(type))
     {
       return untyped_object_ptr_type();
@@ -410,12 +464,12 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        if(Cpp::IsImplicitlyConvertible(args[arg_idx + member_offset].m_Type, param_type))
+        if(is_implicitly_convertible(args[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
         }
 
-        if(is_convertible(param_type))
+        if(is_trait_convertible(param_type))
         {
           if(needed_conversion.is_some())
           {
@@ -467,7 +521,7 @@ namespace jank::analyze::cpp_util
   }
 
   /* TODO: Cache result. */
-  bool is_convertible(jtl::ptr<void> const type)
+  bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo const arg{ Cpp::GetTypeWithoutCv(
@@ -596,7 +650,7 @@ namespace jank::analyze::cpp_util
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr)
   {
     auto const type{ expression_type(expr) };
-    if(!is_any_object(type) && !is_convertible(type))
+    if(!is_any_object(type) && !is_trait_convertible(type))
     {
       return error::analyze_invalid_conversion(
         util::format("This function is returning a native object of type '{}', which is not "

@@ -557,7 +557,7 @@ namespace jank::error
     }
 
     auto document{ vbox(doc_body) };
-    auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
+    auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
     Render(screen, document);
     screen.Print();
     util::print("\n");

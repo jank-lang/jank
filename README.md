@@ -69,6 +69,12 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<p align="center">
+  <a href="https://nubank.com.br/">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Nubank_logo_2021.svg" height="100px">
+  </a>
+</p>
+
 <!-- mkarp -->
 <p align="center">
   <a href="https://pitch.com/">

@@ -5,11 +5,6 @@ namespace jank::analyze::expr
 {
   using namespace jank::runtime;
 
-  cpp_type::cpp_type()
-    : expression{ expr_kind }
-  {
-  }
-
   cpp_type::cpp_type(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
