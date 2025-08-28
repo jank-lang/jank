@@ -14,7 +14,7 @@ namespace jank::runtime::obj
 
   uuid::uuid(jtl::immutable_string const &s)
   {
-    value = uuids::uuid::from_string(static_cast<std::string>(s)).value();
+    value = uuids::uuid::from_string(s.c_str()).value();
   }
 
   bool uuid::equal(object const &o) const
@@ -55,7 +55,7 @@ namespace jank::runtime::obj
     {
       return hash;
     }
-    static auto to_hash = std::hash<uuids::uuid>{};
+    static std::hash<uuids::uuid> to_hash{};
     return hash = static_cast<uhash>(to_hash(value));
   }
 }
