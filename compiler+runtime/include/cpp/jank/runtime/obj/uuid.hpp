@@ -1,8 +1,11 @@
 #pragma once
 
-#include <uuid.h>
-
 #include <jank/runtime/object.hpp>
+
+namespace uuids
+{
+  class uuid;
+}
 
 namespace jank::runtime::obj
 {
@@ -24,7 +27,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     object base{ obj_type };
-    uuids::uuid value{};
+    jtl::ref<uuids::uuid> value;
     mutable uhash hash{};
   };
 }
