@@ -1,6 +1,8 @@
 #include <uuid.h>
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::obj
 {
@@ -14,7 +16,15 @@ namespace jank::runtime::obj
 
   uuid::uuid(jtl::immutable_string const &s)
   {
-    value = uuids::uuid::from_string(s.c_str()).value();
+    auto const result = uuids::uuid::from_string(s.c_str());
+    if(result)
+    {
+      value = result.value();
+    }
+    else
+    {
+      throw make_box(util::format("Invalid UUID string: {}", s)).erase();
+    }
   }
 
   bool uuid::equal(object const &o) const
@@ -55,7 +65,7 @@ namespace jank::runtime::obj
     {
       return hash;
     }
-    static std::hash<uuids::uuid> to_hash{};
+    static std::hash<uuids::uuid> const to_hash{};
     return hash = static_cast<uhash>(to_hash(value));
   }
 }

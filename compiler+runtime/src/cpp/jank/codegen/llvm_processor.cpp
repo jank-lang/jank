@@ -2519,16 +2519,16 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::uuid_ref const s) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::uuid_ref const u) const
   {
-    auto const found(ctx->literal_globals.find(s));
+    auto const found(ctx->literal_globals.find(u));
     if(found != ctx->literal_globals.end())
     {
       return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
     }
 
-    auto &global(ctx->literal_globals[s]);
-    auto const name(util::format("uuid_{}", s->to_hash()));
+    auto &global(ctx->literal_globals[u]);
+    auto const name(util::format("uuid_{}", u->to_hash()));
     auto const var(create_global_var(name));
     llvm_module->insertGlobalVariable(var);
     global = var;
@@ -2542,7 +2542,7 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const create_fn(llvm_module->getOrInsertFunction("jank_uuid_create", create_fn_type));
 
-      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(s->to_string().c_str()) };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(u->to_string().c_str()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
