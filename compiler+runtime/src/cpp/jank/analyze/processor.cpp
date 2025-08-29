@@ -1139,10 +1139,13 @@ namespace jank::analyze
      * more params than args, if some of them support default values. */
     for(usize i{}; i < arg_exprs.size() - member_offset; ++i)
     {
+      /* For variadic C functions, we won't have a parameter type for anything which goes
+       * into the va_list. For those, we'll just take the arg type as is. */
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
+      auto const arg_type{ arg_types[i + member_offset].m_Type };
       auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],
-                                                arg_types[i + member_offset].m_Type,
-                                                param_type,
+                                                arg_type,
+                                                param_type ?: arg_type,
                                                 macro_expansions) };
       if(res.is_err())
       {
