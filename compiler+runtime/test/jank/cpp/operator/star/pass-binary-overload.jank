@@ -2,9 +2,9 @@
           {
             struct foo
             {
-              foo& operator *(long l)
+              foo& operator *(long *l)
               {
-                a *= l;
+                a *= *l;
                 return *this;
               }
 
@@ -39,7 +39,7 @@
        _ (assert (= 50 (cpp/.-a foo*i)))
 
        ; member foo * long
-       l20 (cpp/long. 20)
-       foo-member*l (cpp/* lhs-foo l20)
+       l20 (cpp/long 20)
+       foo-member*l (cpp/* lhs-foo (cpp/& l20))
        _ (assert (= 100 (cpp/.-a foo-member*l)))]
   :success)

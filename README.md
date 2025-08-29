@@ -22,8 +22,7 @@ jank's host is LLVM and its interop is with C++.
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
-The current tl;dr for jank's usability is: **still getting there, but not ready for
-use yet. Check back in a few months!**
+**jank is expected to have its alpha launch in December 2025!**
 
 ## Docs
 * [Installing jank](./compiler+runtime/doc/install.md)

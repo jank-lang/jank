@@ -31,13 +31,16 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> expression_type(expression_ref expr);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);
+  jtl::ptr<void> expression_scope(expression_ref const expr);
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
-                                       std::vector<Cpp::TemplateArgInfo> const &args,
+                                       std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool is_member_call);
   jtl::string_result<jtl::ptr<void>>
-  find_best_overload(std::vector<void *> const &fns, std::vector<Cpp::TemplateArgInfo> const &args);
+  find_best_overload(std::vector<void *> const &fns,
+                     std::vector<Cpp::TemplateArgInfo> &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes);
 
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
