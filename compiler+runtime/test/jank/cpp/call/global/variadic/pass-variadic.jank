@@ -20,6 +20,8 @@
           }")
 (let* [n (cpp/int. 5)
        i (cpp/int. 2)
-       a (cpp/jank.cpp.call.global.variadic.pass_variadic.sum n i i i i i)]
-  (if (= 10 a)
+       a (cpp/jank.cpp.call.global.variadic.pass_variadic.sum (cpp/int.))
+       b (cpp/jank.cpp.call.global.variadic.pass_variadic.sum (cpp/int 1) i)
+       c (cpp/jank.cpp.call.global.variadic.pass_variadic.sum n i i i i i)]
+  (if (and (= 0 a) (= 2 b) (= 10 c))
     :success))

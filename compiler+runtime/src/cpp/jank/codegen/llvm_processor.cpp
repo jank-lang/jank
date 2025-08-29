@@ -1832,10 +1832,17 @@ namespace jank::codegen
       link_module(*ctx, parse_res->TheModule.get());
     }
 
+    std::vector<Cpp::TCppType_t> arg_types;
+    arg_types.reserve(expr->arg_exprs.size());
+    for(auto const arg_expr : expr->arg_exprs)
+    {
+      arg_types.emplace_back(cpp_util::expression_type(arg_expr));
+    }
+
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ llvm::cast<expr::cpp_value>(expr->source_expr.data) };
-      return gen_aot_call(Cpp::MakeAotCallable(source->scope),
+      return gen_aot_call(Cpp::MakeAotCallable(source->scope, arg_types),
                           source->scope,
                           expr->type,
                           Cpp::GetName(source->scope),
@@ -1847,12 +1854,6 @@ namespace jank::codegen
     else
     {
       auto const source_type{ cpp_util::expression_type(expr->source_expr) };
-      std::vector<Cpp::TCppType_t> arg_types;
-      arg_types.reserve(expr->arg_exprs.size());
-      for(auto const arg_expr : expr->arg_exprs)
-      {
-        arg_types.emplace_back(cpp_util::expression_type(arg_expr));
-      }
       auto arg_exprs{ expr->arg_exprs };
       arg_exprs.insert(arg_exprs.begin(), expr->source_expr);
       return gen_aot_call(Cpp::MakeApplyCallable(source_type, arg_types),
