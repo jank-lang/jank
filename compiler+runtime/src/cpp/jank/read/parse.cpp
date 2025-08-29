@@ -830,7 +830,7 @@ namespace jank::read::parse
       else if(str_result.expect_ok().is_none())
       {
         return error::parse_invalid_reader_symbolic_value(
-          "A string literal value after '#uuid' must be present.",
+          "The string literal after this '#uuid' is missing.",
           { start_token.start, latest_token.end });
       }
 
@@ -839,19 +839,18 @@ namespace jank::read::parse
       if(str_end.kind != lex::token_kind::string)
       {
         return error::parse_invalid_reader_symbolic_value(
-          "A string literal value after '#uuid' must be present.",
+          "The form after '#uuid' must be a string literal.",
           { start_token.start, latest_token.end });
       }
 
       auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-
       auto const wrapped(make_box<obj::uuid>(str->data));
 
       return object_source_info{ wrapped, start_token, str_end };
     }
 
     return error::parse_invalid_reader_symbolic_value(
-      "No reader function for tag. '#uuid' is the only tag currently supported.",
+      "This reader tag is not supported. '#uuid' is the only tag currently supported.",
       { start_token.start, latest_token.end });
   }
 

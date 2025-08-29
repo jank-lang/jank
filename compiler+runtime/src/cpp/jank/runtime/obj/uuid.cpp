@@ -1,4 +1,3 @@
-#include <uuid.h>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/rtti.hpp>
