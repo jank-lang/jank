@@ -178,10 +178,11 @@ namespace jank::codegen
     /* TODO: Use gc allocator to avoid leaks. */
     std::list<deferred_init> deferred_inits{};
 
+    /* landingpad and catch basic block used for try...catch...finally */
     struct lpad_and_catch_bb
     {
-      llvm::BasicBlock *lpad_bb;
-      llvm::BasicBlock *catch_bb;
+      llvm::BasicBlock *lpad_bb{};
+      llvm::BasicBlock *catch_bb{};
     };
 
     std::vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
