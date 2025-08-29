@@ -142,9 +142,9 @@ namespace jank::jit
     /* Add a search generator that can resolve symbols from the main executable itself.
      * This is essential for the JIT to find runtime functions and RTTI data
      * (like typeinfo for exceptions) that live in the host process. */
-    auto &lljit = interpreter->getExecutionEngine().get();
-    auto &jd = lljit.getMainJITDylib();
-    auto const &dl = lljit.getDataLayout();
+    auto &lljit{ interpreter->getExecutionEngine().get() };
+    auto &jd{ lljit.getMainJITDylib() };
+    auto const &dl{ lljit.getDataLayout() };
 
     /* 1. Add the standard dynamic library search generator. This is best practice
      * and will resolve most symbols from the host process. */
@@ -153,13 +153,13 @@ namespace jank::jit
 
     /* 2. Manually define the absolute address of the RTTI symbol. This is the most
      * robust way to ensure it's found, bypassing any linker visibility issues. */
-    llvm::orc::MangleAndInterner Mangle(lljit.getExecutionSession(), dl);
+    llvm::orc::MangleAndInterner mangle_and_interner(lljit.getExecutionSession(), dl);
     llvm::orc::SymbolMap symbols;
 
     /* Programmatically get the mangled name and address, don't hardcode them. */
-    char const *typeinfo_name = typeid(jank::runtime::object_ref).name();
-    void const *typeinfo_addr = &typeid(jank::runtime::object_ref);
-    symbols[Mangle(typeinfo_name)] = llvm::orc::ExecutorSymbolDef(
+    auto const *typeinfo_name{ typeid(jank::runtime::object_ref).name() };
+    auto const *typeinfo_addr{ &typeid(jank::runtime::object_ref) };
+    symbols[mangle_and_interner(typeinfo_name)] = llvm::orc::ExecutorSymbolDef(
       llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(typeinfo_addr)),
       llvm::JITSymbolFlags());
 
