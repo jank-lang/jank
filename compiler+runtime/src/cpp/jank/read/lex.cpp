@@ -574,11 +574,6 @@ namespace jank::read::lex
           {
             return ch.expect_err();
           }
-          else if(std::iswspace(static_cast<int>(ch.expect_ok().character)))
-          {
-            return error::lex_incomplete_character("A \\ must be followed by a character value.",
-                                                   { token_start, pos });
-          }
 
           while(pos <= file.size())
           {
@@ -591,6 +586,12 @@ namespace jank::read::lex
           }
 
           jtl::immutable_string_view const data{ file.data() + token_start, ++pos - token_start };
+
+          if(data == "\\ ")
+          {
+            return ok(token{ token_start, pos, token_kind::character, "\\space" });
+          }
+
           return ok(token{ token_start, pos, token_kind::character, data });
         }
       case ';':

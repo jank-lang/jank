@@ -43,6 +43,7 @@ namespace jank::util::cli
       .add_option("-O,--optimization",
                   opts.optimization_level,
                   "The optimization level to use for AOT compilation.")
+      /* TODO: This does not validate. */
       ->check(CLI::Range(0, 3));
 
     std::map<std::string, codegen_type> const codegen_types{

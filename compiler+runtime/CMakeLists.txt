@@ -145,6 +145,10 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
 
+if(APPLE)
+  list(APPEND CMAKE_BUILD_RPATH "${llvm_dir}/lib")
+endif()
+
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
   OR
@@ -176,7 +180,7 @@ endfunction()
 # can configure jank correctly during the build phase and then it'll just
 # continue to work with that setup once it's installed.
 execute_process(
-  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^\\s\\+/-I/' | sed 's/ (framework directory)//'"
+  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^[[:space:]]\\{1,\\}/-I/' | sed 's/ (framework directory)//'"
   RESULT_VARIABLE clang_system_includes_result
   OUTPUT_VARIABLE clang_system_includes_unescaped
   OUTPUT_STRIP_TRAILING_WHITESPACE

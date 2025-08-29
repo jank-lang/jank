@@ -716,6 +716,13 @@ namespace jank::analyze
         is_member_call = true;
       }
 
+      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
+      {
+        return error::analyze_invalid_cpp_function_call(res.expect_err(),
+                                                        object_source(val->form),
+                                                        latest_expansion(macro_expansions));
+      }
+
       //util::println("match found\n\t{}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       //util::println("new args");
       //for(auto const arg : arg_types)
@@ -806,7 +813,7 @@ namespace jank::analyze
     auto new_types{ new_types_res.expect_ok() };
     /* We don't bother with figuring out scopes for conversion calls. They need to match up
      * perfectly or we just won't do it. */
-    std::vector<Cpp::TCppScope_t> empty_scopes(arg_scopes.size(), nullptr);
+    std::vector<Cpp::TCppScope_t> const empty_scopes(arg_scopes.size(), nullptr);
     auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types, empty_scopes) };
     if(conversion_match_res.is_err())
     {
