@@ -850,8 +850,9 @@ namespace jank::read::parse
       return object_source_info{ wrapped, start_token, str_end };
     }
 
-    return error::parse_invalid_reader_symbolic_value("No reader function for tag",
-                                                      { start_token.start, latest_token.end });
+    return error::parse_invalid_reader_symbolic_value(
+      "No reader function for tag. '#uuid' is the only tag currently supported.",
+      { start_token.start, latest_token.end });
   }
 
   processor::object_result processor::parse_reader_macro_comment()
