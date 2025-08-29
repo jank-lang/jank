@@ -1,0 +1,9 @@
+(def a identity)
+
+(def b #'a)
+
+(def c #'b)
+
+(assert (== 1 (c 1)))
+
+:success
