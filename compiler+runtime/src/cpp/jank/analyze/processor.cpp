@@ -649,30 +649,39 @@ namespace jank::analyze
     }
 
     std::string scope_name{};
-    if(is_ctor)
+    switch(val->val_kind)
     {
-      scope_name = Cpp::GetName(val->scope);
-      Cpp::LookupConstructors("", val->scope, fns);
-    }
-    else if(is_member_call)
-    {
-      scope_name = try_object<obj::symbol>(val->form)->name.substr(1);
-    }
-    else if(is_operator_call)
-    {
-      scope_name = try_object<obj::symbol>(val->form)->name;
-    }
-    else
-    {
-      scope_name = Cpp::GetName(val->scope);
-      fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
-      if(fns.empty())
-      {
+      case expr::cpp_value::value_kind::null:
+      case expr::cpp_value::value_kind::bool_true:
+      case expr::cpp_value::value_kind::bool_false:
+      case expr::cpp_value::value_kind::variable:
+      case expr::cpp_value::value_kind::enum_constant:
+      case expr::cpp_value::value_kind::member_access:
         return error::analyze_invalid_cpp_function_call(
-          util::format("There is no '{}' function.", scope_name),
+          util::format("This value is not callable.", scope_name),
           object_source(val->form),
           latest_expansion(macro_expansions));
-      }
+      case expr::cpp_value::value_kind::constructor:
+        scope_name = Cpp::GetName(val->scope);
+        Cpp::LookupConstructors("", val->scope, fns);
+        break;
+      case expr::cpp_value::value_kind::member_call:
+        scope_name = try_object<obj::symbol>(val->form)->name.substr(1);
+        break;
+      case expr::cpp_value::value_kind::operator_call:
+        scope_name = try_object<obj::symbol>(val->form)->name;
+        break;
+      case expr::cpp_value::value_kind::function:
+        scope_name = Cpp::GetName(val->scope);
+        fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
+        if(fns.empty())
+        {
+          return error::analyze_invalid_cpp_function_call(
+            util::format("There is no '{}' function.", scope_name),
+            object_source(val->form),
+            latest_expansion(macro_expansions));
+        }
+        break;
     }
 
     for(auto &arg : arg_types)
