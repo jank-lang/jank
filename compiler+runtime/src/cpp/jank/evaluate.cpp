@@ -309,7 +309,7 @@ namespace jank::evaluate
   object_ref eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
-    if(source->type == object_type::var)
+    while(source->type == object_type::var)
     {
       source = deref(source);
     }
