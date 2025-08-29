@@ -372,6 +372,7 @@ add_library(
   src/cpp/jank/runtime/obj/symbol.cpp
   src/cpp/jank/runtime/obj/keyword.cpp
   src/cpp/jank/runtime/obj/tagged_literal.cpp
+  src/cpp/jank/runtime/obj/uuid.cpp
   src/cpp/jank/runtime/obj/opaque_box.cpp
   src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/big_integer.cpp
@@ -509,6 +510,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   ${OPENSSL_INCLUDE_DIR}
   ${LIBZIP_INCLUDE_DIR}
 )

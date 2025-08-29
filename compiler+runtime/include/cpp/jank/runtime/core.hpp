@@ -80,4 +80,8 @@ namespace jank::runtime
 
   object_ref tagged_literal(object_ref tag, object_ref form);
   bool is_tagged_literal(object_ref o);
+
+  object_ref parse_uuid(object_ref o);
+  bool is_uuid(object_ref o);
+  object_ref random_uuid();
 }

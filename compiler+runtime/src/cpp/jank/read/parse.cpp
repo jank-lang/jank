@@ -622,6 +622,8 @@ namespace jank::read::parse
         return parse_reader_macro_var_quote();
       case lex::token_kind::reader_macro:
         return parse_reader_macro_symbolic_values();
+      case lex::token_kind::symbol:
+        return parse_reader_macro_tagged();
       default:
         return error::parse_unsupported_reader_macro({ start_token.start, latest_token.end });
     }
@@ -808,6 +810,49 @@ namespace jank::read::parse
 
     auto const wrapped(make_box<obj::real>(n));
     return object_source_info{ wrapped, start_token, sym_end };
+  }
+
+  processor::object_result processor::parse_reader_macro_tagged()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto const sym_result(next());
+    auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
+    auto const sym_end(sym_result.expect_ok().unwrap().end);
+
+    if(sym->name == "uuid")
+    {
+      auto str_result(next());
+
+      if(str_result.is_err())
+      {
+        return str_result;
+      }
+      else if(str_result.expect_ok().is_none())
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "A string literal value after '#uuid' must be present.",
+          { start_token.start, latest_token.end });
+      }
+
+      auto const str_end(str_result.expect_ok().unwrap().end);
+
+      if(str_end.kind != lex::token_kind::string)
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "A string literal value after '#uuid' must be present.",
+          { start_token.start, latest_token.end });
+      }
+
+      auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+      auto const wrapped(make_box<obj::uuid>(str->data));
+
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+
+    return error::parse_invalid_reader_symbolic_value(
+      "No reader function for tag. '#uuid' is the only tag currently supported.",
+      { start_token.start, latest_token.end });
   }
 
   processor::object_result processor::parse_reader_macro_comment()
