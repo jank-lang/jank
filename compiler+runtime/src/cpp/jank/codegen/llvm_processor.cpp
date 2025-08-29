@@ -1601,8 +1601,12 @@ namespace jank::codegen
     }
 
     auto const callable{ Cpp::IsFunctionPointerType(expr->type)
-                           ? Cpp::MakeFunctionValueAotCallable(expr->scope)
+                           /* We pass the type and the scope in here so that unresolved template
+                            * scopes can be turned into the correct specialization which matches
+                            * the type we have. */
+                           ? Cpp::MakeFunctionValueAotCallable(expr->scope, expr->type)
                            : Cpp::MakeAotCallable(expr->scope) };
+    jank_debug_assert(callable);
     link_module(*ctx, reinterpret_cast<llvm::Module *>(callable.getModule()));
 
     auto const alloc{ alloc_type(*ctx, llvm_ctx, expr->type) };
