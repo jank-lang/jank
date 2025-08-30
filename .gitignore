@@ -33,6 +33,7 @@ inst
 deb-cache
 build
 compiler+runtime/build-*
+compiler+runtime/third-party
 coverage.txt
 vcpkg_installed
 .idea/

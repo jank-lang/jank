@@ -90,7 +90,7 @@ namespace jank::util::cli
     cli_compile_module
       .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
-    cli_compile_module.add_option("-o", opts.output_filename, "Output object file name.");
+    cli_compile_module.add_option("-o", opts.output_object_filename, "Output object file name.");
 
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server."));
