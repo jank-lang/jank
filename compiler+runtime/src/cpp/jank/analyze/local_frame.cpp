@@ -232,7 +232,7 @@ namespace jank::analyze
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ __rt_ctx->unique_string(munge(qualified_sym->name)), qualified_sym };
+    lifted_var lv{ __rt_ctx->unique_namespaced_string(munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }

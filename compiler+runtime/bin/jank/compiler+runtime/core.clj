@@ -23,6 +23,8 @@
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
+  ; TODO: Enable when precompiled headers can be correctly accessed
+  ; for AOT compiled binaries
   #_(jank.compiler+runtime.bash-test/-main {:enabled? build?})
 
   ; Codecov (merge results)

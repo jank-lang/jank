@@ -58,6 +58,7 @@ namespace jank::util::cli
     std::vector<std::string> extra_opts;
 
     std::string output_filename;
+    std::string output_object_filename;
 
     command command{ command::repl };
   };
