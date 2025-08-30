@@ -418,17 +418,6 @@ namespace jank::runtime
     return ok();
   }
 
-  jtl::immutable_string context::unique_string() const
-  {
-    return unique_string("G_");
-  }
-
-  jtl::immutable_string context::unique_string(jtl::immutable_string_view const &prefix) const
-  {
-    auto const ns{ current_ns() };
-    return util::format("{}-{}", prefix.data(), ++ns->symbol_counter);
-  }
-
   jtl::immutable_string context::unique_namespaced_string() const
   {
     return unique_namespaced_string("G_");
@@ -452,7 +441,7 @@ namespace jank::runtime
 
   obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
   {
-    return { "", unique_string(prefix) };
+    return { "", unique_namespaced_string(prefix) };
   }
 
   ns_ref context::intern_ns(jtl::immutable_string const &name)
