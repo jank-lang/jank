@@ -821,7 +821,7 @@ namespace jank::read::parse
 
     if(sym->name == "uuid")
     {
-      auto const str_result(next());
+      auto str_result(next());
 
       if(str_result.is_err())
       {
@@ -851,7 +851,7 @@ namespace jank::read::parse
 
     if(sym->name == "cpp")
     {
-      auto const str_result(next());
+      auto str_result(next());
 
       if(str_result.is_err())
       {
