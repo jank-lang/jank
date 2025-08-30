@@ -866,7 +866,8 @@ namespace jank::read::parse
 
       auto const str_end(str_result.expect_ok().unwrap().end);
 
-      if(str_end.kind != lex::token_kind::string)
+
+      if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
       {
         return error::parse_invalid_reader_symbolic_value(
           "The form after '#cpp' must be a string literal.",
@@ -875,10 +876,10 @@ namespace jank::read::parse
 
       auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
 
-      auto const wrapped(
-        make_box<obj::persistent_list>(std::in_place,
-                                       make_box<obj::symbol>("cpp/value"),
-                                       make_box(util::format("\"{}\"", str->data)).erase()));
+      auto const wrapped(make_box<obj::persistent_list>(
+        std::in_place,
+        make_box<obj::symbol>("cpp/value"),
+        make_box(util::format("\"{}\"", util::escape(str->data))).erase()));
 
       return object_source_info{ wrapped, start_token, str_end };
     }
