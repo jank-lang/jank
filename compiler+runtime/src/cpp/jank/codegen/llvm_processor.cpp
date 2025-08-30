@@ -1599,6 +1599,23 @@ namespace jank::codegen
       }
       return alloc;
     }
+    if(expr->val_kind == expr::cpp_value::value_kind::enum_constant)
+    {
+      auto const val{ Cpp::GetEnumConstantValue(expr->scope) };
+      auto const alloc{ ctx->builder->CreateAlloca(
+        llvm_builtin_type(*ctx,
+                          llvm_ctx,
+                          Cpp::GetIntegerTypeFromEnumType(Cpp::GetNonReferenceType(expr->type))),
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+      auto const ir_val{ llvm::ConstantInt::getSigned(ctx->builder->getInt8Ty(),
+                                                      static_cast<int64_t>(val)) };
+      ctx->builder->CreateStore(ir_val, alloc);
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(alloc);
+      }
+      return alloc;
+    }
 
     auto const callable{ Cpp::IsFunctionPointerType(expr->type)
                            /* We pass the type and the scope in here so that unresolved template

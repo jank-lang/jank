@@ -746,7 +746,12 @@ namespace jank::analyze
       {
         if(auto const value = llvm::dyn_cast<expr::cpp_value>(arg_exprs[i].data))
         {
-          value->type = arg_types[i].m_Type;
+          /* Just adding a reference to the same type is not worthy of change.
+           * For some situations, this would fuck up codegen. For example, with enum constants. */
+          if(value->type.data != Cpp::GetNonReferenceType(arg_types[i].m_Type))
+          {
+            value->type = arg_types[i].m_Type;
+          }
         }
       }
 
@@ -757,7 +762,6 @@ namespace jank::analyze
                                                         latest_expansion(macro_expansions));
       }
 
-      //util::println("match found\n\t{}", Cpp::GetTypeAsString(Cpp::GetTypeFromScope(match)));
       auto const conversion_res{
         apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
       };
@@ -819,6 +823,7 @@ namespace jank::analyze
                                                       latest_expansion(macro_expansions));
     }
 
+    /* TODO: We don't actually use this. Is it needed? */
     auto new_types{ new_types_res.expect_ok() };
     /* We don't bother with figuring out scopes for conversion calls. They need to match up
      * perfectly or we just won't do it. */
@@ -854,7 +859,7 @@ namespace jank::analyze
       }
       if(is_member_call)
       {
-        arg_types.erase(arg_types.begin());
+        arg_types.erase(new_types.begin());
       }
       if(is_ctor)
       {
@@ -3313,7 +3318,7 @@ namespace jank::analyze
     }
 
     if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope)
-       || (allow_types && Cpp::IsEnumType(type)))
+       || (allow_types && Cpp::IsEnumType(type) && !Cpp::IsEnumConstant(scope)))
     {
       if(is_ctor)
       {
@@ -3381,6 +3386,7 @@ namespace jank::analyze
     else if(Cpp::IsEnumConstant(scope))
     {
       vk = expr::cpp_value::value_kind::enum_constant;
+      type = Cpp::GetNonReferenceType(type);
     }
     else if(Cpp::IsFunction(scope))
     {
