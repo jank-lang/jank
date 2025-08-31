@@ -1982,7 +1982,7 @@
   ([name]
    (cond
      (keyword? name) name
-     (symbol? name) (clojure.core-native/keyword nil (clojure.core/name name))
+     (symbol? name) (clojure.core-native/keyword nil (str name))
      (string? name) (clojure.core-native/keyword nil name)))
   ([ns name]
    (clojure.core-native/keyword ns name)))
