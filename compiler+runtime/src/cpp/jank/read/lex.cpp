@@ -765,7 +765,12 @@ namespace jank::read::lex
             {
               if(radix == 10 && !found_r)
               {
-                if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                if(!expecting_exponent)
+                {
+                  break;
+                }
+
+                if(found_exponent_sign || !is_scientific)
                 {
                   ++pos;
                   return error::lex_invalid_number(
