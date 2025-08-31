@@ -1496,6 +1496,16 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Symbol with double hyphen")
+      {
+        processor p{ "--a" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 3, token_kind::symbol, "--a" }
+        }));
+      }
+
       SUBCASE("Quoted")
       {
         processor p{ "'foo" };
