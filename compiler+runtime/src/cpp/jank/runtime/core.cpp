@@ -279,7 +279,14 @@ namespace jank::runtime
 
   object_ref keyword(object_ref const ns, object_ref const name)
   {
-    return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
+    if(ns == jank_nil)
+    {
+      return __rt_ctx->intern_keyword(runtime::to_string(name)).expect_ok();
+    }
+    else
+    {
+      return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
+    }
   }
 
   bool is_keyword(object_ref const o)
