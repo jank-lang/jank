@@ -44,7 +44,7 @@ namespace jank::runtime
 
   object_ref dynamic_call(object_ref source, object_ref const a1)
   {
-    if(source->type == object_type::var)
+    while(source->type == object_type::var)
     {
       source = runtime::deref(source);
     }

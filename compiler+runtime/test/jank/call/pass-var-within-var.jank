@@ -7,12 +7,8 @@
 (assert (== 1 (c 1)))
 
 (defn d [x]
-  (identity x))
+  (c x))
 
-(def e #'d)
-
-(def f #'e)
-
-(assert (== 2 (f 2)))
+(assert (== 2 (d 2)))
 
 :success
