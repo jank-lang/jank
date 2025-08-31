@@ -372,9 +372,9 @@ namespace jank::runtime
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{
-      util::cli::opts.output_filename.empty()
+      util::cli::opts.output_object_filename.empty()
         ? util::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
-        : jtl::immutable_string{ util::cli::opts.output_filename }
+        : jtl::immutable_string{ util::cli::opts.output_object_filename }
     };
     std::filesystem::create_directories(module_path.parent_path());
 
@@ -418,17 +418,6 @@ namespace jank::runtime
     return ok();
   }
 
-  jtl::immutable_string context::unique_string() const
-  {
-    return unique_string("G_");
-  }
-
-  jtl::immutable_string context::unique_string(jtl::immutable_string_view const &prefix) const
-  {
-    auto const ns{ current_ns() };
-    return util::format("{}-{}", prefix.data(), ++ns->symbol_counter);
-  }
-
   jtl::immutable_string context::unique_namespaced_string() const
   {
     return unique_namespaced_string("G_");
@@ -452,7 +441,7 @@ namespace jank::runtime
 
   obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
   {
-    return { "", unique_string(prefix) };
+    return { "", unique_namespaced_string(prefix) };
   }
 
   ns_ref context::intern_ns(jtl::immutable_string const &name)

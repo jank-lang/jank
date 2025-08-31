@@ -106,9 +106,7 @@ namespace jank::runtime
                                           jtl::ref<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
-     * lifted vars, to shadowed locals. */
-    jtl::immutable_string unique_string() const;
-    jtl::immutable_string unique_string(jtl::immutable_string_view const &prefix) const;
+     * lifted vars, to shadowed locals. Prefixes with current namespace. */
     jtl::immutable_string unique_namespaced_string() const;
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string_view const &prefix) const;
     obj::symbol unique_symbol() const;
