@@ -36,4 +36,4 @@
 	url = https://github.com/jank-lang/bdwgc.git
 [submodule "compiler+runtime/third-party/stduuid"]
 	path = compiler+runtime/third-party/stduuid
-	url = https://github.com/mariusbancila/stduuid
+	url = https://github.com/jank-lang/stduuid.git
