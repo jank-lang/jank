@@ -1645,6 +1645,27 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Invalid auto-resolved qualified keyword")
+      {
+        processor p{ "::/foo" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 6),
+              }));
+      }
+
+      SUBCASE("Invalid ::/ pattern")
+      {
+        processor p{ "::/" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 3),
+              }));
+      }
+
+
       SUBCASE("Too many starting colons")
       {
         processor p{ ":::foo" };

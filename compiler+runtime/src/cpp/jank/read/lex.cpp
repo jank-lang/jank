@@ -1125,8 +1125,23 @@ namespace jank::read::lex
           if(c == ':')
           {
             ++pos;
+            auto const after_dd_colon(peek());
+            if(after_dd_colon.is_ok() && after_dd_colon.expect_ok().character == '/')
+            {
+              /* Invalid ::/ pattern found. Consume the entire invalid token. */
+              while(true)
+              {
+                auto const result(convert_to_codepoint(file.substr(pos), pos));
+                if(result.is_err() || !is_symbol_char(result.expect_ok().character))
+                {
+                  break;
+                }
+                pos += result.expect_ok().len;
+              }
+              return error::lex_invalid_keyword("An auto-resolved keyword may not start with '/'.",
+                                                { token_start, pos });
+            }
           }
-
           while(true)
           {
             auto const oc(peek());
