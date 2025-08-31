@@ -1,15 +1,6 @@
 (ns nrepl-server.util
   (:require [clojure.walk :refer [postwalk]]))
 
-(def alpha-num  "abcdefghijklmnopqrstuvwxyz0123456789")
-
-(defn rand-str [n]
-  (apply str (repeatedly n #(rand-nth alpha-num))))
-
-(defn generate-uuid []
-  ;; TODO: use clojure.core/random-uuid once it's ported
-  (str (rand-str 8) "-" (rand-str 4) "-" (rand-str 4) "-" (rand-str 4) "-" (rand-str 12)))
-
 (defn abbreviate
   "Traverse through `form` shortening any strings which exceed the length `n`."
   [form n]
