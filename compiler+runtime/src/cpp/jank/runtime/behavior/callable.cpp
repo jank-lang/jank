@@ -19,7 +19,7 @@ namespace jank::runtime
     return source;
   }
 
-  object_ref dynamic_call(object_ref source)
+  object_ref dynamic_call(object_ref const source)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
@@ -47,7 +47,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source, object_ref const a1)
+  object_ref dynamic_call(object_ref const source, object_ref const a1)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
@@ -90,7 +90,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source, object_ref const a1, object_ref const a2)
+  object_ref dynamic_call(object_ref const source, object_ref const a1, object_ref const a2)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
@@ -133,8 +133,10 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref
-  dynamic_call(object_ref source, object_ref const a1, object_ref const a2, object_ref const a3)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
@@ -172,7 +174,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -216,7 +218,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -263,7 +265,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -325,7 +327,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -392,7 +394,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -464,7 +466,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -538,7 +540,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -659,7 +661,7 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
