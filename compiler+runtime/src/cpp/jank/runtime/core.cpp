@@ -281,9 +281,9 @@ namespace jank::runtime
   {
     if(ns != jank_nil && ns->type != object_type::persistent_string)
     {
-      throw std::runtime_error{ util::format("The 'keyword' function expects a namespace to be "
-                                             "either 'nil' or a 'string', got {} instead.",
-                                             runtime::to_string(ns)) };
+      throw std::runtime_error{ util::format(
+        "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
+        runtime::to_string(ns)) };
     }
     if(name->type != object_type::persistent_string)
     {
@@ -296,10 +296,8 @@ namespace jank::runtime
     {
       return __rt_ctx->intern_keyword(runtime::to_string(name)).expect_ok();
     }
-    else
-    {
-      return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
-    }
+
+    return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
   bool is_keyword(object_ref const o)

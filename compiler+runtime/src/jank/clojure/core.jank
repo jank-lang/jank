@@ -1980,9 +1980,10 @@
   "Returns a Keyword with the given namespace and name.  Do not use :
    in the keyword strings, it will be added automatically."
   ([name]
-   (if (keyword? name)
-     name
-     (clojure.core-native/keyword "" name)))
+   (cond
+     (keyword? name) name
+     (symbol? name) (clojure.core-native/keyword nil (clojure.core/name name))
+     (string? name) (clojure.core-native/keyword nil name)))
   ([ns name]
    (clojure.core-native/keyword ns name)))
 
