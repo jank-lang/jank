@@ -10,13 +10,18 @@ namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ref dynamic_call(object_ref source)
+  static object_ref pass_through_vars(object_ref source)
   {
-    if(source->type == object_type::var)
+    while(source->type == object_type::var)
     {
       source = runtime::deref(source);
     }
+    return source;
+  }
 
+  object_ref dynamic_call(object_ref source)
+  {
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -39,16 +44,12 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source, object_ref const a1)
   {
-    while(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -86,16 +87,12 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source, object_ref const a1, object_ref const a2)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -133,17 +130,13 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref
   dynamic_call(object_ref source, object_ref const a1, object_ref const a2, object_ref const a3)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -176,7 +169,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -185,11 +178,7 @@ namespace jank::runtime
                           object_ref const a3,
                           object_ref const a4)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -224,7 +213,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -234,11 +223,7 @@ namespace jank::runtime
                           object_ref const a4,
                           object_ref const a5)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -275,7 +260,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -286,11 +271,7 @@ namespace jank::runtime
                           object_ref const a5,
                           object_ref const a6)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -341,7 +322,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -353,11 +334,7 @@ namespace jank::runtime
                           object_ref const a6,
                           object_ref const a7)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -412,7 +389,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -425,11 +402,7 @@ namespace jank::runtime
                           object_ref const a7,
                           object_ref const a8)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -488,7 +461,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -502,11 +475,7 @@ namespace jank::runtime
                           object_ref const a8,
                           object_ref const a9)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -566,7 +535,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -581,11 +550,7 @@ namespace jank::runtime
                           object_ref const a9,
                           object_ref const a10)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -691,7 +656,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref dynamic_call(object_ref source,
@@ -708,11 +673,7 @@ namespace jank::runtime
                           obj::persistent_list_ref const rest)
   {
     /* TODO: Move call fns into var so we can remove these checks. */
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -860,7 +821,7 @@ namespace jank::runtime
                                                  typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref apply_to(object_ref const source, object_ref const args)
