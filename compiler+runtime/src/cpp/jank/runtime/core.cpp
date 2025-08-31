@@ -283,13 +283,13 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
-        runtime::to_string(ns)) };
+        runtime::to_code_string(ns)) };
     }
     if(name->type != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects the name to be a 'string', got {} instead.",
-        runtime::to_string(name)) };
+        runtime::to_code_string(name)) };
     }
 
     if(ns == jank_nil)
