@@ -279,6 +279,24 @@ namespace jank::runtime
 
   object_ref keyword(object_ref const ns, object_ref const name)
   {
+    if(!ns.is_nil() && ns->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ util::format(
+        "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
+        runtime::to_code_string(ns)) };
+    }
+    if(name->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ util::format(
+        "The 'keyword' function expects the name to be a 'string', got {} instead.",
+        runtime::to_code_string(name)) };
+    }
+
+    if(ns.is_nil())
+    {
+      return __rt_ctx->intern_keyword(runtime::to_string(name)).expect_ok();
+    }
+
     return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
