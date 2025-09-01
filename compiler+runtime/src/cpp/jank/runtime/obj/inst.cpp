@@ -20,7 +20,7 @@ namespace jank::runtime::obj
   {
   }
 
-  static jtl::ref<inst_time_point> from_string(jtl::immutable_string const &s)
+  static jtl::ref<inst_time_point> inst_from_string(jtl::immutable_string const &s)
   {
     inst_time_point o;
     std::istringstream is{ static_cast<std::string>(s) };
@@ -36,7 +36,7 @@ namespace jank::runtime::obj
   }
 
   inst::inst(jtl::immutable_string const &s)
-    : value{ from_string(s) }
+    : value{ inst_from_string(s) }
   {
   }
 
