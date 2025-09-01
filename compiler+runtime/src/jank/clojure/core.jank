@@ -6737,24 +6737,28 @@ fails, attempts to require sym's namespace and retries."
       [:encoding (first opts)])
     opts))
 
+(cpp/raw "#include <fstream>")
+(cpp/raw "#include <iostream>")
+
 (defn slurp
   "Opens a reader on f and reads all its contents, returning a string.
   See clojure.java.io/reader for a complete list of supported arguments."
   ([f & opts]
-    ;;  (let [opts (normalize-slurp-opts opts)
-    ;;        sw (java.io.StringWriter.)]
-    ;;    (with-open [^java.io.Reader r (apply jio/reader f opts)]
-    ;;      (jio/copy r sw)
-    ;;      (.toString sw)))
-   (throw "TODO: port slurp")))
+   (let [opts (normalize-slurp-opts opts)
+         file (cpp/std.ifstream. (cpp/cast cpp/std.string f))
+         buffer (cpp/std.stringstream.)]
+     (cpp/<< buffer (cpp/.rdbuf file))
+     (cpp/.str buffer))))
 
 (defn spit
   "Opposite of slurp.  Opens f with writer, writes content, then
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
-  ;; (with-open [^java.io.Writer w (apply jio/writer f options)]
-  ;;   (.write w (str content)))
-  (throw "TODO: port spit"))
+  (let [file (cpp/std.ofstream.)]
+    (cpp/.open file (cpp/cast cpp/std.string f))
+    (cpp/<< file (cpp/cast cpp/std.string content))
+    (cpp/.close file)
+    nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
 (defn future-call
