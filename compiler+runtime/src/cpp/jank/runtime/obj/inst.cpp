@@ -65,10 +65,8 @@ namespace jank::runtime::obj
 
   static void to_string_impl(jtl::ref<inst_time_point> value, jtl::string_builder &buff)
   {
-    buff("#inst \"");
     buff(std::format("{:%FT%T}-00:00",
                      std::chrono::time_point_cast<std::chrono::milliseconds>(*value)));
-    buff("\"");
   }
 
   void inst::to_string(jtl::string_builder &buff) const
@@ -85,7 +83,11 @@ namespace jank::runtime::obj
 
   jtl::immutable_string inst::to_code_string() const
   {
-    return to_string();
+    jtl::string_builder buff;
+    buff("#inst \"");
+    to_string_impl(value, buff);
+    buff("\"");
+    return buff.release();
   }
 
   uhash inst::to_hash() const
