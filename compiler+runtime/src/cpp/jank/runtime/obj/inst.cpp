@@ -23,11 +23,23 @@ namespace jank::runtime::obj
   static jtl::ref<inst_time_point> inst_from_string(jtl::immutable_string const &s)
   {
     inst_time_point o;
-    std::istringstream is{ static_cast<std::string>(s) };
-    is.imbue(std::locale("en_US.utf-8"));
-    is >> std::chrono::parse("%FT%T", o);
+    auto const formats = { "%FT%T%Oz", "%FT%T%z", "%FT%T", "%F" };
+    auto parsed = false;
 
-    if(is.fail())
+    for(auto const format : formats)
+    {
+      std::istringstream is{ static_cast<std::string>(s) };
+      is.imbue(std::locale("en_US.utf-8"));
+      is >> std::chrono::parse(format, o);
+
+      if(!is.fail() && is.peek() == EOF)
+      {
+        parsed = true;
+        break;
+      }
+    }
+
+    if(!parsed)
     {
       throw make_box(util::format("Unrecognized date/time syntax: {}", s)).erase();
     }
@@ -51,19 +63,23 @@ namespace jank::runtime::obj
     return *s->value == *value;
   }
 
-  void inst::to_string(jtl::string_builder &buff) const
+  static void to_string_impl(jtl::ref<inst_time_point> value, jtl::string_builder &buff)
   {
     buff("#inst \"");
-    buff(std::format("{:%FT%T}", *value));
+    buff(std::format("{:%FT%T}-00:00",
+                     std::chrono::time_point_cast<std::chrono::milliseconds>(*value)));
     buff("\"");
+  }
+
+  void inst::to_string(jtl::string_builder &buff) const
+  {
+    to_string_impl(value, buff);
   }
 
   jtl::immutable_string inst::to_string() const
   {
     jtl::string_builder buff;
-    buff("#inst \"");
-    buff(std::format("{:%FT%T}", *value));
-    buff("\"");
+    to_string_impl(value, buff);
     return buff.release();
   }
 
