@@ -21,30 +21,21 @@ namespace jank::runtime
    * supported arities at compile-time, but that's not always the case in
    * dynamic code. We may not every know if the source is callable at all, so
    * codegen will use this suite of fns instead. */
-  object_ref dynamic_call(object_ref source);
-  object_ref dynamic_call(object_ref source, object_ref);
-  object_ref dynamic_call(object_ref source, object_ref, object_ref);
-  object_ref dynamic_call(object_ref source, object_ref, object_ref, object_ref);
-  object_ref dynamic_call(object_ref source, object_ref, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref const source);
+  object_ref dynamic_call(object_ref const source, object_ref);
+  object_ref dynamic_call(object_ref const source, object_ref, object_ref);
+  object_ref dynamic_call(object_ref const source, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref const source, object_ref, object_ref, object_ref, object_ref);
   object_ref
-  dynamic_call(object_ref source, object_ref, object_ref, object_ref, object_ref, object_ref);
-  object_ref dynamic_call(object_ref source,
+  dynamic_call(object_ref const source, object_ref, object_ref, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref const source,
                           object_ref,
                           object_ref,
                           object_ref,
                           object_ref,
                           object_ref,
                           object_ref);
-  object_ref dynamic_call(object_ref source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
-  object_ref dynamic_call(object_ref source,
-                          object_ref,
+  object_ref dynamic_call(object_ref const source,
                           object_ref,
                           object_ref,
                           object_ref,
@@ -52,8 +43,7 @@ namespace jank::runtime
                           object_ref,
                           object_ref,
                           object_ref);
-  object_ref dynamic_call(object_ref source,
-                          object_ref,
+  object_ref dynamic_call(object_ref const source,
                           object_ref,
                           object_ref,
                           object_ref,
@@ -62,8 +52,7 @@ namespace jank::runtime
                           object_ref,
                           object_ref,
                           object_ref);
-  object_ref dynamic_call(object_ref source,
-                          object_ref,
+  object_ref dynamic_call(object_ref const source,
                           object_ref,
                           object_ref,
                           object_ref,
@@ -73,7 +62,18 @@ namespace jank::runtime
                           object_ref,
                           object_ref,
                           object_ref);
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref);
+  object_ref dynamic_call(object_ref const source,
                           object_ref,
                           object_ref,
                           object_ref,

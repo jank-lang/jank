@@ -6,4 +6,9 @@
 
 (assert (== 1 (c 1)))
 
+(defn d [x]
+  (c x))
+
+(assert (== 2 (d 2)))
+
 :success

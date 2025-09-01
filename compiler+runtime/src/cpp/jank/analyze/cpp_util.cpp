@@ -155,7 +155,7 @@ namespace jank::analyze::cpp_util
     diag.setClient(new clang::IgnoringDiagConsumer{}, true);
     util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
-    auto const alias{ runtime::__rt_ctx->unique_string() };
+    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{ util::format("using {} = {};", runtime::munge(alias), literal) };
     auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!res)

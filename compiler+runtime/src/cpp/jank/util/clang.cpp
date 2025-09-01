@@ -17,6 +17,7 @@
 #include <jank/util/clang.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/error/system.hpp>
 
@@ -156,7 +157,7 @@ namespace jank::util
     return resource_dir;
   }
 
-  jtl::result<void, error_ref> invoke_clang(std::vector<char const *> const &args)
+  jtl::result<void, error_ref> invoke_clang(std::vector<char const *> args)
   {
     std::string buffer;
     llvm::raw_string_ostream diag_stream{ buffer };
@@ -179,6 +180,9 @@ namespace jank::util
      * be checked, though. */
     clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
     driver.setCheckInputsExist(true);
+
+    /* The first argument should be the clang executable. */
+    args.insert(args.begin(), clang_path.c_str());
 
     auto const compilation_result{ driver.BuildCompilation(args) };
     if(!compilation_result || compilation_result->containsError())

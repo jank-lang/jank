@@ -1664,7 +1664,7 @@ namespace jank::analyze
           {
             /* C++ doesn't allow multiple params with the same name, so we generate a unique
              * name for shared params. */
-            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
+            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_namespaced_string("shadowed"));
             break;
           }
         }
@@ -1773,7 +1773,7 @@ namespace jank::analyze
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
-      unique_name = __rt_ctx->unique_string(name);
+      unique_name = __rt_ctx->unique_namespaced_string(name);
       if(length < 3)
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
@@ -1785,7 +1785,7 @@ namespace jank::analyze
     }
     else
     {
-      name = __rt_ctx->unique_string("fn");
+      name = __rt_ctx->unique_namespaced_string("fn");
       unique_name = name;
     }
 
@@ -2115,7 +2115,7 @@ namespace jank::analyze
       auto const expr_type{ cpp_util::non_void_expression_type(it.second) };
       ret->frame->locals.emplace(sym,
                                  local_binding{ sym,
-                                                __rt_ctx->unique_string(sym->name),
+                                                __rt_ctx->unique_namespaced_string(sym->name),
                                                 it.second,
                                                 current_frame,
                                                 it.second->needs_box,
