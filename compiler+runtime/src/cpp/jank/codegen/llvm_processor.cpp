@@ -880,8 +880,7 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::persistent_string>
                      || std::same_as<T, runtime::obj::ratio>
                      || std::same_as<T, runtime::obj::big_integer>
-                     || std::same_as<T, runtime::obj::uuid>
-                     || std::same_as<T, runtime::obj::inst>)
+                     || std::same_as<T, runtime::obj::uuid> || std::same_as<T, runtime::obj::inst>)
         {
           return gen_global(typed_o);
         }

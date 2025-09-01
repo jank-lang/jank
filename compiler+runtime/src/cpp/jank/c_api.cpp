@@ -433,7 +433,7 @@ extern "C"
     return make_box<obj::uuid>(s).erase();
   }
 
- jank_object_ref jank_inst_create(char const *s)
+  jank_object_ref jank_inst_create(char const *s)
   {
     jank_debug_assert(s);
     return make_box<obj::inst>(s).erase();

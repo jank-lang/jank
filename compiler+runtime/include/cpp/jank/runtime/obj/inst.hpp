@@ -8,6 +8,7 @@ namespace jank::runtime::obj
 {
   using inst_ref = oref<struct inst>;
   using inst_time_point = std::chrono::time_point<std::chrono::system_clock>;
+
   struct inst : gc
   {
     static constexpr object_type obj_type{ object_type::inst };
