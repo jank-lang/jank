@@ -214,7 +214,7 @@ namespace jank::analyze::cpp_util
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{
-      util::format("inline decltype(auto) {}(){ return {}; }", runtime::munge(alias), literal)
+      util::format("inline decltype(auto) {}(){ return ({}); }", runtime::munge(alias), literal)
     };
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!parse_res)
