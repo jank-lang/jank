@@ -1,0 +1,6 @@
+(assert-eq 246.9M (+ 123.45M 123.45M))
+(assert-eq 0.0M (- 123.45M 123.45M))
+(assert-eq 15239.9025M (* 123.45M 123.45M))
+(assert-eq 1.0M (/ 123.45M 123.45M))
+
+:success

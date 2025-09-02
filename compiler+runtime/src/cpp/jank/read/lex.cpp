@@ -129,6 +129,17 @@ namespace jank::read::lex
   {
   }
 
+  token::token(movable_position const &s,
+               movable_position const &e,
+               token_kind const k,
+               big_decimal const &d)
+    : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
+    , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
 #ifdef JANK_TEST
   token::token(usize const offset, usize const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
@@ -195,6 +206,14 @@ namespace jank::read::lex
     , data{ d }
   {
   }
+
+  token::token(usize const offset, usize const width, token_kind const k, big_decimal const &d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
 #endif
 
   struct codepoint
@@ -220,6 +239,16 @@ namespace jank::read::lex
   }
 
   bool big_integer::operator!=(big_integer const &rhs) const
+  {
+    return !(*this == rhs);
+  }
+
+  bool big_decimal::operator==(big_decimal const &rhs) const
+  {
+    return number_literal == rhs.number_literal;
+  }
+
+  bool big_decimal::operator!=(big_decimal const &rhs) const
   {
     return !(*this == rhs);
   }
@@ -296,6 +325,11 @@ namespace jank::read::lex
       os << static_cast<int>(r.radix) << "r" << r.number_literal;
     }
     return os;
+  }
+
+  static std::ostream &operator<<(std::ostream &os, big_decimal const &r)
+  {
+    return os << r.number_literal;
   }
 
   processor::processor(jtl::immutable_string_view const &f)
@@ -649,6 +683,7 @@ namespace jank::read::lex
           bool expecting_exponent{};
           bool expecting_more_digits{};
           bool found_N{};
+          bool found_M{};
           i8 radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           bool found_beginning_negative{};
@@ -919,6 +954,32 @@ namespace jank::read::lex
                 expecting_more_digits = false;
                 break;
               }
+              if (c == 'M')
+              {
+                ++pos;
+                if (found_M)
+                {
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
+                if (found_slash_after_number)
+                {
+                  found_slash_after_number = false;
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
+                if (found_N)
+                {
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                found_M = true;
+                expecting_more_digits = false;
+                break;
+              }
               /* When parsing decimal numbers only, we would break if we see a non-digit char. */
               /* But to support other kinds of numbers (octal, hex, etc.), we only break if
                * c is also not a letter. */
@@ -1005,7 +1066,7 @@ namespace jank::read::lex
 
             /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
-            auto const number_end{ found_N ? pos - 1 : pos };
+            auto const number_end{ found_N || found_M ? pos - 1 : pos };
             for(auto i{ number_start }; i < number_end; i++)
             {
               if(!is_valid_num_char(file[i], radix))
@@ -1021,6 +1082,17 @@ namespace jank::read::lex
                   jtl::immutable_string_view{ invalid_digits.begin(), invalid_digits.end() },
                   radix),
                 { token_start, pos });
+            }
+            if (found_M)
+            {
+              jtl::immutable_string_view const number_literal{ file.data() + number_start,
+                                                               number_end - number_start };
+              return ok(token{
+                token_start,
+                pos,
+                token_kind::big_decimal,
+                big_decimal{ number_literal }
+              });
             }
             /* Real numbers. */
             if(contains_dot || is_scientific || found_exponent_sign)

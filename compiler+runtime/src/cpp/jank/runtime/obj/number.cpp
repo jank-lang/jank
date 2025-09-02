@@ -60,6 +60,11 @@ namespace jank::runtime::obj
     return (data > o.data) - (data < o.data);
   }
 
+  native_big_decimal boolean::to_native_big_decimal() const
+  {
+    return native_big_decimal(data ? 1 : 0);
+  }
+
   /***** integer *****/
   integer::integer(i64 const d)
     : data{ d }
@@ -121,6 +126,11 @@ namespace jank::runtime::obj
   f64 integer::to_real() const
   {
     return static_cast<f64>(data);
+  }
+
+  native_big_decimal integer::to_native_big_decimal() const
+  {
+    return native_big_decimal(data);
   }
 
   /***** real *****/
@@ -204,6 +214,11 @@ namespace jank::runtime::obj
   f64 real::to_real() const
   {
     return data;
+  }
+
+  native_big_decimal real::to_native_big_decimal() const
+  {
+    return native_big_decimal(data);
   }
 }
 

@@ -1,3 +1,4 @@
+#include <jank/runtime/obj/big_decimal.hpp>
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -332,6 +333,11 @@ namespace jank::runtime::obj
   f64 big_integer::to_real() const
   {
     return big_integer::to_f64(data);
+  }
+
+  native_big_decimal big_integer::to_native_big_decimal() const
+  {
+    return native_big_decimal(data.str().c_str());
   }
 
 }

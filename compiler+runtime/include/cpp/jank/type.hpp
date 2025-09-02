@@ -14,6 +14,7 @@
 #include <immer/heap/heap_policy.hpp>
 #include <immer/memory_policy.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <folly/FBVector.h>
 
 #include <jtl/primitive.hpp>
@@ -29,7 +30,10 @@ namespace jank
                                              false>;
 
   using native_persistent_string_view = std::string_view;
-  using native_big_integer = boost::multiprecision::cpp_int;
+  using native_big_integer
+    = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
+  using native_big_decimal
+    = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<100>>;
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;

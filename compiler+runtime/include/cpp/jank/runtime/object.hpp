@@ -14,6 +14,7 @@ namespace jank::runtime
     boolean,
     integer,
     big_integer,
+    big_decimal,
     real,
     ratio,
 
@@ -101,6 +102,8 @@ namespace jank::runtime
         return "integer";
       case object_type::big_integer:
         return "big_integer";
+      case object_type::big_decimal:
+        return "Big-decimal";
       case object_type::real:
         return "real";
       case object_type::ratio:

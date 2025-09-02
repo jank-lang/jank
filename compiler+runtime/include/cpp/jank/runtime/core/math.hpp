@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/big_decimal.hpp>
 
 namespace jank::runtime
 {
@@ -9,21 +10,24 @@ namespace jank::runtime
     using integer_ref = oref<struct integer>;
     using real_ref = oref<struct real>;
     using ratio_ref = oref<struct ratio>;
+    using big_decimal_ref = oref<struct big_decimal>;
   }
 
   object_ref add(object_ref l, object_ref r);
   object_ref add(obj::integer_ref l, object_ref r);
   object_ref add(object_ref l, obj::integer_ref r);
   object_ref add(object_ref l, obj::ratio_ref r);
+  object_ref add(obj::big_decimal_ref l, object_ref r);
+  object_ref add(object_ref l, obj::big_decimal_ref r);
   i64 add(obj::integer_ref l, obj::integer_ref r);
   f64 add(obj::real_ref l, obj::real_ref r);
-  f64 add(obj::real_ref l, object_ref r);
-  f64 add(object_ref l, obj::real_ref r);
+  object_ref add(obj::real_ref l, object_ref r);
+  object_ref add(object_ref l, obj::real_ref r);
   f64 add(obj::real_ref l, obj::integer_ref r);
   f64 add(obj::integer_ref l, obj::real_ref r);
 
-  f64 add(object_ref l, f64 r);
-  f64 add(f64 l, object_ref r);
+  object_ref add(object_ref l, f64 r);
+  object_ref add(f64 l, object_ref r);
   f64 add(f64 l, f64 r);
 
   f64 add(i64 l, f64 r);
@@ -40,15 +44,17 @@ namespace jank::runtime
   object_ref sub(object_ref l, object_ref r);
   object_ref sub(obj::integer_ref l, object_ref r);
   object_ref sub(object_ref l, obj::integer_ref r);
+  object_ref sub(obj::big_decimal_ref l, object_ref r);
+  object_ref sub(object_ref l, obj::big_decimal_ref r);
   i64 sub(obj::integer_ref l, obj::integer_ref r);
   f64 sub(obj::real_ref l, obj::real_ref r);
-  f64 sub(obj::real_ref l, object_ref r);
-  f64 sub(object_ref l, obj::real_ref r);
+  object_ref sub(obj::real_ref l, object_ref r);
+  object_ref sub(object_ref l, obj::real_ref r);
   f64 sub(obj::real_ref l, obj::integer_ref r);
   f64 sub(obj::integer_ref l, obj::real_ref r);
 
-  f64 sub(object_ref l, f64 r);
-  f64 sub(f64 l, object_ref r);
+  object_ref sub(object_ref l, f64 r);
+  object_ref sub(f64 l, object_ref r);
   f64 sub(f64 l, f64 r);
 
   f64 sub(i64 l, f64 r);
@@ -61,15 +67,17 @@ namespace jank::runtime
   object_ref div(object_ref l, object_ref r);
   object_ref div(obj::integer_ref l, object_ref r);
   object_ref div(object_ref l, obj::integer_ref r);
+  object_ref div(obj::big_decimal_ref l, object_ref r);
+  object_ref div(object_ref l, obj::big_decimal_ref r);
   i64 div(obj::integer_ref l, obj::integer_ref r);
   f64 div(obj::real_ref l, obj::real_ref r);
-  f64 div(obj::real_ref l, object_ref r);
-  f64 div(object_ref l, obj::real_ref r);
+  object_ref div(obj::real_ref l, object_ref r);
+  object_ref div(object_ref l, obj::real_ref r);
   f64 div(obj::real_ref l, obj::integer_ref r);
   f64 div(obj::integer_ref l, obj::real_ref r);
 
-  f64 div(object_ref l, f64 r);
-  f64 div(f64 l, object_ref r);
+  object_ref div(object_ref l, f64 r);
+  object_ref div(f64 l, object_ref r);
   f64 div(f64 l, f64 r);
 
   f64 div(i64 l, f64 r);
@@ -82,15 +90,17 @@ namespace jank::runtime
   object_ref mul(object_ref l, object_ref r);
   object_ref mul(obj::integer_ref l, object_ref r);
   object_ref mul(object_ref l, obj::integer_ref r);
+  object_ref mul(obj::big_decimal_ref l, object_ref r);
+  object_ref mul(object_ref l, obj::big_decimal_ref r);
   i64 mul(obj::integer_ref l, obj::integer_ref r);
   f64 mul(obj::real_ref l, obj::real_ref r);
-  f64 mul(obj::real_ref l, object_ref r);
-  f64 mul(object_ref l, obj::real_ref r);
+  object_ref mul(obj::real_ref l, object_ref r);
+  object_ref mul(object_ref l, obj::real_ref r);
   f64 mul(obj::real_ref l, obj::integer_ref r);
   f64 mul(obj::integer_ref l, obj::real_ref r);
 
-  f64 mul(object_ref l, f64 r);
-  f64 mul(f64 l, object_ref r);
+  object_ref mul(object_ref l, f64 r);
+  object_ref mul(f64 l, object_ref r);
   f64 mul(f64 l, f64 r);
 
   f64 mul(i64 l, f64 r);
@@ -173,8 +183,8 @@ namespace jank::runtime
   f64 max(obj::real_ref l, obj::integer_ref r);
   f64 max(obj::integer_ref l, obj::real_ref r);
 
-  f64 max(object_ref l, f64 r);
-  f64 max(f64 l, object_ref r);
+  object_ref max(object_ref l, f64 r);
+  object_ref max(f64 l, object_ref r);
   f64 max(f64 l, f64 r);
 
   f64 max(i64 l, f64 r);
@@ -208,8 +218,8 @@ namespace jank::runtime
   f64 pow(obj::real_ref l, obj::integer_ref r);
   f64 pow(obj::integer_ref l, obj::real_ref r);
 
-  f64 pow(object_ref l, f64 r);
-  f64 pow(f64 l, object_ref r);
+  object_ref pow(object_ref l, f64 r);
+  object_ref pow(f64 l, object_ref r);
   f64 pow(f64 l, f64 r);
 
   f64 pow(i64 l, f64 r);
