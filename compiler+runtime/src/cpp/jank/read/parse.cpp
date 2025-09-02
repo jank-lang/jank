@@ -849,6 +849,45 @@ namespace jank::read::parse
       return object_source_info{ wrapped, start_token, str_end };
     }
 
+    if(sym->name == "inst")
+    {
+      auto str_result(next());
+
+      if(str_result.is_err())
+      {
+        return str_result;
+      }
+      else if(str_result.expect_ok().is_none())
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "The string literal after this '#inst' is missing.",
+          { start_token.start, latest_token.end });
+      }
+
+      auto const str_end(str_result.expect_ok().unwrap().end);
+
+
+      if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "The form after '#inst' must be a string literal.",
+          { start_token.start, latest_token.end });
+      }
+
+      auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+      try
+      {
+        auto const wrapped(make_box<obj::inst>(str->data));
+        return object_source_info{ wrapped, start_token, str_end };
+      }
+      catch(jank::runtime::object * const e)
+      {
+        return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
+                                         { start_token.start, latest_token.end });
+      }
+    }
+
     if(sym->name == "cpp")
     {
       auto str_result(next());

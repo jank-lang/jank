@@ -524,4 +524,22 @@ namespace jank::runtime
   {
     return make_box<obj::uuid>();
   }
+
+  bool is_inst(object_ref const o)
+  {
+    return o->type == object_type::inst;
+  }
+
+  i64 inst_ms(object_ref const o)
+  {
+    if(o->type != object_type::inst)
+    {
+      throw std::runtime_error{ util::format("The function 'inst-ms' expects an inst, got {}",
+                                             object_type_str(o->type)) };
+    }
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+             expect_object<obj::inst>(o)->value.time_since_epoch())
+      .count();
+  }
 }
