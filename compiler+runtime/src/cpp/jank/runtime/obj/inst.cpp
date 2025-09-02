@@ -16,9 +16,10 @@ namespace jank::runtime::obj
 
   static inst_time_point inst_from_string(jtl::immutable_string const &s)
   {
+    static auto const formats = { "%FT%T%Oz", "%FT%T%z", "%FT%T", "%F" };
+
     inst_time_point o;
-    auto const formats = { "%FT%T%Oz", "%FT%T%z", "%FT%T", "%F" };
-    auto parsed = false;
+    bool parsed{ false };
 
     for(auto const format : formats)
     {
