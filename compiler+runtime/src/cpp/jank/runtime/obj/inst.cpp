@@ -15,6 +15,13 @@ namespace jank::runtime::obj
   }
 
 #ifdef _LIBCPP_VERSION
+  /* The current version of libc++ within LLVM does not implement
+   * std::chrono::parse() (a C++20 feature). Until it is added or an alternative
+   * is used, inst parsing will be disabled
+   *
+   * To find progress for this feature in LLVM goto:
+   * https://github.com/llvm/llvm-project/issues/99982
+   */
   static inst_time_point inst_from_string(jtl::immutable_string const &)
   {
     throw make_box("'#inst' parsing not currently supported.").erase();
