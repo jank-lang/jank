@@ -1037,98 +1037,74 @@ namespace jank::analyze
                             jtl::ptr<void> const expected_type,
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
-    //util::println(
-    //  "apply_implicit_conversion expr type {} (canon {}), expected type {} (canon {}), underlying "
-    //  "subclass {}",
-    //  Cpp::GetTypeAsString(expr_type),
-    //  Cpp::GetTypeAsString(Cpp::GetCanonicalType(expr_type)),
-    //  Cpp::GetTypeAsString(expected_type),
-    //  Cpp::GetTypeAsString(Cpp::GetCanonicalType(expected_type)),
-    //  Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-    //                         Cpp::GetUnderlyingType(expected_type)));
+    auto const action{ cpp_util::determine_implicit_conversion(expr_type, expected_type) };
+    //util::println("implicit conversion action: {}",
+    //              cpp_util::implicit_conversion_action_str(action));
+    switch(action)
+    {
+      case cpp_util::implicit_conversion_action::none:
+        return expr;
+      case cpp_util::implicit_conversion_action::into_object:
+        {
+          auto const cast_position{ expr->position };
+          expr->propagate_position(expression_position::value);
+          return jtl::make_ref<expr::cpp_cast>(cast_position,
+                                               expr->frame,
+                                               expr->needs_box,
+                                               expected_type,
+                                               expr_type,
+                                               conversion_policy::into_object,
+                                               expr);
+        }
 
-    expr_type = Cpp::GetNonReferenceType(expr_type);
-    if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
-       || (Cpp::GetCanonicalType(expr_type)
-           == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
-       || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expr_type))
-           == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type)))
-       || Cpp::IsTypeDerivedFrom(Cpp::GetCanonicalType(expr_type),
-                                 Cpp::GetCanonicalType(expected_type))
-       || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
-    {
-      return ok(expr);
-    }
-
-    auto const cast_position{ expr->position };
-    expr->propagate_position(expression_position::value);
-
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
-    {
-      return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                           expr->frame,
-                                           expr->needs_box,
-                                           expected_type,
-                                           expr_type,
-                                           conversion_policy::into_object,
-                                           expr);
-    }
-    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
-    {
-      return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                           expr->frame,
-                                           expr->needs_box,
-                                           Cpp::GetNonReferenceType(expected_type),
-                                           expected_type,
-                                           conversion_policy::from_object,
-                                           expr);
-    }
-    else if(/* Up cast. */
-            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                                    Cpp::GetUnderlyingType(expected_type)))
-            /* Same type or adding reference. */
-            || (Cpp::GetCanonicalType(expr_type)
-                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
-                && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
-            /* Matching nullptr to any pointer type. */
-            || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type)))
-    {
-      expr->propagate_position(cast_position);
-      return expr;
-    }
-    else if(Cpp::IsConstructible(expected_type, expr_type))
-    {
-      auto const bare_param_type{ Cpp::GetNonReferenceType(Cpp::GetTypeWithoutCv(expected_type)) };
-      auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
-        cast_position,
-        expr->frame,
-        false,
-        /* TODO: Can we do better here? */
-        make_box<obj::symbol>(Cpp::GetTypeAsString(bare_param_type)),
-        bare_param_type,
-        Cpp::GetScopeFromType(bare_param_type),
-        expr::cpp_value::value_kind::constructor) };
-      auto const new_expr{ build_cpp_call(cpp_value,
-                                          { expr },
-                                          { { expr_type } },
-                                          { Cpp::GetScopeFromType(bare_param_type) },
-                                          expr->frame,
-                                          cast_position,
-                                          expr->needs_box,
-                                          macro_expansions) };
-      if(new_expr.is_err())
-      {
-        return new_expr.expect_err();
-      }
-      return new_expr.expect_ok();
-    }
-    else
-    {
-      return error::internal_analyze_failure(
-        util::format("Unknown implicit conversion from {} to {}.",
-                     Cpp::GetTypeAsString(expr_type),
-                     Cpp::GetTypeAsString(expected_type)),
-        latest_expansion(macro_expansions));
+      case cpp_util::implicit_conversion_action::from_object:
+        {
+          auto const cast_position{ expr->position };
+          expr->propagate_position(expression_position::value);
+          return jtl::make_ref<expr::cpp_cast>(cast_position,
+                                               expr->frame,
+                                               expr->needs_box,
+                                               Cpp::GetNonReferenceType(expected_type),
+                                               expected_type,
+                                               conversion_policy::from_object,
+                                               expr);
+        }
+      case cpp_util::implicit_conversion_action::cast:
+        {
+          auto const cast_position{ expr->position };
+          expr->propagate_position(expression_position::value);
+          auto const bare_param_type{ Cpp::GetNonReferenceType(
+            Cpp::GetTypeWithoutCv(expected_type)) };
+          auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
+            cast_position,
+            expr->frame,
+            false,
+            /* TODO: Can we do better here? */
+            make_box<obj::symbol>(Cpp::GetTypeAsString(bare_param_type)),
+            bare_param_type,
+            Cpp::GetScopeFromType(bare_param_type),
+            expr::cpp_value::value_kind::constructor) };
+          auto const new_expr{ build_cpp_call(cpp_value,
+                                              { expr },
+                                              { { expr_type } },
+                                              { Cpp::GetScopeFromType(bare_param_type) },
+                                              expr->frame,
+                                              cast_position,
+                                              expr->needs_box,
+                                              macro_expansions) };
+          if(new_expr.is_err())
+          {
+            return new_expr.expect_err();
+          }
+          return new_expr.expect_ok();
+        }
+      case cpp_util::implicit_conversion_action::unknown:
+      default:
+        return error::internal_analyze_failure(
+          util::format("Unknown implicit conversion from {} to {}.",
+                       Cpp::GetTypeAsString(expr_type),
+                       Cpp::GetTypeAsString(expected_type)),
+          latest_expansion(macro_expansions));
     }
   }
 
