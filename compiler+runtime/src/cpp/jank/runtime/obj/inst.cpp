@@ -1,4 +1,3 @@
-#include <chrono>
 #include <iostream>
 #include <locale>
 #include <sstream>
@@ -10,17 +9,12 @@
 
 namespace jank::runtime::obj
 {
-  static jtl::ref<inst_time_point> now()
-  {
-    return jtl::make_ref<inst_time_point>(std::chrono::system_clock::now());
-  }
-
   inst::inst()
-    : value{ now() }
+    : value{ std::chrono::system_clock::now() }
   {
   }
 
-  static jtl::ref<inst_time_point> inst_from_string(jtl::immutable_string const &s)
+  static inst_time_point inst_from_string(jtl::immutable_string const &s)
   {
     inst_time_point o;
     auto const formats = { "%FT%T%Oz", "%FT%T%z", "%FT%T", "%F" };
@@ -44,7 +38,7 @@ namespace jank::runtime::obj
       throw make_box(util::format("Unrecognized date/time syntax: {}", s)).erase();
     }
 
-    return jtl::make_ref<inst_time_point>(o);
+    return o;
   }
 
   inst::inst(jtl::immutable_string const &s)
@@ -60,13 +54,13 @@ namespace jank::runtime::obj
     }
 
     auto const s(expect_object<inst>(&o));
-    return *s->value == *value;
+    return s->value == value;
   }
 
-  static void to_string_impl(jtl::ref<inst_time_point> value, jtl::string_builder &buff)
+  static void to_string_impl(inst_time_point const &value, jtl::string_builder &buff)
   {
     buff(std::format("{:%FT%T}-00:00",
-                     std::chrono::time_point_cast<std::chrono::milliseconds>(*value)));
+                     std::chrono::time_point_cast<std::chrono::milliseconds>(value)));
   }
 
   void inst::to_string(jtl::string_builder &buff) const
@@ -97,6 +91,6 @@ namespace jank::runtime::obj
       return hash;
     }
 
-    return hash = static_cast<uhash>(value->time_since_epoch().count());
+    return hash = static_cast<uhash>(value.time_since_epoch().count());
   }
 }

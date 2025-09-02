@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct inst : gc
   {
     static constexpr object_type obj_type{ object_type::inst };
-    static constexpr bool pointer_free{ false };
+    static constexpr bool pointer_free{ true };
 
     inst();
     inst(jtl::immutable_string const &s);
@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     object base{ obj_type };
-    jtl::ref<inst_time_point> value;
+    inst_time_point value;
     mutable uhash hash{};
   };
 }

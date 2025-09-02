@@ -539,7 +539,7 @@ namespace jank::runtime
     }
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-             expect_object<obj::inst>(o)->value->time_since_epoch())
+             expect_object<obj::inst>(o)->value.time_since_epoch())
       .count();
   }
 }
