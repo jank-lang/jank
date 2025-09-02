@@ -47,6 +47,7 @@
             # FetchContent, but that's not allowed in a nix build. As a
             # workaround we use libdl which is always available.
             "-DCPPTRACE_GET_SYMBOLS_WITH_LIBDL=ON"
+            "-Djank_unity_build=on"
           ];
         };
 
