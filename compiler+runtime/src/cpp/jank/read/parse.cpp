@@ -875,9 +875,18 @@ namespace jank::read::parse
       }
 
       auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-      auto const wrapped(make_box<obj::inst>(str->data));
 
-      return object_source_info{ wrapped, start_token, str_end };
+      try
+      {
+        auto const wrapped(make_box<obj::inst>(str->data));
+        return object_source_info{ wrapped, start_token, str_end };
+      }
+      catch(jank::runtime::object * const e)
+      {
+        return error::parse_invalid_tagged_reader_value(
+          expect_object<obj::persistent_string>(e)->data,
+          { start_token.start, latest_token.end });
+      }
     }
 
     if(sym->name == "cpp")
