@@ -14,6 +14,12 @@ namespace jank::runtime::obj
   {
   }
 
+#ifdef _LIBCPP_VERSION
+  static inst_time_point inst_from_string(jtl::immutable_string const &)
+  {
+    throw make_box("'#inst' parsing not currently supported.").erase();
+  }
+#else
   static inst_time_point inst_from_string(jtl::immutable_string const &s)
   {
     static std::vector const formats{ "%FT%T%Oz", "%FT%T%z", "%FT%T", "%F" };
@@ -41,6 +47,7 @@ namespace jank::runtime::obj
 
     return o;
   }
+#endif
 
   inst::inst(jtl::immutable_string const &s)
     : value{ inst_from_string(s) }
