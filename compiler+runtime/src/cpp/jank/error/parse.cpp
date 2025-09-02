@@ -209,10 +209,9 @@ namespace jank::error
     return make_error(kind::parse_invalid_reader_symbolic_value, message, source);
   }
 
-  error_ref parse_invalid_tagged_reader_value(jtl::immutable_string const &message,
-                                              read::source const &source)
+  error_ref parse_invalid_inst(jtl::immutable_string const &message, read::source const &source)
   {
-    return make_error(kind::parse_invalid_tagged_reader_value, message, source);
+    return make_error(kind::parse_invalid_inst, message, source);
   }
 
   error_ref

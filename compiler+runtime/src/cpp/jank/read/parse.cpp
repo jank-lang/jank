@@ -883,9 +883,8 @@ namespace jank::read::parse
       }
       catch(jank::runtime::object * const e)
       {
-        return error::parse_invalid_tagged_reader_value(
-          expect_object<obj::persistent_string>(e)->data,
-          { start_token.start, latest_token.end });
+        return error::parse_invalid_inst(expect_object<obj::persistent_string>(e)->data,
+                                         { start_token.start, latest_token.end });
       }
     }
 
