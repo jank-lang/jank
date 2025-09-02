@@ -823,7 +823,7 @@ namespace jank::read::parse
     }
     else if(str_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The string literal after this '#uuid' is missing.",
         { start_token.start, latest_token.end });
     }
@@ -832,7 +832,7 @@ namespace jank::read::parse
 
     if(str_end.kind != lex::token_kind::string)
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The form after '#uuid' must be a string literal.",
         { start_token.start, latest_token.end });
     }
@@ -862,7 +862,7 @@ namespace jank::read::parse
     }
     else if(str_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The string literal after this '#inst' is missing.",
         { start_token.start, latest_token.end });
     }
@@ -872,7 +872,7 @@ namespace jank::read::parse
 
     if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The form after '#inst' must be a string literal.",
         { start_token.start, latest_token.end });
     }
@@ -902,7 +902,7 @@ namespace jank::read::parse
     }
     else if(str_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The string literal after this '#cpp' is missing.",
         { start_token.start, latest_token.end });
     }
@@ -911,7 +911,7 @@ namespace jank::read::parse
 
     if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
     {
-      return error::parse_invalid_reader_symbolic_value(
+      return error::parse_invalid_reader_tag_value(
         "The form after '#cpp' must be a string literal.",
         { start_token.start, latest_token.end });
     }
