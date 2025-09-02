@@ -6747,6 +6747,8 @@ fails, attempts to require sym's namespace and retries."
    (let [opts (normalize-slurp-opts opts)
          file (cpp/std.ifstream. (cpp/cast (cpp/type "char const*") f))
          buffer (cpp/std.stringstream.)]
+     (when-not (cpp/.is_open file)
+       (throw (str f " (No such file or directory)")))
      (cpp/<< buffer (cpp/.rdbuf file))
      (cpp/.str buffer))))
 
