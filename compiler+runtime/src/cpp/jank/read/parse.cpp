@@ -838,9 +838,17 @@ namespace jank::read::parse
     }
 
     auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-    auto const wrapped(make_box<obj::uuid>(str->data));
 
-    return object_source_info{ wrapped, start_token, str_end };
+    try
+    {
+      auto const wrapped(make_box<obj::uuid>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
+                                       { start_token.start, latest_token.end });
+    }
   }
 
   processor::object_result processor::parse_tagged_inst()
