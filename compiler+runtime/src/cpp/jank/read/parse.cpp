@@ -883,7 +883,7 @@ namespace jank::read::parse
       }
       catch(jank::runtime::object * const e)
       {
-        return error::parse_invalid_inst(expect_object<obj::persistent_string>(e)->data,
+        return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
                                          { start_token.start, latest_token.end });
       }
     }
