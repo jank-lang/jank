@@ -16,40 +16,56 @@
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
 
-        packages.default = pkgs.stdenv.mkDerivation {
-          pname = "jank";
-          version = "git";
-          src = ./.;
+        packages.default = let
+          llvm-jank = pkgs.callPackage ./llvm.nix {};
+          # versions from cpptrace/cmake/OptionVariables.cmake
+          libdwarf-lite-src = pkgs.fetchFromGitHub {
+            owner = "jeremy-rifkin";
+            repo = "libdwarf-lite";
+            rev = "5e71a74491dddc231664bbcd6a8cf8a8643918e9";
+            sha256 = "sha256-qHikjAG5xuuHquqqKGuiDHXVZSlg/MbNp9JNSAKM/Hs=";
+          };
+          zstd-src = pkgs.fetchFromGitHub {
+            owner = "facebook";
+            repo = "zstd";
+            rev = "v1.5.7";
+            sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
+          };
+        in
+          pkgs.stdenv.mkDerivation {
+            pname = "jank";
+            version = "git";
+            src = ./.;
 
-          nativeBuildInputs = with pkgs; [
-            git
-            cmake
-            ninja
-            (pkgs.callPackage ./llvm.nix {})
-          ];
-          buildInputs = with pkgs; [libzip openssl];
+            nativeBuildInputs = with pkgs; [
+              git
+              cmake
+              ninja
+              llvm-jank
+            ];
+            buildInputs = with pkgs; [libzip openssl];
 
-          postPatch = ''
-            patchShebangs ./compiler+runtime/bin/ar-merge
-          '';
+            postPatch = ''
+              patchShebangs ./compiler+runtime/bin/ar-merge
+            '';
 
-          cmakeBuildDir = "./compiler+runtime/build";
-          cmakeDir = "..";
-          cmakeFlags = [
-            "-DCMAKE_C_COMPILER=clang"
-            "-DCMAKE_CXX_COMPILER=clang++"
-            # TODO: Updating RPATHs during install causes the step to fail as it
-            # tries to rewrite non-existent RPATHs like /lib. Needs more
-            # investigation.
-            "-DCMAKE_SKIP_RPATH=ON"
-            # TODO: To use libdwarf (recommended) we need to build the custom
-            # patched version available from CppTrace. Normally this is done via
-            # FetchContent, but that's not allowed in a nix build. As a
-            # workaround we use libdl which is always available.
-            "-DCPPTRACE_GET_SYMBOLS_WITH_LIBDL=ON"
-            "-Djank_unity_build=on"
-          ];
-        };
+            cmakeBuildDir = "./compiler+runtime/build";
+            cmakeDir = "..";
+            cmakeFlags = [
+              "-DCMAKE_C_COMPILER=${llvm-jank}/bin/clang"
+              "-DCMAKE_CXX_COMPILER=${llvm-jank}/bin/clang++"
+              # TODO: Updating RPATHs during install causes the step to fail as it
+              # tries to rewrite non-existent RPATHs like /lib. Needs more
+              # investigation.
+              "-DCMAKE_SKIP_RPATH=ON"
+              # Manually provide any FetchContent sources as network requests are
+              # not allowed in the nix build sandbox.
+              "-DFETCHCONTENT_SOURCE_DIR_LIBDWARF=${libdwarf-lite-src}"
+              "-DFETCHCONTENT_SOURCE_DIR_ZSTD=${zstd-src}"
+              # Jank options
+              "-Djank_unity_build=on"
+            ];
+          };
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
