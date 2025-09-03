@@ -84,4 +84,7 @@ namespace jank::runtime
   object_ref parse_uuid(object_ref o);
   bool is_uuid(object_ref o);
   object_ref random_uuid();
+
+  bool is_inst(object_ref o);
+  i64 inst_ms(object_ref o);
 }

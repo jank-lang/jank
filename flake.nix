@@ -15,6 +15,42 @@
       }: {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
+
+        packages.default = pkgs.stdenv.mkDerivation {
+          pname = "jank";
+          version = "git";
+          src = ./.;
+
+          nativeBuildInputs = with pkgs; [
+            git
+            cmake
+            ninja
+            (pkgs.callPackage ./llvm.nix {})
+          ];
+          buildInputs = with pkgs; [libzip openssl];
+
+          postPatch = ''
+            patchShebangs ./compiler+runtime/bin/ar-merge
+          '';
+
+          cmakeBuildDir = "./compiler+runtime/build";
+          cmakeDir = "..";
+          cmakeFlags = [
+            "-DCMAKE_C_COMPILER=clang"
+            "-DCMAKE_CXX_COMPILER=clang++"
+            # TODO: Updating RPATHs during install causes the step to fail as it
+            # tries to rewrite non-existent RPATHs like /lib. Needs more
+            # investigation.
+            "-DCMAKE_SKIP_RPATH=ON"
+            # TODO: To use libdwarf (recommended) we need to build the custom
+            # patched version available from CppTrace. Normally this is done via
+            # FetchContent, but that's not allowed in a nix build. As a
+            # workaround we use libdl which is always available.
+            "-DCPPTRACE_GET_SYMBOLS_WITH_LIBDL=ON"
+            "-Djank_unity_build=on"
+          ];
+        };
+
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             stdenv.cc.cc.lib

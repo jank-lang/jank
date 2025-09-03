@@ -85,6 +85,12 @@ namespace jank::error
         return "gensym literal is not within a syntax quote.";
       case kind::parse_invalid_reader_symbolic_value:
         return "Invalid reader symbolic value.";
+      case kind::parse_invalid_reader_tag_value:
+        return "Invalid reader tag value.";
+      case kind::parse_invalid_uuid:
+        return "Invalid UUID.";
+      case kind::parse_invalid_inst:
+        return "Unsupported date/time syntax.";
       case kind::parse_invalid_syntax_quote:
         return "Invalid syntax quote.";
       case kind::parse_invalid_syntax_unquote:

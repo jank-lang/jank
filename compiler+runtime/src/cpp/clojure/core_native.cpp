@@ -523,6 +523,8 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
   intern_fn("parse-uuid", &parse_uuid);
   intern_fn("uuid?", &is_uuid);
   intern_fn("random-uuid", &random_uuid);
+  intern_fn("inst?", &is_inst);
+  intern_fn("inst-ms", &inst_ms);
 
   /* TODO: jank.math? */
   intern_fn("sqrt", static_cast<f64 (*)(object_ref)>(&runtime::sqrt));

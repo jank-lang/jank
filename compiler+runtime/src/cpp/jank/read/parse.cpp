@@ -812,6 +812,120 @@ namespace jank::read::parse
     return object_source_info{ wrapped, start_token, sym_end };
   }
 
+  processor::object_result processor::parse_tagged_uuid()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#uuid' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    if(str_end.kind != lex::token_kind::string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#uuid' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    try
+    {
+      auto const wrapped(make_box<obj::uuid>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
+                                       { start_token.start, latest_token.end });
+    }
+  }
+
+  processor::object_result processor::parse_tagged_inst()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#inst' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+
+    if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#inst' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    try
+    {
+      auto const wrapped(make_box<obj::inst>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
+                                       { start_token.start, latest_token.end });
+    }
+  }
+
+  processor::object_result processor::parse_tagged_cpp()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#cpp' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#cpp' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    auto const wrapped(make_box<obj::persistent_list>(
+      std::in_place,
+      make_box<obj::symbol>("cpp/value"),
+      make_box(util::format("\"{}\"", util::escape(str->data))).erase()));
+
+    return object_source_info{ wrapped, start_token, str_end };
+  }
+
   processor::object_result processor::parse_reader_macro_tagged()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
@@ -821,72 +935,23 @@ namespace jank::read::parse
 
     if(sym->name == "uuid")
     {
-      auto str_result(next());
-
-      if(str_result.is_err())
-      {
-        return str_result;
-      }
-      else if(str_result.expect_ok().is_none())
-      {
-        return error::parse_invalid_reader_symbolic_value(
-          "The string literal after this '#uuid' is missing.",
-          { start_token.start, latest_token.end });
-      }
-
-      auto const str_end(str_result.expect_ok().unwrap().end);
-
-      if(str_end.kind != lex::token_kind::string)
-      {
-        return error::parse_invalid_reader_symbolic_value(
-          "The form after '#uuid' must be a string literal.",
-          { start_token.start, latest_token.end });
-      }
-
-      auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-      auto const wrapped(make_box<obj::uuid>(str->data));
-
-      return object_source_info{ wrapped, start_token, str_end };
+      return parse_tagged_uuid();
     }
-
-    if(sym->name == "cpp")
+    else if(sym->name == "inst")
     {
-      auto str_result(next());
-
-      if(str_result.is_err())
-      {
-        return str_result;
-      }
-      else if(str_result.expect_ok().is_none())
-      {
-        return error::parse_invalid_reader_symbolic_value(
-          "The string literal after this '#cpp' is missing.",
-          { start_token.start, latest_token.end });
-      }
-
-      auto const str_end(str_result.expect_ok().unwrap().end);
-
-
-      if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
-      {
-        return error::parse_invalid_reader_symbolic_value(
-          "The form after '#cpp' must be a string literal.",
-          { start_token.start, latest_token.end });
-      }
-
-      auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-
-      auto const wrapped(make_box<obj::persistent_list>(
-        std::in_place,
-        make_box<obj::symbol>("cpp/value"),
-        make_box(util::format("\"{}\"", util::escape(str->data))).erase()));
-
-      return object_source_info{ wrapped, start_token, str_end };
+      return parse_tagged_inst();
     }
-
-    return error::parse_invalid_reader_symbolic_value(
-      "This reader tag is not supported. '#uuid' and '#cpp' are the only tags currently supported.",
-      { start_token.start, latest_token.end });
+    else if(sym->name == "cpp")
+    {
+      return parse_tagged_cpp();
+    }
+    else
+    {
+      return error::parse_invalid_reader_symbolic_value(
+        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently "
+        "supported.",
+        { start_token.start, latest_token.end });
+    }
   }
 
   processor::object_result processor::parse_reader_macro_comment()
