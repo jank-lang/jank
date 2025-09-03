@@ -11,6 +11,7 @@
       systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
       perSystem = {
         pkgs,
+        lib,
         ...
       }: {
         legacyPackages = pkgs;
@@ -32,7 +33,7 @@
             sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
           };
         in
-          pkgs.stdenv.mkDerivation {
+          pkgs.stdenv.mkDerivation (finalAttrs: {
             pname = "jank";
             version = "git";
             src = ./.;
@@ -44,6 +45,7 @@
               llvm-jank
             ];
             buildInputs = with pkgs; [libzip openssl];
+            checkInputs = with pkgs; [glibcLocales doctest];
 
             postPatch = ''
               patchShebangs ./compiler+runtime/bin/ar-merge
@@ -63,9 +65,21 @@
               "-DFETCHCONTENT_SOURCE_DIR_LIBDWARF=${libdwarf-lite-src}"
               "-DFETCHCONTENT_SOURCE_DIR_ZSTD=${zstd-src}"
               # Jank options
-              "-Djank_unity_build=on"
+              (lib.cmakeBool "jank_unity_build" true)
+              (lib.cmakeBool "jank_test" finalAttrs.doCheck)
             ];
-          };
+
+            # Use a UTF-8 locale or else tests which use UTF-8 characters will
+            # fail. See: https://github.com/NixOS/nixpkgs/issues/172752
+            LC_ALL = "C.UTF-8";
+
+            doCheck = true;
+            checkPhase = ''
+              pushd ../
+              ./build/jank-test
+              popd
+            '';
+          });
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
