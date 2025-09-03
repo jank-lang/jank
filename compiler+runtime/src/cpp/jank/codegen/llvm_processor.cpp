@@ -1901,6 +1901,9 @@ namespace jank::codegen
     {
       if(expr->arg_exprs.empty())
       {
+        /* TODO: We should just be able to alloc the type here and zero the memory.
+         * We can save ourselves the time of JIT compiling more C++ and make the IR easier
+         * to optimize. */
         ctor_fn_callable = Cpp::MakeBuiltinConstructorAotCallable(expr->type);
       }
       else
