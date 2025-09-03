@@ -1604,13 +1604,14 @@ namespace jank::codegen
     if(expr->val_kind == expr::cpp_value::value_kind::enum_constant)
     {
       auto const val{ Cpp::GetEnumConstantValue(expr->scope) };
-      auto const alloc{ ctx->builder->CreateAlloca(
-        llvm_builtin_type(*ctx,
-                          llvm_ctx,
-                          Cpp::GetIntegerTypeFromEnumType(Cpp::GetNonReferenceType(expr->type))),
-        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-      auto const ir_val{ llvm::ConstantInt::getSigned(ctx->builder->getInt8Ty(),
-                                                      static_cast<int64_t>(val)) };
+      auto const int_type{ llvm_builtin_type(
+        *ctx,
+        llvm_ctx,
+        Cpp::GetIntegerTypeFromEnumType(Cpp::GetNonReferenceType(expr->type))) };
+      auto const alloc{
+        ctx->builder->CreateAlloca(int_type, llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1))
+      };
+      auto const ir_val{ llvm::ConstantInt::getSigned(int_type, static_cast<int64_t>(val)) };
       ctx->builder->CreateStore(ir_val, alloc);
       if(expr->position == expression_position::tail)
       {

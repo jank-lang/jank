@@ -9,4 +9,5 @@
 (let* [bar cpp/jank.cpp.enum_.pass_within_when.foo.bar]
   ; This triggers an interesting code path which originally led to a crash.
   (when (cpp/!= bar cpp/jank.cpp.enum_.pass_within_when.foo.spam)
-    (println cpp/jank.cpp.enum_.pass_within_when.foo.spam)))
+    (assert (= 10 cpp/jank.cpp.enum_.pass_within_when.foo.spam))
+    :success))
