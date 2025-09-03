@@ -172,3 +172,27 @@ jobs:
               git push origin main
             popd
           popd
+
+  build-nix:
+    name: "nix - release"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Set up nix"
+      uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: "Set up cachix"
+      uses: cachix/cachix-action@v16
+      with:
+        name: jank-lang
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        # Only push to cache on main branch, not PRs
+        skipPush: "${{ github.ref != 'refs/heads/main' }}"
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: "Build jank"
+      run: nix build .?submodules=1 -L
+    - name: "Check health"
+      run: nix run .?submodules=1 check-health
