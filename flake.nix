@@ -36,14 +36,20 @@
           pkgs.stdenv.mkDerivation (finalAttrs: {
             pname = "jank";
             version = "git";
-            src = ./.;
 
-            nativeBuildInputs = with pkgs; [
-              git
-              cmake
-              ninja
-              llvm-jank
-            ];
+            # Add only essential files so that the source hash is consistent.
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset =
+                lib.fileset.difference
+                (lib.fileset.unions [
+                  ./.clang-format
+                  ./compiler+runtime
+                ])
+                (lib.fileset.fileFilter (file: lib.strings.hasInfix ".git" file.name) ./.);
+            };
+
+            nativeBuildInputs = with pkgs; [git cmake ninja llvm-jank];
             buildInputs = with pkgs; [libzip openssl];
             checkInputs = with pkgs; [glibcLocales doctest];
 
