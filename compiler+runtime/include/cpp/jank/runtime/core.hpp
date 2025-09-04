@@ -91,5 +91,6 @@ namespace jank::runtime
   object_ref re_pattern(object_ref o);
   object_ref re_matcher(object_ref re, object_ref s);
   object_ref re_find(object_ref m);
-  // bool re_groups(object_ref m);
+  object_ref re_groups(object_ref m);
+  object_ref re_matches(object_ref re, object_ref s);
 }

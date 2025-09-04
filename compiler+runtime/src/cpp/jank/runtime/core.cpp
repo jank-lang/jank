@@ -535,17 +535,103 @@ namespace jank::runtime
 
     auto const matcher = expect_object<obj::re_matcher>(m);
     std::regex_search(matcher->s, matcher->m, matcher->re->regex);
-    native_vector<object_ref> vec;
 
-    for(auto const s : matcher->m)
+    switch(matcher->m.size())
     {
-      vec.push_back(make_box<obj::persistent_string>(s.str()));
+      case 0:
+        matcher->groups = jank_nil;
+        break;
+      case 1:
+        {
+          matcher->groups = make_box<obj::persistent_string>(matcher->m[0].str());
+          matcher->s = matcher->m.suffix().str();
+          break;
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+
+          for(auto const s : matcher->m)
+          {
+            vec.push_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          matcher->s = matcher->m.suffix().str();
+
+          matcher->groups = make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+          break;
+        }
     }
 
-    matcher->s = matcher->m.suffix().str();
+    return matcher->groups;
+  }
 
-    return make_box<obj::persistent_vector>(
-      runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+  object_ref re_groups(object_ref const m)
+  {
+    if(m->type != object_type::re_matcher)
+    {
+      throw std::runtime_error{ util::format("Expected matcher, got {}",
+                                             object_type_str(m->type)) };
+    }
+
+    auto const matcher = expect_object<obj::re_matcher>(m);
+
+    if(matcher->groups.is_nil())
+    {
+      throw std::runtime_error{ "No match found" };
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_matches(object_ref const re, object_ref const s)
+  {
+    if(re->type != object_type::re_pattern)
+    {
+      throw std::runtime_error{ util::format("Expected pattern, got {}",
+                                             object_type_str(re->type)) };
+    }
+
+    if(s->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ util::format("Expected string, got {}", object_type_str(s->type)) };
+    }
+
+    std::smatch m{};
+    std::string const search_str{ expect_object<obj::persistent_string>(s)->data.c_str() };
+
+    std::regex_search(search_str,
+                      m,
+                      expect_object<obj::re_pattern>(re)->regex,
+                      std::regex_constants::match_continuous);
+
+    if(!m.suffix().str().empty())
+    {
+      return jank_nil;
+    }
+
+    switch(m.size())
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(m[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+
+          for(auto const s : m)
+          {
+            vec.push_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
   }
 
   object_ref parse_uuid(object_ref const o)

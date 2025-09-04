@@ -52,6 +52,7 @@ namespace jank::runtime::obj
     std::string s{};
     std::smatch m{};
     re_pattern_ref re;
+    object_ref groups{};
 
     mutable uhash hash{};
   };

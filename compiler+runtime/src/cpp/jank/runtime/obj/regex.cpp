@@ -63,8 +63,8 @@ namespace jank::runtime::obj
       return false;
     }
 
-    // TODO: implement
-    return true;
+    auto const matcher(expect_object<re_matcher>(&o));
+    return this == &(*matcher);
   }
 
   void re_matcher::to_string(jtl::string_builder &buff) const
