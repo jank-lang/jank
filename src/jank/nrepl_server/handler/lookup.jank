@@ -1,19 +1,22 @@
 (ns nrepl-server.handler.lookup
   (:require [nrepl-server.handler :refer [handle-message]]))
 
-(defn lookup [ns sym]
-  ;; TODO: catch exception when symbol does not resolve
-  (let [ns'  (symbol ns)
-        sym' (symbol sym)]
-    (some-> (ns-resolve ns' sym') meta)))
+(defn lookup
+  "Lookup meta for the a symbol defined in a namespace, or return nil if either
+  is not defined."
+  [ns sym]
+  (let [ns'  (some-> ns symbol find-ns)
+        sym' (some-> sym symbol)]
+    (when (and ns' sym')
+      (some-> (ns-resolve ns' sym') meta))))
 
 (defmethod handle-message :lookup [msg]
-  (let [req-ns  (get msg "ns")
-        req-sym (get msg "sym")]
-    (if-let [info (lookup req-ns req-sym)]
-      {:info   {:ns       req-ns
-                :name     req-sym
-                :arglists (str (:arglists info))
-                :doc      (str (:doc info))}
+  (let [ns  (get msg "ns")
+        sym (get msg "sym")]
+    (if-let [m (lookup ns sym)]
+      {:info   {:ns       ns
+                :name     sym
+                :arglists (str (:arglists m))
+                :doc      (str (:doc m))}
        :status [:done]}
       {:status [:error :done]})))
