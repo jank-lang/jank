@@ -1765,9 +1765,9 @@ namespace jank::codegen
           param_type = arg_type;
         }
       }
-      auto const is_param_indirect{ Cpp::IsReferenceType(param_type)
-                                    || Cpp::IsPointerType(param_type)
-                                    || Cpp::IsArrayType(param_type) };
+      auto const is_param_ptr{ Cpp::IsPointerType(param_type) || Cpp::IsArrayType(param_type)
+                               || cpp_util::is_any_object(param_type) };
+      auto const is_param_indirect{ Cpp::IsReferenceType(param_type) || is_param_ptr };
       //util::println(
       //  "gen_aot_call arg {}, arg type {} {} (indirect {}), param type {} {} (indirect {}), "
       //  "implicitly convertible {}",
@@ -1798,6 +1798,15 @@ namespace jank::codegen
               || (is_arg_ptr && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg_handle)))
       {
         arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+      }
+      /* TODO: This is borked, but maybe close to what we want. Figure out the exact logic. */
+      else if(is_arg_ptr && !llvm::isa<llvm::AllocaInst>(arg_handle) && is_param_ptr)
+      {
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getPtrTy(),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+        ctx->builder->CreateStore(arg_handle, alloc);
+        arg_handle = alloc;
       }
       //else if(!is_arg_ref && is_param_indirect)
       //{

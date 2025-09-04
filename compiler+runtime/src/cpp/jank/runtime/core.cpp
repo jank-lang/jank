@@ -58,6 +58,42 @@ namespace jank::runtime
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
+  object_ref to_unqualified_symbol(object_ref const o)
+  {
+    return runtime::visit_object(
+      [&](auto const typed_o) -> object_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::symbol>)
+        {
+          return typed_o;
+        }
+        else if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return make_box<obj::symbol>(typed_o->data);
+        }
+        else if constexpr(std::same_as<T, var>)
+        {
+          return make_box<obj::symbol>(typed_o->n->name->name, typed_o->name->name);
+        }
+        else if constexpr(std::same_as<T, obj::keyword>)
+        {
+          return typed_o->sym;
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("can't convert {} to a symbol",
+                                                 typed_o->to_code_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  {
+    return make_box<obj::symbol>(ns, name);
+  }
+
   object_ref print(object_ref const args)
   {
     visit_object(
