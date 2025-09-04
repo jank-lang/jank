@@ -4,10 +4,11 @@
 
 (defmethod handle-message :describe [_]
   {:aux      {}
-   :ops      {:clone     {}
-              :describe  {}
-              :eval      {}
-              :load-file {}
-              :lookup    {}}
+   :ops      {:clone       {}
+              :describe    {}
+              :eval        {}
+              :load-file   {}
+              :lookup      {}
+              :completions {}}
    :versions {}
    :status   [:done]})

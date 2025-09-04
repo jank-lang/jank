@@ -6,6 +6,7 @@
    ;; handler implementations
    [nrepl-server.handler.clone]
    [nrepl-server.handler.close]
+   [nrepl-server.handler.completions]
    [nrepl-server.handler.describe]
    [nrepl-server.handler.eval]
    [nrepl-server.handler.lookup]))
