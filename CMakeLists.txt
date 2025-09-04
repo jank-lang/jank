@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.21)
 project(nrepl_server LANGUAGES CXX)
 
 # Disable FindBoost warning
-cmake_policy(SET CMP0167 NEW)
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
 
 find_package(Boost REQUIRED COMPONENTS system)
 
