@@ -11,6 +11,12 @@
    [nrepl-server.handler.eval]
    [nrepl-server.handler.lookup]))
 
+(def *verbose (atom false))
+
+(defn log [& args]
+  (when @*verbose
+    (apply println args)))
+
 (defn response-for
   "Given a request/response pair, copy the session identification data from the
   request over to the response."
@@ -30,13 +36,16 @@
   [client*]
   (while (connected? client*)
     (when-let [req (read-message client*)]
-      (println "<-" (pr-str (abbreviate req 20)))
+      (log "<-" (pr-str (abbreviate req 20)))
       (let [resps (responses-for req (handle-message req))]
         (doseq [resp resps]
-          (println "->" (pr-str (abbreviate resp 20)))
+          (log "->" (pr-str (abbreviate resp 20)))
           (write-message client* resp))))))
 
-(defn -main []
+(defn -main [& args]
+  (when (some #{"-v" "--verbose"} args)
+    (reset! *verbose true))
+
   (let [listen-port 4200
         server      (server/listen listen-port)]
     (println (str "jank-nrepl listening for connections on port " listen-port "…"))
