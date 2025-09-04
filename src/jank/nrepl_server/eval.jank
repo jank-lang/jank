@@ -6,7 +6,7 @@ namespace nrepl_server::eval
   using namespace jank;
   using namespace jank::runtime;
 
-  bool safe_eval(std::string code)
+  bool safe_eval(const std::string& code)
   {
     auto var_1 = __rt_ctx->find_var(\"clojure.core\", \"*1\");
     auto var_2 = __rt_ctx->find_var(\"clojure.core\", \"*2\");
