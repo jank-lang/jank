@@ -6,15 +6,15 @@
 
 namespace nrepl_server::inspect
 {
-  std::string int_to_hex_string(int i)
+  std::string hash_to_hex_string(unsigned int i)
   {
     return std::format(\"0x{:x}\", i);
   }
 }
 ")
 
-(defn int->hex-string [i]
-  (cpp/nrepl_server.inspect.int_to_hex_string i))
+(defn hash->hex-string [i]
+  (cpp/nrepl_server.inspect.hash_to_hex_string i))
 
 (defn inspect-str
   "Inspect a value to build a display string for CIDER."
@@ -30,4 +30,4 @@ namespace nrepl_server::inspect
      (:newline) (:newline)
      "--- Hash"
      (:newline)
-     (:value ~(int->hex-string (hash x))))))
+     (:value ~(hash->hex-string (hash x))))))
