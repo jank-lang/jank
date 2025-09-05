@@ -1151,39 +1151,33 @@ namespace jank::analyze
     , root_frame{ jtl::make_ref<local_frame>(local_frame::frame_type::root, rt_ctx, none) }
   {
     using runtime::obj::symbol;
-    auto const make_fn = [this](auto const fn) -> decltype(specials)::mapped_type {
-      return [this, fn](auto const list,
-                        auto const current_frame,
-                        auto const position,
-                        auto const &fn_ctx,
-                        auto const needs_box) {
-        return (this->*fn)(list, current_frame, position, fn_ctx, needs_box);
-      };
-    };
-    /* TODO: Just use a raw fn pointer. No need for std::function. */
-    specials = {
-      {        make_box<symbol>("def"),        make_fn(&processor::analyze_def) },
-      {        make_box<symbol>("fn*"),         make_fn(&processor::analyze_fn) },
-      {      make_box<symbol>("recur"),      make_fn(&processor::analyze_recur) },
-      {         make_box<symbol>("do"),         make_fn(&processor::analyze_do) },
-      {       make_box<symbol>("let*"),        make_fn(&processor::analyze_let) },
-      {     make_box<symbol>("letfn*"),      make_fn(&processor::analyze_letfn) },
-      {      make_box<symbol>("loop*"),       make_fn(&processor::analyze_loop) },
-      {         make_box<symbol>("if"),         make_fn(&processor::analyze_if) },
-      {      make_box<symbol>("quote"),      make_fn(&processor::analyze_quote) },
-      {        make_box<symbol>("var"),   make_fn(&processor::analyze_var_call) },
-      {      make_box<symbol>("throw"),      make_fn(&processor::analyze_throw) },
-      {        make_box<symbol>("try"),        make_fn(&processor::analyze_try) },
-      {      make_box<symbol>("case*"),       make_fn(&processor::analyze_case) },
-      {    make_box<symbol>("cpp/raw"),    make_fn(&processor::analyze_cpp_raw) },
-      {   make_box<symbol>("cpp/type"),   make_fn(&processor::analyze_cpp_type) },
-      {  make_box<symbol>("cpp/value"),  make_fn(&processor::analyze_cpp_value) },
-      {   make_box<symbol>("cpp/cast"),   make_fn(&processor::analyze_cpp_cast) },
-      {    make_box<symbol>("cpp/box"),    make_fn(&processor::analyze_cpp_box) },
-      {  make_box<symbol>("cpp/unbox"),  make_fn(&processor::analyze_cpp_unbox) },
-      {    make_box<symbol>("cpp/new"),    make_fn(&processor::analyze_cpp_new) },
-      { make_box<symbol>("cpp/delete"), make_fn(&processor::analyze_cpp_delete) },
-    };
+    for(auto const &p :
+        std::initializer_list<std::pair<runtime::obj::symbol_ref, special_function_type>>{
+          {        make_box<symbol>("def"),        &processor::analyze_def },
+          {        make_box<symbol>("fn*"),         &processor::analyze_fn },
+          {      make_box<symbol>("recur"),      &processor::analyze_recur },
+          {         make_box<symbol>("do"),         &processor::analyze_do },
+          {       make_box<symbol>("let*"),        &processor::analyze_let },
+          {     make_box<symbol>("letfn*"),      &processor::analyze_letfn },
+          {      make_box<symbol>("loop*"),       &processor::analyze_loop },
+          {         make_box<symbol>("if"),         &processor::analyze_if },
+          {      make_box<symbol>("quote"),      &processor::analyze_quote },
+          {        make_box<symbol>("var"),   &processor::analyze_var_call },
+          {      make_box<symbol>("throw"),      &processor::analyze_throw },
+          {        make_box<symbol>("try"),        &processor::analyze_try },
+          {      make_box<symbol>("case*"),       &processor::analyze_case },
+          {    make_box<symbol>("cpp/raw"),    &processor::analyze_cpp_raw },
+          {   make_box<symbol>("cpp/type"),   &processor::analyze_cpp_type },
+          {  make_box<symbol>("cpp/value"),  &processor::analyze_cpp_value },
+          {   make_box<symbol>("cpp/cast"),   &processor::analyze_cpp_cast },
+          {    make_box<symbol>("cpp/box"),    &processor::analyze_cpp_box },
+          {  make_box<symbol>("cpp/unbox"),  &processor::analyze_cpp_unbox },
+          {    make_box<symbol>("cpp/new"),    &processor::analyze_cpp_new },
+          { make_box<symbol>("cpp/delete"), &processor::analyze_cpp_delete },
+    })
+    {
+      specials.insert(p);
+    }
   }
 
   processor::expression_result processor::analyze(read::parse::processor::iterator parse_current,
@@ -2137,7 +2131,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_letfn(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_letfn(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3021,7 +3015,7 @@ namespace jank::analyze
       auto const found_special(specials.find(sym));
       if(found_special != specials.end())
       {
-        return found_special->second(o, current_frame, position, fn_ctx, needs_box);
+        return (*this.*found_special->second)(o, current_frame, position, fn_ctx, needs_box);
       }
 
       pop_macro_expansions = push_macro_expansions(*this, o);
