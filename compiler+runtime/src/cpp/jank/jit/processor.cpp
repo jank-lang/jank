@@ -163,7 +163,16 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
+#ifdef JANK_SANITIZE
+    /* ASan leads to larger code size, which can run us up against the 32 bit limit of the
+     * default 'small' JIT code model. When we know we're running ASan, we want to opt
+     * into the 'large' code model instead. This may have some marginal perf impact, but
+     * for ASan builds, that's not a problem. */
+    interpreter.reset(static_cast<Cpp::Interpreter *>(
+      Cpp::CreateInterpreter(args, {}, static_cast<int>(llvm::CodeModel::Large))));
+#else
     interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args)));
+#endif
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
