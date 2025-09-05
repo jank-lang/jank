@@ -52,7 +52,8 @@
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
-#include <jank/runtime/obj/regex.hpp>
+#include <jank/runtime/obj/re_pattern.hpp>
+#include <jank/runtime/obj/re_matcher.hpp>
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
