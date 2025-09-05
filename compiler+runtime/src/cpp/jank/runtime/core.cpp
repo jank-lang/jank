@@ -509,30 +509,31 @@ namespace jank::runtime
 
   object_ref re_find(object_ref const m)
   {
+    std::smatch match_results{};
     auto const matcher(try_object<obj::re_matcher>(m));
-    std::regex_search(matcher->s, matcher->m, matcher->re->regex);
+    std::regex_search(matcher->s, match_results, matcher->re->regex);
 
-    switch(matcher->m.size())
+    switch(match_results.size())
     {
       case 0:
         matcher->groups = jank_nil;
         break;
       case 1:
         {
-          matcher->groups = make_box<obj::persistent_string>(matcher->m[0].str());
-          matcher->s = matcher->m.suffix().str();
+          matcher->groups = make_box<obj::persistent_string>(match_results[0].str());
+          matcher->s = match_results.suffix().str();
           break;
         }
       default:
         {
           native_vector<object_ref> vec;
 
-          for(auto const s : matcher->m)
+          for(auto const s : match_results)
           {
             vec.push_back(make_box<obj::persistent_string>(s.str()));
           }
 
-          matcher->s = matcher->m.suffix().str();
+          matcher->s = match_results.suffix().str();
 
           matcher->groups = make_box<obj::persistent_vector>(
             runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
@@ -557,32 +558,32 @@ namespace jank::runtime
 
   object_ref re_matches(object_ref const re, object_ref const s)
   {
-    std::smatch m{};
+    std::smatch match_results{};
     std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
 
     std::regex_search(search_str,
-                      m,
+                      match_results,
                       try_object<obj::re_pattern>(re)->regex,
                       std::regex_constants::match_continuous);
 
-    if(!m.suffix().str().empty())
+    if(!match_results.suffix().str().empty())
     {
       return jank_nil;
     }
 
-    switch(m.size())
+    switch(match_results.size())
     {
       case 0:
         return jank_nil;
       case 1:
         {
-          return make_box<obj::persistent_string>(m[0].str());
+          return make_box<obj::persistent_string>(match_results[0].str());
         }
       default:
         {
           native_vector<object_ref> vec;
 
-          for(auto const s : m)
+          for(auto const s : match_results)
           {
             vec.push_back(make_box<obj::persistent_string>(s.str()));
           }
