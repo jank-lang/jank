@@ -347,9 +347,10 @@ namespace jank::codegen
     }
     auto const match_name{ Cpp::GetCompleteName(match) };
     auto const param_type{ Cpp::GetFunctionArgType(match, 0) };
-    auto const is_param_indirect{
-      param_type && (Cpp::IsReferenceType(param_type) || Cpp::IsPointerType(param_type))
-    };
+    auto const is_param_indirect{ param_type
+                                  && (Cpp::IsReferenceType(param_type)
+                                      || Cpp::IsPointerType(param_type)
+                                      /*|| Cpp::IsArrayType(param_type)*/) };
 
     auto const fn_callable{ Cpp::MakeAotCallable(match) };
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
@@ -1600,6 +1601,24 @@ namespace jank::codegen
       }
       return alloc;
     }
+    if(expr->val_kind == expr::cpp_value::value_kind::enum_constant)
+    {
+      auto const val{ Cpp::GetEnumConstantValue(expr->scope) };
+      auto const int_type{ llvm_builtin_type(
+        *ctx,
+        llvm_ctx,
+        Cpp::GetIntegerTypeFromEnumType(Cpp::GetNonReferenceType(expr->type))) };
+      auto const alloc{
+        ctx->builder->CreateAlloca(int_type, llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1))
+      };
+      auto const ir_val{ llvm::ConstantInt::getSigned(int_type, static_cast<int64_t>(val)) };
+      ctx->builder->CreateStore(ir_val, alloc);
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(alloc);
+      }
+      return alloc;
+    }
 
     auto const callable{ Cpp::IsFunctionPointerType(expr->type)
                            /* We pass the type and the scope in here so that unresolved template
@@ -1709,8 +1728,10 @@ namespace jank::codegen
     {
       auto arg_handle{ gen(arg_exprs[i], arity) };
       auto const arg_type{ cpp_util::expression_type(arg_exprs[i]) };
-      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type) };
-      auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) };
+      auto const is_arg_ref{ Cpp::IsReferenceType(arg_type)
+                             && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(arg_type))
+                                  || Cpp::IsArrayType(Cpp::GetNonReferenceType(arg_type))) };
+      auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) || Cpp::IsArrayType(arg_type) };
       auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
 
       if(i == 0 && requires_this_obj)
@@ -1745,7 +1766,8 @@ namespace jank::codegen
         }
       }
       auto const is_param_indirect{ Cpp::IsReferenceType(param_type)
-                                    || Cpp::IsPointerType(param_type) };
+                                    || Cpp::IsPointerType(param_type)
+                                    || Cpp::IsArrayType(param_type) };
       //util::println(
       //  "gen_aot_call arg {}, arg type {} {} (indirect {}), param type {} {} (indirect {}), "
       //  "implicitly convertible {}",
@@ -1758,6 +1780,7 @@ namespace jank::codegen
       //  is_param_indirect,
       //  Cpp::IsImplicitlyConvertible(arg_type, param_type));
 
+      /* TODO: Is this needed? I thought our casts were explicit in the AST. */
       if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
              || !Cpp::IsImplicitlyConvertible(arg_type, param_type)))
@@ -1878,6 +1901,9 @@ namespace jank::codegen
     {
       if(expr->arg_exprs.empty())
       {
+        /* TODO: We should just be able to alloc the type here and zero the memory.
+         * We can save ourselves the time of JIT compiling more C++ and make the IR easier
+         * to optimize. */
         ctor_fn_callable = Cpp::MakeBuiltinConstructorAotCallable(expr->type);
       }
       else
@@ -1964,7 +1990,7 @@ namespace jank::codegen
       {
         return gen(expr->arg_exprs[0], arity);
       }
-      else if(Cpp::IsPointerType(expr->type))
+      else if(Cpp::IsPointerType(expr->type) /*|| Cpp::IsArrayType(expr->type)*/)
       {
         auto const alloc{ ctx->builder->CreateAlloca(
           ctx->builder->getPtrTy(),

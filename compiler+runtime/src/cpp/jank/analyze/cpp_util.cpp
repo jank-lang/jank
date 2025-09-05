@@ -214,7 +214,7 @@ namespace jank::analyze::cpp_util
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{
-      util::format("inline decltype(auto) {}(){ return {}; }", runtime::munge(alias), literal)
+      util::format("inline decltype(auto) {}(){ return ({}); }", runtime::munge(alias), literal)
     };
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!parse_res)
@@ -374,7 +374,8 @@ namespace jank::analyze::cpp_util
    * primitives instead. */
   bool is_primitive(jtl::ptr<void> const type)
   {
-    return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type);
+    return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type)
+      || Cpp::IsEnumType(type);
   }
 
   jtl::ptr<void> expression_type(expression_ref const expr)
@@ -721,5 +722,86 @@ namespace jank::analyze::cpp_util
                      Cpp::GetTypeAsString(type)));
     }
     return ok();
+  }
+
+  /* By the time we get here, we know that the types are compatible in *some* fashion. This
+   * is because we only apply this after using Clang to match types in the first place.
+   * However, Clang doesn't tell us what needs to happen, so we then need to figure that
+   * out ourselves. The benefit, though, is that we're not checking *if* two types are compatible.
+   * We're checking *how* they're compatible. In other words, we're checking what we need to
+   * do in order to make them compatible, with the knowledge that there's something we can do. */
+  implicit_conversion_action
+  determine_implicit_conversion(jtl::ptr<void> expr_type, jtl::ptr<void> const expected_type)
+  {
+    //util::println("determine_implicit_conversion expr type {} (canon {}), expected type {} (canon "
+    //              "{}), underlying "
+    //              "subclass {}",
+    //              Cpp::GetTypeAsString(expr_type),
+    //              Cpp::GetTypeAsString(Cpp::GetCanonicalType(expr_type)),
+    //              Cpp::GetTypeAsString(expected_type),
+    //              Cpp::GetTypeAsString(Cpp::GetCanonicalType(expected_type)),
+    //              Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+    //                                     Cpp::GetUnderlyingType(expected_type)));
+
+    expr_type = Cpp::GetNonReferenceType(expr_type);
+    if(Cpp::GetCanonicalType(expr_type) == Cpp::GetCanonicalType(expected_type)
+       || (Cpp::GetCanonicalType(expr_type)
+           == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expected_type)))
+       || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(expr_type))
+           == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type)))
+       || Cpp::IsTypeDerivedFrom(Cpp::GetCanonicalType(expr_type),
+                                 Cpp::GetCanonicalType(expected_type))
+       || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
+    {
+      return implicit_conversion_action::none;
+    }
+
+    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
+    {
+      return implicit_conversion_action::into_object;
+    }
+    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+    {
+      return implicit_conversion_action::from_object;
+    }
+    else if(/* Up cast. */
+            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                                    Cpp::GetUnderlyingType(expected_type)))
+            /* Same type or adding reference. */
+            || (Cpp::GetCanonicalType(expr_type)
+                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
+                && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+            /* Matching nullptr to any pointer type. */
+            || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
+            /* TODO: Array size. */
+            || (Cpp::IsArrayType(expr_type) && Cpp::IsArrayType(expected_type)
+                && Cpp::GetArrayElementType(expr_type) == Cpp::GetArrayElementType(expected_type)))
+    {
+      return implicit_conversion_action::none;
+    }
+    else if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
+            && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
+    {
+      auto const res{ determine_implicit_conversion(Cpp::GetPointeeType(expr_type),
+                                                    Cpp::GetPointeeType(expected_type)) };
+      switch(res)
+      {
+        case implicit_conversion_action::none:
+          return res;
+        case implicit_conversion_action::unknown:
+        case implicit_conversion_action::into_object:
+        case implicit_conversion_action::from_object:
+        case implicit_conversion_action::cast:
+          return implicit_conversion_action::unknown;
+      }
+    }
+    else if(Cpp::IsConstructible(expected_type, expr_type))
+    {
+      return implicit_conversion_action::cast;
+    }
+    else
+    {
+      return implicit_conversion_action::unknown;
+    }
   }
 }
