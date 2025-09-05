@@ -923,11 +923,6 @@ namespace jank::read::lex
                 return error::lex_invalid_number("Missing exponent from end of number.",
                                                  { token_start, pos });
               }
-              if(contains_dot)
-              {
-                /* If we have a dot, then we are parsing a decimal real number. */
-                break;
-              }
               if(!contains_leading_digit)
               {
                 /* If we don't have a leading digit, then we are parsing a symbol. */
@@ -950,27 +945,34 @@ namespace jank::read::lex
                                                    { token_start, pos },
                                                    error::note{ "Found 'N' here.", pos });
                 }
-                found_N = true;
-                expecting_more_digits = false;
-                break;
-              }
-              if (c == 'M')
-              {
-                ++pos;
-                if (found_M)
+                if(found_M)
                 {
                   return error::lex_invalid_number("Unexpected 'M' found in number.",
                                                    { token_start, pos },
                                                    error::note{ "Found 'M' here.", pos });
                 }
-                if (found_slash_after_number)
+                found_N = true;
+                expecting_more_digits = false;
+                break;
+              }
+              if(c == 'M')
+              {
+                /* Big decimal number. */
+                ++pos;
+                if(found_M)
+                {
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
+                if(found_slash_after_number)
                 {
                   found_slash_after_number = false;
                   return error::lex_invalid_number("Unexpected 'M' found in number.",
                                                    { token_start, pos },
                                                    error::note{ "Found 'M' here.", pos });
                 }
-                if (found_N)
+                if(found_N)
                 {
                   return error::lex_invalid_number("Unexpected 'N' found in number.",
                                                    { token_start, pos },
@@ -978,6 +980,12 @@ namespace jank::read::lex
                 }
                 found_M = true;
                 expecting_more_digits = false;
+                break;
+              }
+              if(contains_dot)
+              {
+                /* If we have a dot and do not have an 'M', then we are parsing a regular decimal
+                 * real number. */
                 break;
               }
               /* When parsing decimal numbers only, we would break if we see a non-digit char. */
@@ -1083,7 +1091,7 @@ namespace jank::read::lex
                   radix),
                 { token_start, pos });
             }
-            if (found_M)
+            if(found_M)
             {
               jtl::immutable_string_view const number_literal{ file.data() + number_start,
                                                                number_end - number_start };
@@ -1091,7 +1099,10 @@ namespace jank::read::lex
                 token_start,
                 pos,
                 token_kind::big_decimal,
-                big_decimal{ number_literal }
+                big_decimal{
+                            found_beginning_negative ? jtl::immutable_string_view{ "-" + number_literal }
+                                           : number_literal,
+                            }
               });
             }
             /* Real numbers. */

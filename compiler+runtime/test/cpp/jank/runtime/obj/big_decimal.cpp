@@ -8,8 +8,8 @@ using namespace jank::runtime::obj;
 
 TEST_CASE("big_decimal creation and equality") {
   auto bd1 = big_decimal::create("123.45");
-  auto bd2 = big_decimal::create("123.45M");
-  auto bd3 = big_decimal::create("123.46M");
+  auto bd2 = big_decimal::create("123.45");
+  auto bd3 = big_decimal::create("123.46");
 
   CHECK(equal(bd1, bd2));
   CHECK(!equal(bd1, bd3));
