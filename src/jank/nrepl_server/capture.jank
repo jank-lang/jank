@@ -58,7 +58,7 @@
   (let [temp-fd (cpp/fopen (:file-name capture-handle) "r")
         size    (cpp/long (file-size (:file-name capture-handle)))
         buf     (doto (cpp/std.string.) (cpp/.resize size))]
-    (cpp/fread (cpp/& (cpp/.front buf)) 1 size temp-fd)
+    (cpp/fread (cpp/cast (cpp/type "void*") (cpp/& (cpp/.front buf))) 1 size temp-fd)
     (cpp/fclose temp-fd)
     buf))
 
