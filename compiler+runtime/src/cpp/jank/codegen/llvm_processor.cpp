@@ -145,6 +145,7 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::boolean_ref b) const;
     llvm::Value *gen_global(runtime::obj::integer_ref i) const;
     llvm::Value *gen_global(runtime::obj::big_integer_ref i) const;
+    llvm::Value *gen_global(runtime::obj::big_decimal_ref i) const;
     llvm::Value *gen_global(runtime::obj::real_ref r) const;
     llvm::Value *gen_global(runtime::obj::ratio_ref r) const;
     llvm::Value *gen_global(runtime::obj::persistent_string_ref s) const;
@@ -881,6 +882,7 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::persistent_string>
                      || std::same_as<T, runtime::obj::ratio>
                      || std::same_as<T, runtime::obj::big_integer>
+                     || std::same_as<T, runtime::obj::big_decimal>
                      || std::same_as<T, runtime::obj::uuid> || std::same_as<T, runtime::obj::inst>)
         {
           return gen_global(typed_o);
@@ -2426,6 +2428,46 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
       auto const create_fn(
         llvm_module->getOrInsertFunction("jank_big_integer_create", create_fn_type));
+
+      auto const str_repr(i->to_string());
+      auto const c_str_arg(gen_c_string(str_repr));
+
+      llvm::SmallVector<llvm::Value *, 1> const args{ c_str_arg };
+      auto const call(ctx->builder->CreateCall(create_fn, args));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::impl::gen_global(obj::big_decimal_ref const i) const
+  {
+    auto const found(ctx->literal_globals.find(i));
+    if(found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[i]);
+    auto const name(util::format("big_decimal_{}", i->to_hash()));
+    auto const var(create_global_var(name));
+    llvm_module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      auto const create_fn(
+        llvm_module->getOrInsertFunction("jank_big_decimal_create", create_fn_type));
 
       auto const str_repr(i->to_string());
       auto const c_str_arg(gen_c_string(str_repr));

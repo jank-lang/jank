@@ -103,7 +103,7 @@ namespace jank::runtime
       case object_type::big_integer:
         return "big_integer";
       case object_type::big_decimal:
-        return "Big-decimal";
+        return "big_decimal";
       case object_type::real:
         return "real";
       case object_type::ratio:

@@ -1,4 +1,0 @@
-(assert-eq 123.45M (read-string "123.45M"))
-(assert-eq -123.45M (read-string "-123.45M"))
-
-:success

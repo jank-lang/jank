@@ -1,0 +1,4 @@
+(assert (= 123.45M (read-string "123.45M")))
+(assert (= -123.45M (read-string "-123.45M")))
+
+:success
