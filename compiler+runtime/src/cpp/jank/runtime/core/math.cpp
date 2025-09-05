@@ -8,17 +8,6 @@
 
 namespace jank::runtime
 {
-  using boost::multiprecision::operator>;
-  using boost::multiprecision::operator>=;
-  using boost::multiprecision::operator<;
-  using boost::multiprecision::operator<=;
-  using boost::multiprecision::operator==;
-  using boost::multiprecision::operator!=;
-  using boost::multiprecision::operator+;
-  using boost::multiprecision::operator-;
-  using boost::multiprecision::operator*;
-  using boost::multiprecision::operator/;
-
   template <typename T>
   static f64 to_real(T const &val)
   {

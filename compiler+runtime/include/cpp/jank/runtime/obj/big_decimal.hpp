@@ -64,20 +64,6 @@ namespace jank::runtime::obj
     native_big_decimal data{};
   };
 
-  // native_big_decimal operator+(native_big_decimal const &l, native_big_decimal const &r);
-  // native_big_decimal operator-(native_big_decimal const &l, native_big_decimal const &r);
-  // native_big_decimal operator*(native_big_decimal const &l, native_big_decimal const &r);
-  // native_big_decimal operator/(native_big_decimal const &l, native_big_decimal const &r);
-  //
-  // native_big_decimal operator+(native_big_decimal const &l, native_big_integer const &r);
-  // native_big_decimal operator-(native_big_decimal const &l, native_big_integer const &r);
-  // native_big_decimal operator*(native_big_decimal const &l, native_big_integer const &r);
-  // native_big_decimal operator/(native_big_decimal const &l, native_big_integer const &r);
-  //
-  // native_big_decimal operator+(native_big_integer const &l, native_big_decimal const &r);
-  // native_big_decimal operator-(native_big_integer const &l, native_big_decimal const &r);
-  // native_big_decimal operator*(native_big_integer const &l, native_big_decimal const &r);
-  // native_big_decimal operator/(native_big_integer const &l, native_big_decimal const &r);
   using jank::runtime::operator+;
   using jank::runtime::operator-;
   using jank::runtime::operator*;
