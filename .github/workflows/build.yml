@@ -35,7 +35,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+          key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build Clang/LLVM
         run: |
           if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
@@ -67,12 +67,10 @@ jobs:
             analyze: on
 
           ## Debug + sanitization
-          # TODO: Fix this. relocation target 0x7f35f070a000 (DW.ref.__gxx_personality_v0) is out of range of Delta32 fixup at address 0x7f35f070a000 (<anonymous block> @ 0x7b35f02041a4 + 0x13)
-          # https://github.com/jank-lang/jank/actions/runs/16711172704/job/47296376050
-          #- name: Ubuntu - address sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: address
+          - name: Ubuntu - address sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: address
 
           - name: Ubuntu - undefined behavior sanitizer
             os: ubuntu-24.04
