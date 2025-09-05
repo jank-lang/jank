@@ -859,7 +859,7 @@ namespace jank::analyze
       }
       if(is_member_call)
       {
-        arg_types.erase(new_types.begin());
+        arg_types.erase(arg_types.begin());
       }
       if(is_ctor)
       {
