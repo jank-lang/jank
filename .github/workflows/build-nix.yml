@@ -1,0 +1,25 @@
+name: "Build (nix)"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - uses: cachix/cachix-action@v16
+      with:
+        name: kylc
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - run: nix build .?submodules=1 -L
+    - run: nix run .?submodules=1 check-health
