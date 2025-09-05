@@ -1,6 +1,7 @@
 #include <limits>
 #include <cmath>
 
+#include <jank/runtime/obj/big_decimal.hpp>
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/visit.hpp>
@@ -100,6 +101,12 @@ namespace jank::runtime::obj
     return big_integer::to_i64(numerator / denominator);
   }
 
+  native_big_decimal ratio_data::to_native_big_decimal() const
+  {
+    return native_big_decimal(numerator.str().c_str())
+      / native_big_decimal(denominator.str().c_str());
+  }
+
   f64 ratio::to_real() const
   {
     return data.to_real();
@@ -108,6 +115,12 @@ namespace jank::runtime::obj
   i64 ratio::to_integer() const
   {
     return data.to_integer();
+  }
+
+  native_big_decimal ratio::to_native_big_decimal() const
+  {
+    return native_big_decimal(data.numerator.str().c_str())
+      / native_big_decimal(data.denominator.str().c_str());
   }
 
   void ratio::to_string(jtl::string_builder &buff) const
@@ -156,7 +169,17 @@ namespace jank::runtime::obj
   i64 ratio::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 {
+        using T = std::decay_t<decltype(*typed_o)>;
+        if constexpr(std::is_same_v<T, big_decimal>)
+        {
+          return this->to_native_big_decimal().compare(typed_o->data);
+        }
+        else
+        {
+          return (data > typed_o->data) - (data < typed_o->data);
+        }
+      },
       &o);
   }
 
@@ -694,4 +717,120 @@ namespace jank::runtime::obj
     return l >= ratio_data(r, 1);
   }
 
+  native_big_decimal operator+(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() + r;
+  }
+
+  native_big_decimal operator+(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l + r.to_native_big_decimal();
+  }
+
+  native_big_decimal operator-(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() - r;
+  }
+
+  native_big_decimal operator-(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l - r.to_native_big_decimal();
+  }
+
+  native_big_decimal operator*(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() * r;
+  }
+
+  native_big_decimal operator*(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l * r.to_native_big_decimal();
+  }
+
+  native_big_decimal operator/(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() / r;
+  }
+
+  native_big_decimal operator/(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l / r.to_native_big_decimal();
+  }
+
+  bool operator==(native_big_decimal const &l, ratio_data const &r)
+  {
+    native_big_decimal const r_bd = r.to_native_big_decimal();
+
+    // Use a relative epsilon comparison, which is the standard for floating-point types.
+    // This handles comparisons correctly for numbers of any magnitude (very large or very small).
+    // The formula is: |a - b| <= epsilon * max(|a|, |b|)
+
+    // 1. Get the machine epsilon for the native_big_decimal type.
+    native_big_decimal const eps = std::numeric_limits<native_big_decimal>::epsilon();
+
+    // 2. Calculate the absolute difference between the two numbers.
+    //    boost::multiprecision::abs() is a non-member function.
+    native_big_decimal const diff = abs(l - r_bd);
+
+    // 3. Calculate the tolerance, scaling it by the larger of the two values.
+    native_big_decimal const tolerance = eps * std::max(abs(l), abs(r_bd));
+
+    // 4. Perform the comparison.
+    return diff <= tolerance;
+  }
+
+  bool operator==(ratio_data const &l, native_big_decimal const &r)
+  {
+    return r == l;
+  }
+
+  bool operator!=(native_big_decimal const &l, ratio_data const &r)
+  {
+    return !(l == r);
+  }
+
+  bool operator!=(ratio_data const &l, native_big_decimal const &r)
+  {
+    return !(l == r);
+  }
+
+  bool operator<(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l < r.to_native_big_decimal();
+  }
+
+  bool operator<(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() < r;
+  }
+
+  bool operator<=(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l <= r.to_native_big_decimal();
+  }
+
+  bool operator<=(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() <= r;
+  }
+
+  bool operator>(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l > r.to_native_big_decimal();
+  }
+
+  bool operator>(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() > r;
+  }
+
+  bool operator>=(native_big_decimal const &l, ratio_data const &r)
+  {
+    return l >= r.to_native_big_decimal();
+  }
+
+  bool operator>=(ratio_data const &l, native_big_decimal const &r)
+  {
+    return l.to_native_big_decimal() >= r;
+  }
 }
