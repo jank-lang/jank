@@ -27,7 +27,5 @@ namespace jank::runtime::obj
 
     jtl::immutable_string pattern{};
     std::regex regex{};
-
-    mutable uhash hash{};
   };
 }

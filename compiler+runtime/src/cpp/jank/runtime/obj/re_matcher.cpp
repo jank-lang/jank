@@ -1,9 +1,10 @@
 #include <jank/runtime/obj/re_matcher.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
-  re_matcher::re_matcher(re_pattern_ref re, jtl::immutable_string const &s)
+  re_matcher::re_matcher(re_pattern_ref const re, jtl::immutable_string const &s)
     : s{ s.c_str() }
     , re{ re }
   {
@@ -11,24 +12,18 @@ namespace jank::runtime::obj
 
   bool re_matcher::equal(object const &o) const
   {
-    if(o.type != object_type::re_matcher)
-    {
-      return false;
-    }
-
-    auto const matcher(expect_object<re_matcher>(&o));
-    return this == &(*matcher);
+    return &base == &o;
   }
 
   void re_matcher::to_string(jtl::string_builder &buff) const
   {
-    buff("#<re_matcher>");
+    util::format_to(buff, "#object[{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string re_matcher::to_string() const
   {
     jtl::string_builder buff;
-    buff("#<re_matcher>");
+    to_string(buff);
     return buff.release();
   }
 
@@ -39,12 +34,6 @@ namespace jank::runtime::obj
 
   uhash re_matcher::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    // TODO: implement
-    return 0;
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 }

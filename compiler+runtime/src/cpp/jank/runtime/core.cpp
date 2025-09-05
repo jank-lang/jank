@@ -496,44 +496,20 @@ namespace jank::runtime
     return o->type == object_type::tagged_literal;
   }
 
-  object_ref re_pattern(object_ref o)
+  object_ref re_pattern(object_ref const o)
   {
-    if(o->type == object_type::persistent_string)
-    {
-      return make_box<obj::re_pattern>(expect_object<obj::persistent_string>(o)->data);
-    }
-    else
-    {
-      throw std::runtime_error{ util::format("Expected string, got {}", object_type_str(o->type)) };
-    }
+    return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
   }
 
   object_ref re_matcher(object_ref const re, object_ref const s)
   {
-    if(re->type != object_type::re_pattern)
-    {
-      throw std::runtime_error{ util::format("Expected pattern, got {}",
-                                             object_type_str(re->type)) };
-    }
-
-    if(s->type != object_type::persistent_string)
-    {
-      throw std::runtime_error{ util::format("Expected string, got {}", object_type_str(s->type)) };
-    }
-
-    return make_box<obj::re_matcher>(expect_object<obj::re_pattern>(re),
-                                     expect_object<obj::persistent_string>(s)->data);
+    return make_box<obj::re_matcher>(try_object<obj::re_pattern>(re),
+                                     try_object<obj::persistent_string>(s)->data);
   }
 
   object_ref re_find(object_ref const m)
   {
-    if(m->type != object_type::re_matcher)
-    {
-      throw std::runtime_error{ util::format("Expected matcher, got {}",
-                                             object_type_str(m->type)) };
-    }
-
-    auto const matcher = expect_object<obj::re_matcher>(m);
+    auto const matcher(try_object<obj::re_matcher>(m));
     std::regex_search(matcher->s, matcher->m, matcher->re->regex);
 
     switch(matcher->m.size())
@@ -569,13 +545,7 @@ namespace jank::runtime
 
   object_ref re_groups(object_ref const m)
   {
-    if(m->type != object_type::re_matcher)
-    {
-      throw std::runtime_error{ util::format("Expected matcher, got {}",
-                                             object_type_str(m->type)) };
-    }
-
-    auto const matcher = expect_object<obj::re_matcher>(m);
+    auto const matcher(try_object<obj::re_matcher>(m));
 
     if(matcher->groups.is_nil())
     {
@@ -587,23 +557,12 @@ namespace jank::runtime
 
   object_ref re_matches(object_ref const re, object_ref const s)
   {
-    if(re->type != object_type::re_pattern)
-    {
-      throw std::runtime_error{ util::format("Expected pattern, got {}",
-                                             object_type_str(re->type)) };
-    }
-
-    if(s->type != object_type::persistent_string)
-    {
-      throw std::runtime_error{ util::format("Expected string, got {}", object_type_str(s->type)) };
-    }
-
     std::smatch m{};
-    std::string const search_str{ expect_object<obj::persistent_string>(s)->data.c_str() };
+    std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
 
     std::regex_search(search_str,
                       m,
-                      expect_object<obj::re_pattern>(re)->regex,
+                      try_object<obj::re_pattern>(re)->regex,
                       std::regex_constants::match_continuous);
 
     if(!m.suffix().str().empty())

@@ -12,13 +12,7 @@ namespace jank::runtime::obj
 
   bool re_pattern::equal(object const &o) const
   {
-    if(o.type != object_type::re_pattern)
-    {
-      return false;
-    }
-
-    auto const re(expect_object<re_pattern>(&o));
-    return re->pattern == pattern;
+    return &base == &o;
   }
 
   void re_pattern::to_string(jtl::string_builder &buff) const
@@ -42,11 +36,6 @@ namespace jank::runtime::obj
 
   uhash re_pattern::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = pattern.to_hash();
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 }
