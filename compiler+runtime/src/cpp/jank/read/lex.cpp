@@ -930,6 +930,10 @@ namespace jank::read::lex
               }
               if(c == 'N')
               {
+                if(contains_dot)
+                {
+                  break;
+                }
                 ++pos;
                 /* big integer */
                 if(found_N)
