@@ -6,12 +6,12 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED)
 
 # Define the shared library for the native component.
 add_library(nrepl_server_native SHARED src/cpp/nrepl_server/nrepl_server.cpp)
 target_include_directories(nrepl_server_native PUBLIC src/cpp)
-target_link_libraries(nrepl_server_native PRIVATE Boost::system)
+target_link_libraries(nrepl_server_native PRIVATE Boost::boost)
 
 # Define a dummy interface target for the jank script which we will use to
 # collect include directories, link directories, and link libraries to be passed
