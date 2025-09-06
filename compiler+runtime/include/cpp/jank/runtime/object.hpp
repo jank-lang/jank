@@ -232,6 +232,16 @@ namespace jank::runtime
 
   struct object
   {
+    object() = delete;
+    object(object_type);
+    virtual ~object() = default;
+
+    virtual bool equal(object const &);
+    virtual jtl::immutable_string to_string();
+    virtual void to_string(jtl::string_builder &);
+    virtual jtl::immutable_string to_code_string();
+    virtual uhash to_hash();
+
     object_type type{};
   };
 

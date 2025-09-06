@@ -2,9 +2,42 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/hash.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
+  object::object(object_type const t)
+    : type{ t }
+  {
+  }
+
+  bool object::equal(object const &o)
+  {
+    return this == &o;
+  }
+
+  jtl::immutable_string object::to_string()
+  {
+    jtl::string_builder buff;
+    to_string(buff);
+    return buff.release();
+  }
+
+  void object::to_string(jtl::string_builder &buff)
+  {
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
+  }
+
+  jtl::immutable_string object::to_code_string()
+  {
+    return to_string();
+  }
+
+  uhash object::to_hash()
+  {
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs->type != rhs->type)
