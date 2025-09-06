@@ -605,13 +605,12 @@ namespace jank::analyze::cpp_util
   usize offset_to_typed_object_base(jtl::ptr<void> const type)
   {
     jank_debug_assert(is_typed_object(type));
+    static auto const base{ Cpp::GetScopeFromCompleteName("jank::runtime::object") };
     auto const can_type{ Cpp::GetCanonicalType(type) };
     auto const scope{ Cpp::GetUnderlyingScope(
       Cpp::GetNamed("value_type", Cpp::GetScopeFromType(can_type))) };
     jank_debug_assert(scope);
-    auto const base{ Cpp::LookupDatamember("base", scope) };
-    jank_debug_assert(base);
-    auto const offset{ Cpp::GetVariableOffset(base, scope) };
+    auto const offset{ Cpp::GetBaseClassOffset(scope, base) };
     return offset;
   }
 
