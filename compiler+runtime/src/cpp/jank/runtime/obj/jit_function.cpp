@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 
   bool jit_function::equal(object const &rhs) const
   {
-    return &base == &rhs;
+    return this == &rhs;
   }
 
   jtl::immutable_string jit_function::to_string() const
@@ -47,8 +47,8 @@ namespace jank::runtime::obj
       buff,
       "{} ({}@{})",
       (name->type == object_type::nil ? "unknown" : expect_object<persistent_string>(name)->data),
-      object_type_str(base.type),
-      &base);
+      object_type_str(type),
+      this);
   }
 
   jtl::immutable_string jit_function::to_code_string() const
@@ -225,6 +225,6 @@ namespace jank::runtime::obj
 
   object_ref jit_function::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

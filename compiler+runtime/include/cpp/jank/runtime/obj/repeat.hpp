@@ -47,7 +47,6 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     repeat_ref with_meta(object_ref m) const;
 
-    object base{ obj_type };
     object_ref value{};
     object_ref count{};
     jtl::option<object_ref> meta{};

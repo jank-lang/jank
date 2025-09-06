@@ -47,7 +47,7 @@ namespace jank::runtime::obj
 
   object_ref nil::get(object_ref const)
   {
-    return &base;
+    return this;
   }
 
   object_ref nil::get(object_ref const, object_ref const fallback)
@@ -57,7 +57,7 @@ namespace jank::runtime::obj
 
   object_ref nil::get_entry(object_ref)
   {
-    return &base;
+    return this;
   }
 
   bool nil::contains(object_ref) const

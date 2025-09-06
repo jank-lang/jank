@@ -1354,7 +1354,7 @@ namespace jank::read::parse
             return err(
               error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
                                                          typed_form->to_code_string(),
-                                                         object_type_str(typed_form->base.type))));
+                                                         object_type_str(typed_form->type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */

@@ -82,7 +82,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   uhash base_persistent_map_sequence<PT, IT>::to_hash() const
   {
-    return hash::unordered(&static_cast<PT const *>(this)->base);
+    return hash::unordered(static_cast<PT const *>(this));
   }
 
   template <typename PT, typename IT>

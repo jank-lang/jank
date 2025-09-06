@@ -27,12 +27,12 @@ namespace jank::runtime::obj
 
   bool native_function_wrapper::equal(object const &o) const
   {
-    return &base == &o;
+    return this == &o;
   }
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
   jtl::immutable_string native_function_wrapper::to_string() const
@@ -195,6 +195,6 @@ namespace jank::runtime::obj
 
   object_ref native_function_wrapper::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

@@ -39,7 +39,6 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     iterator_ref next_in_place();
 
-    object base{ obj_type };
     /* TODO: Support chunking. */
     object_ref fn{};
     object_ref current{};

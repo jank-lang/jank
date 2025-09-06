@@ -280,12 +280,6 @@ namespace jank::runtime::behavior
      * based on the value, or values, within the object. There are a set of hash functions
      * which should be used for this in hash.hpp. */
     { t->to_hash() } -> std::convertible_to<i64>;
-
-    /* Every object needs to have this base field, which is the actual object field.
-     * When we pass around object pointers, we pass around pointers to this field within
-     * the overall object. This field stores the type of the object and we use that
-     * type to shift the object pointer and cast it into the fully typed object. */
-    { t->base } -> std::same_as<object &>;
   };
 }
 

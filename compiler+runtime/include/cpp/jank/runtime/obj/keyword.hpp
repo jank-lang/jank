@@ -48,7 +48,6 @@ namespace jank::runtime::obj
 
     bool operator==(keyword const &rhs) const;
 
-    object base{ obj_type };
     symbol_ref sym;
   };
 }

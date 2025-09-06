@@ -24,7 +24,6 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ref deref();
 
-    object base{ obj_type };
     object_ref val{};
     object_ref fn{};
     object_ref error{};

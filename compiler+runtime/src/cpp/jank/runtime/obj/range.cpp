@@ -237,7 +237,7 @@ namespace jank::runtime::obj
 
   uhash range::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   range_ptr range::with_meta(object_ref const m) const

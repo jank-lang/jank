@@ -8,18 +8,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_vector::transient_vector()
+    : object{ obj_type }
+  {
+  }
+
   transient_vector::transient_vector(runtime::detail::native_persistent_vector &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_persistent_vector const &d)
-    : data{ d.transient() }
+    : object{ obj_type }
+    , data{ d.transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_transient_vector &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
@@ -31,7 +39,7 @@ namespace jank::runtime::obj
   bool transient_vector::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
+    return this == &o;
   }
 
   jtl::immutable_string transient_vector::to_string() const
@@ -43,7 +51,7 @@ namespace jank::runtime::obj
 
   void transient_vector::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_vector::to_code_string() const

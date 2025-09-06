@@ -83,7 +83,6 @@ namespace jank::runtime::obj
     object_ref get_method(object_ref dispatch_val);
     object_ref find_and_cache_best_method(object_ref dispatch_val);
 
-    object base{ obj_type };
     object_ref dispatch{};
     object_ref default_dispatch_value{};
     object_ref hierarchy{};

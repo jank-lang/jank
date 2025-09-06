@@ -29,7 +29,6 @@ namespace jank::runtime::obj
       return reinterpret_cast<T *>(data);
     }
 
-    object base{ obj_type };
     void *data{};
   };
 }

@@ -24,7 +24,6 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
-    object base{ obj_type };
     /* Holds the raw form of the character bytes. Supports Unicode. */
     jtl::immutable_string data;
   };

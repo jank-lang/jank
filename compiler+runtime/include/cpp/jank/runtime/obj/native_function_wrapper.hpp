@@ -128,7 +128,6 @@ namespace jank::runtime
       /* behavior::metadatable */
       native_function_wrapper_ref with_meta(object_ref m) const;
 
-      object base{ obj_type };
       obj::detail::function_type data{};
       jtl::option<object_ref> meta;
     };

@@ -72,7 +72,6 @@ namespace jank::runtime::obj
     bool contains(object_ref o) const;
     persistent_hash_set_ref disj(object_ref o) const;
 
-    object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;
   };

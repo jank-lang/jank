@@ -137,6 +137,7 @@ namespace jank::runtime
 
       /* Callables need a way to get back to the root object so we can do helpful
        * error reporting on failed calls. */
+      /* TODO: Remove this. */
       virtual object_ref this_object_ref() = 0;
 
       /* When dynamically calling a function, we need to know three things:

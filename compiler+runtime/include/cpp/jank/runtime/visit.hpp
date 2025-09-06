@@ -67,7 +67,7 @@ namespace jank::runtime
   [[gnu::hot]]
   constexpr auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
-    return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
+    return fn(const_cast<T *>(not_erased.data), std::forward<Args>(args)...);
   }
 
   template <typename F, typename... Args>

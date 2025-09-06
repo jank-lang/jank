@@ -82,7 +82,6 @@ namespace jank::runtime::obj
     object_ref peek() const;
     persistent_list_ref pop() const;
 
-    object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;
   };

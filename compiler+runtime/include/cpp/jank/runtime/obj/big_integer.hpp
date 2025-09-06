@@ -70,7 +70,6 @@ namespace jank::runtime::obj
 
     void init(jtl::immutable_string const &);
 
-    object base{ obj_type };
     native_big_integer data{};
   };
 

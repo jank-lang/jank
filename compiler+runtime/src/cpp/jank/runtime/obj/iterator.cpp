@@ -84,7 +84,7 @@ namespace jank::runtime::obj
 
   uhash iterator::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   cons_ref iterator::conj(object_ref const head) const

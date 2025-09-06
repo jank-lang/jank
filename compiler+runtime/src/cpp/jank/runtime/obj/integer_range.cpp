@@ -162,7 +162,7 @@ namespace jank::runtime::obj
 
   uhash integer_range::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   integer_range_ref integer_range::with_meta(object_ref const m) const

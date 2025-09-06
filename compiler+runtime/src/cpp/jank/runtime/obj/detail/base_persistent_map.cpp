@@ -24,7 +24,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }

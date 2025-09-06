@@ -44,7 +44,6 @@ namespace jank::runtime::obj
 
     object_ref compare_and_set(object_ref old_val, object_ref new_val);
 
-    object base{ obj_type };
     std::atomic<object *> val{};
   };
 }

@@ -117,7 +117,7 @@ namespace jank::runtime::obj
 
   uhash repeat::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   repeat_ref repeat::with_meta(object_ref const m) const

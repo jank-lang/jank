@@ -20,7 +20,6 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
-    object base{ obj_type };
     jtl::ptr<void> data{};
   };
 }

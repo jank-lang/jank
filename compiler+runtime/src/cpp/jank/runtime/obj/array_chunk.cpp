@@ -33,7 +33,7 @@ namespace jank::runtime::obj
 
   bool array_chunk::equal(object const &o) const
   {
-    return &o == &base;
+    return &o == this;
   }
 
   jtl::immutable_string array_chunk::to_string() const
@@ -45,7 +45,7 @@ namespace jank::runtime::obj
 
   void array_chunk::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
   jtl::immutable_string array_chunk::to_code_string() const

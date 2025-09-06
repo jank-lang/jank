@@ -56,8 +56,6 @@ namespace jank::runtime::obj
     void set_ns(jtl::immutable_string const &);
     void set_name(jtl::immutable_string const &);
 
-    object base{ obj_type };
-
     /* These require mutation fns, since changing them will affect the hash. */
     jtl::immutable_string ns;
     jtl::immutable_string name;

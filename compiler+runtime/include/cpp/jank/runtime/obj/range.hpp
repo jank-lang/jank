@@ -70,7 +70,6 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     range_ptr with_meta(object_ref m) const;
 
-    object base{ obj_type };
     object_ref start{};
     object_ref end{};
     object_ref step{};

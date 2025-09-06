@@ -57,7 +57,6 @@ namespace jank::runtime::obj
 
   public:
     /* TODO: Synchronize. */
-    object base{ obj_type };
     mutable object_ref fn{};
     mutable object_ref sv{};
     mutable object_ref s{};

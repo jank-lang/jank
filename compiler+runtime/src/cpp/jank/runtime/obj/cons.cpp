@@ -69,7 +69,7 @@ namespace jank::runtime::obj
       return hash;
     }
 
-    return hash = hash::ordered(&base);
+    return hash = hash::ordered(this);
   }
 
   cons_ref cons::conj(object_ref const head) const

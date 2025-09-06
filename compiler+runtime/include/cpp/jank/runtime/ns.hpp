@@ -15,7 +15,7 @@ namespace jank::runtime
 
   using ns_ref = oref<struct ns>;
 
-  struct ns : gc
+  struct ns : object
   {
     static constexpr object_type obj_type{ object_type::ns };
     static constexpr bool pointer_free{ false };
@@ -38,11 +38,11 @@ namespace jank::runtime
     obj::persistent_hash_map_ref get_mappings() const;
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     bool operator==(ns const &rhs) const;
 

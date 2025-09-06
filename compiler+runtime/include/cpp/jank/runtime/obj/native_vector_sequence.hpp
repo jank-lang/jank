@@ -48,7 +48,6 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     native_vector_sequence_ref with_meta(object_ref const m) const;
 
-    object base{ obj_type };
     native_vector<object_ref> data{};
     usize index{};
     jtl::option<object_ref> meta;

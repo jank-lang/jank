@@ -40,7 +40,6 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     cons_ref conj(object_ref head) const;
 
-    object base{ obj_type };
     object_ref head{};
     object_ref tail{};
     mutable uhash hash{};

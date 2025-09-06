@@ -29,7 +29,6 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(boolean const &) const;
 
-    object base{ obj_type };
     bool data{};
   };
 
@@ -62,8 +61,6 @@ namespace jank::runtime::obj
     i64 to_integer() const;
     f64 to_real() const;
 
-    object base{ obj_type };
-    /* TODO: Is it faster to have the data first or the base first? */
     i64 data{};
   };
 
@@ -97,7 +94,6 @@ namespace jank::runtime::obj
     f64 to_real() const;
 
     f64 data{};
-    object base{ obj_type };
   };
 }
 

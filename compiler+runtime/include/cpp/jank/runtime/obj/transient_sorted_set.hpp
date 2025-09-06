@@ -54,7 +54,6 @@ namespace jank::runtime::obj
 
     void assert_active() const;
 
-    object base{ obj_type };
     value_type data;
     mutable uhash hash{};
     bool active{ true };

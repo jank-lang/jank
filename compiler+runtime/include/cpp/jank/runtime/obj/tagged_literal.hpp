@@ -26,8 +26,6 @@ namespace jank::runtime::obj
     object_ref get_entry(object_ref key) const;
     bool contains(object_ref key) const;
 
-    object base{ obj_type };
-
     object_ref tag{};
     object_ref form{};
 

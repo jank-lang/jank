@@ -181,7 +181,7 @@ namespace jank::runtime::obj
 
   uhash chunked_cons::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   cons_ref chunked_cons::conj(object_ref const head) const

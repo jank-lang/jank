@@ -30,7 +30,6 @@ namespace jank::runtime::obj
     object_ref nth(object_ref index) const;
     object_ref nth(object_ref index, object_ref fallback) const;
 
-    object base{ obj_type };
     native_vector<object_ref> buffer;
     usize offset{};
   };

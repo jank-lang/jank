@@ -26,7 +26,7 @@ namespace jank::runtime::obj
 
   bool multi_function::equal(object const &rhs) const
   {
-    return &base == &rhs;
+    return this == &rhs;
   }
 
   jtl::immutable_string multi_function::to_string() const
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
 
   void multi_function::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(base.type), &base);
+    util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(type), this);
   }
 
   jtl::immutable_string multi_function::to_code_string() const
@@ -190,7 +190,7 @@ namespace jank::runtime::obj
 
   object_ref multi_function::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 
   multi_function_ref multi_function::reset()

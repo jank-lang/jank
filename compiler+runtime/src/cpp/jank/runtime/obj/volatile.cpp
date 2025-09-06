@@ -3,15 +3,22 @@
 
 namespace jank::runtime::obj
 {
+  volatile_::volatile_()
+    : object{ obj_type }
+  {
+    jank_debug_assert(val.is_some());
+  }
+
   volatile_::volatile_(object_ref const o)
-    : val{ o }
+    : object{ obj_type }
+    , val{ o }
   {
     jank_debug_assert(val.is_some());
   }
 
   bool volatile_::equal(object const &o) const
   {
-    return &o == &base;
+    return &o == this;
   }
 
   jtl::immutable_string volatile_::to_string() const
@@ -23,7 +30,7 @@ namespace jank::runtime::obj
 
   void volatile_::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
   jtl::immutable_string volatile_::to_code_string() const

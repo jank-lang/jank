@@ -37,7 +37,7 @@ namespace jank::runtime::obj
   bool transient_hash_set::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
+    return this == &o;
   }
 
   jtl::immutable_string transient_hash_set::to_string() const
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
 
   void transient_hash_set::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_hash_set::to_code_string() const

@@ -73,7 +73,6 @@ namespace jank::runtime::obj
     arity_flag_t get_arity_flags() const override;
     object_ref this_object_ref() override;
 
-    object base{ obj_type };
     object *(*arity_0)(){};
     object *(*arity_1)(object *){};
     object *(*arity_2)(object *, object *){};

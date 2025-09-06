@@ -27,7 +27,7 @@ namespace jank::runtime::obj
   /* Keywords are interned, so we can always count on identity equality. */
   bool keyword::equal(object const &o) const
   {
-    return &base == &o;
+    return this == &o;
   }
 
   static void to_string_impl(symbol const &sym, jtl::string_builder &buff)

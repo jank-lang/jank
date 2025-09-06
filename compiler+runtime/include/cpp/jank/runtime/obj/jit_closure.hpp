@@ -73,7 +73,6 @@ namespace jank::runtime::obj
 
     object_ref this_object_ref() final;
 
-    object base{ obj_type };
     void *context{};
     object *(*arity_0)(void *){};
     object *(*arity_1)(void *, object *){};

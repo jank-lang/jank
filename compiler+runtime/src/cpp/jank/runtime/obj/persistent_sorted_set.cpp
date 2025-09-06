@@ -59,7 +59,7 @@ namespace jank::runtime::obj
 
   bool persistent_sorted_set::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }

@@ -69,7 +69,7 @@ namespace jank::runtime::obj
 
   bool persistent_vector::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }
