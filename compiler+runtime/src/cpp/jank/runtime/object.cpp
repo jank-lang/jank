@@ -11,29 +11,29 @@ namespace jank::runtime
   {
   }
 
-  bool object::equal(object const &o)
+  bool object::equal(object const &o) const
   {
     return this == &o;
   }
 
-  jtl::immutable_string object::to_string()
+  jtl::immutable_string object::to_string() const
   {
     jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void object::to_string(jtl::string_builder &buff)
+  void object::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{}@{}", object_type_str(type), this);
   }
 
-  jtl::immutable_string object::to_code_string()
+  jtl::immutable_string object::to_code_string() const
   {
     return to_string();
   }
 
-  uhash object::to_hash()
+  uhash object::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }

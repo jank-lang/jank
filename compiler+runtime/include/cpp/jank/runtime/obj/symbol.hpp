@@ -9,12 +9,12 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using symbol_ref = oref<struct symbol>;
 
-  struct symbol : gc
+  struct symbol : object
   {
     static constexpr object_type obj_type{ object_type::symbol };
     static constexpr bool pointer_free{ false };
 
-    symbol() = default;
+    symbol();
     symbol(symbol &&) noexcept = default;
     symbol(symbol const &) = default;
     symbol(jtl::immutable_string const &d);
@@ -28,11 +28,11 @@ namespace jank::runtime::obj
     symbol &operator=(symbol &&) = default;
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::object_like extended */
     bool equal(symbol const &) const;

@@ -13,7 +13,7 @@ namespace jank::runtime::obj
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
    * For integer values, use integer_range. This is not countable in constant time, due
    * to floating point shenanigans. */
-  struct range : gc
+  struct range : object
   {
     static constexpr object_type obj_type{ object_type::range };
     static constexpr bool pointer_free{ false };
@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     using bounds_check_t = bool (*)(object_ref, object_ref);
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
-    range() = default;
+    range();
     range(range &&) noexcept = default;
     range(range const &) = default;
     range(object_ref end);
@@ -42,11 +42,11 @@ namespace jank::runtime::obj
     static object_ref create(object_ref start, object_ref end, object_ref step);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     range_ptr seq();

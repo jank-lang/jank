@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   using nil_ref = oref<struct nil>;
   using persistent_list_ref = oref<struct persistent_list>;
 
-  struct persistent_list : gc
+  struct persistent_list : object
   {
     using value_type = runtime::detail::native_persistent_list;
 
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     static persistent_list_ref create(persistent_list_ref s);
     static persistent_list_ref create(nil_ref s);
 
-    persistent_list() = default;
+    persistent_list();
     persistent_list(persistent_list &&) noexcept = default;
     persistent_list(persistent_list const &) = default;
     persistent_list(value_type const &d);
@@ -32,13 +32,15 @@ namespace jank::runtime::obj
      * It just uses the copy ctor. */
     template <typename... Args>
     persistent_list(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_list(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
@@ -50,11 +52,11 @@ namespace jank::runtime::obj
     }
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     persistent_list_ref with_meta(object_ref m) const;

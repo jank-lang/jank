@@ -5,8 +5,14 @@
 
 namespace jank::runtime::obj
 {
+  cons::cons()
+    : object{ obj_type }
+  {
+  }
+
   cons::cons(object_ref const head, object_ref const tail)
-    : head{ head }
+    : object{ obj_type }
+    , head{ head }
     , tail{ tail }
   {
   }

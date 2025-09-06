@@ -8,24 +8,24 @@ namespace jank::runtime::obj
   using jit_closure_ref = oref<struct jit_closure>;
 
   struct jit_closure
-    : gc
+    : object
     , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_closure };
     static constexpr bool pointer_free{ false };
 
-    jit_closure() = default;
+    jit_closure();
     jit_closure(jit_closure &&) noexcept = default;
     jit_closure(jit_closure const &) = default;
     jit_closure(arity_flag_t arity_flags, void *context);
     jit_closure(object_ref meta);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     jit_closure_ref with_meta(object_ref m);

@@ -13,7 +13,8 @@ namespace jank::runtime::obj
                                  object_ref const dispatch,
                                  object_ref const default_,
                                  object_ref const hierarchy)
-    : dispatch{ dispatch }
+    : object{ obj_type }
+    , dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
     , method_table{ persistent_hash_map::empty() }
@@ -28,19 +29,19 @@ namespace jank::runtime::obj
     return &base == &rhs;
   }
 
-  jtl::immutable_string multi_function::to_string()
+  jtl::immutable_string multi_function::to_string() const
   {
     jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void multi_function::to_string(jtl::string_builder &buff)
+  void multi_function::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(base.type), &base);
   }
 
-  jtl::immutable_string multi_function::to_code_string()
+  jtl::immutable_string multi_function::to_code_string() const
   {
     return to_string();
   }

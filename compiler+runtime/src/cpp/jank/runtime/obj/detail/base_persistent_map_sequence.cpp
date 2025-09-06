@@ -8,7 +8,8 @@ namespace jank::runtime::obj::detail
   base_persistent_map_sequence<PT, IT>::base_persistent_map_sequence(object_ref const c,
                                                                      IT const &b,
                                                                      IT const &e)
-    : coll{ c }
+    : object{ PT::obj_type }
+    , coll{ c }
     , begin{ b }
     , end{ e }
   {

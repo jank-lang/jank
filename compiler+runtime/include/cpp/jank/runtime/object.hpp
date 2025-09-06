@@ -230,17 +230,17 @@ namespace jank::runtime
     return "unknown";
   }
 
-  struct object
+  struct object : gc
   {
     object() = delete;
     object(object_type);
     virtual ~object() = default;
 
-    virtual bool equal(object const &);
-    virtual jtl::immutable_string to_string();
-    virtual void to_string(jtl::string_builder &);
-    virtual jtl::immutable_string to_code_string();
-    virtual uhash to_hash();
+    virtual bool equal(object const &) const;
+    virtual jtl::immutable_string to_string() const;
+    virtual void to_string(jtl::string_builder &) const;
+    virtual jtl::immutable_string to_code_string() const;
+    virtual uhash to_hash() const;
 
     object_type type{};
   };

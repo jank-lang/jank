@@ -4,8 +4,14 @@
 
 namespace jank::runtime::obj
 {
+  native_pointer_wrapper::native_pointer_wrapper()
+    : object{ obj_type }
+  {
+  }
+
   native_pointer_wrapper::native_pointer_wrapper(void * const d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 

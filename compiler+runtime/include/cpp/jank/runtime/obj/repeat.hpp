@@ -9,14 +9,14 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using repeat_ref = oref<struct repeat>;
 
-  struct repeat : gc
+  struct repeat : object
   {
     static constexpr object_type obj_type{ object_type::repeat };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
     static constexpr i64 infinite{ -1 };
 
-    repeat() = default;
+    repeat();
     repeat(object_ref value);
     repeat(object_ref count, object_ref value);
 
@@ -24,11 +24,11 @@ namespace jank::runtime::obj
     static object_ref create(object_ref count, object_ref value);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     repeat_ref seq();

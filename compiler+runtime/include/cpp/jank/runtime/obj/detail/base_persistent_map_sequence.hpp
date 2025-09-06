@@ -17,23 +17,22 @@ namespace jank::runtime
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename IT>
-  struct base_persistent_map_sequence : gc
+  struct base_persistent_map_sequence : object
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    base_persistent_map_sequence() = default;
     base_persistent_map_sequence(base_persistent_map_sequence &&) = default;
     base_persistent_map_sequence(base_persistent_map_sequence const &) = default;
     base_persistent_map_sequence(object_ref const c, IT const &b, IT const &e);
 
     /* behavior::object_like */
-    bool equal(object const &o) const;
+    bool equal(object const &o) const override;
     void to_string_impl(jtl::string_builder &buff, bool const to_code) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::countable */
     usize count() const;

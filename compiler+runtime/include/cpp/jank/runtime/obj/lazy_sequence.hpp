@@ -11,24 +11,24 @@ namespace jank::runtime::obj
   using lazy_sequence_ref = oref<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
-  struct lazy_sequence : gc
+  struct lazy_sequence : object
   {
     static constexpr object_type obj_type{ object_type::lazy_sequence };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    lazy_sequence() = default;
+    lazy_sequence();
     lazy_sequence(lazy_sequence &&) noexcept = default;
     lazy_sequence(lazy_sequence const &) = default;
     lazy_sequence(object_ref fn);
     lazy_sequence(object_ref fn, object_ref sequence);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     object_ref seq() const;

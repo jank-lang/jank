@@ -11,13 +11,20 @@
 
 namespace jank::runtime::obj
 {
+  transient_array_map::transient_array_map()
+    : object{ obj_type }
+  {
+  }
+
   transient_array_map::transient_array_map(runtime::detail::native_array_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   transient_array_map::transient_array_map(runtime::detail::native_array_map const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 

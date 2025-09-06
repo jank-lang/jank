@@ -5,8 +5,14 @@
 
 namespace jank::runtime::obj
 {
+  iterator::iterator()
+    : object{ obj_type }
+  {
+  }
+
   iterator::iterator(object_ref const fn, object_ref const start)
-    : fn{ fn }
+    : object{ obj_type }
+    , fn{ fn }
     , current{ start }
   {
   }
@@ -61,19 +67,19 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void iterator::to_string(jtl::string_builder &buff)
+  void iterator::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::to_string(const_cast<iterator *>(this)->seq(), buff);
   }
 
-  jtl::immutable_string iterator::to_string()
+  jtl::immutable_string iterator::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::to_string(const_cast<iterator *>(this)->seq());
   }
 
-  jtl::immutable_string iterator::to_code_string()
+  jtl::immutable_string iterator::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::to_code_string(const_cast<iterator *>(this)->seq());
   }
 
   uhash iterator::to_hash() const

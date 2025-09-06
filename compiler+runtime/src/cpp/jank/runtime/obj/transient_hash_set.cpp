@@ -6,18 +6,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_hash_set::transient_hash_set()
+    : object{ obj_type }
+  {
+  }
+
   transient_hash_set::transient_hash_set(runtime::detail::native_persistent_hash_set &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_hash_set::transient_hash_set(runtime::detail::native_persistent_hash_set const &d)
-    : data{ d.transient() }
+    : object{ obj_type }
+    , data{ d.transient() }
   {
   }
 
   transient_hash_set::transient_hash_set(runtime::detail::native_transient_hash_set &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 

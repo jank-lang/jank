@@ -9,18 +9,26 @@
 
 namespace jank::runtime::obj
 {
+  persistent_vector::persistent_vector()
+    : object{ obj_type }
+  {
+  }
+
   persistent_vector::persistent_vector(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   persistent_vector::persistent_vector(value_type const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   persistent_vector::persistent_vector(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }

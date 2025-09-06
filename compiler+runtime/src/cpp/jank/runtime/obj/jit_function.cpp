@@ -11,13 +11,20 @@
 
 namespace jank::runtime::obj
 {
+  jit_function::jit_function()
+    : object{ obj_type }
+  {
+  }
+
   jit_function::jit_function(arity_flag_t const arity_flags)
-    : arity_flags{ arity_flags }
+    : object{ obj_type }
+    , arity_flags{ arity_flags }
   {
   }
 
   jit_function::jit_function(object_ref const meta)
-    : meta{ meta }
+    : object{ obj_type }
+    , meta{ meta }
   {
   }
 
@@ -26,14 +33,14 @@ namespace jank::runtime::obj
     return &base == &rhs;
   }
 
-  jtl::immutable_string jit_function::to_string()
+  jtl::immutable_string jit_function::to_string() const
   {
     jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void jit_function::to_string(jtl::string_builder &buff)
+  void jit_function::to_string(jtl::string_builder &buff) const
   {
     auto const name(get(meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
@@ -44,7 +51,7 @@ namespace jank::runtime::obj
       &base);
   }
 
-  jtl::immutable_string jit_function::to_code_string()
+  jtl::immutable_string jit_function::to_code_string() const
   {
     return to_string();
   }

@@ -9,23 +9,23 @@ namespace jank::runtime::obj
   using iterator_ref = oref<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
-  struct iterator : gc
+  struct iterator : object
   {
     static constexpr object_type obj_type{ object_type::iterator };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    iterator() = default;
+    iterator();
     iterator(iterator &&) noexcept = default;
     iterator(iterator const &) = default;
     iterator(object_ref const fn, object_ref const start);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     iterator_ref seq();

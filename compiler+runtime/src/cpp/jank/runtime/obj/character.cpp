@@ -33,13 +33,20 @@ namespace jank::runtime::obj
     }
   }
 
+  character::character()
+    : object{ obj_type }
+  {
+  }
+
   character::character(jtl::immutable_string const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   character::character(char const ch)
-    : data{ 1, ch }
+    : object{ obj_type }
+    , data{ 1, ch }
   {
   }
 

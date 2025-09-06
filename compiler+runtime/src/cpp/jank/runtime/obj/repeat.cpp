@@ -6,14 +6,21 @@
 
 namespace jank::runtime::obj
 {
+  repeat::repeat()
+    : object{ obj_type }
+  {
+  }
+
   repeat::repeat(object_ref const value)
-    : value{ value }
+    : object{ obj_type }
+    , value{ value }
     , count{ make_box(infinite) }
   {
   }
 
   repeat::repeat(object_ref const count, object_ref const value)
-    : value{ value }
+    : object{ obj_type }
+    , value{ value }
     , count{ count }
   {
     if(0 >= to_int(count))
@@ -93,19 +100,19 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void repeat::to_string(jtl::string_builder &buff)
+  void repeat::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::to_string(const_cast<repeat *>(this)->seq(), buff);
   }
 
-  jtl::immutable_string repeat::to_string()
+  jtl::immutable_string repeat::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::to_string(const_cast<repeat *>(this)->seq());
   }
 
-  jtl::immutable_string repeat::to_code_string()
+  jtl::immutable_string repeat::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::to_code_string(const_cast<repeat *>(this)->seq());
   }
 
   uhash repeat::to_hash() const

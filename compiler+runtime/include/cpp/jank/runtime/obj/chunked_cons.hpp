@@ -9,24 +9,24 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using chunked_cons_ref = oref<struct chunked_cons>;
 
-  struct chunked_cons : gc
+  struct chunked_cons : object
   {
     static constexpr object_type obj_type{ object_type::chunked_cons };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    chunked_cons() = default;
+    chunked_cons();
     chunked_cons(chunked_cons &&) noexcept = default;
     chunked_cons(chunked_cons const &) = default;
     chunked_cons(object_ref head, object_ref tail);
     chunked_cons(object_ref meta, object_ref head, object_ref tail);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     chunked_cons_ref with_meta(object_ref m) const;

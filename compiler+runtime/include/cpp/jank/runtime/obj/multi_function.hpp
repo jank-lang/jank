@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   using multi_function_ref = oref<struct multi_function>;
 
   struct multi_function
-    : gc
+    : object
     , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::multi_function };
@@ -22,11 +22,11 @@ namespace jank::runtime::obj
     multi_function(object_ref name, object_ref dispatch, object_ref default_, object_ref hierarchy);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::callable */
     object_ref call() override;

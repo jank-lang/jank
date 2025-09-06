@@ -24,7 +24,7 @@ namespace jank::runtime::obj
   using real_ref = oref<struct real>;
   using ratio_ref = oref<struct ratio>;
 
-  struct ratio : gc
+  struct ratio : object
   {
     static constexpr object_type obj_type{ object_type::ratio };
     static constexpr bool pointer_free{ true };
@@ -37,11 +37,11 @@ namespace jank::runtime::obj
     static object_ref create(native_big_integer const &, native_big_integer const &);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;

@@ -65,24 +65,24 @@ namespace jank::runtime
     using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
     struct native_function_wrapper
-      : gc
+      : object
       , behavior::callable
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
       static constexpr bool pointer_free{ false };
 
-      native_function_wrapper() = default;
+      native_function_wrapper();
       native_function_wrapper(native_function_wrapper &&) noexcept = default;
       native_function_wrapper(native_function_wrapper const &) = default;
       native_function_wrapper(obj::detail::function_type &&d);
       native_function_wrapper(obj::detail::function_type const &d);
 
       /* behavior::object_like */
-      bool equal(object const &) const;
-      jtl::immutable_string to_string() const;
-      void to_string(jtl::string_builder &buff) const;
-      jtl::immutable_string to_code_string() const;
-      uhash to_hash() const;
+      bool equal(object const &) const override;
+      jtl::immutable_string to_string() const override;
+      void to_string(jtl::string_builder &buff) const override;
+      jtl::immutable_string to_code_string() const override;
+      uhash to_hash() const override;
 
       /* behavior::callable */
       object_ref call() final;

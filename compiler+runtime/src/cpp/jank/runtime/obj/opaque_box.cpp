@@ -5,7 +5,8 @@
 namespace jank::runtime::obj
 {
   opaque_box::opaque_box(jtl::ptr<void> const data)
-    : data{ data }
+    : object{ obj_type }
+    , data{ data }
   {
   }
 

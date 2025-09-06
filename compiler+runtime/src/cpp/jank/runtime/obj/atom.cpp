@@ -6,8 +6,14 @@
 
 namespace jank::runtime::obj
 {
+  atom::atom()
+    : object{ obj_type }
+  {
+  }
+
   atom::atom(object_ref const o)
-    : val{ o.data }
+    : object{ obj_type }
+    , val{ o.data }
   {
   }
 

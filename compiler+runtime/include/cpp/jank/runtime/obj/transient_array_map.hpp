@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   using transient_array_map_ref = oref<struct transient_array_map>;
 
   /* TODO: Benchmark how fast is the transient array map vs the transient hash map for small maps? */
-  struct transient_array_map : gc
+  struct transient_array_map : object
   {
     static constexpr object_type obj_type{ object_type::transient_array_map };
     static constexpr bool pointer_free{ false };
@@ -16,7 +16,7 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_array_map;
     using persistent_type_ref = oref<struct persistent_array_map>;
 
-    transient_array_map() = default;
+    transient_array_map();
     transient_array_map(transient_array_map &&) noexcept = default;
     transient_array_map(transient_array_map const &) = default;
     transient_array_map(runtime::detail::native_array_map const &d);
@@ -25,11 +25,11 @@ namespace jank::runtime::obj
     static transient_array_map_ref empty();
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::countable */
     u8 count() const;

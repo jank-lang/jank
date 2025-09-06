@@ -8,13 +8,20 @@
 
 namespace jank::runtime::obj
 {
+  native_function_wrapper::native_function_wrapper()
+    : object{ obj_type }
+  {
+  }
+
   native_function_wrapper::native_function_wrapper(detail::function_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   native_function_wrapper::native_function_wrapper(detail::function_type const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 

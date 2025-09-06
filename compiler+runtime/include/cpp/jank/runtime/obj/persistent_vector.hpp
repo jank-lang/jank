@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
-  struct persistent_vector : gc
+  struct persistent_vector : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
     static constexpr bool pointer_free{ false };
@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     using transient_type = transient_vector;
     using value_type = runtime::detail::native_persistent_vector;
 
-    persistent_vector() = default;
+    persistent_vector();
     persistent_vector(persistent_vector &&) noexcept = default;
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
@@ -27,13 +27,15 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_vector(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
@@ -43,11 +45,11 @@ namespace jank::runtime::obj
     static persistent_vector_ref empty();
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;

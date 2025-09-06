@@ -7,7 +7,6 @@
 
 namespace jank::runtime
 {
-
   f64 operator+(native_big_integer const &l, f64 const &r)
   {
     return obj::big_integer::to_f64(l) + r;
@@ -108,23 +107,30 @@ namespace jank::runtime
   {
     return l > r || l == r;
   }
-
 }
 
 namespace jank::runtime::obj
 {
+  big_integer::big_integer()
+    : object{ obj_type }
+  {
+  }
+
   big_integer::big_integer(native_big_integer const &val)
-    : data(val)
+    : object{ obj_type }
+    , data(val)
   {
   }
 
   big_integer::big_integer(native_big_integer &&val)
-    : data(std::move(val))
+    : object{ obj_type }
+    , data(std::move(val))
   {
   }
 
   big_integer::big_integer(i64 const val)
-    : data(val)
+    : object{ obj_type }
+    , data(val)
   {
   }
 
@@ -154,11 +160,13 @@ namespace jank::runtime::obj
   }
 
   big_integer::big_integer(jtl::immutable_string const &s)
+    : object{ obj_type }
   {
     init(s);
   }
 
   big_integer::big_integer(jtl::immutable_string const &s, i64 const radix, bool const is_negative)
+    : object{ obj_type }
   {
     /* Radix passed from lexer, and it's made sure to be between 2 and 36. */
     if(radix == 10)

@@ -10,20 +10,17 @@ namespace jank::runtime::obj
 namespace jank::runtime::obj::detail
 {
   template <typename Derived, typename It>
-  struct iterator_sequence
+  struct iterator_sequence : object
   {
-    /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
-    iterator_sequence() = default;
-
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence(object_ref const &c, It const &b, It const &e, usize const s);
 
     /* behavior::object_like */
-    bool equal(object const &o) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &o) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     oref<Derived> seq();
