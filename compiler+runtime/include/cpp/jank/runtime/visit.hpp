@@ -53,6 +53,7 @@
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/obj/uuid.hpp>
+#include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
@@ -198,6 +199,8 @@ namespace jank::runtime
         return fn(expect_object<obj::tagged_literal>(erased), std::forward<Args>(args)...);
       case object_type::uuid:
         return fn(expect_object<obj::uuid>(erased), std::forward<Args>(args)...);
+      case object_type::inst:
+        return fn(expect_object<obj::inst>(erased), std::forward<Args>(args)...);
       case object_type::opaque_box:
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
       default:

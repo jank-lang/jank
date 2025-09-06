@@ -61,4 +61,34 @@ namespace jank::analyze::cpp_util
   jtl::option<jtl::immutable_string> operator_name(Cpp::Operator const op);
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
+
+  enum class implicit_conversion_action : u8
+  {
+    unknown,
+    none,
+    into_object,
+    from_object,
+    cast
+  };
+
+  constexpr char const *implicit_conversion_action_str(implicit_conversion_action const a)
+  {
+    switch(a)
+    {
+      case implicit_conversion_action::none:
+        return "none";
+      case implicit_conversion_action::into_object:
+        return "into_object";
+      case implicit_conversion_action::from_object:
+        return "from_object";
+      case implicit_conversion_action::cast:
+        return "cast";
+      case implicit_conversion_action::unknown:
+      default:
+        return "unknown";
+    }
+  }
+
+  implicit_conversion_action
+  determine_implicit_conversion(jtl::ptr<void> expr_type, jtl::ptr<void> const expected_type);
 }

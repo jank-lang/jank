@@ -6676,15 +6676,13 @@ fails, attempts to require sym's namespace and retries."
 ;;   java.util.Date
 ;;   (inst-ms* [inst] (.getTime ^java.util.Date inst)))
 
-;; (defn inst-ms
-;;   "Return the number of milliseconds since January 1, 1970, 00:00:00 GMT"
-;;   [inst]
-;;   (inst-ms* inst))
+(def inst-ms
+  "Return the number of milliseconds since January 1, 1970, 00:00:00 GMT"
+  clojure.core-native/inst-ms)
 
-;; (defn inst?
-;;   "Return true if x satisfies Inst"
-;;   [x]
-;;   (satisfies? Inst x))
+(def inst?
+  "Return true if x satisfies Inst"
+  clojure.core-native/inst?)
 
 ;; (extend-protocol clojure.core/Inst
 ;;   java.time.Instant

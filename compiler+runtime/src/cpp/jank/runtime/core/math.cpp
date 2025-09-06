@@ -5,26 +5,9 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt/print.hpp>
-#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime
 {
-  template <typename T>
-  static auto to_number(T const &t)
-  {
-    if constexpr(std::same_as<T, obj::ratio_data>)
-    {
-      return t.to_real();
-    }
-    else if constexpr(std::same_as<T, native_big_integer>)
-    {
-      return t.template convert_to<f64>();
-    }
-    else
-    {
-      return t;
-    }
-  }
 
   template <typename T>
   static f64 to_real(T const &val)

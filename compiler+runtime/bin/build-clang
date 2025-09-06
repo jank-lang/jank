@@ -15,14 +15,19 @@ set +e
   make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
 set -e
 
-while getopts ":hj:" opt; do
+update=0
+
+while getopts ":huj:" opt; do
   case "${opt}" in
     h)
-      echo "Usage ${0} [-j N] [srcdir]"
+      echo "Usage ${0} [-j N] [-u] [srcdir]"
       exit 0
       ;;
     j)
       make_j="${OPTARG}"
+      ;;
+    u)
+      update=1
       ;;
     \?)
       echo "Invalid option: ${OPTARG}" 1>&2
@@ -52,6 +57,12 @@ function prepare()
   if [[ ! -d "${srcdir}/llvm" ]];
   then
     git clone -b "${llvm_branch}" --depth 1 --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
+  elif [[ ${update} == 1 ]];
+  then
+    cd "${srcdir}"/llvm
+      git checkout "${llvm_branch}"
+      git pull origin "${llvm_branch}"
+    cd -
   fi
 }
 

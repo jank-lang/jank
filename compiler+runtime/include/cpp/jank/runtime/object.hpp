@@ -82,6 +82,7 @@ namespace jank::runtime
 
     tagged_literal,
     uuid,
+    inst,
 
     opaque_box,
   };
@@ -220,6 +221,8 @@ namespace jank::runtime
         return "tagged_literal";
       case object_type::uuid:
         return "uuid";
+      case object_type::inst:
+        return "inst";
 
       case object_type::opaque_box:
         return "opaque_box";
