@@ -52,6 +52,8 @@
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
+#include <jank/runtime/obj/re_pattern.hpp>
+#include <jank/runtime/obj/re_matcher.hpp>
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
@@ -197,6 +199,10 @@ namespace jank::runtime
         return fn(expect_object<var_unbound_root>(erased), std::forward<Args>(args)...);
       case object_type::tagged_literal:
         return fn(expect_object<obj::tagged_literal>(erased), std::forward<Args>(args)...);
+      case object_type::re_pattern:
+        return fn(expect_object<obj::re_pattern>(erased), std::forward<Args>(args)...);
+      case object_type::re_matcher:
+        return fn(expect_object<obj::re_matcher>(erased), std::forward<Args>(args)...);
       case object_type::uuid:
         return fn(expect_object<obj::uuid>(erased), std::forward<Args>(args)...);
       case object_type::inst:
