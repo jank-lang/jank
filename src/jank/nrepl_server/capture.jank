@@ -5,6 +5,17 @@
 (cpp/raw "#include <fcntl.h>")
 (cpp/raw "#include <filesystem>")
 
+;; The definition of stdout, stderr are implementation-defined. Instead of
+;; leaving it up to jank's interop to understand, just wrap it in some C++ code
+;; to return a FILE*.
+(def stdout
+  "A boxed FILE* to stdout."
+  (cpp/box (cpp/value "&*stdout")))
+
+(def stderr
+  "A boxed FILE* to stderr."
+  (cpp/box (cpp/value "&*stderr")))
+
 (def out-file-template "/tmp/jank-nrepl-XXXXXX")
 
 (defn- make-temp-file []
@@ -63,7 +74,7 @@
     buf))
 
 (comment
-  (let [capture-handle (start (cpp/box cpp/stdout))]
+  (let [capture-handle (start stdout)]
     (println "A message")
     (println "captured from stdout")
     (end capture-handle)

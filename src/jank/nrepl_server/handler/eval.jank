@@ -21,7 +21,7 @@
   ;; output during a long eval.
   (let [target-ns        (or (some-> ns symbol find-ns) default-ns)
         ;; do the eval, capturing anything on stdout
-        capture-handle   (capture/start (cpp/box cpp/stdout))
+        capture-handle   (capture/start capture/stdout)
         [success res-ns] (binding [*ns* target-ns]
                            ;; the evaluation may change the namespace
                            [(safe-eval code) *ns*])
