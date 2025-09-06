@@ -18,7 +18,7 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr oref<T> dyn_cast(object_ref const o)
   {
-    return dynamic_cast<T *>(o.data);
+    return dynamic_cast<T *>(o.data) ?: oref<T>{};
   }
 
   template <typename T>
@@ -36,7 +36,7 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return dynamic_cast<T *>(o.data);
+    return dynamic_cast<T *>(o.data) ?: oref<T>{};
   }
 
   /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
@@ -52,7 +52,7 @@ namespace jank::runtime
       jank_debug_assert(o.is_some());
     }
     jank_debug_assert(o->type == T::obj_type);
-    return dynamic_cast<T *>(o.data);
+    return dynamic_cast<T *>(o.data) ?: oref<T>{};
   }
 
   template <typename T>
@@ -62,6 +62,6 @@ namespace jank::runtime
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);
-    return dynamic_cast<T const *>(o);
+    return dynamic_cast<T const *>(o) ?: oref<T>{};
   }
 }
