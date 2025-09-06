@@ -26,8 +26,8 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
 
-    std::string s{};
     re_pattern_ref re;
+    std::string match_input{};
     object_ref groups{};
   };
 }

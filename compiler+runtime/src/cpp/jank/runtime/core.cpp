@@ -511,7 +511,7 @@ namespace jank::runtime
   {
     std::smatch match_results{};
     auto const matcher(try_object<obj::re_matcher>(m));
-    std::regex_search(matcher->s, match_results, matcher->re->regex);
+    std::regex_search(matcher->match_input, match_results, matcher->re->regex);
 
     switch(match_results.size())
     {
@@ -521,7 +521,7 @@ namespace jank::runtime
       case 1:
         {
           matcher->groups = make_box<obj::persistent_string>(match_results[0].str());
-          matcher->s = match_results.suffix().str();
+          matcher->match_input = match_results.suffix().str();
           break;
         }
       default:
@@ -533,7 +533,7 @@ namespace jank::runtime
             vec.push_back(make_box<obj::persistent_string>(s.str()));
           }
 
-          matcher->s = match_results.suffix().str();
+          matcher->match_input = match_results.suffix().str();
 
           matcher->groups = make_box<obj::persistent_vector>(
             runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
