@@ -10,6 +10,11 @@ namespace jank::runtime::obj
   {
   }
 
+  re_matcher::~re_matcher()
+  {
+    match_input.~basic_string();
+  }
+
   bool re_matcher::equal(object const &o) const
   {
     return &base == &o;
