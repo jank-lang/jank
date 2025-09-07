@@ -11,6 +11,7 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/big_integer.hpp>
+#include <jank/runtime/obj/big_decimal.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_hash_set.hpp>
@@ -88,6 +89,8 @@ namespace jank::runtime
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
+      case object_type::big_decimal:
+        return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
       case object_type::persistent_string:
@@ -410,6 +413,8 @@ namespace jank::runtime
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
+      case object_type::big_decimal:
+        return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
       case object_type::ratio:

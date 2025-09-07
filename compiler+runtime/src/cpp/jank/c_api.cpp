@@ -395,6 +395,12 @@ extern "C"
     return make_box<runtime::obj::big_integer>(s).erase();
   }
 
+  jank_object_ref jank_big_decimal_create(char const * const s)
+  {
+    jank_assert(s);
+    return make_box<runtime::obj::big_decimal>(s).erase();
+  }
+
   jank_object_ref jank_real_create(jank_f64 const r)
   {
     return make_box(r).erase();

@@ -29,6 +29,11 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(boolean const &) const;
 
+    /* behavior::number_like */
+    i64 to_integer() const;
+    f64 to_real() const;
+    native_big_decimal to_native_big_decimal() const;
+
     object base{ obj_type };
     bool data{};
   };
@@ -61,6 +66,7 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     i64 to_integer() const;
     f64 to_real() const;
+    native_big_decimal to_native_big_decimal() const;
 
     object base{ obj_type };
     /* TODO: Is it faster to have the data first or the base first? */
@@ -95,6 +101,7 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     i64 to_integer() const;
     f64 to_real() const;
+    native_big_decimal to_native_big_decimal() const;
 
     f64 data{};
     object base{ obj_type };

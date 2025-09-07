@@ -1277,6 +1277,83 @@ namespace jank::read::lex
       }
     }
 
+    TEST_CASE("Big decimal")
+    {
+      SUBCASE("Positive")
+      {
+        processor p{ "1.23M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 5, token_kind::big_decimal, big_decimal{ "1.23" } }
+        }));
+      }
+
+      SUBCASE("Negative")
+      {
+        processor p{ "-1.23M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 6, token_kind::big_decimal, big_decimal{ "-1.23" } }
+        }));
+      }
+
+      SUBCASE("Leading dot")
+      {
+        processor p{ ".123M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 5, token_kind::symbol, ".123M"sv }
+        }));
+      }
+
+      SUBCASE("Trailing dot")
+      {
+        processor p{ "123.M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 5, token_kind::big_decimal, big_decimal{ "123." } }
+        }));
+      }
+
+      SUBCASE("Scientific notation")
+      {
+        processor p{ "1.23e4M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 7, token_kind::big_decimal, big_decimal{ "1.23e4" } }
+        }));
+      }
+
+      SUBCASE("Invalid - multiple Ms")
+      {
+        processor p{ "1.23MM" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 5, token_kind::big_decimal, big_decimal{ "1.23" } },
+                make_error(kind::lex_expecting_whitespace, 5, 0),
+                token{ 5, 1,      token_kind::symbol,                 "M"sv },
+        }));
+      }
+
+      SUBCASE("Invalid - M in middle")
+      {
+        processor p{ "1.M23" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 3, token_kind::big_decimal, big_decimal{ "1." } },
+                make_error(kind::lex_expecting_whitespace, 3, 0),
+                token{ 3, 2,     token_kind::integer,              "23"sv },
+        }));
+      }
+    }
+
     TEST_CASE("Character")
     {
       SUBCASE("Whitespace")

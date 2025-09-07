@@ -77,14 +77,6 @@ namespace jank::read::parse
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());
         CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
-        //CHECK(is_equiv(r.expect_ok().unwrap().ptr, obj::ratio::create(4, 5)));
-        //CHECK(r.expect_ok().unwrap().start
-        //      == lex::token{
-        //        0,
-        //        3,
-        //        lex::token_kind::ratio,
-        //        { .numerator = 4, .denominator = 5 }
-        //});
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
       SUBCASE("Division by zero")
@@ -1321,6 +1313,66 @@ namespace jank::read::parse
                                                            make_box(2))));
           }
         }
+      }
+    }
+
+    TEST_CASE("BigDecimal")
+    {
+      SUBCASE("Simple")
+      {
+        lex::processor lp{ "12.34M" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::big_decimal>("12.34")));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{ 0, 6, lex::token_kind::big_decimal, lex::big_decimal{ "12.34" } });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+
+      SUBCASE("Leading plus")
+      {
+        lex::processor lp{ "+12.34M" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        /* TODO: Enable once we can handle numbers start with '+'. */
+        /* CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::big_decimal>("12.34")));
+         * CHECK(r.expect_ok().unwrap().start
+         *      == lex::token{ 0, 7, lex::token_kind::big_decimal, lex::big_decimal{ "+12.34" } });
+         * CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+         */
+      }
+
+      SUBCASE("Leading minus")
+      {
+        lex::processor lp{ "-12.34M" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::big_decimal>("-12.34")));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{ 0, 7, lex::token_kind::big_decimal, lex::big_decimal{ "-12.34" } });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+
+      SUBCASE("Exponent")
+      {
+        lex::processor lp{ "1.234e5M" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::big_decimal>("1.234e5")));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{ 0, 8, lex::token_kind::big_decimal, lex::big_decimal{ "1.234e5" } });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+      }
+
+      SUBCASE("Negative exponent")
+      {
+        lex::processor lp{ "1.234e-5M" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::big_decimal>("1.234e-5")));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{ 0, 9, lex::token_kind::big_decimal, lex::big_decimal{ "1.234e-5" } });
+        CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
       }
     }
   }
