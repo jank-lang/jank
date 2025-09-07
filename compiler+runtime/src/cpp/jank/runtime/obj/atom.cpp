@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn)
   {
     while(true)
@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1)
   {
     while(true)
@@ -90,7 +90,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1, object_ref const a2)
   {
     while(true)
@@ -104,7 +104,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref
   atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
