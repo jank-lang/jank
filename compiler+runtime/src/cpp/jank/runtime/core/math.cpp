@@ -8,6 +8,488 @@
 
 namespace jank::runtime
 {
+  struct integer_ops;
+  struct real_ops;
+
+  struct number_ops
+  {
+    virtual ~number_ops() = default;
+
+    virtual number_ops const &combine(number_ops const &) const = 0;
+    virtual number_ops const &with(integer_ops const &) const = 0;
+    virtual number_ops const &with(real_ops const &) const = 0;
+
+    virtual object_ref add() const = 0;
+    virtual f64 add_real() const = 0;
+    virtual object_ref subtract() const = 0;
+    virtual f64 sub_real() const = 0;
+    virtual object_ref multiply() const = 0;
+    virtual f64 mul_real() const = 0;
+    virtual object_ref divide() const = 0;
+    virtual f64 div_real() const = 0;
+    virtual object_ref remainder() const = 0;
+    virtual object_ref inc() const = 0;
+    virtual object_ref dec() const = 0;
+    virtual object_ref negate() const = 0;
+    virtual object_ref abs() const = 0;
+    virtual object_ref min() const = 0;
+    virtual f64 min_real() const = 0;
+    virtual object_ref max() const = 0;
+    virtual f64 max_real() const = 0;
+    virtual f64 pow() const = 0;
+    virtual bool lt() const = 0;
+    virtual bool lte() const = 0;
+    virtual bool gte() const = 0;
+    virtual bool equal() const = 0;
+    virtual bool is_positive() const = 0;
+    virtual bool is_negative() const = 0;
+    virtual bool is_zero() const = 0;
+  };
+
+  number_ops &left_ops(object_ref n);
+  number_ops &right_ops(object_ref n);
+
+  struct integer_ops : number_ops
+  {
+    number_ops const &combine(number_ops const &l) const final
+    {
+      return l.with(*this);
+    }
+
+    number_ops const &with(integer_ops const &) const final;
+    number_ops const &with(real_ops const &) const final;
+
+    object_ref add() const final
+    {
+      return make_box<obj::integer>(left + right);
+    }
+
+    f64 add_real() const final
+    {
+      return left + right;
+    }
+
+    object_ref subtract() const final
+    {
+      return make_box<obj::integer>(left - right);
+    }
+
+    f64 sub_real() const final
+    {
+      return left - right;
+    }
+
+    object_ref multiply() const final
+    {
+      return make_box<obj::integer>(left * right);
+    }
+
+    f64 mul_real() const final
+    {
+      return left * right;
+    }
+
+    object_ref divide() const final
+    {
+      return make_box<obj::integer>(left / right);
+    }
+
+    f64 div_real() const final
+    {
+      return static_cast<f64>(left) / right;
+    }
+
+    object_ref remainder() const final
+    {
+      return make_box<obj::integer>(left % right);
+    }
+
+    object_ref inc() const final
+    {
+      return make_box<obj::integer>(left + 1);
+    }
+
+    object_ref dec() const final
+    {
+      return make_box<obj::integer>(left - 1);
+    }
+
+    object_ref negate() const final
+    {
+      return make_box<obj::integer>(-left);
+    }
+
+    object_ref abs() const final
+    {
+      return make_box<obj::integer>(std::labs(left));
+    }
+
+    object_ref min() const final
+    {
+      return make_box<obj::integer>(std::min(left, right));
+    }
+
+    f64 min_real() const final
+    {
+      return std::min(left, right);
+    }
+
+    object_ref max() const final
+    {
+      return make_box<obj::integer>(std::max(left, right));
+    }
+
+    f64 max_real() const final
+    {
+      return std::max(left, right);
+    }
+
+    f64 pow() const final
+    {
+      return std::pow(left, right);
+    }
+
+    bool lt() const final
+    {
+      return left < right;
+    }
+
+    bool lte() const final
+    {
+      return left <= right;
+    }
+
+    bool gte() const final
+    {
+      return left >= right;
+    }
+
+    bool equal() const final
+    {
+      return left == right;
+    }
+
+    bool is_positive() const final
+    {
+      return left > 0;
+    }
+
+    bool is_negative() const final
+    {
+      return left < 0;
+    }
+
+    bool is_zero() const final
+    {
+      return left == 0;
+    }
+
+    i64 left{}, right{};
+  };
+
+  struct real_ops : number_ops
+  {
+    number_ops const &combine(number_ops const &l) const final
+    {
+      return l.with(*this);
+    }
+
+    number_ops const &with(integer_ops const &) const final;
+    number_ops const &with(real_ops const &) const final;
+
+    object_ref add() const final
+    {
+      return make_box<obj::real>(left + right);
+    }
+
+    f64 add_real() const final
+    {
+      return left + right;
+    }
+
+    object_ref subtract() const final
+    {
+      return make_box<obj::real>(left - right);
+    }
+
+    f64 sub_real() const final
+    {
+      return left - right;
+    }
+
+    object_ref multiply() const final
+    {
+      return make_box<obj::real>(left * right);
+    }
+
+    f64 mul_real() const final
+    {
+      return left * right;
+    }
+
+    object_ref divide() const final
+    {
+      return make_box<obj::real>(left / right);
+    }
+
+    f64 div_real() const final
+    {
+      return left / right;
+    }
+
+    object_ref remainder() const final
+    {
+      return make_box<obj::real>(std::fmod(left, right));
+    }
+
+    object_ref inc() const final
+    {
+      return make_box<obj::real>(left + 1);
+    }
+
+    object_ref dec() const final
+    {
+      return make_box<obj::real>(right + 1);
+    }
+
+    object_ref negate() const final
+    {
+      return make_box<obj::real>(-left);
+    }
+
+    object_ref abs() const final
+    {
+      return make_box<obj::real>(std::fabs(left));
+    }
+
+    object_ref min() const final
+    {
+      return make_box<obj::real>(std::min(left, right));
+    }
+
+    f64 min_real() const final
+    {
+      return std::min(left, right);
+    }
+
+    object_ref max() const final
+    {
+      return make_box<obj::real>(std::max(left, right));
+    }
+
+    f64 max_real() const final
+    {
+      return std::max(left, right);
+    }
+
+    f64 pow() const final
+    {
+      return std::pow(left, right);
+    }
+
+    bool lt() const final
+    {
+      return left < right;
+    }
+
+    bool lte() const final
+    {
+      return left <= right;
+    }
+
+    bool gte() const final
+    {
+      return left >= right;
+    }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+
+    bool equal() const final
+    {
+      return left == right;
+    }
+
+#pragma clang diagnostic pop
+
+    bool is_positive() const final
+    {
+      return left > 0;
+    }
+
+    bool is_negative() const final
+    {
+      return left < 0;
+    }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+
+    bool is_zero() const final
+    {
+      return left == 0;
+    }
+
+#pragma clang diagnostic pop
+
+    f64 left{}, right{};
+  };
+
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
+  static thread_local integer_ops i_ops;
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): These are thread-local.
+  static thread_local real_ops r_ops;
+
+  number_ops const &integer_ops::with(integer_ops const &) const
+  {
+    return i_ops;
+  }
+
+  number_ops const &integer_ops::with(real_ops const &) const
+  {
+    r_ops.left = left;
+    return r_ops;
+  }
+
+  number_ops const &real_ops::with(integer_ops const &r) const
+  {
+    r_ops.right = r.right;
+    return r_ops;
+  }
+
+  number_ops const &real_ops::with(real_ops const &) const
+  {
+    return r_ops;
+  }
+
+  number_ops &left_ops(object_ref const n)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(n->type)
+    {
+      case object_type::integer:
+        {
+          i_ops.left = expect_object<obj::integer>(n)->data;
+          return i_ops;
+        }
+      case object_type::real:
+        {
+          r_ops.left = expect_object<obj::real>(n)->data;
+          return r_ops;
+        }
+      default:
+        /* TODO: Exception type. */
+        {
+          throw std::runtime_error{ util::format("(left_ops) not a number: {}",
+                                                 runtime::to_code_string(n)) };
+        }
+    }
+#pragma clang diagnostic pop
+  }
+
+  static integer_ops &left_ops(obj::integer_ref const n)
+  {
+    i_ops.left = n->data;
+    return i_ops;
+  }
+
+  static real_ops &left_ops(obj::real_ref const n)
+  {
+    r_ops.left = n->data;
+    return r_ops;
+  }
+
+  static integer_ops &left_ops(i64 const n)
+  {
+    i_ops.left = n;
+    return i_ops;
+  }
+
+  static real_ops &left_ops(f64 const n)
+  {
+    r_ops.left = n;
+    return r_ops;
+  }
+
+  number_ops &right_ops(object_ref const n)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(n->type)
+    {
+      case object_type::integer:
+        {
+          i_ops.right = expect_object<obj::integer>(n)->data;
+          return i_ops;
+        }
+      case object_type::real:
+        {
+          r_ops.right = expect_object<obj::real>(n)->data;
+          return r_ops;
+        }
+      default:
+        /* TODO: Exception type. */
+        {
+          throw std::runtime_error{ util::format("(right_ops) not a number: {}",
+                                                 runtime::to_code_string(n)) };
+        }
+    }
+#pragma clang diagnostic pop
+  }
+
+  static integer_ops &right_ops(obj::integer_ref const n)
+  {
+    i_ops.right = n->data;
+    return i_ops;
+  }
+
+  static real_ops &right_ops(obj::real_ref const n)
+  {
+    r_ops.right = n->data;
+    return r_ops;
+  }
+
+  static integer_ops &right_ops(i64 const n)
+  {
+    i_ops.right = n;
+    return i_ops;
+  }
+
+  static real_ops &right_ops(f64 const n)
+  {
+    r_ops.right = n;
+    return r_ops;
+  }
+
+  /* This version of `with` avoids two dynamic dispatches per operation, so it's
+   * preferable over `number_ops.combine`. */
+  static integer_ops const &with(integer_ops const &, integer_ops const &)
+  {
+    return i_ops;
+  }
+
+  static real_ops const &with(real_ops const &, real_ops const &)
+  {
+    return r_ops;
+  }
+
+  static real_ops const &with(integer_ops const &, real_ops const &)
+  {
+    r_ops.left = i_ops.left;
+    return r_ops;
+  }
+
+  static real_ops const &with(real_ops const &, integer_ops const &)
+  {
+    r_ops.right = i_ops.right;
+    return r_ops;
+  }
+
+  static number_ops const &with(number_ops const &l, number_ops const &r)
+  {
+    return r.combine(l);
+  }
 
   template <typename T>
   static f64 to_real(T const &val)
@@ -15,6 +497,10 @@ namespace jank::runtime
     if constexpr(std::is_same_v<T, i64>)
     {
       return static_cast<f64>(val);
+    }
+    else if constexpr(std::is_same_v<T, obj::big_integer>)
+    {
+      return val.template convert_to<f64>();
     }
     else if constexpr(std::is_same_v<T, native_big_integer>)
     {
@@ -35,40 +521,19 @@ namespace jank::runtime
     }
   }
 
-  /* TODO: visit_number_like */
   object_ref add(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return make_box(typed_l + typed_r->data).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).add();
   }
 
   object_ref add(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l + typed_r->data);
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).add();
   }
 
   object_ref add(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data + typed_r);
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).add();
   }
 
   i64 add(obj::integer_ref const l, obj::integer_ref const r)
@@ -83,44 +548,32 @@ namespace jank::runtime
 
   f64 add(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l + typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).add_real();
   }
 
   f64 add(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data + typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).add_real();
   }
 
   f64 add(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data + static_cast<f64>(r->data);
+    return l->data + r->data;
   }
 
   f64 add(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) + r->data;
+    return l->data + r->data;
   }
 
   f64 add(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data + typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).add_real();
   }
 
   f64 add(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l + typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).add_real();
   }
 
   f64 add(f64 const l, f64 const r)
@@ -130,72 +583,27 @@ namespace jank::runtime
 
   f64 add(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) + r;
+    return l + r;
   }
 
   f64 add(f64 const l, i64 const r)
-  {
-    return l + static_cast<f64>(r);
-  }
-
-  object_ref add(object_ref const l, i64 const r)
-  {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data + typed_r);
-      },
-      l,
-      r);
-  }
-
-  object_ref add(i64 const l, object_ref const r)
-  {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l + typed_r->data);
-      },
-      r,
-      l);
-  }
-
-  i64 add(i64 const l, i64 const r)
   {
     return l + r;
   }
 
   object_ref sub(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return make_box(typed_l - typed_r->data).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).subtract();
   }
 
   object_ref sub(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l - typed_r->data);
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).subtract();
   }
 
   object_ref sub(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data - typed_r);
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).subtract();
   }
 
   i64 sub(obj::integer_ref const l, obj::integer_ref const r)
@@ -210,44 +618,32 @@ namespace jank::runtime
 
   f64 sub(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l - typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).sub_real();
   }
 
   f64 sub(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data - typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).sub_real();
   }
 
   f64 sub(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data - static_cast<f64>(r->data);
+    return l->data - r->data;
   }
 
   f64 sub(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) - r->data;
+    return l->data - r->data;
   }
 
   f64 sub(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data - typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).sub_real();
   }
 
   f64 sub(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l - typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).sub_real();
   }
 
   f64 sub(f64 const l, f64 const r)
@@ -257,32 +653,22 @@ namespace jank::runtime
 
   f64 sub(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) - r;
+    return l - r;
   }
 
   f64 sub(f64 const l, i64 const r)
   {
-    return l - static_cast<f64>(r);
+    return l - r;
   }
 
   object_ref sub(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data - typed_r);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).subtract();
   }
 
   object_ref sub(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l - typed_r->data);
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).subtract();
   }
 
   i64 sub(i64 const l, i64 const r)
@@ -292,37 +678,17 @@ namespace jank::runtime
 
   object_ref div(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return make_box(typed_l / typed_r->data).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).divide();
   }
 
   object_ref div(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l / typed_r->data);
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).divide();
   }
 
   object_ref div(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data / typed_r);
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).divide();
   }
 
   i64 div(obj::integer_ref const l, obj::integer_ref const r)
@@ -337,44 +703,32 @@ namespace jank::runtime
 
   f64 div(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l / typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).div_real();
   }
 
   f64 div(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data / typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).div_real();
   }
 
   f64 div(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data / static_cast<f64>(r->data);
+    return l->data / r->data;
   }
 
   f64 div(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) / r->data;
+    return l->data / r->data;
   }
 
   f64 div(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data / typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).div_real();
   }
 
   f64 div(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l / typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).div_real();
   }
 
   f64 div(f64 const l, f64 const r)
@@ -384,32 +738,22 @@ namespace jank::runtime
 
   f64 div(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) / r;
+    return l / r;
   }
 
   f64 div(f64 const l, i64 const r)
   {
-    return l / static_cast<f64>(r);
+    return l / r;
   }
 
   object_ref div(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data / typed_r);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).divide();
   }
 
   object_ref div(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l / typed_r->data);
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).divide();
   }
 
   i64 div(i64 const l, i64 const r)
@@ -419,37 +763,17 @@ namespace jank::runtime
 
   object_ref mul(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return make_box(typed_l * typed_r->data).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).multiply();
   }
 
   object_ref mul(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l * typed_r->data);
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).multiply();
   }
 
   object_ref mul(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data * typed_r);
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).multiply();
   }
 
   i64 mul(obj::integer_ref const l, obj::integer_ref const r)
@@ -464,44 +788,32 @@ namespace jank::runtime
 
   f64 mul(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l * typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).mul_real();
   }
 
   f64 mul(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data * typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).mul_real();
   }
 
   f64 mul(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data * static_cast<f64>(r->data);
+    return l->data * r->data;
   }
 
   f64 mul(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) * r->data;
+    return l->data * r->data;
   }
 
   f64 mul(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data * typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).mul_real();
   }
 
   f64 mul(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l * typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).mul_real();
   }
 
   f64 mul(f64 const l, f64 const r)
@@ -511,32 +823,22 @@ namespace jank::runtime
 
   f64 mul(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) * r;
+    return l * r;
   }
 
   f64 mul(f64 const l, i64 const r)
   {
-    return l * static_cast<f64>(r);
+    return l * r;
   }
 
   object_ref mul(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return make_box(typed_l->data * typed_r);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).multiply();
   }
 
   object_ref mul(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return make_box(typed_l * typed_r->data);
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).multiply();
   }
 
   i64 mul(i64 const l, i64 const r)
@@ -880,31 +1182,17 @@ namespace jank::runtime
 
   bool lt(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> bool {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> bool { return typed_l < typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(obj::integer_ref const l, obj::integer_ref const r)
@@ -919,44 +1207,32 @@ namespace jank::runtime
 
   bool lt(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data < static_cast<f64>(r->data);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) < r->data;
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(f64 const l, f64 const r)
@@ -966,28 +1242,22 @@ namespace jank::runtime
 
   bool lt(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) < r;
+    return l < r;
   }
 
   bool lt(f64 const l, i64 const r)
   {
-    return l < static_cast<f64>(r);
+    return l < r;
   }
 
   bool lt(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data < typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).lt();
   }
 
   bool lt(i64 const l, i64 const r)
@@ -997,31 +1267,17 @@ namespace jank::runtime
 
   bool lte(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> bool {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> bool { return typed_l <= typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(obj::integer_ref const l, obj::integer_ref const r)
@@ -1036,118 +1292,77 @@ namespace jank::runtime
 
   bool lte(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(obj::real_ref const l, obj::integer_ref const r)
   {
-    return l->data <= static_cast<f64>(r->data);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(obj::integer_ref const l, obj::real_ref const r)
   {
-    return static_cast<f64>(l->data) <= r->data;
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(f64 const l, f64 const r)
   {
-    return l <= r;
+    return l < r;
   }
 
   bool lte(i64 const l, f64 const r)
   {
-    return static_cast<f64>(l) <= r;
+    return l < r;
   }
 
   bool lte(f64 const l, i64 const r)
   {
-    return l <= static_cast<f64>(r);
+    return l < r;
   }
 
   bool lte(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> bool { return typed_l->data <= typed_r; },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).lte();
   }
 
   bool lte(i64 const l, i64 const r)
   {
-    return l <= r;
+    return l < r;
   }
 
   object_ref min(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return typed_l < typed_r->data ? make_box(typed_l).erase()
-                                           : make_box(typed_r->data).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).min();
   }
 
   object_ref min(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return typed_l < typed_r->data ? make_box(typed_l).erase()
-                                       : make_box(typed_r->data).erase();
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).min();
   }
 
   object_ref min(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return typed_l->data < typed_r ? make_box(typed_l->data).erase()
-                                       : make_box(typed_r).erase();
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).min();
   }
 
   i64 min(obj::integer_ref const l, obj::integer_ref const r)
@@ -1162,26 +1377,12 @@ namespace jank::runtime
 
   f64 min(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).min_real();
   }
 
   f64 min(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).min_real();
   }
 
   f64 min(obj::real_ref const l, obj::integer_ref const r)
@@ -1196,26 +1397,12 @@ namespace jank::runtime
 
   f64 min(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).min_real();
   }
 
   f64 min(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_r_data), decltype(typed_l)>;
-        return std::min(static_cast<C>(typed_r_data), static_cast<C>(typed_l));
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).min_real();
   }
 
   f64 min(f64 const l, f64 const r)
@@ -1235,22 +1422,12 @@ namespace jank::runtime
 
   object_ref min(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return typed_l->data < typed_r ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).min();
   }
 
   object_ref min(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return typed_l < typed_r->data ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).min();
   }
 
   i64 min(i64 const l, i64 const r)
@@ -1260,37 +1437,17 @@ namespace jank::runtime
 
   object_ref max(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> object_ref {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return typed_r->data > typed_l ? make_box(typed_r).erase() : make_box(typed_l).erase();
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).max();
   }
 
   object_ref max(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return typed_l > typed_r->data ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).max();
   }
 
   object_ref max(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return typed_l->data > typed_r ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).max();
   }
 
   i64 max(obj::integer_ref const l, obj::integer_ref const r)
@@ -1305,26 +1462,12 @@ namespace jank::runtime
 
   f64 max(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).max_real();
   }
 
   f64 max(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).max_real();
   }
 
   f64 max(obj::real_ref const l, obj::integer_ref const r)
@@ -1339,26 +1482,12 @@ namespace jank::runtime
 
   f64 max(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).max_real();
   }
 
   f64 max(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).max_real();
   }
 
   f64 max(f64 const l, f64 const r)
@@ -1378,22 +1507,12 @@ namespace jank::runtime
 
   object_ref max(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> object_ref {
-        return typed_l->data > typed_r ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).max();
   }
 
   object_ref max(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> object_ref {
-        return typed_l > typed_r->data ? make_box(typed_l).erase() : make_box(typed_r).erase();
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).max();
   }
 
   i64 max(i64 const l, i64 const r)
@@ -1403,12 +1522,7 @@ namespace jank::runtime
 
   object_ref abs(object_ref const l)
   {
-    return visit_number_like(
-      [](auto const typed_l) -> object_ref {
-        return typed_l->data < 0ll ? make_box(-1ll * typed_l->data).erase()
-                                   : make_box(typed_l->data).erase();
-      },
-      l);
+    return left_ops(l).abs();
   }
 
   i64 abs(obj::integer_ref const l)
@@ -1465,45 +1579,17 @@ namespace jank::runtime
 
   f64 pow(object_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const r) -> f64 {
-        return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> f64 {
-            auto const typed_r_data{ to_real(typed_r->data) };
-            auto const typed_l_data{ to_real(typed_l) };
-            using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;
-            return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r_data));
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(obj::integer_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        auto const typed_l_data{ to_real(typed_l) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r_data));
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(object_ref const l, obj::integer_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(obj::integer_ref const l, obj::integer_ref const r)
@@ -1518,60 +1604,32 @@ namespace jank::runtime
 
   f64 pow(obj::real_ref const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l->data);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(object_ref const l, obj::real_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r->data);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(obj::real_ref const l, obj::integer_ref const r)
   {
-    return std::pow(l->data, static_cast<f64>(r->data));
+    return std::pow(l->data, r->data);
   }
 
   f64 pow(obj::integer_ref const l, obj::real_ref const r)
   {
-    return std::pow(static_cast<f64>(l->data), r->data);
+    return std::pow(l->data, r->data);
   }
 
   f64 pow(object_ref const l, f64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(f64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(f64 const l, f64 const r)
@@ -1581,36 +1639,22 @@ namespace jank::runtime
 
   f64 pow(i64 const l, f64 const r)
   {
-    return std::pow(static_cast<f64>(l), r);
+    return std::pow(l, r);
   }
 
   f64 pow(f64 const l, i64 const r)
   {
-    return std::pow(l, static_cast<f64>(r));
+    return std::pow(l, r);
   }
 
   f64 pow(object_ref const l, i64 const r)
   {
-    return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
-        auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
-      },
-      l,
-      r);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(i64 const l, object_ref const r)
   {
-    return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
-        auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
-      },
-      r,
-      l);
+    return with(left_ops(l), right_ops(r)).pow();
   }
 
   f64 pow(i64 const l, i64 const r)
