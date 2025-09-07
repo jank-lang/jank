@@ -1588,11 +1588,10 @@ namespace jank::analyze
     auto const first_form(list->data.first());
     if(first_form.is_none())
     {
-      return error::analyze_invalid_fn_parameters(
-        "Variadic function must include a parameter vector.",
-        object_source(list),
-        "Missing [] inside this form.",
-        latest_expansion(macro_expansions));
+      return error::analyze_invalid_fn_parameters("Function is missing a parameter vector.",
+                                                  object_source(list),
+                                                  "Missing [] inside this form.",
+                                                  latest_expansion(macro_expansions));
     }
     auto const params_obj(first_form.unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
