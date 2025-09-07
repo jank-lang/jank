@@ -1563,9 +1563,9 @@ namespace jank::analyze
     auto const first_form(list->data.first());
     if(first_form.is_none())
     {
-      return error::analyze_invalid_fn_parameters("Function is missing a parameter vector.",
+      return error::analyze_invalid_fn_parameters("This function is missing a parameter vector.",
                                                   object_source(list),
-                                                  "Missing [] inside this form.",
+                                                  "The missing [] was expected here.",
                                                   latest_expansion(macro_expansions));
     }
     auto const params_obj(first_form.unwrap());
