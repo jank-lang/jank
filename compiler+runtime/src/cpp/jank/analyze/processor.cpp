@@ -908,7 +908,8 @@ namespace jank::analyze
         object_source(val->form),
         latest_expansion(macro_expansions));
     }
-    if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
+    if(is_ctor
+       && Cpp::IsAggregateConstructible(val->type, arg_types, __rt_ctx->unique_munged_string()))
     {
       //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
