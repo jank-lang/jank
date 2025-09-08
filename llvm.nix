@@ -35,8 +35,8 @@ in
     src = pkgs.fetchFromGitHub {
       owner = "jank-lang";
       repo = "llvm-project";
-      rev = "3bfa007f9db853ddeb9ed88c27e443e781e53790";
-      sha256 = "sha256-hLTSk0eH2gNAo3Mml3tbBL4o00KfkmQRI+bqRgKxG9U=";
+      rev = "57bb1edd1923ee85736cec8a2d7ca57e5f961d58";
+      sha256 = "sha256-u9HHAjYjnoiW++66YaFY9SCgDPByfXZa1/y1TBavhLo=";
     };
 
     nativeBuildInputs = [pkgs.cmake pkgs.ninja pkgs.clang pkgs.python3 pkgs.makeWrapper];

@@ -109,6 +109,8 @@ namespace jank::runtime
      * lifted vars, to shadowed locals. Prefixes with current namespace. */
     jtl::immutable_string unique_namespaced_string() const;
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string_view const &prefix) const;
+    jtl::immutable_string unique_munged_string() const;
+    jtl::immutable_string unique_munged_string(jtl::immutable_string_view const &prefix) const;
     obj::symbol unique_symbol() const;
     obj::symbol unique_symbol(jtl::immutable_string_view const &prefix) const;
 
