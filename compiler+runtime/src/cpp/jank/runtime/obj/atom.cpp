@@ -104,8 +104,8 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
     while(true)
