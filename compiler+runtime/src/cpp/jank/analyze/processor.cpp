@@ -908,7 +908,8 @@ namespace jank::analyze
         object_source(val->form),
         latest_expansion(macro_expansions));
     }
-    if(is_ctor && Cpp::IsAggregateConstructible(val->type, arg_types))
+    if(is_ctor
+       && Cpp::IsAggregateConstructible(val->type, arg_types, __rt_ctx->unique_munged_string()))
     {
       //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -1560,7 +1561,15 @@ namespace jank::analyze
                               jtl::immutable_string const &name,
                               local_frame_ptr const current_frame)
   {
-    auto const params_obj(list->data.first().unwrap());
+    auto const first_form(list->data.first());
+    if(first_form.is_none())
+    {
+      return error::analyze_invalid_fn_parameters("This function is missing a parameter vector.",
+                                                  object_source(list),
+                                                  "The missing [] was expected here.",
+                                                  latest_expansion(macro_expansions));
+    }
+    auto const params_obj(first_form.unwrap());
     if(params_obj->type != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_fn_parameters("A function parameter vector must be a vector.",
