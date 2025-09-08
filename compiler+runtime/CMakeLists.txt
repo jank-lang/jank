@@ -88,6 +88,7 @@ set(
   -Wno-invalid-offsetof
   -Wno-deprecated-declarations
   -Wno-c++23-extensions
+  -Wno-macro-redefined
   -fno-common
   -frtti
   -fexceptions

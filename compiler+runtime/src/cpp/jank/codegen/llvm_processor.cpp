@@ -291,7 +291,7 @@ namespace jank::codegen
     auto const tsc{ ctx.module.getContext() };
     //std::unique_ptr<llvm::Module> module{ raw_module };
     //llvm::orc::ThreadSafeModule tsm{ jtl::move(module), tsc };
-    auto cloned_cpp_module{ llvm::orc::cloneToContext(*raw_module, tsc) };
+    auto cloned_cpp_module{ llvm::orc::cloneExternalModuleToContext(*raw_module, tsc) };
     cloned_cpp_module.consumingModuleDo([&](std::unique_ptr<llvm::Module> module) {
       llvm::Linker::linkModules(*ctx.module.getModuleUnlocked(), jtl::move(module));
     });

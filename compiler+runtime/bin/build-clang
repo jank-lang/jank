@@ -89,7 +89,10 @@ function build()
         -G "Ninja" \
         ../llvm/llvm
 
-  DESTDIR="${srcdir}/llvm-install" ninja clang clang-repl clang-cpp clang-tidy install -j"${make_j}"
+  export DESTDIR="${srcdir}/llvm-install"
+  ninja clang clang-repl compiler-rt clang-cpp clang-tidy install -j"${make_j}"
+  mkdir -p "${DESTDIR}"/usr/local/lib/clang/22/lib
+  cp -r lib/clang/22/lib/* "${DESTDIR}"/usr/local/lib/clang/22/lib/
 }
 
 prepare
