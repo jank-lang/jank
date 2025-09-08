@@ -434,6 +434,17 @@ namespace jank::runtime
                         ++ns->symbol_counter);
   }
 
+  jtl::immutable_string context::unique_munged_string() const
+  {
+    return munge(unique_namespaced_string());
+  }
+
+  jtl::immutable_string
+  context::unique_munged_string(jtl::immutable_string_view const &prefix) const
+  {
+    return munge(unique_namespaced_string(prefix));
+  }
+
   obj::symbol context::unique_symbol() const
   {
     return unique_symbol("G-");
