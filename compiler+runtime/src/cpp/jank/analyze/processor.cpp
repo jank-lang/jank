@@ -393,10 +393,6 @@ namespace jank::analyze
      * The reason we don't want value types is that jank doesn't work with C++ value semantics.
      * The only value types we have are those immediately constructed or returned from C++
      * functions. Everything else is a reference. */
-    /* TODO: We're skipping past the reference and the pointer here. That will
-     * require two loads during codegen. We need to keep the before/after type if we're
-     * going to know how many loads to do. */
-    util::println("op* star_type {}", Cpp::GetTypeAsString(args[0].m_Type));
     auto const pointee{ Cpp::GetPointeeType(Cpp::GetNonReferenceType(args[0].m_Type)) };
     if(pointee && Cpp::IsPointerType(pointee))
     {
