@@ -9,6 +9,7 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(enable_cplusplus ON CACHE BOOL "Enable C++")
   set(build_cord OFF CACHE BOOL "Build cord")
   set(enable_docs OFF CACHE BOOL "Enable docs")
+  set(enable_large_config ON CACHE BOOL "Optimize for large heap or root set")
   set(enable_throw_bad_alloc_library ON CACHE BOOL "Enable C++ gctba library build")
   add_subdirectory(third-party/bdwgc EXCLUDE_FROM_ALL)
 
