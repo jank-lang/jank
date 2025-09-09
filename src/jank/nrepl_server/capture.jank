@@ -16,17 +16,18 @@
   "A boxed FILE* to stderr."
   (cpp/box (cpp/value "&*stderr")))
 
-(def out-file-template "/tmp/jank-nrepl-XXXXXX")
+(def temp-file-template "/tmp/jank-nrepl-XXXXXX")
 
 (defn- make-temp-file []
-  (let [out-file-name (cpp/cast cpp/std.string out-file-template)
-        fd            (cpp/mkstemp (cpp/.data out-file-name))]
-    [out-file-name fd]))
+  (let [name (cpp/cast cpp/std.string temp-file-template)
+        fd   (cpp/mkstemp (cpp/.data name))]
+    (assert (not= fd -1) "temp file could not be created")
+    [name fd]))
 
 (defn- file-size [path]
   (cpp/std.filesystem.file_size (cpp/cast cpp/std.string path)))
 
-(defn start
+(defn- start
   "Redirect the given file stream to a capture sink, available by `readback`.
   Returns a capture handle."
   [fp*]
@@ -44,41 +45,45 @@
 
     ;; Return a handle of what we've changed so that we can revert it later.
     {:fp*       fp*
-     :fd        fd
      :bak-fd    bak-fd
-     :file-name temp-name
-     :file-fd   temp-fd}))
+     :temp-name temp-name
+     :temp-fd   temp-fd}))
 
-;; TODO(jank): map destructuring syntax doesn't work here? {:keys [fp* fd]}
-(defn end
+(defn- end
   "End the capture. Make sure to pair this with every `start` call or else the
   stream will remain permanently redirected."
-  [capture-handle]
-  ;; Flush any remaining data that we want to be included in the capture.
-  (cpp/fflush (cpp/unbox cpp/FILE* (:fp* capture-handle)))
+  [{:keys [fp* bak-fd temp-fd]}]
+  (let [fp (cpp/unbox cpp/FILE* fp*)
+        fd (cpp/fileno fp)]
+    ;; Flush any remaining data that we want to be included in the capture.
+    (cpp/fflush fp)
 
-  ;; Bring it all back to its original state.
-  (cpp/dup2 (:bak-fd capture-handle) (:fd capture-handle))
-  (cpp/close (:bak-fd capture-handle))
+    ;; Bring it all back to its original state.
+    (cpp/dup2 bak-fd fd)
+    (cpp/close bak-fd)
+    (cpp/close temp-fd)))
 
-  (cpp/close (:file-fd capture-handle)))
+(defn- readback
+  "Read back the data which was captured by the handle. The data is deleted, so
+  this can only be called once."
+  [{:keys [temp-name]}]
+  (let [s (slurp temp-name)]
+    (cpp/unlink temp-name)
+    s))
 
-(defn readback
-  "Read back the data which was captured by the handle."
-  [capture-handle]
-  (let [temp-fd (cpp/fopen (:file-name capture-handle) "r")
-        size    (cpp/long (file-size (:file-name capture-handle)))
-        buf     (doto (cpp/std.string.) (cpp/.resize size))]
-    (cpp/fread (cpp/cast (cpp/type "void*") (cpp/& (cpp/.front buf))) 1 size temp-fd)
-    (cpp/fclose temp-fd)
-    buf))
+(defn with-capture
+  "Execute `f` and return a map of :ret, the returned value from f, and
+  :stderr/:stdout, the string data which was captured from the respective
+  streams."
+  [f]
+  (let [stdout-handle (start stdout)
+        stderr-handle (start stderr)
+        ret           (f)]
+    (end stdout-handle)
+    (end stderr-handle)
+    {:ret    ret
+     :stdout (readback stdout-handle)
+     :stderr (readback stderr-handle)}))
 
 (comment
-  (let [capture-handle (start stdout)]
-    (println "A message")
-    (println "captured from stdout")
-    (end capture-handle)
-
-    ;; Always make sure to clean up the file descriptors or else we will have
-    ;; no more stdout!!
-    (readback capture-handle)))
+  (with-capture #(do (println "Hello") :a-ret-value)))
