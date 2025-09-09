@@ -156,7 +156,7 @@ namespace jank::analyze::cpp_util
     util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
-    auto const code{ util::format("using {} = {};", runtime::munge(alias), literal) };
+    auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
     auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!res)
     {
@@ -214,13 +214,15 @@ namespace jank::analyze::cpp_util
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{
-      util::format("inline decltype(auto) {}(){ return ({}); }", runtime::munge(alias), literal)
+      util::format("inline decltype(auto) {}(){ return ({}\n); }", runtime::munge(alias), literal)
     };
+    //util::println("cpp/value code: {}", code);
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!parse_res)
     {
       return err("Unable to parse C++ literal.");
     }
+    /* TODO: Can we do size checks reliably? */
 
     auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
@@ -228,10 +230,6 @@ namespace jank::analyze::cpp_util
     if(size == 0)
     {
       return err("Invalid C++ literal.");
-    }
-    else if(size != 1)
-    {
-      return err("Extra expressions found in C++ literal.");
     }
 
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
@@ -241,13 +239,6 @@ namespace jank::analyze::cpp_util
     }
 
     auto const f_decl{ llvm::cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
-    auto const body{ f_decl->getBody() };
-    auto const body_size{ std::distance(body->child_begin(), body->child_end()) };
-    if(body_size != 1)
-    {
-      return err("Extra expressions found in C++ literal.");
-    }
-
     auto const ret_type{ Cpp::GetFunctionReturnType(f_decl) };
     if(auto const ret_scope = Cpp::GetScopeFromType(ret_type))
     {
