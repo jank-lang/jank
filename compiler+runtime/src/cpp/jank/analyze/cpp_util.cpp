@@ -148,23 +148,19 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
   {
-    /* TODO: silent_sfinae_trap */
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
-    auto old_client{ diag.takeClient() };
-    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
-    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+    clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
-    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!res)
+    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!parse_res || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
       return err("Unable to parse C++ literal.");
     }
 
-    auto const * const translation_unit{ res->TUPart };
+    auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)
@@ -205,12 +201,8 @@ namespace jank::analyze::cpp_util
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {
-    /* TODO: Need a call to instantiate in here? */
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
-    auto old_client{ diag.takeClient() };
-    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
-    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+    clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{
@@ -218,12 +210,12 @@ namespace jank::analyze::cpp_util
     };
     //util::println("cpp/value code: {}", code);
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!parse_res)
+    if(!parse_res || trap.hasErrorOccurred())
     {
       return err("Unable to parse C++ literal.");
     }
-    /* TODO: Can we do size checks reliably? */
 
+    /* TODO: Can we do a reliable size check for extra expressions? */
     auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
