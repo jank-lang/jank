@@ -5771,22 +5771,25 @@
         (do (f) :ok)
         :no-test)))
 
-(def re-pattern
+(defn re-pattern
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
   re-matcher."
-  clojure.core-native/re-pattern)
+  [s]
+  (cpp/jank.runtime.re_pattern s))
 
-(def re-matcher
+(defn re-matcher
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
-  clojure.core-native/re-matcher)
+  [re s]
+  (cpp/jank.runtime.re_matcher re s))
 
-(def re-groups
+(defn re-groups
   "Returns the groups from the most recent match/find. If there are no
   nested groups, returns a string of the entire match. If there are
   nested groups, returns a vector of the groups, the first element
   being the entire match."
-  clojure.core-native/re-groups)
+  [m]
+  (cpp/jank.runtime.re_groups m))
 
 (defn re-seq
   "Returns a lazy sequence of successive matches of pattern in string,
@@ -5799,18 +5802,19 @@
   ;;        (cons (re-groups m) (lazy-seq (step)))))))
   (throw "TODO: port re-seq"))
 
-(def re-matches
+(defn re-matches
   "Returns the match, if any, of string to pattern, using
   java.util.regex.Matcher.matches().  Uses re-groups to return the
   groups."
-  clojure.core-native/re-matches)
+  [re s]
+  (cpp/jank.runtime.re_matches re s))
 
 (defn re-find
   "Returns the next regex match, if any, of string to pattern, using
   java.util.regex.Matcher.find().  Uses re-groups to return the
   groups."
   ([m]
-   (clojure.core-native/re-find m))
+   (cpp/jank.runtime.re_find m))
   ([re s]
    (let [m (re-matcher re s)]
      (re-find m))))
