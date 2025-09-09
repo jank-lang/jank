@@ -37,7 +37,11 @@ namespace jank::runtime::obj
 
   void multi_function::to_string(jtl::string_builder &buff)
   {
-    util::format_to(buff, "{} ({}@{})", name->to_string(), object_type_str(base.type), &base);
+    util::format_to(buff,
+                    "#object[{} {} {}]",
+                    name->to_string(),
+                    object_type_str(base.type),
+                    &base);
   }
 
   jtl::immutable_string multi_function::to_code_string()

@@ -25,7 +25,7 @@ namespace jank::runtime::obj
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object[{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string native_function_wrapper::to_string() const

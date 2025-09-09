@@ -24,7 +24,7 @@ namespace jank::runtime::obj
 
   void delay::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object[{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string delay::to_code_string() const
