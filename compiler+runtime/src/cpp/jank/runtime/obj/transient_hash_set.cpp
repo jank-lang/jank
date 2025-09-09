@@ -41,7 +41,7 @@ namespace jank::runtime::obj
 
   void transient_hash_set::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object[{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string transient_hash_set::to_code_string() const
