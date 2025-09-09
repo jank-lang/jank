@@ -5771,36 +5771,22 @@
         (do (f) :ok)
         :no-test)))
 
-(defn re-pattern
+(def re-pattern
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
   re-matcher."
-  [s]
-  ;; (if (instance? java.util.regex.Pattern s)
-  ;;   s
-  ;;   (. java.util.regex.Pattern (compile s)))
-  (throw "TODO: port re-pattern"))
+  clojure.core-native/re-pattern)
 
-(defn re-matcher
+(def re-matcher
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
-  [#_java.util.regex.Pattern re s]
-    ;; (. re (matcher s))
-  (throw "TODO: port re-matcher"))
+  clojure.core-native/re-matcher)
 
-(defn re-groups
+(def re-groups
   "Returns the groups from the most recent match/find. If there are no
   nested groups, returns a string of the entire match. If there are
   nested groups, returns a vector of the groups, the first element
   being the entire match."
-  [#_java.util.regex.Matcher m]
-    ;; (let [gc  (. m (groupCount))]
-    ;;   (if (zero? gc)
-    ;;     (. m (group))
-    ;;     (loop [ret [] c 0]
-    ;;       (if (<= c gc)
-    ;;         (recur (conj ret (. m (group c))) (inc c))
-    ;;         ret))))
-  (throw "TODO: port re-groups"))
+  clojure.core-native/re-groups)
 
 (defn re-seq
   "Returns a lazy sequence of successive matches of pattern in string,
@@ -5813,28 +5799,21 @@
   ;;        (cons (re-groups m) (lazy-seq (step)))))))
   (throw "TODO: port re-seq"))
 
-(defn re-matches
+(def re-matches
   "Returns the match, if any, of string to pattern, using
   java.util.regex.Matcher.matches().  Uses re-groups to return the
   groups."
-  [#_java.util.regex.Pattern re s]
-    ;; (let [m (re-matcher re s)]
-    ;;   (when (. m (matches))
-    ;;     (re-groups m)))
-  (throw "TODO: port re-matches"))
+  clojure.core-native/re-matches)
 
 (defn re-find
   "Returns the next regex match, if any, of string to pattern, using
   java.util.regex.Matcher.find().  Uses re-groups to return the
   groups."
-  ([#_java.util.regex.Matcher m]
-  ;;  (when (. m (find))
-  ;;    (re-groups m))
-   (throw "TODO: port re-find"))
-  ([#_java.util.regex.Pattern re s]
-  ;;  (let [m (re-matcher re s)]
-  ;;    (re-find m))
-   (throw "TODO: port re-find")))
+  ([m]
+   (clojure.core-native/re-find m))
+  ([re s]
+   (let [m (re-matcher re s)]
+     (re-find m))))
 
 (defn rand-int
   "Returns a random integer between 0 (inclusive) and n (exclusive)."

@@ -90,4 +90,10 @@ namespace jank::runtime
 
   bool is_inst(object_ref o);
   i64 inst_ms(object_ref o);
+
+  object_ref re_pattern(object_ref o);
+  object_ref re_matcher(object_ref re, object_ref s);
+  object_ref re_find(object_ref m);
+  object_ref re_groups(object_ref m);
+  object_ref re_matches(object_ref re, object_ref s);
 }

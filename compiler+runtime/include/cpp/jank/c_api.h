@@ -144,6 +144,7 @@ extern "C"
   jank_object_ref jank_string_create(char const *s);
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_character_create(char const *s);
+  jank_object_ref jank_regex_create(char const *s);
   jank_object_ref jank_uuid_create(char const *s);
   jank_object_ref jank_inst_create(char const *s);
 
