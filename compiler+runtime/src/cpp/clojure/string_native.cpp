@@ -14,7 +14,7 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ref blank(object_ref const s)
+  object_ref blank(object_ref const s)
   {
     if(runtime::is_nil(s))
     {
@@ -24,46 +24,46 @@ namespace clojure::string_native
     return make_box(s_str.is_blank());
   }
 
-  static object_ref reverse(object_ref const s)
+  object_ref reverse(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box<obj::persistent_string>(jtl::immutable_string{ s_str.rbegin(), s_str.rend() });
   }
 
-  static object_ref lower_case(object_ref const s)
+  object_ref lower_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_lowercase(s_str));
   }
 
-  static object_ref starts_with(object_ref const s, object_ref const substr)
+  object_ref starts_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.starts_with(substr_str));
   }
 
-  static object_ref ends_with(object_ref const s, object_ref const substr)
+  object_ref ends_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.ends_with(substr_str));
   }
 
-  static object_ref includes(object_ref const s, object_ref const substr)
+  object_ref includes(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.contains(substr_str));
   }
 
-  static object_ref upper_case(object_ref const s)
+  object_ref upper_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_uppercase(s_str));
   }
 
-  static i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
   {
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));
@@ -71,7 +71,7 @@ namespace clojure::string_native
     return s_str.find(value_str, pos);
   }
 
-  static i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
   {
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));

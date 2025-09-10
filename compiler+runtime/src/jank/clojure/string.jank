@@ -1,9 +1,12 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse]))
 
-(def ^{:doc "returns s with its characters reversed."
-       :arglists '([s])}
-  reverse clojure.string-native/reverse)
+(cpp/raw "#include <clojure/string_native.hpp>")
+
+(defn reverse
+  "returns s with its characters reversed."
+  [s]
+  (cpp/clojure.string_native.reverse s))
   
 (defn re-quote-replacement
   "Given a replacement string that you wish to be a literal
@@ -147,13 +150,15 @@
               sep)
        s))))
 
-(def ^{:doc "Converts string to all upper-case."
-       :arglists '([s])}
-  upper-case clojure.string-native/upper-case)
+(defn upper-case
+  "Converts string to all upper-case."
+  [s]
+  (cpp/clojure.string_native.upper_case s))
 
-(def ^{:doc "Converts string to all lower-case."
-       :arglists '([s])}
-  lower-case clojure.string-native/lower-case)
+(defn lower-case
+  "Converts string to all lower-case."
+  [s]
+  (cpp/clojure.string_native.lower_case s))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
@@ -236,9 +241,10 @@
   ;        (.. s (subSequence 0 index) toString)))))
   (throw "TODO: port clojure.string/trim-newline"))
 
-(def ^{:doc "True if s is nil, empty, or contains only whitespace."
-       :arglists '([s])}
-  blank? clojure.string-native/blank?)
+(defn blank?
+  "True if s is nil, empty, or contains only whitespace."
+  [s]
+  (cpp/clojure.string_native.blank s))
 
 (defn escape
   "Return a new string, using cmap to escape each character ch
@@ -265,8 +271,8 @@
    (index-of s value 0))
   ([s value from-index]
    (let [result (if (char? value)
-                  (clojure.string-native/index-of s (str value) from-index)
-                  (clojure.string-native/index-of s value from-index))]
+                  (cpp/clojure.string_native.index_of s (str value) from-index)
+                  (cpp/clojure.string_native.index_of s value from-index))]
      (if (= result -1)
        nil
        result))))
@@ -278,20 +284,23 @@
    (last-index-of s value (count s)))
   ([s value from-index]
    (let [result (if (char? value)
-                  (clojure.string-native/last-index-of s (str value) from-index)
-                  (clojure.string-native/last-index-of s value from-index))]
+                  (cpp/clojure.string_native.last_index_of s (str value) from-index)
+                  (cpp/clojure.string_native.last_index_of s value from-index))]
      (if (= result -1)
        nil
        result))))
 
-(def ^{:doc "True if s starts with substr."
-       :arglists '([s substr])}
-  starts-with? clojure.string-native/starts-with?)
+(defn starts-with?
+  "True if s starts with substr."
+  [s substr]
+  (cpp/clojure.string_native.starts_with s substr))
 
-(def ^{:doc "True if s ends with substr."
-       :arglists '([s substr])}
-  ends-with? clojure.string-native/ends-with?)
+(defn ends-with?
+  "True if s ends with substr."
+  [s substr]
+  (cpp/clojure.string_native.ends_with s substr))
 
-(def ^{:doc "True if s includes substr."
-        :arglists '([s substr])}
-  includes? clojure.string-native/includes?)
+(defn includes?
+  "True if s includes substr."
+  [s substr]
+  (cpp/clojure.string_native.includes s substr))
