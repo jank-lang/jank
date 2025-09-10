@@ -152,6 +152,7 @@ namespace jank::analyze::cpp_util
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
@@ -205,6 +206,7 @@ namespace jank::analyze::cpp_util
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{
       util::format("inline decltype(auto) {}(){ return ({}\n); }", runtime::munge(alias), literal)
     };

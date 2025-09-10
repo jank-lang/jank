@@ -312,7 +312,7 @@ namespace jank::codegen
     }
     if(cpp_util::is_any_object(type))
     {
-      return ret + 1;
+      ++ret;
     }
 
     return ret;
