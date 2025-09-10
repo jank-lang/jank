@@ -160,6 +160,8 @@ namespace jank::runtime
     }
 
     constexpr oref(nullptr_t) = delete;
+    constexpr oref(object *) = delete;
+    constexpr oref(object const *) = delete;
 
     constexpr oref(jtl::remove_const_t<T> * const data)
       : data{ data }
