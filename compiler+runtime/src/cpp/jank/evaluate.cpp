@@ -150,9 +150,8 @@ namespace jank::evaluate
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));
 
-    auto const frame{
-      jtl::make_ref<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent)
-    };
+    auto const frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn,
+                                                 expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
     expr::function_arity arity{ jtl::move(params),
                                 jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
