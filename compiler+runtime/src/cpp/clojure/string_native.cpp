@@ -79,32 +79,3 @@ namespace clojure::string_native
     return s_str.rfind(value_str, pos);
   }
 }
-
-extern "C" jank_object_ref jank_load_clojure_string_native()
-{
-  using namespace jank;
-  using namespace jank::runtime;
-  using namespace clojure;
-
-  auto const ns(__rt_ctx->intern_ns("clojure.string-native"));
-
-  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
-    ns->intern_var(name)->bind_root(
-      make_box<obj::native_function_wrapper>(convert_function(fn))
-        ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
-          __rt_ctx->intern_keyword("name").expect_ok(),
-          make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
-  });
-
-  intern_fn("blank?", &string_native::blank);
-  intern_fn("ends-with?", &string_native::ends_with);
-  intern_fn("includes?", &string_native::includes);
-  intern_fn("lower-case", &string_native::lower_case);
-  intern_fn("reverse", &string_native::reverse);
-  intern_fn("starts-with?", &string_native::starts_with);
-  intern_fn("upper-case", &string_native::upper_case);
-  intern_fn("index-of", &string_native::index_of);
-  intern_fn("last-index-of", &string_native::last_index_of);
-
-  return jank_nil.erase();
-}
