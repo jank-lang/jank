@@ -62,7 +62,7 @@ namespace clojure::string_native
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));
     auto const pos(try_object<obj::integer>(from_index)->data);
-    return s_str.find(value_str, pos);
+    return static_cast<i64>(s_str.find(value_str, pos));
   }
 
   i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
@@ -70,6 +70,6 @@ namespace clojure::string_native
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));
     auto const pos(try_object<obj::integer>(from_index)->data);
-    return s_str.rfind(value_str, pos);
+    return static_cast<i64>(s_str.rfind(value_str, pos));
   }
 }
