@@ -233,6 +233,10 @@ namespace jank::runtime
   {
     static constexpr obj::persistent_string_ref into_object(char const * const o)
     {
+      if(o == nullptr)
+      {
+        return jank_nil;
+      }
       return make_box(o);
     }
 
