@@ -262,41 +262,27 @@
   "Return index of value (string or char) in s, optionally searching
   forward from from-index. Return nil if value not found."
   ([s value]
-   ;(let [result (if (instance? Character value)
-   ;               (.indexOf (.toString s) (.charValue value))
-   ;               (.indexOf (.toString s) value))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of"))
+   (index-of s value 0))
   ([s value from-index]
-   ;(let [result (if (instance? Character value)
-   ;               (.indexOf (.toString s) (.charValue value) (unchecked-int from-index))
-   ;               (.indexOf (.toString s) value (unchecked-int from-index)))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of")))
+   (let [result (if (char? value)
+                  (clojure.string-native/index-of s (str value) from-index)
+                  (clojure.string-native/index-of s value from-index))]
+     (if (= result -1)
+       nil
+       result))))
 
 (defn last-index-of
   "Return last index of value (string or char) in s, optionally
   searching backward from from-index. Return nil if value not found."
   ([s value]
-   ;(let [result (if (instance? Character value)
-   ;               (.lastIndexOf (.toString s) (.charValue value))
-   ;               (.lastIndexOf (.toString s) value))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of"))
+   (last-index-of s value (count s)))
   ([s value from-index]
-   ;(let [result (if (instance? Character value)
-   ;               (.lastIndexOf (.toString s) (.charValue value) (unchecked-int from-index))
-   ;               (.lastIndexOf (.toString s) value (unchecked-int from-index)))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of")))
+   (let [result (if (char? value)
+                  (clojure.string-native/last-index-of s (str value) from-index)
+                  (clojure.string-native/last-index-of s value from-index))]
+     (if (= result -1)
+       nil
+       result))))
 
 (def ^{:doc "True if s starts with substr."
        :arglists '([s substr])}

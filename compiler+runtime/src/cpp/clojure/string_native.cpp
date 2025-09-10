@@ -62,6 +62,22 @@ namespace clojure::string_native
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_uppercase(s_str));
   }
+
+  static i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const value_str(runtime::to_string(value));
+    auto const pos(try_object<obj::integer>(from_index)->data);
+    return s_str.find(value_str, pos);
+  }
+
+  static i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const value_str(runtime::to_string(value));
+    auto const pos(try_object<obj::integer>(from_index)->data);
+    return s_str.rfind(value_str, pos);
+  }
 }
 
 extern "C" jank_object_ref jank_load_clojure_string_native()
@@ -87,6 +103,8 @@ extern "C" jank_object_ref jank_load_clojure_string_native()
   intern_fn("reverse", &string_native::reverse);
   intern_fn("starts-with?", &string_native::starts_with);
   intern_fn("upper-case", &string_native::upper_case);
+  intern_fn("index-of", &string_native::index_of);
+  intern_fn("last-index-of", &string_native::last_index_of);
 
   return jank_nil.erase();
 }
