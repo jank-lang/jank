@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_const_keyword_ref
+          {
+            runtime::obj::keyword_ref foo(runtime::obj::keyword_ref const o)
+            {
+              return o;
+            }
+          }")
+(let* [a (cpp/jank.cpp.call.global.pass_const_keyword_ref.foo :success)]
+  a)

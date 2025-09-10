@@ -297,6 +297,14 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  static jtl::ptr<void> untyped_keyword_ptr_type()
+  {
+    static jtl::ptr<void> const ret{ Cpp::GetPointerType(Cpp::GetTypeFromScope(
+      Cpp::GetNamed("keyword",
+                    Cpp::GetNamed("obj", Cpp::GetNamed("runtime", Cpp::GetNamed("jank")))))) };
+    return ret;
+  }
+
   bool is_member_function(jtl::ptr<void> const scope)
   {
     return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
@@ -365,6 +373,7 @@ namespace jank::analyze::cpp_util
       || Cpp::IsEnumType(type);
   }
 
+  /* TODO: Just put a type member function in expression_base and read it from there. */
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(
@@ -400,6 +409,14 @@ namespace jank::analyze::cpp_util
             return untyped_object_ptr_type();
           }
           return expression_type(typed_expr->values.back());
+        }
+        else if constexpr(jtl::is_same<T, expr::primitive_literal>)
+        {
+          if(typed_expr->data->type == runtime::object_type::keyword)
+          {
+            return untyped_keyword_ptr_type();
+          }
+          return untyped_object_ptr_type();
         }
         else
         {
@@ -486,6 +503,11 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
+        /* This is not a viable conversion. */
+        if(is_typed_object(param_type))
+        {
+          continue;
+        }
         if(is_implicitly_convertible(arg_types[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
@@ -495,7 +517,9 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            return err("Ambiguous call.");
+            /* TODO: Show possible matches. */
+            return err("No normal overload match was found. When considering automatic trait "
+                       "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
           converted_args[arg_idx + member_offset] = param_type;
