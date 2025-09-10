@@ -156,7 +156,7 @@ namespace clojure::string_native
     std::string const search_str{ s_str.c_str() };
     std::regex_search(search_str, match_results, match_regex);
 
-    if(match_results.size() == 0)
+    if(match_results.empty())
     {
       return make_box(s_str);
     }
