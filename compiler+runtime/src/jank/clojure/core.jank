@@ -6403,13 +6403,15 @@ fails, attempts to require sym's namespace and retries."
   "Returns a sorted set of symbols naming the currently loaded libs"
   [] @*loaded-libs*)
 
-(def sorted?
- "Returns true if coll implements Sorted"
-  clojure.core-native/sorted?)
+(defn sorted?
+  "Returns true if coll implements Sorted"
+  [coll]
+  (cpp/jank.runtime.is_sorted coll))
 
-(def counted?
- "Returns true if coll implements count in constant time"
-  clojure.core-native/counted?)
+(defn counted?
+  "Returns true if coll implements count in constant time"
+  [coll]
+  (cpp/jank.runtime.is_counter coll))
 
 (defn reversible?
  "Returns true if coll implements Reversible"
@@ -6687,27 +6689,31 @@ fails, attempts to require sym's namespace and retries."
 ;;   java.util.Date
 ;;   (inst-ms* [inst] (.getTime ^java.util.Date inst)))
 
-(def inst-ms
+(defn inst-ms
   "Return the number of milliseconds since January 1, 1970, 00:00:00 GMT"
-  clojure.core-native/inst-ms)
+  [inst]
+  (cpp/jank.runtime.inst_ms inst))
 
-(def inst?
+(defn inst?
   "Return true if x satisfies Inst"
-  clojure.core-native/inst?)
+  [x]
+  (cpp/jank.runtime.is_inst x))
 
 ;; (extend-protocol clojure.core/Inst
 ;;   java.time.Instant
 ;;   (inst-ms* [inst] (.toEpochMilli ^java.time.Instant inst)))
 
-(def uuid?
+(defn uuid?
   "Return true if x is a java.util.UUID"
-  clojure.core-native/uuid?)
+  [x]
+  (cpp/jank.runtime.is_uuid x))
 
-(def random-uuid
+(defn random-uuid
   "Returns a pseudo-randomly generated java.util.UUID instance (i.e. type 4).
 
   See: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#randomUUID--"
-  clojure.core-native/random-uuid)
+  []
+  (cpp/jank.runtime.random_uuid))
 
 ;; (extend-protocol clojure.core.protocols/IKVReduce
 ;;  nil
@@ -6976,9 +6982,10 @@ fails, attempts to require sym's namespace and retries."
        (let [seg (into [] (take n) coll)]
          (cons seg (partitionv-all n step (drop step s))))))))
 
-(def shuffle
+(defn shuffle
   "Return a random permutation of coll"
-  clojure.core-native/shuffle)
+  [coll]
+  (cpp/jank.runtime.shuffle coll))
 
 (defn bounded-count
   "If coll is counted? returns its count, else will count at most the first n
@@ -7109,14 +7116,16 @@ fails, attempts to require sym's namespace and retries."
   ;;              acc))))
   (throw "TODO: port iteration"))
 
-(def tagged-literal?
+(defn tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  clojure.core-native/tagged-literal?)
+  [value]
+  (cpp/jank.runtime.is_tagged_literal value))
 
-(def tagged-literal
+(defn tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  clojure.core-native/tagged-literal)
+  [tag form]
+  (cpp/jank.runtime.tagged_literal tag form))
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"
@@ -7310,24 +7319,27 @@ fails, attempts to require sym's namespace and retries."
   [val]
   (str "Expected string, got " (if (nil? val) "nil" (type val))))
 
-(def parse-long
+(defn parse-long
   "Parse string of decimal digits with optional leading -/+ and return a
   Long value, or nil if parse fails"
-  clojure.core-native/parse-long)
+  [s]
+  (cpp/jank.runtime.parse_long s))
 
-(def parse-double
+(defn parse-double
   "Parse string with floating point components and return a Double value,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
-  clojure.core-native/parse-double)
+  [s]
+  (cpp/jank.runtime.parse_double s))
 
-(def parse-uuid
+(defn parse-uuid
   "Parse a string representing a UUID and return a java.util.UUID instance,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#toString--"
-  clojure.core-native/parse-uuid)
+  [s]
+  (cpp/jank.runtime.parse_uuid s))
 
 (defn parse-boolean
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
@@ -7339,10 +7351,12 @@ fails, attempts to require sym's namespace and retries."
         nil)
     (throw (parsing-err s))))
 
-(def NaN?
+(defn NaN?
   "Returns true if num is NaN, else false"
-  clojure.core-native/NaN?)
+  [num]
+  (cpp/jank.runtime.is_nan num))
 
-(def infinite?
+(defn infinite?
   "Returns true if num is negative or positive infinity, else false"
-  clojure.core-native/infinite?)
+  [num]
+  (cpp/jank.runtime.is_infinite num))
