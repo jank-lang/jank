@@ -145,7 +145,7 @@ namespace clojure::string_native
     }
   }
 
-  object_ref
+  static object_ref
   replace_first_re_pattern(object_ref const s, object_ref const match, object_ref const replacement)
   {
     auto const s_str(runtime::to_string(s));
