@@ -2094,8 +2094,14 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(analyze::expr::cpp_box_ref const expr,
                                          analyze::expr::function_arity const &arity)
   {
-    auto const value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
-                                               gen(expr->value_expr, arity)) };
+    auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
+
+    /* We want to be sure that we're only boxing pointers, so if we have a reference we need
+     * to get past it. */
+    if(Cpp::IsReferenceType(cpp_util::expression_type(expr->value_expr)))
+    {
+      value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
+    }
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
