@@ -372,7 +372,7 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
   intern_fn("->unqualified-symbol", &core_native::to_unqualified_symbol);
   intern_fn("->qualified-symbol", &core_native::to_qualified_symbol);
   intern_fn("apply*", &apply_to);
-  intern_fn("counted?", &is_counter);
+  intern_fn("counted?", &is_counted);
   intern_fn("transientable?", &is_transientable);
   intern_fn("transient", &transient);
   intern_fn("persistent!", &persistent);

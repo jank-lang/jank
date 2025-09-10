@@ -6411,7 +6411,7 @@ fails, attempts to require sym's namespace and retries."
 (defn counted?
   "Returns true if coll implements count in constant time"
   [coll]
-  (cpp/jank.runtime.is_counter coll))
+  (cpp/jank.runtime.is_counted coll))
 
 (defn reversible?
  "Returns true if coll implements Reversible"

@@ -126,7 +126,7 @@ namespace jank::runtime
             || o->type == object_type::persistent_sorted_set);
   }
 
-  bool is_counter(object_ref const o)
+  bool is_counted(object_ref const o)
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
