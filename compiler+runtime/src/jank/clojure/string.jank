@@ -133,7 +133,7 @@
                        (.toString replacement))
         (replace-first-by s match replacement))
       :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
-  (throw "TODO: port clojure.string/replace-first"))
+  (cpp/clojure.string_native.replace_first s match replacement))
 
 (defn join
   "Returns a string of all elements in coll, as returned by (seq coll),

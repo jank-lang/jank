@@ -14,6 +14,7 @@ namespace clojure::string_native
   object_ref ends_with(object_ref s, object_ref substr);
   object_ref includes(object_ref s, object_ref substr);
   object_ref upper_case(object_ref s);
+  object_ref replace_first(object_ref s, object_ref match, object_ref replacement);
 
   i64 index_of(object_ref s, object_ref value, object_ref from_index);
   i64 last_index_of(object_ref s, object_ref value, object_ref from_index);

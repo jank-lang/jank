@@ -1,6 +1,11 @@
 #include <clojure/string_native.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/native_function_wrapper.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/re_pattern.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/util/string.hpp>
 
 namespace clojure::string_native
@@ -55,6 +60,162 @@ namespace clojure::string_native
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_uppercase(s_str));
+  }
+
+  static object_ref
+  replace_first_character(object_ref const s, object_ref const match, object_ref const replacement)
+  {
+    auto const s_str(runtime::to_string(s));
+
+    auto const match_char(expect_object<obj::character>(match)->data);
+    auto const i(s_str.find(match_char));
+
+    if(i == jtl::immutable_string::npos)
+    {
+      return make_box(s_str);
+    }
+
+    jtl::string_builder buff;
+    buff(s_str.substr(0, i));
+
+    auto const replacement_char(try_object<obj::character>(replacement)->data);
+    buff(replacement_char);
+
+    auto const rest_i(i + 1);
+
+    if(rest_i < s_str.size())
+    {
+      buff(s_str.substr(rest_i));
+    }
+
+    return make_box(buff.release());
+  }
+
+  static object_ref
+  replace_first_string(object_ref const s, object_ref const match, object_ref const replacement)
+  {
+    auto const s_str(runtime::to_string(s));
+
+    auto const match_str(expect_object<obj::persistent_string>(match)->data);
+    auto const i(s_str.find(match_str));
+
+    if(i == jtl::immutable_string::npos)
+    {
+      return make_box(s_str);
+    }
+
+    jtl::string_builder buff;
+    buff(s_str.substr(0, i));
+
+    auto const replacement_str(try_object<obj::persistent_string>(replacement)->data);
+    buff(replacement_str);
+
+    auto const rest_i(i + replacement_str.size());
+
+    if(rest_i < s_str.size())
+    {
+      buff(s_str.substr(rest_i));
+    }
+
+    return make_box(buff.release());
+  }
+
+  static object_ref match_results_collect(std::smatch const &match_results)
+  {
+    switch(match_results.size())
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(match_results[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+
+          for(auto const s : match_results)
+          {
+            vec.push_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
+  }
+
+  object_ref
+  replace_first_re_pattern(object_ref const s, object_ref const match, object_ref const replacement)
+  {
+    auto const s_str(runtime::to_string(s));
+
+    auto const match_regex(try_object<obj::re_pattern>(match)->regex);
+
+    std::smatch match_results{};
+    std::string const search_str{ s_str.c_str() };
+    std::regex_search(search_str, match_results, match_regex);
+
+    if(match_results.size() == 0)
+    {
+      return make_box(s_str);
+    }
+
+    auto const i(match_results.position(0));
+
+    jtl::string_builder buff;
+    buff(s_str.substr(0, i));
+
+    if(replacement->type == object_type::persistent_string)
+    {
+      auto const replacement_str(try_object<obj::persistent_string>(replacement)->data);
+      buff(replacement_str);
+    }
+    else if(replacement->type == object_type::native_function_wrapper)
+    {
+      auto const replacement_fn(expect_object<obj::native_function_wrapper>(replacement));
+      auto const replacement_value(replacement_fn->call(match_results_collect(match_results)));
+      buff(try_object<obj::persistent_string>(replacement_value)->data);
+    }
+    else if(replacement->type == object_type::jit_function)
+    {
+      auto const replacement_fn(expect_object<obj::jit_function>(replacement));
+      auto const replacement_value(replacement_fn->call(match_results_collect(match_results)));
+      buff(try_object<obj::persistent_string>(replacement_value)->data);
+    }
+    else
+    {
+      throw std::runtime_error{ util::format("Invalid replacement arg: {}",
+                                             runtime::to_code_string(replacement)) };
+    }
+
+    auto const rest_i(i + match_results[0].str().size());
+
+    if(rest_i < s_str.size())
+    {
+      buff(s_str.substr(rest_i));
+    }
+
+    return make_box(buff.release());
+  }
+
+  object_ref replace_first(object_ref const s, object_ref const match, object_ref const replacement)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(match->type)
+    {
+      case object_type::character:
+        return replace_first_character(s, match, replacement);
+      case object_type::persistent_string:
+        return replace_first_string(s, match, replacement);
+      case object_type::re_pattern:
+        return replace_first_re_pattern(s, match, replacement);
+      default:
+        throw std::runtime_error{ util::format("Invalid match arg: {}",
+                                               runtime::to_code_string(match)) };
+    }
+#pragma clang diagnostic pop
   }
 
   i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
