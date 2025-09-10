@@ -194,7 +194,7 @@ namespace jank::analyze
                                         expr::cpp_value_ref const val,
                                         native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2 || Cpp::IsPointerType(args[0].m_Type)
+    if(args.size() == 2 || Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
        || Cpp::IsArrayType(Cpp::GetNonReferenceType(args[0].m_Type)))
     {
       return ok();
@@ -210,8 +210,10 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      if((Cpp::IsPointerType(args[0].m_Type) && !Cpp::IsIntegral(args[1].m_Type))
-         || (Cpp::IsPointerType(args[1].m_Type) && !Cpp::IsIntegral(args[0].m_Type)))
+      if((Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
+          && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[1].m_Type)))
+         || (Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type))
+             && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))))
       {
         return invalid_binary(args, op_name, val, macro_expansions);
       }
@@ -227,7 +229,8 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      if(Cpp::IsIntegral(args[0].m_Type) && Cpp::IsPointerType(args[1].m_Type))
+      if(Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))
+         && Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
       {
         /* TODO: Add a note to swap the arguments. */
         return invalid_binary(args, op_name, val, macro_expansions);
@@ -244,7 +247,7 @@ namespace jank::analyze
   {
     for(auto const &arg : args)
     {
-      if(Cpp::IsPointerType(arg.m_Type))
+      if(Cpp::IsPointerType(Cpp::GetNonReferenceType(arg.m_Type)))
       {
         return invalid(args, op_name, val, macro_expansions);
       }
@@ -260,7 +263,7 @@ namespace jank::analyze
   {
     for(auto const &arg : args)
     {
-      if(cpp_util::is_nullptr(arg.m_Type))
+      if(cpp_util::is_nullptr(Cpp::GetNonReferenceType(arg.m_Type)))
       {
         return invalid(args, op_name, val, macro_expansions);
       }
@@ -278,7 +281,7 @@ namespace jank::analyze
     {
       for(auto const &arg : args)
       {
-        if(Cpp::IsPointerType(arg.m_Type))
+        if(Cpp::IsPointerType(Cpp::GetNonReferenceType(arg.m_Type)))
         {
           return invalid(args, op_name, val, macro_expansions);
         }
@@ -295,7 +298,7 @@ namespace jank::analyze
   {
     for(auto const &arg : args)
     {
-      if(!Cpp::IsIntegral(arg.m_Type))
+      if(!Cpp::IsIntegral(Cpp::GetNonReferenceType(arg.m_Type)))
       {
         return invalid(args, op_name, val, macro_expansions);
       }
@@ -314,7 +317,7 @@ namespace jank::analyze
     {
       for(auto const &arg : args)
       {
-        if(!Cpp::IsIntegral(arg.m_Type))
+        if(!Cpp::IsIntegral(Cpp::GetNonReferenceType(arg.m_Type)))
         {
           return invalid(args, op_name, val, macro_expansions);
         }
@@ -333,8 +336,9 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      auto const is_arg0_ptr{ Cpp::IsPointerType(args[0].m_Type) };
-      if((is_arg0_ptr && is_arg0_ptr != Cpp::IsPointerType(args[1].m_Type))
+      auto const is_arg0_ptr{ Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type)) };
+      if((is_arg0_ptr
+          && is_arg0_ptr != Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
          || !Cpp::IsImplicitlyConvertible(Cpp::GetNonReferenceType(args[0].m_Type),
                                           Cpp::GetNonReferenceType(args[1].m_Type)))
       {
@@ -349,7 +353,8 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      auto const ret{ Cpp::GetCommonType(args[0].m_Type, args[1].m_Type) };
+      auto const ret{ Cpp::GetCommonType(Cpp::GetNonReferenceType(args[0].m_Type),
+                                         Cpp::GetNonReferenceType(args[1].m_Type)) };
       if(ret)
       {
         return ret;
@@ -357,11 +362,11 @@ namespace jank::analyze
 
       /* For pointer arithmetic, we won't have a common type. We want to return the
        * pointer type, though. */
-      if(Cpp::IsPointerType(args[0].m_Type))
+      if(Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type)))
       {
         return args[0].m_Type;
       }
-      if(Cpp::IsPointerType(args[1].m_Type))
+      if(Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
       {
         return args[1].m_Type;
       }
@@ -388,8 +393,8 @@ namespace jank::analyze
      * The reason we don't want value types is that jank doesn't work with C++ value semantics.
      * The only value types we have are those immediately constructed or returned from C++
      * functions. Everything else is a reference. */
-    auto const pointee{ Cpp::GetPointeeType(args[0].m_Type) };
-    if(Cpp::IsPointerType(pointee))
+    auto const pointee{ Cpp::GetPointeeType(Cpp::GetNonReferenceType(args[0].m_Type)) };
+    if(pointee && Cpp::IsPointerType(pointee))
     {
       return pointee;
     }
@@ -414,6 +419,7 @@ namespace jank::analyze
 
   static jtl::ptr<void> left_type(std::vector<Cpp::TemplateArgInfo> const &args)
   {
+    /* TODO: Consider reference vs value type. */
     return args[0].m_Type;
   }
 
@@ -3999,7 +4005,7 @@ namespace jank::analyze
     }
 
     auto const value_expr{ value_expr_res.expect_ok() };
-    auto const value_type{ cpp_util::expression_type(value_expr) };
+    auto const value_type{ Cpp::GetNonReferenceType(cpp_util::expression_type(value_expr)) };
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_box(

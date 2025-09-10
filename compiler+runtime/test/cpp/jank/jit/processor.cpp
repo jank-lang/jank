@@ -64,6 +64,12 @@ namespace jank::jit
         }
 
         auto const filename(dir_entry.path().filename().string());
+
+        if(filename.starts_with("."))
+        {
+          continue;
+        }
+
         auto const expect_success(filename.starts_with("pass-"));
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));

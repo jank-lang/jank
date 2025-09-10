@@ -298,6 +298,27 @@ namespace jank::codegen
     });
   }
 
+  static u8 pointer_count(jtl::ptr<void> type)
+  {
+    u8 ret{};
+    if(Cpp::IsReferenceType(type))
+    {
+      ++ret;
+      type = Cpp::GetNonReferenceType(type);
+    }
+    while(Cpp::IsPointerType(type))
+    {
+      ++ret;
+      type = Cpp::GetPointeeType(type);
+    }
+    if(cpp_util::is_any_object(type))
+    {
+      ++ret;
+    }
+
+    return ret;
+  }
+
   /* Generates the IR to call into jank's conversion trait to convert to/from
    * an object, based on the `policy`. We need to know the input's type, the
    * expected output type, as well as the type to use to instantiate the
@@ -2006,21 +2027,27 @@ namespace jank::codegen
      * the whole CppInterOp dance and do a load. */
     if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1)
     {
-      if(Cpp::IsReferenceType(expr->type))
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+      auto const arg_handle{ gen(expr->arg_exprs[0], arity) };
+      auto const arg_ptr_count{ pointer_count(arg_type) };
+      auto const target_ptr_count{ pointer_count(expr->type) };
+      auto const ptr_diff{ arg_ptr_count - target_ptr_count };
+
+      if(ptr_diff == 0)
       {
-        return gen(expr->arg_exprs[0], arity);
+        return arg_handle;
       }
-      else if(Cpp::IsPointerType(expr->type) /*|| Cpp::IsArrayType(expr->type)*/)
+
+      auto const alloc{ ctx->builder->CreateAlloca(
+        ctx->builder->getPtrTy(),
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+      auto value{ arg_handle };
+      for(int i{}; i < ptr_diff + llvm::isa<llvm::AllocaInst>(arg_handle); ++i)
       {
-        auto const alloc{ ctx->builder->CreateAlloca(
-          ctx->builder->getPtrTy(),
-          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-        auto const value{ ctx->builder->CreateLoad(
-          ctx->builder->getPtrTy(),
-          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->arg_exprs[0], arity))) };
-        ctx->builder->CreateStore(value, alloc);
-        return alloc;
+        value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
       }
+      ctx->builder->CreateStore(value, alloc);
+      return alloc;
     }
     else if(expr->op == Cpp::OP_Amp && expr->arg_exprs.size() == 1)
     {
@@ -2069,8 +2096,14 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(analyze::expr::cpp_box_ref const expr,
                                          analyze::expr::function_arity const &arity)
   {
-    auto const value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
-                                               gen(expr->value_expr, arity)) };
+    auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
+
+    /* We want to be sure that we're only boxing pointers, so if we have a reference we need
+     * to get past it. */
+    if(Cpp::IsReferenceType(cpp_util::expression_type(expr->value_expr)))
+    {
+      value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
+    }
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
