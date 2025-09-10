@@ -66,6 +66,33 @@ yay -S jank-git   # if you installed jank-git
 yay -S jank-bin   # if you installed jank-bin
 ```
 
+## Nix
+### Install
+We have binary packages in our cachix cache, so installation is quick and easy.
+You may also skip the cache setup and artifacts will be built from source.
+
+```bash
+# Make sure cachix is installed, then follow the prompts.
+cachix use jank-lang
+```
+
+Next, you can directly run the jank binary from the nix flake derivation. For
+example, to run the `jank check-health` subcommand:
+
+```bash
+nix run git+https://github.com/jank-lang/jank.git -- check-health
+```
+
+If you pull down the jank repository locally for development, you can enter the
+dev shell and then follow the build instructions linked below. Skip the LLVM
+build step as it's done for you by nix.
+
+```bash
+git clone https://github.com/jank-lang/jank.git
+cd jank
+nix develop
+```
+
 ## Anything else
 If nothing above matches what you have, you can still build jank by following
 the docs [here](./build.md).
