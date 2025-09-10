@@ -328,7 +328,8 @@ namespace jank::analyze::cpp_util
 
   bool is_untyped_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
@@ -342,7 +343,8 @@ namespace jank::analyze::cpp_util
   /* TODO: Support for typed object raw pointers. */
   bool is_typed_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     /* TODO: Need underlying? */
     auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
     return !is_untyped_object(can_type) && scope
