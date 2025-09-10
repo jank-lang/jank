@@ -75,15 +75,18 @@ namespace clojure::string_native
       return make_box(s_str);
     }
 
-    jtl::string_builder buff;
+    auto const replacement_char(try_object<obj::character>(replacement)->data);
+
+    auto const s_size(s_str.size());
+
+    jtl::string_builder buff{ s_size };
     buff(s_str.substr(0, i));
 
-    auto const replacement_char(try_object<obj::character>(replacement)->data);
     buff(replacement_char);
 
     auto const rest_i(i + 1);
 
-    if(rest_i < s_str.size())
+    if(rest_i < s_size)
     {
       buff(s_str.substr(rest_i));
     }
@@ -104,15 +107,18 @@ namespace clojure::string_native
       return make_box(s_str);
     }
 
-    jtl::string_builder buff;
-    buff(s_str.substr(0, i));
-
     auto const replacement_str(try_object<obj::persistent_string>(replacement)->data);
+
+    auto const replacement_size(replacement_str.size());
+    auto const s_size(s_str.size());
+
+    jtl::string_builder buff{ s_size - match_str.size() + replacement_size };
+    buff(s_str.substr(0, i));
     buff(replacement_str);
 
-    auto const rest_i(i + replacement_str.size());
+    auto const rest_i(i + replacement_size);
 
-    if(rest_i < s_str.size())
+    if(rest_i < s_size)
     {
       buff(s_str.substr(rest_i));
     }
