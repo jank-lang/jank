@@ -30,8 +30,8 @@ We have binary jank packages in our PPA, so installation is quick and easy.
 
 ```bash
 sudo apt install -y curl gnupg
-curl -s "https://jank-lang.github.io/ppa/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
-sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://jank-lang.github.io/ppa/jank.list"
+curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
 sudo apt update
 sudo apt install -y jank
 ```
