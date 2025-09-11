@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     env:
-      JANK_SSH_KEY: "~/.ssh/jank_id_ed25519"
+      JANK_SSH_KEY: ~/.ssh/jank_id_ed25519
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -155,11 +155,11 @@ jobs:
           path: ~/
       - name: Import SSH key
         run: |
-          echo "${{ secrets.PPA_SSH_KEY }}" > "${JANK_SSH_KEY}"
+          echo "${{ secrets.PPA_SSH_KEY }}" > ${JANK_SSH_KEY}
       - name: Publish to PPA
         run: |
-          scp -i "${JANK_SSH_KEY}" ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-          ssh -i "${JANK_SSH_KEY}" root@ppa.jank-lang.org "~/update+sign"
+          scp -i ${JANK_SSH_KEY} ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          ssh -i ${JANK_SSH_KEY} root@ppa.jank-lang.org "~/update+sign"
 
   build-nix:
     name: "Nix - release"
