@@ -157,8 +157,8 @@ jobs:
           echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
       - name: Publish to PPA
         run: |
-          scp -i ~/.ssh/jank_id_ed25519 ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-          ssh -i ~/.ssh/jank_id_ed25519 root@ppa.jank-lang.org "~/update+sign"
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
 
   build-nix:
     name: "Nix - release"
