@@ -162,7 +162,7 @@ jobs:
           ssh -i "${JANK_SSH_KEY}" root@ppa.jank-lang.org "~/update+sign"
 
   build-nix:
-    name: "nix - release"
+    name: "Nix - release"
     runs-on: ubuntu-latest
     steps:
     - name: "Set up nix"
