@@ -96,33 +96,6 @@ namespace clojure::string_native
     return make_box(buff.release());
   }
 
-  static object_ref match_results_collect(std::smatch const &match_results)
-  {
-    auto const size(match_results.size());
-    switch(size)
-    {
-      case 0:
-        return jank_nil;
-      case 1:
-        {
-          return make_box<obj::persistent_string>(match_results[0].str());
-        }
-      default:
-        {
-          native_vector<object_ref> vec;
-          vec.reserve(size);
-
-          for(auto const s : match_results)
-          {
-            vec.emplace_back(make_box<obj::persistent_string>(s.str()));
-          }
-
-          return make_box<obj::persistent_vector>(
-            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
-        }
-    }
-  }
-
   static object_ref
   replace_first_re_pattern(object_ref const s, object_ref const match, object_ref const replacement)
   {
@@ -152,13 +125,13 @@ namespace clojure::string_native
     else if(replacement->type == object_type::native_function_wrapper)
     {
       auto const replacement_fn(expect_object<obj::native_function_wrapper>(replacement));
-      auto const replacement_value(replacement_fn->call(match_results_collect(match_results)));
+      auto const replacement_value(replacement_fn->call(smatch_to_vector(match_results)));
       buff(try_object<obj::persistent_string>(replacement_value)->data);
     }
     else if(replacement->type == object_type::jit_function)
     {
       auto const replacement_fn(expect_object<obj::jit_function>(replacement));
-      auto const replacement_value(replacement_fn->call(match_results_collect(match_results)));
+      auto const replacement_value(replacement_fn->call(smatch_to_vector(match_results)));
       buff(try_object<obj::persistent_string>(replacement_value)->data);
     }
     else

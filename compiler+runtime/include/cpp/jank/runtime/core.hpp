@@ -1,5 +1,7 @@
 #pragma once
 
+#include <regex>
+
 /* TODO: Remove these so that people include only what they need. */
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -96,4 +98,5 @@ namespace jank::runtime
   object_ref re_find(object_ref m);
   object_ref re_groups(object_ref m);
   object_ref re_matches(object_ref re, object_ref s);
+  object_ref smatch_to_vector(std::smatch const &match_results);
 }
