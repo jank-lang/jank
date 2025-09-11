@@ -297,14 +297,6 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
-  static jtl::ptr<void> untyped_keyword_ptr_type()
-  {
-    static jtl::ptr<void> const ret{ Cpp::GetPointerType(Cpp::GetTypeFromScope(
-      Cpp::GetNamed("keyword",
-                    Cpp::GetNamed("obj", Cpp::GetNamed("runtime", Cpp::GetNamed("jank")))))) };
-    return ret;
-  }
-
   bool is_member_function(jtl::ptr<void> const scope)
   {
     return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
@@ -409,14 +401,6 @@ namespace jank::analyze::cpp_util
             return untyped_object_ptr_type();
           }
           return expression_type(typed_expr->values.back());
-        }
-        else if constexpr(jtl::is_same<T, expr::primitive_literal>)
-        {
-          if(typed_expr->data->type == runtime::object_type::keyword)
-          {
-            return untyped_keyword_ptr_type();
-          }
-          return untyped_object_ptr_type();
         }
         else
         {

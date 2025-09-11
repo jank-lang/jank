@@ -5,5 +5,8 @@
               return o;
             }
           }")
-(let* [a (cpp/jank.cpp.call.global.pass_const_keyword_ref.foo :success)]
+(let* [kw (-> cpp/jank.runtime.__rt_ctx
+              (cpp/.intern_keyword #cpp "success")
+              cpp/.expect_ok)
+       a (cpp/jank.cpp.call.global.pass_const_keyword_ref.foo kw)]
   a)
