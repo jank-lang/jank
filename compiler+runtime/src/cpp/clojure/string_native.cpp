@@ -62,65 +62,35 @@ namespace clojure::string_native
     return make_box(util::to_uppercase(s_str));
   }
 
-  static object_ref
-  replace_first_character(object_ref const s, object_ref const match, object_ref const replacement)
+  static object_ref replace_first_string(object_ref const s_obj,
+                                         jtl::immutable_string const &match,
+                                         jtl::immutable_string const &replacement)
   {
-    auto const s_str(runtime::to_string(s));
+    auto const is_string(s_obj->type == object_type::persistent_string);
 
-    auto const match_char(expect_object<obj::character>(match)->data);
-    auto const i(s_str.find(match_char));
+    auto const s(is_string ? try_object<obj::persistent_string>(s_obj)->data
+                           : runtime::to_string(s_obj));
+
+    auto const i(s.find(match));
 
     if(i == jtl::immutable_string::npos)
     {
-      return make_box(s_str);
+      return is_string ? s_obj : make_box(s);
     }
 
-    auto const replacement_char(try_object<obj::character>(replacement)->data);
+    auto const s_size(s.size());
+    auto const match_size(match.size());
+    auto const replacement_size(replacement.size());
 
-    auto const s_size(s_str.size());
+    jtl::string_builder buff{ s_size - match_size + replacement_size };
+    buff(s.substr(0, i));
+    buff(replacement);
 
-    jtl::string_builder buff{ s_size };
-    buff(s_str.substr(0, i));
-
-    buff(replacement_char);
-
-    auto const rest_i(i + 1);
+    auto const rest_i(i + match_size);
 
     if(rest_i < s_size)
     {
-      buff(s_str.substr(rest_i));
-    }
-
-    return make_box(buff.release());
-  }
-
-  static object_ref
-  replace_first_string(object_ref const s, object_ref const match, object_ref const replacement)
-  {
-    auto const s_str(runtime::to_string(s));
-
-    auto const match_str(expect_object<obj::persistent_string>(match)->data);
-    auto const i(s_str.find(match_str));
-
-    if(i == jtl::immutable_string::npos)
-    {
-      return make_box(s_str);
-    }
-
-    auto const replacement_str(try_object<obj::persistent_string>(replacement)->data);
-
-    auto const replacement_size(replacement_str.size());
-    auto const s_size(s_str.size());
-
-    jtl::string_builder buff{ s_size - match_str.size() + replacement_size };
-    buff(s_str.substr(0, i));
-    buff(replacement_str);
-
-    auto const rest_i(i + replacement_size);
-
-    if(rest_i < s_size)
-    {
-      buff(s_str.substr(rest_i));
+      buff(s.substr(rest_i));
     }
 
     return make_box(buff.release());
@@ -212,9 +182,13 @@ namespace clojure::string_native
     switch(match->type)
     {
       case object_type::character:
-        return replace_first_character(s, match, replacement);
+        return replace_first_string(s,
+                                    try_object<obj::character>(match)->data,
+                                    try_object<obj::character>(replacement)->data);
       case object_type::persistent_string:
-        return replace_first_string(s, match, replacement);
+        return replace_first_string(s,
+                                    try_object<obj::persistent_string>(match)->data,
+                                    try_object<obj::persistent_string>(replacement)->data);
       case object_type::re_pattern:
         return replace_first_re_pattern(s, match, replacement);
       default:
