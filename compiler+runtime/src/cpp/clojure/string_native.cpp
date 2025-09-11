@@ -98,7 +98,8 @@ namespace clojure::string_native
 
   static object_ref match_results_collect(std::smatch const &match_results)
   {
-    switch(match_results.size())
+    auto const size(match_results.size());
+    switch(size)
     {
       case 0:
         return jank_nil;
@@ -109,10 +110,11 @@ namespace clojure::string_native
       default:
         {
           native_vector<object_ref> vec;
+          vec.reserve(size);
 
           for(auto const s : match_results)
           {
-            vec.push_back(make_box<obj::persistent_string>(s.str()));
+            vec.emplace_back(make_box<obj::persistent_string>(s.str()));
           }
 
           return make_box<obj::persistent_vector>(
