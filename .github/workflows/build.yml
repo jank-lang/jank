@@ -155,6 +155,7 @@ jobs:
           path: ~/
       - name: Import SSH key
         run: |
+          mkdir -p ~/.ssh
           echo "${{ secrets.PPA_SSH_KEY }}" > ${JANK_SSH_KEY}
       - name: Publish to PPA
         run: |
