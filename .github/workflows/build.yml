@@ -155,6 +155,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to PPA
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
