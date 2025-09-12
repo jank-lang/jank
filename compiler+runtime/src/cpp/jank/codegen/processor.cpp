@@ -2313,7 +2313,7 @@ namespace jank::codegen
             util::format_to(expression_buffer,
                             "{} {}",
                             (need_comma ? "," : ""),
-                            munge(recursion.unwrap().fn_ctx->name));
+                            munge(recursion.unwrap().fn_frame->fn_ctx->name));
           }
           else
           {

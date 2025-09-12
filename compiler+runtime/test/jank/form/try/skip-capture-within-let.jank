@@ -1,0 +1,6 @@
+(let* [x :success]
+  (try
+    (let* [y x]
+      y)
+    (catch _
+      )))
