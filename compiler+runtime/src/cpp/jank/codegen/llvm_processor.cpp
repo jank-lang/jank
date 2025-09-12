@@ -1046,7 +1046,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::local_reference_ref const expr, expr::function_arity const &arity)
   {
-    auto const ret(locals[expr->binding->name]);
+    auto ret(locals[expr->binding->name]);
     jank_debug_assert_fmt(ret,
                           "Unable to find binding for local '{}' in fn '{}'",
                           expr->binding->name->to_code_string(),
@@ -1054,6 +1054,11 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
+      if(llvm::isa<llvm::AllocaInst>(ret.data))
+      {
+        ret = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret);
+      }
+
       return ctx->builder->CreateRet(ret);
     }
 
