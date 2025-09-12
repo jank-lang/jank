@@ -464,11 +464,13 @@ namespace jank::runtime
 
   /* This version of `with` avoids two dynamic dispatches per operation, so it's
    * preferable over `number_ops.combine`. */
+  [[maybe_unused]]
   static integer_ops const &with(integer_ops const &, integer_ops const &)
   {
     return i_ops;
   }
 
+  [[maybe_unused]]
   static real_ops const &with(real_ops const &, real_ops const &)
   {
     return r_ops;
