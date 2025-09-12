@@ -169,7 +169,7 @@ namespace jank::runtime
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
-      analyze::processor an_prc{ *this };
+      analyze::processor an_prc;
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
           .expect_ok()));

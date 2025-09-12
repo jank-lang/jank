@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::operator_::star
+          {
+            int a{ 55 };
+            int* b{ &a };
+          }")
+(let [b (cpp/value "jank::cpp::operator_::star::b")]
+  (if (= 55 (cpp/* b))
+    :success))

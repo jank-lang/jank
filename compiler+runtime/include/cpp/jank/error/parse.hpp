@@ -40,6 +40,7 @@ namespace jank::error
                                                 read::source const &source);
   error_ref
   parse_invalid_reader_tag_value(jtl::immutable_string const &message, read::source const &source);
+  error_ref parse_invalid_regex(jtl::immutable_string const &message, read::source const &source);
   error_ref parse_invalid_uuid(jtl::immutable_string const &message, read::source const &source);
   error_ref parse_invalid_inst(jtl::immutable_string const &message, read::source const &source);
   error_ref

@@ -151,24 +151,36 @@ jobs:
         with:
           name: jank-deb
           path: ~/
-      - name: Import GPG key
+      - name: Import SSH key
         run: |
-          gpg_tmp="$(mktemp).gpg"
-          echo "${{ secrets.GPG_SIGNING_KEY }}" > "${gpg_tmp}"
-          gpg --import "${gpg_tmp}"
-          rm -f "${gpg_tmp}"
-          unset gpg_tmp
-      - name: Commit to PPA repo
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to PPA
         run: |
-          pushd ~/
-            git clone https://jeaye:${{ secrets.JANK_GITHUB_TOKEN }}@github.com/jank-lang/ppa.git
-            pushd ppa
-              cp -fv ~/*.deb .
-              git add *.deb
-              git config --global user.email "jeaye@jank-lang.org"
-              git config --global user.name "Jeaye Wilkerson"
-              git config --global commit.gpgsign true
-              git commit -m "[automated] Publish new deb"
-              git push origin main
-            popd
-          popd
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+
+  build-nix:
+    name: "Nix - release"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Set up nix"
+      uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: "Set up cachix"
+      uses: cachix/cachix-action@v16
+      with:
+        name: jank-lang
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        # Only push to cache on main branch, not PRs
+        skipPush: "${{ github.ref != 'refs/heads/main' }}"
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: "Build jank"
+      run: nix build .?submodules=1 -L
+    - name: "Check health"
+      run: nix run .?submodules=1 check-health

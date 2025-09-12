@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     auto const name(get(meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
-      "{} ({}@{})",
+      "#object [{} {} {}]",
       (name->type == object_type::nil ? "unknown" : expect_object<persistent_string>(name)->data),
       object_type_str(type),
       this);

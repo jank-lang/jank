@@ -45,7 +45,7 @@ namespace jank::runtime::obj
 
   void array_chunk::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(type), this);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string array_chunk::to_code_string() const

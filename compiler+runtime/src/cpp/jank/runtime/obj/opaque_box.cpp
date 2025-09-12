@@ -23,7 +23,7 @@ namespace jank::runtime::obj
 
   void opaque_box::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(type), this);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string opaque_box::to_string() const

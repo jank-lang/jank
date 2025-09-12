@@ -42,8 +42,7 @@ namespace jank::analyze
   {
     using expression_result = jtl::result<expression_ref, error_ref>;
 
-    processor() = delete;
-    processor(runtime::context &rt_ctx);
+    processor();
     processor(processor const &) = default;
     processor(processor &&) noexcept = default;
 
@@ -236,8 +235,6 @@ namespace jank::analyze
 
     native_unordered_map<runtime::obj::symbol_ref, special_function_type> specials;
     native_unordered_map<runtime::var_ref, expression_ref> vars;
-    /* TODO: Remove this. */
-    runtime::context &rt_ctx;
     local_frame_ptr root_frame;
     native_vector<runtime::object_ref> macro_expansions;
   };

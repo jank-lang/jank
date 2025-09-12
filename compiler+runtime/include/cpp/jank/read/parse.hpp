@@ -74,6 +74,7 @@ namespace jank::read::parse
     object_result parse_reader_macro_fn();
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
+    object_result parse_regex();
     object_result parse_tagged_uuid();
     object_result parse_tagged_inst();
     object_result parse_tagged_cpp();

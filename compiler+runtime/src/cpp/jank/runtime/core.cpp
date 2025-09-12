@@ -532,6 +532,104 @@ namespace jank::runtime
     return o->type == object_type::tagged_literal;
   }
 
+  object_ref re_pattern(object_ref const o)
+  {
+    return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
+  }
+
+  object_ref re_matcher(object_ref const re, object_ref const s)
+  {
+    return make_box<obj::re_matcher>(try_object<obj::re_pattern>(re),
+                                     try_object<obj::persistent_string>(s)->data);
+  }
+
+  object_ref re_find(object_ref const m)
+  {
+    std::smatch match_results{};
+    auto const matcher(try_object<obj::re_matcher>(m));
+    std::regex_search(matcher->match_input, match_results, matcher->re->regex);
+
+    switch(match_results.size())
+    {
+      case 0:
+        matcher->groups = jank_nil;
+        break;
+      case 1:
+        {
+          matcher->groups = make_box<obj::persistent_string>(match_results[0].str());
+          matcher->match_input = match_results.suffix().str();
+          break;
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+
+          for(auto const s : match_results)
+          {
+            vec.push_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          matcher->match_input = match_results.suffix().str();
+
+          matcher->groups = make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+          break;
+        }
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_groups(object_ref const m)
+  {
+    auto const matcher(try_object<obj::re_matcher>(m));
+
+    if(matcher->groups.is_nil())
+    {
+      throw std::runtime_error{ "No match found" };
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_matches(object_ref const re, object_ref const s)
+  {
+    std::smatch match_results{};
+    std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
+
+    std::regex_search(search_str,
+                      match_results,
+                      try_object<obj::re_pattern>(re)->regex,
+                      std::regex_constants::match_continuous);
+
+    if(!match_results.suffix().str().empty())
+    {
+      return jank_nil;
+    }
+
+    switch(match_results.size())
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(match_results[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+
+          for(auto const s : match_results)
+          {
+            vec.push_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
+  }
+
   object_ref parse_uuid(object_ref const o)
   {
     if(o->type == object_type::persistent_string)

@@ -29,7 +29,7 @@ namespace jank::runtime::obj
 
   void reduced::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(type), this);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string reduced::to_code_string() const

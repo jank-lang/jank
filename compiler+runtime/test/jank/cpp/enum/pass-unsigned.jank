@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::enum_::pass_unsigned
+          {
+            enum class foo : u8
+            {
+              bar = 255
+            };
+          }")
+(let* [bar cpp/jank.cpp.enum_.pass_unsigned.foo.bar]
+  (if (= 255 bar)
+    :success))

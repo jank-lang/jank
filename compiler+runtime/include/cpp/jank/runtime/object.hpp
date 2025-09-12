@@ -81,6 +81,9 @@ namespace jank::runtime
     var_unbound_root,
 
     tagged_literal,
+
+    re_pattern,
+    re_matcher,
     uuid,
     inst,
 
@@ -219,6 +222,11 @@ namespace jank::runtime
 
       case object_type::tagged_literal:
         return "tagged_literal";
+
+      case object_type::re_pattern:
+        return "re_pattern";
+      case object_type::re_matcher:
+        return "re_matcher";
       case object_type::uuid:
         return "uuid";
       case object_type::inst:

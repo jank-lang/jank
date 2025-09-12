@@ -44,7 +44,7 @@ namespace jank::runtime::obj
 
   void chunk_buffer::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(type), this);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string chunk_buffer::to_code_string() const

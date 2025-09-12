@@ -151,6 +151,7 @@ namespace jank::codegen
     llvm::Value *gen_global(runtime::obj::symbol_ref s) const;
     llvm::Value *gen_global(runtime::obj::keyword_ref k) const;
     llvm::Value *gen_global(runtime::obj::character_ref c) const;
+    llvm::Value *gen_global(runtime::obj::re_pattern_ref re) const;
     llvm::Value *gen_global(runtime::obj::uuid_ref u) const;
     llvm::Value *gen_global(runtime::obj::inst_ref i) const;
     llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
@@ -295,6 +296,27 @@ namespace jank::codegen
     cloned_cpp_module.consumingModuleDo([&](std::unique_ptr<llvm::Module> module) {
       llvm::Linker::linkModules(*ctx.module.getModuleUnlocked(), jtl::move(module));
     });
+  }
+
+  static u8 pointer_count(jtl::ptr<void> type)
+  {
+    u8 ret{};
+    if(Cpp::IsReferenceType(type))
+    {
+      ++ret;
+      type = Cpp::GetNonReferenceType(type);
+    }
+    while(Cpp::IsPointerType(type))
+    {
+      ++ret;
+      type = Cpp::GetPointeeType(type);
+    }
+    if(cpp_util::is_any_object(type))
+    {
+      ++ret;
+    }
+
+    return ret;
   }
 
   /* Generates the IR to call into jank's conversion trait to convert to/from
@@ -881,7 +903,8 @@ namespace jank::codegen
                      || std::same_as<T, runtime::obj::persistent_string>
                      || std::same_as<T, runtime::obj::ratio>
                      || std::same_as<T, runtime::obj::big_integer>
-                     || std::same_as<T, runtime::obj::uuid> || std::same_as<T, runtime::obj::inst>)
+                     || std::same_as<T, runtime::obj::uuid> || std::same_as<T, runtime::obj::inst>
+                     || std::same_as<T, runtime::obj::re_pattern>)
         {
           return gen_global(typed_o);
         }
@@ -1021,13 +1044,21 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::impl::gen(expr::local_reference_ref const expr, expr::function_arity const &)
+  llvm_processor::impl::gen(expr::local_reference_ref const expr, expr::function_arity const &arity)
   {
-    auto const ret(locals[expr->binding->name]);
-    jank_debug_assert(ret);
+    auto ret(locals[expr->binding->name]);
+    jank_debug_assert_fmt(ret,
+                          "Unable to find binding for local '{}' in fn '{}'",
+                          expr->binding->name->to_code_string(),
+                          arity.fn_ctx->name);
 
     if(expr->position == expression_position::tail)
     {
+      if(llvm::isa<llvm::AllocaInst>(ret.data))
+      {
+        ret = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret);
+      }
+
       return ctx->builder->CreateRet(ret);
     }
 
@@ -2004,21 +2035,27 @@ namespace jank::codegen
      * the whole CppInterOp dance and do a load. */
     if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1)
     {
-      if(Cpp::IsReferenceType(expr->type))
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+      auto const arg_handle{ gen(expr->arg_exprs[0], arity) };
+      auto const arg_ptr_count{ pointer_count(arg_type) };
+      auto const target_ptr_count{ pointer_count(expr->type) };
+      auto const ptr_diff{ arg_ptr_count - target_ptr_count };
+
+      if(ptr_diff == 0)
       {
-        return gen(expr->arg_exprs[0], arity);
+        return arg_handle;
       }
-      else if(Cpp::IsPointerType(expr->type) /*|| Cpp::IsArrayType(expr->type)*/)
+
+      auto const alloc{ ctx->builder->CreateAlloca(
+        ctx->builder->getPtrTy(),
+        llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+      auto value{ arg_handle };
+      for(int i{}; i < ptr_diff + llvm::isa<llvm::AllocaInst>(arg_handle); ++i)
       {
-        auto const alloc{ ctx->builder->CreateAlloca(
-          ctx->builder->getPtrTy(),
-          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-        auto const value{ ctx->builder->CreateLoad(
-          ctx->builder->getPtrTy(),
-          ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->arg_exprs[0], arity))) };
-        ctx->builder->CreateStore(value, alloc);
-        return alloc;
+        value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
       }
+      ctx->builder->CreateStore(value, alloc);
+      return alloc;
     }
     else if(expr->op == Cpp::OP_Amp && expr->arg_exprs.size() == 1)
     {
@@ -2067,8 +2104,14 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(analyze::expr::cpp_box_ref const expr,
                                          analyze::expr::function_arity const &arity)
   {
-    auto const value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
-                                               gen(expr->value_expr, arity)) };
+    auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
+
+    /* We want to be sure that we're only boxing pointers, so if we have a reference we need
+     * to get past it. */
+    if(Cpp::IsReferenceType(cpp_util::expression_type(expr->value_expr)))
+    {
+      value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
+    }
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
@@ -2558,6 +2601,42 @@ namespace jank::codegen
       auto const create_fn(llvm_module->getOrInsertFunction("jank_string_create", create_fn_type));
 
       llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(s->data.c_str()) };
+      auto const call(ctx->builder->CreateCall(create_fn, args));
+      ctx->builder->CreateStore(call, global);
+
+      if(prev_block == ctx->global_ctor_block)
+      {
+        return call;
+      }
+    }
+
+    return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
+  }
+
+  llvm::Value *llvm_processor::impl::gen_global(obj::re_pattern_ref const re) const
+  {
+    auto const found(ctx->literal_globals.find(re));
+    if(found != ctx->literal_globals.end())
+    {
+      return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), found->second);
+    }
+
+    auto &global(ctx->literal_globals[re]);
+    auto const name(util::format("re_pattern_{}", re->to_hash()));
+    auto const var(create_global_var(name));
+    llvm_module->insertGlobalVariable(var);
+    global = var;
+
+    auto const prev_block(ctx->builder->GetInsertBlock());
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+      ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+
+      auto const create_fn_type(
+        llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      auto const create_fn(llvm_module->getOrInsertFunction("jank_regex_create", create_fn_type));
+
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(re->to_string().c_str()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 

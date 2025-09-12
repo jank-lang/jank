@@ -55,7 +55,7 @@ namespace jank::runtime::obj
 
   void transient_hash_map::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(type), this);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_hash_map::to_string() const
