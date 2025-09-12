@@ -23,35 +23,23 @@
     (str "--codegen " (name value))
 
     :defines
-    (->> value
-         (map (fn [[k v]]
-                (str "-D" k "=" v)))
-         (clojure.string/join " "))
+    (map (fn [[k v]] (str "-D" k "=" v)) value) 
 
     :include-dirs
-    (->> value
-         (map (fn [v]
-                (str "-I" v)))
-         (clojure.string/join " "))
+    (map (fn [v] (str "-I" v)) value)
 
     :library-dirs
-    (->> value
-         (map (fn [v]
-                (str "-L" v)))
-         (clojure.string/join " "))
+    (map (fn [v] (str "-L" v)) value)
 
-    :linked-libraries
-    (->> value
-         (map (fn [v]
-                (str "-l" v)))
-         (clojure.string/join " "))
+    :linked-libraries 
+    (map (fn [v] (str "-l" v)) value)
 
     (lmain/warn (str "Unknown flag " flag))))
 
 (defn build-declarative-flags [project]
-  (map (fn [[flag value]]
-         (build-declarative-flag flag value))
-       (:jank project)))
+  (flatten (map (fn [[flag value]]
+                  (build-declarative-flag flag value))
+                (:jank project))))
 
 
 (defn shell-out! [project classpath command compiler-args runtime-args]
