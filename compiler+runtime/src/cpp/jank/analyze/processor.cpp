@@ -1153,9 +1153,8 @@ namespace jank::analyze
     return ok();
   }
 
-  processor::processor(runtime::context &rt_ctx)
-    : rt_ctx{ rt_ctx }
-    , root_frame{ jtl::make_ref<local_frame>(local_frame::frame_type::root, rt_ctx, none) }
+  processor::processor()
+    : root_frame{ jtl::make_ref<local_frame>(local_frame::frame_type::root, none) }
   {
     using runtime::obj::symbol;
     for(auto const &p :
@@ -1258,7 +1257,7 @@ namespace jank::analyze
 
     auto qualified_sym(current_frame->lift_var(sym));
     qualified_sym->meta = sym->meta;
-    auto const var(rt_ctx.intern_var(qualified_sym));
+    auto const var(__rt_ctx->intern_var(qualified_sym));
     if(var.is_err())
     {
       return error::internal_analyze_failure(var.expect_err(),
@@ -1303,7 +1302,7 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
       auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil),
-                                              rt_ctx.intern_keyword("doc").expect_ok(),
+                                              __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
@@ -1537,14 +1536,15 @@ namespace jank::analyze
       {
         local_frame::register_captures(current_frame, unwrapped_named_recursion);
       }
+      /* TODO: Capture all of the captures of the referenced function. */
       return jtl::make_ref<expr::recursion_reference>(position,
                                                       current_frame,
                                                       needs_box,
                                                       unwrapped_named_recursion.fn_ctx);
     }
 
-    auto const qualified_sym(rt_ctx.qualify_symbol(sym));
-    auto const var(rt_ctx.find_var(qualified_sym));
+    auto const qualified_sym(__rt_ctx->qualify_symbol(sym));
+    auto const var(__rt_ctx->find_var(qualified_sym));
     if(var.is_nil())
     {
       return error::analyze_unresolved_symbol(
@@ -1554,7 +1554,7 @@ namespace jank::analyze
     }
 
     /* Macros aren't lifted, since they're not used during runtime. */
-    auto const macro_kw(rt_ctx.intern_keyword("", "macro", true).expect_ok());
+    auto const macro_kw(__rt_ctx->intern_keyword("", "macro", true).expect_ok());
     if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw).is_nil())
     {
       current_frame->lift_var(qualified_sym);
@@ -1586,9 +1586,7 @@ namespace jank::analyze
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
 
-    auto frame{
-      jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame->rt_ctx, current_frame)
-    };
+    auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame) };
 
     native_vector<runtime::obj::symbol_ref> param_symbols;
     param_symbols.reserve(params->data.size());
@@ -1861,7 +1859,7 @@ namespace jank::analyze
     }
 
     auto const meta(runtime::obj::persistent_hash_map::create_unique(std::make_pair(
-      rt_ctx.intern_keyword("name").expect_ok(),
+      __rt_ctx->intern_keyword("name").expect_ok(),
       make_box(
         runtime::obj::symbol{ runtime::__rt_ctx->current_ns()->to_string(), name }.to_string()))));
 
@@ -1920,7 +1918,7 @@ namespace jank::analyze
         meta_source(list->meta),
         latest_expansion(macro_expansions));
     }
-    else if(rt_ctx.no_recur_var->is_bound() && runtime::truthy(rt_ctx.no_recur_var->deref()))
+    else if(__rt_ctx->no_recur_var->is_bound() && runtime::truthy(__rt_ctx->no_recur_var->deref()))
     {
       /* TODO: Note where the try is. */
       return error::analyze_invalid_recur_from_try(
@@ -2063,9 +2061,7 @@ namespace jank::analyze
                                         latest_expansion(macro_expansions));
     }
 
-    auto frame{
-      jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame->rt_ctx, current_frame)
-    };
+    auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame) };
     auto ret{ jtl::make_ref<expr::let>(
       position,
       frame,
@@ -2177,9 +2173,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    auto frame{
-      make_box<local_frame>(local_frame::frame_type::letfn, current_frame->rt_ctx, current_frame)
-    };
+    auto frame{ make_box<local_frame>(local_frame::frame_type::letfn, current_frame) };
     auto ret{ make_box<expr::letfn>(
       position,
       frame,
@@ -2542,7 +2536,7 @@ namespace jank::analyze
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
 
     auto const qualified_sym(current_frame->lift_var(arg_sym));
-    auto const found_var(rt_ctx.find_var(qualified_sym));
+    auto const found_var(__rt_ctx->find_var(qualified_sym));
     if(found_var.is_nil())
     {
       return error::analyze_unresolved_var(
@@ -2610,25 +2604,19 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
-    auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_,
-                                              current_frame->rt_ctx,
-                                              current_frame));
+    auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
-    auto catch_frame(jtl::make_ref<local_frame>(local_frame::frame_type::catch_,
-                                                current_frame->rt_ctx,
-                                                current_frame));
-    auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally,
-                                                  current_frame->rt_ctx,
-                                                  current_frame));
+    auto catch_frame(jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
+    auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
     auto ret{ jtl::make_ref<expr::try_>(position, try_frame, true, jtl::make_ref<expr::do_>()) };
 
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
-    rt_ctx
-      .push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(rt_ctx.no_recur_var, runtime::jank_true)))
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_true)))
       .expect_ok();
-    util::scope_exit const finally{ [&]() { rt_ctx.pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ []() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     enum class try_expression_type : u8
     {
@@ -3067,7 +3055,7 @@ namespace jank::analyze
       jtl::ptr<error::base> expansion_error{};
       JANK_TRY
       {
-        expanded = rt_ctx.macroexpand(o);
+        expanded = __rt_ctx->macroexpand(o);
       }
       JANK_CATCH_THEN(
         [&](auto const &e) {
@@ -3095,16 +3083,17 @@ namespace jank::analyze
           runtime::get_in(var_deref->var->meta.unwrap(),
                           make_box<runtime::obj::persistent_vector>(
                             std::in_place,
-                            rt_ctx.intern_keyword("", "arities", true).expect_ok(),
+                            __rt_ctx->intern_keyword("", "arities", true).expect_ok(),
                             /* NOTE: We don't support unboxed meta on variadic arities. */
                             make_box(arg_count))));
 
         bool const supports_unboxed_input(runtime::truthy(
-          get(arity_meta, rt_ctx.intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
+          get(arity_meta,
+              __rt_ctx->intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
         bool const supports_unboxed_output(
           runtime::truthy
           /* TODO: Rename key. */
-          (get(arity_meta, rt_ctx.intern_keyword("", "unboxed-output?", true).expect_ok())));
+          (get(arity_meta, __rt_ctx->intern_keyword("", "unboxed-output?", true).expect_ok())));
 
         if(supports_unboxed_input || supports_unboxed_output)
         {

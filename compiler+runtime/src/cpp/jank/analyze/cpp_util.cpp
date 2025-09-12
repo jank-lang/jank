@@ -328,7 +328,8 @@ namespace jank::analyze::cpp_util
 
   bool is_untyped_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
@@ -342,7 +343,8 @@ namespace jank::analyze::cpp_util
   /* TODO: Support for typed object raw pointers. */
   bool is_typed_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     /* TODO: Need underlying? */
     auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
     return !is_untyped_object(can_type) && scope
@@ -363,6 +365,7 @@ namespace jank::analyze::cpp_util
       || Cpp::IsEnumType(type);
   }
 
+  /* TODO: Just put a type member function in expression_base and read it from there. */
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(
@@ -484,6 +487,11 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
+        /* This is not a viable conversion. */
+        if(is_typed_object(param_type))
+        {
+          continue;
+        }
         if(is_implicitly_convertible(arg_types[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
@@ -493,7 +501,9 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            return err("Ambiguous call.");
+            /* TODO: Show possible matches. */
+            return err("No normal overload match was found. When considering automatic trait "
+                       "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
           converted_args[arg_idx + member_offset] = param_type;

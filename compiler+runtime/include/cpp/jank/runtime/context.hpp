@@ -136,7 +136,7 @@ namespace jank::runtime
      *
      * TODO: Is it? I think we can remove this. */
     /* TODO: This needs to be synchronized, if it's kept. */
-    analyze::processor an_prc{ *this };
+    analyze::processor an_prc;
     jtl::immutable_string binary_version;
     jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */

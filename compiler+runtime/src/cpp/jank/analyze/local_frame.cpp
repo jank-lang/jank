@@ -40,42 +40,10 @@ namespace jank::analyze
       make_box(has_unboxed_usage));
   }
 
-  local_frame::local_frame(frame_type const &type,
-                           context &rt_ctx,
-                           jtl::option<jtl::ptr<local_frame>> const &p)
+  local_frame::local_frame(frame_type const &type, jtl::option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
-    , rt_ctx{ rt_ctx }
   {
-  }
-
-  local_frame &local_frame::operator=(local_frame const &rhs)
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    /* TODO: Is this operator used? It's missing some members. */
-    type = rhs.type;
-    parent = rhs.parent;
-    locals = rhs.locals;
-
-    return *this;
-  }
-
-  local_frame &local_frame::operator=(local_frame &&rhs) noexcept
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    type = rhs.type;
-    parent = std::move(rhs.parent);
-    locals = std::move(rhs.locals);
-
-    return *this;
   }
 
   static jtl::option<local_frame::binding_find_result>
@@ -223,7 +191,7 @@ namespace jank::analyze
     if(sym->ns.empty())
     {
       qualified_sym
-        = make_box<obj::symbol>(expect_object<ns>(rt_ctx.current_ns_var->deref())->name->name,
+        = make_box<obj::symbol>(expect_object<ns>(__rt_ctx->current_ns_var->deref())->name->name,
                                 sym->name);
     }
     else
