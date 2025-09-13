@@ -1,0 +1,4 @@
+(let* [v (cpp/int 55)]
+  ((fn* foo []
+     (if (= 55 v)
+       :success))))

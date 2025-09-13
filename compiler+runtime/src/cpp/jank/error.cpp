@@ -152,6 +152,8 @@ namespace jank::error
         return "Invalid C++ constructor call.";
       case kind::analyze_invalid_cpp_member_call:
         return "Invalid C++ member function call.";
+      case kind::analyze_invalid_cpp_capture:
+        return "Invalid C++ capture.";
       case kind::analyze_invalid_cpp_function_call:
         return "Invalid C++ function call.";
       case kind::analyze_invalid_cpp_call:

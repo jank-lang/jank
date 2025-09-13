@@ -1486,6 +1486,23 @@ namespace jank::analyze
     if(found_local.is_some())
     {
       auto &unwrapped_local(found_local.unwrap());
+
+      if(!unwrapped_local.crossed_fns.empty())
+      {
+        auto const binding_type{ unwrapped_local.binding->type };
+        if(!cpp_util::is_any_object(binding_type) && !cpp_util::is_trait_convertible(binding_type))
+        {
+          return error::analyze_invalid_cpp_capture(
+            util::format("Unable to capture '{}', since its type '{}' is not able to be "
+                         "automatically converted to a jank object. You can mitigate this by "
+                         "wrapping the value in a 'cpp/box' before capturing it.",
+                         sym->to_string(),
+                         Cpp::GetTypeAsString(binding_type)),
+            meta_source(sym->meta),
+            latest_expansion(macro_expansions));
+        }
+      }
+
       local_frame::register_captures(unwrapped_local);
 
       /* Since we're referring to a local, we're boxed if it is boxed. */

@@ -248,6 +248,17 @@ namespace jank::error
     return make_error(kind::analyze_invalid_cpp_member_call, message, source, expansion);
   }
 
+  error_ref analyze_invalid_cpp_capture(jtl::immutable_string const &message,
+                                        read::source const &source,
+                                        runtime::object_ref expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_capture,
+                      message,
+                      source,
+                      "Captured here.",
+                      expansion);
+  }
+
   error_ref analyze_invalid_cpp_function_call(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref expansion)

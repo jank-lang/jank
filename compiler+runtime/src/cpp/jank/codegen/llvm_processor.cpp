@@ -1200,6 +1200,10 @@ namespace jank::codegen
      *
      * In this case of a named recursion which crosses a fn, we can't use the current fn's
      * closure context. We need to build a new one. */
+
+    /* TODO: The plan here is to register the capture of the fn for the named recursion.
+     * Then, when generating the code for that capture, actually capture the fn's closure
+     * context directly. Then we can just reuse that context later on. */
     auto const crosses_fn(expr->recursion_ref.fn_ctx->fn != arity.fn_ctx->fn);
 
     llvm::SmallVector<llvm::Value *> arg_handles;
