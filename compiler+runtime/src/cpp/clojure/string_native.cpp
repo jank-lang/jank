@@ -96,11 +96,26 @@ namespace clojure::string_native
     return make_box(buff.release());
   }
 
+  static object_ref replace_first_re_pattern_string(object_ref const s,
+                                                    object_ref const match,
+                                                    object_ref const replacement)
+  {
+    auto const is_string(s->type == object_type::persistent_string);
+    auto const s_str(is_string ? try_object<obj::persistent_string>(s)->data.c_str()
+                               : runtime::to_string(s).c_str());
+    auto const match_regex(try_object<obj::re_pattern>(match)->regex);
+    auto const replacement_str(try_object<obj::persistent_string>(replacement)->data.c_str());
+    auto const out_str(std::regex_replace(s_str,
+                                          match_regex,
+                                          replacement_str,
+                                          std::regex_constants::format_first_only));
+    return make_box<obj::persistent_string>(out_str.c_str()).erase();
+  }
+
   static object_ref
   replace_first_re_pattern(object_ref const s, object_ref const match, object_ref const replacement)
   {
     auto const s_str(runtime::to_string(s));
-
     auto const match_regex(try_object<obj::re_pattern>(match)->regex);
 
     std::smatch match_results{};
@@ -117,12 +132,7 @@ namespace clojure::string_native
     jtl::string_builder buff;
     buff(s_str.substr(0, i));
 
-    if(replacement->type == object_type::persistent_string)
-    {
-      auto const replacement_str(try_object<obj::persistent_string>(replacement)->data);
-      buff(replacement_str);
-    }
-    else if(replacement->type == object_type::native_function_wrapper)
+    if(replacement->type == object_type::native_function_wrapper)
     {
       auto const replacement_fn(expect_object<obj::native_function_wrapper>(replacement));
       auto const replacement_value(replacement_fn->call(smatch_to_vector(match_results)));
@@ -165,7 +175,14 @@ namespace clojure::string_native
                                     try_object<obj::persistent_string>(match)->data,
                                     try_object<obj::persistent_string>(replacement)->data);
       case object_type::re_pattern:
-        return replace_first_re_pattern(s, match, replacement);
+        if(replacement->type == object_type::persistent_string)
+        {
+          return replace_first_re_pattern_string(s, match, replacement);
+        }
+        else
+        {
+          return replace_first_re_pattern(s, match, replacement);
+        }
       default:
         throw std::runtime_error{ util::format("Invalid match arg: {}",
                                                runtime::to_code_string(match)) };
