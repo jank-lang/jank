@@ -547,7 +547,7 @@ namespace jank::error
     //    }) }) };
 
     {
-      std::vector<Element> doc_body{
+      std::vector<Element> const doc_body{
         error,
         text("\n"),
       };
