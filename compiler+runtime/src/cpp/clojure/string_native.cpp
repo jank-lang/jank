@@ -121,23 +121,9 @@ namespace clojure::string_native
     jtl::string_builder buff;
     buff(s.substr(0, i));
 
-    if(replacement->type == object_type::native_function_wrapper)
-    {
-      auto const replacement_fn(expect_object<obj::native_function_wrapper>(replacement));
-      auto const replacement_value(replacement_fn->call(smatch_to_vector(match_results)));
-      buff(try_object<obj::persistent_string>(replacement_value)->data);
-    }
-    else if(replacement->type == object_type::jit_function)
-    {
-      auto const replacement_fn(expect_object<obj::jit_function>(replacement));
-      auto const replacement_value(replacement_fn->call(smatch_to_vector(match_results)));
-      buff(try_object<obj::persistent_string>(replacement_value)->data);
-    }
-    else
-    {
-      throw std::runtime_error{ util::format("Invalid replacement arg: {}",
-                                             runtime::to_code_string(replacement)) };
-    }
+    auto const group(smatch_to_vector(match_results));
+    auto const replacement_value(dynamic_call(replacement, group));
+    buff(try_object<obj::persistent_string>(replacement_value)->data);
 
     auto const rest_i(i + match_results[0].str().size());
 
@@ -172,10 +158,8 @@ namespace clojure::string_native
                                try_object<obj::re_pattern>(match)->regex,
                                try_object<obj::persistent_string>(replacement)->data);
         }
-        else
-        {
-          return replace_first(s, try_object<obj::re_pattern>(match)->regex, replacement);
-        }
+
+        return replace_first(s, try_object<obj::re_pattern>(match)->regex, replacement);
       default:
         throw std::runtime_error{ util::format("Invalid match arg: {}",
                                                runtime::to_code_string(match)) };
