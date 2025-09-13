@@ -5791,17 +5791,6 @@
   [m]
   (cpp/jank.runtime.re_groups m))
 
-(defn re-seq
-  "Returns a lazy sequence of successive matches of pattern in string,
-  using java.util.regex.Matcher.find(), each such match processed with
-  re-groups."
-  [#_java.util.regex.Pattern re s]
-  ;; (let [m (re-matcher re s)]
-  ;;   ((fn step []
-  ;;      (when (. m (find))
-  ;;        (cons (re-groups m) (lazy-seq (step)))))))
-  (throw "TODO: port re-seq"))
-
 (defn re-matches
   "Returns the match, if any, of string to pattern, using
   java.util.regex.Matcher.matches().  Uses re-groups to return the
@@ -5818,6 +5807,16 @@
   ([re s]
    (let [m (re-matcher re s)]
      (re-find m))))
+
+(defn re-seq
+  "Returns a lazy sequence of successive matches of pattern in string,
+  using java.util.regex.Matcher.find(), each such match processed with
+  re-groups."
+  [re s]
+  (let [m (re-matcher re s)]
+    ((fn step []
+       (when (re-find m)
+         (cons (re-groups m) (lazy-seq (step))))))))
 
 (defn rand-int
   "Returns a random integer between 0 (inclusive) and n (exclusive)."
