@@ -4,8 +4,14 @@
 
 namespace jank::runtime::obj
 {
+  native_pointer_wrapper::native_pointer_wrapper()
+    : object{ obj_type }
+  {
+  }
+
   native_pointer_wrapper::native_pointer_wrapper(void * const d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
@@ -22,7 +28,7 @@ namespace jank::runtime::obj
 
   void native_pointer_wrapper::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string native_pointer_wrapper::to_string() const

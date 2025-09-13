@@ -4,21 +4,30 @@
 
 namespace jank::runtime::obj
 {
+  native_vector_sequence::native_vector_sequence()
+    : object{ obj_type }
+  {
+    jank_debug_assert(!this->data.empty());
+  }
+
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data, usize index)
-    : data{ data }
+    : object{ obj_type }
+    , data{ data }
     , index{ index }
   {
     jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data)
-    : data{ std::move(data) }
+    : object{ obj_type }
+    , data{ std::move(data) }
   {
     jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data, usize index)
-    : data{ std::move(data) }
+    : object{ obj_type }
+    , data{ std::move(data) }
     , index{ index }
   {
     jank_debug_assert(!this->data.empty());
@@ -26,7 +35,8 @@ namespace jank::runtime::obj
 
   native_vector_sequence::native_vector_sequence(jtl::option<object_ref> const &meta,
                                                  native_vector<object_ref> &&data)
-    : data{ std::move(data) }
+    : object{ obj_type }
+    , data{ std::move(data) }
     , meta{ meta }
   {
   }
@@ -56,7 +66,7 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  uhash native_vector_sequence::to_hash()
+  uhash native_vector_sequence::to_hash() const
   {
     return hash::ordered(data.begin(), data.end());
   }

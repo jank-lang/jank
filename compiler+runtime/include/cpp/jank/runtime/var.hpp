@@ -20,7 +20,7 @@ namespace jank::runtime
     using persistent_hash_map_ref = oref<struct persistent_hash_map>;
   }
 
-  struct var : gc
+  struct var : object
   {
     static constexpr object_type obj_type{ object_type::var };
     static constexpr bool pointer_free{ false };
@@ -35,11 +35,11 @@ namespace jank::runtime
         bool thread_bound);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     /* behavior::object_like extended */
     bool equal(var const &) const;
@@ -82,7 +82,7 @@ namespace jank::runtime
     std::atomic_bool thread_bound{ false };
   };
 
-  struct var_thread_binding : gc
+  struct var_thread_binding : object
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
     static constexpr bool pointer_free{ false };
@@ -90,11 +90,11 @@ namespace jank::runtime
     var_thread_binding(object_ref value, std::thread::id id);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     object base{ obj_type };
     object_ref value{};
@@ -106,7 +106,7 @@ namespace jank::runtime
     obj::persistent_hash_map_ref bindings{};
   };
 
-  struct var_unbound_root : gc
+  struct var_unbound_root : object
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
     static constexpr bool pointer_free{ true };
@@ -114,11 +114,11 @@ namespace jank::runtime
     var_unbound_root(var_ref var);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     object base{ obj_type };
     var_ref var;

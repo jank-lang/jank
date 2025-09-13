@@ -10,7 +10,8 @@
 namespace jank::runtime::obj
 {
   tagged_literal::tagged_literal(object_ref const tag, object_ref const form)
-    : tag{ tag }
+    : object{ obj_type }
+    , tag{ tag }
     , form{ form }
   {
   }

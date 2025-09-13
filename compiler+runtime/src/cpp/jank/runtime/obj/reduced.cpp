@@ -3,15 +3,21 @@
 
 namespace jank::runtime::obj
 {
+  reduced::reduced()
+    : object{ obj_type }
+  {
+  }
+
   reduced::reduced(object_ref const o)
-    : val{ o }
+    : object{ obj_type }
+    , val{ o }
   {
     jank_debug_assert(val.is_some());
   }
 
   bool reduced::equal(object const &o) const
   {
-    return &o == &base;
+    return &o == this;
   }
 
   jtl::immutable_string reduced::to_string() const
@@ -23,7 +29,7 @@ namespace jank::runtime::obj
 
   void reduced::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string reduced::to_code_string() const

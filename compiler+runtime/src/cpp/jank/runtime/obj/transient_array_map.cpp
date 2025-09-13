@@ -11,13 +11,20 @@
 
 namespace jank::runtime::obj
 {
+  transient_array_map::transient_array_map()
+    : object{ obj_type }
+  {
+  }
+
   transient_array_map::transient_array_map(runtime::detail::native_array_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   transient_array_map::transient_array_map(runtime::detail::native_array_map const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
@@ -29,12 +36,12 @@ namespace jank::runtime::obj
   bool transient_array_map::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
+    return this == &o;
   }
 
   void transient_array_map::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_array_map::to_string() const

@@ -65,7 +65,8 @@ namespace jank::runtime::obj
   }
 
   ratio::ratio(ratio_data const &data)
-    : data{ data }
+    : object{ obj_type }
+    , data{ data }
   {
   }
 

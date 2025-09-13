@@ -5,13 +5,21 @@
 
 namespace jank::runtime::obj
 {
+  chunk_buffer::chunk_buffer()
+    : object{ obj_type }
+  {
+    buffer.reserve(capacity);
+  }
+
   chunk_buffer::chunk_buffer(usize const capacity)
-    : capacity{ capacity }
+    : object{ obj_type }
+    , capacity{ capacity }
   {
     buffer.reserve(capacity);
   }
 
   chunk_buffer::chunk_buffer(object_ref const capacity)
+    : object{ obj_type }
   {
     auto const c(to_int(capacity));
     if(c < 0)
@@ -24,7 +32,7 @@ namespace jank::runtime::obj
 
   bool chunk_buffer::equal(object const &o) const
   {
-    return &o == &base;
+    return &o == this;
   }
 
   jtl::immutable_string chunk_buffer::to_string() const
@@ -36,7 +44,7 @@ namespace jank::runtime::obj
 
   void chunk_buffer::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string chunk_buffer::to_code_string() const

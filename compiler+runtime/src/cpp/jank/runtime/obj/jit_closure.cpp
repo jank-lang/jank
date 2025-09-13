@@ -11,41 +11,48 @@
 
 namespace jank::runtime::obj
 {
+  jit_closure::jit_closure()
+    : object{ obj_type }
+  {
+  }
+
   jit_closure::jit_closure(arity_flag_t const arity_flags, void * const context)
-    : context{ context }
+    : object{ obj_type }
+    , context{ context }
     , arity_flags{ arity_flags }
   {
   }
 
   jit_closure::jit_closure(object_ref const meta)
-    : meta{ meta }
+    : object{ obj_type }
+    , meta{ meta }
   {
   }
 
   bool jit_closure::equal(object const &rhs) const
   {
-    return &base == &rhs;
+    return this == &rhs;
   }
 
-  jtl::immutable_string jit_closure::to_string()
+  jtl::immutable_string jit_closure::to_string() const
   {
     jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void jit_closure::to_string(jtl::string_builder &buff)
+  void jit_closure::to_string(jtl::string_builder &buff) const
   {
     auto const name(get(meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
       (name->type == object_type::nil ? "unknown" : expect_object<persistent_string>(name)->data),
-      object_type_str(base.type),
-      &base);
+      object_type_str(type),
+      this);
   }
 
-  jtl::immutable_string jit_closure::to_code_string()
+  jtl::immutable_string jit_closure::to_code_string() const
   {
     return to_string();
   }
@@ -229,6 +236,6 @@ namespace jank::runtime::obj
 
   object_ref jit_closure::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

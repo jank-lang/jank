@@ -5,14 +5,20 @@
 
 namespace jank::runtime::obj
 {
+  delay::delay()
+    : object{ obj_type }
+  {
+  }
+
   delay::delay(object_ref const fn)
-    : fn{ fn }
+    : object{ obj_type }
+    , fn{ fn }
   {
   }
 
   bool delay::equal(object const &o) const
   {
-    return &o == &base;
+    return &o == this;
   }
 
   jtl::immutable_string delay::to_string() const
@@ -24,7 +30,7 @@ namespace jank::runtime::obj
 
   void delay::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string delay::to_code_string() const

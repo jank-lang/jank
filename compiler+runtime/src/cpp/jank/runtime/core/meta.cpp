@@ -46,7 +46,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format("not metadatable: {} [{}]",
                                                  typed_o->to_code_string(),
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o,
@@ -91,7 +91,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format("not metadatable: {} [{}]",
                                                  typed_o->to_code_string(),
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o,

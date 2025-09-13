@@ -8,24 +8,31 @@
 
 namespace jank::runtime::obj
 {
+  native_function_wrapper::native_function_wrapper()
+    : object{ obj_type }
+  {
+  }
+
   native_function_wrapper::native_function_wrapper(detail::function_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   native_function_wrapper::native_function_wrapper(detail::function_type const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   bool native_function_wrapper::equal(object const &o) const
   {
-    return &base == &o;
+    return this == &o;
   }
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string native_function_wrapper::to_string() const
@@ -188,6 +195,6 @@ namespace jank::runtime::obj
 
   object_ref native_function_wrapper::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

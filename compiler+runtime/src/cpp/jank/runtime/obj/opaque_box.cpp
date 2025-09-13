@@ -5,7 +5,8 @@
 namespace jank::runtime::obj
 {
   opaque_box::opaque_box(jtl::ptr<void> const data)
-    : data{ data }
+    : object{ obj_type }
+    , data{ data }
   {
   }
 
@@ -22,7 +23,7 @@ namespace jank::runtime::obj
 
   void opaque_box::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string opaque_box::to_string() const

@@ -6,14 +6,21 @@
 
 namespace jank::runtime::obj
 {
+  persistent_list::persistent_list()
+    : object{ obj_type }
+  {
+  }
+
   persistent_list::persistent_list(runtime::detail::native_persistent_list const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   persistent_list::persistent_list(object_ref const meta,
                                    runtime::detail::native_persistent_list const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
     , meta{ meta }
   {
   }

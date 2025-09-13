@@ -8,7 +8,8 @@
 namespace jank::runtime
 {
   ns::ns(obj::symbol_ref const &name)
-    : name{ name }
+    : object{ obj_type }
+    , name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
   {

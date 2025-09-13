@@ -5,22 +5,29 @@
 
 namespace jank::runtime::obj
 {
+  keyword::keyword()
+    : object{ obj_type }
+  {
+  }
+
   keyword::keyword(detail::must_be_interned, jtl::immutable_string_view const &s)
-    : sym{ make_box<obj::symbol>(s) }
+    : object{ obj_type }
+    , sym{ make_box<obj::symbol>(s) }
   {
   }
 
   keyword::keyword(detail::must_be_interned,
                    jtl::immutable_string_view const &ns,
                    jtl::immutable_string_view const &n)
-    : sym{ make_box<obj::symbol>(ns, n) }
+    : object{ obj_type }
+    , sym{ make_box<obj::symbol>(ns, n) }
   {
   }
 
   /* Keywords are interned, so we can always count on identity equality. */
   bool keyword::equal(object const &o) const
   {
-    return &base == &o;
+    return this == &o;
   }
 
   static void to_string_impl(symbol const &sym, jtl::string_builder &buff)
