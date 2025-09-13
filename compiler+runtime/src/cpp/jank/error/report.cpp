@@ -546,21 +546,32 @@ namespace jank::error
     //      }),
     //    }) }) };
 
-    std::vector<Element> doc_body{
-      error,
-      text("\n"),
-    };
-
-    for(auto const &s : p.snippets)
     {
-      doc_body.emplace_back(code_snippet(s, max_width));
+      std::vector<Element> doc_body{
+        error,
+        text("\n"),
+      };
+
+      auto document{ vbox(doc_body) };
+      auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
+      Render(screen, document);
+      screen.Print();
+      util::print("\n");
     }
 
-    auto document{ vbox(doc_body) };
-    auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
-    Render(screen, document);
-    screen.Print();
-    util::print("\n");
+    {
+      std::vector<Element> doc_body;
+      for(auto const &s : p.snippets)
+      {
+        doc_body.emplace_back(code_snippet(s, max_width));
+      }
+
+      auto document{ vbox(doc_body) };
+      auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
+      Render(screen, document);
+      screen.Print();
+      util::print("\n");
+    }
 
     if(e->cause)
     {
