@@ -116,7 +116,7 @@ namespace jank::analyze
 
     struct named_recursion_find_result
     {
-      expr::function_context_ref fn_ctx;
+      jtl::ptr<local_frame> fn_frame;
       native_vector<jtl::ptr<local_frame>> crossed_fns;
     };
 
@@ -126,6 +126,8 @@ namespace jank::analyze
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
+    static void register_crossed_captures(jtl::ptr<local_frame> frame,
+                                          named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */

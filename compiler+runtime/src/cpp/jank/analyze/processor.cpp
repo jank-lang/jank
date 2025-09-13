@@ -1536,11 +1536,16 @@ namespace jank::analyze
       {
         local_frame::register_captures(current_frame, unwrapped_named_recursion);
       }
-      /* TODO: Capture all of the captures of the referenced function. */
-      return jtl::make_ref<expr::recursion_reference>(position,
-                                                      current_frame,
-                                                      needs_box,
-                                                      unwrapped_named_recursion.fn_ctx);
+      else if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      {
+        local_frame::register_crossed_captures(current_frame, unwrapped_named_recursion);
+      }
+
+      return jtl::make_ref<expr::recursion_reference>(
+        position,
+        current_frame,
+        needs_box,
+        unwrapped_named_recursion.fn_frame->fn_ctx.data);
     }
 
     auto const qualified_sym(__rt_ctx->qualify_symbol(sym));
