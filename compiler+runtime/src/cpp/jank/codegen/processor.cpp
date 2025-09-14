@@ -1957,6 +1957,30 @@ namespace jank::codegen
     return ret_tmp;
   }
 
+  jtl::option<handle> processor::gen(analyze::expr::cpp_aset_ref const expr,
+                                     analyze::expr::function_arity const &arity,
+                                     bool)
+  {
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_aset")) };
+
+    auto array_tmp{ gen(expr->array_expr, arity, false) };
+    auto index_tmp{ gen(expr->index_expr, arity, false) };
+    auto value_tmp{ gen(expr->value_expr, arity, false) };
+
+    util::format_to(deps_buffer,
+                    "auto {} = ({}[{}] = {});\n",
+                    ret_tmp,
+                    array_tmp.unwrap().str(false),
+                    index_tmp.unwrap().str(false),
+                    value_tmp.unwrap().str(false));
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      return none;
+    }
+    return ret_tmp;
+  }
+
   jtl::immutable_string processor::declaration_str()
   {
     if(!generated_declaration)

@@ -68,7 +68,8 @@ namespace jank::analyze
     cpp_unbox,
     cpp_new,
     cpp_delete,
-    cpp_value_max = cpp_delete,
+    cpp_aset,
+    cpp_value_max = cpp_aset,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)
@@ -145,6 +146,8 @@ namespace jank::analyze
         return "cpp_new";
       case expression_kind::cpp_delete:
         return "cpp_delete";
+      case expression_kind::cpp_aset:
+        return "cpp_aset";
     }
     return "unknown";
   }

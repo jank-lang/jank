@@ -149,4 +149,8 @@ namespace jank::error
   error_ref internal_analyze_failure(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref expansion);
+
+  error_ref analyze_invalid_cpp_aset(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     runtime::object_ref expansion);
 }

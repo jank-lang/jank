@@ -100,6 +100,7 @@ namespace jank::error
     analyze_invalid_cpp_new,
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
+    analyze_invalid_cpp_aset,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -290,6 +291,8 @@ namespace jank::error
         return "analyze/invalid-cpp-delete";
       case kind::analyze_invalid_cpp_member_access:
         return "analyze/invalid-cpp-member-access";
+      case kind::analyze_invalid_cpp_aset:
+        return "analyze/invalid-cpp-member-aset";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:

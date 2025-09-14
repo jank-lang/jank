@@ -35,6 +35,7 @@
 #include <jank/analyze/expr/cpp_unbox.hpp>
 #include <jank/analyze/expr/cpp_new.hpp>
 #include <jank/analyze/expr/cpp_delete.hpp>
+#include <jank/analyze/expr/cpp_aset.hpp>
 
 namespace jank::analyze
 {
@@ -112,6 +113,8 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::cpp_new>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_delete:
         return f(jtl::static_ref_cast<expr::cpp_delete>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_aset:
+        return f(jtl::static_ref_cast<expr::cpp_aset>(e), std::forward<Args>(args)...);
 
       case expression_kind::uninitialized:
         break;

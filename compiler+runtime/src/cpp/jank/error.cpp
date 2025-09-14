@@ -180,6 +180,10 @@ namespace jank::error
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
         return "Invalid C++ member access.";
+
+      case kind::analyze_invalid_cpp_aset:
+        return "Invalid C++ array set.";
+
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 

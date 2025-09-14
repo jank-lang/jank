@@ -40,6 +40,7 @@ namespace jank::analyze
     using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
     using cpp_box_ref = jtl::ref<struct cpp_box>;
     using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_aset_ref = jtl::ref<struct cpp_aset>;
   }
 }
 
@@ -164,6 +165,9 @@ namespace jank::codegen
     gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &, bool box_needed);
     jtl::option<handle>
     gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &, bool box_needed);
+
+    jtl::option<handle> 
+    gen(analyze::expr::cpp_aset_ref const, analyze::expr::function_arity const &, bool);
 
     jtl::immutable_string declaration_str();
     void build_header();

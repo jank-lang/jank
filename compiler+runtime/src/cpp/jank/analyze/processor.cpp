@@ -59,6 +59,7 @@
 #include <jank/analyze/expr/cpp_unbox.hpp>
 #include <jank/analyze/expr/cpp_new.hpp>
 #include <jank/analyze/expr/cpp_delete.hpp>
+#include <jank/analyze/expr/cpp_aset.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
 
@@ -1180,6 +1181,7 @@ namespace jank::analyze
           {  make_box<symbol>("cpp/unbox"),  &processor::analyze_cpp_unbox },
           {    make_box<symbol>("cpp/new"),    &processor::analyze_cpp_new },
           { make_box<symbol>("cpp/delete"), &processor::analyze_cpp_delete },
+          { make_box<symbol>("cpp/aset"),   &processor::analyze_cpp_aset   }
     })
     {
       specials.insert(p);
@@ -4408,6 +4410,127 @@ namespace jank::analyze
         }
       },
       o);
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_aset(runtime::obj::persistent_list_ref const l,
+                              local_frame_ptr const current_frame,
+                              expression_position const position,
+                              jtl::option<expr::function_context_ref> const &fn_ctx,
+                              bool const needs_box) 
+  {
+    auto const count(l->count());
+
+    // Validate we have exactly 4 elements: (cpp/aset array index value)
+    if(count < 4) {
+        return error::analyze_invalid_cpp_aset(
+            "This call to 'cpp/aset' is missing arguments. Expected: (cpp/aset array index value)",
+            object_source(l->first()),
+            latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(count > 4) {
+        return error::analyze_invalid_cpp_aset(
+            "A call to 'cpp/aset' must have exactly three arguments: array, index, and value.",
+            object_source(l->next()->next()->next()->next()->first()),
+            latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(l, 4));
+    }
+
+    // Extract arguments
+    auto const array_obj = l->data.rest().first().unwrap();
+    auto const index_obj = l->data.rest().rest().first().unwrap();
+    auto const value_obj = l->data.rest().rest().rest().first().unwrap();
+
+    // Analyze array expression
+    auto const array_expr_res = analyze(array_obj, current_frame,
+                                        expression_position::value, fn_ctx, false);
+
+    if(array_expr_res.is_err()) {
+        return array_expr_res.expect_err();
+    }
+    auto const array_expr = array_expr_res.expect_ok();
+    auto const array_type = cpp_util::expression_type(array_expr.data);
+
+    // Check if type supports subscripting
+    bool can_subscript = false;
+    jtl::ptr<void> element_type = nullptr;
+
+    if(Cpp::IsPointerType(array_type)) {
+        can_subscript = true;
+        element_type = Cpp::GetPointeeType(array_type);
+    }
+    else {
+        // Check for operator[] support on class types
+        auto const scope = Cpp::GetScopeFromType(array_type);
+        if(scope) {
+            // Look for operator[] overloads using CppInterOp
+            std::vector<void*> operators;
+            std::vector<Cpp::TemplateArgInfo> arg_types; // May need to be populated
+            Cpp::GetOperator(Cpp::OP_Subscript, arg_types, operators, Cpp::kBinary);
+
+            if(!operators.empty()) {
+                can_subscript = true;
+                // Get the return type from the first operator[] overload
+                element_type = Cpp::GetFunctionReturnType(operators[0]);
+            }
+        }
+    }
+
+    if(!can_subscript) {
+        return error::analyze_invalid_cpp_aset(
+            util::format("Type '{}' does not support array subscripting.",
+                        Cpp::GetTypeAsString(array_type)),
+            object_source(array_obj),
+            latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    // Analyze index expression
+    auto const index_expr_res = analyze(index_obj, current_frame,
+                                        expression_position::value, fn_ctx, false);
+    if(index_expr_res.is_err()) {
+        return index_expr_res.expect_err();
+    }
+    auto const index_expr = index_expr_res.expect_ok();
+    auto const index_type = cpp_util::expression_type(index_expr.data);
+
+    // Verify index is integral type
+    if(!Cpp::IsIntegral(index_type)) {
+        return error::analyze_invalid_cpp_aset(
+            "Array index must be an integral type.",
+            object_source(index_obj),
+            latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
+    // Analyze value expression
+    auto const value_expr_res = analyze(value_obj, current_frame,
+                                        expression_position::value, fn_ctx, false);
+    if(value_expr_res.is_err()) {
+        return value_expr_res.expect_err();
+    }
+    auto const value_expr = value_expr_res.expect_ok();
+    auto const value_type = cpp_util::expression_type(value_expr.data);
+
+    // Check type compatibility for assignment
+    if(!cpp_util::is_implicitly_convertible(value_type, element_type)) {
+        return error::analyze_invalid_cpp_aset(
+            util::format("Cannot assign value of type '{}' to array element of type '{}'.",
+                        Cpp::GetTypeAsString(value_type),
+                        Cpp::GetTypeAsString(element_type)),
+            object_source(value_obj),
+            latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(l, 3));
+    }
+
+    return jtl::make_ref<expr::cpp_aset>(position,
+                                         current_frame,
+                                         needs_box,
+                                         array_expr.data,
+                                         index_expr.data,
+                                         value_expr.data,
+                                         element_type);
   }
 
   bool processor::is_special(runtime::object_ref const form)

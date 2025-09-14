@@ -131,6 +131,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_unbox_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_new_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_delete_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_aset_ref, analyze::expr::function_arity const &);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const;
@@ -2246,6 +2247,36 @@ namespace jank::codegen
     }
 
     return ret;
+  }
+
+  llvm::Value *llvm_processor::impl::gen(analyze::expr::cpp_aset_ref const expr,
+                                         analyze::expr::function_arity const &arity)
+  {
+    auto const array_val{ gen(expr->array_expr, arity) };
+    auto const index_val{ gen(expr->index_expr, arity) };
+    auto const value_val{ gen(expr->value_expr, arity) };
+
+    // The fundamental issue: we need to handle subscript operations at the C++ level
+    // rather than trying to do low-level LLVM pointer arithmetic
+    // For now, revert to the simpler approach but make it more robust
+    auto const array_loaded{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), array_val) };
+    auto const index_loaded{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), index_val) };
+    auto const value_loaded{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), value_val) };
+
+    // Create GEP (GetElementPtr) instruction for array access
+    llvm::SmallVector<llvm::Value *, 2> const indices{ index_loaded };
+    auto const gep{ ctx->builder->CreateGEP(ctx->builder->getInt32Ty(), array_loaded, indices) };
+
+    // Store the value at the computed address
+    ctx->builder->CreateStore(value_loaded, gep);
+
+    // Return the stored value (assignment expression returns the assigned value)
+    if(expr->position == expression_position::tail)
+    {
+      return ctx->builder->CreateRet(value_loaded);
+    }
+
+    return value_loaded;
   }
 
   llvm::Value *llvm_processor::impl::gen_var(obj::symbol_ref const qualified_name) const

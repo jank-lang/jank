@@ -67,6 +67,7 @@ namespace jank::analyze
     using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
     using cpp_new_ref = jtl::ref<struct cpp_new>;
     using cpp_delete_ref = jtl::ref<struct cpp_delete>;
+    using cpp_aset_ref = jtl::ref<struct cpp_aset>;
   }
 }
 
