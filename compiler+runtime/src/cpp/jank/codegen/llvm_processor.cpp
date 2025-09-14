@@ -2995,8 +2995,13 @@ namespace jank::codegen
                                                  true,
                                                  name,
                                                  capture.second };
-          ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, fn_arity),
-                                    field_ptr);
+          auto local{ gen(expr::local_reference_ref{ &local_ref }, fn_arity) };
+          if(llvm::isa<llvm::AllocaInst>(local) && cpp_util::is_any_object(capture.second->type))
+          {
+            local = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), local);
+          }
+
+          ctx->builder->CreateStore(local, field_ptr);
         }
       }
 

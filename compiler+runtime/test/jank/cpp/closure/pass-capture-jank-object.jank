@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::closure::pass_capture_jank_object
+          {
+            jank::runtime::object_ref ref(jank::runtime::object_ref const o)
+            { return o; }
+            jank::runtime::object* ptr(jank::runtime::object* const o)
+            { return o; }
+          }")
+(let [outer (fn* outer []
+              (let* [a (cpp/jank.cpp.closure.pass_capture_jank_object.ref 55)
+                     b (cpp/jank.cpp.closure.pass_capture_jank_object.ptr 77)]
+                ((fn* inner []
+                   (if (and (= 55 a) (= 77 b))
+                     :success)))))]
+  (outer))
