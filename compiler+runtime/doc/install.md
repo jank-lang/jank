@@ -44,17 +44,26 @@ sudo apt reinstall jank
 
 ## Arch Linux (AUR)
 ### Install
-There is no binary AUR package yet, but there's a source package which builds from
-git.
+There are two packages available in the AUR:
+
+- `jank-git`: Builds jank directly from the latest source code on GitHub.
+- `jank-bin`: Installs a precompiled binary from the official Debian package (recommended for most users).
+
+To install:
 
 ```bash
+# Build from source (requires clang, llvm, cmake, ...)
 yay -S jank-git
+
+# Install prebuilt binary (faster, no build deps)
+yay -S jank-bin
 ```
 
 ### Update
 ```bash
 yay -Syy
-yay -S jank-git
+yay -S jank-git   # if you installed jank-git
+yay -S jank-bin   # if you installed jank-bin
 ```
 
 ## Anything else
