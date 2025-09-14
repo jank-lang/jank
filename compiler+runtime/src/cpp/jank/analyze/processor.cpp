@@ -4452,38 +4452,14 @@ namespace jank::analyze
     auto const array_expr = array_expr_res.expect_ok();
     auto const array_type = cpp_util::expression_type(array_expr.data);
 
-    // Check if type supports subscripting
-    bool can_subscript = false;
     jtl::ptr<void> element_type = nullptr;
 
     if(Cpp::IsPointerType(array_type)) {
-        can_subscript = true;
         element_type = Cpp::GetPointeeType(array_type);
     }
     else {
         // Check for operator[] support on class types
-        auto const scope = Cpp::GetScopeFromType(array_type);
-        if(scope) {
-            // Look for operator[] overloads using CppInterOp
-            std::vector<void*> operators;
-            std::vector<Cpp::TemplateArgInfo> arg_types; // May need to be populated
-            Cpp::GetOperator(Cpp::OP_Subscript, arg_types, operators, Cpp::kBinary);
-
-            if(!operators.empty()) {
-                can_subscript = true;
-                // Get the return type from the first operator[] overload
-                element_type = Cpp::GetFunctionReturnType(operators[0]);
-            }
-        }
-    }
-
-    if(!can_subscript) {
-        return error::analyze_invalid_cpp_aset(
-            util::format("Type '{}' does not support array subscripting.",
-                        Cpp::GetTypeAsString(array_type)),
-            object_source(array_obj),
-            latest_expansion(macro_expansions))
-            ->add_usage(read::parse::reparse_nth(l, 1));
+        throw std::runtime_error("operator[] support not implemented yet");
     }
 
     // Analyze index expression

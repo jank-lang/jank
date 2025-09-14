@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::aset::pass_std_array
+          {
+            #include <array>
+            
+            std::array<int, 1> arr;
+
+            int aget(int index) {
+              return arr[index];
+            }
+          }")
+
+(let* [_ (cpp/aset cpp/jank.cpp.aset.pass_std_array.arr (cpp/int 0) (cpp/int 1))
+       v (cpp/jank.cpp.aset.pass_std_array.aget (cpp/int 0))]
+      (if (= 1 v) :success))
