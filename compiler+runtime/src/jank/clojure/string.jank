@@ -119,21 +119,7 @@
                                 #\"(\\w+)(\\s+)(\\w+)\" \"$3$2$1\")
   -> \"first swap two words\""
   [s match replacement]
-  #_
-  (let [s (.toString s)]
-    (cond
-      (instance? Character match)
-      (replace-first-char s match replacement)
-      (instance? CharSequence match)
-      (replace-first-str s (.toString match)
-                         (.toString replacement))
-      (instance? Pattern match)
-      (if (instance? CharSequence replacement)
-        (.replaceFirst (re-matcher match s)
-                       (.toString replacement))
-        (replace-first-by s match replacement))
-      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
-  (throw "TODO: port clojure.string/replace-first"))
+  (cpp/clojure.string_native.replace_first s match replacement))
 
 (defn join
   "Returns a string of all elements in coll, as returned by (seq coll),

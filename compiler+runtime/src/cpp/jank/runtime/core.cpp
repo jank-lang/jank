@@ -543,39 +543,45 @@ namespace jank::runtime
                                      try_object<obj::persistent_string>(s)->data);
   }
 
+  object_ref smatch_to_vector(std::smatch const &match_results)
+  {
+    auto const size(match_results.size());
+    switch(size)
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(match_results[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+          vec.reserve(size);
+
+          for(auto const s : match_results)
+          {
+            vec.emplace_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
+  }
+
   object_ref re_find(object_ref const m)
   {
     std::smatch match_results{};
     auto const matcher(try_object<obj::re_matcher>(m));
     std::regex_search(matcher->match_input, match_results, matcher->re->regex);
 
-    switch(match_results.size())
+    if(!match_results.empty())
     {
-      case 0:
-        matcher->groups = jank_nil;
-        break;
-      case 1:
-        {
-          matcher->groups = make_box<obj::persistent_string>(match_results[0].str());
-          matcher->match_input = match_results.suffix().str();
-          break;
-        }
-      default:
-        {
-          native_vector<object_ref> vec;
-
-          for(auto const s : match_results)
-          {
-            vec.push_back(make_box<obj::persistent_string>(s.str()));
-          }
-
-          matcher->match_input = match_results.suffix().str();
-
-          matcher->groups = make_box<obj::persistent_vector>(
-            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
-          break;
-        }
+      matcher->match_input = match_results.suffix().str();
     }
+
+    matcher->groups = smatch_to_vector(match_results);
 
     return matcher->groups;
   }
@@ -607,27 +613,7 @@ namespace jank::runtime
       return jank_nil;
     }
 
-    switch(match_results.size())
-    {
-      case 0:
-        return jank_nil;
-      case 1:
-        {
-          return make_box<obj::persistent_string>(match_results[0].str());
-        }
-      default:
-        {
-          native_vector<object_ref> vec;
-
-          for(auto const s : match_results)
-          {
-            vec.push_back(make_box<obj::persistent_string>(s.str()));
-          }
-
-          return make_box<obj::persistent_vector>(
-            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
-        }
-    }
+    return smatch_to_vector(match_results);
   }
 
   object_ref parse_uuid(object_ref const o)
