@@ -5813,7 +5813,7 @@
   using java.util.regex.Matcher.find(), each such match processed with
   re-groups."
   [re s]
-  (let [m (re-matcher re s)]
+  (let [m (cpp/jank.runtime.re_matcher re s)]
     ((fn step []
        (when (re-find m)
          (cons (re-groups m) (lazy-seq (step))))))))
