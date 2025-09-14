@@ -2256,16 +2256,15 @@ namespace jank::codegen
     auto const index_val{ gen(expr->index_expr, arity) };
     auto const value_val{ gen(expr->value_expr, arity) };
 
-    // The fundamental issue: we need to handle subscript operations at the C++ level
-    // rather than trying to do low-level LLVM pointer arithmetic
-    // For now, revert to the simpler approach but make it more robust
     auto const array_loaded{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), array_val) };
     auto const index_loaded{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), index_val) };
-    auto const value_loaded{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), value_val) };
 
     // Create GEP (GetElementPtr) instruction for array access
     llvm::SmallVector<llvm::Value *, 2> const indices{ index_loaded };
     auto const gep{ ctx->builder->CreateGEP(ctx->builder->getInt32Ty(), array_loaded, indices) };
+
+    // Store the value at the computed address
+    auto const value_loaded{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), value_val) };
 
     // Store the value at the computed address
     ctx->builder->CreateStore(value_loaded, gep);
