@@ -170,8 +170,8 @@ namespace clojure::string_native
   object_ref replace_first(object_ref const s, object_ref const match, object_ref const replacement)
   {
     auto const is_string(s->type == object_type::persistent_string);
-    auto const s_str(is_string ? try_object<obj::persistent_string>(s)->data
-                               : runtime::to_string(s));
+    auto const &s_str(is_string ? try_object<obj::persistent_string>(s)->data
+                                : runtime::to_string(s));
 
     auto const output_str(replace_first(s_str, match, replacement));
 
