@@ -177,55 +177,23 @@
 (defn trim
   "Removes whitespace from both ends of string."
   [s]
-  ;(let [len (.length s)]
-  ;  (loop [rindex len]
-  ;    (if (zero? rindex)
-  ;      ""
-  ;      (if (Character/isWhitespace (.charAt s (dec rindex)))
-  ;        (recur (dec rindex))
-  ;        ;; there is at least one non-whitespace char in the string,
-  ;        ;; so no need to check for lindex reaching len.
-  ;        (loop [lindex 0]
-  ;          (if (Character/isWhitespace (.charAt s lindex))
-  ;            (recur (inc lindex))
-  ;            (.. s (subSequence lindex rindex) toString)))))))
-  (throw "TODO: port clojure.string/trim"))
+  (cpp/clojure.string_native.trim s))
 
 (defn triml
   "Removes whitespace from the left side of string."
   [s]
-  ;(let [len (.length s)]
-  ;  (loop [index 0]
-  ;    (if (= len index)
-  ;      ""
-  ;      (if (Character/isWhitespace (.charAt s index))
-  ;        (recur (unchecked-inc index))
-  ;        (.. s (subSequence index len) toString)))))
-  (throw "TODO: port clojure.string/triml"))
+  (cpp/clojure.string_native.triml s))
 
 (defn trimr
   "Removes whitespace from the right side of string."
   [s]
-  ;(loop [index (.length s)]
-  ;  (if (zero? index)
-  ;    ""
-  ;    (if (Character/isWhitespace (.charAt s (unchecked-dec index)))
-  ;      (recur (unchecked-dec index))
-  ;      (.. s (subSequence 0 index) toString))))
-  (throw "TODO: port clojure.string/trimr"))
+  (cpp/clojure.string_native.trimr s))
 
 (defn trim-newline
   "Removes all trailing newline \\n or return \\r characters from
   string.  Similar to Perl's chomp."
   [s]
-  ;(loop [index (.length s)]
-  ;  (if (zero? index)
-  ;    ""
-  ;    (let [ch (.charAt s (dec index))]
-  ;      (if (or (= ch \newline) (= ch \return))
-  ;        (recur (dec index))
-  ;        (.. s (subSequence 0 index) toString)))))
-  (throw "TODO: port clojure.string/trim-newline"))
+  (cpp/clojure.string_native.trim_newline s))
 
 (defn blank?
   "True if s is nil, empty, or contains only whitespace."

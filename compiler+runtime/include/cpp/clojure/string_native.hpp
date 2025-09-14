@@ -18,4 +18,9 @@ namespace clojure::string_native
 
   i64 index_of(object_ref s, object_ref value, object_ref from_index);
   i64 last_index_of(object_ref s, object_ref value, object_ref from_index);
+
+  object_ref triml(object_ref s);
+  object_ref trimr(object_ref s);
+  object_ref trim(object_ref s);
+  object_ref trim_newline(object_ref s);
 }
