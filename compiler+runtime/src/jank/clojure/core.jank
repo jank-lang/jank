@@ -5463,15 +5463,17 @@
   ([array idx & idxs]
    (apply aget (aget array idx) idxs)))
 
-(defn aset
-  "Sets the value at the index/indices. Works on Java arrays of
-  reference types. Returns val."
-  ([array idx val]
-  ;;  (. Array (set array idx val))
-  ;;  val
-   (throw "TODO: port aset"))
-  ([array idx idx2 & idxv]
-   (apply aset (aget array idx) idx2 idxv)))
+(defmacro aset
+  "Sets the value at the index/indices. Returns val."
+  [array idx & more]
+  (if (= 1 (count more))
+    ;; Simple case: (aset array index value)
+    (let [val (first more)]
+      `(do
+         (cpp/= (cpp/aget ~array ~idx) ~val)
+         ~val))
+    ;; Nested case: (aset array idx1 idx2 & idxv) - not yet implemented
+    `(throw "TODO: Nested array indexing not yet implemented")))
 
 (defmacro
   ^{:private true}
