@@ -94,7 +94,7 @@ file. Here's a minimal example of such a nix flake:
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    jank.url = "git+https://github.com/jank-lang/jank.git";
+    jank-lang.url = "git+https://github.com/jank-lang/jank.git";
   };
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} {
