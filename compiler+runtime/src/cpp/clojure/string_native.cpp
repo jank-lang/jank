@@ -199,7 +199,7 @@ namespace clojure::string_native
     auto const s_size(s.size());
     jtl::immutable_string::size_type i{ 0 };
 
-    for(; i < s_size; i++)
+    for(; i < s_size; ++i)
     {
       if(!std::isspace(s[i]))
       {
@@ -228,7 +228,7 @@ namespace clojure::string_native
     auto const s_size(s.size());
     jtl::immutable_string::size_type i{ s_size };
 
-    for(; i > 0; i--)
+    for(; i > 0; --i)
     {
       if(!std::isspace(s[i - 1]))
       {
@@ -271,7 +271,7 @@ namespace clojure::string_native
     auto const s_size(s.size());
     jtl::immutable_string::size_type i{ s_size };
 
-    for(; i > 0; i--)
+    for(; i > 0; --i)
     {
       auto const c(s[i - 1]);
       if(c != '\n' && c != '\r')
