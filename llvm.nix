@@ -1,7 +1,14 @@
 {
-  stdenv,
+  src,
+  clang,
+  cmake,
+  gcc,
   lib,
-  pkgs,
+  makeWrapper,
+  ninja,
+  python3,
+  stdenv,
+  targetPlatform,
   wrapCC,
   ...
 }: let
@@ -11,12 +18,12 @@
   # executable. Since we will be compiling clang's runtime with our custom
   # (unwrapped) clang/clang++ executables, we need to provide them manually.
   runtimeCompileFlags = lib.strings.concatStringsSep " " [
-    "-B${gccForLibs}/lib/gcc/${pkgs.targetPlatform.config}/${gccForLibs.version}"
+    "-B${gccForLibs}/lib/gcc/${targetPlatform.config}/${gccForLibs.version}"
     "-B${stdenv.cc.libc}/lib"
 
-    "-isystem ${pkgs.gcc.cc}/include/c++/${pkgs.gcc.version}"
-    "-isystem ${pkgs.gcc.cc}/include/c++/${pkgs.gcc.version}/${pkgs.targetPlatform.config}"
-    "-isystem ${pkgs.gcc.libc.dev}/include"
+    "-isystem ${gcc.cc}/include/c++/${gcc.version}"
+    "-isystem ${gcc.cc}/include/c++/${gcc.version}/${targetPlatform.config}"
+    "-isystem ${gcc.libc.dev}/include"
 
     # some of these flags won't be used all the time
     "-Wno-unused-command-line-argument"
@@ -24,30 +31,24 @@
 
   runtimeLinkFlags = lib.strings.concatStringsSep " " [
     "-L${gccForLibs}/lib"
-    "-L${gccForLibs}/lib/gcc/${pkgs.targetPlatform.config}/${gccForLibs.version}"
+    "-L${gccForLibs}/lib/gcc/${targetPlatform.config}/${gccForLibs.version}"
     "-L${stdenv.cc.libc}/lib"
   ];
 in
   wrapCC (stdenv.mkDerivation {
     pname = "llvm-jank";
     version = "21.0.0-git";
+    inherit src;
 
-    src = pkgs.fetchFromGitHub {
-      owner = "jank-lang";
-      repo = "llvm-project";
-      rev = "57bb1edd1923ee85736cec8a2d7ca57e5f961d58";
-      sha256 = "sha256-u9HHAjYjnoiW++66YaFY9SCgDPByfXZa1/y1TBavhLo=";
-    };
-
-    nativeBuildInputs = [pkgs.cmake pkgs.ninja pkgs.clang pkgs.python3 pkgs.makeWrapper];
+    nativeBuildInputs = [cmake ninja clang python3 makeWrapper];
 
     cmakeDir = "../llvm";
     cmakeFlags = [
       (lib.cmakeFeature "CMAKE_BUILD_TYPE" "Release")
 
       # use clang to compile clang
-      (lib.cmakeFeature "CMAKE_C_COMPILER" "${pkgs.clang}/bin/clang")
-      (lib.cmakeFeature "CMAKE_CXX_COMPILER" "${pkgs.clang}/bin/clang++")
+      (lib.cmakeFeature "CMAKE_C_COMPILER" "${clang}/bin/clang")
+      (lib.cmakeFeature "CMAKE_CXX_COMPILER" "${clang}/bin/clang++")
 
       # from compiler+runtime/bin/build-clang
       (lib.cmakeBool "LLVM_BUILD_LLVM_DYLIB" true)
@@ -65,7 +66,7 @@ in
       (lib.cmakeBool "LLVM_ENABLE_OCAMLDOC" false)
 
       # nix-specific changes
-      (lib.cmakeFeature "C_INCLUDE_DIRS" "${pkgs.gcc.libc.dev}/include")
+      (lib.cmakeFeature "C_INCLUDE_DIRS" "${gcc.libc.dev}/include")
       (lib.cmakeFeature "LLVM_ENABLE_RUNTIMES" "libunwind")
       # libunwind shared library fails to compile, use static instead
       (lib.cmakeBool "LIBUNWIND_ENABLE_SHARED" false)

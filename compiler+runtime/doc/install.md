@@ -66,6 +66,55 @@ yay -S jank-git   # if you installed jank-git
 yay -S jank-bin   # if you installed jank-bin
 ```
 
+## Nix
+### Usage
+We have binary packages in our cachix cache, so usage via nix flakes is quick
+and easy. You may also skip the cache setup and artifacts will be built from
+source.
+
+```bash
+# Make sure cachix is installed, then follow the prompts.
+cachix use jank-lang
+```
+
+Next, you can directly run the jank binary from the nix flake derivation. This
+will always run from the latest main branch, unless a specific ref or rev is
+given. For example, to run the `jank check-health` subcommand:
+
+```bash
+nix run git+https://github.com/jank-lang/jank.git -- check-health
+```
+
+You can also include jank as a flake input to your NixOS system configuration or
+project. In this case, the jank version will be managed by the `flake.lock`
+file. Here's a minimal example of such a nix flake:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    jank-lang.url = "git+https://github.com/jank-lang/jank.git";
+  };
+  outputs = inputs @ {flake-parts, ...}:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
+      perSystem = {
+        inputs',
+        pkgs,
+        system,
+        ...
+      }: {
+        devShells.default = pkgs.mkShell {
+          packages = [
+            inputs'.jank-lang.packages.default
+          ];
+        };
+      };
+    };
+}
+```
+
 ## Anything else
 If nothing above matches what you have, you can still build jank by following
 the docs [here](./build.md).
