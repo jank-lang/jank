@@ -106,12 +106,7 @@ namespace jank::analyze
     local_frame() = delete;
     local_frame(local_frame const &) = default;
     local_frame(local_frame &&) noexcept = default;
-    local_frame(frame_type const &type,
-                runtime::context &ctx,
-                jtl::option<jtl::ptr<local_frame>> const &p);
-
-    local_frame &operator=(local_frame const &rhs);
-    local_frame &operator=(local_frame &&rhs) noexcept;
+    local_frame(frame_type const &type, jtl::option<jtl::ptr<local_frame>> const &p);
 
     struct binding_find_result
     {
@@ -121,7 +116,7 @@ namespace jank::analyze
 
     struct named_recursion_find_result
     {
-      expr::function_context_ref fn_ctx;
+      jtl::ptr<local_frame> fn_frame;
       native_vector<jtl::ptr<local_frame>> crossed_fns;
     };
 
@@ -131,6 +126,8 @@ namespace jank::analyze
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
+    static void register_crossed_captures(jtl::ptr<local_frame> frame,
+                                          named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
@@ -165,8 +162,6 @@ namespace jank::analyze
       lifted_constants;
     /* This is only set if the frame type is fn. */
     jtl::ptr<expr::function_context> fn_ctx;
-    /* TODO: Remove this. */
-    runtime::context &rt_ctx;
   };
 
   /* TODO: Use a ref. */

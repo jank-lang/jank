@@ -20,7 +20,7 @@ namespace jank::analyze::expr
 
   struct function_context : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr bool pointer_free{ false };
 
     jtl::ptr<function> fn;
     jtl::immutable_string name;

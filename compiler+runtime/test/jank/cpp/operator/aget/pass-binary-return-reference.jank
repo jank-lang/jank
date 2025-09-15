@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::operator_::aget::pass_binary_return_reference
+          {
+            int arr[3]{ 1, 2, 3 };
+          }")
+(let* [i0 (cpp/int. 0)
+       _ (assert (= 1 (cpp/aget cpp/jank.cpp.operator_.aget.pass_binary_return_reference.arr i0)))
+       _ (cpp/= (cpp/aget cpp/jank.cpp.operator_.aget.pass_binary_return_reference.arr i0) (cpp/int. 55))
+       _ (assert (= 55 (cpp/aget cpp/jank.cpp.operator_.aget.pass_binary_return_reference.arr i0)))]
+  :success)

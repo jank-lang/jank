@@ -53,6 +53,7 @@ namespace jank::error
     parse_invalid_reader_gensym,
     parse_invalid_reader_symbolic_value,
     parse_invalid_reader_tag_value,
+    parse_invalid_regex,
     parse_invalid_uuid,
     parse_invalid_inst,
     parse_invalid_syntax_quote,
@@ -99,6 +100,7 @@ namespace jank::error
     analyze_invalid_cpp_new,
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
+    analyze_invalid_cpp_capture,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -190,6 +192,8 @@ namespace jank::error
         return "parse_invalid_reader_symbolic-value";
       case kind::parse_invalid_reader_tag_value:
         return "parse/invalid-reader-tag-value";
+      case kind::parse_invalid_regex:
+        return "parse/invalid-regex";
       case kind::parse_invalid_uuid:
         return "parse/invalid-uuid";
       case kind::parse_invalid_inst:
@@ -287,6 +291,8 @@ namespace jank::error
         return "analyze/invalid-cpp-delete";
       case kind::analyze_invalid_cpp_member_access:
         return "analyze/invalid-cpp-member-access";
+      case kind::analyze_invalid_cpp_capture:
+        return "analyze/invalid-cpp-capture";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
       case kind::internal_codegen_failure:

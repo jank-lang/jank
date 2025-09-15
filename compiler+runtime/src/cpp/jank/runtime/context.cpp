@@ -169,7 +169,7 @@ namespace jank::runtime
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
-      analyze::processor an_prc{ *this };
+      analyze::processor an_prc;
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
           .expect_ok()));
@@ -432,6 +432,17 @@ namespace jank::runtime
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
                         prefix.data(),
                         ++ns->symbol_counter);
+  }
+
+  jtl::immutable_string context::unique_munged_string() const
+  {
+    return munge(unique_namespaced_string());
+  }
+
+  jtl::immutable_string
+  context::unique_munged_string(jtl::immutable_string_view const &prefix) const
+  {
+    return munge(unique_namespaced_string(prefix));
   }
 
   obj::symbol context::unique_symbol() const

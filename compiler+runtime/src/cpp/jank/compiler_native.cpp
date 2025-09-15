@@ -23,7 +23,7 @@ namespace jank::compiler_native
   {
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */
-    analyze::processor an_prc{ *__rt_ctx };
+    analyze::processor an_prc;
     auto const expr(analyze::pass::optimize(
       an_prc.analyze(form, analyze::expression_position::value).expect_ok()));
     auto const wrapped_expr(evaluate::wrap_expression(expr, "native_source", {}));

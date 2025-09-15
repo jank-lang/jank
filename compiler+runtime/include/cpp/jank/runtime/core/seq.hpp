@@ -87,7 +87,7 @@ namespace jank::runtime
   bool is_map(object_ref o);
   bool is_associative(object_ref o);
   bool is_set(object_ref o);
-  bool is_counter(object_ref o);
+  bool is_counted(object_ref o);
   bool is_transientable(object_ref o);
   bool is_sorted(object_ref o);
 

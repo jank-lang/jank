@@ -25,7 +25,7 @@ namespace jank::runtime::obj
 
   void atom::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string atom::to_code_string() const
@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn)
   {
     while(true)
@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1)
   {
     while(true)
@@ -90,7 +90,7 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1, object_ref const a2)
   {
     while(true)
@@ -104,8 +104,8 @@ namespace jank::runtime::obj
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
   object_ref
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
     while(true)

@@ -26,6 +26,21 @@ namespace jank::runtime
     }
   };
 
+  template <typename T>
+  requires(jtl::is_any_same<T, object *, object const *>)
+  struct convert<T>
+  {
+    static constexpr T into_object(T t)
+    {
+      return t;
+    }
+
+    static constexpr T from_object(T t)
+    {
+      return t;
+    }
+  };
+
   /* Any typed object can convert to/from itself easily. */
   template <typename T>
   requires typed_object_ref<T>
@@ -218,6 +233,10 @@ namespace jank::runtime
   {
     static constexpr obj::persistent_string_ref into_object(char const * const o)
     {
+      if(o == nullptr)
+      {
+        return jank_nil;
+      }
       return make_box(o);
     }
 

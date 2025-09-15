@@ -148,23 +148,20 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
   {
-    /* TODO: silent_sfinae_trap */
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
-    auto old_client{ diag.takeClient() };
-    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
-    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+    clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
-    auto const code{ util::format("using {} = {};", runtime::munge(alias), literal) };
-    auto res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!res)
+    /* We add a new line so that a trailing // comment won't interfere with our code. */
+    auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
+    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    if(!parse_res || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
       return err("Unable to parse C++ literal.");
     }
 
-    auto const * const translation_unit{ res->TUPart };
+    auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)
@@ -205,33 +202,28 @@ namespace jank::analyze::cpp_util
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {
-    /* TODO: Need a call to instantiate in here? */
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
-    auto old_client{ diag.takeClient() };
-    diag.setClient(new clang::IgnoringDiagConsumer{}, true);
-    util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+    clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{
-      util::format("inline decltype(auto) {}(){ return ({}); }", runtime::munge(alias), literal)
+      util::format("inline decltype(auto) {}(){ return ({}\n); }", runtime::munge(alias), literal)
     };
+    //util::println("cpp/value code: {}", code);
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
-    if(!parse_res)
+    if(!parse_res || trap.hasErrorOccurred())
     {
       return err("Unable to parse C++ literal.");
     }
 
+    /* TODO: Can we do a reliable size check for extra expressions? */
     auto const * const translation_unit{ parse_res->TUPart };
     auto const size{ std::distance(translation_unit->decls_begin(),
                                    translation_unit->decls_end()) };
     if(size == 0)
     {
       return err("Invalid C++ literal.");
-    }
-    else if(size != 1)
-    {
-      return err("Extra expressions found in C++ literal.");
     }
 
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
@@ -241,13 +233,6 @@ namespace jank::analyze::cpp_util
     }
 
     auto const f_decl{ llvm::cast<clang::FunctionDecl>(*translation_unit->decls_begin()) };
-    auto const body{ f_decl->getBody() };
-    auto const body_size{ std::distance(body->child_begin(), body->child_end()) };
-    if(body_size != 1)
-    {
-      return err("Extra expressions found in C++ literal.");
-    }
-
     auto const ret_type{ Cpp::GetFunctionReturnType(f_decl) };
     if(auto const ret_scope = Cpp::GetScopeFromType(ret_type))
     {
@@ -343,7 +328,8 @@ namespace jank::analyze::cpp_util
 
   bool is_untyped_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
@@ -357,7 +343,8 @@ namespace jank::analyze::cpp_util
   /* TODO: Support for typed object raw pointers. */
   bool is_typed_object(jtl::ptr<void> const type)
   {
-    auto const can_type{ Cpp::GetCanonicalType(type) };
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     /* TODO: Need underlying? */
     auto const scope{ Cpp::GetUnderlyingScope(Cpp::GetScopeFromType(can_type)) };
     return !is_untyped_object(can_type) && scope
@@ -378,6 +365,7 @@ namespace jank::analyze::cpp_util
       || Cpp::IsEnumType(type);
   }
 
+  /* TODO: Just put a type member function in expression_base and read it from there. */
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
     return visit_expr(
@@ -499,6 +487,11 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
+        /* This is not a viable conversion. */
+        if(is_typed_object(param_type))
+        {
+          continue;
+        }
         if(is_implicitly_convertible(arg_types[arg_idx + member_offset].m_Type, param_type))
         {
           continue;
@@ -508,7 +501,9 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            return err("Ambiguous call.");
+            /* TODO: Show possible matches. */
+            return err("No normal overload match was found. When considering automatic trait "
+                       "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
           converted_args[arg_idx + member_offset] = param_type;
@@ -588,8 +583,8 @@ namespace jank::analyze::cpp_util
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    Cpp::TemplateArgInfo const arg{ Cpp::GetTypeWithoutCv(
-      Cpp::GetNonReferenceType(Cpp::GetCanonicalType(type))) };
+    Cpp::TemplateArgInfo const arg{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
     Cpp::TCppScope_t instantiation{};
     {
@@ -618,42 +613,43 @@ namespace jank::analyze::cpp_util
   jtl::option<Cpp::Operator> match_operator(jtl::immutable_string const &name)
   {
     static native_unordered_map<jtl::immutable_string, Cpp::Operator> const operators{
-      {   "+",                Cpp::OP_Plus },
-      {   "-",               Cpp::OP_Minus },
-      {   "*",                Cpp::OP_Star },
-      {   "/",               Cpp::OP_Slash },
-      {   "%",             Cpp::OP_Percent },
-      {  "++",            Cpp::OP_PlusPlus },
-      {  "--",          Cpp::OP_MinusMinus },
-      {  "==",          Cpp::OP_EqualEqual },
-      {  "!=",        Cpp::OP_ExclaimEqual },
-      {   ">",             Cpp::OP_Greater },
-      {   "<",                Cpp::OP_Less },
-      {  ">=",        Cpp::OP_GreaterEqual },
-      {  "<=",           Cpp::OP_LessEqual },
-      { "<=>",           Cpp::OP_Spaceship },
-      {   "!",             Cpp::OP_Exclaim },
-      {  "&&",              Cpp::OP_AmpAmp },
-      {  "||",            Cpp::OP_PipePipe },
-      {   "~",               Cpp::OP_Tilde },
-      {   "&",                 Cpp::OP_Amp },
-      {   "|",                Cpp::OP_Pipe },
-      {   "^",               Cpp::OP_Caret },
-      {  "<<",            Cpp::OP_LessLess },
-      {  ">>",      Cpp::OP_GreaterGreater },
-      {   "=",               Cpp::OP_Equal },
-      {  "+=",           Cpp::OP_PlusEqual },
-      {  "-=",          Cpp::OP_MinusEqual },
-      {  "*=",           Cpp::OP_StarEqual },
-      {  "/=",          Cpp::OP_SlashEqual },
-      {  "%=",        Cpp::OP_PercentEqual },
-      {  "&=",            Cpp::OP_AmpEqual },
-      {  "|=",           Cpp::OP_PipeEqual },
-      {  "^=",          Cpp::OP_CaretEqual },
-      { "<<=",       Cpp::OP_LessLessEqual },
-      { ">>=", Cpp::OP_GreaterGreaterEqual },
+      {    "+",                Cpp::OP_Plus },
+      {    "-",               Cpp::OP_Minus },
+      {    "*",                Cpp::OP_Star },
+      {    "/",               Cpp::OP_Slash },
+      {    "%",             Cpp::OP_Percent },
+      {   "++",            Cpp::OP_PlusPlus },
+      {   "--",          Cpp::OP_MinusMinus },
+      {   "==",          Cpp::OP_EqualEqual },
+      {   "!=",        Cpp::OP_ExclaimEqual },
+      {    ">",             Cpp::OP_Greater },
+      {    "<",                Cpp::OP_Less },
+      {   ">=",        Cpp::OP_GreaterEqual },
+      {   "<=",           Cpp::OP_LessEqual },
+      {  "<=>",           Cpp::OP_Spaceship },
+      {    "!",             Cpp::OP_Exclaim },
+      {   "&&",              Cpp::OP_AmpAmp },
+      {   "||",            Cpp::OP_PipePipe },
+      {    "~",               Cpp::OP_Tilde },
+      {    "&",                 Cpp::OP_Amp },
+      {    "|",                Cpp::OP_Pipe },
+      {    "^",               Cpp::OP_Caret },
+      {   "<<",            Cpp::OP_LessLess },
+      {   ">>",      Cpp::OP_GreaterGreater },
+      {    "=",               Cpp::OP_Equal },
+      {   "+=",           Cpp::OP_PlusEqual },
+      {   "-=",          Cpp::OP_MinusEqual },
+      {   "*=",           Cpp::OP_StarEqual },
+      {   "/=",          Cpp::OP_SlashEqual },
+      {   "%=",        Cpp::OP_PercentEqual },
+      {   "&=",            Cpp::OP_AmpEqual },
+      {   "|=",           Cpp::OP_PipeEqual },
+      {   "^=",          Cpp::OP_CaretEqual },
+      {  "<<=",       Cpp::OP_LessLessEqual },
+      {  ">>=", Cpp::OP_GreaterGreaterEqual },
+      { "aget",           Cpp::OP_Subscript },
       /* This is not accessible through jank's syntax, but we use it internally. */
-      {  "()",                Cpp::OP_Call }
+      {   "()",                Cpp::OP_Call }
     };
 
     auto const op{ operators.find(name) };
@@ -667,40 +663,42 @@ namespace jank::analyze::cpp_util
   jtl::option<jtl::immutable_string> operator_name(Cpp::Operator const op)
   {
     static native_unordered_map<Cpp::Operator, jtl::immutable_string> const operators{
-      {                Cpp::OP_Plus,   "+" },
-      {               Cpp::OP_Minus,   "-" },
-      {                Cpp::OP_Star,   "*" },
-      {               Cpp::OP_Slash,   "/" },
-      {             Cpp::OP_Percent,   "%" },
-      {            Cpp::OP_PlusPlus,  "++" },
-      {          Cpp::OP_MinusMinus,  "--" },
-      {          Cpp::OP_EqualEqual,  "==" },
-      {        Cpp::OP_ExclaimEqual,  "!=" },
-      {             Cpp::OP_Greater,   ">" },
-      {                Cpp::OP_Less,   "<" },
-      {        Cpp::OP_GreaterEqual,  ">=" },
-      {           Cpp::OP_LessEqual,  "<=" },
-      {           Cpp::OP_Spaceship, "<=>" },
-      {             Cpp::OP_Exclaim,   "!" },
-      {              Cpp::OP_AmpAmp,  "&&" },
-      {            Cpp::OP_PipePipe,  "||" },
-      {               Cpp::OP_Tilde,   "~" },
-      {                 Cpp::OP_Amp,   "&" },
-      {                Cpp::OP_Pipe,   "|" },
-      {               Cpp::OP_Caret,   "^" },
-      {            Cpp::OP_LessLess,  "<<" },
-      {      Cpp::OP_GreaterGreater,  ">>" },
-      {               Cpp::OP_Equal,   "=" },
-      {           Cpp::OP_PlusEqual,  "+=" },
-      {          Cpp::OP_MinusEqual,  "-=" },
-      {           Cpp::OP_StarEqual,  "*=" },
-      {          Cpp::OP_SlashEqual,  "/=" },
-      {        Cpp::OP_PercentEqual,  "%=" },
-      {            Cpp::OP_AmpEqual,  "&=" },
-      {           Cpp::OP_PipeEqual,  "|=" },
-      {          Cpp::OP_CaretEqual,  "^=" },
-      {       Cpp::OP_LessLessEqual, "<<=" },
-      { Cpp::OP_GreaterGreaterEqual, ">>=" }
+      {                Cpp::OP_Plus,    "+" },
+      {               Cpp::OP_Minus,    "-" },
+      {                Cpp::OP_Star,    "*" },
+      {               Cpp::OP_Slash,    "/" },
+      {             Cpp::OP_Percent,    "%" },
+      {            Cpp::OP_PlusPlus,   "++" },
+      {          Cpp::OP_MinusMinus,   "--" },
+      {          Cpp::OP_EqualEqual,   "==" },
+      {        Cpp::OP_ExclaimEqual,   "!=" },
+      {             Cpp::OP_Greater,    ">" },
+      {                Cpp::OP_Less,    "<" },
+      {        Cpp::OP_GreaterEqual,   ">=" },
+      {           Cpp::OP_LessEqual,   "<=" },
+      {           Cpp::OP_Spaceship,  "<=>" },
+      {             Cpp::OP_Exclaim,    "!" },
+      {              Cpp::OP_AmpAmp,   "&&" },
+      {            Cpp::OP_PipePipe,   "||" },
+      {               Cpp::OP_Tilde,    "~" },
+      {                 Cpp::OP_Amp,    "&" },
+      {                Cpp::OP_Pipe,    "|" },
+      {               Cpp::OP_Caret,    "^" },
+      {            Cpp::OP_LessLess,   "<<" },
+      {      Cpp::OP_GreaterGreater,   ">>" },
+      {               Cpp::OP_Equal,    "=" },
+      {           Cpp::OP_PlusEqual,   "+=" },
+      {          Cpp::OP_MinusEqual,   "-=" },
+      {           Cpp::OP_StarEqual,   "*=" },
+      {          Cpp::OP_SlashEqual,   "/=" },
+      {        Cpp::OP_PercentEqual,   "%=" },
+      {            Cpp::OP_AmpEqual,   "&=" },
+      {           Cpp::OP_PipeEqual,   "|=" },
+      {          Cpp::OP_CaretEqual,   "^=" },
+      {       Cpp::OP_LessLessEqual,  "<<=" },
+      { Cpp::OP_GreaterGreaterEqual,  ">>=" },
+      {           Cpp::OP_Subscript, "aget" },
+      {                Cpp::OP_Call,   "()" }
     };
 
     auto const name{ operators.find(op) };

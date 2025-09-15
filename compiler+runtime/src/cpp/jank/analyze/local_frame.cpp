@@ -40,42 +40,10 @@ namespace jank::analyze
       make_box(has_unboxed_usage));
   }
 
-  local_frame::local_frame(frame_type const &type,
-                           context &rt_ctx,
-                           jtl::option<jtl::ptr<local_frame>> const &p)
+  local_frame::local_frame(frame_type const &type, jtl::option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
-    , rt_ctx{ rt_ctx }
   {
-  }
-
-  local_frame &local_frame::operator=(local_frame const &rhs)
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    /* TODO: Is this operator used? It's missing some members. */
-    type = rhs.type;
-    parent = rhs.parent;
-    locals = rhs.locals;
-
-    return *this;
-  }
-
-  local_frame &local_frame::operator=(local_frame &&rhs) noexcept
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    type = rhs.type;
-    parent = std::move(rhs.parent);
-    locals = std::move(rhs.locals);
-
-    return *this;
   }
 
   static jtl::option<local_frame::binding_find_result>
@@ -128,6 +96,7 @@ namespace jank::analyze
   {
     for(auto const &crossed_fn : result.crossed_fns)
     {
+      /* We intentionally copy the binding here. */
       auto res(crossed_fn->captures.emplace(result.binding->name, *result.binding));
       /* We know it needs a box, since it's captured. */
       res.first->second.needs_box = true;
@@ -140,12 +109,49 @@ namespace jank::analyze
   void local_frame::register_captures(local_frame_ptr const frame,
                                       named_recursion_find_result const &result)
   {
-    local_binding b{ make_box<obj::symbol>(result.fn_ctx->name), result.fn_ctx->name, none, frame };
-    if(result.fn_ctx->fn)
+    local_binding b{ make_box<obj::symbol>(result.fn_frame->fn_ctx->name),
+                     result.fn_frame->fn_ctx->name,
+                     none,
+                     frame };
+    if(result.fn_frame->fn_ctx->fn)
     {
-      b.value_expr = result.fn_ctx->fn;
+      b.value_expr = result.fn_frame->fn_ctx->fn;
     }
     register_captures(binding_find_result{ &b, result.crossed_fns });
+  }
+
+  /* For IR gen, when we have named recursion across functions, the deepest function needs
+   * to construct a new instance of the target of the recursion. In order to construct
+   * a new instance, we need to also construct its closure context, which means we need
+   * access to all of the captures for that function. So that's what we do here. We find
+   * the function to which we're recursing and then we copy all of its captures into
+   * the current function.
+   *
+   * However, this will break in the case of the target function having multiple arities
+   * where the other arities actually capture different values. In order to tackle that,
+   * we would need to get all arities from our fn context, but we can't do that here,
+   * since those artities haven't analyzed yet.
+   *
+   * So we either need to defer this work until all arities have been analyzed, which is
+   * going to be some annoying and bug-prone bookkeeping, or we need to change how we're
+   * doing this in IR gen so that we don't need to rebuild closure contexts. */
+  /* TODO: Clean this up. */
+  void local_frame::register_crossed_captures(local_frame_ptr const frame,
+                                              named_recursion_find_result const &result)
+  {
+    auto &fn_frame{ find_closest_fn_frame(*frame) };
+    for(auto const &capture : result.fn_frame->captures)
+    {
+      auto const res{ fn_frame.captures.emplace(capture.first, capture.second) };
+      if(res.second)
+      {
+        /* We know it needs a box, since it's captured. */
+        res.first->second.needs_box = true;
+        res.first->second.has_boxed_usage = true;
+        /* To start with, we assume it's only boxed. */
+        res.first->second.has_unboxed_usage = false;
+      }
+    }
   }
 
   jtl::option<local_frame::binding_find_result>
@@ -164,7 +170,7 @@ namespace jank::analyze
     {
       if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
       {
-        return local_frame::named_recursion_find_result{ it->fn_ctx.data, jtl::move(crossed_fns) };
+        return local_frame::named_recursion_find_result{ it, jtl::move(crossed_fns) };
       }
 
       if(it->parent.is_some())
@@ -223,7 +229,7 @@ namespace jank::analyze
     if(sym->ns.empty())
     {
       qualified_sym
-        = make_box<obj::symbol>(expect_object<ns>(rt_ctx.current_ns_var->deref())->name->name,
+        = make_box<obj::symbol>(expect_object<ns>(__rt_ctx->current_ns_var->deref())->name->name,
                                 sym->name);
     }
     else
