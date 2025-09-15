@@ -193,4 +193,106 @@ namespace clojure::string_native
     auto const pos(try_object<obj::integer>(from_index)->data);
     return static_cast<i64>(s_str.rfind(value_str, pos));
   }
+
+  static jtl::immutable_string::size_type triml_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ 0 };
+
+    for(; i < s_size; ++i)
+    {
+      if(!std::isspace(s[i]))
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref triml(object_ref const s)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const l(triml_index(s_str));
+
+    if(l == 0)
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(l));
+  }
+
+  static jtl::immutable_string::size_type trimr_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ s_size };
+
+    for(; i > 0; --i)
+    {
+      if(!std::isspace(s[i - 1]))
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref trimr(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const r(trimr_index(s_str));
+
+    if(r == s_str.size())
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(0, r));
+  }
+
+  object_ref trim(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const l(triml_index(s_str));
+    auto const r(trimr_index(s_str));
+
+    if(l == 0 && r == s_str.size())
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(l, r - l));
+  }
+
+  static jtl::immutable_string::size_type trim_newline_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ s_size };
+
+    for(; i > 0; --i)
+    {
+      auto const c(s[i - 1]);
+      if(c != '\n' && c != '\r')
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref trim_newline(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const r(trim_newline_index(s_str));
+
+    if(r == s_str.size())
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(0, r));
+  }
 }
