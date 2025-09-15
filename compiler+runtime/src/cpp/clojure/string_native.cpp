@@ -305,14 +305,14 @@ namespace clojure::string_native
 
     native_vector<object_ref> vec;
     std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
-    std::sregex_token_iterator end;
+    std::sregex_token_iterator const end;
 
     if(iter != end && iter->str().empty())
     {
-      iter++;
+      ++iter;
     }
 
-    for(; iter != end; iter++)
+    for(; iter != end; ++iter)
     {
       vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
     }
@@ -339,15 +339,15 @@ namespace clojure::string_native
     vec.reserve(limit_int);
 
     std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
-    std::sregex_token_iterator end;
+    std::sregex_token_iterator const end;
 
     if(iter != end && iter->str().empty())
     {
-      iter++;
+      ++iter;
     }
 
     int i{ 1 };
-    for(; i < limit_int && iter != end; ++i, iter++)
+    for(; i < limit_int && iter != end; ++i, ++iter)
     {
       vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
     }
