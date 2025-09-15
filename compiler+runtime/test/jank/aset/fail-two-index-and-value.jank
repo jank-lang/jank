@@ -1,0 +1,7 @@
+(cpp/raw "namespace jank::aset::pass_single_index_and_value {
+            int arr[] = {0};
+          }")
+
+(let* [v (cpp/int 1)
+       _ (aset cpp/jank.aset.pass_single_index_and_value.arr (cpp/int 0) (cpp/int 0) v)]
+      :success)
