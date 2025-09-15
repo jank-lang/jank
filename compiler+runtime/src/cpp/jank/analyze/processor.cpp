@@ -256,6 +256,26 @@ namespace jank::analyze
     return ok();
   }
 
+  static validator_ret no_non_subscript(std::vector<Cpp::TemplateArgInfo> const &args,
+                                        jtl::immutable_string const &op_name,
+                                        expr::cpp_value_ref const val,
+                                        native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    auto const arr_type{ Cpp::GetNonReferenceType(args[0].m_Type) };
+    if(!(Cpp::IsPointerType(arr_type) || Cpp::IsArrayType(arr_type)))
+    {
+      return invalid(args, op_name, val, macro_expansions);
+    }
+
+    auto const idx_type{ Cpp::GetNonReferenceType(args[1].m_Type) };
+    if(!Cpp::IsIntegral(idx_type))
+    {
+      return invalid(args, op_name, val, macro_expansions);
+    }
+
+    return ok();
+  }
+
   static validator_ret no_nullptr(std::vector<Cpp::TemplateArgInfo> const &args,
                                   jtl::immutable_string const &op_name,
                                   expr::cpp_value_ref const val,
@@ -423,6 +443,12 @@ namespace jank::analyze
     return args[0].m_Type;
   }
 
+  static jtl::ptr<void> subscript_type(std::vector<Cpp::TemplateArgInfo> const &args)
+  {
+    return Cpp::GetLValueReferenceType(
+      Cpp::GetPointeeType(Cpp::GetNonReferenceType(args[0].m_Type)));
+  }
+
   static processor::expression_result
   build_builtin_operator_call(expr::cpp_value_ref const val,
                               Cpp::Operator const op,
@@ -484,6 +510,7 @@ namespace jank::analyze
       {            Cpp::OP_PipePipe,                                     { { no_unary }, bool_type } },
       {            Cpp::OP_PlusPlus,                                    { { no_binary }, left_type } },
       {          Cpp::OP_MinusMinus,                                    { { no_binary }, left_type } },
+      {           Cpp::OP_Subscript,              { { no_unary, no_non_subscript }, subscript_type } },
       //{ Cpp::OP_Comma, { {} } },
       //{ Cpp::OP_ArrowStar, { {} } },
       //{ Cpp::OP_Arrow, { {} } },
