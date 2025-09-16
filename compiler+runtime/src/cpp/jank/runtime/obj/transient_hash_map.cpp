@@ -10,22 +10,31 @@
 
 namespace jank::runtime::obj
 {
+  transient_hash_map::transient_hash_map()
+    : object{ obj_type }
+  {
+  }
+
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map const &d)
-    : data{ d.transient() }
+    : object{ obj_type }
+    , data{ d.transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_transient_hash_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_array_map const &m)
+    : object{ obj_type }
   {
     for(auto const &e : m)
     {
@@ -41,12 +50,12 @@ namespace jank::runtime::obj
   bool transient_hash_map::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
+    return this == &o;
   }
 
   void transient_hash_map::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_hash_map::to_string() const

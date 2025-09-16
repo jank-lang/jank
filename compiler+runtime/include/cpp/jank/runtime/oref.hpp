@@ -59,7 +59,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     constexpr oref(T * const typed_data)
-      : data{ &typed_data->base }
+      : data{ typed_data }
     {
       jank_assert_throw(this->data);
     }
@@ -67,7 +67,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     constexpr oref(T const * const typed_data)
-      : data{ const_cast<object *>(&typed_data->base) }
+      : data{ const_cast<T *>(typed_data) }
     {
       jank_assert_throw(this->data);
     }
@@ -263,7 +263,7 @@ namespace jank::runtime
       {
         return std::bit_cast<object *>(detail::jank_nil_ptr);
       }
-      return &reinterpret_cast<T *>(data)->base;
+      return reinterpret_cast<T *>(data);
     }
 
     constexpr bool is_some() const noexcept

@@ -11,14 +11,21 @@
 
 namespace jank::runtime::obj
 {
+  lazy_sequence::lazy_sequence()
+    : object{ obj_type }
+  {
+  }
+
   lazy_sequence::lazy_sequence(object_ref const fn)
-    : fn{ fn }
+    : object{ obj_type }
+    , fn{ fn }
   {
     jank_debug_assert(fn.is_some());
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
-    : fn{ fn }
+    : object{ obj_type }
+    , fn{ fn }
     , s{ sequence }
   {
   }

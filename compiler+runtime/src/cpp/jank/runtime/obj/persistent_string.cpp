@@ -8,13 +8,20 @@
 
 namespace jank::runtime::obj
 {
+  persistent_string::persistent_string()
+    : object{ obj_type }
+  {
+  }
+
   persistent_string::persistent_string(jtl::immutable_string const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   persistent_string::persistent_string(jtl::immutable_string &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
@@ -29,7 +36,7 @@ namespace jank::runtime::obj
     return data == s->data;
   }
 
-  jtl::immutable_string const &persistent_string::to_string() const
+  jtl::immutable_string persistent_string::to_string() const
   {
     return data;
   }

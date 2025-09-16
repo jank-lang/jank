@@ -5,7 +5,8 @@
 namespace jank::runtime::obj
 {
   re_matcher::re_matcher(re_pattern_ref const re, jtl::immutable_string const &s)
-    : re{ re }
+    : object{ obj_type }
+    , re{ re }
     , match_input{ s.c_str() }
   {
   }

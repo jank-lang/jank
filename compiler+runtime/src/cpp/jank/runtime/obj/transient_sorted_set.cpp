@@ -6,18 +6,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_sorted_set::transient_sorted_set()
+    : object{ obj_type }
+  {
+  }
+
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d)
-    : data{ d.transient() }
+    : object{ obj_type }
+    , data{ d.transient() }
   {
   }
 
   transient_sorted_set::transient_sorted_set(runtime::detail::native_transient_sorted_set &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
@@ -29,7 +37,7 @@ namespace jank::runtime::obj
   bool transient_sorted_set::equal(object const &o) const
   {
     /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
+    return this == &o;
   }
 
   jtl::immutable_string transient_sorted_set::to_string() const
@@ -41,7 +49,7 @@ namespace jank::runtime::obj
 
   void transient_sorted_set::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
   }
 
   jtl::immutable_string transient_sorted_set::to_code_string() const

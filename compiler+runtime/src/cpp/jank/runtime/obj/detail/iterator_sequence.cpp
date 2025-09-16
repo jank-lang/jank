@@ -15,7 +15,8 @@ namespace jank::runtime::obj::detail
                                                     It const &b,
                                                     It const &e,
                                                     usize const s)
-    : coll{ c }
+    : object{ Derived::obj_type }
+    , coll{ c }
     , begin{ b }
     , end{ e }
     , size{ s }
