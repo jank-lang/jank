@@ -1043,8 +1043,8 @@ namespace jank::codegen
     return call;
   }
 
-  llvm::Value *
-  llvm_processor::impl::gen(expr::local_reference_ref const expr, expr::function_arity const &arity)
+  llvm::Value *llvm_processor::impl::gen(expr::local_reference_ref const expr,
+                                         [[maybe_unused]] expr::function_arity const &arity)
   {
     auto ret(locals[expr->binding->name]);
     jank_debug_assert_fmt(ret,

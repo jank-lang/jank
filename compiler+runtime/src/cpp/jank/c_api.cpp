@@ -11,9 +11,11 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/aot/resource.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/try.hpp>
+#include <jank/util/fmt/print.hpp>
 
 using namespace jank;
 using namespace jank::runtime;
@@ -975,16 +977,37 @@ extern "C"
     profile::report(label);
   }
 
+  void
+  jank_resource_register(char const * const name, char const * const data, jank_usize const size)
+  {
+    aot::register_resource(name, { data, size });
+  }
+
+  void jank_module_set_loaded(char const * const module)
+  {
+    runtime::__rt_ctx->module_loader.set_is_loaded(module);
+  }
+
   int jank_init(int const argc,
                 char const ** const argv,
                 jank_bool const init_default_ctx,
                 int (*fn)(int const, char const ** const))
   {
+    return jank_init_with_pch(argc, argv, init_default_ctx, nullptr, 0, fn);
+  }
+
+  int jank_init_with_pch(int const argc,
+                         char const ** const argv,
+                         jank_bool const init_default_ctx,
+                         char const * const pch_data,
+                         jank_usize const pch_size,
+                         int (*fn)(int const, char const ** const))
+  {
     JANK_TRY
     {
-      /* To handle UTF-8 Text , we set the locale to the current environment locale
+      /* To handle UTF-8, we set the locale to the current environment locale.
        * Usage of the local locale allows better localization.
-       * Notably this might make text encoding become more platform dependent. */
+       * Notably, this might make text encoding become more platform dependent. */
       std::locale::global(std::locale(""));
 
       /* The GC needs to enabled even before arg parsing, since our native types,
@@ -998,6 +1021,10 @@ extern "C"
       llvm::InitializeNativeTargetAsmParser();
       llvm::InitializeNativeTargetAsmPrinter();
 
+      if(pch_data)
+      {
+        aot::register_resource("incremental.pch", { pch_data, pch_size });
+      }
       if(init_default_ctx)
       {
         runtime::__rt_ctx = new(GC) runtime::context{};

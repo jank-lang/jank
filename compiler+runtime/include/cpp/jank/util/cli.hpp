@@ -48,6 +48,8 @@ namespace jank::util::cli
     /* Compile command. */
     std::string target_module;
     std::string target_runtime{ "dynamic" };
+    std::string output_filename{ "a.out" };
+    std::string output_object_filename;
 
     /* REPL command. */
     bool repl_server{};
@@ -56,9 +58,6 @@ namespace jank::util::cli
      * TODO: Use a native_persistent_vector instead.
      * */
     std::vector<std::string> extra_opts;
-
-    std::string output_filename;
-    std::string output_object_filename;
 
     command command{ command::repl };
   };
