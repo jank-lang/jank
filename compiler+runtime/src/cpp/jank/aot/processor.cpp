@@ -234,8 +234,7 @@ int main(int argc, const char** argv)
     } };
 
     compiler_args.push_back(strdup("-o"));
-    auto const output_filepath{ relative_to_cache_dir(util::cli::opts.output_filename) };
-    compiler_args.push_back(strdup(output_filepath.c_str()));
+    compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
 
     //util::println("compilation command: {} ", compiler_args);
 
@@ -245,7 +244,6 @@ int main(int argc, const char** argv)
       return res.expect_err();
     }
 
-    util::println("{} ", output_filepath);
     return ok();
   }
 }
