@@ -306,7 +306,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot jit compile c++",
+      return util::format("{}─ ❌{} jank cannot jit compile c++",
                           terminal_style::red,
                           terminal_style::reset);
     }
@@ -341,7 +341,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot jit compile llvm ir",
+      return util::format("{}─ ❌{} jank cannot jit compile llvm ir",
                           terminal_style::red,
                           terminal_style::reset);
     }
@@ -374,6 +374,7 @@ namespace jank::environment
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ [=] { util::cli::opts = saved_opts; } };
 
+      runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest).expect_ok();
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
@@ -409,7 +410,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot jit aot compile working binaries",
+      return util::format("{}─ ❌{} jank cannot jit aot compile working binaries",
                           terminal_style::red,
                           terminal_style::reset);
     }
