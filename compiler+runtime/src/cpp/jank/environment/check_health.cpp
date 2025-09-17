@@ -374,7 +374,7 @@ namespace jank::environment
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ [=] { util::cli::opts = saved_opts; } };
 
-      runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest).expect_ok();
+      runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
@@ -468,7 +468,6 @@ namespace jank::environment
       util::println("{}", header("jank runtime", max_width));
       runtime::__rt_ctx = new(GC) runtime::context{};
       jank_load_clojure_core_native();
-      runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest).expect_ok();
       util::println("{}─ ✅{} jank runtime initialized",
                     terminal_style::green,
                     terminal_style::reset);
