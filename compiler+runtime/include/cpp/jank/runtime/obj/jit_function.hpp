@@ -74,17 +74,26 @@ namespace jank::runtime::obj
     object_ref this_object_ref() override;
 
     object base{ obj_type };
-    object *(*arity_0)(){};
-    object *(*arity_1)(object *){};
-    object *(*arity_2)(object *, object *){};
-    object *(*arity_3)(object *, object *, object *){};
-    object *(*arity_4)(object *, object *, object *, object *){};
-    object *(*arity_5)(object *, object *, object *, object *, object *){};
-    object *(*arity_6)(object *, object *, object *, object *, object *, object *){};
-    object *(*arity_7)(object *, object *, object *, object *, object *, object *, object *){};
+    object *(*arity_0)(object *){};
+    object *(*arity_1)(object *, object *){};
+    object *(*arity_2)(object *, object *, object *){};
+    object *(*arity_3)(object *, object *, object *, object *){};
+    object *(*arity_4)(object *, object *, object *, object *, object *){};
+    object *(*arity_5)(object *, object *, object *, object *, object *, object *){};
+    object *(*arity_6)(object *, object *, object *, object *, object *, object *, object *){};
     object *(
-      *arity_8)(object *, object *, object *, object *, object *, object *, object *, object *){};
+      *arity_7)(object *, object *, object *, object *, object *, object *, object *, object *){};
+    object *(*arity_8)(object *,
+                       object *,
+                       object *,
+                       object *,
+                       object *,
+                       object *,
+                       object *,
+                       object *,
+                       object *){};
     object *(*arity_9)(object *,
+                       object *,
                        object *,
                        object *,
                        object *,
@@ -94,6 +103,7 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_10)(object *,
+                        object *,
                         object *,
                         object *,
                         object *,
