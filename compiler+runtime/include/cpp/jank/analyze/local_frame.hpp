@@ -126,8 +126,6 @@ namespace jank::analyze
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
-    static void register_crossed_captures(jtl::ptr<local_frame> frame,
-                                          named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */

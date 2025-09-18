@@ -120,40 +120,6 @@ namespace jank::analyze
     register_captures(binding_find_result{ &b, result.crossed_fns });
   }
 
-  /* For IR gen, when we have named recursion across functions, the deepest function needs
-   * to construct a new instance of the target of the recursion. In order to construct
-   * a new instance, we need to also construct its closure context, which means we need
-   * access to all of the captures for that function. So that's what we do here. We find
-   * the function to which we're recursing and then we copy all of its captures into
-   * the current function.
-   *
-   * However, this will break in the case of the target function having multiple arities
-   * where the other arities actually capture different values. In order to tackle that,
-   * we would need to get all arities from our fn context, but we can't do that here,
-   * since those artities haven't analyzed yet.
-   *
-   * So we either need to defer this work until all arities have been analyzed, which is
-   * going to be some annoying and bug-prone bookkeeping, or we need to change how we're
-   * doing this in IR gen so that we don't need to rebuild closure contexts. */
-  /* TODO: Clean this up. */
-  void local_frame::register_crossed_captures(local_frame_ptr const frame,
-                                              named_recursion_find_result const &result)
-  {
-    auto &fn_frame{ find_closest_fn_frame(*frame) };
-    for(auto const &capture : result.fn_frame->captures)
-    {
-      auto const res{ fn_frame.captures.emplace(capture.first, capture.second) };
-      if(res.second)
-      {
-        /* We know it needs a box, since it's captured. */
-        res.first->second.needs_box = true;
-        res.first->second.has_boxed_usage = true;
-        /* To start with, we assume it's only boxed. */
-        res.first->second.has_unboxed_usage = false;
-      }
-    }
-  }
-
   jtl::option<local_frame::binding_find_result>
   local_frame::find_originating_local(obj::symbol_ref const sym)
   {

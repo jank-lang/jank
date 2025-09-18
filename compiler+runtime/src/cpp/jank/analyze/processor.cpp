@@ -1576,11 +1576,6 @@ namespace jank::analyze
     {
       auto &unwrapped_named_recursion(found_named_recursion.unwrap());
       local_frame::register_captures(current_frame, unwrapped_named_recursion);
-      /* TODO: Remove this. */
-      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
-      {
-        local_frame::register_crossed_captures(current_frame, unwrapped_named_recursion);
-      }
 
       return jtl::make_ref<expr::recursion_reference>(
         position,
