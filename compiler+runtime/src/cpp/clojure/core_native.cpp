@@ -69,12 +69,12 @@ namespace clojure::core_native
     return make_box<obj::lazy_sequence>(o);
   }
 
-  static object_ref is_var(object_ref const o)
+  object_ref is_var(object_ref const o)
   {
     return make_box(o->type == object_type::var);
   }
 
-  static object_ref var_get(object_ref const o)
+  object_ref var_get(object_ref const o)
   {
     return try_object<var>(o)->deref();
   }
@@ -94,7 +94,7 @@ namespace clojure::core_native
     return try_object<var>(v)->bind_root(o);
   }
 
-  static object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args)
+  object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args)
   {
     return try_object<var>(o)->alter_root(fn, args);
   }
@@ -246,13 +246,13 @@ namespace clojure::core_native
     return jank_nil;
   }
 
-  static object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
+  object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
   {
     try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
     return jank_nil;
   }
 
-  static object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
+  object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
   {
     try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
     return jank_nil;
@@ -283,9 +283,9 @@ namespace clojure::core_native
     return __rt_ctx->eval(expr);
   }
 
-  static object_ref hash_unordered(object_ref const expr)
+  object_ref hash_unordered(object_ref const coll)
   {
-    return make_box(hash::unordered(expr.data)).erase();
+    return make_box(hash::unordered(coll.data)).erase();
   }
 
   /* TODO: implement opts for `read-string` */
@@ -294,7 +294,7 @@ namespace clojure::core_native
     return __rt_ctx->read_string(runtime::to_string(str));
   }
 
-  static object_ref jank_version()
+  object_ref jank_version()
   {
     return make_box(JANK_VERSION);
   }

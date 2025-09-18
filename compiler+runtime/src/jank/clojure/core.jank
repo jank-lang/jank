@@ -42,6 +42,8 @@
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
 
+(cpp/raw "#include <clojure/core_native.hpp>")
+
 ; Syntax quoting.
 (def unquote
   (fn* unquote [_]
@@ -117,7 +119,8 @@
 (def count
   "Returns the number of items in the collection. (count nil) returns
    0.  Also works on strings, arrays, and Java Collections and Maps"
-  clojure.core-native/count)
+  (fn* [coll]
+    (cpp/jank.runtime.sequence_length coll)))
 
 ; Numbers.
 (def boolean
@@ -1764,16 +1767,17 @@
   ([set]
    set)
   ([set key]
-   (clojure.core-native/disj set key))
+   (cpp/jank.runtime.disj set key))
   ([set key & ks]
    (let* [res (disj set key)]
      (if (empty? ks)
        res
        (recur res (first ks) (next ks))))))
 
-(def set?
+(defn set?
   "Returns true if x implements IPersistentSet"
-  clojure.core-native/set?)
+  [x]
+  (cpp/jank.runtime.is_set x))
 
 (defn set
   "Returns a set of the distinct elements of coll."
@@ -1786,21 +1790,24 @@
                          coll))))
 
 ;; Other.
-(def hash
+(defn hash
   "Returns the hash code of its argument. Note this is the hash code
    consistent with =, and thus is different than .hashCode for Integer,
    Short, Byte and Clojure collections."
-  clojure.core-native/hash)
+  [o]
+  (cpp/jank.runtime.to_hash o))
 
 (def ^:private named? clojure.core-native/named?)
 
-(def name
+(defn name
   "Returns the name String of a string, symbol or keyword."
-  clojure.core-native/name)
+  [x]
+  (cpp/jank.runtime.name x))
 
-(def namespace
+(defn namespace
   "Returns the namespace String of a symbol or keyword, or nil if not present."
-  clojure.core-native/namespace)
+  [x]
+  (cpp/jank.runtime.namespace_ x))
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -1814,17 +1821,21 @@
      (step n coll))))
 
 ;; Vars.
-(def var?
+(defn var?
   "Returns true if v is a var."
-  clojure.core-native/var?)
-(def var-get
-  "Gets the value in the var object."
-  clojure.core-native/var-get)
+  [x]
+  (cpp/clojure.core_native.is_var x))
 
-(def alter-var-root
+(defn var-get
+  "Gets the value in the var object."
+  [x]
+  (cpp/clojure.core_native.var_get x))
+
+(defn alter-var-root
   "Atomically alters the root binding of var v by applying f to its
    current value plus any args"
-  clojure.core-native/alter-var-root)
+   [v f & args]
+  (cpp/clojure.core_native.alter_var_root v f args))
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
@@ -5620,7 +5631,7 @@
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
   [ns sym]
-  (clojure.core-native/ns-unmap (the-ns ns) sym))
+  (cpp/clojure.core_native.ns_unmap (the-ns ns) sym))
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."
@@ -5654,7 +5665,7 @@
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
   [ns sym]
-  (clojure.core-native/ns-unalias (the-ns ns) sym))
+  (cpp/clojure.core_native.ns_unalias (the-ns ns) sym))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be
@@ -5995,13 +6006,14 @@
   ;; (clojure.lang.Murmur3/hashOrdered coll)
   (throw "TODO: port hash-ordered-coll"))
 
-(def hash-unordered-coll
+(defn hash-unordered-coll
   "Returns the hash code, consistent with =, for an external unordered
    collection implementing Iterable. For maps, the iterator should
    return map entries whose hash is computed as
      (hash-ordered-coll [k v]).
    See http://clojure.org/data_structures#hash for full algorithms."
-  clojure.core-native/hash-unordered-coll)
+   [coll]
+   (cpp/clojure.core_native.hash_unordered coll))
 
 (defmacro definline
   "Experimental - like defmacro, except defines a named function whose
@@ -6896,9 +6908,10 @@ fails, attempts to require sym's namespace and retries."
 ;;   Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
 ;;   {:added "1.0"})
 
-(def clojure-version
+(defn clojure-version
   "Returns clojure version as a printable string."
-  clojure.core-native/jank-version)
+  []
+  (cpp/clojure.core_native.jank_version))
 
 (defn promise
   "Returns a promise object that can be read with deref/@, and set,
