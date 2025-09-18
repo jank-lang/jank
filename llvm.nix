@@ -68,6 +68,9 @@ in
       # nix-specific changes
       (lib.cmakeFeature "C_INCLUDE_DIRS" "${gcc.libc.dev}/include")
       (lib.cmakeFeature "LLVM_ENABLE_RUNTIMES" "libunwind")
+      # fix linking path for compiler-rt sanitize libs with
+      # -fsanitize={address,undefined}
+      (lib.cmakeBool "LLVM_ENABLE_PER_TARGET_RUNTIME_DIR" false)
       # libunwind shared library fails to compile, use static instead
       (lib.cmakeBool "LIBUNWIND_ENABLE_SHARED" false)
       (lib.cmakeBool "LIBUNWIND_ENABLE_STATIC" true)
