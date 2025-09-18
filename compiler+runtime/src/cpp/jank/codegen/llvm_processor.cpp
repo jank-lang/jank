@@ -566,8 +566,10 @@ namespace jank::codegen
     auto const is_closure(!captures.empty());
 
     /* Closures get one extra parameter, the first one, which is a pointer to the closure's
-     * context. The context is a struct containing all captured values. */
-    std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure,
+     * context. The context is a struct containing all captured values.
+     *
+     * We add one unconditionally for the `this` object. */
+    std::vector<llvm::Type *> const arg_types{ arity.params.size() + is_closure + 1,
                                                ctx->builder->getPtrTy() };
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
     std::string const name{ munge(root_fn->unique_name) };
@@ -615,17 +617,26 @@ namespace jank::codegen
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
+    auto this_arg(fn->getArg(0));
+    this_arg->setName("this");
+    /* We need a way to represent the current object, but we don't want to conflict with
+     * any existing symbols in the scope, so we introduce a qualified symbol. This will be
+     * impossible to have as a local, so it's safe. */
+    locals[make_box<obj::symbol>("virtual/this")] = this_arg;
+    locals[make_box<obj::symbol>(root_fn->name)] = this_arg;
+
     for(usize i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
-      auto arg(fn->getArg(i + is_closure));
+      auto arg(fn->getArg(i + is_closure + 1));
       arg->setName(param->get_name().c_str());
       locals[param] = arg;
     }
 
     if(is_closure)
     {
-      auto const context(fn->getArg(0));
+      auto const context(fn->getArg(1));
+      context->setName("context");
       auto const captures(root_fn->captures());
       std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
@@ -1117,12 +1128,15 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
-    arg_handles.reserve(expr->arg_exprs.size() + is_closure);
-    arg_types.reserve(expr->arg_exprs.size() + is_closure);
+    arg_handles.reserve(expr->arg_exprs.size() + is_closure + 1);
+    arg_types.reserve(expr->arg_exprs.size() + is_closure + 1);
+
+    arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+    arg_types.emplace_back(ctx->builder->getPtrTy());
 
     if(is_closure)
     {
-      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(1));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
@@ -1208,16 +1222,13 @@ namespace jank::codegen
 
     llvm::SmallVector<llvm::Value *> arg_handles;
     llvm::SmallVector<llvm::Type *> arg_types;
-    arg_handles.reserve(expr->arg_exprs.size() + is_closure);
-    arg_types.reserve(expr->arg_exprs.size() + is_closure);
+    arg_handles.reserve(expr->arg_exprs.size() + is_closure + 1);
+    arg_types.reserve(expr->arg_exprs.size() + is_closure + 1);
 
-    if(expr->recursion_ref.fn_ctx->is_variadic)
-    {
-      arg_handles.emplace_back(
-        gen_function_instance(expr->recursion_ref.fn_ctx->fn.as_ref(), arity));
-      arg_types.emplace_back(ctx->builder->getPtrTy());
-    }
-    else if(is_closure)
+    arg_handles.emplace_back(locals[make_box<obj::symbol>("virtual/this")]);
+    arg_types.emplace_back(ctx->builder->getPtrTy());
+
+    if(is_closure)
     {
       /* TODO: If nested closures all build their contexts on their parents, we can always
        * pass a nested closure upward for a named recursion. This would require sorted captures
@@ -1225,11 +1236,14 @@ namespace jank::codegen
       if(crosses_fn)
       {
         auto const &fn(*expr->recursion_ref.fn_ctx->fn);
+        auto const fn_handle{ locals[make_box<obj::symbol>(expr->recursion_ref.fn_ctx->fn->name)] };
+        arg_handles[0] = fn_handle;
         std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
         auto const closure_ctx_type(
           get_or_insert_struct_type(util::format("{}_context", munge(fn.unique_name)),
                                     capture_types));
 
+        /* TODO: REMOVE THIS SINCE IT SHOULD COME FROM THE CAPTURED 'THIS' */
         auto const malloc_fn_type(
           llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, false));
         auto const malloc_fn(llvm_module->getOrInsertFunction("GC_malloc", malloc_fn_type));
@@ -1248,14 +1262,22 @@ namespace jank::codegen
                                                  capture.second };
           ctx->builder->CreateStore(gen(expr::local_reference_ref{ &local_ref }, arity), field_ptr);
         }
-        arg_handles.emplace_back(closure_obj);
-        arg_types.emplace_back(ctx->builder->getPtrTy());
+        if(!expr->recursion_ref.fn_ctx->is_variadic)
+        {
+          arg_handles.emplace_back(closure_obj);
+          arg_types.emplace_back(ctx->builder->getPtrTy());
+        }
       }
       else
       {
-        arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+        arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(1));
         arg_types.emplace_back(ctx->builder->getPtrTy());
       }
+    }
+    else if(crosses_fn)
+    {
+      auto const fn_handle{ locals[make_box<obj::symbol>(expr->recursion_ref.fn_ctx->fn->name)] };
+      arg_handles[0] = fn_handle;
     }
 
     for(auto const &arg_expr : expr->arg_exprs)
@@ -3026,7 +3048,7 @@ namespace jank::codegen
       auto const set_arity_fn(
         llvm_module->getOrInsertFunction(set_arity_fn_name.c_str(), set_arity_fn_type));
 
-      std::vector<llvm::Type *> const target_arg_types{ arity.params.size(),
+      std::vector<llvm::Type *> const target_arg_types{ arity.params.size() + 1,
                                                         ctx->builder->getPtrTy() };
       auto const target_fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), target_arg_types, false));

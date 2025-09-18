@@ -1575,12 +1575,9 @@ namespace jank::analyze
     if(found_named_recursion.is_some())
     {
       auto &unwrapped_named_recursion(found_named_recursion.unwrap());
-      /* TODO: Do we want this for IR gen? Maybe we can optimize closures. */
-      if(util::cli::opts.codegen == util::cli::codegen_type::cpp)
-      {
-        local_frame::register_captures(current_frame, unwrapped_named_recursion);
-      }
-      else if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      local_frame::register_captures(current_frame, unwrapped_named_recursion);
+      /* TODO: Remove this. */
+      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
       {
         local_frame::register_crossed_captures(current_frame, unwrapped_named_recursion);
       }
