@@ -576,12 +576,14 @@ namespace jank::runtime
     auto const matcher(try_object<obj::re_matcher>(m));
     std::regex_search(matcher->match_input, match_results, matcher->re->regex);
 
+    // Copy out the match result substrings before mutating the source
+    // match_input string below.
+    matcher->groups = smatch_to_vector(match_results);
+
     if(!match_results.empty())
     {
       matcher->match_input = match_results.suffix().str();
     }
-
-    matcher->groups = smatch_to_vector(match_results);
 
     return matcher->groups;
   }
