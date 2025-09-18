@@ -201,8 +201,6 @@ int main(int argc, const char** argv)
           "-lLLVM",
           "-lclang-cpp",
           "-lcrypto",
-          "-lgc",
-          "-lgccpp",
           "-lz",
           "-lzstd",
           "-lzip",
