@@ -68,7 +68,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_0(&base, context);
+    return arity_0(&base);
   }
 
   object_ref jit_closure::call(object_ref const a1)
@@ -77,7 +77,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_1(&base, context, a1.data);
+    return arity_1(&base, a1.data);
   }
 
   object_ref jit_closure::call(object_ref const a1, object_ref const a2)
@@ -86,7 +86,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_2(&base, context, a1.data, a2.data);
+    return arity_2(&base, a1.data, a2.data);
   }
 
   object_ref jit_closure::call(object_ref const a1, object_ref const a2, object_ref const a3)
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_3(&base, context, a1.data, a2.data, a3.data);
+    return arity_3(&base, a1.data, a2.data, a3.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -107,7 +107,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_4(&base, context, a1.data, a2.data, a3.data, a4.data);
+    return arity_4(&base, a1.data, a2.data, a3.data, a4.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -120,7 +120,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_5(&base, context, a1.data, a2.data, a3.data, a4.data, a5.data);
+    return arity_5(&base, a1.data, a2.data, a3.data, a4.data, a5.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -134,7 +134,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_6(&base, context, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data);
+    return arity_6(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -149,7 +149,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_7(&base, context, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data);
+    return arity_7(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -165,16 +165,7 @@ namespace jank::runtime::obj
     {
       throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
     }
-    return arity_8(&base,
-                   context,
-                   a1.data,
-                   a2.data,
-                   a3.data,
-                   a4.data,
-                   a5.data,
-                   a6.data,
-                   a7.data,
-                   a8.data);
+    return arity_8(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data, a8.data);
   }
 
   object_ref jit_closure::call(object_ref const a1,
@@ -192,7 +183,6 @@ namespace jank::runtime::obj
       throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
     }
     return arity_9(&base,
-                   context,
                    a1.data,
                    a2.data,
                    a3.data,
@@ -220,7 +210,6 @@ namespace jank::runtime::obj
       throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
     }
     return arity_10(&base,
-                    context,
                     a1.data,
                     a2.data,
                     a3.data,

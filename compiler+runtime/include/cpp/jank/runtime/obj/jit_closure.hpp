@@ -75,16 +75,15 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     void *context{};
-    object *(*arity_0)(object *, void *){};
-    object *(*arity_1)(object *, void *, object *){};
-    object *(*arity_2)(object *, void *, object *, object *){};
-    object *(*arity_3)(object *, void *, object *, object *, object *){};
-    object *(*arity_4)(object *, void *, object *, object *, object *, object *){};
-    object *(*arity_5)(object *, void *, object *, object *, object *, object *, object *){};
-    object *(
-      *arity_6)(object *, void *, object *, object *, object *, object *, object *, object *){};
+    object *(*arity_0)(object *){};
+    object *(*arity_1)(object *, object *){};
+    object *(*arity_2)(object *, object *, object *){};
+    object *(*arity_3)(object *, object *, object *, object *){};
+    object *(*arity_4)(object *, object *, object *, object *, object *){};
+    object *(*arity_5)(object *, object *, object *, object *, object *, object *){};
+    object *(*arity_6)(object *, object *, object *, object *, object *, object *, object *){};
     object *(*arity_7)(object *,
-                       void *,
+
                        object *,
                        object *,
                        object *,
@@ -93,7 +92,7 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_8)(object *,
-                       void *,
+
                        object *,
                        object *,
                        object *,
@@ -103,7 +102,7 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_9)(object *,
-                       void *,
+
                        object *,
                        object *,
                        object *,
@@ -114,7 +113,7 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_10)(object *,
-                        void *,
+
                         object *,
                         object *,
                         object *,
