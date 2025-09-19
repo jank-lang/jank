@@ -98,18 +98,6 @@
   (fn* identical? [lhs rhs]
     (cpp/== lhs rhs)))
 
-(def =
-  "Equality. Returns true if x equals y, false if not. It also works
-   for nil and compares numbers and collections in a type-independent
-   manner. Clojure's immutable data structures define equals() (and
-   thus =) as a value, not an identity, comparison."
-  clojure.core-native/=)
-
-(def ==
-  "Returns non-nil if nums all have the equivalent
-   value (type-independent), otherwise false"
-  clojure.core-native/==)
-
 ; Collections.
 (def empty?
   "Returns true if coll has no items - same as (not (seq coll))."
@@ -458,6 +446,36 @@
 (def ^{:macro true} fn
   (fn* fn [&form &env & decl]
     (with-meta `(fn* ~@decl) (meta &form))))
+
+(def =
+  "Equality. Returns true if x equals y, false if not. It also works
+   for nil and compares numbers and collections in a type-independent
+   manner. Clojure's immutable data structures define equals() (and
+   thus =) as a value, not an identity, comparison."
+  (fn* =
+    ([x] true)
+    ([x y]
+     (cpp/jank.runtime.equal x y))
+    ([x y & more]
+     (if (cpp/jank.runtime.equal x y)
+       (if (next more)
+         (recur y (first more) (next more))
+         (cpp/jank.runtime.equal y (first more)))
+       false))))
+
+(def ==
+  "Returns non-nil if nums all have the equivalent
+   value (type-independent), otherwise false"
+  (fn* ==
+    ([x] true)
+    ([x y]
+     (cpp/jank.runtime.is_equiv x y))
+    ([x y & more]
+     (if (cpp/jank.runtime.is_equiv x y)
+       (if (next more)
+         (recur y (first more) (next more))
+         (cpp/jank.runtime.is_equiv y (first more)))
+       false))))
 
 (def ^:private sigs
   (fn* [fdecl]
