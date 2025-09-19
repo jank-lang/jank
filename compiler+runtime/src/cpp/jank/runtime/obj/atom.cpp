@@ -113,7 +113,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto args(cons(v, cons(a1, cons(a2, rest))));
+      auto const args(cons(v, cons(a1, cons(a2, rest))));
       auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
@@ -170,7 +170,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto args(cons(v, cons(a1, cons(a2, rest))));
+      auto const args(cons(v, cons(a1, cons(a2, rest))));
       auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
