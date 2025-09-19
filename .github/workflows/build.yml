@@ -168,16 +168,23 @@ jobs:
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      HOMEBREW_NO_AUTO_UPDATE: 1
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
+      - name: Install apt packages
+        if: runner.os == 'Linux'
+        uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
           packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip zipcmp zipmerge ziptool build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
           # Increment this when the package list changes.
           version: 8
+      - name: Install Homebrew packages
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja ccache boost libzip openssl
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
