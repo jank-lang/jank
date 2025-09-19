@@ -286,18 +286,23 @@
              (seq ret)))))
 
 ;; Maps.
-; XXX: Clojure returns an array map for the nullary arity, but that sucks.
 (def hash-map
   "keyval => key val
    Returns a new hash map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/hash-map)
+  (fn* hash-map
+    ([] (cpp/jank.runtime.obj.persistent_hash_map.empty))
+    ([& keyvals]
+     (cpp/jank.runtime.obj.persistent_hash_map.create_from_seq keyvals))))
 
 (def sorted-map
   "keyval => key val
    Returns a new sorted map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/sorted-map)
+  (fn* sorted-map
+    ([] (cpp/jank.runtime.obj.persistent_sorted_map.empty))
+    ([& keyvals]
+     (cpp/jank.runtime.obj.persistent_sorted_map.create_from_seq keyvals))))
 
 (def map?
   "Return true if x implements IPersistentMap"
