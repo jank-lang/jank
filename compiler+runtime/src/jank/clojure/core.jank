@@ -847,7 +847,7 @@
    timeout-val if the timeout (in milliseconds) is reached before a
    value is available. See also - realized?."
   ([ref]
-   (clojure.core-native/deref ref))
+   (cpp/jank.runtime.deref ref))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]
    ;(if (instance? clojure.lang.IBlockingDeref ref)
@@ -855,13 +855,15 @@
    ;  (deref-future ref timeout-ms timeout-val))
    ))
 
-(def reduced
+(defn reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
-  clojure.core-native/reduced)
+  [x]
+  (cpp/jank.runtime.reduced x))
 
-(def reduced?
+(defn reduced?
   "Returns true if x is the result of a call to reduced"
-  clojure.core-native/reduced?)
+  [x]
+  (cpp/jank.runtime.is_reduced x))
 
 (defn ensure-reduced
   "If x is already reduced?, returns it, else returns (reduced x)"
@@ -894,7 +896,7 @@
        (f))))
   ([f init coll]
    ; TODO: Chunking support.
-   (clojure.core-native/reduce f init coll)))
+   (cpp/jank.runtime.reduce f init coll)))
 
 (defn completing
   "Takes a reducing function f of 2 args and returns a fn suitable for
@@ -966,17 +968,19 @@
   ([f g & fs]
    (reduce comp (list* f g fs))))
 
-(def peek
+(defn peek
   "For a list or queue, same as first, for a vector, same as, but much
    more efficient than, last. If the collection is empty, returns nil."
-  clojure.core-native/peek)
+  [coll]
+  (cpp/jank.runtime.peek coll))
 
-(def pop
+(defn pop
   "For a list or queue, returns a new list/queue without the first
    item, for a vector, returns a new vector without the last item. If
    the collection is empty, throws an exception. Note - not the same
    as next/butlast."
-  clojure.core-native/pop)
+  [coll]
+  (cpp/jank.runtime.pop coll))
 
 (defn vary-meta
   "Returns an object of the same type and value as obj, with
@@ -1009,17 +1013,24 @@
    change. If the new state is unacceptable, the validate-fn should
    return false or throw an exception."
   ([x]
-   (clojure.core-native/atom x))
+   (cpp/jank.runtime.atom x))
   ; TODO: Validators.
   #_([x & options]
      (setup-reference (atom x) options)))
 
-(def swap!
+(defn swap!
   "Atomically swaps the value of atom to be:
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects. Returns
    the value that was swapped in."
-  clojure.core-native/swap!)
+  ([atom f]
+   (cpp/jank.runtime.swap_atom atom f))
+  ([atom f x]
+   (cpp/jank.runtime.swap_atom atom f x))
+  ([atom f x y]
+   (cpp/jank.runtime.swap_atom atom f x y))
+  ([atom f x y & args]
+   (cpp/jank.runtime.swap_atom atom f x y args)))
 
 (def swap-vals!
   "Atomically swaps the value of atom to be:
