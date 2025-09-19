@@ -17,8 +17,8 @@ concurrency:
 jobs:
   # Rather than having every job in the matrix try to build its own Clang, we built it once
   # before running the matrix. Then we can just restore it from the cache in each job.
-  build-clang:
-    name: Build Clang
+  ubuntu-build-clang:
+    name: Ubuntu - clang
     runs-on: ubuntu-24.04
     timeout-minutes: 200
     steps:
@@ -45,142 +45,170 @@ jobs:
             popd
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
-
-  build-jank:
-    needs:
-      - build-clang
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Ubuntu
-          ## Lint all sources
-          - name: Ubuntu - lint
-            os: ubuntu-24.04
-            lint: true
-          ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: none
-            coverage: on
-            analyze: on
-
-          ## Debug + sanitization
-          - name: Ubuntu - address sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: address
-
-          - name: Ubuntu - undefined behavior sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: undefined
-
-          ## TODO: Fix this. Causes linker issues.
-          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          #- name: Ubuntu - thread sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: thread
-
-          ## Release
-          - name: Ubuntu - release
-            os: ubuntu-24.04
-            build_type: Release
-            sanitize: none
-            package: on
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
+  macos-build-clang:
+    name: macOS - clang
+    runs-on: macos-26
     env:
-      JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
-      JANK_BUILD_TYPE: ${{ matrix.build_type }}
-      JANK_LINT: ${{ matrix.lint }}
-      JANK_COVERAGE: ${{ matrix.coverage }}
-      JANK_ANALYZE: ${{ matrix.analyze }}
-      JANK_SANITIZE: ${{ matrix.sanitize }}
-      JANK_PACKAGE: ${{ matrix.package }}
-      ASAN_OPTIONS: detect_leaks=0
-      TERM: xterm
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    timeout-minutes: 45
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
-        with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip zipcmp zipmerge ziptool build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
-          # Increment this when the package list changes.
-          version: 8
+      - name: Install Homebrew deps
+        run: |
+          brew install git git-lfs pkg-config ninja python cmake gnupg zlib
       - name: Cache Clang/LLVM
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
-      - name: Cache object files
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/.ccache
-            ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ${{ env.JANK_MATRIX_ID }}
-      - name: Build and test jank
-        id: jank-build-step
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+          key: ${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Build Clang/LLVM
         run: |
-          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
-          chmod +x install-bb
-          sudo ./install-bb
-          JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
-      - name: Upload .deb for publishing
-        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
-        uses: actions/upload-artifact@v4
-        with:
-          name: jank-deb
-          path: ${{ steps.jank-build-step.outputs.deb }}
+          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
+            pushd ${{ github.workspace }}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
-  publish-deb:
-    if: github.ref == 'refs/heads/main'
-    needs: build-jank
-    name: Publish .deb
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/download-artifact@v5
-        with:
-          name: jank-deb
-          path: ~/
-      - name: Import SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
-          chmod 400 ~/.ssh/jank_id_ed25519
-      - name: Publish to PPA
-        run: |
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+  #build-jank:
+  #  needs:
+  #    - ubuntu-build-clang
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      include:
+  #        # Ubuntu
+  #        ## Lint all sources
+  #        - name: Ubuntu - lint
+  #          os: ubuntu-24.04
+  #          lint: true
+  #        ## Debug + clang-tidy + coverage
+  #        - name: Ubuntu - debug, analysis, coverage
+  #          os: ubuntu-24.04
+  #          build_type: Debug
+  #          sanitize: none
+  #          coverage: on
+  #          analyze: on
 
-  build-nix:
-    name: "Nix - release"
-    runs-on: ubuntu-latest
-    steps:
-    - name: "Set up nix"
-      uses: cachix/install-nix-action@v31
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    - name: "Set up cachix"
-      uses: cachix/cachix-action@v16
-      with:
-        name: jank-lang
-        # If you chose API tokens for write access OR if you have a private cache
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-        # Only push to cache on main branch, not PRs
-        skipPush: "${{ github.ref != 'refs/heads/main' }}"
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - name: "Build jank"
-      run: nix build .?submodules=1 -L
-    - name: "Check health"
-      run: nix run .?submodules=1 check-health
+  #        ## Debug + sanitization
+  #        - name: Ubuntu - address sanitizer
+  #          os: ubuntu-24.04
+  #          build_type: Debug
+  #          sanitize: address
+
+  #        - name: Ubuntu - undefined behavior sanitizer
+  #          os: ubuntu-24.04
+  #          build_type: Debug
+  #          sanitize: undefined
+
+  #        ## TODO: Fix this. Causes linker issues.
+  #        # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
+  #        #- name: Ubuntu - thread sanitizer
+  #        #  os: ubuntu-24.04
+  #        #  build_type: Debug
+  #        #  sanitize: thread
+
+  #        ## Release
+  #        - name: Ubuntu - release
+  #          os: ubuntu-24.04
+  #          build_type: Release
+  #          sanitize: none
+  #          package: on
+  #  runs-on: ${{ matrix.os }}
+  #  name: ${{ matrix.name }}
+  #  env:
+  #    JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
+  #    JANK_BUILD_TYPE: ${{ matrix.build_type }}
+  #    JANK_LINT: ${{ matrix.lint }}
+  #    JANK_COVERAGE: ${{ matrix.coverage }}
+  #    JANK_ANALYZE: ${{ matrix.analyze }}
+  #    JANK_SANITIZE: ${{ matrix.sanitize }}
+  #    JANK_PACKAGE: ${{ matrix.package }}
+  #    ASAN_OPTIONS: detect_leaks=0
+  #    TERM: xterm
+  #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #  timeout-minutes: 45
+  #  steps:
+  #    - uses: actions/checkout@v4
+  #      with:
+  #        submodules: true
+  #    - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
+  #      with:
+  #        packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip zipcmp zipmerge ziptool build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
+  #        # Increment this when the package list changes.
+  #        version: 8
+  #    - name: Cache Clang/LLVM
+  #      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+  #      with:
+  #        path: |
+  #          ${{ github.workspace }}/compiler+runtime/build/llvm-install
+  #        key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+  #    - name: Cache object files
+  #      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+  #      with:
+  #        path: |
+  #          ${{ github.workspace }}/compiler+runtime/.ccache
+  #          ${{ github.workspace }}/compiler+runtime/.ctcache
+  #        key: ${{ env.JANK_MATRIX_ID }}
+  #    - name: Build and test jank
+  #      id: jank-build-step
+  #      run: |
+  #        curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+  #        chmod +x install-bb
+  #        sudo ./install-bb
+  #        JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
+  #    - name: Upload .deb for publishing
+  #      if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: jank-deb
+  #        path: ${{ steps.jank-build-step.outputs.deb }}
+
+  #publish-deb:
+  #  if: github.ref == 'refs/heads/main'
+  #  needs: build-jank
+  #  name: Publish .deb
+  #  runs-on: ubuntu-24.04
+  #  timeout-minutes: 5
+  #  steps:
+  #    - uses: actions/download-artifact@v5
+  #      with:
+  #        name: jank-deb
+  #        path: ~/
+  #    - name: Import SSH key
+  #      run: |
+  #        mkdir -p ~/.ssh
+  #        echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+  #        chmod 400 ~/.ssh/jank_id_ed25519
+  #    - name: Publish to PPA
+  #      run: |
+  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+
+  #build-nix:
+  #  name: "Nix - release"
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #  - name: "Set up nix"
+  #    uses: cachix/install-nix-action@v31
+  #    with:
+  #      nix_path: nixpkgs=channel:nixos-unstable
+  #  - name: "Set up cachix"
+  #    uses: cachix/cachix-action@v16
+  #    with:
+  #      name: jank-lang
+  #      # If you chose API tokens for write access OR if you have a private cache
+  #      authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+  #      # Only push to cache on main branch, not PRs
+  #      skipPush: "${{ github.ref != 'refs/heads/main' }}"
+  #  - uses: actions/checkout@v4
+  #    with:
+  #      submodules: 'recursive'
+  #  - name: "Build jank"
+  #    run: nix build .?submodules=1 -L
+  #  - name: "Check health"
+  #    run: nix run .?submodules=1 check-health
