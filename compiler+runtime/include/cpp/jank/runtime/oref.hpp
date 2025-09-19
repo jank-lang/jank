@@ -399,7 +399,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  constexpr oref<obj::boolean> make_box(bool const &b)
+  constexpr oref<obj::boolean> make_box(bool const b)
   {
     return b ? jank_true : jank_false;
   }
