@@ -1513,7 +1513,7 @@ namespace jank::read::parse
     auto const token((*token_current).expect_ok());
     ++token_current;
     auto const b(std::get<bool>(token.data));
-    return object_source_info{ make_box<obj::boolean>(b), token, token };
+    return object_source_info{ b ? jank_true : jank_false, token, token };
   }
 
   processor::object_result processor::parse_symbol()
