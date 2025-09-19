@@ -182,5 +182,6 @@ jobs:
         submodules: 'recursive'
     - name: "Build jank"
       run: nix build .?submodules=1 -L
-    - name: "Check health"
-      run: nix run .?submodules=1 check-health
+    # TODO: Enable once AOT building is sorted out on Nix.
+    #- name: "Check health"
+    #  run: nix run .?submodules=1 check-health
