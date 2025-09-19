@@ -64,7 +64,7 @@ namespace clojure::core_native
     return make_box<obj::symbol>(ns, name);
   }
 
-  static object_ref lazy_seq(object_ref const o)
+  object_ref lazy_seq(object_ref const o)
   {
     return make_box<obj::lazy_sequence>(o);
   }

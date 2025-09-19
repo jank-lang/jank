@@ -418,27 +418,35 @@
 (def print
   "Prints the object(s) to the output stream that is the current value
    of *out*.  print and println produce output for human consumption."
-  clojure.core-native/print)
+  (fn* print [& more]
+    (cpp/jank.runtime.print more)))
 (def println
   "Same as print followed by (newline)"
-  clojure.core-native/println)
+  (fn* println [& more]
+    (cpp/jank.runtime.println more)))
 (def pr
   "Prints the object(s) to the output stream that is the current value
    of *out*.  Prints the object(s), separated by spaces if there is
    more than one.  By default, pr and prn print in a way that objects
    can be read by the reader"
-  clojure.core-native/pr)
+   (fn* pr [& more]
+     (cpp/jank.runtime.pr more)))
 (def prn
   "Same as pr followed by (newline). Observes *flush-on-newline*"
-  clojure.core-native/prn)
+  (fn* prn [& more]
+    (cpp/jank.runtime.prn more)))
 (def pr-str
   "pr to a string, returning it"
-  clojure.core-native/pr-str)
+  ;; TODO: support multiple parameters, preserving current behavior
+  (fn* pr-str [x]
+    (cpp/jank.runtime.to_code_string x)))
 
 ;; Utils.
 ; The full `apply` will be defined below, but it requires more helpers to support
 ; all of its arities.
-(def ^:private apply* clojure.core-native/apply*)
+(def ^:private apply*
+  (fn* apply* [source args]
+    (cpp/jank.runtime.apply_to source args)))
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -803,15 +811,15 @@
 (defn apply
   "Applies fn f to the argument list formed by prepending intervening arguments to args."
   ([f args]
-   (clojure.core-native/apply* f args))
+   (cpp/jank.runtime.apply_to f args))
   ([f x args]
-   (clojure.core-native/apply* f (list* x args)))
+   (cpp/jank.runtime.apply_to f (list* x args)))
   ([f x y args]
-   (clojure.core-native/apply* f (list* x y args)))
+   (cpp/jank.runtime.apply_to f (list* x y args)))
   ([f x y z args]
-   (clojure.core-native/apply* f (list* x y z args)))
+   (cpp/jank.runtime.apply_to f (list* x y z args)))
   ([f a b c d & args]
-   (clojure.core-native/apply* f (cons a (cons b (cons c (cons d (spread args))))))))
+   (cpp/jank.runtime.apply_to f (cons a (cons b (cons c (cons d (spread args))))))))
 
 (defn constantly
   "Returns a function that takes any number of arguments and returns x."
@@ -1418,18 +1426,22 @@
    (* (rand) n)))
 
 ;; Strings.
-(def subs
+(defn subs
   "Returns the substring of s beginning at start inclusive, and ending
    at end (defaults to length of string), exclusive."
-  clojure.core-native/subs)
+  ([s start]
+   (cpp/jank.runtime.subs s start))
+  ([s start end]
+   (cpp/jank.runtime.subs s start end)))
 
 (def ^:private first-index-of clojure.core-native/first-index-of)
 (def ^:private last-index-of clojure.core-native/last-index-of)
 
 ;; Sequences (again).
-(def sequential?
+(defn sequential?
   "Returns true if coll implements sequential"
-  clojure.core-native/sequential?)
+  [coll]
+  (cpp/jank.runtime.is_sequential coll))
 
 (defn reverse
   "Returns a seq of the items in coll in reverse order. Not lazy."
@@ -1464,7 +1476,7 @@
    ; TODO: LazilyPersistentVector
    (vec (concat* [a b c d e f] args))))
 
-(def ^:private lazy-seq* clojure.core-native/lazy-seq*)
+(defn- lazy-seq* [o] (cpp/clojure.core_native.lazy_seq o))
 
 (defmacro lazy-seq
   "Takes a body of expressions that returns an ISeq or nil, and yields
@@ -1474,31 +1486,38 @@
   [& body]
   (list `lazy-seq* (list* `fn `lazy-seq# [] body)))
 
-(def chunk-buffer
-  clojure.core-native/chunk-buffer)
+(defn chunk-buffer
+  [capacity]
+  (cpp/jank.runtime.chunk_buffer capacity))
 
-(def chunk-append
-  clojure.core-native/chunk-append)
+(defn chunk-append
+  [b x]
+  (cpp/jank.runtime.chunk_append b x))
 
-(def chunk
-  clojure.core-native/chunk)
+(defn chunk
+  [b]
+  (cpp/jank.runtime.chunk b))
 
-(def chunk-first
-  clojure.core-native/chunk-first)
+(defn chunk-first
+  [s]
+  (cpp/jank.runtime.chunk_first s))
 
-(def chunk-next
-  clojure.core-native/chunk-next)
+(defn chunk-next
+  [s]
+  (cpp/jank.runtime.chunk_next s))
 
-(def chunk-rest
-  clojure.core-native/chunk-rest)
+(defn chunk-rest
+  [s]
+  (cpp/jank.runtime.chunk_rest s))
 
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
     rest
-    (clojure.core-native/chunk-cons chunk rest)))
+    (cpp/jank.runtime.chunk_cons chunk rest)))
 
-(def chunked-seq?
-  clojure.core-native/chunk-seq?)
+(defn chunked-seq?
+  [s]
+  (cpp/jank.runtime.is_chunked_seq s))
 
 ; TODO: Support more bindings
 ; TODO: Support `for` functionality
@@ -1782,15 +1801,21 @@
           []
           m))
 
-(def get
+(defn get
   "Returns the value mapped to key, not-found or nil if key not present
    in associative collection, set, string, array, or ILookup instance."
-  clojure.core-native/get)
-(def get-in
+  ([map key]
+   (cpp/jank.runtime.get map key))
+  ([map key not-found]
+   (cpp/jank.runtime.get map key not-found)))
+(defn get-in
   "Returns the value in a nested associative structure,
    where ks is a sequence of keys. Returns nil if the key
    is not present, or the not-found value if supplied."
-  clojure.core-native/get-in)
+  ([m ks]
+   (cpp/jank.runtime.get_in m ks))
+  ([m ks not-found]
+   (cpp/jank.runtime.get_in m ks not-found)))
 
 (defn dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
@@ -1798,24 +1823,26 @@
   ([m]
    m)
   ([m k]
-   (clojure.core-native/dissoc m k))
+   (cpp/jank.runtime.dissoc m k))
   ([m k & ks]
    (let* [ret (dissoc m k)]
      (if ks
        (recur ret (first ks) (next ks))
        ret))))
 
-(def contains?
+(defn contains?
   "Returns true if key is present in the given collection, otherwise
    returns false.  Note that for numerically indexed collections like
    vectors and Java arrays, this tests if the numeric key is within the
    range of indexes. 'contains?' operates constant or logarithmic time;
    it will not perform a linear search for a value.  See also 'some'."
-  clojure.core-native/contains?)
+  [coll key]
+  (cpp/jank.runtime.contains coll key))
 
-(def find
+(defn find
   "Returns the map entry for key, or nil if key not present."
-  clojure.core-native/find)
+  [map key]
+  (cpp/jank.runtime.find map key))
 
 (defn select-keys
   "Returns a map containing only those entries in map whose key is in keys"
@@ -1898,7 +1925,9 @@
   [o]
   (cpp/jank.runtime.to_hash o))
 
-(def ^:private named? clojure.core-native/named?)
+(defn- named?
+  [x]
+  (cpp/jank.runtime.is_named x))
 
 (defn name
   "Returns the name String of a string, symbol or keyword."
@@ -2179,12 +2208,15 @@
      (clojure.core-native/integer-range start end step)
      (clojure.core-native/range start end step))))
 
-(def nth
+(defn nth
   "Returns the value at the index. get returns nil if index out of
    bounds, nth throws an exception unless not-found is supplied.  nth
    also works for strings, Java arrays, regex Matchers and Lists, and,
    in O(n) time, for sequences."
-  clojure.core-native/nth)
+  ([coll index]
+   (cpp/jank.runtime.nth coll index))
+  ([coll index not-found]
+   (cpp/jank.runtime.nth coll index not-found)))
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."

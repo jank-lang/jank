@@ -54,6 +54,8 @@ namespace clojure::core_native
   object_ref eval(object_ref expr);
   object_ref read_string(object_ref /* opts */, object_ref str);
 
+  object_ref lazy_seq(object_ref o);
+
   object_ref hash_unordered(object_ref coll);
   object_ref jank_version();
 }
