@@ -184,7 +184,7 @@ jobs:
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja ccache boost libzip openssl
+          brew install cmake ninja clang ccache boost libzip openssl
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
