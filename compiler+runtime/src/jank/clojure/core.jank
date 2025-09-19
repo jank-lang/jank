@@ -713,14 +713,14 @@
   ([coll]
    coll)
   ([coll x]
-   (clojure.core-native/conj-in-place! coll x)))
+   (cpp/jank.runtime.conj_in_place coll x)))
 
 (defn assoc!
   "When applied to a transient map, adds mapping of key(s) to
    val(s). When applied to a transient vector, sets the val at index.
    Note - index must be <= (count vector). Returns coll."
   ([coll k v]
-   (clojure.core-native/assoc-in-place! coll k v))
+   (cpp/jank.runtime.assoc_in_place coll k v))
   ([coll k v & kvs]
    (let [ret (assoc! coll k v)]
      (if kvs
@@ -730,7 +730,7 @@
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
   ([coll k]
-   (clojure.core-native/dissoc-in-place! coll k))
+   (cpp/jank.runtime.dissoc_in_place coll k))
   ([coll k & ks]
    (let [ret (dissoc! coll k)]
      (if ks
@@ -741,14 +741,14 @@
   "Removes the last item from a transient vector. If
    the collection is empty, throws an exception. Returns coll"
   [coll]
-  (clojure.core-native/pop-in-place! coll))
+  (cpp/jank.runtime.pop_in_place coll))
 
 (defn disj!
   "disj[oin]. Returns a transient set of the same (hashed/sorted) type, that
    does not contain key(s)."
   ([set] set)
   ([set elem]
-   (clojure.core-native/disj-in-place! set elem))
+   (cpp/jank.runtime.dissoc_in_place set elem))
   ([set elem & elems]
    (let [ret (disj! set elem)]
      (if elems
