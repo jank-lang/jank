@@ -204,6 +204,10 @@ jobs:
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           chmod +x install-bb
           sudo ./install-bb
+          if [[ "${RUNNER_OS}" == "macOS" ]];
+          then
+            export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+          fi
           JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
       - name: Upload .deb for publishing
         if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
