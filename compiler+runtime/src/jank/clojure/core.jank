@@ -1787,15 +1787,19 @@
            (persistent! map))))
 
 ;; Sets.
-(def hash-set
+(defn hash-set
   "Returns a new hash set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native/hash-set)
+  ([] (cpp/jank.runtime.obj.persistent_hash_set.empty))
+  ([& keys]
+   (cpp/jank.runtime.obj.persistent_hash_set.create_from_seq keys)))
 
-(def sorted-set
+(defn sorted-set
   "Returns a new sorted set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native/sorted-set)
+  ([] (cpp/jank.runtime.obj.persistent_sorted_set.empty))
+  ([& keys]
+   (cpp/jank.runtime.obj.persistent_sorted_set.create_from_seq keys)))
 
 (defn sorted-set-by
   "Returns a new sorted set with supplied keys, using the supplied
