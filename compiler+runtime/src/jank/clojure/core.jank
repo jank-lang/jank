@@ -1032,49 +1032,65 @@
   ([atom f x y & args]
    (cpp/jank.runtime.swap_atom atom f x y args)))
 
-(def swap-vals!
+(defn swap-vals!
   "Atomically swaps the value of atom to be:
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects.
    Returns [old new], the value of the atom before and after the swap."
-  clojure.core-native/swap-vals!)
+  ([atom f]
+   (cpp/jank.runtime.swap_vals atom f))
+  ([atom f x]
+   (cpp/jank.runtime.swap_vals atom f x))
+  ([atom f x y]
+   (cpp/jank.runtime.swap_vals atom f x y))
+  ([atom f x y & args]
+   (cpp/jank.runtime.swap_vals atom f x y args)))
 
-(def compare-and-set!
+(defn compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
    current value of the atom is identical to oldval. Returns true if
    set happened, else false"
-  clojure.core-native/compare-and-set!)
+  [atom oldval newval]
+  (cpp/jank.runtime.compare_and_set atom oldval newval))
 
-(def reset!
+(defn reset!
   "Sets the value of atom to newval without regard for the
    current value. Returns newval."
-  clojure.core-native/reset!)
+  [atom newval]
+  (cpp/jank.runtime.reset atom newval))
 
-(def reset-vals!
+(defn reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
-  clojure.core-native/reset-vals!)
+  [atom newval]
+  (cpp/jank.runtime.reset_vals atom newval))
 
 ;; Volatiles.
-(def volatile!
+(defn volatile!
   "Creates and returns a volatile with an initial value of val."
-  clojure.core-native/volatile!)
+  [val]
+  (cpp/jank.runtime.volatile_ val))
 
-(def vreset!
+(defn vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
-  clojure.core-native/vreset!)
+  [vol newval]
+  (cpp/jank.runtime.vreset vol newval))
 
 ; TODO: In Clojure, this is a macro (for perf reasons).
-(def vswap!
+(defn vswap!
   "Non-atomically swaps the value of the volatile as if:
    (apply f current-value-of-vol args). Returns the value that
    was swapped in."
-  clojure.core-native/vswap!)
+  ([vol f]
+   (cpp/jank.runtime.vswap vol f))
+  ([vol f & args]
+   (cpp/jank.runtime.vswap vol f args)))
 
-(def volatile?
+(defn volatile?
   "Returns true if x is a volatile."
-  clojure.core-native/volatile?)
+  [x]
+  (cpp/jank.runtime.is_volatile x))
 
 (def ^:private delay* clojure.core-native/delay*)
 
@@ -1101,9 +1117,10 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/+ l r))
+   (cpp/jank.runtime.add l r))
   ([l r & args]
-   (let [res (clojure.core-native/+ l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (+ l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1115,9 +1132,10 @@
   ([x]
    (- 0 x))
   ([l r]
-   (clojure.core-native/- l r))
+   (cpp/jank.runtime.sub l r))
   ([l r & args]
-   (let [res (clojure.core-native/- l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (- l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1131,9 +1149,10 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/* l r))
+   (cpp/jank.runtime.mul l r))
   ([l r & args]
-   (let [res (clojure.core-native/* l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (* l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1145,74 +1164,83 @@
   ([x]
    (/ 1 x))
   ([l r]
-   (clojure.core-native// l r))
+   (cpp/jank.runtime.div l r))
   ([l r & args]
-   (let [res (clojure.core-native// l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (/ l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
 ;; Bit operations.
 ; TODO: Unboxing and inlining for these.
-(def bit-not
+(defn bit-not
   "Bitwise complement"
-  clojure.core-native/bit-not)
+  [x]
+  (cpp/jank.runtime.bit_not x))
 
 (defn bit-and
   "Bitwise and"
   ([x y]
-   (clojure.core-native/bit-and x y))
+   (cpp/jank.runtime.bit_and x y))
   ([x y & more]
    (reduce bit-and (bit-and x y) more)))
 
 (defn bit-or
   "Bitwise or"
   ([x y]
-   (clojure.core-native/bit-or x y))
+   (cpp/jank.runtime.bit_or x y))
   ([x y & more]
    (reduce bit-or (bit-or x y) more)))
 
 (defn bit-xor
   "Bitwise exclusive or"
   ([x y]
-   (clojure.core-native/bit-xor x y))
+   (cpp/jank.runtime.bit_xor x y))
   ([x y & more]
    (reduce bit-xor (bit-xor x y) more)))
 
 (defn bit-and-not
   "Bitwise and with complement"
   ([x y]
-   (clojure.core-native/bit-and-not x y))
+   (cpp/jank.runtime.bit_and_not x y))
   ([x y & more]
    (reduce bit-and-not (bit-and-not x y) more)))
 
-(def bit-clear
+(defn bit-clear
   "Clear bit at index n"
-  clojure.core-native/bit-clear)
+  [x n]
+  (cpp/jank.runtime.bit_clear x n))
 
-(def bit-set
+(defn bit-set
   "Set bit at index n"
-  clojure.core-native/bit-set)
+  [x n]
+  (cpp/jank.runtime.bit_set x n))
 
-(def bit-flip
+(defn bit-flip
   "Flip bit at index n"
-  clojure.core-native/bit-flip)
+  [x n]
+  (cpp/jank.runtime.bit_flip x n))
 
-(def bit-test
+(defn bit-test
   "Test bit at index n"
-  clojure.core-native/bit-test)
+  [x n]
+  (cpp/jank.runtime.bit_test x n))
 
-(def bit-shift-left
+(defn bit-shift-left
   "Bitwise shift left"
-  clojure.core-native/bit-shift-left)
+  [x n]
+  (cpp/jank.runtime.bit_shift_left x n))
 
-(def bit-shift-right
+(defn bit-shift-right
   "Bitwise shift right"
-  clojure.core-native/bit-shift-right)
+  [x n]
+  (cpp/jank.runtime.bit_shift_right x n))
 
-(def unsigned-bit-shift-right
+(defn unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
-  clojure.core-native/unsigned-bit-shift-right)
+  [x n]
+  (cpp/jank.runtime.bit_unsigned_shift_right x n))
 
 (defn not=
   ([x]
