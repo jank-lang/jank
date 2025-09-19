@@ -1257,12 +1257,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/< l r))
+   (cpp/jank.runtime.lt l r))
   ([l r & args]
-   (if (clojure.core-native/< l r)
+   (if (cpp/jank.runtime.lt l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/< r (first args)))
+       (cpp/jank.runtime.lt r (first args)))
      false)))
 
 (defn
@@ -1272,12 +1272,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/<= l r))
+   (cpp/jank.runtime.lte l r))
   ([l r & args]
-   (if (clojure.core-native/<= l r)
+   (if (cpp/jank.runtime.lte l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/<= r (first args)))
+       (cpp/jank.runtime.lte r (first args)))
      false)))
 
 (defn
@@ -1287,12 +1287,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/< r l))
+   (cpp/jank.runtime.lt r l))
   ([l r & args]
-   (if (clojure.core-native/< r l)
+   (if (cpp/jank.runtime.lt r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/< (first args) r))
+       (cpp/jank.runtime.lt (first args) r))
      false)))
 
 (defn
@@ -1302,12 +1302,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/<= r l))
+   (cpp/jank.runtime.lte r l))
   ([l r & args]
-   (if (clojure.core-native/<= r l)
+   (if (cpp/jank.runtime.lte r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/<= (first args) r))
+       (cpp/jank.runtime.lte (first args) r))
      false)))
 
 (defn
@@ -1317,9 +1317,10 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/min l r))
+   (cpp/jank.runtime.min l r))
   ([l r & args]
-   (let [res (clojure.core-native/min l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (min l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1331,38 +1332,46 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/max l r))
+   (cpp/jank.runtime.max l r))
   ([l r & args]
-   (let [res (clojure.core-native/max l r)]
+   ;; TODO: swap to interop, currently broken
+   (let [res (max l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
-(def inc
+(defn inc
   "Returns a number one greater than num. Does not auto-promote
    longs, will throw on overflow. See also: inc'"
-  clojure.core-native/inc)
-(def dec
+  [x]
+  (cpp/jank.runtime.inc x))
+(defn dec
   "Returns a number one less than num. Does not auto-promote
    longs, will throw on overflow. See also: dec"
-  clojure.core-native/dec)
+  [x]
+  (cpp/jank.runtime.dec x))
 
-(def pos?
+(defn pos?
   "Returns true if num is greater than zero, else false"
-  clojure.core-native/pos?)
-(def neg?
+  [num]
+  (cpp/jank.runtime.is_pos num))
+(defn neg?
   "Returns true if num is less than zero, else false"
-  clojure.core-native/neg?)
-(def zero?
+  [num]
+  (cpp/jank.runtime.is_neg num))
+(defn zero?
   "Returns true if num is zero, else false"
-  clojure.core-native/zero?)
+  [num]
+  (cpp/jank.runtime.is_zero num))
 
-(def rem
+(defn rem
   "Returns the remainder of dividing numerator by denominator."
-  clojure.core-native/rem)
-(def quot
+  [num div]
+  (cpp/jank.runtime.rem num div))
+(defn quot
   "quot[ient] of dividing numerator by denominator."
-  clojure.core-native/quot)
+  [num div]
+  (cpp/jank.runtime.quot num div))
 
 (defn mod
   "Modulus of num and div. Truncates toward negative infinity."
@@ -1373,32 +1382,38 @@
       (+ m div))))
 
 ;; Numbers.
-(def integer?
+(defn integer?
   "Returns true if n is an integer"
-  clojure.core-native/integer?)
-(def float?
+  [n]
+  (cpp/jank.runtime.is_integer n))
+(defn float?
   "Returns true if n is a floating point number"
-  clojure.core-native/real?)
-(def boolean?
+  [n]
+  (cpp/jank.runtime.is_real n))
+(defn boolean?
   "Returns true if x is a boolean"
-  clojure.core-native/boolean?)
-(def number?
+  [x]
+  (cpp/jank.runtime.is_boolean x))
+(defn number?
   "Returns true if x is a number"
-  clojure.core-native/number?)
+  [x]
+  (cpp/jank.runtime.is_number x))
 
-(def even?
+(defn even?
   "Returns true if n is even, throws an exception if n is not an integer"
-  clojure.core-native/even?)
-(def odd?
+  [n]
+  (cpp/jank.runtime.is_even n))
+(defn odd?
   "Returns true if n is odd, throws an exception if n is not an integer"
-  clojure.core-native/odd?)
+  [n]
+  (cpp/jank.runtime.is_odd n))
 
 ;; Random.
 (defn rand
   "Returns a random floating point number between 0 (inclusive) and
    n (default 1) (exclusive)."
   ([]
-   (clojure.core-native/rand))
+   (cpp/jank.runtime.rand))
   ([n]
    (* (rand) n)))
 
