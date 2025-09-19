@@ -14,7 +14,13 @@ namespace jank::runtime
   namespace obj
   {
     struct nil;
+    struct boolean;
   }
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::boolean> jank_true;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::boolean> jank_false;
 
   namespace detail
   {
@@ -390,6 +396,12 @@ namespace jank::runtime
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
     return o;
+  }
+
+  template <typename T>
+  constexpr oref<obj::boolean> make_box(bool const &b)
+  {
+    return b ? jank_true : jank_false;
   }
 
   /* TODO: Constexpr these. */
