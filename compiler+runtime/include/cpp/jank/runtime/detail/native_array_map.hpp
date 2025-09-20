@@ -41,7 +41,7 @@ namespace jank::runtime::detail
 
     void erase(object_ref const key);
 
-    object_ref find(object_ref const key) const;
+    object_ref *find(object_ref const key) const;
 
     uhash to_hash() const;
 

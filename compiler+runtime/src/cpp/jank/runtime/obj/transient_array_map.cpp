@@ -64,32 +64,37 @@ namespace jank::runtime::obj
   object_ref transient_array_map::get(object_ref const key) const
   {
     assert_active();
-    return data.find(key);
+    auto const res(data.find(key));
+    if(res)
+    {
+      return *res;
+    }
+    return jank_nil;
   }
 
   object_ref transient_array_map::get(object_ref const key, object_ref const fallback) const
   {
-    auto const res(get(key));
-    if(res.is_some())
+    auto const res(data.find(key));
+    if(res)
     {
-      return res;
+      return *res;
     }
     return fallback;
   }
 
   object_ref transient_array_map::get_entry(object_ref const key) const
   {
-    auto const res(get(key));
-    if(res.is_some())
+    auto const res(data.find(key));
+    if(res)
     {
-      return make_box<persistent_vector>(std::in_place, key, res);
+      return make_box<persistent_vector>(std::in_place, key, *res);
     }
     return jank_nil;
   }
 
   bool transient_array_map::contains(object_ref const key) const
   {
-    return get(key).is_some();
+    return data.find(key);
   }
 
   object_ref transient_array_map::assoc_in_place(object_ref const key, object_ref const value)
