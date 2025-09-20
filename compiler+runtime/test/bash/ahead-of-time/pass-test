@@ -8,17 +8,15 @@
    [clojure.test :as t :refer [deftest is testing use-fixtures]]))
 
 (def this-nsym (ns-name *ns*))
+(def default-output-file "target/cli")
 
 (defn module-path [alias]
   (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
 
-(defn find-binary [{:keys [name] :or {name "cli"}}]
-  (-> (proc/sh (str "find ./target -name " name)) :out str/trim))
-
 (defn compile-command [module-path main-module {:keys [optimization-flag
                                                        output-file]
                                                 :or {optimization-flag "-O0"
-                                                     output-file "cli"}}]
+                                                     output-file default-output-file}}]
   (str "jank " optimization-flag
        " --module-path=" module-path
        " compile " main-module
@@ -42,18 +40,17 @@
                          " foo bar baz"
                          nil)
                   expected-output (slurp (str "expected-output/" alias-name "/" main-module))
-                  compile-command (compile-command module-path main-module {})
-                  cli-path (delay (find-binary {}))]]
+                  compile-command (compile-command module-path main-module {})]]
       (testing (str alias-name " & " main-module)
         (is (= 0 (->> compile-command
                       (proc/sh {:out *out*
                                 :err *out*})
                       :exit)))
-        (is (= expected-output (->> args (str @cli-path)
+        (is (= expected-output (->> args (str default-output-file)
                                     proc/sh :out))))
       (testing "Executable in temp directory"
         (fs/with-temp-dir [dir {}]
-          (fs/move @cli-path dir)
+          (fs/move default-output-file dir)
           (is (= expected-output (->> (str "./cli " args)
                                       (proc/sh {:dir dir})
                                       :out))))))))
@@ -63,16 +60,15 @@
         module-path (module-path alias-name)
         module "core"
         args " Admin 3000"
-        output-filename "my-cli"
+        output-filename "target/my-cli"
         expected-output (slurp (str "expected-output/" alias-name "/" module))
-        compile-command (compile-command module-path module {:output-file output-filename})
-        cli-path (delay (find-binary {:name output-filename}))]
+        compile-command (compile-command module-path module {:output-file output-filename})]
     (testing (str alias-name " & core")
       (is (= 0 (->> compile-command
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (= expected-output (-> @cli-path (str args)
+      (is (= expected-output (-> output-filename (str args)
                                  proc/sh :out))))))
 
 (deftest aot-jank-and-cpp-modules
@@ -81,12 +77,11 @@
           module "core"
           args " foo bar"
           expected-output (slurp (str "expected-output/" alias-name "/" module))
-          compile-command (compile-command module-path module {:include-headers? true})
-          cli-path (delay (find-binary {}))]
+          compile-command (compile-command module-path module {:include-headers? true})]
       (testing (str alias-name " & core")
         (println "Compile command: " compile-command)
         (is (= 0 (->> compile-command proc/sh :exit)))
-        (is (= expected-output (-> @cli-path (str args)
+        (is (= expected-output (-> default-output-file (str args)
                                    proc/sh :out))))))
 
 (deftest aot-jank-and-cpp-modules-release-build
@@ -96,15 +91,14 @@
           args " foo bar"
           expected-output (slurp (str "expected-output/" alias-name "/" module))
           compile-command (compile-command module-path module {:include-headers? true
-                                                               :optimization-flag "-O3"})
-          cli-path (delay (find-binary {}))]
+                                                               :optimization-flag "-O3"})]
       (testing (str alias-name " & core")
         (println "Compile command: " compile-command)
         (is (= 0 (->> compile-command
                       (proc/sh {:out *out*
                                 :err *out*})
                       :exit)))
-        (is (= expected-output (-> @cli-path (str args)
+        (is (= expected-output (-> default-output-file (str args)
                                    proc/sh :out))))))
 
 (defn -main []

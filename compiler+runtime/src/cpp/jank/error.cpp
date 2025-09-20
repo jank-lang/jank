@@ -188,6 +188,8 @@ namespace jank::error
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
 
+      case kind::aot_unresolved_main:
+        return "Unresolved -main function.";
       case kind::aot_compilation_failure:
         return "Ahead-of-time compilation failure.";
       case kind::internal_aot_failure:

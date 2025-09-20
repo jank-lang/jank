@@ -24,7 +24,6 @@ namespace Cpp
 
 namespace jank::jit
 {
-
   struct processor
   {
     processor(jtl::immutable_string const &binary_version);
@@ -46,5 +45,10 @@ namespace jank::jit
 
     std::unique_ptr<Cpp::Interpreter> interpreter;
     native_vector<std::filesystem::path> library_dirs;
+
+    /* The files within this map will get added into Clang's VFS prior to the creation of
+     * the `clang::Interpreter`. This allows us to embed the PCH into AOT compiled programs
+     * while still being able to include it. */
+    std::map<char const *, std::string_view> vfs;
   };
 }

@@ -111,7 +111,8 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
+      auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
+      auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
         return next;
@@ -167,7 +168,8 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
+      auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
+      auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
         return make_box<persistent_vector>(std::in_place, v, next);

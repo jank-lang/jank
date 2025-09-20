@@ -19,6 +19,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/aot/resource.hpp>
 #include <jank/error/system.hpp>
 
 namespace Cpp
@@ -211,6 +212,17 @@ namespace jank::util
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version)
   {
     std::filesystem::path const jank_path{ process_dir().c_str() };
+
+    /* For AOT compiled jank programs, the PCH is embedded within the executable as a resource.
+     * In this case, we just grab a pointer to the data and set it up with Clang's VFS so
+     * no copying or file IO is required. */
+    auto const resource{ aot::find_resource("incremental.pch") };
+    if(resource.is_some())
+    {
+      runtime::__rt_ctx->jit_prc.vfs["/virtual/incremental.pch"]
+        = { resource.unwrap().data(), resource.unwrap().size() };
+      return "/virtual/incremental.pch";
+    }
 
     auto dev_path{ jank_path / "incremental.pch" };
     if(std::filesystem::exists(dev_path))
