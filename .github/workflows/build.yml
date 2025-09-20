@@ -189,13 +189,20 @@ jobs:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
           key: ${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
-      - name: Cache object files
+      - name: Cache ccache object files
+        if: matrix.analyze == 'off'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/.ccache
             ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ${{ env.JANK_MATRIX_ID }}
+          key: ccache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+      - name: Cache ctcache object files
+        if: matrix.analyze == 'on'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/.ctcache
+          key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
       - name: Build and test jank
         id: jank-build-step
         run: |
