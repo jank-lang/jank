@@ -124,31 +124,29 @@ jobs:
           - name: macOS - lint
             os: macos-26
             lint: true
-          ### Debug + clang-tidy + coverage
-          #- name: macOS - debug, analysis, coverage
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: none
-          #  coverage: on
-          #  analyze: on
+          ## Debug + clang-tidy + coverage
+          - name: macOS - debug, analysis, coverage
+            os: macos-26
+            build_type: Debug
+            sanitize: none
+            coverage: on
+            analyze: on
 
-          ### Debug + sanitization
-          #- name: macOS - address sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: address
+          ## Debug + sanitization
+          - name: macOS - address sanitizer
+            os: macos-26
+            build_type: Debug
+            sanitize: address
 
-          #- name: macOS - undefined behavior sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: undefined
+          - name: macOS - undefined behavior sanitizer
+            os: macos-26
+            build_type: Debug
+            sanitize: undefined
 
-          ## TODO: Fix this. Causes linker issues.
-          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          #- name: macOS - thread sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: thread
+          - name: macOS - thread sanitizer
+            os: macos-26
+            build_type: Debug
+            sanitize: thread
 
           ## Release
           - name: macOS - release
