@@ -824,6 +824,16 @@ namespace jank::runtime::module
     return load_jank(entry);
   }
 
+  void loader::add_path(jtl::immutable_string const &path)
+  {
+    jtl::string_builder sb;
+    sb(paths);
+    sb(module_separator);
+    sb(path);
+    paths = sb.release();
+    register_path(entries, path);
+  }
+
   object_ref loader::to_runtime_data() const
   {
     runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());

@@ -1,7 +1,7 @@
 # We don't have any dynamic lib deps which are installed alongside jank.
 set(CMAKE_SKIP_INSTALL_RPATH ON)
 install(TARGETS jank_exe_phase_2 DESTINATION bin)
-install(FILES ${CMAKE_BINARY_DIR}/libjank.a DESTINATION lib/jank/${PROJECT_VERSION}/lib)
+install(FILES ${CMAKE_BINARY_DIR}/libjank-standalone.a DESTINATION lib/jank/${PROJECT_VERSION}/lib)
 
 # This is a helper which recursively takes headers from one directory
 # and installs them into the same output include directory. It
