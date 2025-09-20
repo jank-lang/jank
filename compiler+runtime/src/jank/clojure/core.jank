@@ -803,11 +803,11 @@
   ([ref]
    (clojure.core-native/deref ref))
   ; TODO: Blocking.
-  ([ref timeout-ms timeout-val]
+  ([ref timeout-ms timeout-val]))
    ;(if (instance? clojure.lang.IBlockingDeref ref)
    ;  (.deref ^clojure.lang.IBlockingDeref ref timeout-ms timeout-val)
    ;  (deref-future ref timeout-ms timeout-val))
-   ))
+   
 
 (def reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
@@ -1400,20 +1400,72 @@
 (def chunked-seq?
   clojure.core-native/chunk-seq?)
 
-; TODO: Support more bindings
-; TODO: Support `for` functionality
+
+(defn ^:private assert-arguments
+  [& pairs]
+  (let [pairs (partition 2 pairs)]
+    (loop [ps pairs]
+      (when (seq ps)
+        (let [[pred msg] (first ps)]
+          (when (not pred)
+            (throw (str msg))))
+        (recur (next ps))))))
+
+(defn ^:private emit-doseq-step
+  "Returns [need-recur? form] mirroring clojure.core/doseq’s expansion"
+  [recform exprs body]
+  (if-not exprs
+    [true `(do ~@body)]
+    (let [k (first exprs)
+          v (second exprs)]
+      (if (keyword? k)
+        (let [[needrec subform] (emit-doseq-step recform (nnext exprs) body)]
+          (cond
+            (= k :let)   [needrec `(let ~v ~subform)]
+            (= k :while) [false   `(when ~v
+                                     ~subform
+                                     ~@(when needrec [recform]))]
+            (= k :when)  [false   `(if ~v
+                                     (do
+                                       ~subform
+                                       ~@(when needrec [recform]))
+                                     ~recform)]))
+        ;; binding level with chunked fast path
+        (let [seq-   (gensym "seq_")
+              chunk- (gensym "chunk_")
+              count- (gensym "count_")
+              i-     (gensym "i_")
+              recform-next  `(recur (next ~seq-) nil 0 0)
+              [needrec-normal subform-normal]
+              (emit-doseq-step recform-next (nnext exprs) body)
+              recform-chunk `(recur ~seq- ~chunk- ~count- (unchecked-inc ~i-))
+              [_ subform-chunk]
+              (emit-doseq-step recform-chunk (nnext exprs) body)]
+          [true
+           `(loop* [~seq- (seq ~v), ~chunk- nil, ~count- 0, ~i- 0]
+              (if (< ~i- ~count-)
+                (let [~k (nth ~chunk- ~i-)]   
+                  ~subform-chunk
+                  ~@(when needrec-normal [recform-chunk]))
+                (when-let [~seq- (seq ~seq-)]
+                  (if (chunked-seq? ~seq-)
+                    (let [c# (chunk-first ~seq-)]
+                      (recur (chunk-rest ~seq-) c# (int (count c#)) (int 0)))
+                    (let [~k (first ~seq-)]
+                      ~subform-normal
+                      ~@(when needrec-normal [recform-next]))))))])))))
+
 (defmacro doseq
   "Repeatedly executes body (presumably for side-effects) with
-   bindings and filtering as provided by `for`.  Does not retain
-   the head of the sequence. Returns nil."
-  [bindings & body]
-  (let [arg (first bindings)
-        s (second bindings)]
-    (list 'clojure.core/reduce (concat* (list 'clojure.core/fn ['_ arg])
-                                        body
-                                        [nil])
-          nil
-          s)))
+  bindings and filtering as provided by \"for\".  Does not retain
+  the head of the sequence. Returns nil."
+  [seq-exprs & body]
+  (assert-arguments
+    (vector? seq-exprs) "doseq requires a vector for its binding"
+    (even? (count seq-exprs)) "doseq requires an even number of forms in binding vector")
+  (let [[_ form] (emit-doseq-step nil (seq seq-exprs) body)]
+    form))
+
 
 (defn concat
   "Returns a lazy seq representing the concatenation of the elements in the supplied colls."
@@ -4210,18 +4262,18 @@
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
   ([ns name]
-     (let [v (clojure.core-native/intern-var
-               (cpp/jank.runtime.to_qualified_symbol
-                 (the-ns ns) name))]
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
-       v))
+   (let [v (clojure.core-native/intern-var
+             (cpp/jank.runtime.to_qualified_symbol
+               (the-ns ns) name))]
+     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     v))
   ([ns name val]
-     (let [v (clojure.core-native/intern-var
-               (cpp/jank.runtime.to_qualified_symbol
-                 (the-ns ns) name))]
-       (clojure.core-native/var-bind-root v val)
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
-       v)))
+   (let [v (clojure.core-native/intern-var
+             (cpp/jank.runtime.to_qualified_symbol
+               (the-ns ns) name))]
+     (clojure.core-native/var-bind-root v val)
+     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     v)))
 
 (defn nfirst
   "Same as (next (first x))"
@@ -4352,7 +4404,7 @@
    (throw "TODO: port *'"))
   ([x y]
   ;;  (. clojure.lang.Numbers (multiplyP x y))
-  (throw "TODO: port *'"))
+   (throw "TODO: port *'"))
   ([x y & more]
    (reduce *' (*' x y) more)))
 
@@ -4891,7 +4943,7 @@
   "Gets the validator-fn for a var/ref/agent/atom."
  [#_clojure.lang.IRef iref]
   ;; (. iref (getValidator))
-  (throw "TODO: port get-validator"))
+ (throw "TODO: port get-validator"))
 
 (defn commute
   "Must be called in a transaction. Sets the in-transaction-value of
@@ -5001,8 +5053,8 @@
   remaining items in other colls are ignored. The transform should accept
   number-of-colls arguments"
   ([coll]
-     (if (seq? coll) coll
-         (or (seq coll) ())))
+   (if (seq? coll) coll
+       (or (seq coll) ())))
   ([xform coll]
     ;;  (or (clojure.lang.RT/chunkIteratorSeq
     ;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
@@ -5047,12 +5099,12 @@
   [f & maps]
   (when (some identity maps)
     (let [merge-entry (fn [m e]
-			(let [k (key e) v (val e)]
-			  (if (contains? m k)
-			    (assoc m k (f (get m k) v))
-			    (assoc m k v))))
+                       (let [k (key e) v (val e)]
+                            (if (contains? m k)
+                                (assoc m k (f (get m k) v))
+                                (assoc m k v))))
           merge2 (fn [m1 m2]
-		   (reduce merge-entry (or m1 {}) (seq m2)))]
+                  (reduce merge-entry (or m1 {}) (seq m2)))]
       (reduce merge2 maps))))
 
 (defn line-seq
@@ -5066,8 +5118,8 @@
 (defn comparator
   "Returns an implementation of java.util.Comparator based upon pred."
   [pred]
-    (fn [x y]
-      (cond (pred x y) -1 (pred y x) 1 :else 0)))
+  (fn [x y]
+    (cond (pred x y) -1 (pred y x) 1 :else 0)))
 
 (def sort
   "Returns a sorted sequence of the items in coll. If no comparator is
@@ -5300,7 +5352,7 @@
   ;;   (instance? BigInteger x) (BigDecimal. ^BigInteger x)
   ;;   (number? x) (BigDecimal/valueOf (long x))
   ;;   :else (BigDecimal. x))
-   (throw "TODO: port bigdec"))
+  (throw "TODO: port bigdec"))
 
 (def ^:dynamic ^:private print-initialized false)
 
@@ -5768,10 +5820,10 @@
   "test [v] finds fn at key :test in var metadata and calls it,
   presuming failure will throw exception"
   [v]
-    (let [f (:test (meta v))]
-      (if f
-        (do (f) :ok)
-        :no-test)))
+  (let [f (:test (meta v))]
+    (if f
+      (do (f) :ok)
+      :no-test)))
 
 (defn re-pattern
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
@@ -5836,10 +5888,10 @@
 (defn xml-seq
   "A tree seq on the xml elements as per xml/parse"
   [root]
-    (tree-seq
-     (complement string?)
-     (comp seq :content)
-     root))
+  (tree-seq
+   (complement string?)
+   (comp seq :content)
+   root))
 
 (defn special-symbol?
   "Returns true if s names a special form"
@@ -5889,15 +5941,15 @@
   corresponding val in smap.  Returns a transducer when no collection
   is provided."
   ([smap]
-     (map #(if-let [e (find smap %)] (val e) %)))
+   (map #(if-let [e (find smap %)] (val e) %)))
   ([smap coll]
-     (if (vector? coll)
-       (reduce (fn [v i]
-                  (if-let [e (find smap (nth v i))]
-                    (assoc v i (val e))
-                    v))
-                coll (range (count coll)))
-       (map #(if-let [e (find smap %)] (val e) %) coll))))
+   (if (vector? coll)
+     (reduce (fn [v i]
+                (if-let [e (find smap (nth v i))]
+                  (assoc v i (val e))
+                  v))
+             coll (range (count coll)))
+     (map #(if-let [e (find smap %)] (val e) %) coll))))
 
 (defmacro dosync
   "Runs the exprs (in an implicit do) in a transaction that encompasses
@@ -6047,7 +6099,7 @@
    (throw "TODO: port float-array"))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
-   (throw "TODO: port float-array") ))
+   (throw "TODO: port float-array")))
 
 (defn boolean-array
   "Creates an array of booleans"
@@ -6219,7 +6271,7 @@
   ;;                       (cons (if (identical? x NIL) nil x) (drain)))))))]
   ;;    (send-off agt fill)
   ;;    (drain))
-     (throw "TODO: port seque")))
+   (throw "TODO: port seque")))
 
 (defn class?
   "Returns true if x is an instance of Class"
@@ -6455,12 +6507,12 @@ fails, attempts to require sym's namespace and retries."
   final value, you must wrap it in some data structure and unpack it
   after trampoline returns."
   ([f]
-     (let [ret (f)]
-       (if (fn? ret)
-         (recur ret)
-         ret)))
+   (let [ret (f)]
+     (if (fn? ret)
+       (recur ret)
+       ret)))
   ([f & args]
-     (trampoline #(apply f args))))
+   (trampoline #(apply f args))))
 
 (defmacro while
   "Repeatedly executes body while test expression is true. Presumes
@@ -7040,9 +7092,9 @@ fails, attempts to require sym's namespace and retries."
   "Returns items from coll with random probability of prob (0.0 -
   1.0).  Returns a transducer when no collection is provided."
   ([prob]
-     (filter (fn [_] (< (rand) prob))))
+   (filter (fn [_] (< (rand) prob))))
   ([prob coll]
-     (filter (fn [_] (< (rand) prob)) coll)))
+   (filter (fn [_] (< (rand) prob)) coll)))
 
 ;; (deftype Eduction [xform coll]
 ;;    Iterable
@@ -7146,11 +7198,11 @@ fails, attempts to require sym's namespace and retries."
 (def default-data-readers
   "Default map of data reader functions provided by Clojure. May be
   overridden by binding *data-readers*."
-  (merge
+  (merge))
     ;; {'uuid #'clojure.uuid/default-uuid-reader}
     ;; (when-class "java.sql.Timestamp"
     ;;   {'inst #'clojure.instant/read-instant-date})
-   ))
+   
 
 (def ^:dynamic *data-readers*
   "Map from reader tag symbols to data reader Vars.
