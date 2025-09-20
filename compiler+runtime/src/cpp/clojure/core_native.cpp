@@ -109,7 +109,7 @@ namespace clojure::core_native
     return make_box(try_object<runtime::var>(o)->get_thread_binding().is_some());
   }
 
-  static object_ref delay(object_ref const fn)
+  object_ref delay(object_ref const fn)
   {
     return make_box<obj::delay>(fn);
   }

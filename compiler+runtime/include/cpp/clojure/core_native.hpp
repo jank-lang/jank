@@ -58,4 +58,6 @@ namespace clojure::core_native
 
   object_ref hash_unordered(object_ref coll);
   object_ref jank_version();
+
+  object_ref delay(object_ref fn);
 }
