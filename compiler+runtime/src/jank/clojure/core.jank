@@ -5421,20 +5421,17 @@
   ;; (clojure.lang.RT/uncheckedDoubleCast x)
   (throw "TODO: port unchecked-double"))
 
-(defn ratio?
+(def ratio?
   "Returns true if n is a Ratio"
-  [r]
-  (cpp/jank.runtime.is_ratio r))
+  clojure.core-native/ratio?)
 
-(defn numerator
+(def numerator
   "Returns the numerator part of a Ratio."
-  [r]
-  (cpp/jank.runtime.numerator r))
+  clojure.core-native/numerator)
 
-(defn denominator
+(def denominator
   "Returns the denominator part of a Ratio."
-  [r]
-  (cpp/jank.runtime.denominator r))
+  clojure.core-native/denominator)
 
 (defn decimal?
   "Returns true if n is a BigDecimal"
