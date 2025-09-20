@@ -398,12 +398,6 @@ namespace jank::runtime
     return o;
   }
 
-  template <typename T>
-  constexpr oref<obj::boolean> make_box(bool const b)
-  {
-    return b ? jank_true : jank_false;
-  }
-
   /* TODO: Constexpr these. */
   template <typename T, typename... Args>
   jtl::ref<T> make_box(Args &&...args)
@@ -432,6 +426,13 @@ namespace jank::runtime
       throw std::runtime_error{ "unable to allocate box" };
     }
     return ret;
+  }
+
+  template <typename T>
+  requires(T::obj_type == object_type::boolean)
+  oref<T> make_box(bool const b)
+  {
+    return b ? jank_true : jank_false;
   }
 
   template <typename T, typename... Args>
