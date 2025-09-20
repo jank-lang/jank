@@ -372,7 +372,9 @@ namespace jank::environment
       util::cli::opts.target_module = "health";
       util::cli::opts.output_filename = exe_output;
       util::cli::opts.module_path = path_tmp;
-      util::scope_exit const finally{ [=] { util::cli::opts = saved_opts; } };
+      util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
+                                      [=] { util::cli::opts = saved_opts; }
+      };
 
       runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
