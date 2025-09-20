@@ -412,7 +412,7 @@
 (def reset-meta!
   "Atomically resets the metadata for a namespace/var/ref/agent/atom"
   (fn* [iref metadata-map]
-    (cpp/jank.runtime.with_meta iref metadata-map)))
+    (cpp/jank.runtime.reset_meta iref metadata-map)))
 
 ;; Input/output.
 (def print
