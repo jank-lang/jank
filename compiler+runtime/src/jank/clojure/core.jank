@@ -1435,9 +1435,6 @@
   ([s start end]
    (cpp/jank.runtime.subs s start end)))
 
-(def ^:private first-index-of clojure.core-native/first-index-of)
-(def ^:private last-index-of clojure.core-native/last-index-of)
-
 ;; Sequences (again).
 (defn sequential?
   "Returns true if coll implements sequential"
