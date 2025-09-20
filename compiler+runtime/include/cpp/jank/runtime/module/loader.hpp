@@ -156,6 +156,9 @@ namespace jank::runtime::module
     jtl::string_result<void> load_jank(file_entry const &entry) const;
     jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
+    /* This only adds a single path, so it's assumed there's no separator present. */
+    void add_path(jtl::immutable_string const &path);
+
     object_ref to_runtime_data() const;
 
     jtl::immutable_string paths;

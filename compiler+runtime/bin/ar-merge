@@ -5,8 +5,8 @@ set -euo pipefail
 # CMake will copy this script into the build directory when configuring
 # and it will replace these variables with the correct values.
 ar="@CMAKE_AR@"
+cmake_binary_dir="@CMAKE_CURRENT_BINARY_DIR@"
 cache_dir="@CMAKE_CURRENT_BINARY_DIR@/ar-cache"
-merge_output="@CMAKE_CURRENT_BINARY_DIR@/libjank.a"
 
 command="${1}"
 shift
@@ -23,6 +23,17 @@ case "${command}" in
   # We use this prior to building the jank executable, but after building all libraries.
   merge)
     object_files="$(cat "${cache_dir}"/*)"
+    merge_output="${cmake_binary_dir}/libjank-standalone-phase-1.a"
+    rm -f "${merge_output}"
+    # shellcheck disable=SC2086
+    "${ar}" qc "${merge_output}" ${object_files}
+    ;;
+
+  # This follows merge, but also bundles in the Clojure core library object files, following
+  # jank's phase 2 building.
+  merge-phase-2)
+    object_files="$(cat "${cache_dir}"/*) ${cmake_binary_dir}/core-libs/clojure/core.o"
+    merge_output="${cmake_binary_dir}/libjank-standalone.a"
     rm -f "${merge_output}"
     # shellcheck disable=SC2086
     "${ar}" qc "${merge_output}" ${object_files}

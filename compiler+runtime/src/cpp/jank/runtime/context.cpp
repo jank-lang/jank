@@ -40,9 +40,10 @@ namespace jank::runtime
   context *__rt_ctx{};
 
   context::context()
-    : binary_version{ util::binary_version() }
-    , jit_prc{ binary_version }
+    /* We want to initialize __rt_ctx ASAP so other code can start using it. */
+    : binary_version{ (__rt_ctx = this, util::binary_version()) }
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
+    , jit_prc{ binary_version }
   {
     intern_ns(make_box<obj::symbol>("cpp"));
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));

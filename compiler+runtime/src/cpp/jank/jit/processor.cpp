@@ -169,9 +169,9 @@ namespace jank::jit
      * into the 'large' code model instead. This may have some marginal perf impact, but
      * for ASan builds, that's not a problem. */
     interpreter.reset(static_cast<Cpp::Interpreter *>(
-      Cpp::CreateInterpreter(args, {}, static_cast<int>(llvm::CodeModel::Large))));
+      Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 #else
-    interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args)));
+    interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args, {}, vfs)));
 #endif
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
