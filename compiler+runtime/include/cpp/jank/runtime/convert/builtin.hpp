@@ -30,14 +30,14 @@ namespace jank::runtime
   requires(jtl::is_any_same<T, object *, object const *>)
   struct convert<T>
   {
-    static constexpr T into_object(T t)
+    static constexpr object *into_object(T t)
     {
-      return t;
+      return const_cast<object *>(t);
     }
 
-    static constexpr T from_object(T t)
+    static constexpr object *from_object(T t)
     {
-      return t;
+      return const_cast<object *>(t);
     }
   };
 
