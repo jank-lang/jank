@@ -82,6 +82,9 @@ namespace jank::runtime::obj
     object_ref nth(object_ref index) const;
     object_ref nth(object_ref index, object_ref fallback) const;
 
+    /* behavior::callable */
+    object_ref call(object_ref) const;
+
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;
 
