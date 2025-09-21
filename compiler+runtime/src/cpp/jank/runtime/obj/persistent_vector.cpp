@@ -242,6 +242,36 @@ namespace jank::runtime::obj
     }
   }
 
+  persistent_vector_ref persistent_vector::assoc(object_ref const key, object_ref const val) const
+  {
+    if(key->type != object_type::integer)
+    {
+      throw std::runtime_error{ "Key must be integer." };
+    }
+
+    auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
+    auto const size(data.size());
+
+    if(i > size)
+    {
+      throw std::runtime_error{ "Index out of bounds." };
+    }
+
+    if(i == size)
+    {
+      auto vec(data.push_back(val));
+      return make_box<persistent_vector>(meta, std::move(vec));
+    }
+
+    auto vec(data.set(i, val));
+    return make_box<persistent_vector>(meta, std::move(vec));
+  }
+
+  persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
+  {
+    throw std::runtime_error{ "Type 'persistent_vector' does not support 'dissoc'." };
+  }
+
   object_ref persistent_vector::peek() const
   {
     if(data.empty())
