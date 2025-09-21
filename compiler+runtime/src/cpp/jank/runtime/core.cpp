@@ -664,4 +664,20 @@ namespace jank::runtime
              expect_object<obj::inst>(o)->value.time_since_epoch())
       .count();
   }
+
+  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  {
+    auto const a(try_object<obj::atom>(reference));
+    a->watches = a->watches->assoc(key, fn);
+
+    return reference;
+  }
+
+  object_ref remove_watch(object_ref const reference, object_ref const key)
+  {
+    auto const a(try_object<obj::atom>(reference));
+    a->watches = a->watches->dissoc(key);
+
+    return reference;
+  }
 }

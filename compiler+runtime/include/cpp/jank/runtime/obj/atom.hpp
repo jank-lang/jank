@@ -6,6 +6,7 @@ namespace jank::runtime::obj
 {
   using atom_ref = oref<struct atom>;
   using persistent_vector_ref = oref<struct persistent_vector>;
+  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
 
   struct atom : gc
   {
@@ -46,5 +47,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     std::atomic<object *> val{};
+    mutable persistent_hash_map_ref watches{};
   };
 }
