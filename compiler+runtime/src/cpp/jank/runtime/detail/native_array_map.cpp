@@ -154,7 +154,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  object_ref *native_array_map::find(object_ref const key) const
+  jtl::option<object_ref> native_array_map::find(object_ref const key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -162,7 +162,7 @@ namespace jank::runtime::detail
       {
         if(data[i] == key)
         {
-          return &data[i + 1];
+          return data[i + 1];
         }
       }
     }
@@ -172,11 +172,11 @@ namespace jank::runtime::detail
       {
         if(runtime::equal(data[i], key))
         {
-          return &data[i + 1];
+          return data[i + 1];
         }
       }
     }
-    return nullptr;
+    return {};
   }
 
   void native_array_map::erase(object_ref const key)
