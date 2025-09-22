@@ -62,7 +62,7 @@ namespace jank::runtime::obj
 
   native_big_decimal boolean::to_native_big_decimal() const
   {
-    return native_big_decimal(data ? 1 : 0);
+    return { data ? 1 : 0 };
   }
 
   /***** integer *****/
@@ -130,7 +130,7 @@ namespace jank::runtime::obj
 
   native_big_decimal integer::to_native_big_decimal() const
   {
-    return native_big_decimal(data);
+    return { data };
   }
 
   /***** real *****/
@@ -218,7 +218,7 @@ namespace jank::runtime::obj
 
   native_big_decimal real::to_native_big_decimal() const
   {
-    return native_big_decimal(data);
+    return { data };
   }
 }
 
