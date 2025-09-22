@@ -102,11 +102,12 @@
                                    proc/sh :out))))))
 
 (defn -main []
-  (proc/sh {:out *out* :err *out*} "jank check-health")
-  (System/exit
-   (if (t/successful? (t/run-tests this-nsym))
-     0
-     1)))
+  (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
+    (proc/sh {:out *out* :err *out*} "jank check-health")
+    (System/exit
+      (if (t/successful? (t/run-tests this-nsym))
+        0
+        1))))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))

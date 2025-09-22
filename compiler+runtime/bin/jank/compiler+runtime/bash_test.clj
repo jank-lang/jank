@@ -14,7 +14,10 @@
     (util/log-info "Not enabled")
     (let [bash-test-dir (str compiler+runtime-dir "/test/bash")
           test-files (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
-          extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
+          extra-env (merge {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
+                           (let [skip (System/getenv "JANK_SKIP_AOT_CHECK")]
+                             (when-not (empty? skip)
+                               {"JANK_SKIP_AOT_CHECK" skip})))
           passed? (volatile! true)]
       (doseq [test-file test-files]
         (let [skip? (clojure.string/ends-with? (str test-file) "skip-test")
