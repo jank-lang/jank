@@ -147,8 +147,8 @@ namespace jank::read::lex
   {
     jtl::immutable_string_view number_literal;
 
-    bool operator==(big_decimal const &) const;
-    bool operator!=(big_decimal const &) const;
+    bool operator==(big_decimal const &) const = default;
+    bool operator!=(big_decimal const &) const = default;
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to

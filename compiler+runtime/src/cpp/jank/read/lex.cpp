@@ -243,16 +243,6 @@ namespace jank::read::lex
     return !(*this == rhs);
   }
 
-  bool big_decimal::operator==(big_decimal const &rhs) const
-  {
-    return number_literal == rhs.number_literal;
-  }
-
-  bool big_decimal::operator!=(big_decimal const &rhs) const
-  {
-    return !(*this == rhs);
-  }
-
   bool token::no_data::operator==(no_data const &) const
   {
     return true;
