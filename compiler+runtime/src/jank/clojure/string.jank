@@ -1,9 +1,12 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse]))
 
-(def ^{:doc "returns s with its characters reversed."
-       :arglists '([s])}
-  reverse clojure.string-native/reverse)
+(cpp/raw "#include <clojure/string_native.hpp>")
+
+(defn reverse
+  "returns s with its characters reversed."
+  [s]
+  (cpp/clojure.string_native.reverse s))
   
 (defn re-quote-replacement
   "Given a replacement string that you wish to be a literal
@@ -116,21 +119,7 @@
                                 #\"(\\w+)(\\s+)(\\w+)\" \"$3$2$1\")
   -> \"first swap two words\""
   [s match replacement]
-  #_
-  (let [s (.toString s)]
-    (cond
-      (instance? Character match)
-      (replace-first-char s match replacement)
-      (instance? CharSequence match)
-      (replace-first-str s (.toString match)
-                         (.toString replacement))
-      (instance? Pattern match)
-      (if (instance? CharSequence replacement)
-        (.replaceFirst (re-matcher match s)
-                       (.toString replacement))
-        (replace-first-by s match replacement))
-      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
-  (throw "TODO: port clojure.string/replace-first"))
+  (cpp/clojure.string_native.replace_first s match replacement))
 
 (defn join
   "Returns a string of all elements in coll, as returned by (seq coll),
@@ -147,13 +136,15 @@
               sep)
        s))))
 
-(def ^{:doc "Converts string to all upper-case."
-       :arglists '([s])}
-  upper-case clojure.string-native/upper-case)
+(defn upper-case
+  "Converts string to all upper-case."
+  [s]
+  (cpp/clojure.string_native.upper_case s))
 
-(def ^{:doc "Converts string to all lower-case."
-       :arglists '([s])}
-  lower-case clojure.string-native/lower-case)
+(defn lower-case
+  "Converts string to all lower-case."
+  [s]
+  (cpp/clojure.string_native.lower_case s))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
@@ -170,75 +161,40 @@
   the maximum number of parts. Not lazy. Returns vector of the parts.
   Trailing empty strings are not returned - pass limit of -1 to return all."
   ([s re]
-   ;(LazilyPersistentVector/createOwning (.split re s))
-   (throw "TODO: port clojure.string/split"))
+   (cpp/clojure.string_native.split s re))
   ([s re limit]
-   ;(LazilyPersistentVector/createOwning (.split re s limit))
-   (throw "TODO: port clojure.string/split")))
+   (cpp/clojure.string_native.split s re limit)))
 
 (defn split-lines
   "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
   [s]
-  ;(split s #"\r?\n")
-  (throw "TODO: port clojure.string/split-lines")
-  )
+  (cpp/clojure.string_native.split s #"\r?\n"))
 
 (defn trim
   "Removes whitespace from both ends of string."
   [s]
-  ;(let [len (.length s)]
-  ;  (loop [rindex len]
-  ;    (if (zero? rindex)
-  ;      ""
-  ;      (if (Character/isWhitespace (.charAt s (dec rindex)))
-  ;        (recur (dec rindex))
-  ;        ;; there is at least one non-whitespace char in the string,
-  ;        ;; so no need to check for lindex reaching len.
-  ;        (loop [lindex 0]
-  ;          (if (Character/isWhitespace (.charAt s lindex))
-  ;            (recur (inc lindex))
-  ;            (.. s (subSequence lindex rindex) toString)))))))
-  (throw "TODO: port clojure.string/trim"))
+  (cpp/clojure.string_native.trim s))
 
 (defn triml
   "Removes whitespace from the left side of string."
   [s]
-  ;(let [len (.length s)]
-  ;  (loop [index 0]
-  ;    (if (= len index)
-  ;      ""
-  ;      (if (Character/isWhitespace (.charAt s index))
-  ;        (recur (unchecked-inc index))
-  ;        (.. s (subSequence index len) toString)))))
-  (throw "TODO: port clojure.string/triml"))
+  (cpp/clojure.string_native.triml s))
 
 (defn trimr
   "Removes whitespace from the right side of string."
   [s]
-  ;(loop [index (.length s)]
-  ;  (if (zero? index)
-  ;    ""
-  ;    (if (Character/isWhitespace (.charAt s (unchecked-dec index)))
-  ;      (recur (unchecked-dec index))
-  ;      (.. s (subSequence 0 index) toString))))
-  (throw "TODO: port clojure.string/trimr"))
+  (cpp/clojure.string_native.trimr s))
 
 (defn trim-newline
   "Removes all trailing newline \\n or return \\r characters from
   string.  Similar to Perl's chomp."
   [s]
-  ;(loop [index (.length s)]
-  ;  (if (zero? index)
-  ;    ""
-  ;    (let [ch (.charAt s (dec index))]
-  ;      (if (or (= ch \newline) (= ch \return))
-  ;        (recur (dec index))
-  ;        (.. s (subSequence 0 index) toString)))))
-  (throw "TODO: port clojure.string/trim-newline"))
+  (cpp/clojure.string_native.trim_newline s))
 
-(def ^{:doc "True if s is nil, empty, or contains only whitespace."
-       :arglists '([s])}
-  blank? clojure.string-native/blank?)
+(defn blank?
+  "True if s is nil, empty, or contains only whitespace."
+  [s]
+  (cpp/clojure.string_native.blank s))
 
 (defn escape
   "Return a new string, using cmap to escape each character ch
@@ -262,50 +218,39 @@
   "Return index of value (string or char) in s, optionally searching
   forward from from-index. Return nil if value not found."
   ([s value]
-   ;(let [result (if (instance? Character value)
-   ;               (.indexOf (.toString s) (.charValue value))
-   ;               (.indexOf (.toString s) value))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of"))
+   (index-of s value 0))
   ([s value from-index]
-   ;(let [result (if (instance? Character value)
-   ;               (.indexOf (.toString s) (.charValue value) (unchecked-int from-index))
-   ;               (.indexOf (.toString s) value (unchecked-int from-index)))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of")))
+   (let [result (if (char? value)
+                  (cpp/clojure.string_native.index_of s (str value) from-index)
+                  (cpp/clojure.string_native.index_of s value from-index))]
+     (if (= result -1)
+       nil
+       result))))
 
 (defn last-index-of
   "Return last index of value (string or char) in s, optionally
   searching backward from from-index. Return nil if value not found."
   ([s value]
-   ;(let [result (if (instance? Character value)
-   ;               (.lastIndexOf (.toString s) (.charValue value))
-   ;               (.lastIndexOf (.toString s) value))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of"))
+   (last-index-of s value (count s)))
   ([s value from-index]
-   ;(let [result (if (instance? Character value)
-   ;               (.lastIndexOf (.toString s) (.charValue value) (unchecked-int from-index))
-   ;               (.lastIndexOf (.toString s) value (unchecked-int from-index)))]
-   ;  (if (= result -1)
-   ;    nil
-   ;    result))
-   (throw "TODO: port clojure.string/index-of")))
+   (let [result (if (char? value)
+                  (cpp/clojure.string_native.last_index_of s (str value) from-index)
+                  (cpp/clojure.string_native.last_index_of s value from-index))]
+     (if (= result -1)
+       nil
+       result))))
 
-(def ^{:doc "True if s starts with substr."
-       :arglists '([s substr])}
-  starts-with? clojure.string-native/starts-with?)
+(defn starts-with?
+  "True if s starts with substr."
+  [s substr]
+  (cpp/clojure.string_native.starts_with s substr))
 
-(def ^{:doc "True if s ends with substr."
-       :arglists '([s substr])}
-  ends-with? clojure.string-native/ends-with?)
+(defn ends-with?
+  "True if s ends with substr."
+  [s substr]
+  (cpp/clojure.string_native.ends_with s substr))
 
-(def ^{:doc "True if s includes substr."
-        :arglists '([s substr])}
-  includes? clojure.string-native/includes?)
+(defn includes?
+  "True if s includes substr."
+  [s substr]
+  (cpp/clojure.string_native.includes s substr))

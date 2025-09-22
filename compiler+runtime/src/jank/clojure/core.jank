@@ -38,6 +38,10 @@
 (def ^:dynamic *print-readably* nil)
 (def ^:dynamic *read-eval* nil)
 
+(cpp/raw "#include <fstream>")
+(cpp/raw "#include <sstream>")
+(cpp/raw "#include <filesystem>")
+
 ; Syntax quoting.
 (def unquote
   (fn* unquote [_]
@@ -46,7 +50,8 @@
   (fn* unquote-splicing [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
-(def type clojure.core-native/type)
+(def type (fn* type [o]
+            (cpp/jank.runtime.object_type_str (cpp/.-type o))))
 
 ; Exceptions
 (def ex-info
@@ -80,11 +85,13 @@
 ;; Miscellaneous.
 (def nil?
   "Returns true if x is nil, false otherwise."
-  clojure.core-native/nil?)
+  (fn* nil? [o]
+    (cpp/== (cpp/.-type o) cpp/jank.runtime.object_type.nil)))
 
 (def identical?
   "Tests if 2 arguments are the same object, meaning the same pointer address."
-  clojure.core-native/identical?)
+  (fn* identical? [lhs rhs]
+    (cpp/== lhs rhs)))
 
 (def =
   "Equality. Returns true if x equals y, false if not. It also works
@@ -101,10 +108,12 @@
 ; Collections.
 (def empty?
   "Returns true if coll has no items - same as (not (seq coll))."
-  clojure.core-native/empty?)
+  (fn* empty? [o]
+    (cpp/jank.runtime.is_empty o)))
 (def empty
   "Returns an empty collection of the same category as coll, or nil"
-  clojure.core-native/empty)
+  (fn* empty [o]
+    (cpp/jank.runtime.empty o)))
 (def count
   "Returns the number of items in the collection. (count nil) returns
    0.  Also works on strings, arrays, and Java Collections and Maps"
@@ -113,13 +122,16 @@
 ; Numbers.
 (def boolean
   "Coerce to boolean"
-  clojure.core-native/boolean)
+  (fn* boolean [o]
+    (cpp/jank.runtime.truthy o)))
 (def int
   "Coerce to int"
-  clojure.core-native/integer)
+  (fn* int [o]
+    (cpp/jank.runtime.to_int o)))
 (def float
   "Coerce to float"
-  clojure.core-native/real)
+  (fn* real [o]
+    (cpp/jank.runtime.to_real o)))
 
 ;; Sequences.
 (def seq
@@ -129,13 +141,16 @@
    that implement Iterable. Note that seqs cache values, thus seq
    should not be used on any Iterable whose iterator repeatedly
    returns the same mutable object."
-  clojure.core-native/seq)
+  (fn* seq [o]
+    (cpp/jank.runtime.seq o)))
 (def fresh-seq
-  clojure.core-native/fresh-seq)
+  (fn* fresh-seq [o]
+    (cpp/jank.runtime.fresh_seq o)))
 (def first
   "Returns the first item in the collection. Calls seq on its
    argument. If coll is nil, returns nil."
-  clojure.core-native/first)
+  (fn* first [o]
+    (cpp/jank.runtime.first o)))
 (def ffirst
   "Same as (first (first x))"
   (fn* ffirst [o]
@@ -143,33 +158,41 @@
 (def next
   "Returns a seq of the items after the first. Calls seq on its
    argument.  If there are no more items, returns nil."
-  clojure.core-native/next)
+  (fn* next [o]
+    (cpp/jank.runtime.next o)))
 (def next-in-place
-  clojure.core-native/next-in-place)
+  (fn* next-in-place [o]
+    (cpp/jank.runtime.next_in_place o)))
 (def nnext
   "Same as (next (next x))"
   (fn* nnext [o]
     (next (next o))))
 (def second
   "Same as (first (next x))"
-  clojure.core-native/second)
+  (fn* second [o]
+    (cpp/jank.runtime.second o)))
 (def rest
   "Returns a possibly empty seq of the items after the first. Calls seq on its
    argument."
-  clojure.core-native/rest)
+  (fn* rest [o]
+    (cpp/jank.runtime.rest o)))
 (def cons
   "Returns a new seq where x is the first element and seq is
    the rest."
-  clojure.core-native/cons)
+  (fn* cons [head tail]
+    (cpp/jank.runtime.cons head tail)))
 (def coll?
   "Returns true if x implements IPersistentCollection"
-  clojure.core-native/coll?)
+  (fn* coll? [o]
+    (cpp/jank.runtime.is_collection o)))
 (def seq?
   "Return true if x implements ISeq"
-  clojure.core-native/seq?)
+  (fn* seq? [o]
+    (cpp/jank.runtime.is_seq o)))
 (def seqable?
   "Return true if the seq function is supported for x"
-  clojure.core-native/seqable?)
+  (fn* seqable? [o]
+    (cpp/jank.runtime.is_seqable o)))
 
 (def ^:private reverse*
   (fn* reverse* [coll]
@@ -203,19 +226,23 @@
 ; Lists.
 (def list?
   "Returns true if x implements IPersistentList"
-  clojure.core-native/list?)
+  (fn* list? [o]
+    (cpp/jank.runtime.is_list o)))
 (def list
   "Creates a new list containing the items."
-  clojure.core-native/list)
+  (fn* list [& args]
+    (cpp/jank.runtime.list args)))
 
 ;; Vectors.
 (def vector?
   "Return true if x implements IPersistentVector"
-  clojure.core-native/vector?)
+  (fn* vector? [o]
+    (cpp/jank.runtime.is_vector o)))
 (def vec
   "Creates a new vector containing the contents of coll. Java arrays
    will be aliased and should not be modified."
-  clojure.core-native/vec)
+  (fn* vec [o]
+    (cpp/jank.runtime.vec o)))
 
 (def subvec
   "Returns a persistent vector of the items in vector from
@@ -227,7 +254,7 @@
     ([v start]
      (subvec v start (count v)))
     ([v start end]
-     (clojure.core-native/subvec v start end))))
+     (cpp/jank.runtime.subvec v start end))))
 
 (def conj
   "conj[oin]. Returns a new collection with the xs
@@ -241,7 +268,7 @@
     ([coll]
      coll)
     ([coll x]
-     (clojure.core-native/conj coll x))
+     (cpp/jank.runtime.conj coll x))
     ([coll x & args]
      (let* [res (conj coll x)]
        (if (empty? args)
@@ -280,11 +307,13 @@
 
 (def map?
   "Return true if x implements IPersistentMap"
-  clojure.core-native/map?)
+  (fn* map? [o]
+    (cpp/jank.runtime.is_map o)))
 
 (def associative?
  "Returns true if coll implements Associative"
-  clojure.core-native/associative?)
+  (fn* associative? [o]
+    (cpp/jank.runtime.is_associative o)))
 
 (def assoc
   "assoc[iate]. When applied to a map, returns a new map of the
@@ -293,7 +322,7 @@
    contains val at index. Note - index must be <= (count vector)."
   (fn* assoc
     ([map key val]
-     (clojure.core-native/assoc map key val))
+     (cpp/jank.runtime.assoc map key val))
     ([map key val & kvs]
      (let* [res (assoc map key val)]
        (if kvs
@@ -305,11 +334,13 @@
 ;; Strings.
 (def string?
   "Return true if x is a String"
-  clojure.core-native/string?)
+  (fn* string? [o]
+    (cpp/jank.runtime.is_string o)))
 
 (def char?
   "Return true if x is a Character"
-  clojure.core-native/char?)
+  (fn* char? [o]
+    (cpp/jank.runtime.is_char o)))
 
 (def str
   "With no args, returns the empty string. With one arg x, returns
@@ -328,18 +359,19 @@
 ;; Symbols.
 (def symbol?
   "Return true if x is a Symbol"
-  clojure.core-native/symbol?)
+  (fn* symbol? [o]
+    (cpp/jank.runtime.is_symbol o)))
 (def
   symbol
   "Returns a Symbol with the given namespace and name. Arity-1 works
    on strings, keywords, and vars."
   (fn* symbol
     ([o]
-     (clojure.core-native/->unqualified-symbol o))
+     (cpp/jank.runtime.to_unqualified_symbol o))
     ([ns o]
      (if (nil? ns)
        (symbol o)
-       (clojure.core-native/->qualified-symbol ns o)))))
+       (cpp/jank.runtime.to_qualified_symbol ns o)))))
 (def simple-symbol?
   "Return true if x is a symbol without a namespace"
   clojure.core-native/simple-symbol?)
@@ -4179,13 +4211,13 @@
   metadata from the name symbol.  Returns the var."
   ([ns name]
      (let [v (clojure.core-native/intern-var
-               (clojure.core-native/->qualified-symbol
+               (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
        (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
        v))
   ([ns name val]
      (let [v (clojure.core-native/intern-var
-               (clojure.core-native/->qualified-symbol
+               (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
        (clojure.core-native/var-bind-root v val)
        (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
@@ -5431,15 +5463,17 @@
   ([array idx & idxs]
    (apply aget (aget array idx) idxs)))
 
-(defn aset
-  "Sets the value at the index/indices. Works on Java arrays of
-  reference types. Returns val."
-  ([array idx val]
-  ;;  (. Array (set array idx val))
-  ;;  val
-   (throw "TODO: port aset"))
-  ([array idx idx2 & idxv]
-   (apply aset (aget array idx) idx2 idxv)))
+(defmacro aset
+  "Sets the value at the index/indices. Returns val."
+  [array idx & more]
+  (if (= 1 (count more))
+    ;; Simple case: (aset array index value)
+    (let [val (first more)]
+      `(do
+         (cpp/= (cpp/aget ~array ~idx) ~val)
+         ~val))
+    ;; Nested case: (aset array idx1 idx2 & idxv) - not yet implemented
+    `(throw "TODO: Nested array indexing not yet implemented")))
 
 (defmacro
   ^{:private true}
@@ -5743,66 +5777,48 @@
   "Returns an instance of java.util.regex.Pattern, for use, e.g. in
   re-matcher."
   [s]
-  ;; (if (instance? java.util.regex.Pattern s)
-  ;;   s
-  ;;   (. java.util.regex.Pattern (compile s)))
-  (throw "TODO: port re-pattern"))
+  (cpp/jank.runtime.re_pattern s))
 
 (defn re-matcher
   "Returns an instance of java.util.regex.Matcher, for use, e.g. in
   re-find."
-  [#_java.util.regex.Pattern re s]
-    ;; (. re (matcher s))
-  (throw "TODO: port re-matcher"))
+  [re s]
+  (cpp/jank.runtime.re_matcher re s))
 
 (defn re-groups
   "Returns the groups from the most recent match/find. If there are no
   nested groups, returns a string of the entire match. If there are
   nested groups, returns a vector of the groups, the first element
   being the entire match."
-  [#_java.util.regex.Matcher m]
-    ;; (let [gc  (. m (groupCount))]
-    ;;   (if (zero? gc)
-    ;;     (. m (group))
-    ;;     (loop [ret [] c 0]
-    ;;       (if (<= c gc)
-    ;;         (recur (conj ret (. m (group c))) (inc c))
-    ;;         ret))))
-  (throw "TODO: port re-groups"))
-
-(defn re-seq
-  "Returns a lazy sequence of successive matches of pattern in string,
-  using java.util.regex.Matcher.find(), each such match processed with
-  re-groups."
-  [#_java.util.regex.Pattern re s]
-  ;; (let [m (re-matcher re s)]
-  ;;   ((fn step []
-  ;;      (when (. m (find))
-  ;;        (cons (re-groups m) (lazy-seq (step)))))))
-  (throw "TODO: port re-seq"))
+  [m]
+  (cpp/jank.runtime.re_groups m))
 
 (defn re-matches
   "Returns the match, if any, of string to pattern, using
   java.util.regex.Matcher.matches().  Uses re-groups to return the
   groups."
-  [#_java.util.regex.Pattern re s]
-    ;; (let [m (re-matcher re s)]
-    ;;   (when (. m (matches))
-    ;;     (re-groups m)))
-  (throw "TODO: port re-matches"))
+  [re s]
+  (cpp/jank.runtime.re_matches re s))
 
 (defn re-find
   "Returns the next regex match, if any, of string to pattern, using
   java.util.regex.Matcher.find().  Uses re-groups to return the
   groups."
-  ([#_java.util.regex.Matcher m]
-  ;;  (when (. m (find))
-  ;;    (re-groups m))
-   (throw "TODO: port re-find"))
-  ([#_java.util.regex.Pattern re s]
-  ;;  (let [m (re-matcher re s)]
-  ;;    (re-find m))
-   (throw "TODO: port re-find")))
+  ([m]
+   (cpp/jank.runtime.re_find m))
+  ([re s]
+   (let [m (re-matcher re s)]
+     (re-find m))))
+
+(defn re-seq
+  "Returns a lazy sequence of successive matches of pattern in string,
+  using java.util.regex.Matcher.find(), each such match processed with
+  re-groups."
+  [re s]
+  (let [m (cpp/jank.runtime.re_matcher re s)]
+    ((fn step []
+       (when (re-find m)
+         (cons (re-groups m) (lazy-seq (step))))))))
 
 (defn rand-int
   "Returns a random integer between 0 (inclusive) and n (exclusive)."
@@ -6388,13 +6404,15 @@ fails, attempts to require sym's namespace and retries."
   "Returns a sorted set of symbols naming the currently loaded libs"
   [] @*loaded-libs*)
 
-(def sorted?
- "Returns true if coll implements Sorted"
-  clojure.core-native/sorted?)
+(defn sorted?
+  "Returns true if coll implements Sorted"
+  [coll]
+  (cpp/jank.runtime.is_sorted coll))
 
-(def counted?
- "Returns true if coll implements count in constant time"
-  clojure.core-native/counted?)
+(defn counted?
+  "Returns true if coll implements count in constant time"
+  [coll]
+  (cpp/jank.runtime.is_counted coll))
 
 (defn reversible?
  "Returns true if coll implements Reversible"
@@ -6672,27 +6690,31 @@ fails, attempts to require sym's namespace and retries."
 ;;   java.util.Date
 ;;   (inst-ms* [inst] (.getTime ^java.util.Date inst)))
 
-(def inst-ms
+(defn inst-ms
   "Return the number of milliseconds since January 1, 1970, 00:00:00 GMT"
-  clojure.core-native/inst-ms)
+  [inst]
+  (cpp/jank.runtime.inst_ms inst))
 
-(def inst?
+(defn inst?
   "Return true if x satisfies Inst"
-  clojure.core-native/inst?)
+  [x]
+  (cpp/jank.runtime.is_inst x))
 
 ;; (extend-protocol clojure.core/Inst
 ;;   java.time.Instant
 ;;   (inst-ms* [inst] (.toEpochMilli ^java.time.Instant inst)))
 
-(def uuid?
+(defn uuid?
   "Return true if x is a java.util.UUID"
-  clojure.core-native/uuid?)
+  [x]
+  (cpp/jank.runtime.is_uuid x))
 
-(def random-uuid
+(defn random-uuid
   "Returns a pseudo-randomly generated java.util.UUID instance (i.e. type 4).
 
   See: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#randomUUID--"
-  clojure.core-native/random-uuid)
+  []
+  (cpp/jank.runtime.random_uuid))
 
 ;; (extend-protocol clojure.core.protocols/IKVReduce
 ;;  nil
@@ -6739,20 +6761,25 @@ fails, attempts to require sym's namespace and retries."
   "Opens a reader on f and reads all its contents, returning a string.
   See clojure.java.io/reader for a complete list of supported arguments."
   ([f & opts]
-    ;;  (let [opts (normalize-slurp-opts opts)
-    ;;        sw (java.io.StringWriter.)]
-    ;;    (with-open [^java.io.Reader r (apply jio/reader f opts)]
-    ;;      (jio/copy r sw)
-    ;;      (.toString sw)))
-   (throw "TODO: port slurp")))
+   (let [opts (normalize-slurp-opts opts)
+         fname (cpp/cast (cpp/type "char const*") f)
+         file (cpp/std.ifstream. fname)]
+     (if-not (cpp/.is_open file)
+       (throw (str f " (No such file or directory)"))
+       (let [size (cpp/std.filesystem.file_size fname)
+             out (cpp/std.string. size (cpp/char 0))]
+         (cpp/.read file (cpp/& (cpp/.front out)) size)
+         out)))))
 
 (defn spit
   "Opposite of slurp.  Opens f with writer, writes content, then
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
-  ;; (with-open [^java.io.Writer w (apply jio/writer f options)]
-  ;;   (.write w (str content)))
-  (throw "TODO: port spit"))
+  (let [file (cpp/std.ofstream.)]
+    (cpp/.open file (cpp/cast (cpp/type "char const*") f))
+    (cpp/<< file (cpp/cast (cpp/type "char const*") content))
+    (cpp/.close file)
+    nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
 (defn future-call
@@ -6956,9 +6983,10 @@ fails, attempts to require sym's namespace and retries."
        (let [seg (into [] (take n) coll)]
          (cons seg (partitionv-all n step (drop step s))))))))
 
-(def shuffle
+(defn shuffle
   "Return a random permutation of coll"
-  clojure.core-native/shuffle)
+  [coll]
+  (cpp/jank.runtime.shuffle coll))
 
 (defn bounded-count
   "If coll is counted? returns its count, else will count at most the first n
@@ -7089,14 +7117,16 @@ fails, attempts to require sym's namespace and retries."
   ;;              acc))))
   (throw "TODO: port iteration"))
 
-(def tagged-literal?
+(defn tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
-  clojure.core-native/tagged-literal?)
+  [value]
+  (cpp/jank.runtime.is_tagged_literal value))
 
-(def tagged-literal
+(defn tagged-literal
   "Construct a data representation of a tagged literal from a
   tag symbol and a form."
-  clojure.core-native/tagged-literal)
+  [tag form]
+  (cpp/jank.runtime.tagged_literal tag form))
 
 (defn reader-conditional?
   "Return true if the value is the data representation of a reader conditional"
@@ -7290,24 +7320,27 @@ fails, attempts to require sym's namespace and retries."
   [val]
   (str "Expected string, got " (if (nil? val) "nil" (type val))))
 
-(def parse-long
+(defn parse-long
   "Parse string of decimal digits with optional leading -/+ and return a
   Long value, or nil if parse fails"
-  clojure.core-native/parse-long)
+  [s]
+  (cpp/jank.runtime.parse_long s))
 
-(def parse-double
+(defn parse-double
   "Parse string with floating point components and return a Double value,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/lang/Double.html#valueOf-java.lang.String-"
-  clojure.core-native/parse-double)
+  [s]
+  (cpp/jank.runtime.parse_double s))
 
-(def parse-uuid
+(defn parse-uuid
   "Parse a string representing a UUID and return a java.util.UUID instance,
   or nil if parse fails.
 
   Grammar: https://docs.oracle.com/javase/8/docs/api/java/util/UUID.html#toString--"
-  clojure.core-native/parse-uuid)
+  [s]
+  (cpp/jank.runtime.parse_uuid s))
 
 (defn parse-boolean
   "Parse strings \"true\" or \"false\" and return a boolean, or nil if invalid"
@@ -7319,10 +7352,12 @@ fails, attempts to require sym's namespace and retries."
         nil)
     (throw (parsing-err s))))
 
-(def NaN?
+(defn NaN?
   "Returns true if num is NaN, else false"
-  clojure.core-native/NaN?)
+  [num]
+  (cpp/jank.runtime.is_nan num))
 
-(def infinite?
+(defn infinite?
   "Returns true if num is negative or positive infinity, else false"
-  clojure.core-native/infinite?)
+  [num]
+  (cpp/jank.runtime.is_infinite num))

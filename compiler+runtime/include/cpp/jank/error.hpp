@@ -53,6 +53,7 @@ namespace jank::error
     parse_invalid_reader_gensym,
     parse_invalid_reader_symbolic_value,
     parse_invalid_reader_tag_value,
+    parse_invalid_regex,
     parse_invalid_uuid,
     parse_invalid_inst,
     parse_invalid_syntax_quote,
@@ -99,10 +100,12 @@ namespace jank::error
     analyze_invalid_cpp_new,
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
+    analyze_invalid_cpp_capture,
     internal_analyze_failure,
 
     internal_codegen_failure,
 
+    aot_unresolved_main,
     aot_compilation_failure,
     internal_aot_failure,
 
@@ -142,6 +145,7 @@ namespace jank::error
         return "lex/unexpected-character";
       case kind::internal_lex_failure:
         return "internal/lex-failure";
+
       case kind::parse_invalid_unicode:
         return "parse/invalid-unicode";
       case kind::parse_invalid_character:
@@ -190,6 +194,8 @@ namespace jank::error
         return "parse_invalid_reader_symbolic-value";
       case kind::parse_invalid_reader_tag_value:
         return "parse/invalid-reader-tag-value";
+      case kind::parse_invalid_regex:
+        return "parse/invalid-regex";
       case kind::parse_invalid_uuid:
         return "parse/invalid-uuid";
       case kind::parse_invalid_inst:
@@ -208,6 +214,7 @@ namespace jank::error
         return "parse/invalid-keyword";
       case kind::internal_parse_failure:
         return "internal/parse-failure";
+
       case kind::analyze_invalid_case:
         return "analyze/invalid-case";
       case kind::analyze_invalid_def:
@@ -247,12 +254,6 @@ namespace jank::error
       case kind::analyze_invalid_conversion:
         return "analyze/invalid-conversion";
 
-      case kind::aot_compilation_failure:
-        return "aot/compilation-failure";
-
-      case kind::system_clang_executable_not_found:
-        return "system/clang-executable-not-found";
-
       case kind::analyze_invalid_cpp_operator_call:
         return "analyze/invalid-cpp-operator-call";
       case kind::analyze_invalid_cpp_constructor_call:
@@ -287,16 +288,28 @@ namespace jank::error
         return "analyze/invalid-cpp-delete";
       case kind::analyze_invalid_cpp_member_access:
         return "analyze/invalid-cpp-member-access";
+      case kind::analyze_invalid_cpp_capture:
+        return "analyze/invalid-cpp-capture";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
+
       case kind::internal_codegen_failure:
         return "internal/codegen-failure";
+
+      case kind::aot_unresolved_main:
+        return "aot/unresolved-main";
+      case kind::aot_compilation_failure:
+        return "aot/compilation-failure";
       case kind::internal_aot_failure:
         return "internal/aot-failure";
-      case kind::internal_runtime_failure:
-        return "internal/runtime-failure";
+
+      case kind::system_clang_executable_not_found:
+        return "system/clang-executable-not-found";
       case kind::internal_system_failure:
         return "internal/system-failure";
+
+      case kind::internal_runtime_failure:
+        return "internal/runtime-failure";
       case kind::internal_failure:
         return "internal/failure";
     }

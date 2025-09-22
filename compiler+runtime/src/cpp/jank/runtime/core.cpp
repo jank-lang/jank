@@ -58,6 +58,42 @@ namespace jank::runtime
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
+  object_ref to_unqualified_symbol(object_ref const o)
+  {
+    return runtime::visit_object(
+      [&](auto const typed_o) -> object_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::symbol>)
+        {
+          return typed_o;
+        }
+        else if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return make_box<obj::symbol>(typed_o->data);
+        }
+        else if constexpr(std::same_as<T, var>)
+        {
+          return make_box<obj::symbol>(typed_o->n->name->name, typed_o->name->name);
+        }
+        else if constexpr(std::same_as<T, obj::keyword>)
+        {
+          return typed_o->sym;
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("can't convert {} to a symbol",
+                                                 typed_o->to_code_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  {
+    return make_box<obj::symbol>(ns, name);
+  }
+
   object_ref print(object_ref const args)
   {
     visit_object(
@@ -494,6 +530,92 @@ namespace jank::runtime
   bool is_tagged_literal(object_ref const o)
   {
     return o->type == object_type::tagged_literal;
+  }
+
+  object_ref re_pattern(object_ref const o)
+  {
+    return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
+  }
+
+  object_ref re_matcher(object_ref const re, object_ref const s)
+  {
+    return make_box<obj::re_matcher>(try_object<obj::re_pattern>(re),
+                                     try_object<obj::persistent_string>(s)->data);
+  }
+
+  object_ref smatch_to_vector(std::smatch const &match_results)
+  {
+    auto const size(match_results.size());
+    switch(size)
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(match_results[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+          vec.reserve(size);
+
+          for(auto const s : match_results)
+          {
+            vec.emplace_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
+  }
+
+  object_ref re_find(object_ref const m)
+  {
+    std::smatch match_results{};
+    auto const matcher(try_object<obj::re_matcher>(m));
+    std::regex_search(matcher->match_input, match_results, matcher->re->regex);
+
+    // Copy out the match result substrings before mutating the source
+    // match_input string below.
+    matcher->groups = smatch_to_vector(match_results);
+
+    if(!match_results.empty())
+    {
+      matcher->match_input = match_results.suffix().str();
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_groups(object_ref const m)
+  {
+    auto const matcher(try_object<obj::re_matcher>(m));
+
+    if(matcher->groups.is_nil())
+    {
+      throw std::runtime_error{ "No match found" };
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_matches(object_ref const re, object_ref const s)
+  {
+    std::smatch match_results{};
+    std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
+
+    std::regex_search(search_str,
+                      match_results,
+                      try_object<obj::re_pattern>(re)->regex,
+                      std::regex_constants::match_continuous);
+
+    if(!match_results.suffix().str().empty())
+    {
+      return jank_nil;
+    }
+
+    return smatch_to_vector(match_results);
   }
 
   object_ref parse_uuid(object_ref const o)

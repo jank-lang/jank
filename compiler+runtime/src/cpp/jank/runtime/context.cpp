@@ -40,9 +40,10 @@ namespace jank::runtime
   context *__rt_ctx{};
 
   context::context()
-    : binary_version{ util::binary_version() }
-    , jit_prc{ binary_version }
+    /* We want to initialize __rt_ctx ASAP so other code can start using it. */
+    : binary_version{ (__rt_ctx = this, util::binary_version()) }
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
+    , jit_prc{ binary_version }
   {
     intern_ns(make_box<obj::symbol>("cpp"));
     auto const core(intern_ns(make_box<obj::symbol>("clojure.core")));
@@ -169,7 +170,7 @@ namespace jank::runtime
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
-      analyze::processor an_prc{ *this };
+      analyze::processor an_prc;
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
           .expect_ok()));
@@ -432,6 +433,17 @@ namespace jank::runtime
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
                         prefix.data(),
                         ++ns->symbol_counter);
+  }
+
+  jtl::immutable_string context::unique_munged_string() const
+  {
+    return munge(unique_namespaced_string());
+  }
+
+  jtl::immutable_string
+  context::unique_munged_string(jtl::immutable_string_view const &prefix) const
+  {
+    return munge(unique_namespaced_string(prefix));
   }
 
   obj::symbol context::unique_symbol() const

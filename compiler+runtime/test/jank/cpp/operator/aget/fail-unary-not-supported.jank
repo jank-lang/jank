@@ -1,0 +1,6 @@
+(cpp/raw "namespace jank::cpp::operator_::aget::fail_unary_not_supported
+          {
+            int arr[3]{};
+          }")
+(let* [b (cpp/aget cpp/jank.cpp.operator_.aget.fail_unary_not_supported.arr)]
+  :success)

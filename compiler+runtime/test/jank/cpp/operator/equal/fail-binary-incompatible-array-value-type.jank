@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::operator_::equal::fail_binary_incompatible_array_value_type
+          {
+            int arr[2]{ 2, 4 };
+          }")
+(let* [arr0 (cpp/aget cpp/jank.cpp.operator_.equal.fail_binary_incompatible_array_value_type.arr (cpp/int 0))
+       _ (assert (= 2 arr0))
+       _ (cpp/= arr0 (cpp/& (cpp/std.string)))]
+  :success)

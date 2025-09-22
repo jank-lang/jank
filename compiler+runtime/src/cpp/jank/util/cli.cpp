@@ -118,9 +118,9 @@ namespace jank::util::cli
     cli_compile
       .add_option("--runtime", opts.target_runtime, "The runtime of the compiled program.")
       ->check(CLI::IsMember({ "dynamic", "static" }))
-      ->default_str(make_default("dynamic"));
+      ->default_str(make_default(opts.target_runtime));
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
-      ->default_str(make_default("a.out"));
+      ->default_str(make_default(opts.output_filename));
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
 
     /* Health check subcommand. */

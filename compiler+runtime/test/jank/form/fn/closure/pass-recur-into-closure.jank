@@ -1,0 +1,6 @@
+(let* [x :success]
+  (fn* y []
+    x
+    (fn* []
+      (y)))
+  x)

@@ -93,7 +93,7 @@ namespace jank::ui
       usize last_newline{};
       for(auto it(space.find('\n')); it != decltype(space)::npos; it = space.find('\n', it + 1))
       {
-        if(!skip && last_line >= line_start)
+        if(!skip)
         {
           std::string line{ space.substr(last_newline, it - last_newline) };
           current_line.emplace_back(text(std::move(line)) | color);
@@ -103,6 +103,7 @@ namespace jank::ui
         last_newline = it + 1;
         ++last_line;
       }
+
       if(!skip && last_newline < space.size())
       {
         current_line.emplace_back(text(std::string{ space.substr(last_newline) }) | color);
@@ -129,28 +130,25 @@ namespace jank::ui
 
       auto const skip(token.end.line < line_start);
       fill_in_lines(skip, token.start.offset, color(Color::Default));
-      last_offset = token.start.offset;
 
       /* TODO: Large tokens can be broken up further, to aid in line wrapping. For example,
        * using `paragraph` for comments. */
       auto const token_size(std::max(token.end.offset - token.start.offset, 1llu));
-      if(!skip)
+      jtl::immutable_string_view const code_range{ code.data() + token.start.offset, token_size };
+      /* Multi-line tokens can't just be added to the current line. We need to walk through
+       * all of the new lines and build things up accordingly. We just use the same
+       * `fill_in_lines` fn for this, but we give it the token color.
+       *
+       * This only adds lines if it finds a new line character, though, so the normal
+       * case of a single-line token is handled below. */
+      if(code_range.find('\n') != jtl::immutable_string_view::npos)
       {
-        jtl::immutable_string_view const code_range{ code.data() + token.start.offset, token_size };
-        /* Multi-line tokens can't just be added to the current line. We need to walk through
-         * all of the new lines and build things up accordingly. We just use the same
-         * `fill_in_lines` fn for this, but we give it the token color.
-         *
-         * This only adds lines if it finds a new line character, though, so the normal
-         * case of a single-line token is handled below. */
-        if(code_range.find('\n') != jtl::immutable_string_view::npos)
-        {
-          fill_in_lines(skip, token.start.offset + token_size, token_color(token));
-        }
-        else
-        {
-          current_line.emplace_back(text(std::string{ code_range }) | token_color(token));
-        }
+        last_offset = token.start.offset;
+        fill_in_lines(skip, token.start.offset + token_size, token_color(token));
+      }
+      else
+      {
+        current_line.emplace_back(text(std::string{ code_range }) | token_color(token));
       }
       last_offset = token.start.offset + token_size;
     }

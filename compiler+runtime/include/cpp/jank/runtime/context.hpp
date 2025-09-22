@@ -41,7 +41,8 @@ namespace jank::runtime
   struct context
   {
     context();
-    context(context &&) = delete;
+    context(context const &) = delete;
+    context(context &&) noexcept = delete;
     ~context();
 
     ns_ref intern_ns(jtl::immutable_string const &);
@@ -109,6 +110,8 @@ namespace jank::runtime
      * lifted vars, to shadowed locals. Prefixes with current namespace. */
     jtl::immutable_string unique_namespaced_string() const;
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string_view const &prefix) const;
+    jtl::immutable_string unique_munged_string() const;
+    jtl::immutable_string unique_munged_string(jtl::immutable_string_view const &prefix) const;
     obj::symbol unique_symbol() const;
     obj::symbol unique_symbol(jtl::immutable_string_view const &prefix) const;
 
@@ -134,9 +137,8 @@ namespace jank::runtime
      *
      * TODO: Is it? I think we can remove this. */
     /* TODO: This needs to be synchronized, if it's kept. */
-    analyze::processor an_prc{ *this };
+    analyze::processor an_prc;
     jtl::immutable_string binary_version;
-    jit::processor jit_prc;
     /* TODO: This needs to be a dynamic var. */
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
@@ -160,6 +162,10 @@ namespace jank::runtime
     /* TODO: Remove this map. Just use the list. */
     static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
       thread_binding_frames;
+
+    /* This must go last, since it'll try to access other bits in the runtime context during
+     * its initialization and we need them to be ready. */
+    jit::processor jit_prc;
   };
 
   /* NOLINTNEXTLINE */

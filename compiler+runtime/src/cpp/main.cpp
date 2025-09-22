@@ -269,13 +269,6 @@ namespace jank
     }
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
-    auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
-    if(main_var.is_nil())
-    {
-      throw std::runtime_error{ util::format("Could not find #'{}/-main function!",
-                                             opts.target_module) };
-    }
-
     jank::aot::processor const aot_prc{};
     aot_prc.compile(opts.target_module).expect_ok();
   }
@@ -313,7 +306,6 @@ int main(int const argc, char const **argv)
     __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
-    jank_load_clojure_string_native();
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 

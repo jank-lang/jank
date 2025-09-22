@@ -626,6 +626,9 @@ namespace jank::read::parse
         return parse_reader_macro_symbolic_values();
       case lex::token_kind::symbol:
         return parse_reader_macro_tagged();
+      case lex::token_kind::string:
+      case lex::token_kind::escaped_string:
+        return parse_regex();
       default:
         return error::parse_unsupported_reader_macro({ start_token.start, latest_token.end });
     }
@@ -812,6 +815,29 @@ namespace jank::read::parse
 
     auto const wrapped(make_box<obj::real>(n));
     return object_source_info{ wrapped, start_token, sym_end };
+  }
+
+  processor::object_result processor::parse_regex()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto const str_result(parse_string());
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    try
+    {
+      auto const wrapped(make_box<obj::re_pattern>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_regex(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_regex(try_object<obj::persistent_string>(e)->data,
+                                        { start_token.start, latest_token.end });
+    }
   }
 
   processor::object_result processor::parse_tagged_uuid()

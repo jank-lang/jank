@@ -42,8 +42,7 @@ namespace jank::analyze
   {
     using expression_result = jtl::result<expression_ref, error_ref>;
 
-    processor() = delete;
-    processor(runtime::context &rt_ctx);
+    processor();
     processor(processor const &) = default;
     processor(processor &&) noexcept = default;
 
@@ -94,7 +93,7 @@ namespace jank::analyze
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   bool needs_box);
-    expression_result analyze_letfn(runtime::obj::persistent_list_ref const &,
+    expression_result analyze_letfn(runtime::obj::persistent_list_ref const,
                                     local_frame_ptr,
                                     expression_position,
                                     jtl::option<expr::function_context_ref> const &,
@@ -228,16 +227,14 @@ namespace jank::analyze
     bool is_special(runtime::object_ref form);
 
     using special_function_type
-      = std::function<expression_result(runtime::obj::persistent_list_ref const,
-                                        local_frame_ptr,
-                                        expression_position,
-                                        jtl::option<expr::function_context_ref> const &,
-                                        bool)>;
+      = expression_result (processor::*)(runtime::obj::persistent_list_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool);
 
     native_unordered_map<runtime::obj::symbol_ref, special_function_type> specials;
     native_unordered_map<runtime::var_ref, expression_ref> vars;
-    /* TODO: Remove this. */
-    runtime::context &rt_ctx;
     local_frame_ptr root_frame;
     native_vector<runtime::object_ref> macro_expansions;
   };

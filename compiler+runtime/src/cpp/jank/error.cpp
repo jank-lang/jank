@@ -87,6 +87,8 @@ namespace jank::error
         return "Invalid reader symbolic value.";
       case kind::parse_invalid_reader_tag_value:
         return "Invalid reader tag value.";
+      case kind::parse_invalid_regex:
+        return "Invalid regex.";
       case kind::parse_invalid_uuid:
         return "Invalid UUID.";
       case kind::parse_invalid_inst:
@@ -150,6 +152,8 @@ namespace jank::error
         return "Invalid C++ constructor call.";
       case kind::analyze_invalid_cpp_member_call:
         return "Invalid C++ member function call.";
+      case kind::analyze_invalid_cpp_capture:
+        return "Invalid C++ capture.";
       case kind::analyze_invalid_cpp_function_call:
         return "Invalid C++ function call.";
       case kind::analyze_invalid_cpp_call:
@@ -184,6 +188,8 @@ namespace jank::error
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
 
+      case kind::aot_unresolved_main:
+        return "Unresolved -main function.";
       case kind::aot_compilation_failure:
         return "Ahead-of-time compilation failure.";
       case kind::internal_aot_failure:

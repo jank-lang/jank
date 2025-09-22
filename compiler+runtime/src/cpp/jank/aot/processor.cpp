@@ -34,17 +34,21 @@ namespace jank::aot
 
 using jank_object_ref = void*;
 using jank_bool = char;
+using jank_usize = unsigned long long;
 
-extern "C" int jank_init(int const argc,
-                     char const **argv,
-                     jank_bool init_default_ctx,
-                     int (*fn)(int const, char const **));
+extern "C" int jank_init_with_pch(int const argc,
+                         char const ** const argv,
+                         jank_bool const init_default_ctx,
+                         char const * const pch_data,
+                         jank_usize pch_size,
+                         int (*fn)(int const, char const ** const));
 extern "C" jank_object_ref jank_load_clojure_core_native();
-extern "C" jank_object_ref jank_load_clojure_string_native();
+extern "C" jank_object_ref jank_load_clojure_core();
 extern "C" jank_object_ref jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
+extern "C" void jank_module_set_loaded(char const *module);
 extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
 
@@ -57,13 +61,27 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
       sb("\n");
     }
 
+    /* TODO: Embed all registered resources. */
+    auto const pch_path{ util::find_pch(util::binary_version()) };
+    sb(util::format(R"(
+namespace
+{
+  char const incremental_pch[]
+  {
+    #embed "{}"
+  };
+}
+        )",
+                    pch_path.unwrap()));
+
     sb(R"(
 
 int main(int argc, const char** argv)
 {
   auto const fn{ [](int const argc, char const **argv) {
     jank_load_clojure_core_native();
-    jank_load_clojure_string_native();
+    jank_load_clojure_core();
+    jank_module_set_loaded("/clojure.core");
     jank_load_jank_compiler_native();
 
     )");
@@ -86,7 +104,7 @@ int main(int argc, const char** argv)
 
   } };
 
-  return jank_init(argc, argv, /* init_default_ctx= */ true, fn);
+  return jank_init_with_pch(argc, argv, true, incremental_pch, sizeof(incremental_pch), fn);
 }
   )");
 
@@ -104,6 +122,14 @@ int main(int argc, const char** argv)
 
   jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
   {
+    auto const main_var(__rt_ctx->find_var(module, "-main"));
+    if(main_var.is_nil())
+    {
+      return error::aot_unresolved_main(util::format(
+        "The entrypoint of the program is expected to be #'{}/-main, but this var is missing.",
+        module));
+    }
+
     std::vector<char const *> compiler_args{};
 
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
@@ -168,15 +194,13 @@ int main(int argc, const char** argv)
     }
 
     for(auto const &lib : {
-          "-ljank",
+          "-ljank-standalone",
           /* Default libraries that jank depends on. */
           "-lm",
           "-lstdc++",
           "-lLLVM",
           "-lclang-cpp",
           "-lcrypto",
-          "-lgc",
-          "-lgccpp",
           "-lz",
           "-lzstd",
           "-lzip",
@@ -192,6 +216,10 @@ int main(int argc, const char** argv)
     }
 
     compiler_args.push_back(strdup("-std=c++20"));
+    compiler_args.push_back(strdup("-Wno-c23-extensions"));
+    compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+    compiler_args.push_back(strdup("-rdynamic"));
+    compiler_args.push_back(strdup("-O2"));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
@@ -204,10 +232,9 @@ int main(int argc, const char** argv)
     } };
 
     compiler_args.push_back(strdup("-o"));
-    auto const output_filepath{ relative_to_cache_dir(util::cli::opts.output_filename) };
-    compiler_args.push_back(strdup(output_filepath.c_str()));
+    compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
 
-    util::println("compilation command: {} ", compiler_args);
+    //util::println("compilation command: {} ", compiler_args);
 
     auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())
