@@ -1299,6 +1299,17 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Invalid - space between")
+      {
+        processor p{ "1.23 M" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 4,   token_kind::real,  1.23 },
+                { 5, 1, token_kind::symbol, "M"sv }
+        }));
+      }
+
       SUBCASE("Leading dot")
       {
         processor p{ ".123M" };
