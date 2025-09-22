@@ -18,26 +18,9 @@
   (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE"))
   (util/log-info "JANK_PACKAGE: " (System/getenv "JANK_PACKAGE")))
 
-; Most Linux deps are installed by a Github action. We need to manually install
-; boost for some reason. Otherwise, its headers aren't found by clang.
-(def os->deps-cmd {"Mac OS X" "brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost libzip lbzip2"})
-
-(defmulti install-deps
-  (fn [_props]
-    (System/getProperty "os.name")))
-
-(defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
+(defn install-common-deps []
   ; TODO: Enable once we're linting Clojure/jank again.
   ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
-
-  ; TODO: Enable once we're not building Clang/LLVM from source again.
-  ;; Install Clang/LLVM.
-  ;(util/quiet-shell {} "curl -L -O https://apt.llvm.org/llvm.sh")
-  ;(util/quiet-shell {} "chmod +x llvm.sh")
-  ;(util/quiet-shell {} (str "sudo ./llvm.sh " util/llvm-version " all"))
-  ;; The libc++abi headers conflict with the system headers:
-  ;; https://github.com/llvm/llvm-project/issues/121300
-  ;(util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
 
   ; TODO: Cache this shit.
   (when (= "on" (util/get-env "JANK_ANALYZE"))
@@ -48,7 +31,22 @@
       (spit "clang-tidy-cache-wrapper"
             (str "#!/bin/bash\nclang-tidy-cache " clang-tidy " \"${@}\"")))
     (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin"))
+    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin")))
+
+(defmulti install-deps
+  (fn [_props]
+    (System/getProperty "os.name")))
+
+(defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
+  (install-common-deps)
+  ; TODO: Enable once we're not building Clang/LLVM from source again.
+  ;; Install Clang/LLVM.
+  ;(util/quiet-shell {} "curl -L -O https://apt.llvm.org/llvm.sh")
+  ;(util/quiet-shell {} "chmod +x llvm.sh")
+  ;(util/quiet-shell {} (str "sudo ./llvm.sh " util/llvm-version " all"))
+  ;; The libc++abi headers conflict with the system headers:
+  ;; https://github.com/llvm/llvm-project/issues/121300
+  ;(util/quiet-shell {} (str "sudo apt-get remove -y libc++abi-" util/llvm-version "-dev"))
 
   ; Install the new Clojure CLI.
   (util/quiet-shell {} "curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh")
@@ -56,11 +54,7 @@
   (util/quiet-shell {} "sudo ./linux-install.sh"))
 
 (defmethod install-deps "Mac OS X" [_props]
-  (util/quiet-shell {:extra-env {"HOMEBREW_NO_AUTO_UPDATE" "1"}}
-                    (os->deps-cmd "Mac OS X"))
-
-  ; TODO: This is missing some of the other things above.
-  )
+  (install-common-deps))
 
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime
                      clojure-cli lein-jank]

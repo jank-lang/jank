@@ -1146,7 +1146,21 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      auto arg_handle{ gen(arg_expr, arity) };
+      auto const expr_type{ cpp_util::expression_type(arg_expr) };
+      auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                             && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                  || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+      auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                             || cpp_util::is_any_object(expr_type) };
+      auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+      if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+      {
+        arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+      }
+
+      arg_handles.emplace_back(arg_handle);
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
@@ -1155,6 +1169,7 @@ namespace jank::codegen
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
     auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
     auto const call(ctx->builder->CreateCall(fn, arg_handles));
+    call->setTailCall();
 
     if(expr->position == expression_position::tail)
     {

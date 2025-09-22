@@ -71,6 +71,10 @@ namespace jank::runtime::obj
     object_ref get_entry(object_ref key) const;
     bool contains(object_ref key) const;
 
+    /* behavior::associatively_writable */
+    persistent_vector_ref assoc(object_ref key, object_ref val) const;
+    persistent_vector_ref dissoc(object_ref key) const;
+
     /* behavior::conjable */
     persistent_vector_ref conj(object_ref head) const;
 

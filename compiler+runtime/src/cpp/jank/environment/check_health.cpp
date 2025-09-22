@@ -352,6 +352,13 @@ namespace jank::environment
 
   static jtl::immutable_string check_aot()
   {
+    if(std::getenv("JANK_SKIP_AOT_CHECK"))
+    {
+      return util::format("{}─ ⚠️ {} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
+                          terminal_style::yellow,
+                          terminal_style::reset);
+    }
+
     bool error{};
 
     JANK_TRY
@@ -372,7 +379,9 @@ namespace jank::environment
       util::cli::opts.target_module = "health";
       util::cli::opts.output_filename = exe_output;
       util::cli::opts.module_path = path_tmp;
-      util::scope_exit const finally{ [=] { util::cli::opts = saved_opts; } };
+      util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
+                                      [=] { util::cli::opts = saved_opts; }
+      };
 
       runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
       runtime::__rt_ctx->module_loader.add_path(path_tmp);

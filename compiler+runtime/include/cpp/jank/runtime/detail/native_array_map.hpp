@@ -2,6 +2,7 @@
 
 #include <type_traits>
 
+#include <jtl/option.hpp>
 #include <jtl/ref.hpp>
 
 #include <jank/runtime/object.hpp>
@@ -41,7 +42,7 @@ namespace jank::runtime::detail
 
     void erase(object_ref const key);
 
-    object_ref find(object_ref const key) const;
+    jtl::option<object_ref> find(object_ref const key) const;
 
     uhash to_hash() const;
 
