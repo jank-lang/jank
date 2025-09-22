@@ -16,12 +16,12 @@
 (defmethod create-package! "Linux" [_props]
   (let [dir (format "jank_%s-1_amd64" jank-version)
         control (format "Package: jank
-                        Version: %s
-                        Architecture: amd64
-                        Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
-                        Depends: libssl-dev, gcc, libzip-dev, libxml2-dev, libstdc++-14-dev
-                        Description: The native Clojure dialect hosted on LLVM with seamless C++ interop.
-                        " jank-version)]
+Version: %s
+Architecture: amd64
+Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
+Depends: libssl-dev, gcc, libzip-dev, libxml2-dev, libstdc++-14-dev
+Description: The native Clojure dialect hosted on LLVM with seamless C++ interop.
+" jank-version)]
     (util/quiet-shell {:dir compiler+runtime-dir
                        :extra-env {"DESTDIR" dir}}
                       "./bin/install")
