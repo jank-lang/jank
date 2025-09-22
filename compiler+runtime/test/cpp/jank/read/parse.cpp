@@ -78,6 +78,14 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(is_equiv(runtime::mul(r.expect_ok().unwrap().ptr, make_box(10)), make_box(8)));
         CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+        CHECK(is_equiv(r.expect_ok().unwrap().ptr, obj::ratio::create(4, 5)));
+        CHECK(r.expect_ok().unwrap().start
+              == lex::token{
+                0,
+                3,
+                lex::token_kind::ratio,
+                { .numerator = 4, .denominator = 5 }
+        });
       }
       SUBCASE("Division by zero")
       {
