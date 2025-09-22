@@ -33,7 +33,8 @@ namespace jank
   using native_big_integer
     = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
   using native_big_decimal
-    = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<100>>;
+    = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<100>,
+                                    boost::multiprecision::et_off>;
 
   template <typename T>
   using native_vector = folly::fbvector<T, native_allocator<T>>;
