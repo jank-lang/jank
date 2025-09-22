@@ -1340,6 +1340,17 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Invalid - scientific notation missing exponent")
+      {
+        processor p{ "1.23eM" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_number, 0, 5),
+                token{ 5, 1, token_kind::symbol, "M"sv }
+        }));
+      }
+
       SUBCASE("Invalid - multiple Ms")
       {
         processor p{ "1.23MM" };
