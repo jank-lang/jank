@@ -1,8 +1,6 @@
-#include "jank/runtime/visit.hpp"
-#include <jank/util/fmt.hpp>
-
-
 #include <jank/runtime/obj/big_decimal.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {

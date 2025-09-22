@@ -1,4 +1,3 @@
-#include <jank/runtime/obj/big_decimal.hpp>
 #include <jank/runtime/obj/big_integer.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/rtti.hpp>
