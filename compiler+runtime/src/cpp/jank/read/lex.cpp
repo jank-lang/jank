@@ -1097,17 +1097,14 @@ namespace jank::read::lex
             }
             if(found_M)
             {
-              jtl::immutable_string_view const number_literal{ file.data() + number_start,
-                                                               number_end - number_start };
-              return ok(token{
-                token_start,
-                pos,
-                token_kind::big_decimal,
-                big_decimal{
-                            found_beginning_negative ? jtl::immutable_string_view{ "-" + number_literal }
-                                           : number_literal,
-                            }
-              });
+              auto const number_literal(
+                found_beginning_negative
+                  ? jtl::immutable_string_view{ file.data() + number_start - 1,
+                                                number_end - number_start + 1 }
+                  : jtl::immutable_string_view{ file.data() + number_start,
+                                                number_end - number_start });
+              return ok(
+                token{ token_start, pos, token_kind::big_decimal, big_decimal{ number_literal } });
             }
             /* Real numbers. */
             if(contains_dot || is_scientific || found_exponent_sign)
