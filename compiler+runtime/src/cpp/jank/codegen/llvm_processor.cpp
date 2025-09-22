@@ -2508,10 +2508,7 @@ namespace jank::codegen
       auto const create_fn(
         llvm_module->getOrInsertFunction("jank_big_decimal_create", create_fn_type));
 
-      auto const str_repr(i->to_string());
-      auto const c_str_arg(gen_c_string(str_repr));
-
-      llvm::SmallVector<llvm::Value *, 1> const args{ c_str_arg };
+      llvm::SmallVector<llvm::Value *, 1> const args{ gen_c_string(i->to_string().c_str()) };
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
