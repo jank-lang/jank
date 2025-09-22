@@ -120,10 +120,6 @@ jobs:
           #  sanitize: none
           #  package: on
           # macOS
-          ## Lint all sources
-          - name: macOS - lint
-            os: macos-26
-            lint: true
           ## Debug + clang-tidy
           - name: macOS - debug, analysis
             os: macos-26
@@ -225,27 +221,53 @@ jobs:
         with:
           name: jank-deb
           path: ${{ steps.jank-build-step.outputs.deb }}
+      - name: Upload Homebrew tarball for publishing
+        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.homebrew-tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: jank-homebrew-tarball
+          path: ${{ steps.jank-build-step.outputs.homebrew-tarball }}
 
-  #publish-deb:
-  #  if: github.ref == 'refs/heads/main'
-  #  needs: build-jank
-  #  name: Publish .deb
-  #  runs-on: ubuntu-24.04
-  #  timeout-minutes: 5
-  #  steps:
-  #    - uses: actions/download-artifact@v5
-  #      with:
-  #        name: jank-deb
-  #        path: ~/
-  #    - name: Import SSH key
-  #      run: |
-  #        mkdir -p ~/.ssh
-  #        echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
-  #        chmod 400 ~/.ssh/jank_id_ed25519
-  #    - name: Publish to PPA
-  #      run: |
-  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+  publish-deb:
+    if: github.ref == 'refs/heads/main'
+    needs: build-jank
+    name: Publish .deb
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: jank-deb
+          path: ~/
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to PPA
+        run: |
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+
+  publish-homebrew-tarball:
+    if: github.ref == 'refs/heads/main'
+    needs: build-jank
+    name: Publish .deb
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: jank-homebrew-tarball
+          path: ~/
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to cache
+        run: |
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
   #build-nix:
   #  name: "Nix - release"
