@@ -15,7 +15,6 @@ namespace jank::runtime::obj
 
     f64 to_real() const;
     i64 to_integer() const;
-    native_big_decimal to_native_big_decimal() const;
 
     native_big_integer numerator{};
     native_big_integer denominator{};
@@ -53,7 +52,6 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     i64 to_integer() const;
     f64 to_real() const;
-    native_big_decimal to_native_big_decimal() const;
 
     object base{ obj_type };
     ratio_data data;

@@ -335,9 +335,4 @@ namespace jank::runtime::obj
     return big_integer::to_f64(data);
   }
 
-  native_big_decimal big_integer::to_native_big_decimal() const
-  {
-    return native_big_decimal(data.str().c_str());
-  }
-
 }

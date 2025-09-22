@@ -56,7 +56,6 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     i64 to_integer() const;
     f64 to_real() const;
-    native_big_decimal to_native_big_decimal() const;
 
     static object_ref create(jtl::immutable_string const &);
 

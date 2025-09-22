@@ -61,7 +61,6 @@ namespace jank::runtime::obj
     /* behavior::number_like */
     i64 to_integer() const;
     f64 to_real() const;
-    native_big_decimal to_native_big_decimal() const;
 
     static native_big_integer gcd(native_big_integer const &, native_big_integer const &);
     static i64 to_i64(native_big_integer const &);

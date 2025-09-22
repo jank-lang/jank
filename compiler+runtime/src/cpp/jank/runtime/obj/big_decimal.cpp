@@ -176,11 +176,6 @@ namespace jank::runtime::obj
     return data.convert_to<f64>();
   }
 
-  native_big_decimal big_decimal::to_native_big_decimal() const
-  {
-    return data;
-  }
-
   object_ref big_decimal::create(jtl::immutable_string const &val)
   {
     return make_box<big_decimal>(val).erase();

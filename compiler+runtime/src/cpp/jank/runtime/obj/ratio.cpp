@@ -11,6 +11,17 @@ namespace jank::runtime::obj
 {
   static constexpr auto epsilon{ std::numeric_limits<f64>::epsilon() };
 
+  static native_big_decimal to_native_big_decimal(ratio_data const &r)
+  {
+    return native_big_decimal(r.numerator.str().c_str())
+      / native_big_decimal(r.denominator.str().c_str());
+  }
+
+  static native_big_decimal to_native_big_decimal(ratio const &r)
+  {
+    return to_native_big_decimal(r.data);
+  }
+
   static native_big_integer extract_big_integer(object_ref const d)
   {
     native_big_integer result{};
@@ -101,12 +112,6 @@ namespace jank::runtime::obj
     return big_integer::to_i64(numerator / denominator);
   }
 
-  native_big_decimal ratio_data::to_native_big_decimal() const
-  {
-    return native_big_decimal(numerator.str().c_str())
-      / native_big_decimal(denominator.str().c_str());
-  }
-
   f64 ratio::to_real() const
   {
     return data.to_real();
@@ -115,12 +120,6 @@ namespace jank::runtime::obj
   i64 ratio::to_integer() const
   {
     return data.to_integer();
-  }
-
-  native_big_decimal ratio::to_native_big_decimal() const
-  {
-    return native_big_decimal(data.numerator.str().c_str())
-      / native_big_decimal(data.denominator.str().c_str());
   }
 
   void ratio::to_string(jtl::string_builder &buff) const
@@ -173,7 +172,7 @@ namespace jank::runtime::obj
         using T = std::decay_t<decltype(*typed_o)>;
         if constexpr(std::is_same_v<T, big_decimal>)
         {
-          return this->to_native_big_decimal().compare(typed_o->data);
+          return to_native_big_decimal(*this).compare(typed_o->data);
         }
         else
         {
@@ -719,47 +718,47 @@ namespace jank::runtime::obj
 
   native_big_decimal operator+(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() + r;
+    return to_native_big_decimal(l) + r;
   }
 
   native_big_decimal operator+(native_big_decimal const &l, ratio_data const &r)
   {
-    return l + r.to_native_big_decimal();
+    return l + to_native_big_decimal(r);
   }
 
   native_big_decimal operator-(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() - r;
+    return to_native_big_decimal(l) - r;
   }
 
   native_big_decimal operator-(native_big_decimal const &l, ratio_data const &r)
   {
-    return l - r.to_native_big_decimal();
+    return l - to_native_big_decimal(r);
   }
 
   native_big_decimal operator*(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() * r;
+    return to_native_big_decimal(l) * r;
   }
 
   native_big_decimal operator*(native_big_decimal const &l, ratio_data const &r)
   {
-    return l * r.to_native_big_decimal();
+    return l * to_native_big_decimal(r);
   }
 
   native_big_decimal operator/(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() / r;
+    return to_native_big_decimal(l) / r;
   }
 
   native_big_decimal operator/(native_big_decimal const &l, ratio_data const &r)
   {
-    return l / r.to_native_big_decimal();
+    return l / to_native_big_decimal(r);
   }
 
   bool operator==(native_big_decimal const &l, ratio_data const &r)
   {
-    native_big_decimal const r_bd(r.to_native_big_decimal());
+    native_big_decimal const r_bd(to_native_big_decimal(r));
     native_big_decimal const eps(std::numeric_limits<native_big_decimal>::epsilon());
     native_big_decimal const diff(abs(l - r_bd));
     native_big_decimal const tolerance(eps * std::max(abs(l), abs(r_bd)));
@@ -783,41 +782,41 @@ namespace jank::runtime::obj
 
   bool operator<(native_big_decimal const &l, ratio_data const &r)
   {
-    return l < r.to_native_big_decimal();
+    return l < to_native_big_decimal(r);
   }
 
   bool operator<(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() < r;
+    return to_native_big_decimal(l) < r;
   }
 
   bool operator<=(native_big_decimal const &l, ratio_data const &r)
   {
-    return l <= r.to_native_big_decimal();
+    return l <= to_native_big_decimal(r);
   }
 
   bool operator<=(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() <= r;
+    return to_native_big_decimal(l) <= r;
   }
 
   bool operator>(native_big_decimal const &l, ratio_data const &r)
   {
-    return l > r.to_native_big_decimal();
+    return l > to_native_big_decimal(r);
   }
 
   bool operator>(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() > r;
+    return to_native_big_decimal(l) > r;
   }
 
   bool operator>=(native_big_decimal const &l, ratio_data const &r)
   {
-    return l >= r.to_native_big_decimal();
+    return l >= to_native_big_decimal(r);
   }
 
   bool operator>=(ratio_data const &l, native_big_decimal const &r)
   {
-    return l.to_native_big_decimal() >= r;
+    return to_native_big_decimal(l) >= r;
   }
 }
