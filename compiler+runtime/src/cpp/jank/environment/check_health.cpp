@@ -352,6 +352,13 @@ namespace jank::environment
 
   static jtl::immutable_string check_aot()
   {
+    if(std::getenv("JANK_SKIP_AOT_CHECK"))
+    {
+      return util::format("{}─ ⚠️ {} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
+                          terminal_style::yellow,
+                          terminal_style::reset);
+    }
+
     bool error{};
 
     JANK_TRY

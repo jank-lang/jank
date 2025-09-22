@@ -187,8 +187,27 @@ int main(int argc, const char** argv)
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
-    /* TODO: Do we need to loop through these? */
-    compiler_args.push_back(strdup(JANK_DEPS_LIBRARY_DIRS));
+    {
+      std::string_view flags{ JANK_AOT_FLAGS };
+      size_t start{};
+      while(start < flags.size())
+      {
+        auto end{ flags.find(' ', start) };
+        if(end == std::string_view::npos)
+        {
+          end = flags.size();
+        }
+
+        auto const token{ flags.substr(start, end - start) };
+        if(!token.empty())
+        {
+          compiler_args.push_back(strdup(std::string{ token }.c_str()));
+        }
+
+        start = end + 1;
+      }
+    }
+
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
       compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
@@ -231,6 +250,7 @@ int main(int argc, const char** argv)
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
+    /* TODO: I doubt this is really needed. These strings aren't captured by Clang. */
     util::scope_exit const cleanup{ [&]() {
       for(auto const s : compiler_args)
       {
