@@ -49,7 +49,7 @@ namespace jank::runtime
 
   bool operator==(native_big_decimal const &l, native_big_integer const &r)
   {
-    native_big_decimal r_as_decimal(r.str());
+    native_big_decimal const r_as_decimal(r.str());
     return abs(l - r_as_decimal) < std::numeric_limits<native_big_decimal>::epsilon();
   }
 
