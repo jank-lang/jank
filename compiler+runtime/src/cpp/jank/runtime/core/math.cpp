@@ -15,11 +15,8 @@ namespace jank::runtime
     {
       return static_cast<f64>(val);
     }
-    else if constexpr(std::is_same_v<T, native_big_integer>)
-    {
-      return val.template convert_to<f64>();
-    }
-    else if constexpr(std::is_same_v<T, native_big_decimal>)
+    else if constexpr(std::is_same_v<T, native_big_integer>
+                      || std::is_same_v<T, native_big_decimal>)
     {
       return val.template convert_to<f64>();
     }
