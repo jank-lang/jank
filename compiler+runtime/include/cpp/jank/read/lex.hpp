@@ -222,7 +222,9 @@ namespace jank::read::lex
     static constexpr usize ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
-    std::variant<no_data, i64, f64, jtl::immutable_string_view, bool, ratio, big_integer, big_decimal> data;
+    std::
+      variant<no_data, i64, f64, jtl::immutable_string_view, bool, ratio, big_integer, big_decimal>
+        data;
   };
 
   std::ostream &operator<<(std::ostream &os, movable_position const &p);
