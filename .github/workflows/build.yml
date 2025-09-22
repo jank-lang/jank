@@ -124,12 +124,11 @@ jobs:
           - name: macOS - lint
             os: macos-26
             lint: true
-          ## Debug + clang-tidy + coverage
-          - name: macOS - debug, analysis, coverage
+          ## Debug + clang-tidy
+          - name: macOS - debug, analysis
             os: macos-26
             build_type: Debug
             sanitize: none
-            coverage: on
             analyze: on
 
           ## Debug + sanitization
