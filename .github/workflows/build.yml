@@ -82,45 +82,45 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          ## Ubuntu
-          ### Lint all sources
-          #- name: Ubuntu - lint
-          #  os: ubuntu-24.04
-          #  lint: true
-          ### Debug + clang-tidy + coverage
-          #- name: Ubuntu - debug, analysis, coverage
+          # Ubuntu
+          ## Lint all sources
+          - name: Ubuntu - lint
+            os: ubuntu-24.04
+            lint: true
+          ## Debug + clang-tidy + coverage
+          - name: Ubuntu - debug, analysis, coverage
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: none
+            coverage: on
+            analyze: on
+
+          ## Debug + sanitization
+          - name: Ubuntu - address sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: address
+
+          - name: Ubuntu - undefined behavior sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: undefined
+
+          ## TODO: Fix this. Causes linker issues.
+          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
+          #- name: Ubuntu - thread sanitizer
           #  os: ubuntu-24.04
           #  build_type: Debug
-          #  sanitize: none
-          #  coverage: on
-          #  analyze: on
+          #  sanitize: thread
 
-          ### Debug + sanitization
-          #- name: Ubuntu - address sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: address
-
-          #- name: Ubuntu - undefined behavior sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: undefined
-
-          ### TODO: Fix this. Causes linker issues.
-          ## https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          ##- name: Ubuntu - thread sanitizer
-          ##  os: ubuntu-24.04
-          ##  build_type: Debug
-          ##  sanitize: thread
-
-          ### Release
-          #- name: Ubuntu - release
-          #  os: ubuntu-24.04
-          #  build_type: Release
-          #  sanitize: none
-          #  package: on
+          ## Release
+          - name: Ubuntu - release
+            os: ubuntu-24.04
+            build_type: Release
+            sanitize: none
+            package: on
           # macOS
-          ## Debug + clang-tidy
+          # Debug + clang-tidy
           - name: macOS - debug, analysis
             os: macos-26
             build_type: Debug
@@ -269,26 +269,26 @@ jobs:
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
-  #build-nix:
-  #  name: "Nix - release"
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #  - name: "Set up nix"
-  #    uses: cachix/install-nix-action@v31
-  #    with:
-  #      nix_path: nixpkgs=channel:nixos-unstable
-  #  - name: "Set up cachix"
-  #    uses: cachix/cachix-action@v16
-  #    with:
-  #      name: jank-lang
-  #      # If you chose API tokens for write access OR if you have a private cache
-  #      authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-  #      # Only push to cache on main branch, not PRs
-  #      skipPush: "${{ github.ref != 'refs/heads/main' }}"
-  #  - uses: actions/checkout@v4
-  #    with:
-  #      submodules: 'recursive'
-  #  - name: "Build jank"
-  #    run: nix build .?submodules=1 -L
-  #  - name: "Check health"
-  #    run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
+  build-nix:
+    name: "Nix - release"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Set up nix"
+      uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: "Set up cachix"
+      uses: cachix/cachix-action@v16
+      with:
+        name: jank-lang
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        # Only push to cache on main branch, not PRs
+        skipPush: "${{ github.ref != 'refs/heads/main' }}"
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: "Build jank"
+      run: nix build .?submodules=1 -L
+    - name: "Check health"
+      run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
