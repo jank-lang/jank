@@ -759,23 +759,10 @@ namespace jank::runtime::obj
 
   bool operator==(native_big_decimal const &l, ratio_data const &r)
   {
-    native_big_decimal const r_bd = r.to_native_big_decimal();
-
-    // Use a relative epsilon comparison, which is the standard for floating-point types.
-    // This handles comparisons correctly for numbers of any magnitude (very large or very small).
-    // The formula is: |a - b| <= epsilon * max(|a|, |b|)
-
-    // 1. Get the machine epsilon for the native_big_decimal type.
-    native_big_decimal const eps = std::numeric_limits<native_big_decimal>::epsilon();
-
-    // 2. Calculate the absolute difference between the two numbers.
-    //    boost::multiprecision::abs() is a non-member function.
-    native_big_decimal const diff = abs(l - r_bd);
-
-    // 3. Calculate the tolerance, scaling it by the larger of the two values.
-    native_big_decimal const tolerance = eps * std::max(abs(l), abs(r_bd));
-
-    // 4. Perform the comparison.
+    native_big_decimal const r_bd(r.to_native_big_decimal());
+    native_big_decimal const eps(std::numeric_limits<native_big_decimal>::epsilon());
+    native_big_decimal const diff(abs(l - r_bd));
+    native_big_decimal const tolerance(eps * std::max(abs(l), abs(r_bd)));
     return diff <= tolerance;
   }
 
