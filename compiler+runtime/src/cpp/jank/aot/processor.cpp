@@ -188,7 +188,7 @@ int main(int argc, const char** argv)
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
     {
-      std::string_view flags{ JANK_AOT_FLAGS };
+      std::string_view const flags{ JANK_AOT_FLAGS };
       size_t start{};
       while(start < flags.size())
       {
