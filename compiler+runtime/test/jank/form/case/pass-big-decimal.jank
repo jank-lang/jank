@@ -1,9 +1,4 @@
-(assert
- (=
-  (case 99999.9M
-    :no-match                             :no-match
-    99999.9M                              :big-nines
-    :default)
-  :big-nines))
-
-:success
+(case 99999.9M
+  :no-match :no-match
+  99999.9M :success
+  :default)
