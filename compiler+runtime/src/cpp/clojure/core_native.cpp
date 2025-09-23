@@ -79,7 +79,7 @@ namespace clojure::core_native
     return try_object<var>(o)->deref();
   }
 
-  static object_ref intern_var(object_ref const sym)
+  object_ref intern_var(object_ref const sym)
   {
     return __rt_ctx->intern_var(try_object<obj::symbol>(sym)).expect_ok();
   }

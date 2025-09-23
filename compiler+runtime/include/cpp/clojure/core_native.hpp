@@ -16,6 +16,7 @@ namespace clojure::core_native
   object_ref is_var_thread_bound(object_ref o);
   object_ref var_bind_root(object_ref v, object_ref o);
   object_ref var_get_root(object_ref o);
+  object_ref intern_var(object_ref sym);
 
   object_ref ns_unalias(object_ref current_ns, object_ref alias);
   object_ref ns_unmap(object_ref current_ns, object_ref sym);

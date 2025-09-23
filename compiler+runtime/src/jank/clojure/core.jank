@@ -1128,8 +1128,7 @@
   ([l r]
    (cpp/jank.runtime.add l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (+ l r)]
+   (let [res (cpp/jank.runtime.add l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1143,8 +1142,7 @@
   ([l r]
    (cpp/jank.runtime.sub l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (- l r)]
+   (let [res (cpp/jank.runtime.sub l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1160,8 +1158,7 @@
   ([l r]
    (cpp/jank.runtime.mul l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (* l r)]
+   (let [res (cpp/jank.runtime.mul l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1175,8 +1172,7 @@
   ([l r]
    (cpp/jank.runtime.div l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (/ l r)]
+   (let [res (cpp/jank.runtime.div l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1328,8 +1324,7 @@
   ([l r]
    (cpp/jank.runtime.min l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (min l r)]
+   (let [res (cpp/jank.runtime.min l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1343,8 +1338,7 @@
   ([l r]
    (cpp/jank.runtime.max l r))
   ([l r & args]
-   ;; TODO: swap to interop, currently broken
-   (let [res (max l r)]
+   (let [res (cpp/jank.runtime.max l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -3688,10 +3682,16 @@
 ;; Case.
 (def ^:private max-mask-bits 13)
 (def ^:private max-switch-table-size (bit-shift-left 1 max-mask-bits))
-(def ^:private int-min-value clojure.core-native/int-min)
-(def ^:private int-max-value clojure.core-native/int-max)
-(def ^:private int32-min-value clojure.core-native/int32-min)
-(def ^:private int32-max-value clojure.core-native/int32-max)
+
+(defn- i64? [n]
+  (and (integer? n)
+       (>= n (cpp/value "std::numeric_limits<jtl::i64>::min()"))
+       (<= n (cpp/value "std::numeric_limits<jtl::i64>::max()"))))
+
+(defn- i32? [n]
+  (and (integer? n)
+       (>= n (cpp/value "std::numeric_limits<jtl::i32>::min()"))
+       (<= n (cpp/value "std::numeric_limits<jtl::i32>::max()"))))
 
 (defn- shift-mask [shift mask x]
   (-> x (bit-shift-right shift) (bit-and mask)))
@@ -3701,9 +3701,7 @@
   input. The native hash returns a int32 int so this is to make sure that (case-hash (case-hash x)) == (case-hash x).
   A key may be hashed more than once and we need to make sure its value does not change in later hashing."
   [input]
-  (if (and (integer? input)
-           (>= input int32-min-value)
-           (<= input int32-max-value))
+  (if (i32? input)
     input
     (hash input)))
 
@@ -3912,8 +3910,7 @@
             (vals pairs)
             mode
             (cond
-              (every? #(and (integer? %) (<= int-min-value % int-max-value))
-                      tests)
+              (every? i64? tests)
               :ints
 
               (every? keyword? tests)
@@ -4140,7 +4137,7 @@
                       sym (rename sym sym)]
                   (when (nil? v)
                     (throw (ex-info :var-does-not-exist {:value sym})))
-                  (clojure.core-native/refer *ns* sym v))))
+                  (cpp/clojure.core_native.refer *ns* sym v))))
             nil
             to-refer)))
 
@@ -4384,17 +4381,17 @@
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
   ([ns name]
-     (let [v (clojure.core-native/intern-var
+     (let [v (cpp/clojure.core_native.intern_var
                (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+       (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
        v))
   ([ns name val]
-     (let [v (clojure.core-native/intern-var
+     (let [v (cpp/clojure.core_native.intern_var
                (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
-       (clojure.core-native/var-bind-root v val)
-       (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+       (cpp/clojure.core_native.var_bind_root v val)
+       (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
        v)))
 
 (defn nfirst
