@@ -176,6 +176,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref persistent_vector::call(object_ref const o) const
+  {
+    return get(o);
+  }
+
   transient_vector_ref persistent_vector::to_transient() const
   {
     return make_box<transient_vector>(data);

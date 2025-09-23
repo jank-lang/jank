@@ -415,6 +415,7 @@ namespace jank::evaluate
             }
           }
           else if constexpr(std::same_as<T, obj::persistent_hash_set>
+                            || std::same_as<T, obj::persistent_vector>
                             || std::same_as<T, obj::transient_vector>)
           {
             auto const s(expr->arg_exprs.size());
