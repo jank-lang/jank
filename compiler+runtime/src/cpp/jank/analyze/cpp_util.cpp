@@ -480,15 +480,10 @@ namespace jank::analyze::cpp_util
       }
 
       jtl::option<usize> needed_conversion;
-      for(usize fn_idx{}; fn_idx < fns.size(); ++fn_idx)
+      for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
-        auto const param_type{ Cpp::GetFunctionArgType(fns[fn_idx], arg_idx) };
+        auto const param_type{ Cpp::GetFunctionArgType(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
-        {
-          continue;
-        }
-        /* This is not a viable conversion. */
-        if(is_typed_object(param_type))
         {
           continue;
         }
@@ -754,11 +749,14 @@ namespace jank::analyze::cpp_util
       return implicit_conversion_action::none;
     }
 
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
+    if((cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
+       || (cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type)))
     {
       return implicit_conversion_action::into_object;
     }
-    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+    else if((cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
+            || (cpp_util::is_any_object(expr_type)
+                && cpp_util::is_trait_convertible(expected_type)))
     {
       return implicit_conversion_action::from_object;
     }
