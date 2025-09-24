@@ -470,12 +470,10 @@ namespace jank::analyze::cpp_util
     {
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
-      auto const is_untyped_obj{ is_untyped_object(arg_types[arg_idx + member_offset].m_Type) };
-      auto const is_typed_obj{ is_typed_object(arg_types[arg_idx + member_offset].m_Type) };
-      if(!(is_untyped_obj || is_typed_obj))
-      {
-        continue;
-      }
+      auto const arg_type{ Cpp::GetNonReferenceType(arg_types[arg_idx + member_offset].m_Type) };
+      auto const is_arg_untyped_obj{ is_untyped_object(arg_type) };
+      auto const is_arg_typed_obj{ is_typed_object(arg_type) };
+      auto const is_arg_obj{ is_arg_untyped_obj || is_arg_typed_obj };
 
       jtl::option<usize> needed_conversion;
       for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
@@ -489,8 +487,14 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
+        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object(param_type) };
+        if(!is_arg_obj && !is_param_obj)
+        {
+          continue;
+        }
 
-        if(is_trait_convertible(param_type))
+        auto const trait_type{ is_arg_obj ? param_type : arg_type };
+        if(is_trait_convertible(trait_type))
         {
           if(needed_conversion.is_some())
           {

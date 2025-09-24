@@ -895,7 +895,12 @@ namespace jank::codegen
 
       for(auto const &arg_expr : expr->arg_exprs)
       {
-        auto const arg_handle{ gen(arg_expr, arity) };
+        auto arg_handle{ gen(arg_expr, arity) };
+        if(llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
         arg_handles.emplace_back(arg_handle);
         arg_types.emplace_back(ctx->builder->getPtrTy());
       }
