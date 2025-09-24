@@ -468,13 +468,11 @@ namespace jank::analyze::cpp_util
      * The user will need to specify the correct type by using a cast. */
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
-      /* TODO: Check for typed and untyped objects. */
-
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
       auto const is_untyped_obj{ is_untyped_object(arg_types[arg_idx + member_offset].m_Type) };
-      /* TODO: Check the other way, too, if we're calling a fn taking objects. */
-      if(!is_untyped_obj)
+      auto const is_typed_obj{ is_typed_object(arg_types[arg_idx + member_offset].m_Type) };
+      if(!(is_untyped_obj || is_typed_obj))
       {
         continue;
       }
@@ -749,34 +747,44 @@ namespace jank::analyze::cpp_util
       return implicit_conversion_action::none;
     }
 
-    if((cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
-       || (cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type)))
+    if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
     {
       return implicit_conversion_action::into_object;
     }
-    else if((cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
-            || (cpp_util::is_any_object(expr_type)
-                && cpp_util::is_trait_convertible(expected_type)))
+
+    if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
     {
       return implicit_conversion_action::from_object;
     }
-    else if(/* Up cast. */
-            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                                    Cpp::GetUnderlyingType(expected_type)))
-            /* Same type or adding reference. */
-            || (Cpp::GetCanonicalType(expr_type)
-                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
-                && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
-            /* Matching nullptr to any pointer type. */
-            || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
-            /* TODO: Array size. */
-            || (Cpp::IsArrayType(expr_type) && Cpp::IsArrayType(expected_type)
-                && Cpp::GetArrayElementType(expr_type) == Cpp::GetArrayElementType(expected_type)))
+
+    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
+    {
+      return implicit_conversion_action::into_object;
+    }
+
+    if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+    {
+      return implicit_conversion_action::from_object;
+    }
+
+    if(/* Up cast. */
+       (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                               Cpp::GetUnderlyingType(expected_type)))
+       /* Same type or adding reference. */
+       || (Cpp::GetCanonicalType(expr_type)
+             == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
+           && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+       /* Matching nullptr to any pointer type. */
+       || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
+       /* TODO: Array size. */
+       || (Cpp::IsArrayType(expr_type) && Cpp::IsArrayType(expected_type)
+           && Cpp::GetArrayElementType(expr_type) == Cpp::GetArrayElementType(expected_type)))
     {
       return implicit_conversion_action::none;
     }
-    else if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
-            && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
+
+    if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
+       && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
     {
       auto const res{ determine_implicit_conversion(Cpp::GetPointeeType(expr_type),
                                                     Cpp::GetPointeeType(expected_type)) };
@@ -791,13 +799,12 @@ namespace jank::analyze::cpp_util
           return implicit_conversion_action::unknown;
       }
     }
-    else if(Cpp::IsConstructible(expected_type, expr_type))
+
+    if(Cpp::IsConstructible(expected_type, expr_type))
     {
       return implicit_conversion_action::cast;
     }
-    else
-    {
-      return implicit_conversion_action::unknown;
-    }
+
+    return implicit_conversion_action::unknown;
   }
 }

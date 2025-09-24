@@ -398,7 +398,7 @@ namespace jank::codegen
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
 
     llvm::Value *arg_alloc{ arg };
-    if(cpp_util::is_any_object(input_type))
+    if(cpp_util::is_any_object(input_type) && !llvm::isa<llvm::AllocaInst>(arg_alloc))
     {
       arg_alloc = ctx.builder->CreateAlloca(ctx.builder->getPtrTy(),
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
