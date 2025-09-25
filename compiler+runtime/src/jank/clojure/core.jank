@@ -2189,16 +2189,16 @@
    (iterate inc 0))
   ([end]
    (if (integer? end)
-     (clojure.core-native/integer-range end)
-     (clojure.core-native/range end)))
+     (cpp/jank.runtime.obj.integer_range.create end)
+     (cpp/jank.runtime.obj.range.create end)))
   ([start end]
    (if (and (integer? start) (integer? end))
-     (clojure.core-native/integer-range start end)
-     (clojure.core-native/range start end)))
+     (cpp/jank.runtime.obj.integer_range.create start end)
+     (cpp/jank.runtime.obj.range.create start end)))
   ([start end step]
    (if (and (integer? start) (integer? end) (integer? step))
-     (clojure.core-native/integer-range start end step)
-     (clojure.core-native/range start end step))))
+     (cpp/jank.runtime.obj.integer_range.create start end step)
+     (cpp/jank.runtime.obj.range.create start end step))))
 
 (defn nth
   "Returns the value at the index. get returns nil if index out of
