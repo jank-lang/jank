@@ -4735,15 +4735,13 @@
   set!s. Keys must be unique per reference, and can be used to remove
   the watch with remove-watch, but are otherwise considered opaque by
   the watch mechanism."
-  [#_clojure.lang.IRef reference key fn]
-  ;; (.addWatch reference key fn)
-  (throw "TODO: port add-watch"))
+  [reference key f]
+  (cpp/jank.runtime.add_watch reference key f))
 
 (defn remove-watch
   "Removes a watch (set by add-watch) from a reference"
-  [#_clojure.lang.IRef reference key]
-  ;; (.removeWatch reference key)
-  (throw "TODO: port remove-watch"))
+  [reference key]
+  (cpp/jank.runtime.remove_watch reference key))
 
 (defn agent-error
   "Returns the exception thrown during an asynchronous action of the
