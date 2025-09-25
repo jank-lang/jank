@@ -47,6 +47,10 @@ namespace jank::runtime::obj
 
     object_ref compare_and_set(object_ref old_val, object_ref new_val);
 
+    /* behavior::ref_like */
+    void add_watch(object_ref key, object_ref fn);
+    void remove_watch(object_ref key);
+
     object base{ obj_type };
     std::atomic<object *> val{};
     folly::Synchronized<persistent_hash_map_ref> watches{};

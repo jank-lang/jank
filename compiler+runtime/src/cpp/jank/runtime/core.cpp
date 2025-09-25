@@ -2,6 +2,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
+#include <jank/runtime/behavior/ref.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
@@ -667,18 +668,44 @@ namespace jank::runtime
 
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
   {
-    auto const a(try_object<obj::atom>(reference));
-    auto locked_watches(a->watches.wlock());
-    *locked_watches = (*locked_watches)->assoc(key, fn);
+    visit_object(
+      [=](auto const typed_o) -> void {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          return typed_o->add_watch(key, fn);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'add-watch' because it is not ref_like: {}",
+            typed_o->to_string()) };
+        }
+      },
+      reference);
 
     return reference;
   }
 
   object_ref remove_watch(object_ref const reference, object_ref const key)
   {
-    auto const a(try_object<obj::atom>(reference));
-    auto locked_watches(a->watches.wlock());
-    *locked_watches = (*locked_watches)->dissoc(key);
+    visit_object(
+      [=](auto const typed_o) -> void {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          return typed_o->remove_watch(key);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'remove-watch' because it is not ref_like: {}",
+            typed_o->to_string()) };
+        }
+      },
+      reference);
 
     return reference;
   }

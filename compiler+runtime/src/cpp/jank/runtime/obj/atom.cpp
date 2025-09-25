@@ -214,4 +214,16 @@ namespace jank::runtime::obj
     }
     return make_box(ret);
   }
+
+  void atom::add_watch(object_ref key, object_ref fn)
+  {
+    auto locked_watches(this->watches.wlock());
+    *locked_watches = (*locked_watches)->assoc(key, fn);
+  }
+
+  void atom::remove_watch(object_ref key)
+  {
+    auto locked_watches(this->watches.wlock());
+    *locked_watches = (*locked_watches)->dissoc(key);
+  }
 }
