@@ -1,0 +1,19 @@
+; https://github.com/jank-lang/jank/issues/504
+(cpp/raw "
+namespace jank::cpp::cppinterop::pass_qualified_non_type_param
+{
+  struct meow
+  {
+    static constexpr bool is_stateful{ true };
+
+    int a{}, b{ 7 };
+  };
+
+  template <typename T>
+  std::enable_if_t<T::is_stateful, T> bar(T t)
+  { return t; }
+}")
+(let* [m (cpp/jank.cpp.cppinterop.pass_qualified_non_type_param.meow)
+       b (cpp/jank.cpp.cppinterop.pass_qualified_non_type_param.bar m)]
+  (if (= 7 (cpp/.-b b))
+    :success))

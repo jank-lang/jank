@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::auto_box::pass_typed_object_to_untyped_object
+          {
+            runtime::obj::keyword_ref foo(runtime::obj::keyword_ref const k)
+            { return k; }
+            runtime::object_ref bar(runtime::object_ref const o)
+            { return o; }
+          }")
+(let* [f (cpp/jank.cpp.auto_box.pass_typed_object_to_untyped_object.foo :success)
+       b (cpp/jank.cpp.auto_box.pass_typed_object_to_untyped_object.bar f)]
+  b)

@@ -53,7 +53,7 @@ namespace jank::runtime
 
     static constexpr T from_object(object_ref const t)
     {
-      return try_object<T::value_type>(t);
+      return try_object<typename T::value_type>(t);
     }
 
     static constexpr T from_object(T const t)
