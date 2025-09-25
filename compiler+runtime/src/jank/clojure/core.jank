@@ -4052,7 +4052,7 @@
                     v (second kv)]
                 ; TODO: Check for visibility.
                 (if (var? v)
-                  (if (= ns (clojure.core-native/var-ns v))
+                  (if (= ns (cpp/clojure.core_native.var_ns v))
                     (assoc acc k v)
                     acc)
                   acc)))
