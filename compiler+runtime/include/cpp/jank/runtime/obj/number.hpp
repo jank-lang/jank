@@ -29,6 +29,10 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(boolean const &) const;
 
+    /* behavior::number_like */
+    i64 to_integer() const;
+    f64 to_real() const;
+
     object base{ obj_type };
     bool data{};
   };

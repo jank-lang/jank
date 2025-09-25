@@ -414,6 +414,7 @@ add_library(
   src/cpp/jank/runtime/obj/opaque_box.cpp
   src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/big_integer.cpp
+  src/cpp/jank/runtime/obj/big_decimal.cpp
   src/cpp/jank/runtime/obj/persistent_list.cpp
   src/cpp/jank/runtime/obj/persistent_vector.cpp
   src/cpp/jank/runtime/obj/persistent_vector_sequence.cpp
@@ -575,11 +576,14 @@ foreach(dir ${jank_lib_includes_prop})
   endif()
 endforeach()
 
-set(jank_lib_link_dirs "")
+set(jank_lib_linker_flags_list "")
 get_target_property(jank_lib_link_dirs_prop jank_lib LINK_DIRECTORIES)
 foreach(lib ${jank_lib_link_dirs_prop})
-  list(APPEND jank_lib_link_dirs -L${lib})
+  list(APPEND jank_lib_linker_flags_list -L${lib})
 endforeach()
+list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
+list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
+string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
 set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
@@ -590,9 +594,9 @@ target_compile_options(
   jank_lib
   PUBLIC
   -DJANK_VERSION="${jank_version}"
-  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
-  -DJANK_DEPS_LIBRARY_DIRS="${jank_lib_link_dirs}"
+  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
+  -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
 )
 target_link_options(jank_lib PRIVATE ${jank_linker_flags})
 
@@ -753,6 +757,7 @@ if(jank_test)
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/big_integer.cpp
+    test/cpp/jank/runtime/obj/big_decimal.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/ratio.cpp
     test/cpp/jank/runtime/obj/persistent_list.cpp

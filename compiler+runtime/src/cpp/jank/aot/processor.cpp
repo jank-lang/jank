@@ -187,7 +187,31 @@ int main(int argc, const char** argv)
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
-    compiler_args.push_back(strdup(JANK_DEPS_LIBRARY_DIRS));
+    {
+      std::string_view const flags{ JANK_AOT_FLAGS };
+      size_t start{};
+      while(start < flags.size())
+      {
+        auto end{ flags.find(' ', start) };
+        if(end == std::string_view::npos)
+        {
+          end = flags.size();
+        }
+
+        auto const token{ flags.substr(start, end - start) };
+        if(!token.empty())
+        {
+          compiler_args.push_back(strdup(std::string{ token }.c_str()));
+        }
+
+        start = end + 1;
+      }
+    }
+
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
+    }
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
@@ -217,12 +241,16 @@ int main(int argc, const char** argv)
 
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
-    compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+    if constexpr(jtl::current_platform == jtl::platform::linux_like)
+    {
+      compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+    }
     compiler_args.push_back(strdup("-rdynamic"));
     compiler_args.push_back(strdup("-O2"));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
+    /* TODO: I doubt this is really needed. These strings aren't captured by Clang. */
     util::scope_exit const cleanup{ [&]() {
       for(auto const s : compiler_args)
       {
