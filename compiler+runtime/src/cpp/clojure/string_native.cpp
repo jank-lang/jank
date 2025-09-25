@@ -194,6 +194,12 @@ namespace clojure::string_native
     return static_cast<i64>(s_str.rfind(value_str, pos));
   }
 
+  static object_ref empty_string()
+  {
+    static auto const s(make_box(jtl::immutable_string{}));
+    return s;
+  }
+
   static jtl::immutable_string::size_type triml_index(jtl::immutable_string const &s)
   {
     auto const s_size(s.size());
@@ -218,6 +224,11 @@ namespace clojure::string_native
     if(l == 0)
     {
       return s;
+    }
+
+    if(l == s_str.size())
+    {
+      return empty_string();
     }
 
     return make_box(s_str.substr(l));
@@ -249,14 +260,25 @@ namespace clojure::string_native
       return s;
     }
 
+    if(r == 0)
+    {
+      return empty_string();
+    }
+
     return make_box(s_str.substr(0, r));
   }
 
   object_ref trim(object_ref const s)
   {
     auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const l(triml_index(s_str));
     auto const r(trimr_index(s_str));
+
+    if(r == 0)
+    {
+      return empty_string();
+    }
+
+    auto const l(triml_index(s_str));
 
     if(l == 0 && r == s_str.size())
     {
