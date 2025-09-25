@@ -1,5 +1,7 @@
 #pragma once
 
+#include <folly/Synchronized.h>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
@@ -47,6 +49,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     std::atomic<object *> val{};
-    mutable persistent_hash_map_ref watches{};
+    folly::Synchronized<persistent_hash_map_ref> watches{};
   };
 }

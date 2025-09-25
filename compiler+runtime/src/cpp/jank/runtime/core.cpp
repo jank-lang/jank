@@ -668,7 +668,8 @@ namespace jank::runtime
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
   {
     auto const a(try_object<obj::atom>(reference));
-    a->watches = a->watches->assoc(key, fn);
+    auto locked_watches(a->watches.wlock());
+    *locked_watches = (*locked_watches)->assoc(key, fn);
 
     return reference;
   }
@@ -676,7 +677,8 @@ namespace jank::runtime
   object_ref remove_watch(object_ref const reference, object_ref const key)
   {
     auto const a(try_object<obj::atom>(reference));
-    a->watches = a->watches->dissoc(key);
+    auto locked_watches(a->watches.wlock());
+    *locked_watches = (*locked_watches)->dissoc(key);
 
     return reference;
   }

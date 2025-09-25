@@ -47,7 +47,8 @@ namespace jank::runtime::obj
 
   static void notify_watches(atom_ref const a, object_ref const old_val, object_ref const new_val)
   {
-    for(auto const entry : a->watches->data)
+    auto const locked_watches(a->watches.rlock());
+    for(auto const entry : (*locked_watches)->data)
     {
       auto const fn(entry.second);
       if(!fn.is_nil())
