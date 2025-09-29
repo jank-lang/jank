@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     for(auto const entry : (*locked_watches)->data)
     {
       auto const fn(entry.second);
-      if(!fn.is_nil())
+      if(fn.is_some())
       {
         dynamic_call(fn, entry.first, a, old_val, new_val);
       }
@@ -215,13 +215,13 @@ namespace jank::runtime::obj
     return make_box(ret);
   }
 
-  void atom::add_watch(object_ref key, object_ref fn)
+  void atom::add_watch(object_ref const key, object_ref const fn)
   {
     auto locked_watches(this->watches.wlock());
     *locked_watches = (*locked_watches)->assoc(key, fn);
   }
 
-  void atom::remove_watch(object_ref key)
+  void atom::remove_watch(object_ref const key)
   {
     auto locked_watches(this->watches.wlock());
     *locked_watches = (*locked_watches)->dissoc(key);

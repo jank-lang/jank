@@ -53,6 +53,8 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     std::atomic<object *> val{};
+    /* Since watches is a 'persistent_hash_map", there in no guarantee in which
+     * order watches are invoked. */
     folly::Synchronized<persistent_hash_map_ref> watches{};
   };
 }

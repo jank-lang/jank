@@ -669,18 +669,18 @@ namespace jank::runtime
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
   {
     visit_object(
-      [=](auto const typed_o) -> void {
-        using T = typename decltype(typed_o)::value_type;
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
 
         if constexpr(behavior::ref_like<T>)
         {
-          return typed_o->add_watch(key, fn);
+          typed_reference->add_watch(key, fn);
         }
         else
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'add-watch' because it is not ref_like: {}",
-            typed_o->to_string()) };
+            typed_reference->to_code_string()) };
         }
       },
       reference);
@@ -691,18 +691,18 @@ namespace jank::runtime
   object_ref remove_watch(object_ref const reference, object_ref const key)
   {
     visit_object(
-      [=](auto const typed_o) -> void {
-        using T = typename decltype(typed_o)::value_type;
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
 
         if constexpr(behavior::ref_like<T>)
         {
-          return typed_o->remove_watch(key);
+          typed_reference->remove_watch(key);
         }
         else
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'remove-watch' because it is not ref_like: {}",
-            typed_o->to_string()) };
+            typed_reference->to_code_string()) };
         }
       },
       reference);
