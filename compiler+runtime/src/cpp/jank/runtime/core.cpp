@@ -2,6 +2,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
+#include <jank/runtime/behavior/ref_like.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
@@ -663,5 +664,49 @@ namespace jank::runtime
     return std::chrono::duration_cast<std::chrono::milliseconds>(
              expect_object<obj::inst>(o)->value.time_since_epoch())
       .count();
+  }
+
+  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  {
+    visit_object(
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          typed_reference->add_watch(key, fn);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'add-watch' because it is not ref_like: {}",
+            typed_reference->to_code_string()) };
+        }
+      },
+      reference);
+
+    return reference;
+  }
+
+  object_ref remove_watch(object_ref const reference, object_ref const key)
+  {
+    visit_object(
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          typed_reference->remove_watch(key);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'remove-watch' because it is not ref_like: {}",
+            typed_reference->to_code_string()) };
+        }
+      },
+      reference);
+
+    return reference;
   }
 }
