@@ -119,8 +119,9 @@ jobs:
             build_type: Release
             sanitize: none
             package: on
+
           # macOS
-          # Debug + clang-tidy
+          ## Debug + clang-tidy
           - name: macOS - debug, analysis
             os: macos-26
             build_type: Debug
@@ -150,6 +151,7 @@ jobs:
             os: macos-26
             build_type: Release
             sanitize: none
+            package: on
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:
@@ -252,8 +254,8 @@ jobs:
   publish-homebrew-tarball:
     if: github.ref == 'refs/heads/main'
     needs: build-jank
-    name: Publish .deb
-    runs-on: ubuntu-24.04
+    name: Publish Homebrew package
+    runs-on: macos-26
     timeout-minutes: 5
     steps:
       - uses: actions/download-artifact@v5
