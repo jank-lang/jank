@@ -1405,7 +1405,12 @@ namespace jank::codegen
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
-    auto const condition(gen(expr->condition, arity));
+    auto condition(gen(expr->condition, arity));
+    if(llvm::isa<llvm::AllocaInst>(condition))
+    {
+      condition = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), condition);
+    }
+
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));

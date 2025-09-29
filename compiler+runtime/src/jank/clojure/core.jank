@@ -4022,7 +4022,7 @@
    returns the namespace named by it, throwing an exception if not
    found."
   [ns-or-sym]
-  (if (clojure.core-native/ns? ns-or-sym)
+  (if (cpp/clojure.core_native.is_ns ns-or-sym)
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
