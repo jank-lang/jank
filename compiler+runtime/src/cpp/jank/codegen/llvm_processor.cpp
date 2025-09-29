@@ -3130,7 +3130,8 @@ namespace jank::codegen
 
   void llvm_processor::optimize() const
   {
-    if(getenv("JANK_PRINT_IR"))
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
+    if(print_settings == "1")
     {
       print();
     }
@@ -3145,6 +3146,11 @@ namespace jank::codegen
 #endif
 
     _impl->ctx->mpm.run(*_impl->llvm_module, *_impl->ctx->mam);
+
+    if(print_settings == "2")
+    {
+      print();
+    }
   }
 
   void llvm_processor::print() const
