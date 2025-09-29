@@ -1871,8 +1871,11 @@ namespace jank::analyze
     usize variadic_arity{};
     for(auto const &arity : arities)
     {
-      found_variadic += static_cast<int>(arity.fn_ctx->is_variadic);
-      variadic_arity = arity.params.size();
+      if(arity.fn_ctx->is_variadic)
+      {
+        found_variadic += 1;
+        variadic_arity = arity.params.size();
+      }
     }
     if(found_variadic > 1)
     {
