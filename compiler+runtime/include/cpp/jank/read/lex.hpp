@@ -42,6 +42,8 @@ namespace jank::read::lex
     integer,
     /* Has big int data. */
     big_integer,
+    /* Has big decimal data. */
+    big_decimal,
     /* Has double data. */
     real,
     /* Has two integer data. */
@@ -105,6 +107,8 @@ namespace jank::read::lex
         return "integer";
       case token_kind::big_integer:
         return "big_integer";
+      case token_kind::big_decimal:
+        return "big_decimal";
       case token_kind::real:
         return "real";
       case token_kind::ratio:
@@ -137,6 +141,14 @@ namespace jank::read::lex
     /* TODO: Remove these from here and ratio. */
     bool operator==(big_integer const &) const;
     bool operator!=(big_integer const &) const;
+  };
+
+  struct big_decimal
+  {
+    jtl::immutable_string_view number_literal;
+
+    bool operator==(big_decimal const &) const = default;
+    bool operator!=(big_decimal const &) const = default;
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to
@@ -178,6 +190,10 @@ namespace jank::read::lex
           movable_position const &e,
           token_kind const k,
           big_integer const &);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          big_decimal const &);
 
 #ifdef JANK_TEST
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
@@ -189,6 +205,7 @@ namespace jank::read::lex
     token(usize offset, usize width, token_kind const k, bool const);
     token(usize offset, usize width, token_kind const k, ratio const &);
     token(usize offset, usize width, token_kind const k, big_integer const &);
+    token(usize offset, usize width, token_kind const k, big_decimal const &);
 #endif
 
     bool operator==(token const &rhs) const;
@@ -205,7 +222,9 @@ namespace jank::read::lex
     static constexpr usize ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
-    std::variant<no_data, i64, f64, jtl::immutable_string_view, bool, ratio, big_integer> data;
+    std::
+      variant<no_data, i64, f64, jtl::immutable_string_view, bool, ratio, big_integer, big_decimal>
+        data;
   };
 
   std::ostream &operator<<(std::ostream &os, movable_position const &p);

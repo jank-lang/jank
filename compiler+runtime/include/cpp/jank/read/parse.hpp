@@ -91,6 +91,7 @@ namespace jank::read::parse
     object_result parse_integer();
     object_result parse_ratio();
     object_result parse_big_integer();
+    object_result parse_big_decimal();
     object_result parse_real();
     object_result parse_string();
     object_result parse_escaped_string();

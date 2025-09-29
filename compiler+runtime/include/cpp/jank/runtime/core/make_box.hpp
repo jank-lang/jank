@@ -8,6 +8,7 @@
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
+#include <jank/runtime/obj/big_decimal.hpp>
 
 namespace jank::runtime
 {
@@ -40,6 +41,12 @@ namespace jank::runtime
   inline auto make_box(native_big_integer const &i)
   {
     return make_box<obj::big_integer>(i);
+  }
+
+  [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
+  inline auto make_box(native_big_decimal const &i)
+  {
+    return make_box<obj::big_decimal>(i);
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]

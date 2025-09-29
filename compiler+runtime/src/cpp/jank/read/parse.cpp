@@ -258,6 +258,8 @@ namespace jank::read::parse
           return parse_ratio();
         case lex::token_kind::big_integer:
           return parse_big_integer();
+        case lex::token_kind::big_decimal:
+          return parse_big_decimal();
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::escaped_string:
@@ -1662,6 +1664,15 @@ namespace jank::read::parse
     auto const &[number_literal, radix, is_negative](std::get<lex::big_integer>(token.data));
     auto const bi(obj::big_integer::create(number_literal, radix, is_negative));
     return object_source_info{ bi, token, token };
+  }
+
+  processor::object_result processor::parse_big_decimal()
+  {
+    auto const token{ token_current->expect_ok() };
+    ++token_current;
+    auto const &[number_literal](std::get<lex::big_decimal>(token.data));
+    auto const bd(obj::big_decimal::create(number_literal));
+    return object_source_info{ bd, token, token };
   }
 
   processor::object_result processor::parse_ratio()

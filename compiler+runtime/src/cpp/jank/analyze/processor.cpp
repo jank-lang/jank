@@ -1871,8 +1871,11 @@ namespace jank::analyze
     usize variadic_arity{};
     for(auto const &arity : arities)
     {
-      found_variadic += static_cast<int>(arity.fn_ctx->is_variadic);
-      variadic_arity = arity.params.size();
+      if(arity.fn_ctx->is_variadic)
+      {
+        found_variadic += 1;
+        variadic_arity = arity.params.size();
+      }
     }
     if(found_variadic > 1)
     {
@@ -4133,6 +4136,18 @@ namespace jank::analyze
                  " The type specified here should be the exact type of the value originally "
                  "passed to 'cpp/box'.",
                  Cpp::GetTypeAsString(type_expr->type)),
+               object_source(type_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    auto const value_type{ cpp_util::expression_type(value_expr) };
+    if(!cpp_util::is_any_object(value_type))
+    {
+      return error::analyze_invalid_cpp_unbox(
+               util::format("Unable to unbox value of type '{}', since it's not a jank object type."
+                            " You can only unbox the same object you get back from 'cpp/box'.",
+                            Cpp::GetTypeAsString(value_type)),
                object_source(value_obj),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
