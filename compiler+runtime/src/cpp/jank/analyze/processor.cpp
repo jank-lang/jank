@@ -1955,7 +1955,7 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, list) };
 
-    if(fn_ctx.is_none())
+    if(fn_ctx.is_none() && loop_details.is_none())
     {
       return error::analyze_invalid_recur_position(
         "Unable to use 'recur' outside of a function or 'loop'.",
@@ -1979,15 +1979,32 @@ namespace jank::analyze
 
     /* Minus one to remove recur symbol. */
     auto const arg_count(list->count() - 1);
-    if(fn_ctx.unwrap()->param_count != arg_count)
+    auto const is_loop{ loop_details.is_some() };
+    if(is_loop)
     {
-      /* TODO: Note where the loop/fn args are. */
-      return error::analyze_invalid_recur_args(
-        util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
-                     arg_count,
-                     fn_ctx.unwrap()->param_count),
-        meta_source(list->meta),
-        latest_expansion(macro_expansions));
+      if(loop_details.unwrap()->pairs.size() != arg_count)
+      {
+        /* TODO: Note where the loop args are. */
+        return error::analyze_invalid_recur_args(
+          util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
+                       arg_count,
+                       loop_details.unwrap()->pairs.size()),
+          meta_source(list->meta),
+          latest_expansion(macro_expansions));
+      }
+    }
+    else
+    {
+      if(fn_ctx.unwrap()->param_count != arg_count)
+      {
+        /* TODO: Note where the fn args are. */
+        return error::analyze_invalid_recur_args(
+          util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
+                       arg_count,
+                       fn_ctx.unwrap()->param_count),
+          meta_source(list->meta),
+          latest_expansion(macro_expansions));
+      }
     }
 
 
@@ -2010,13 +2027,21 @@ namespace jank::analyze
       arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
-    fn_ctx.unwrap()->is_tail_recursive = true;
+    if(is_loop)
+    {
+      loop_details.unwrap()->is_loop = true;
+    }
+    else
+    {
+      fn_ctx.unwrap()->is_tail_recursive = true;
+    }
 
     return jtl::make_ref<expr::recur>(position,
                                       current_frame,
                                       true,
                                       make_box<runtime::obj::persistent_list>(list->data.rest()),
-                                      std::move(arg_exprs));
+                                      std::move(arg_exprs),
+                                      is_loop ? some(loop_details.unwrap()) : none);
   }
 
   processor::expression_result
@@ -2111,6 +2136,12 @@ namespace jank::analyze
       frame,
       needs_box,
       jtl::make_ref<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
+
+    if(loop_details.is_some())
+    {
+      loop_details = ret.data;
+    }
+
     for(usize i{}; i < binding_parts; i += 2)
     {
       auto const &sym_obj(bindings->data[i]);
@@ -2319,123 +2350,24 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_loop(runtime::obj::persistent_list_ref const o,
+  processor::analyze_loop(runtime::obj::persistent_list_ref const list,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const)
   {
-    auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-
-    if(o->count() < 2)
+    auto const old_loop_details{ loop_details };
+    loop_details = nullptr;
+    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+    auto let{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
+    if(let.is_err())
     {
-      return error::analyze_invalid_loop("A 'loop' form requires a binding vector.",
-                                         meta_source(o->meta),
-                                         latest_expansion(macro_expansions));
+      return let;
     }
 
-    auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::persistent_vector)
-    {
-      return error::analyze_invalid_loop("The bindings for a 'loop' must be a vector.",
-                                         object_source(bindings_obj),
-                                         latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(o, 1));
-    }
+    let.expect_ok()->propagate_position(position);
 
-    auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
-
-    auto const binding_parts(bindings->data.size());
-    if(binding_parts % 2 == 1)
-    {
-      /* TODO: Note the last item. Check if it's a symbol? */
-      return error::analyze_invalid_loop("There must be an even number of bindings for a 'loop'.",
-                                         object_source(bindings_obj),
-                                         latest_expansion(macro_expansions));
-    }
-
-    runtime::detail::native_transient_vector binding_syms, binding_vals;
-    for(usize i{}; i < binding_parts; i += 2)
-    {
-      auto const &sym_obj(bindings->data[i]);
-      auto const &val(bindings->data[i + 1]);
-
-      if(sym_obj->type != runtime::object_type::symbol)
-      {
-        return error::analyze_invalid_loop(
-                 "The left hand side of a 'loop' binding must be a symbol.",
-                 object_source(sym_obj),
-                 latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(bindings, i));
-      }
-      auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
-      if(!sym->ns.empty())
-      {
-        return error::analyze_invalid_loop("Binding symbols for 'loop' must be unqualified.",
-                                           object_source(sym_obj),
-                                           latest_expansion(macro_expansions));
-      }
-
-      binding_syms.push_back(sym_obj);
-      binding_vals.push_back(val);
-    }
-
-    /* We take the lazy way out here. Clojure JVM handles loop* with two cases:
-     *
-     * 1. Statements, which expand the loop inline and use labels, gotos, and mutation
-     * 2. Expressions, which wrap the loop in a fn which does the same
-     *
-     * We do something similar to the second, but we transform the loop into just function
-     * recursion and call the function on the spot. It works for both cases, though it's
-     * marginally less efficient.
-     *
-     * However, there's an additional snag. If we just transform the loop into a fn to
-     * call immediately, we get something like this:
-     *
-     * ```
-     * (loop* [a 1
-     *         b 2]
-     *   (+ a b))
-     * ```
-     *
-     * Becoming this:
-     *
-     * ```
-     * ((fn* [a b]
-     *   (+ a b)) 1 2)
-     * ```
-     *
-     * This works great, but loop* can actually be used as a let*. That means we can do something
-     * like this:
-     *
-     * ```
-     * (loop* [a 1
-     *         b (* 2 a)]
-     *   (+ a b))
-     * ```
-     *
-     * But we can't translate that like the one above, since we'd be referring to `a` before it
-     * was bound. So we get around this by actually just lifting all of this into a let*:
-     *
-     * ```
-     * (let* [a 1
-     *        b (* 2 a)]
-     *   ((fn* [a b]
-     *     (+ a b)) a b))
-     * ```
-     */
-    runtime::detail::native_persistent_list const args{ binding_syms.rbegin(),
-                                                        binding_syms.rend() };
-    auto const params(make_box<runtime::obj::persistent_vector>(binding_syms.persistent()));
-    auto const fn(make_box<runtime::obj::persistent_list>(
-      o->data.rest().rest().conj(params).conj(make_box<runtime::obj::symbol>("fn*"))));
-    auto const call(make_box<runtime::obj::persistent_list>(args.conj(fn)));
-    auto const let(make_box<runtime::obj::persistent_list>(std::in_place,
-                                                           make_box<runtime::obj::symbol>("let*"),
-                                                           bindings_obj,
-                                                           call));
-
-    return analyze_let(let, current_frame, position, fn_ctx, true);
+    return let;
   }
 
   processor::expression_result

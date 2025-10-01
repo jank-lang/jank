@@ -25,5 +25,6 @@ namespace jank::analyze::expr
 
     native_vector<pair_type> pairs;
     do_ref body;
+    bool is_loop{};
   };
 }

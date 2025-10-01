@@ -187,6 +187,7 @@ namespace jank::codegen
     std::list<deferred_init> deferred_inits{};
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
+    jtl::ptr<llvm::BasicBlock> current_loop;
   };
 
   struct llvm_type_info
@@ -876,7 +877,14 @@ namespace jank::codegen
 
       for(auto const &arg_expr : expr->arg_exprs)
       {
-        auto const arg_handle{ gen(arg_expr, arity) };
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const arg_expr_type{ cpp_util::expression_type(arg_expr) };
+
+        if(cpp_util::is_any_object(arg_expr_type) && llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
         arg_handles.emplace_back(arg_handle);
         arg_types.emplace_back(ctx->builder->getPtrTy());
       }
@@ -1130,55 +1138,84 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::recur_ref const expr, expr::function_arity const &arity)
   {
-    /* The codegen for the special recur form is very similar to the named recursion
+    if(expr->loop_target.is_some())
+    {
+      for(usize i{}; i < expr->arg_exprs.size(); ++i)
+      {
+        auto const &arg_expr{ expr->arg_exprs[i] };
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const expr_type{ cpp_util::expression_type(arg_expr) };
+        auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                               && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                    || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+        auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                               || cpp_util::is_any_object(expr_type) };
+        auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
+        auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
+        jank_debug_assert(arg_alloc);
+        ctx->builder->CreateStore(arg_handle, arg_alloc);
+      }
+
+      return ctx->builder->CreateBr(current_loop.data);
+    }
+    else
+    {
+      /* The codegen for the special recur form is very similar to the named recursion
      * codegen, but it's simpler. The key difference is that named recursion requires
      * arg packing, whereas the special recur form does not. This means, for variadic
      * functions, the special recur form will be expected to supply a sequence for the
      * variadic argument. */
-    auto const &fn_expr(*root_fn->arities[0].fn_ctx->fn);
+      auto const &fn_expr(*root_fn->arities[0].fn_ctx->fn);
 
-    llvm::SmallVector<llvm::Value *> arg_handles;
-    llvm::SmallVector<llvm::Type *> arg_types;
-    /* We add one for `this`. */
-    arg_handles.reserve(expr->arg_exprs.size() + 1);
-    arg_types.reserve(expr->arg_exprs.size() + 1);
+      llvm::SmallVector<llvm::Value *> arg_handles;
+      llvm::SmallVector<llvm::Type *> arg_types;
+      /* We add one for `this`. */
+      arg_handles.reserve(expr->arg_exprs.size() + 1);
+      arg_types.reserve(expr->arg_exprs.size() + 1);
 
-    arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
-    arg_types.emplace_back(ctx->builder->getPtrTy());
+      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+      arg_types.emplace_back(ctx->builder->getPtrTy());
 
-    for(auto const &arg_expr : expr->arg_exprs)
-    {
-      auto arg_handle{ gen(arg_expr, arity) };
-      auto const expr_type{ cpp_util::expression_type(arg_expr) };
-      auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
-                             && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
-                                  || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
-      auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
-                             || cpp_util::is_any_object(expr_type) };
-      auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
-
-      if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+      for(auto const &arg_expr : expr->arg_exprs)
       {
-        arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const expr_type{ cpp_util::expression_type(arg_expr) };
+        auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                               && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                    || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+        auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                               || cpp_util::is_any_object(expr_type) };
+        auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
+        arg_handles.emplace_back(arg_handle);
+        arg_types.emplace_back(ctx->builder->getPtrTy());
       }
 
-      arg_handles.emplace_back(arg_handle);
-      arg_types.emplace_back(ctx->builder->getPtrTy());
+      auto const call_fn_name(
+        util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      auto const call(ctx->builder->CreateCall(fn, arg_handles));
+      call->setTailCall();
+
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(call);
+      }
+
+      return call;
     }
-
-    auto const call_fn_name(
-      util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
-    auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-    auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-    auto const call(ctx->builder->CreateCall(fn, arg_handles));
-    call->setTailCall();
-
-    if(expr->position == expression_position::tail)
-    {
-      return ctx->builder->CreateRet(call);
-    }
-
-    return call;
   }
 
   llvm::Value *llvm_processor::impl::gen(expr::recursion_reference_ref const expr,
@@ -1293,15 +1330,46 @@ namespace jank::codegen
       }
 
       locals[pair.first] = gen(pair.second, arity);
-      locals[pair.first]->setName(pair.first->to_string().c_str());
+      locals[pair.first]->setName(util::format("{}_init", pair.first->to_string()).c_str());
     }
 
-    auto const ret(gen(expr->body, arity));
-    locals = std::move(old_locals);
+    if(expr->is_loop)
+    {
+      for(auto const &pair : expr->pairs)
+      {
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getPtrTy(),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+        alloc->setName(pair.first->to_string().c_str());
+        ctx->builder->CreateStore(locals[pair.first], alloc);
+        locals[pair.first] = alloc;
+      }
 
-    /* XXX: No return creation, since we rely on the body to do that. */
+      auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+      auto const loop_block(llvm::BasicBlock::Create(*llvm_ctx, "loop", current_fn));
+      auto const old_loop{ current_loop };
+      current_loop = loop_block;
+      util::scope_exit const finally{ [&]() { current_loop = old_loop; } };
 
-    return ret;
+      ctx->builder->CreateBr(loop_block);
+      ctx->builder->SetInsertPoint(loop_block);
+
+      auto const ret(gen(expr->body, arity));
+      locals = std::move(old_locals);
+
+      /* XXX: No return creation, since we rely on the body to do that. */
+
+      return ret;
+    }
+    else
+    {
+      auto const ret(gen(expr->body, arity));
+      locals = std::move(old_locals);
+
+      /* XXX: No return creation, since we rely on the body to do that. */
+
+      return ret;
+    }
   }
 
   llvm::Value *

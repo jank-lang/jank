@@ -172,6 +172,7 @@ namespace jank::analyze
   };
 
   using expression_ref = jtl::ref<expression>;
+  using expression_ptr = jtl::ptr<expression>;
 
   /* Captures both expressions and things which inherit from expression. */
   template <typename T>
