@@ -1358,6 +1358,15 @@ namespace jank::codegen
       locals = std::move(old_locals);
 
       /* XXX: No return creation, since we rely on the body to do that. */
+      if(expr->position != expression_position::tail)
+      {
+        auto const postloop_block(llvm::BasicBlock::Create(*llvm_ctx, "postloop", current_fn));
+        if(!ctx->builder->GetInsertBlock()->getTerminator())
+        {
+          ctx->builder->CreateBr(postloop_block);
+        }
+        ctx->builder->SetInsertPoint(postloop_block);
+      }
 
       return ret;
     }
@@ -1459,14 +1468,14 @@ namespace jank::codegen
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
     auto then_block(llvm::BasicBlock::Create(*llvm_ctx, "then", current_fn));
     auto else_block(llvm::BasicBlock::Create(*llvm_ctx, "else"));
-    auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "ifcont"));
+    auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "postif"));
 
     ctx->builder->CreateCondBr(cmp, then_block, else_block);
 
     ctx->builder->SetInsertPoint(then_block);
     auto const then(gen(expr->then, arity));
 
-    if(!is_return)
+    if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateBr(merge_block);
     }
@@ -1491,7 +1500,7 @@ namespace jank::codegen
       }
     }
 
-    if(!is_return)
+    if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateBr(merge_block);
     }
@@ -1503,14 +1512,25 @@ namespace jank::codegen
     {
       current_fn->insert(current_fn->end(), merge_block);
       ctx->builder->SetInsertPoint(merge_block);
-      auto const phi(
-        ctx->builder->CreatePHI(is_return ? ctx->builder->getVoidTy() : ctx->builder->getPtrTy(),
-                                2,
-                                "iftmp"));
-      phi->addIncoming(then, then_block);
-      phi->addIncoming(else_, else_block);
+      if(llvm::isa<llvm::BranchInst>(then))
+      {
+        return else_;
+      }
+      else if(llvm::isa<llvm::BranchInst>(else_))
+      {
+        return then;
+      }
+      else
+      {
+        auto const phi(
+          ctx->builder->CreatePHI(is_return ? ctx->builder->getVoidTy() : ctx->builder->getPtrTy(),
+                                  2,
+                                  "iftmp"));
+        phi->addIncoming(then, then_block);
+        phi->addIncoming(else_, else_block);
 
-      return phi;
+        return phi;
+      }
     }
     return nullptr;
   }

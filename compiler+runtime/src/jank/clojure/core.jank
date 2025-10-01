@@ -194,392 +194,392 @@
   (fn* seqable? [o]
     (cpp/jank.runtime.is_seqable o)))
 
-;(def ^:private reverse*
-;  (fn* reverse* [coll]
-;    (loop* [acc '()
-;            coll (seq coll)]
-;      (if (empty? coll)
-;        acc
-;        (recur (cons (first coll) acc)
-;               (rest coll))))))
-;
-;; XXX: The real concat will be defined later on, to be lazy.
-;(def ^:private concat*
-;  (fn* concat*
-;    ([]
-;     '())
-;    ([x]
-;     (seq x))
-;    ([x y]
-;     (loop* [acc y
-;             x (reverse* x)]
-;       (if (empty? x)
-;         acc
-;         (recur (cons (first x) acc)
-;                (rest x)))))
-;    ([x y & zs]
-;     (let* [r (concat* x y)]
-;       (if (empty? zs)
-;         r
-;         (recur r (first zs) (rest zs)))))))
-;
-;; Lists.
-;(def list?
-;  "Returns true if x implements IPersistentList"
-;  (fn* list? [o]
-;    (cpp/jank.runtime.is_list o)))
-;(def list
-;  "Creates a new list containing the items."
-;  (fn* list [& args]
-;    (cpp/jank.runtime.list args)))
-;
-;;; Vectors.
-;(def vector?
-;  "Return true if x implements IPersistentVector"
-;  (fn* vector? [o]
-;    (cpp/jank.runtime.is_vector o)))
-;(def vec
-;  "Creates a new vector containing the contents of coll. Java arrays
-;   will be aliased and should not be modified."
-;  (fn* vec [o]
-;    (cpp/jank.runtime.vec o)))
-;
-;(def subvec
-;  "Returns a persistent vector of the items in vector from
-;   start (inclusive) to end (exclusive).  If end is not supplied,
-;   defaults to (count vector). This operation is O(1) and very fast, as
-;   the resulting vector shares structure with the original and no
-;   trimming is done."
-;  (fn* subvec
-;    ([v start]
-;     (subvec v start (count v)))
-;    ([v start end]
-;     (cpp/jank.runtime.subvec v start end))))
-;
-;(def conj
-;  "conj[oin]. Returns a new collection with the xs
-;   'added'. (conj nil item) returns (item).
-;   (conj coll) returns coll. (conj) returns [].
-;   The 'addition' may happen at different 'places' depending
-;   on the concrete type."
-;  (fn* conj
-;    ([]
-;     [])
-;    ([coll]
-;     coll)
-;    ([coll x]
-;     (cpp/jank.runtime.conj coll x))
-;    ([coll x & args]
-;     (let* [res (conj coll x)]
-;       (if (empty? args)
-;         res
-;         (recur res (first args) (next args)))))))
-;
-;(def last
-;  "Return the last item in coll, in linear time."
-;  (fn* last [s]
-;    (if (next s)
-;      (recur (next s))
-;      (first s))))
-;
-;(def butlast
-;  "Return a seq of all but the last item in coll, in linear time."
-;  (fn* butlast [s]
-;    (loop* [ret []
-;            s s]
-;           (if (next s)
-;             (recur (conj ret (first s)) (next s))
-;             (seq ret)))))
-;
-;;; Maps.
-;; XXX: Clojure returns an array map for the nullary arity, but that sucks.
-;(def hash-map
-;  "keyval => key val
-;   Returns a new hash map with supplied mappings. If any keys are
-;   equal, they are handled as if by repeated uses of assoc."
-;  clojure.core-native/hash-map)
-;
-;(def sorted-map
-;  "keyval => key val
-;   Returns a new sorted map with supplied mappings. If any keys are
-;   equal, they are handled as if by repeated uses of assoc."
-;  clojure.core-native/sorted-map)
-;
-;(def map?
-;  "Return true if x implements IPersistentMap"
-;  (fn* map? [o]
-;    (cpp/jank.runtime.is_map o)))
-;
-;(def associative?
-; "Returns true if coll implements Associative"
-;  (fn* associative? [o]
-;    (cpp/jank.runtime.is_associative o)))
-;
-;(def assoc
-;  "assoc[iate]. When applied to a map, returns a new map of the
-;   same (hashed/sorted) type, that contains the mapping of key(s) to
-;   val(s). When applied to a vector, returns a new vector that
-;   contains val at index. Note - index must be <= (count vector)."
-;  (fn* assoc
-;    ([map key val]
-;     (cpp/jank.runtime.assoc map key val))
-;    ([map key val & kvs]
-;     (let* [res (assoc map key val)]
-;       (if kvs
-;         (if (next kvs)
-;           (recur res (first kvs) (second kvs) (nnext kvs))
-;           (throw "assoc expects even number of args after the first"))
-;         res)))))
-;
-;;; Strings.
-;(def string?
-;  "Return true if x is a String"
-;  (fn* string? [o]
-;    (cpp/jank.runtime.is_string o)))
-;
-;(def char?
-;  "Return true if x is a Character"
-;  (fn* char? [o]
-;    (cpp/jank.runtime.is_char o)))
-;
-;(def str
-;  "With no args, returns the empty string. With one arg x, returns
-;   x.toString().  (str nil) returns the empty string. With more than
-;   one arg, returns the concatenation of the str values of the args."
-;  (fn* str
-;    ([]
-;     "")
-;    ([o]
-;     (if (nil? o)
-;       ""
-;       (clojure.core-native/to-string o)))
-;    ([o & args]
-;     (clojure.core-native/str o args))))
-;
-;;; Symbols.
-;(def symbol?
-;  "Return true if x is a Symbol"
-;  (fn* symbol? [o]
-;    (cpp/jank.runtime.is_symbol o)))
-;(def
-;  symbol
-;  "Returns a Symbol with the given namespace and name. Arity-1 works
-;   on strings, keywords, and vars."
-;  (fn* symbol
-;    ([o]
-;     (cpp/jank.runtime.to_unqualified_symbol o))
-;    ([ns o]
-;     (if (nil? ns)
-;       (symbol o)
-;       (cpp/jank.runtime.to_qualified_symbol ns o)))))
-;(def simple-symbol?
-;  "Return true if x is a symbol without a namespace"
-;  clojure.core-native/simple-symbol?)
-;(def qualified-symbol?
-;  "Return true if x is a symbol with a namespace"
-;  clojure.core-native/qualified-symbol?)
-;
-;; Relations.
-;;; Miscellaneous.
-;(def true?
-;  "Returns true if x is the value true, false otherwise."
-;  clojure.core-native/true?)
-;(def false?
-;  "Returns true if x is the value false, false otherwise."
-;  clojure.core-native/false?)
-;(def not
-;  "Returns true if x is logical false, false otherwise."
-;  clojure.core-native/not)
-;(def some?
-;  "Returns true if x is not nil, false otherwise."
-;  clojure.core-native/some?)
-;
-;;; Metadata.
-;(def meta
-;  "Returns the metadata of obj, returns nil if there is no metadata."
-;  clojure.core-native/meta)
-;(def with-meta
-;  "Returns an object of the same type and value as obj, with
-;   map m as its metadata."
-;  clojure.core-native/with-meta)
-;(def reset-meta!
-;  "Atomically resets the metadata for a namespace/var/ref/agent/atom"
-;  clojure.core-native/reset-meta!)
-;
-;;; Input/output.
-;(def print
-;  "Prints the object(s) to the output stream that is the current value
-;   of *out*.  print and println produce output for human consumption."
-;  clojure.core-native/print)
-;(def println
-;  "Same as print followed by (newline)"
-;  clojure.core-native/println)
-;(def pr
-;  "Prints the object(s) to the output stream that is the current value
-;   of *out*.  Prints the object(s), separated by spaces if there is
-;   more than one.  By default, pr and prn print in a way that objects
-;   can be read by the reader"
-;  clojure.core-native/pr)
-;(def prn
-;  "Same as pr followed by (newline). Observes *flush-on-newline*"
-;  clojure.core-native/prn)
-;(def pr-str
-;  "pr to a string, returning it"
-;  clojure.core-native/pr-str)
-;
-;;; Utils.
-;; The full `apply` will be defined below, but it requires more helpers to support
-;; all of its arities.
-;(def ^:private apply* clojure.core-native/apply*)
-;
-;(def ^{:macro true} let
-;  (fn* let [&form &env & decl]
-;    `(let* ~@decl)))
-;
-;(def ^{:macro true} loop
-;  (fn* loop [&form &env & decl]
-;    `(loop* ~@decl)))
-;
-;(def ^{:macro true} fn
-;  (fn* fn [&form &env & decl]
-;    (with-meta `(fn* ~@decl) (meta &form))))
-;
-;(def ^:private sigs
-;  (fn* [fdecl]
-;    (let* [asig (fn* asig [fdecl]
-;                  (let* [arglist (first fdecl)
-;                         ;elide implicit macro args
-;                         arglist (if (= '&form (first arglist))
-;                                   (subvec arglist 2 (count arglist))
-;                                   arglist)
-;                         body (next fdecl)]
-;                    (if (map? (first body))
-;                      (if (next body)
-;                        (with-meta arglist (conj (if (meta arglist)
-;                                                   (meta arglist)
-;                                                   {})
-;                                                 (first body)))
-;                        arglist)
-;                      arglist)))]
-;      (if (seq? (first fdecl))
-;        (loop* [ret []
-;                fdecls fdecl]
-;               (if fdecls
-;                 (recur (conj ret (asig (first fdecls))) (next fdecls))
-;                 (seq ret)))
-;        (list (asig fdecl))))))
-;
-;; Macros.
-;(def ^{:macro true
-;       :doc "Same as (def name (fn [params* ] exprs*)) or (def
-;             name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
-;             to the var metadata. prepost-map defines a map with optional keys
-;             :pre and :post that contain collections of pre or post conditions."}
-;  defn
-;  (fn* defn [&form &env name & fdecl]
-;    ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
-;    (if (not (symbol? name))
-;      (throw "First argument to defn must be a symbol"))
-;    (let* [m (if (string? (first fdecl))
-;               {:doc (first fdecl)}
-;               {})
-;           fdecl (if (string? (first fdecl))
-;                   (next fdecl)
-;                   fdecl)
-;           m (if (map? (first fdecl))
-;               (conj m (first fdecl))
-;               m)
-;           fdecl (if (map? (first fdecl))
-;                   (next fdecl)
-;                   fdecl)
-;           fdecl (if (vector? (first fdecl))
-;                   (list fdecl)
-;                   fdecl)
-;           m (if (map? (last fdecl))
-;               (conj m (last fdecl))
-;               m)
-;           fdecl (if (map? (last fdecl))
-;                   (butlast fdecl)
-;                   fdecl)
-;           m (conj {:arglists (list 'quote (sigs fdecl))} m)
-;           m (let* [inline (:inline m)
-;                    ifn (first inline)
-;                    iname (second inline)]
-;               ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-;               (if (if (= 'fn ifn)
-;                     (if (symbol? iname)
-;                       false
-;                       true))
-;                 ;; inserts the same fn name to the inline fn if it does not have one
-;                 (assoc m :inline (cons ifn (cons (symbol (str iname "__inliner"))
-;                                                  (next inline))))
-;                 m))
-;           m (conj (if (meta name) (meta name) {}) m)]
-;      `(def ~(with-meta name m)
-;         ~(with-meta `(fn ~name ~@fdecl) {:rettag (:tag m)})))))
-;
-;(def macroexpand-1
-;  "If form represents a macro form, returns its expansion,
-;   else returns form."
-;  clojure.core-native/macroexpand-1)
-;(def macroexpand
-;  "Repeatedly calls macroexpand-1 on form until it no longer
-;   represents a macro form, then returns it.  Note neither
-;   macroexpand-1 nor macroexpand expand macros in subforms."
-;  clojure.core-native/macroexpand)
-;
-;(def gensym
-;  "Returns a new symbol with a unique name. If a prefix string is
-;   supplied, the name is prefix# where # is some unique number. If
-;   prefix is not supplied, the prefix is 'G__'."
-;  clojure.core-native/gensym)
-;
-;(defn
-;  ^{:macro true
-;    :doc "Like defn, but the resulting function name is declared as a
-;          macro and will be used as a macro by the compiler when it is
-;          called."}
-;  defmacro
-;  [&form &env name & args]
-;  (let [prefix (loop [p (list name) args args]
-;                 (let [f (first args)]
-;                   (if (string? f)
-;                     (recur (cons f p) (next args))
-;                     (if (map? f)
-;                       (recur (cons f p) (next args))
-;                       p))))
-;        fdecl (loop [fd args]
-;                (if (string? (first fd))
-;                  (recur (next fd))
-;                  (if (map? (first fd))
-;                    (recur (next fd))
-;                    fd)))
-;        fdecl (if (vector? (first fdecl))
-;                (list fdecl)
-;                fdecl)
-;        add-implicit-args (fn [fd]
-;                            (let [args (first fd)]
-;                              (cons (vec (cons '&form (cons '&env args))) (next fd))))
-;        add-args (fn [acc ds]
-;                   (if (nil? ds)
-;                     acc
-;                     (let [d (first ds)]
-;                       (if (map? d)
-;                         (conj acc d)
-;                         (recur (conj acc (add-implicit-args d)) (next ds))))))
-;        fdecl (seq (add-args [] fdecl))
-;        decl (loop [p prefix d fdecl]
-;               (if p
-;                 (recur (next p) (cons (first p) d))
-;                 d))]
-;    (list 'do
-;          (cons `defn decl)
-;          (list `reset-meta! (list 'var name) (list 'assoc
-;                                                    (list 'meta (list 'var name))
-;                                                    :macro
-;                                                    true))
-;          (list 'var name))))
-;
+(def ^:private reverse*
+  (fn* reverse* [coll]
+    (loop* [acc '()
+            coll (seq coll)]
+      (if (empty? coll)
+        acc
+        (recur (cons (first coll) acc)
+               (rest coll))))))
+
+; XXX: The real concat will be defined later on, to be lazy.
+(def ^:private concat*
+  (fn* concat*
+    ([]
+     '())
+    ([x]
+     (seq x))
+    ([x y]
+     (loop* [acc y
+             x (reverse* x)]
+       (if (empty? x)
+         acc
+         (recur (cons (first x) acc)
+                (rest x)))))
+    ([x y & zs]
+     (let* [r (concat* x y)]
+       (if (empty? zs)
+         r
+         (recur r (first zs) (rest zs)))))))
+
+; Lists.
+(def list?
+  "Returns true if x implements IPersistentList"
+  (fn* list? [o]
+    (cpp/jank.runtime.is_list o)))
+(def list
+  "Creates a new list containing the items."
+  (fn* list [& args]
+    (cpp/jank.runtime.list args)))
+
+;; Vectors.
+(def vector?
+  "Return true if x implements IPersistentVector"
+  (fn* vector? [o]
+    (cpp/jank.runtime.is_vector o)))
+(def vec
+  "Creates a new vector containing the contents of coll. Java arrays
+   will be aliased and should not be modified."
+  (fn* vec [o]
+    (cpp/jank.runtime.vec o)))
+
+(def subvec
+  "Returns a persistent vector of the items in vector from
+   start (inclusive) to end (exclusive).  If end is not supplied,
+   defaults to (count vector). This operation is O(1) and very fast, as
+   the resulting vector shares structure with the original and no
+   trimming is done."
+  (fn* subvec
+    ([v start]
+     (subvec v start (count v)))
+    ([v start end]
+     (cpp/jank.runtime.subvec v start end))))
+
+(def conj
+  "conj[oin]. Returns a new collection with the xs
+   'added'. (conj nil item) returns (item).
+   (conj coll) returns coll. (conj) returns [].
+   The 'addition' may happen at different 'places' depending
+   on the concrete type."
+  (fn* conj
+    ([]
+     [])
+    ([coll]
+     coll)
+    ([coll x]
+     (cpp/jank.runtime.conj coll x))
+    ([coll x & args]
+     (let* [res (conj coll x)]
+       (if (empty? args)
+         res
+         (recur res (first args) (next args)))))))
+
+(def last
+  "Return the last item in coll, in linear time."
+  (fn* last [s]
+    (if (next s)
+      (recur (next s))
+      (first s))))
+
+(def butlast
+  "Return a seq of all but the last item in coll, in linear time."
+  (fn* butlast [s]
+    (loop* [ret []
+            s s]
+           (if (next s)
+             (recur (conj ret (first s)) (next s))
+             (seq ret)))))
+
+;; Maps.
+; XXX: Clojure returns an array map for the nullary arity, but that sucks.
+(def hash-map
+  "keyval => key val
+   Returns a new hash map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/hash-map)
+
+(def sorted-map
+  "keyval => key val
+   Returns a new sorted map with supplied mappings. If any keys are
+   equal, they are handled as if by repeated uses of assoc."
+  clojure.core-native/sorted-map)
+
+(def map?
+  "Return true if x implements IPersistentMap"
+  (fn* map? [o]
+    (cpp/jank.runtime.is_map o)))
+
+(def associative?
+ "Returns true if coll implements Associative"
+  (fn* associative? [o]
+    (cpp/jank.runtime.is_associative o)))
+
+(def assoc
+  "assoc[iate]. When applied to a map, returns a new map of the
+   same (hashed/sorted) type, that contains the mapping of key(s) to
+   val(s). When applied to a vector, returns a new vector that
+   contains val at index. Note - index must be <= (count vector)."
+  (fn* assoc
+    ([map key val]
+     (cpp/jank.runtime.assoc map key val))
+    ([map key val & kvs]
+     (let* [res (assoc map key val)]
+       (if kvs
+         (if (next kvs)
+           (recur res (first kvs) (second kvs) (nnext kvs))
+           (throw "assoc expects even number of args after the first"))
+         res)))))
+
+;; Strings.
+(def string?
+  "Return true if x is a String"
+  (fn* string? [o]
+    (cpp/jank.runtime.is_string o)))
+
+(def char?
+  "Return true if x is a Character"
+  (fn* char? [o]
+    (cpp/jank.runtime.is_char o)))
+
+(def str
+  "With no args, returns the empty string. With one arg x, returns
+   x.toString().  (str nil) returns the empty string. With more than
+   one arg, returns the concatenation of the str values of the args."
+  (fn* str
+    ([]
+     "")
+    ([o]
+     (if (nil? o)
+       ""
+       (clojure.core-native/to-string o)))
+    ([o & args]
+     (clojure.core-native/str o args))))
+
+;; Symbols.
+(def symbol?
+  "Return true if x is a Symbol"
+  (fn* symbol? [o]
+    (cpp/jank.runtime.is_symbol o)))
+(def
+  symbol
+  "Returns a Symbol with the given namespace and name. Arity-1 works
+   on strings, keywords, and vars."
+  (fn* symbol
+    ([o]
+     (cpp/jank.runtime.to_unqualified_symbol o))
+    ([ns o]
+     (if (nil? ns)
+       (symbol o)
+       (cpp/jank.runtime.to_qualified_symbol ns o)))))
+(def simple-symbol?
+  "Return true if x is a symbol without a namespace"
+  clojure.core-native/simple-symbol?)
+(def qualified-symbol?
+  "Return true if x is a symbol with a namespace"
+  clojure.core-native/qualified-symbol?)
+
+; Relations.
+;; Miscellaneous.
+(def true?
+  "Returns true if x is the value true, false otherwise."
+  clojure.core-native/true?)
+(def false?
+  "Returns true if x is the value false, false otherwise."
+  clojure.core-native/false?)
+(def not
+  "Returns true if x is logical false, false otherwise."
+  clojure.core-native/not)
+(def some?
+  "Returns true if x is not nil, false otherwise."
+  clojure.core-native/some?)
+
+;; Metadata.
+(def meta
+  "Returns the metadata of obj, returns nil if there is no metadata."
+  clojure.core-native/meta)
+(def with-meta
+  "Returns an object of the same type and value as obj, with
+   map m as its metadata."
+  clojure.core-native/with-meta)
+(def reset-meta!
+  "Atomically resets the metadata for a namespace/var/ref/agent/atom"
+  clojure.core-native/reset-meta!)
+
+;; Input/output.
+(def print
+  "Prints the object(s) to the output stream that is the current value
+   of *out*.  print and println produce output for human consumption."
+  clojure.core-native/print)
+(def println
+  "Same as print followed by (newline)"
+  clojure.core-native/println)
+(def pr
+  "Prints the object(s) to the output stream that is the current value
+   of *out*.  Prints the object(s), separated by spaces if there is
+   more than one.  By default, pr and prn print in a way that objects
+   can be read by the reader"
+  clojure.core-native/pr)
+(def prn
+  "Same as pr followed by (newline). Observes *flush-on-newline*"
+  clojure.core-native/prn)
+(def pr-str
+  "pr to a string, returning it"
+  clojure.core-native/pr-str)
+
+;; Utils.
+; The full `apply` will be defined below, but it requires more helpers to support
+; all of its arities.
+(def ^:private apply* clojure.core-native/apply*)
+
+(def ^{:macro true} let
+  (fn* let [&form &env & decl]
+    `(let* ~@decl)))
+
+(def ^{:macro true} loop
+  (fn* loop [&form &env & decl]
+    `(loop* ~@decl)))
+
+(def ^{:macro true} fn
+  (fn* fn [&form &env & decl]
+    (with-meta `(fn* ~@decl) (meta &form))))
+
+(def ^:private sigs
+  (fn* [fdecl]
+    (let* [asig (fn* asig [fdecl]
+                  (let* [arglist (first fdecl)
+                         ;elide implicit macro args
+                         arglist (if (= '&form (first arglist))
+                                   (subvec arglist 2 (count arglist))
+                                   arglist)
+                         body (next fdecl)]
+                    (if (map? (first body))
+                      (if (next body)
+                        (with-meta arglist (conj (if (meta arglist)
+                                                   (meta arglist)
+                                                   {})
+                                                 (first body)))
+                        arglist)
+                      arglist)))]
+      (if (seq? (first fdecl))
+        (loop* [ret []
+                fdecls fdecl]
+               (if fdecls
+                 (recur (conj ret (asig (first fdecls))) (next fdecls))
+                 (seq ret)))
+        (list (asig fdecl))))))
+
+; Macros.
+(def ^{:macro true
+       :doc "Same as (def name (fn [params* ] exprs*)) or (def
+             name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
+             to the var metadata. prepost-map defines a map with optional keys
+             :pre and :post that contain collections of pre or post conditions."}
+  defn
+  (fn* defn [&form &env name & fdecl]
+    ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
+    (if (not (symbol? name))
+      (throw "First argument to defn must be a symbol"))
+    (let* [m (if (string? (first fdecl))
+               {:doc (first fdecl)}
+               {})
+           fdecl (if (string? (first fdecl))
+                   (next fdecl)
+                   fdecl)
+           m (if (map? (first fdecl))
+               (conj m (first fdecl))
+               m)
+           fdecl (if (map? (first fdecl))
+                   (next fdecl)
+                   fdecl)
+           fdecl (if (vector? (first fdecl))
+                   (list fdecl)
+                   fdecl)
+           m (if (map? (last fdecl))
+               (conj m (last fdecl))
+               m)
+           fdecl (if (map? (last fdecl))
+                   (butlast fdecl)
+                   fdecl)
+           m (conj {:arglists (list 'quote (sigs fdecl))} m)
+           m (let* [inline (:inline m)
+                    ifn (first inline)
+                    iname (second inline)]
+               ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
+               (if (if (= 'fn ifn)
+                     (if (symbol? iname)
+                       false
+                       true))
+                 ;; inserts the same fn name to the inline fn if it does not have one
+                 (assoc m :inline (cons ifn (cons (symbol (str iname "__inliner"))
+                                                  (next inline))))
+                 m))
+           m (conj (if (meta name) (meta name) {}) m)]
+      `(def ~(with-meta name m)
+         ~(with-meta `(fn ~name ~@fdecl) {:rettag (:tag m)})))))
+
+(def macroexpand-1
+  "If form represents a macro form, returns its expansion,
+   else returns form."
+  clojure.core-native/macroexpand-1)
+(def macroexpand
+  "Repeatedly calls macroexpand-1 on form until it no longer
+   represents a macro form, then returns it.  Note neither
+   macroexpand-1 nor macroexpand expand macros in subforms."
+  clojure.core-native/macroexpand)
+
+(def gensym
+  "Returns a new symbol with a unique name. If a prefix string is
+   supplied, the name is prefix# where # is some unique number. If
+   prefix is not supplied, the prefix is 'G__'."
+  clojure.core-native/gensym)
+
+(defn
+  ^{:macro true
+    :doc "Like defn, but the resulting function name is declared as a
+          macro and will be used as a macro by the compiler when it is
+          called."}
+  defmacro
+  [&form &env name & args]
+  (let [prefix (loop [p (list name) args args]
+                 (let [f (first args)]
+                   (if (string? f)
+                     (recur (cons f p) (next args))
+                     (if (map? f)
+                       (recur (cons f p) (next args))
+                       p))))
+        fdecl (loop [fd args]
+                (if (string? (first fd))
+                  (recur (next fd))
+                  (if (map? (first fd))
+                    (recur (next fd))
+                    fd)))
+        fdecl (if (vector? (first fdecl))
+                (list fdecl)
+                fdecl)
+        add-implicit-args (fn [fd]
+                            (let [args (first fd)]
+                              (cons (vec (cons '&form (cons '&env args))) (next fd))))
+        add-args (fn [acc ds]
+                   (if (nil? ds)
+                     acc
+                     (let [d (first ds)]
+                       (if (map? d)
+                         (conj acc d)
+                         (recur (conj acc (add-implicit-args d)) (next ds))))))
+        fdecl (seq (add-args [] fdecl))
+        decl (loop [p prefix d fdecl]
+               (if p
+                 (recur (next p) (cons (first p) d))
+                 d))]
+    (list 'do
+          (cons `defn decl)
+          (list `reset-meta! (list 'var name) (list 'assoc
+                                                    (list 'meta (list 'var name))
+                                                    :macro
+                                                    true))
+          (list 'var name))))
+
 ;(defmacro defn-
 ;  "Same as defn, yielding non-public def."
 ;  {:added "1.0"}
