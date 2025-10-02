@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::auto_box::pass_native_type_to_typed_object
+          {
+            runtime::obj::integer_ref foo(runtime::obj::integer_ref const o)
+            { return o; }
+          }")
+(let* [f (cpp/jank.cpp.auto_box.pass_native_type_to_typed_object.foo (cpp/int 555))]
+  (if (= 555 f)
+    :success))
