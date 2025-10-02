@@ -2137,7 +2137,8 @@ namespace jank::analyze
       needs_box,
       jtl::make_ref<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
 
-    if(loop_details.is_some())
+    /* TODO: Cache. */
+    if(loop_details.is_some() && runtime::equal(o->first(), make_box<obj::symbol>("loop*")))
     {
       loop_details = ret.data;
     }

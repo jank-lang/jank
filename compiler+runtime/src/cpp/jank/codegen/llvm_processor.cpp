@@ -1329,8 +1329,12 @@ namespace jank::codegen
                                                pair.first->to_string()) };
       }
 
+      /* TODO: Cache. */
       locals[pair.first] = gen(pair.second, arity);
-      locals[pair.first]->setName(util::format("{}_init", pair.first->to_string()).c_str());
+      if(!llvm::isa<llvm::Argument>(locals[pair.first].data))
+      {
+        locals[pair.first]->setName(util::format("{}_init", pair.first->to_string()).c_str());
+      }
     }
 
     if(expr->is_loop)
