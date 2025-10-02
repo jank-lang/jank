@@ -267,6 +267,7 @@ namespace jank::codegen
     if(cpp_util::is_any_object(type))
     {
       ir_type = ctx.builder->getPtrTy();
+      size = 1;
     }
 
     jank_debug_assert_fmt_throw(ir_type,
@@ -336,16 +337,35 @@ namespace jank::codegen
     /* TODO: If output is void, just return nil. */
     conversion_type = Cpp::GetNonReferenceType(conversion_type);
 
+    if(cpp_util::is_typed_object(Cpp::GetNonReferenceType(input_type))
+       && cpp_util::is_untyped_object(Cpp::GetNonReferenceType(output_type)))
+    {
+      auto const base_offset{ cpp_util::offset_to_typed_object_base(
+        Cpp::GetNonReferenceType(input_type)) };
+      if(0 < base_offset)
+      {
+        auto const arg_base{ ctx.builder->CreateInBoundsGEP(
+          ctx.builder->getInt8Ty(),
+          arg,
+          { ctx.builder->getInt64(base_offset) },
+          util::format("{}.base", arg->getName().str()).c_str()) };
+        return arg_base;
+      }
+      return arg;
+    }
+
     /* References to arrays are just treated as pointers, since that's the decayed type.
      * That requires a bit of a dance here, though. */
     auto const is_arg_ref{ Cpp::IsReferenceType(input_type)
                            && !(Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
     auto const is_arg_ptr{ Cpp::IsPointerType(input_type)
                            || (Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
-    //util::println("convert_object input_type = {}, output_type = {}, conversion_type = {}",
-    //              Cpp::GetTypeAsString(input_type),
-    //              Cpp::GetTypeAsString(output_type),
-    //              Cpp::GetTypeAsString(conversion_type));
+    //util::println(
+    //  "convert_object input_type = {}, output_type = {}, conversion_type = {}, policy = {}",
+    //  Cpp::GetTypeAsString(input_type),
+    //  Cpp::GetTypeAsString(output_type),
+    //  Cpp::GetTypeAsString(conversion_type),
+    //  conversion_policy_str(policy));
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo const template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
@@ -379,7 +399,7 @@ namespace jank::codegen
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
 
     llvm::Value *arg_alloc{ arg };
-    if(policy == conversion_policy::from_object)
+    if(cpp_util::is_any_object(input_type) && !llvm::isa<llvm::AllocaInst>(arg_alloc))
     {
       arg_alloc = ctx.builder->CreateAlloca(ctx.builder->getPtrTy(),
                                             llvm::ConstantInt::get(ctx.builder->getInt32Ty(), 1));
@@ -876,7 +896,12 @@ namespace jank::codegen
 
       for(auto const &arg_expr : expr->arg_exprs)
       {
-        auto const arg_handle{ gen(arg_expr, arity) };
+        auto arg_handle{ gen(arg_expr, arity) };
+        if(llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
         arg_handles.emplace_back(arg_handle);
         arg_types.emplace_back(ctx->builder->getPtrTy());
       }
@@ -1380,7 +1405,12 @@ namespace jank::codegen
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
-    auto const condition(gen(expr->condition, arity));
+    auto condition(gen(expr->condition, arity));
+    if(llvm::isa<llvm::AllocaInst>(condition))
+    {
+      condition = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), condition);
+    }
+
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));
@@ -1678,17 +1708,22 @@ namespace jank::codegen
   llvm_processor::impl::gen(expr::cpp_cast_ref const expr, expr::function_arity const &arity)
   {
     auto const value{ gen(expr->value_expr, arity) };
-    auto const converted{ convert_object(*ctx,
-                                         llvm_ctx,
-                                         llvm_module,
-                                         expr->policy,
-                                         cpp_util::expression_type(expr->value_expr),
-                                         expr->type,
-                                         expr->conversion_type,
-                                         value) };
+    auto converted{ convert_object(*ctx,
+                                   llvm_ctx,
+                                   llvm_module,
+                                   expr->policy,
+                                   cpp_util::expression_type(expr->value_expr),
+                                   expr->type,
+                                   expr->conversion_type,
+                                   value) };
 
     if(expr->position == expression_position::tail)
     {
+      if(llvm::isa<llvm::AllocaInst>(converted))
+      {
+        converted = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), converted);
+      }
+
       return ctx->builder->CreateRet(converted);
     }
 
@@ -1758,7 +1793,8 @@ namespace jank::codegen
       auto const is_arg_ref{ Cpp::IsReferenceType(arg_type)
                              && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(arg_type))
                                   || Cpp::IsArrayType(Cpp::GetNonReferenceType(arg_type))) };
-      auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) || Cpp::IsArrayType(arg_type) };
+      auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) || Cpp::IsArrayType(arg_type)
+                             || cpp_util::is_any_object(arg_type) };
       auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
 
       if(i == 0 && requires_this_obj)
@@ -3138,7 +3174,8 @@ namespace jank::codegen
 
   void llvm_processor::optimize() const
   {
-    if(getenv("JANK_PRINT_IR"))
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
+    if(print_settings == "1")
     {
       print();
     }
@@ -3153,6 +3190,11 @@ namespace jank::codegen
 #endif
 
     _impl->ctx->mpm.run(*_impl->llvm_module, *_impl->ctx->mam);
+
+    if(print_settings == "2")
+    {
+      print();
+    }
   }
 
   void llvm_processor::print() const

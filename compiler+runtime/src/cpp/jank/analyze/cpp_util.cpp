@@ -207,9 +207,10 @@ namespace jank::analyze::cpp_util
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     /* We add a new line so that a trailing // comment won't interfere with our code. */
-    auto const code{
-      util::format("inline decltype(auto) {}(){ return ({}\n); }", runtime::munge(alias), literal)
-    };
+    auto const code{ util::format(
+      "[[gnu::always_inline]] inline decltype(auto) {}(){ return ({}\n); }",
+      runtime::munge(alias),
+      literal) };
     //util::println("cpp/value code: {}", code);
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
@@ -468,27 +469,18 @@ namespace jank::analyze::cpp_util
      * The user will need to specify the correct type by using a cast. */
     for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
     {
-      /* TODO: Check for typed and untyped objects. */
-
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
-      auto const is_untyped_obj{ is_untyped_object(arg_types[arg_idx + member_offset].m_Type) };
-      /* TODO: Check the other way, too, if we're calling a fn taking objects. */
-      if(!is_untyped_obj)
-      {
-        continue;
-      }
+      auto const arg_type{ Cpp::GetNonReferenceType(arg_types[arg_idx + member_offset].m_Type) };
+      auto const is_arg_untyped_obj{ is_untyped_object(arg_type) };
+      auto const is_arg_typed_obj{ is_typed_object(arg_type) };
+      auto const is_arg_obj{ is_arg_untyped_obj || is_arg_typed_obj };
 
       jtl::option<usize> needed_conversion;
-      for(usize fn_idx{}; fn_idx < fns.size(); ++fn_idx)
+      for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
-        auto const param_type{ Cpp::GetFunctionArgType(fns[fn_idx], arg_idx) };
+        auto const param_type{ Cpp::GetFunctionArgType(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
-        {
-          continue;
-        }
-        /* This is not a viable conversion. */
-        if(is_typed_object(param_type))
         {
           continue;
         }
@@ -496,8 +488,14 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
+        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object(param_type) };
+        if(!is_arg_obj && !is_param_obj)
+        {
+          continue;
+        }
 
-        if(is_trait_convertible(param_type))
+        auto const trait_type{ is_arg_obj ? param_type : arg_type };
+        if(is_trait_convertible(trait_type))
         {
           if(needed_conversion.is_some())
           {
@@ -754,31 +752,44 @@ namespace jank::analyze::cpp_util
       return implicit_conversion_action::none;
     }
 
+    if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
+    {
+      return implicit_conversion_action::into_object;
+    }
+
+    if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
+    {
+      return implicit_conversion_action::from_object;
+    }
+
     if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
     {
       return implicit_conversion_action::into_object;
     }
-    else if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+
+    if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
     {
       return implicit_conversion_action::from_object;
     }
-    else if(/* Up cast. */
-            (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                                    Cpp::GetUnderlyingType(expected_type)))
-            /* Same type or adding reference. */
-            || (Cpp::GetCanonicalType(expr_type)
-                  == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
-                && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
-            /* Matching nullptr to any pointer type. */
-            || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
-            /* TODO: Array size. */
-            || (Cpp::IsArrayType(expr_type) && Cpp::IsArrayType(expected_type)
-                && Cpp::GetArrayElementType(expr_type) == Cpp::GetArrayElementType(expected_type)))
+
+    if(/* Up cast. */
+       (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                               Cpp::GetUnderlyingType(expected_type)))
+       /* Same type or adding reference. */
+       || (Cpp::GetCanonicalType(expr_type)
+             == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
+           && !Cpp::IsReferenceType(expr_type) && Cpp::IsReferenceType(expected_type))
+       /* Matching nullptr to any pointer type. */
+       || (cpp_util::is_nullptr(expr_type) && Cpp::IsPointerType(expected_type))
+       /* TODO: Array size. */
+       || (Cpp::IsArrayType(expr_type) && Cpp::IsArrayType(expected_type)
+           && Cpp::GetArrayElementType(expr_type) == Cpp::GetArrayElementType(expected_type)))
     {
       return implicit_conversion_action::none;
     }
-    else if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
-            && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
+
+    if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
+       && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
     {
       auto const res{ determine_implicit_conversion(Cpp::GetPointeeType(expr_type),
                                                     Cpp::GetPointeeType(expected_type)) };
@@ -793,13 +804,12 @@ namespace jank::analyze::cpp_util
           return implicit_conversion_action::unknown;
       }
     }
-    else if(Cpp::IsConstructible(expected_type, expr_type))
+
+    if(Cpp::IsConstructible(expected_type, expr_type))
     {
       return implicit_conversion_action::cast;
     }
-    else
-    {
-      return implicit_conversion_action::unknown;
-    }
+
+    return implicit_conversion_action::unknown;
   }
 }
