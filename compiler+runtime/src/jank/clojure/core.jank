@@ -42,6 +42,11 @@
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
 
+(cpp/raw "#include <clojure/core_native.hpp>")
+(cpp/raw "#include <jank/runtime/core/equal.hpp>")
+(cpp/raw "#include <jank/runtime/core/meta.hpp>")
+(cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
+
 ; Syntax quoting.
 (def unquote
   (fn* unquote [_]
@@ -93,18 +98,6 @@
   (fn* identical? [lhs rhs]
     (cpp/== lhs rhs)))
 
-(def =
-  "Equality. Returns true if x equals y, false if not. It also works
-   for nil and compares numbers and collections in a type-independent
-   manner. Clojure's immutable data structures define equals() (and
-   thus =) as a value, not an identity, comparison."
-  clojure.core-native/=)
-
-(def ==
-  "Returns non-nil if nums all have the equivalent
-   value (type-independent), otherwise false"
-  clojure.core-native/==)
-
 ; Collections.
 (def empty?
   "Returns true if coll has no items - same as (not (seq coll))."
@@ -117,7 +110,8 @@
 (def count
   "Returns the number of items in the collection. (count nil) returns
    0.  Also works on strings, arrays, and Java Collections and Maps"
-  clojure.core-native/count)
+  (fn* [coll]
+    (cpp/jank.runtime.sequence_length coll)))
 
 ; Numbers.
 (def boolean
@@ -292,18 +286,23 @@
              (seq ret)))))
 
 ;; Maps.
-; XXX: Clojure returns an array map for the nullary arity, but that sucks.
 (def hash-map
   "keyval => key val
    Returns a new hash map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/hash-map)
+  (fn* hash-map
+    ([] (cpp/jank.runtime.obj.persistent_hash_map.empty))
+    ([& keyvals]
+     (cpp/jank.runtime.obj.persistent_hash_map.create_from_seq keyvals))))
 
 (def sorted-map
   "keyval => key val
    Returns a new sorted map with supplied mappings. If any keys are
    equal, they are handled as if by repeated uses of assoc."
-  clojure.core-native/sorted-map)
+  (fn* sorted-map
+    ([] (cpp/jank.runtime.obj.persistent_sorted_map.empty))
+    ([& keyvals]
+     (cpp/jank.runtime.obj.persistent_sorted_map.create_from_seq keyvals))))
 
 (def map?
   "Return true if x implements IPersistentMap"
@@ -352,9 +351,9 @@
     ([o]
      (if (nil? o)
        ""
-       (clojure.core-native/to-string o)))
+       (cpp/jank.runtime.to_string o)))
     ([o & args]
-     (clojure.core-native/str o args))))
+     (cpp/jank.runtime.str o args))))
 
 ;; Symbols.
 (def symbol?
@@ -374,63 +373,80 @@
        (cpp/jank.runtime.to_qualified_symbol ns o)))))
 (def simple-symbol?
   "Return true if x is a symbol without a namespace"
-  clojure.core-native/simple-symbol?)
+  (fn* simple-symbol? [x]
+    (cpp/jank.runtime.is_simple_symbol x)))
 (def qualified-symbol?
   "Return true if x is a symbol with a namespace"
-  clojure.core-native/qualified-symbol?)
+  (fn* qualified-symbol? [x]
+    (cpp/jank.runtime.is_qualified_symbol x)))
 
 ; Relations.
 ;; Miscellaneous.
 (def true?
   "Returns true if x is the value true, false otherwise."
-  clojure.core-native/true?)
+  (fn* true? [x]
+    (cpp/jank.runtime.is_true x)))
 (def false?
   "Returns true if x is the value false, false otherwise."
-  clojure.core-native/false?)
+  (fn* false? [x]
+    (cpp/jank.runtime.is_false x)))
 (def not
   "Returns true if x is logical false, false otherwise."
-  clojure.core-native/not)
+  (fn* not [x]
+    (cpp/clojure.core_native.not_ x)))
 (def some?
   "Returns true if x is not nil, false otherwise."
-  clojure.core-native/some?)
+  (fn* some? [x]
+    (cpp/jank.runtime.is_some x)))
 
 ;; Metadata.
 (def meta
   "Returns the metadata of obj, returns nil if there is no metadata."
-  clojure.core-native/meta)
+  (fn* meta [obj]
+    (cpp/jank.runtime.meta obj)))
 (def with-meta
   "Returns an object of the same type and value as obj, with
    map m as its metadata."
-  clojure.core-native/with-meta)
+   (fn* with-meta [obj m]
+     (cpp/jank.runtime.with_meta obj m)))
 (def reset-meta!
   "Atomically resets the metadata for a namespace/var/ref/agent/atom"
-  clojure.core-native/reset-meta!)
+  (fn* [iref metadata-map]
+    (cpp/jank.runtime.reset_meta iref metadata-map)))
 
 ;; Input/output.
 (def print
   "Prints the object(s) to the output stream that is the current value
    of *out*.  print and println produce output for human consumption."
-  clojure.core-native/print)
+  (fn* print [& more]
+    (cpp/jank.runtime.print more)))
 (def println
   "Same as print followed by (newline)"
-  clojure.core-native/println)
+  (fn* println [& more]
+    (cpp/jank.runtime.println more)))
 (def pr
   "Prints the object(s) to the output stream that is the current value
    of *out*.  Prints the object(s), separated by spaces if there is
    more than one.  By default, pr and prn print in a way that objects
    can be read by the reader"
-  clojure.core-native/pr)
+   (fn* pr [& more]
+     (cpp/jank.runtime.pr more)))
 (def prn
   "Same as pr followed by (newline). Observes *flush-on-newline*"
-  clojure.core-native/prn)
+  (fn* prn [& more]
+    (cpp/jank.runtime.prn more)))
 (def pr-str
   "pr to a string, returning it"
-  clojure.core-native/pr-str)
+  ;; TODO: support multiple parameters, preserving current behavior
+  (fn* pr-str [x]
+    (cpp/jank.runtime.to_code_string x)))
 
 ;; Utils.
 ; The full `apply` will be defined below, but it requires more helpers to support
 ; all of its arities.
-(def ^:private apply* clojure.core-native/apply*)
+(def ^:private apply*
+  (fn* apply* [source args]
+    (cpp/jank.runtime.apply_to source args)))
 
 (def ^{:macro true} let
   (fn* let [&form &env & decl]
@@ -443,6 +459,36 @@
 (def ^{:macro true} fn
   (fn* fn [&form &env & decl]
     (with-meta `(fn* ~@decl) (meta &form))))
+
+(def =
+  "Equality. Returns true if x equals y, false if not. It also works
+   for nil and compares numbers and collections in a type-independent
+   manner. Clojure's immutable data structures define equals() (and
+   thus =) as a value, not an identity, comparison."
+  (fn* =
+    ([x] true)
+    ([x y]
+     (cpp/jank.runtime.equal x y))
+    ([x y & more]
+     (if (cpp/jank.runtime.equal x y)
+       (if (next more)
+         (recur y (first more) (next more))
+         (cpp/jank.runtime.equal y (first more)))
+       false))))
+
+(def ==
+  "Returns non-nil if nums all have the equivalent
+   value (type-independent), otherwise false"
+  (fn* ==
+    ([x] true)
+    ([x y]
+     (cpp/jank.runtime.is_equiv x y))
+    ([x y & more]
+     (if (cpp/jank.runtime.is_equiv x y)
+       (if (next more)
+         (recur y (first more) (next more))
+         (cpp/jank.runtime.is_equiv y (first more)))
+       false))))
 
 (def ^:private sigs
   (fn* [fdecl]
@@ -518,21 +564,26 @@
       `(def ~(with-meta name m)
          ~(with-meta `(fn ~name ~@fdecl) {:rettag (:tag m)})))))
 
-(def macroexpand-1
+(defn macroexpand-1
   "If form represents a macro form, returns its expansion,
    else returns form."
-  clojure.core-native/macroexpand-1)
-(def macroexpand
+  [form]
+  (cpp/jank.runtime.macroexpand1 form))
+(defn macroexpand
   "Repeatedly calls macroexpand-1 on form until it no longer
    represents a macro form, then returns it.  Note neither
    macroexpand-1 nor macroexpand expand macros in subforms."
-  clojure.core-native/macroexpand)
+  [form]
+  (cpp/jank.runtime.macroexpand form))
 
-(def gensym
+(defn gensym
   "Returns a new symbol with a unique name. If a prefix string is
    supplied, the name is prefix# where # is some unique number. If
    prefix is not supplied, the prefix is 'G__'."
-  clojure.core-native/gensym)
+  ([]
+   (cpp/jank.runtime.gensym "G__"))
+  ([prefix-string]
+   (cpp/jank.runtime.gensym prefix-string)))
 
 (defn
   ^{:macro true
@@ -668,19 +719,22 @@
   [& body])
 
 ;; Transients.
-(def transientable?
+(defn- transientable?
   "Returns a whether the collection can be made transient."
-  clojure.core-native/transientable?)
+  [coll]
+  (cpp/jank.runtime.is_transientable coll))
 
-(def transient
+(defn transient
   "Returns a new, transient version of the collection, in constant time."
-  clojure.core-native/transient)
+  [coll]
+  (cpp/jank.runtime.transient coll))
 
-(def persistent!
+(defn persistent!
   "Returns a new, persistent version of the transient collection, in
    constant time. The transient collection cannot be used after this
    call, any such use will throw an exception."
-  clojure.core-native/persistent!)
+  [coll]
+  (cpp/jank.runtime.persistent coll))
 
 (defn conj!
   "Adds x to the transient collection, and return coll. The 'addition'
@@ -690,14 +744,14 @@
   ([coll]
    coll)
   ([coll x]
-   (clojure.core-native/conj-in-place! coll x)))
+   (cpp/jank.runtime.conj_in_place coll x)))
 
 (defn assoc!
   "When applied to a transient map, adds mapping of key(s) to
    val(s). When applied to a transient vector, sets the val at index.
    Note - index must be <= (count vector). Returns coll."
   ([coll k v]
-   (clojure.core-native/assoc-in-place! coll k v))
+   (cpp/jank.runtime.assoc_in_place coll k v))
   ([coll k v & kvs]
    (let [ret (assoc! coll k v)]
      (if kvs
@@ -707,7 +761,7 @@
 (defn dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
   ([coll k]
-   (clojure.core-native/dissoc-in-place! coll k))
+   (cpp/jank.runtime.dissoc_in_place coll k))
   ([coll k & ks]
    (let [ret (dissoc! coll k)]
      (if ks
@@ -718,14 +772,14 @@
   "Removes the last item from a transient vector. If
    the collection is empty, throws an exception. Returns coll"
   [coll]
-  (clojure.core-native/pop-in-place! coll))
+  (cpp/jank.runtime.pop_in_place coll))
 
 (defn disj!
   "disj[oin]. Returns a transient set of the same (hashed/sorted) type, that
    does not contain key(s)."
   ([set] set)
   ([set elem]
-   (clojure.core-native/disj-in-place! set elem))
+   (cpp/jank.runtime.dissoc_in_place set elem))
   ([set elem & elems]
    (let [ret (disj! set elem)]
      (if elems
@@ -757,15 +811,15 @@
 (defn apply
   "Applies fn f to the argument list formed by prepending intervening arguments to args."
   ([f args]
-   (clojure.core-native/apply* f args))
+   (cpp/jank.runtime.apply_to f args))
   ([f x args]
-   (clojure.core-native/apply* f (list* x args)))
+   (cpp/jank.runtime.apply_to f (list* x args)))
   ([f x y args]
-   (clojure.core-native/apply* f (list* x y args)))
+   (cpp/jank.runtime.apply_to f (list* x y args)))
   ([f x y z args]
-   (clojure.core-native/apply* f (list* x y z args)))
+   (cpp/jank.runtime.apply_to f (list* x y z args)))
   ([f a b c d & args]
-   (clojure.core-native/apply* f (cons a (cons b (cons c (cons d (spread args))))))))
+   (cpp/jank.runtime.apply_to f (cons a (cons b (cons c (cons d (spread args))))))))
 
 (defn constantly
   "Returns a function that takes any number of arguments and returns x."
@@ -801,7 +855,7 @@
    timeout-val if the timeout (in milliseconds) is reached before a
    value is available. See also - realized?."
   ([ref]
-   (clojure.core-native/deref ref))
+   (cpp/jank.runtime.deref ref))
   ; TODO: Blocking.
   ([ref timeout-ms timeout-val]))
    ;(if (instance? clojure.lang.IBlockingDeref ref)
@@ -809,13 +863,15 @@
    ;  (deref-future ref timeout-ms timeout-val))
    
 
-(def reduced
+(defn reduced
   "Wraps x in a way such that a reduce will terminate with the value x"
-  clojure.core-native/reduced)
+  [x]
+  (cpp/jank.runtime.reduced x))
 
-(def reduced?
+(defn reduced?
   "Returns true if x is the result of a call to reduced"
-  clojure.core-native/reduced?)
+  [x]
+  (cpp/jank.runtime.is_reduced x))
 
 (defn ensure-reduced
   "If x is already reduced?, returns it, else returns (reduced x)"
@@ -848,7 +904,7 @@
        (f))))
   ([f init coll]
    ; TODO: Chunking support.
-   (clojure.core-native/reduce f init coll)))
+   (cpp/jank.runtime.reduce f init coll)))
 
 (defn completing
   "Takes a reducing function f of 2 args and returns a fn suitable for
@@ -920,17 +976,19 @@
   ([f g & fs]
    (reduce comp (list* f g fs))))
 
-(def peek
+(defn peek
   "For a list or queue, same as first, for a vector, same as, but much
    more efficient than, last. If the collection is empty, returns nil."
-  clojure.core-native/peek)
+  [coll]
+  (cpp/jank.runtime.peek coll))
 
-(def pop
+(defn pop
   "For a list or queue, returns a new list/queue without the first
    item, for a vector, returns a new vector without the last item. If
    the collection is empty, throws an exception. Note - not the same
    as next/butlast."
-  clojure.core-native/pop)
+  [coll]
+  (cpp/jank.runtime.pop coll))
 
 (defn vary-meta
   "Returns an object of the same type and value as obj, with
@@ -963,63 +1021,86 @@
    change. If the new state is unacceptable, the validate-fn should
    return false or throw an exception."
   ([x]
-   (clojure.core-native/atom x))
+   (cpp/jank.runtime.atom x))
   ; TODO: Validators.
   #_([x & options]
      (setup-reference (atom x) options)))
 
-(def swap!
+(defn swap!
   "Atomically swaps the value of atom to be:
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects. Returns
    the value that was swapped in."
-  clojure.core-native/swap!)
+  ([atom f]
+   (cpp/jank.runtime.swap_atom atom f))
+  ([atom f x]
+   (cpp/jank.runtime.swap_atom atom f x))
+  ([atom f x y]
+   (cpp/jank.runtime.swap_atom atom f x y))
+  ([atom f x y & args]
+   (cpp/jank.runtime.swap_atom atom f x y args)))
 
-(def swap-vals!
+(defn swap-vals!
   "Atomically swaps the value of atom to be:
    (apply f current-value-of-atom args). Note that f may be called
    multiple times, and thus should be free of side effects.
    Returns [old new], the value of the atom before and after the swap."
-  clojure.core-native/swap-vals!)
+  ([atom f]
+   (cpp/jank.runtime.swap_vals atom f))
+  ([atom f x]
+   (cpp/jank.runtime.swap_vals atom f x))
+  ([atom f x y]
+   (cpp/jank.runtime.swap_vals atom f x y))
+  ([atom f x y & args]
+   (cpp/jank.runtime.swap_vals atom f x y args)))
 
-(def compare-and-set!
+(defn compare-and-set!
   "Atomically sets the value of atom to newval if and only if the
    current value of the atom is identical to oldval. Returns true if
    set happened, else false"
-  clojure.core-native/compare-and-set!)
+  [atom oldval newval]
+  (cpp/jank.runtime.compare_and_set atom oldval newval))
 
-(def reset!
+(defn reset!
   "Sets the value of atom to newval without regard for the
    current value. Returns newval."
-  clojure.core-native/reset!)
+  [atom newval]
+  (cpp/jank.runtime.reset atom newval))
 
-(def reset-vals!
+(defn reset-vals!
   "Sets the value of atom to newval. Returns [old new], the value of the
    atom before and after the reset."
-  clojure.core-native/reset-vals!)
+  [atom newval]
+  (cpp/jank.runtime.reset_vals atom newval))
 
 ;; Volatiles.
-(def volatile!
+(defn volatile!
   "Creates and returns a volatile with an initial value of val."
-  clojure.core-native/volatile!)
+  [val]
+  (cpp/jank.runtime.volatile_ val))
 
-(def vreset!
+(defn vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
-  clojure.core-native/vreset!)
+  [vol newval]
+  (cpp/jank.runtime.vreset vol newval))
 
 ; TODO: In Clojure, this is a macro (for perf reasons).
-(def vswap!
+(defn vswap!
   "Non-atomically swaps the value of the volatile as if:
    (apply f current-value-of-vol args). Returns the value that
    was swapped in."
-  clojure.core-native/vswap!)
+  ([vol f]
+   (cpp/jank.runtime.vswap vol f))
+  ([vol f & args]
+   (cpp/jank.runtime.vswap vol f args)))
 
-(def volatile?
+(defn volatile?
   "Returns true if x is a volatile."
-  clojure.core-native/volatile?)
+  [x]
+  (cpp/jank.runtime.is_volatile x))
 
-(def ^:private delay* clojure.core-native/delay*)
+(defn- delay* [f] (cpp/clojure.core_native.delay f))
 
 (defmacro delay
   "Takes a body of expressions and yields a Delay object that will
@@ -1029,9 +1110,10 @@
   [& body]
   (list `delay* (cons `fn (cons '[] body))))
 
-(def force
+(defn force
   "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
-  clojure.core-native/delay*)
+  [x]
+  (cpp/jank.runtime.force x))
 
 ;; Primitives.
 ;;; Arithmetic.
@@ -1044,9 +1126,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/+ l r))
+   (cpp/jank.runtime.add l r))
   ([l r & args]
-   (let [res (clojure.core-native/+ l r)]
+   (let [res (cpp/jank.runtime.add l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1058,9 +1140,9 @@
   ([x]
    (- 0 x))
   ([l r]
-   (clojure.core-native/- l r))
+   (cpp/jank.runtime.sub l r))
   ([l r & args]
-   (let [res (clojure.core-native/- l r)]
+   (let [res (cpp/jank.runtime.sub l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1074,9 +1156,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/* l r))
+   (cpp/jank.runtime.mul l r))
   ([l r & args]
-   (let [res (clojure.core-native/* l r)]
+   (let [res (cpp/jank.runtime.mul l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1088,74 +1170,82 @@
   ([x]
    (/ 1 x))
   ([l r]
-   (clojure.core-native// l r))
+   (cpp/jank.runtime.div l r))
   ([l r & args]
-   (let [res (clojure.core-native// l r)]
+   (let [res (cpp/jank.runtime.div l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
 ;; Bit operations.
 ; TODO: Unboxing and inlining for these.
-(def bit-not
+(defn bit-not
   "Bitwise complement"
-  clojure.core-native/bit-not)
+  [x]
+  (cpp/jank.runtime.bit_not x))
 
 (defn bit-and
   "Bitwise and"
   ([x y]
-   (clojure.core-native/bit-and x y))
+   (cpp/jank.runtime.bit_and x y))
   ([x y & more]
    (reduce bit-and (bit-and x y) more)))
 
 (defn bit-or
   "Bitwise or"
   ([x y]
-   (clojure.core-native/bit-or x y))
+   (cpp/jank.runtime.bit_or x y))
   ([x y & more]
    (reduce bit-or (bit-or x y) more)))
 
 (defn bit-xor
   "Bitwise exclusive or"
   ([x y]
-   (clojure.core-native/bit-xor x y))
+   (cpp/jank.runtime.bit_xor x y))
   ([x y & more]
    (reduce bit-xor (bit-xor x y) more)))
 
 (defn bit-and-not
   "Bitwise and with complement"
   ([x y]
-   (clojure.core-native/bit-and-not x y))
+   (cpp/jank.runtime.bit_and_not x y))
   ([x y & more]
    (reduce bit-and-not (bit-and-not x y) more)))
 
-(def bit-clear
+(defn bit-clear
   "Clear bit at index n"
-  clojure.core-native/bit-clear)
+  [x n]
+  (cpp/jank.runtime.bit_clear x n))
 
-(def bit-set
+(defn bit-set
   "Set bit at index n"
-  clojure.core-native/bit-set)
+  [x n]
+  (cpp/jank.runtime.bit_set x n))
 
-(def bit-flip
+(defn bit-flip
   "Flip bit at index n"
-  clojure.core-native/bit-flip)
+  [x n]
+  (cpp/jank.runtime.bit_flip x n))
 
-(def bit-test
+(defn bit-test
   "Test bit at index n"
-  clojure.core-native/bit-test)
+  [x n]
+  (cpp/jank.runtime.bit_test x n))
 
-(def bit-shift-left
+(defn bit-shift-left
   "Bitwise shift left"
-  clojure.core-native/bit-shift-left)
+  [x n]
+  (cpp/jank.runtime.bit_shift_left x n))
 
-(def bit-shift-right
+(defn bit-shift-right
   "Bitwise shift right"
-  clojure.core-native/bit-shift-right)
+  [x n]
+  (cpp/jank.runtime.bit_shift_right x n))
 
-(def unsigned-bit-shift-right
+(defn unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
-  clojure.core-native/unsigned-bit-shift-right)
+  [x n]
+  (cpp/jank.runtime.bit_unsigned_shift_right x n))
 
 (defn not=
   ([x]
@@ -1172,12 +1262,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/< l r))
+   (cpp/jank.runtime.lt l r))
   ([l r & args]
-   (if (clojure.core-native/< l r)
+   (if (cpp/jank.runtime.lt l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/< r (first args)))
+       (cpp/jank.runtime.lt r (first args)))
      false)))
 
 (defn
@@ -1187,12 +1277,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/<= l r))
+   (cpp/jank.runtime.lte l r))
   ([l r & args]
-   (if (clojure.core-native/<= l r)
+   (if (cpp/jank.runtime.lte l r)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/<= r (first args)))
+       (cpp/jank.runtime.lte r (first args)))
      false)))
 
 (defn
@@ -1202,12 +1292,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/< r l))
+   (cpp/jank.runtime.lt r l))
   ([l r & args]
-   (if (clojure.core-native/< r l)
+   (if (cpp/jank.runtime.lt r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/< (first args) r))
+       (cpp/jank.runtime.lt (first args) r))
      false)))
 
 (defn
@@ -1217,12 +1307,12 @@
   ([x]
    true)
   ([l r]
-   (clojure.core-native/<= r l))
+   (cpp/jank.runtime.lte r l))
   ([l r & args]
-   (if (clojure.core-native/<= r l)
+   (if (cpp/jank.runtime.lte r l)
      (if (next args)
        (recur r (first args) (next args))
-       (clojure.core-native/<= (first args) r))
+       (cpp/jank.runtime.lte (first args) r))
      false)))
 
 (defn
@@ -1232,9 +1322,9 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/min l r))
+   (cpp/jank.runtime.min l r))
   ([l r & args]
-   (let [res (clojure.core-native/min l r)]
+   (let [res (cpp/jank.runtime.min l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
@@ -1246,38 +1336,45 @@
   ([x]
    x)
   ([l r]
-   (clojure.core-native/max l r))
+   (cpp/jank.runtime.max l r))
   ([l r & args]
-   (let [res (clojure.core-native/max l r)]
+   (let [res (cpp/jank.runtime.max l r)]
      (if (empty? args)
        res
        (recur res (first args) (next args))))))
 
-(def inc
+(defn inc
   "Returns a number one greater than num. Does not auto-promote
    longs, will throw on overflow. See also: inc'"
-  clojure.core-native/inc)
-(def dec
+  [x]
+  (cpp/jank.runtime.inc x))
+(defn dec
   "Returns a number one less than num. Does not auto-promote
    longs, will throw on overflow. See also: dec"
-  clojure.core-native/dec)
+  [x]
+  (cpp/jank.runtime.dec x))
 
-(def pos?
+(defn pos?
   "Returns true if num is greater than zero, else false"
-  clojure.core-native/pos?)
-(def neg?
+  [num]
+  (cpp/jank.runtime.is_pos num))
+(defn neg?
   "Returns true if num is less than zero, else false"
-  clojure.core-native/neg?)
-(def zero?
+  [num]
+  (cpp/jank.runtime.is_neg num))
+(defn zero?
   "Returns true if num is zero, else false"
-  clojure.core-native/zero?)
+  [num]
+  (cpp/jank.runtime.is_zero num))
 
-(def rem
+(defn rem
   "Returns the remainder of dividing numerator by denominator."
-  clojure.core-native/rem)
-(def quot
+  [num div]
+  (cpp/jank.runtime.rem num div))
+(defn quot
   "quot[ient] of dividing numerator by denominator."
-  clojure.core-native/quot)
+  [num div]
+  (cpp/jank.runtime.quot num div))
 
 (defn mod
   "Modulus of num and div. Truncates toward negative infinity."
@@ -1288,48 +1385,55 @@
       (+ m div))))
 
 ;; Numbers.
-(def integer?
+(defn integer?
   "Returns true if n is an integer"
-  clojure.core-native/integer?)
-(def float?
+  [n]
+  (cpp/jank.runtime.is_integer n))
+(defn float?
   "Returns true if n is a floating point number"
-  clojure.core-native/real?)
-(def boolean?
+  [n]
+  (cpp/jank.runtime.is_real n))
+(defn boolean?
   "Returns true if x is a boolean"
-  clojure.core-native/boolean?)
-(def number?
+  [x]
+  (cpp/jank.runtime.is_boolean x))
+(defn number?
   "Returns true if x is a number"
-  clojure.core-native/number?)
+  [x]
+  (cpp/jank.runtime.is_number x))
 
-(def even?
+(defn even?
   "Returns true if n is even, throws an exception if n is not an integer"
-  clojure.core-native/even?)
-(def odd?
+  [n]
+  (cpp/jank.runtime.is_even n))
+(defn odd?
   "Returns true if n is odd, throws an exception if n is not an integer"
-  clojure.core-native/odd?)
+  [n]
+  (cpp/jank.runtime.is_odd n))
 
 ;; Random.
 (defn rand
   "Returns a random floating point number between 0 (inclusive) and
    n (default 1) (exclusive)."
   ([]
-   (clojure.core-native/rand))
+   (cpp/jank.runtime.rand))
   ([n]
    (* (rand) n)))
 
 ;; Strings.
-(def subs
+(defn subs
   "Returns the substring of s beginning at start inclusive, and ending
    at end (defaults to length of string), exclusive."
-  clojure.core-native/subs)
-
-(def ^:private first-index-of clojure.core-native/first-index-of)
-(def ^:private last-index-of clojure.core-native/last-index-of)
+  ([s start]
+   (cpp/jank.runtime.subs s start))
+  ([s start end]
+   (cpp/jank.runtime.subs s start end)))
 
 ;; Sequences (again).
-(def sequential?
+(defn sequential?
   "Returns true if coll implements sequential"
-  clojure.core-native/sequential?)
+  [coll]
+  (cpp/jank.runtime.is_sequential coll))
 
 (defn reverse
   "Returns a seq of the items in coll in reverse order. Not lazy."
@@ -1364,7 +1468,7 @@
    ; TODO: LazilyPersistentVector
    (vec (concat* [a b c d e f] args))))
 
-(def ^:private lazy-seq* clojure.core-native/lazy-seq*)
+(defn- lazy-seq* [o] (cpp/clojure.core_native.lazy_seq o))
 
 (defmacro lazy-seq
   "Takes a body of expressions that returns an ISeq or nil, and yields
@@ -1374,98 +1478,114 @@
   [& body]
   (list `lazy-seq* (list* `fn `lazy-seq# [] body)))
 
-(def chunk-buffer
-  clojure.core-native/chunk-buffer)
+(defn chunk-buffer
+  [capacity]
+  (cpp/jank.runtime.chunk_buffer capacity))
 
-(def chunk-append
-  clojure.core-native/chunk-append)
+(defn chunk-append
+  [b x]
+  (cpp/jank.runtime.chunk_append b x))
 
-(def chunk
-  clojure.core-native/chunk)
+(defn chunk
+  [b]
+  (cpp/jank.runtime.chunk b))
 
-(def chunk-first
-  clojure.core-native/chunk-first)
+(defn chunk-first
+  [s]
+  (cpp/jank.runtime.chunk_first s))
 
-(def chunk-next
-  clojure.core-native/chunk-next)
+(defn chunk-next
+  [s]
+  (cpp/jank.runtime.chunk_next s))
 
-(def chunk-rest
-  clojure.core-native/chunk-rest)
+(defn chunk-rest
+  [s]
+  (cpp/jank.runtime.chunk_rest s))
 
 (defn chunk-cons [chunk rest]
   (if (empty? chunk)
     rest
-    (clojure.core-native/chunk-cons chunk rest)))
+    (cpp/jank.runtime.chunk_cons chunk rest)))
 
-(def chunked-seq?
-  clojure.core-native/chunk-seq?)
+(defn chunked-seq?
+  [s]
+  (cpp/jank.runtime.is_chunked_seq s))
 
-
-(defn ^:private assert-arguments
-  [& pairs]
-  (let [pairs (partition 2 pairs)]
-    (loop [ps pairs]
-      (when (seq ps)
-        (let [[pred msg] (first ps)]
-          (when (not pred)
-            (throw (str msg))))
-        (recur (next ps))))))
-
-(defn ^:private emit-doseq-step
-  "Returns [need-recur? form] mirroring clojure.core/doseq’s expansion"
-  [recform exprs body]
-  (if-not exprs
-    [true `(do ~@body)]
-    (let [k (first exprs)
-          v (second exprs)]
-      (if (keyword? k)
-        (let [[needrec subform] (emit-doseq-step recform (nnext exprs) body)]
-          (cond
-            (= k :let)   [needrec `(let ~v ~subform)]
-            (= k :while) [false   `(when ~v
-                                     ~subform
-                                     ~@(when needrec [recform]))]
-            (= k :when)  [false   `(if ~v
-                                     (do
-                                       ~subform
-                                       ~@(when needrec [recform]))
-                                     ~recform)]))
-        ;; binding level with chunked fast path
-        (let [seq-   (gensym "seq_")
-              chunk- (gensym "chunk_")
-              count- (gensym "count_")
-              i-     (gensym "i_")
-              recform-next  `(recur (next ~seq-) nil 0 0)
-              [needrec-normal subform-normal]
-              (emit-doseq-step recform-next (nnext exprs) body)
-              recform-chunk `(recur ~seq- ~chunk- ~count- (unchecked-inc ~i-))
-              [_ subform-chunk]
-              (emit-doseq-step recform-chunk (nnext exprs) body)]
-          [true
-           `(loop* [~seq- (seq ~v), ~chunk- nil, ~count- 0, ~i- 0]
-              (if (< ~i- ~count-)
-                (let [~k (nth ~chunk- ~i-)]   
-                  ~subform-chunk
-                  ~@(when needrec-normal [recform-chunk]))
-                (when-let [~seq- (seq ~seq-)]
-                  (if (chunked-seq? ~seq-)
-                    (let [c# (chunk-first ~seq-)]
-                      (recur (chunk-rest ~seq-) c# (int (count c#)) (int 0)))
-                    (let [~k (first ~seq-)]
-                      ~subform-normal
-                      ~@(when needrec-normal [recform-next]))))))])))))
-
+(defmacro ^:private assert-macro-args
+ [& pairs]
+ (list 'do
+       (list 'clojure.core/when-not (first pairs)
+             ; TODO: No need for ex-info, if we had a simpler exception type
+             (list 'throw (list 'clojure.core/ex-info
+                                (list 'clojure.core/str
+                                      '&form
+                                      " requires "
+                                      (second pairs)
+                                      " in "
+                                      'clojure.core/*ns*
+                                      ":"
+                                      (:line (meta '&form)))
+                                {})))
+       (let [more (next (next pairs))]
+         (when more
+           (list* 'clojure.core/assert-macro-args more)))))
 (defmacro doseq
   "Repeatedly executes body (presumably for side-effects) with
   bindings and filtering as provided by \"for\".  Does not retain
   the head of the sequence. Returns nil."
+  {:added "1.0"}
   [seq-exprs & body]
-  (assert-arguments
-    (vector? seq-exprs) "doseq requires a vector for its binding"
-    (even? (count seq-exprs)) "doseq requires an even number of forms in binding vector")
-  (let [[_ form] (emit-doseq-step nil (seq seq-exprs) body)]
-    form))
-
+  (assert-macro-args
+     (vector? seq-exprs) "a vector for its binding"
+     (even? (count seq-exprs)) "an even number of forms in binding vector")
+  (let [step (fn step [recform exprs]
+               (if-not exprs
+                 [true `(do ~@body)]
+                 (let [k (first exprs)
+                       v (second exprs)]
+                   (if (keyword? k)
+                     (let [steppair (step recform (nnext exprs))
+                           needrec (steppair 0)
+                           subform (steppair 1)]
+                       (cond
+                         (= k :let) [needrec `(let ~v ~subform)]
+                         (= k :while) [false `(when ~v
+                                                ~subform
+                                                ~@(when needrec [recform]))]
+                         (= k :when) [false `(if ~v
+                                               (do
+                                                 ~subform
+                                                 ~@(when needrec [recform]))
+                                               ~recform)]))
+                     (let [seq- (gensym "seq_")
+                           chunk- (with-meta (gensym "chunk_")
+                                             {:tag 'clojure.lang.IChunk})
+                           count- (gensym "count_")
+                           i- (gensym "i_")
+                           recform `(recur (next ~seq-) nil 0 0)
+                           steppair (step recform (nnext exprs))
+                           needrec (steppair 0)
+                           subform (steppair 1)
+                           recform-chunk 
+                             `(recur ~seq- ~chunk- ~count- (unchecked-inc ~i-))
+                           steppair-chunk (step recform-chunk (nnext exprs))
+                           subform-chunk (steppair-chunk 1)]
+                       [true
+                        `(loop [~seq- (seq ~v), ~chunk- nil,
+                                ~count- 0, ~i- 0]
+                           (if (< ~i- ~count-)
+                             (let [~k (nth ~chunk- ~i-)]
+                               ~subform-chunk
+                               ~@(when needrec [recform-chunk]))
+                             (when-let [~seq- (seq ~seq-)]
+                               (if (chunked-seq? ~seq-)
+                                 (let [c# (chunk-first ~seq-)]
+                                   (recur (chunk-rest ~seq-) c#
+                                          (int (count c#)) (int 0)))
+                                 (let [~k (first ~seq-)]
+                                   ~subform
+                                   ~@(when needrec [recform]))))))])))))]
+    (nth (step nil (seq seq-exprs)) 1)))
 
 (defn concat
   "Returns a lazy seq representing the concatenation of the elements in the supplied colls."
@@ -1734,15 +1854,21 @@
           []
           m))
 
-(def get
+(defn get
   "Returns the value mapped to key, not-found or nil if key not present
    in associative collection, set, string, array, or ILookup instance."
-  clojure.core-native/get)
-(def get-in
+  ([map key]
+   (cpp/jank.runtime.get map key))
+  ([map key not-found]
+   (cpp/jank.runtime.get map key not-found)))
+(defn get-in
   "Returns the value in a nested associative structure,
    where ks is a sequence of keys. Returns nil if the key
    is not present, or the not-found value if supplied."
-  clojure.core-native/get-in)
+  ([m ks]
+   (cpp/jank.runtime.get_in m ks))
+  ([m ks not-found]
+   (cpp/jank.runtime.get_in m ks not-found)))
 
 (defn dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
@@ -1750,24 +1876,26 @@
   ([m]
    m)
   ([m k]
-   (clojure.core-native/dissoc m k))
+   (cpp/jank.runtime.dissoc m k))
   ([m k & ks]
    (let* [ret (dissoc m k)]
      (if ks
        (recur ret (first ks) (next ks))
        ret))))
 
-(def contains?
+(defn contains?
   "Returns true if key is present in the given collection, otherwise
    returns false.  Note that for numerically indexed collections like
    vectors and Java arrays, this tests if the numeric key is within the
    range of indexes. 'contains?' operates constant or logarithmic time;
    it will not perform a linear search for a value.  See also 'some'."
-  clojure.core-native/contains?)
+  [coll key]
+  (cpp/jank.runtime.contains coll key))
 
-(def find
+(defn find
   "Returns the map entry for key, or nil if key not present."
-  clojure.core-native/find)
+  [map key]
+  (cpp/jank.runtime.find map key))
 
 (defn select-keys
   "Returns a map containing only those entries in map whose key is in keys"
@@ -1793,15 +1921,19 @@
            (persistent! map))))
 
 ;; Sets.
-(def hash-set
+(defn hash-set
   "Returns a new hash set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native/hash-set)
+  ([] (cpp/jank.runtime.obj.persistent_hash_set.empty))
+  ([& keys]
+   (cpp/jank.runtime.obj.persistent_hash_set.create_from_seq keys)))
 
-(def sorted-set
+(defn sorted-set
   "Returns a new sorted set with supplied keys.  Any equal keys are
    handled as if by repeated uses of conj."
-  clojure.core-native/sorted-set)
+  ([] (cpp/jank.runtime.obj.persistent_sorted_set.empty))
+  ([& keys]
+   (cpp/jank.runtime.obj.persistent_sorted_set.create_from_seq keys)))
 
 (defn sorted-set-by
   "Returns a new sorted set with supplied keys, using the supplied
@@ -1816,16 +1948,17 @@
   ([set]
    set)
   ([set key]
-   (clojure.core-native/disj set key))
+   (cpp/jank.runtime.disj set key))
   ([set key & ks]
    (let* [res (disj set key)]
      (if (empty? ks)
        res
        (recur res (first ks) (next ks))))))
 
-(def set?
+(defn set?
   "Returns true if x implements IPersistentSet"
-  clojure.core-native/set?)
+  [x]
+  (cpp/jank.runtime.is_set x))
 
 (defn set
   "Returns a set of the distinct elements of coll."
@@ -1838,21 +1971,26 @@
                          coll))))
 
 ;; Other.
-(def hash
+(defn hash
   "Returns the hash code of its argument. Note this is the hash code
    consistent with =, and thus is different than .hashCode for Integer,
    Short, Byte and Clojure collections."
-  clojure.core-native/hash)
+  [o]
+  (cpp/jank.runtime.to_hash o))
 
-(def ^:private named? clojure.core-native/named?)
+(defn- named?
+  [x]
+  (cpp/jank.runtime.is_named x))
 
-(def name
+(defn name
   "Returns the name String of a string, symbol or keyword."
-  clojure.core-native/name)
+  [x]
+  (cpp/jank.runtime.name x))
 
-(def namespace
+(defn namespace
   "Returns the namespace String of a symbol or keyword, or nil if not present."
-  clojure.core-native/namespace)
+  [x]
+  (cpp/jank.runtime.namespace_ x))
 
 ;; Sequences.
 ; This is defined to be lazy later on.
@@ -1866,48 +2004,35 @@
      (step n coll))))
 
 ;; Vars.
-(def var?
+(defn var?
   "Returns true if v is a var."
-  clojure.core-native/var?)
-(def var-get
-  "Gets the value in the var object."
-  clojure.core-native/var-get)
+  [x]
+  (cpp/clojure.core_native.is_var x))
 
-(def alter-var-root
+(defn var-get
+  "Gets the value in the var object."
+  [x]
+  (cpp/clojure.core_native.var_get x))
+
+(defn alter-var-root
   "Atomically alters the root binding of var v by applying f to its
    current value plus any args"
-  clojure.core-native/alter-var-root)
+   [v f & args]
+  (cpp/clojure.core_native.alter_var_root v f args))
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
    Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
   [& vars]
-  (every? clojure.core-native/var-bound? vars))
+  (every? #(cpp/clojure.core_native.is_var_bound %) vars))
 
 (defn thread-bound?
   "Returns true if all of the vars provided as arguments have thread-local bindings.
    Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
   [& vars]
-  (every? clojure.core-native/var-thread-bound? vars))
+  (every? #(cpp/clojure.core_native.is_var_thread_bound %) vars))
 
-(defmacro ^:private assert-macro-args
-  [& pairs]
-  (list 'do
-        (list 'clojure.core/when-not (first pairs)
-              ; TODO: No need for ex-info, if we had a simpler exception type
-              (list 'throw (list 'clojure.core/ex-info
-                                 (list 'clojure.core/str
-                                       '&form
-                                       " requires "
-                                       (second pairs)
-                                       " in "
-                                       'clojure.core/*ns*
-                                       ":"
-                                       (:line (meta '&form)))
-                                 {})))
-        (let [more (next (next pairs))]
-          (when more
-            (list* 'clojure.core/assert-macro-args more)))))
+
 
 (defmacro if-let
   "bindings => binding-form test
@@ -1998,7 +2123,7 @@
            ; TODO: unchecked-inc
            (recur (inc ~i)))))))
 
-(def push-thread-bindings
+(defn push-thread-bindings
   "WARNING: This is a low-level function. Prefer high-level macros like
    binding where ever possible.
 
@@ -2011,17 +2136,20 @@
      ...
      (finally
      (pop-thread-bindings)))"
-  clojure.core-native/push-thread-bindings)
+  [bindings]
+  (cpp/jank.runtime.push_thread_bindings bindings))
 
-(def pop-thread-bindings
+(defn pop-thread-bindings
   "Pop one set of bindings pushed with push-binding before. It is an error to
    pop bindings without pushing before."
-  clojure.core-native/pop-thread-bindings)
+  []
+  (cpp/jank.runtime.pop_thread_bindings))
 
-(def get-thread-bindings
+(defn get-thread-bindings
   "Get a map with the Var/value pairs which is currently in effect for the
    current thread."
-  clojure.core-native/get-thread-bindings)
+  []
+  (cpp/jank.runtime.get_thread_bindings))
 
 (defmacro binding
   "binding => var-symbol init-expr
@@ -2050,15 +2178,18 @@
            (pop-thread-bindings))))))
 
 ;; Keywords.
-(def keyword?
+(defn keyword?
   "Return true if x is a Keyword"
-  clojure.core-native/keyword?)
-(def simple-keyword?
+  [x]
+  (cpp/jank.runtime.is_keyword x))
+(defn simple-keyword?
   "Return true if x is a keyword without a namespace"
-  clojure.core-native/simple-keyword?)
-(def qualified-keyword?
+  [x]
+  (cpp/jank.runtime.is_simple_keyword x))
+(defn qualified-keyword?
   "Return true if x is a keyword with a namespace"
-  clojure.core-native/qualified-keyword?)
+  [x]
+  (cpp/jank.runtime.is_qualified_keyword x))
 
 (defn keyword
   "Returns a Keyword with the given namespace and name.  Do not use :
@@ -2066,10 +2197,10 @@
   ([name]
    (cond
      (keyword? name) name
-     (symbol? name) (clojure.core-native/keyword nil (str name))
-     (string? name) (clojure.core-native/keyword nil name)))
+     (symbol? name) (cpp/jank.runtime.keyword nil (str name))
+     (string? name) (cpp/jank.runtime.keyword nil name)))
   ([ns name]
-   (clojure.core-native/keyword ns name)))
+   (cpp/jank.runtime.keyword ns name)))
 
 (defn ident?
   "Returns true if x is a symbol or keyword"
@@ -2087,10 +2218,11 @@
   (boolean (and (ident? x) (namespace x) true)))
 
 ;; Sequences.
-(def iterate
+(defn iterate
   "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
    f must be free of side-effects"
-  clojure.core-native/iterate)
+   [fn x]
+   (cpp/jank.runtime.iterate fn x))
 
 (defn range
   "Returns a lazy seq of nums from start (inclusive) to end
@@ -2101,23 +2233,26 @@
    (iterate inc 0))
   ([end]
    (if (integer? end)
-     (clojure.core-native/integer-range end)
-     (clojure.core-native/range end)))
+     (cpp/jank.runtime.obj.integer_range.create end)
+     (cpp/jank.runtime.obj.range.create end)))
   ([start end]
    (if (and (integer? start) (integer? end))
-     (clojure.core-native/integer-range start end)
-     (clojure.core-native/range start end)))
+     (cpp/jank.runtime.obj.integer_range.create start end)
+     (cpp/jank.runtime.obj.range.create start end)))
   ([start end step]
    (if (and (integer? start) (integer? end) (integer? step))
-     (clojure.core-native/integer-range start end step)
-     (clojure.core-native/range start end step))))
+     (cpp/jank.runtime.obj.integer_range.create start end step)
+     (cpp/jank.runtime.obj.range.create start end step))))
 
-(def nth
+(defn nth
   "Returns the value at the index. get returns nil if index out of
    bounds, nth throws an exception unless not-found is supplied.  nth
    also works for strings, Java arrays, regex Matchers and Lists, and,
    in O(n) time, for sequences."
-  clojure.core-native/nth)
+  ([coll index]
+   (cpp/jank.runtime.nth coll index))
+  ([coll index not-found]
+   (cpp/jank.runtime.nth coll index not-found)))
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
@@ -2428,9 +2563,12 @@
   ; TODO: Custom cycle object
   (lazy-seq (concat coll (cycle coll))))
 
-(def repeat
+(defn repeat
   "Returns a lazy (infinite!, or length n if supplied) sequence of val."
-  clojure.core-native/repeat)
+  ([x]
+   (cpp/jank.runtime.obj.repeat.create x))
+  ([n x]
+   (cpp/jank.runtime.obj.repeat.create n x)))
 
 (defn split-at
   "Returns a vector of [(take n coll) (drop n coll)]"
@@ -3332,13 +3470,15 @@
           (last steps)))))
 
 ;; Functions.
-(def ifn?
+(defn ifn?
   "Returns true if x implements IFn. Note that many data structures
    (e.g. sets and maps) implement IFn"
-  clojure.core-native/ifn?)
-(def fn?
+  [x]
+  (cpp/jank.runtime.is_callable x))
+(defn fn?
   "Returns true if x implements Fn, i.e. is an object created via fn."
-  clojure.core-native/fn?)
+  [x]
+  (cpp/clojure.core_native.is_fn x))
 
 ;; Multimethods.
 (defn- check-valid-options
@@ -3350,9 +3490,13 @@
                   (first valid-keys)
                   (map #(str ", " %) (rest valid-keys))))))
 
-(def ^:private multi-fn? clojure.core-native/multi-fn?)
+(defn- multi-fn?
+  [x]
+  (cpp/clojure.core_native.is_multi_fn x))
 
-(def ^:private multi-fn* clojure.core-native/multi-fn*)
+(defn- multi-fn*
+  [name dispatch_fn default hierarchy]
+  (cpp/clojure.core_native.multi_fn name dispatch_fn default hierarchy))
 
 (def global-hierarchy)
 
@@ -3410,38 +3554,46 @@
          (when-not (multi-fn? (deref v#))
            (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
 
-(def ^:private defmethod* clojure.core-native/defmethod*)
+(defn- defmethod*
+  [multifn dispatch-val f]
+  (cpp/clojure.core_native.defmethod multifn dispatch-val f))
 
 (defmacro defmethod
   "Creates and installs a new method of multimethod associated with dispatch-value. "
   [multifn dispatch-val & fn-tail]
   `(defmethod* ~multifn ~dispatch-val (fn ~@fn-tail)))
 
-(def remove-all-methods
+(defn remove-all-methods
   "Removes all of the methods of multimethod."
-  clojure.core-native/remove-all-methods)
+  [multifn]
+  (cpp/clojure.core_native.remove_all_methods multifn))
 
-(def remove-method
+(defn remove-method
   "Removes the method of multimethod associated with dispatch-value."
-  clojure.core-native/remove-method)
+  [multifn dispatch-val]
+  (cpp/clojure.core_native.remove_method multifn dispatch-val))
 
-(def prefer-method
+(defn prefer-method
   "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
    when there is a conflict"
-  clojure.core-native/prefer-method)
+  [multifn dispatch-val-x dispatch-val-y]
+  (cpp/clojure.core_native.prefer_method multifn dispatch-val-x dispatch-val-y))
 
-(def methods
+(defn methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
-  clojure.core-native/methods)
+  [multifn]
+  (cpp/clojure.core_native.methods multifn))
 
-(def get-method
+(defn get-method
   "Given a multimethod and a dispatch value, returns the dispatch fn
    that would apply to that value, or nil if none apply and no default"
-  clojure.core-native/get-method)
+  [multifn dispatch-val]
+  (cpp/clojure.core_native.get_method multifn dispatch-val))
 
-(def prefers
+(defn prefers
   "Given a multimethod, returns a map of preferred value -> set of other values"
-  clojure.core-native/prefers)
+  [multifn]
+  (cpp/clojure.core_native.prefers multifn))
 
 ;; Hierarchies.
 (defn make-hierarchy
@@ -3574,10 +3726,16 @@
 ;; Case.
 (def ^:private max-mask-bits 13)
 (def ^:private max-switch-table-size (bit-shift-left 1 max-mask-bits))
-(def ^:private int-min-value clojure.core-native/int-min)
-(def ^:private int-max-value clojure.core-native/int-max)
-(def ^:private int32-min-value clojure.core-native/int32-min)
-(def ^:private int32-max-value clojure.core-native/int32-max)
+
+(defn- i64? [n]
+  (and (integer? n)
+       (>= n (cpp/value "std::numeric_limits<jtl::i64>::min()"))
+       (<= n (cpp/value "std::numeric_limits<jtl::i64>::max()"))))
+
+(defn- i32? [n]
+  (and (integer? n)
+       (>= n (cpp/value "std::numeric_limits<jtl::i32>::min()"))
+       (<= n (cpp/value "std::numeric_limits<jtl::i32>::max()"))))
 
 (defn- shift-mask [shift mask x]
   (-> x (bit-shift-right shift) (bit-and mask)))
@@ -3587,9 +3745,7 @@
   input. The native hash returns a int32 int so this is to make sure that (case-hash (case-hash x)) == (case-hash x).
   A key may be hashed more than once and we need to make sure its value does not change in later hashing."
   [input]
-  (if (and (integer? input)
-           (>= input int32-min-value)
-           (<= input int32-max-value))
+  (if (i32? input)
     input
     (hash input)))
 
@@ -3798,8 +3954,7 @@
             (vals pairs)
             mode
             (cond
-              (every? #(and (integer? %) (<= int-min-value % int-max-value))
-                      tests)
+              (every? i64? tests)
               :ints
 
               (every? keyword? tests)
@@ -3824,8 +3979,10 @@
 
 ;; Miscellaneous.
 ; TODO: jank.core
-(def sleep clojure.core-native/sleep)
-(def current-time clojure.core-native/current-time)
+(defn- sleep [ms]
+  (cpp/clojure.core_native.sleep ms))
+(defn- current-time []
+  (cpp/clojure.core_native.current_time))
 
 (defmacro time
   "Evaluates expr and prints the time it took. Returns the value of expr."
@@ -3846,9 +4003,9 @@
   [binding-map fun]
   (let [root-bind (fn root-bind [m]
                     (doseq [kv m]
-                      (clojure.core-native/var-bind-root (first kv) (second kv))))
+                      (cpp/clojure.core_native.var_bind_root (first kv) (second kv))))
         old-vals (zipmap (keys binding-map)
-                         (map clojure.core-native/var-get-root (keys binding-map)))]
+                         (map #(cpp/clojure.core_native.var_get_root %) (keys binding-map)))]
     (try
       (root-bind binding-map)
       (fun)
@@ -3874,36 +4031,42 @@
                body)))
 
 ;; Namespaces.
-(def in-ns
+(defn in-ns
   "Sets *ns* to the namespace named by the symbol, creating it if needed."
-  clojure.core-native/in-ns)
+  [name]
+  (cpp/clojure.core_native.in_ns name))
 
-(def create-ns
+(defn create-ns
   "Create a new namespace named by the symbol if one doesn't already
    exist, returns it or the already-existing namespace of the same
    name."
-  clojure.core-native/create-ns)
+  [sym]
+  (cpp/clojure.core_native.intern_ns sym))
 
-(def find-ns
+
+(defn find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
-  clojure.core-native/find-ns)
+  [sym]
+  (cpp/clojure.core_native.find_ns sym))
 
-(def find-var
+(defn find-var
   "Returns the global var named by the namespace-qualified symbol, or
   nil if no var with that name."
-  clojure.core-native/find-var)
+  [sym]
+  (cpp/clojure.core_native.find_var sym))
 
-(def remove-ns
+(defn remove-ns
   "Removes the namespace named by the symbol. Use with caution.
    Cannot be used to remove the clojure namespace."
-  clojure.core-native/remove-ns)
+  [sym]
+  (cpp/clojure.core_native.remove_ns sym))
 
 (defn the-ns
   "If passed a namespace, returns it. Else, when passed a symbol,
    returns the namespace named by it, throwing an exception if not
    found."
   [ns-or-sym]
-  (if (clojure.core-native/ns? ns-or-sym)
+  (if (cpp/clojure.core_native.is_ns ns-or-sym)
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
@@ -3914,13 +4077,13 @@
   "Returns the name of the namespace, a symbol."
   [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (clojure.core-native/ns-name ns)))
+    (cpp/clojure.core_native.ns_name ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
   [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (clojure.core-native/ns-map ns)))
+    (cpp/clojure.core_native.ns_map ns)))
 
 (defn ns-publics
   "Returns a map of the public intern mappings for the namespace."
@@ -3933,7 +4096,7 @@
                     v (second kv)]
                 ; TODO: Check for visibility.
                 (if (var? v)
-                  (if (= ns (clojure.core-native/var-ns v))
+                  (if (= ns (cpp/clojure.core_native.var_ns v))
                     (assoc acc k v)
                     acc)
                   acc)))
@@ -3949,7 +4112,7 @@
    (ns-resolve ns nil sym))
   ([ns env sym]
    (when-not (contains? env sym)
-     (clojure.core-native/ns-resolve (the-ns ns) sym))))
+     (cpp/clojure.core_native.ns_resolve (the-ns ns) sym))))
 
 (defn resolve
   "Same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
@@ -3983,7 +4146,7 @@
    to calling this directly."
   [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
-    (clojure.core-native/alias *ns* ns-obj alias)))
+    (cpp/clojure.core_native.alias *ns* ns-obj alias)))
 
 (defn refer
   "refers to all public vars of ns, subject to filters.
@@ -4018,7 +4181,7 @@
                       sym (rename sym sym)]
                   (when (nil? v)
                     (throw (ex-info :var-does-not-exist {:value sym})))
-                  (clojure.core-native/refer *ns* sym v))))
+                  (cpp/clojure.core_native.refer *ns* sym v))))
             nil
             to-refer)))
 
@@ -4143,7 +4306,7 @@
    directory specified by *compile-path*, and that directory too must
    be in the module path."
   [path]
-  (clojure.core-native/compile path))
+  (cpp/clojure.core_native.compile path))
 
 (defn require
   "Loads libs, skipping any that are already loaded. Each argument is
@@ -4262,17 +4425,17 @@
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
   ([ns name]
-   (let [v (clojure.core-native/intern-var
+   (let [v (cpp/clojure.core_native.intern_var
              (cpp/jank.runtime.to_qualified_symbol
                (the-ns ns) name))]
-     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
      v))
   ([ns name val]
-   (let [v (clojure.core-native/intern-var
+   (let [v (cpp/clojure.core_native.intern_var
              (cpp/jank.runtime.to_qualified_symbol
                (the-ns ns) name))]
-     (clojure.core-native/var-bind-root v val)
-     (when (meta name) (clojure.core-native/reset-meta! v (meta name)))
+     (cpp/clojure.core_native.var_bind_root v val)
+     (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
      v)))
 
 (defn nfirst
@@ -4348,13 +4511,14 @@
   ([test then else]
    `(if (not ~test) ~then ~else)))
 
-(def compare
+(defn compare
   "Comparator. Returns a negative number, zero, or a positive number
   when x is logically 'less than', 'equal to', or 'greater than'
   y. Same as Java x.compareTo(y) except it also works for nil, and
   compares numbers and collections in a type-independent manner. x
   must implement Comparable"
-  clojure.core-native/compare)
+  [x y]
+  (cpp/jank.runtime.compare x y))
 
 (defn inc'
   "Returns a number one greater than num. Supports arbitrary precision.
@@ -4421,13 +4585,14 @@
   ([x y & more]
    (reduce -' (-' x y) more)))
 
-(def abs
+(defn abs
   "Returns the absolute value of a.
   If a is Long/MIN_VALUE => Long/MIN_VALUE
   If a is a double and zero => +0.0
   If a is a double and ##Inf or ##-Inf => ##Inf
   If a is a double and ##NaN => ##NaN"
-  clojure.core-native/abs)
+  [a]
+  (cpp/jank.runtime.abs a))
 
 (defn dec'
   "Returns a number one less than num. Supports arbitrary precision.
@@ -4787,15 +4952,13 @@
   set!s. Keys must be unique per reference, and can be used to remove
   the watch with remove-watch, but are otherwise considered opaque by
   the watch mechanism."
-  [#_clojure.lang.IRef reference key fn]
-  ;; (.addWatch reference key fn)
-  (throw "TODO: port add-watch"))
+  [reference key f]
+  (cpp/jank.runtime.add_watch reference key f))
 
 (defn remove-watch
   "Removes a watch (set by add-watch) from a reference"
-  [#_clojure.lang.IRef reference key]
-  ;; (.removeWatch reference key)
-  (throw "TODO: port remove-watch"))
+  [reference key]
+  (cpp/jank.runtime.remove_watch reference key))
 
 (defn agent-error
   "Returns the exception thrown during an asynchronous action of the
@@ -5121,13 +5284,14 @@
   (fn [x y]
     (cond (pred x y) -1 (pred y x) 1 :else 0)))
 
-(def sort
+(defn sort
   "Returns a sorted sequence of the items in coll. If no comparator is
   supplied, uses compare.  comparator must implement
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  clojure.core-native/sort)
+  [coll]
+  (cpp/jank.runtime.sort coll))
 
 (defn sort-by
   "Returns a sorted sequence of the items in coll, where the sort
@@ -5144,9 +5308,10 @@
 
 ;; evaluation
 
-(def eval
+(defn eval
   "Evaluates the form data structure (not text!) and returns the result."
-  clojure.core-native/eval)
+  [form]
+  (cpp/clojure.core_native.eval form))
 
 (defn await
   "Blocks the current thread (indefinitely!) until all actions
@@ -5292,17 +5457,20 @@
   ;; (clojure.lang.RT/uncheckedDoubleCast x)
   (throw "TODO: port unchecked-double"))
 
-(def ratio?
+(defn ratio?
   "Returns true if n is a Ratio"
-  clojure.core-native/ratio?)
+  [r]
+  (cpp/jank.runtime.is_ratio r))
 
-(def numerator
+(defn numerator
   "Returns the numerator part of a Ratio."
-  clojure.core-native/numerator)
+  [r]
+  (cpp/jank.runtime.numerator r))
 
-(def denominator
+(defn denominator
   "Returns the denominator part of a Ratio."
-  clojure.core-native/denominator)
+  [r]
+  (cpp/jank.runtime.denominator r))
 
 (defn decimal?
   "Returns true if n is a BigDecimal"
@@ -5456,7 +5624,7 @@
   ([s]
    (read-string {} s))
   ([opts s]
-   (clojure.core-native/read-string opts s)))
+   (cpp/clojure.core_native.read_string opts s)))
 
 (defmacro with-open
   "bindings => [name init ...]
@@ -5672,7 +5840,7 @@
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
   [ns sym]
-  (clojure.core-native/ns-unmap (the-ns ns) sym))
+  (cpp/clojure.core_native.ns_unmap (the-ns ns) sym))
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."
@@ -5706,7 +5874,7 @@
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
   [ns sym]
-  (clojure.core-native/ns-unalias (the-ns ns) sym))
+  (cpp/clojure.core_native.ns_unalias (the-ns ns) sym))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be
@@ -6047,13 +6215,14 @@
   ;; (clojure.lang.Murmur3/hashOrdered coll)
   (throw "TODO: port hash-ordered-coll"))
 
-(def hash-unordered-coll
+(defn hash-unordered-coll
   "Returns the hash code, consistent with =, for an external unordered
    collection implementing Iterable. For maps, the iterator should
    return map entries whose hash is computed as
      (hash-ordered-coll [k v]).
    See http://clojure.org/data_structures#hash for full algorithms."
-  clojure.core-native/hash-unordered-coll)
+   [coll]
+   (cpp/clojure.core_native.hash_unordered coll))
 
 (defmacro definline
   "Experimental - like defmacro, except defines a named function whose
@@ -6948,9 +7117,10 @@ fails, attempts to require sym's namespace and retries."
 ;;   Possible values of :qualifier include \"GA\", \"SNAPSHOT\", \"RC-x\" \"BETA-x\""
 ;;   {:added "1.0"})
 
-(def clojure-version
+(defn clojure-version
   "Returns clojure version as a printable string."
-  clojure.core-native/jank-version)
+  []
+  (cpp/clojure.core_native.jank_version))
 
 (defn promise
   "Returns a promise object that can be read with deref/@, and set,
