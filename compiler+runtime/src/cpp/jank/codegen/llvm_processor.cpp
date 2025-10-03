@@ -470,6 +470,20 @@ namespace jank::codegen
     return load_ret;
   }
 
+  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
+  {
+    if(!arg)
+    {
+      return arg;
+    }
+
+    if(llvm::isa<llvm::AllocaInst>(arg))
+    {
+      arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
+    }
+    return arg;
+  }
+
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
@@ -997,7 +1011,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1024,7 +1038,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1051,8 +1065,8 @@ namespace jank::codegen
 
     for(auto const &pair : expr->data_exprs)
     {
-      args.emplace_back(gen(pair.first, arity));
-      args.emplace_back(gen(pair.second, arity));
+      args.emplace_back(load_if_needed(ctx, gen(pair.first, arity)));
+      args.emplace_back(load_if_needed(ctx, gen(pair.second, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1079,7 +1093,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1103,12 +1117,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      if(llvm::isa<llvm::AllocaInst>(ret.data))
-      {
-        ret = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret);
-      }
-
-      return ctx->builder->CreateRet(ret);
+      return ctx->builder->CreateRet(load_if_needed(ctx, ret));
     }
 
     return ret;
@@ -1158,6 +1167,7 @@ namespace jank::codegen
   {
     if(expr->loop_target.is_some())
     {
+      native_vector<std::pair<llvm::Value *, llvm::Value *>> deferred_stores;
       for(usize i{}; i < expr->arg_exprs.size(); ++i)
       {
         auto const &arg_expr{ expr->arg_exprs[i] };
@@ -1177,7 +1187,12 @@ namespace jank::codegen
 
         auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
         jank_debug_assert(arg_alloc);
-        ctx->builder->CreateStore(arg_handle, arg_alloc);
+        deferred_stores.emplace_back(arg_handle, arg_alloc);
+      }
+
+      for(auto const &store : deferred_stores)
+      {
+        ctx->builder->CreateStore(store.first, store.second);
       }
 
       return ctx->builder->CreateBr(current_loop.data);
@@ -1305,7 +1320,7 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      arg_handles.emplace_back(load_if_needed(ctx, gen(arg_expr, arity)));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
@@ -1349,7 +1364,7 @@ namespace jank::codegen
 
       /* TODO: Cache. */
       locals[pair.first] = gen(pair.second, arity);
-      if(!llvm::isa<llvm::Argument>(locals[pair.first].data))
+      if(locals[pair.first]->getName().empty())
       {
         locals[pair.first]->setName(util::format("{}_init", pair.first->to_string()).c_str());
       }
@@ -1363,7 +1378,7 @@ namespace jank::codegen
           ctx->builder->getPtrTy(),
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
         alloc->setName(pair.first->to_string().c_str());
-        ctx->builder->CreateStore(locals[pair.first], alloc);
+        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
         locals[pair.first] = alloc;
       }
 
@@ -1479,12 +1494,7 @@ namespace jank::codegen
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
-    auto condition(gen(expr->condition, arity));
-    if(llvm::isa<llvm::AllocaInst>(condition))
-    {
-      condition = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), condition);
-    }
-
+    auto const condition(load_if_needed(ctx, gen(expr->condition, arity)));
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));
@@ -1500,7 +1510,7 @@ namespace jank::codegen
     ctx->builder->CreateCondBr(cmp, then_block, else_block);
 
     ctx->builder->SetInsertPoint(then_block);
-    auto const then(gen(expr->then, arity));
+    auto const then(load_if_needed(ctx, gen(expr->then, arity)));
 
     if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
@@ -1516,7 +1526,7 @@ namespace jank::codegen
 
     if(expr->else_.is_some())
     {
-      else_ = gen(expr->else_.unwrap(), arity);
+      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity));
     }
     else
     {
@@ -1804,12 +1814,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      if(llvm::isa<llvm::AllocaInst>(converted))
-      {
-        converted = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), converted);
-      }
-
-      return ctx->builder->CreateRet(converted);
+      return ctx->builder->CreateRet(load_if_needed(ctx, converted));
     }
 
     return converted;
