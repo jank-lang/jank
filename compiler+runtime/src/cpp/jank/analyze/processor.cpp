@@ -2027,6 +2027,8 @@ namespace jank::analyze
       arg_exprs.emplace_back(arg_expr.expect_ok());
     }
 
+    /* A loop* is only considered a loop if there's actually a recur. Otherwise, it's
+     * just a let* by another name. */
     if(is_loop)
     {
       loop_details.unwrap()->is_loop = true;
@@ -2137,8 +2139,8 @@ namespace jank::analyze
       needs_box,
       jtl::make_ref<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
 
-    /* TODO: Cache. */
-    if(loop_details.is_some() && runtime::equal(o->first(), make_box<obj::symbol>("loop*")))
+    static auto const loop_kw{ make_box<obj::symbol>("loop*") };
+    if(loop_details.is_some() && runtime::equal(o->first(), loop_kw))
     {
       loop_details = ret.data;
     }
@@ -2357,9 +2359,16 @@ namespace jank::analyze
                           jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const)
   {
+    /* When we analyze a loop, we actually just set a flag and then analyze a let.
+     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
+     * we're in a loop. */
     auto const old_loop_details{ loop_details };
-    loop_details = nullptr;
+    loop_details = some(nullptr);
     util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+
+    /* We always analyze loops in tail position, since `recur` always expects to be in
+     * tail position and it can be used within a loop. We then later reset the position
+     * of this expression back to what it should be. */
     auto let{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
     if(let.is_err())
     {

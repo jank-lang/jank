@@ -1,0 +1,10 @@
+(let* [s (cpp/cast cpp/std.string "meow")
+       it (cpp/.begin s)
+       r (loop [letters []]
+           (if (cpp/== (cpp/.end s) it)
+             letters
+             (let [new-letters (conj letters (cpp/* it))]
+               (cpp/++ it)
+               (recur new-letters))))]
+  (if (= [\m \e \o \w] r)
+    :success))

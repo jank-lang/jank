@@ -470,6 +470,8 @@ namespace jank::codegen
     return load_ret;
   }
 
+  /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
+   * makes sense to use with jank objects, as opposed to native values. */
   static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
   {
     if(!arg)
@@ -1165,6 +1167,9 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::recur_ref const expr, expr::function_arity const &arity)
   {
+    /* Using `recur` in a loop will just mean calculating the new values for the each
+     * loop binding's `alloca` and then storing the values. We store all values at the
+     * end, since the old values must be used for all calculations of the new values. */
     if(expr->loop_target.is_some())
     {
       native_vector<std::pair<llvm::Value *, llvm::Value *>> deferred_stores;
@@ -1362,14 +1367,20 @@ namespace jank::codegen
                                                pair.first->to_string()) };
       }
 
-      /* TODO: Cache. */
-      locals[pair.first] = gen(pair.second, arity);
-      if(locals[pair.first]->getName().empty())
+      auto const value{ gen(pair.second, arity) };
+      locals[pair.first] = value;
+      if(value->getName().empty())
       {
-        locals[pair.first]->setName(util::format("{}_init", pair.first->to_string()).c_str());
+        value->setName(util::format("{}_init", pair.first->to_string()).c_str());
       }
     }
 
+    /* Loops are implemented by creating an `alloca` for each binding, which will be a mutable
+     * container for the value as it changes each iteration. We then create a new basic block
+     * for the loop body and a final post-loop block for where to jump when we're done.
+     *
+     * Whenever we hit a `recur`, the new values are calculated and then stored into the
+     * corresponding `alloca` before jumping back to the start of the loop block. */
     if(expr->is_loop)
     {
       for(auto const &pair : expr->pairs)
@@ -1549,6 +1560,11 @@ namespace jank::codegen
     {
       current_fn->insert(current_fn->end(), merge_block);
       ctx->builder->SetInsertPoint(merge_block);
+
+      /* If we're leaving a branch from then/else, we don't actually need a phi, since we only have
+       * one value to select. This can happen in a loop, for example, where the `then` will
+       * always just `recur` (which leads to a branch) and only the `else` actually produces a
+       * value. */
       if(llvm::isa<llvm::BranchInst>(then))
       {
         return else_;

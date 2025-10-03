@@ -25,6 +25,9 @@ namespace jank::analyze::expr
 
     native_vector<pair_type> pairs;
     do_ref body;
+    /* let* and loop* share the same expression (Clojure JVM does the same). In fact,
+     * a loop* is only considered a loop if it also contains a recur. Otherwise, it's
+     * just a let*. */
     bool is_loop{};
   };
 }
