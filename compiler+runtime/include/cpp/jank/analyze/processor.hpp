@@ -28,6 +28,7 @@ namespace jank::analyze
   namespace expr
   {
     using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using let_ptr = jtl::ptr<struct let>;
   }
 
   enum class source_type : u8
@@ -237,5 +238,6 @@ namespace jank::analyze
     native_unordered_map<runtime::var_ref, expression_ref> vars;
     local_frame_ptr root_frame;
     native_vector<runtime::object_ref> macro_expansions;
+    jtl::option<expr::let_ptr> loop_details;
   };
 }

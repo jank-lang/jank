@@ -187,6 +187,7 @@ namespace jank::codegen
     std::list<deferred_init> deferred_inits{};
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
+    jtl::ptr<llvm::BasicBlock> current_loop;
   };
 
   struct llvm_type_info
@@ -467,6 +468,22 @@ namespace jank::codegen
     }
 
     return load_ret;
+  }
+
+  /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
+   * makes sense to use with jank objects, as opposed to native values. */
+  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
+  {
+    if(!arg)
+    {
+      return arg;
+    }
+
+    if(llvm::isa<llvm::AllocaInst>(arg))
+    {
+      arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
+    }
+    return arg;
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
@@ -996,7 +1013,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1023,7 +1040,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1050,8 +1067,8 @@ namespace jank::codegen
 
     for(auto const &pair : expr->data_exprs)
     {
-      args.emplace_back(gen(pair.first, arity));
-      args.emplace_back(gen(pair.second, arity));
+      args.emplace_back(load_if_needed(ctx, gen(pair.first, arity)));
+      args.emplace_back(load_if_needed(ctx, gen(pair.second, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1078,7 +1095,7 @@ namespace jank::codegen
 
     for(auto const &expr : expr->data_exprs)
     {
-      args.emplace_back(gen(expr, arity));
+      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1102,12 +1119,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      if(llvm::isa<llvm::AllocaInst>(ret.data))
-      {
-        ret = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret);
-      }
-
-      return ctx->builder->CreateRet(ret);
+      return ctx->builder->CreateRet(load_if_needed(ctx, ret));
     }
 
     return ret;
@@ -1155,55 +1167,93 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::recur_ref const expr, expr::function_arity const &arity)
   {
-    /* The codegen for the special recur form is very similar to the named recursion
+    /* Using `recur` in a loop will just mean calculating the new values for the each
+     * loop binding's `alloca` and then storing the values. We store all values at the
+     * end, since the old values must be used for all calculations of the new values. */
+    if(expr->loop_target.is_some())
+    {
+      native_vector<std::pair<llvm::Value *, llvm::Value *>> deferred_stores;
+      for(usize i{}; i < expr->arg_exprs.size(); ++i)
+      {
+        auto const &arg_expr{ expr->arg_exprs[i] };
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const expr_type{ cpp_util::expression_type(arg_expr) };
+        auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                               && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                    || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+        auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                               || cpp_util::is_any_object(expr_type) };
+        auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
+        auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
+        jank_debug_assert(arg_alloc);
+        deferred_stores.emplace_back(arg_handle, arg_alloc);
+      }
+
+      for(auto const &store : deferred_stores)
+      {
+        ctx->builder->CreateStore(store.first, store.second);
+      }
+
+      return ctx->builder->CreateBr(current_loop.data);
+    }
+    else
+    {
+      /* The codegen for the special recur form is very similar to the named recursion
      * codegen, but it's simpler. The key difference is that named recursion requires
      * arg packing, whereas the special recur form does not. This means, for variadic
      * functions, the special recur form will be expected to supply a sequence for the
      * variadic argument. */
-    auto const &fn_expr(*root_fn->arities[0].fn_ctx->fn);
+      auto const &fn_expr(*root_fn->arities[0].fn_ctx->fn);
 
-    llvm::SmallVector<llvm::Value *> arg_handles;
-    llvm::SmallVector<llvm::Type *> arg_types;
-    /* We add one for `this`. */
-    arg_handles.reserve(expr->arg_exprs.size() + 1);
-    arg_types.reserve(expr->arg_exprs.size() + 1);
+      llvm::SmallVector<llvm::Value *> arg_handles;
+      llvm::SmallVector<llvm::Type *> arg_types;
+      /* We add one for `this`. */
+      arg_handles.reserve(expr->arg_exprs.size() + 1);
+      arg_types.reserve(expr->arg_exprs.size() + 1);
 
-    arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
-    arg_types.emplace_back(ctx->builder->getPtrTy());
+      arg_handles.emplace_back(ctx->builder->GetInsertBlock()->getParent()->getArg(0));
+      arg_types.emplace_back(ctx->builder->getPtrTy());
 
-    for(auto const &arg_expr : expr->arg_exprs)
-    {
-      auto arg_handle{ gen(arg_expr, arity) };
-      auto const expr_type{ cpp_util::expression_type(arg_expr) };
-      auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
-                             && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
-                                  || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
-      auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
-                             || cpp_util::is_any_object(expr_type) };
-      auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
-
-      if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+      for(auto const &arg_expr : expr->arg_exprs)
       {
-        arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const expr_type{ cpp_util::expression_type(arg_expr) };
+        auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                               && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                    || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+        auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                               || cpp_util::is_any_object(expr_type) };
+        auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
+        {
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+        }
+
+        arg_handles.emplace_back(arg_handle);
+        arg_types.emplace_back(ctx->builder->getPtrTy());
       }
 
-      arg_handles.emplace_back(arg_handle);
-      arg_types.emplace_back(ctx->builder->getPtrTy());
+      auto const call_fn_name(
+        util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      auto const call(ctx->builder->CreateCall(fn, arg_handles));
+      call->setTailCall();
+
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(call);
+      }
+
+      return call;
     }
-
-    auto const call_fn_name(
-      util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
-    auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-    auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-    auto const call(ctx->builder->CreateCall(fn, arg_handles));
-    call->setTailCall();
-
-    if(expr->position == expression_position::tail)
-    {
-      return ctx->builder->CreateRet(call);
-    }
-
-    return call;
   }
 
   llvm::Value *llvm_processor::impl::gen(expr::recursion_reference_ref const expr,
@@ -1275,7 +1325,7 @@ namespace jank::codegen
 
     for(auto const &arg_expr : expr->arg_exprs)
     {
-      arg_handles.emplace_back(gen(arg_expr, arity));
+      arg_handles.emplace_back(load_if_needed(ctx, gen(arg_expr, arity)));
       arg_types.emplace_back(ctx->builder->getPtrTy());
     }
 
@@ -1317,16 +1367,66 @@ namespace jank::codegen
                                                pair.first->to_string()) };
       }
 
-      locals[pair.first] = gen(pair.second, arity);
-      locals[pair.first]->setName(pair.first->to_string().c_str());
+      auto const value{ gen(pair.second, arity) };
+      locals[pair.first] = value;
+      if(value->getName().empty())
+      {
+        value->setName(util::format("{}_init", pair.first->to_string()).c_str());
+      }
     }
 
-    auto const ret(gen(expr->body, arity));
-    locals = std::move(old_locals);
+    /* Loops are implemented by creating an `alloca` for each binding, which will be a mutable
+     * container for the value as it changes each iteration. We then create a new basic block
+     * for the loop body and a final post-loop block for where to jump when we're done.
+     *
+     * Whenever we hit a `recur`, the new values are calculated and then stored into the
+     * corresponding `alloca` before jumping back to the start of the loop block. */
+    if(expr->is_loop)
+    {
+      for(auto const &pair : expr->pairs)
+      {
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getPtrTy(),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+        alloc->setName(pair.first->to_string().c_str());
+        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
+        locals[pair.first] = alloc;
+      }
 
-    /* XXX: No return creation, since we rely on the body to do that. */
+      auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+      auto const loop_block(llvm::BasicBlock::Create(*llvm_ctx, "loop", current_fn));
+      auto const old_loop{ current_loop };
+      current_loop = loop_block;
+      util::scope_exit const finally{ [&]() { current_loop = old_loop; } };
 
-    return ret;
+      ctx->builder->CreateBr(loop_block);
+      ctx->builder->SetInsertPoint(loop_block);
+
+      auto const ret(gen(expr->body, arity));
+      locals = std::move(old_locals);
+
+      /* XXX: No return creation, since we rely on the body to do that. */
+      if(expr->position != expression_position::tail)
+      {
+        auto const postloop_block(llvm::BasicBlock::Create(*llvm_ctx, "postloop", current_fn));
+        if(!ctx->builder->GetInsertBlock()->getTerminator())
+        {
+          ctx->builder->CreateBr(postloop_block);
+        }
+        ctx->builder->SetInsertPoint(postloop_block);
+      }
+
+      return ret;
+    }
+    else
+    {
+      auto const ret(gen(expr->body, arity));
+      locals = std::move(old_locals);
+
+      /* XXX: No return creation, since we rely on the body to do that. */
+
+      return ret;
+    }
   }
 
   llvm::Value *
@@ -1405,12 +1505,7 @@ namespace jank::codegen
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
-    auto condition(gen(expr->condition, arity));
-    if(llvm::isa<llvm::AllocaInst>(condition))
-    {
-      condition = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), condition);
-    }
-
+    auto const condition(load_if_needed(ctx, gen(expr->condition, arity)));
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
     auto const fn(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));
@@ -1421,14 +1516,14 @@ namespace jank::codegen
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
     auto then_block(llvm::BasicBlock::Create(*llvm_ctx, "then", current_fn));
     auto else_block(llvm::BasicBlock::Create(*llvm_ctx, "else"));
-    auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "ifcont"));
+    auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "postif"));
 
     ctx->builder->CreateCondBr(cmp, then_block, else_block);
 
     ctx->builder->SetInsertPoint(then_block);
-    auto const then(gen(expr->then, arity));
+    auto const then(load_if_needed(ctx, gen(expr->then, arity)));
 
-    if(!is_return)
+    if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateBr(merge_block);
     }
@@ -1442,7 +1537,7 @@ namespace jank::codegen
 
     if(expr->else_.is_some())
     {
-      else_ = gen(expr->else_.unwrap(), arity);
+      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity));
     }
     else
     {
@@ -1453,7 +1548,7 @@ namespace jank::codegen
       }
     }
 
-    if(!is_return)
+    if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateBr(merge_block);
     }
@@ -1465,14 +1560,30 @@ namespace jank::codegen
     {
       current_fn->insert(current_fn->end(), merge_block);
       ctx->builder->SetInsertPoint(merge_block);
-      auto const phi(
-        ctx->builder->CreatePHI(is_return ? ctx->builder->getVoidTy() : ctx->builder->getPtrTy(),
-                                2,
-                                "iftmp"));
-      phi->addIncoming(then, then_block);
-      phi->addIncoming(else_, else_block);
 
-      return phi;
+      /* If we're leaving a branch from then/else, we don't actually need a phi, since we only have
+       * one value to select. This can happen in a loop, for example, where the `then` will
+       * always just `recur` (which leads to a branch) and only the `else` actually produces a
+       * value. */
+      if(llvm::isa<llvm::BranchInst>(then))
+      {
+        return else_;
+      }
+      else if(llvm::isa<llvm::BranchInst>(else_))
+      {
+        return then;
+      }
+      else
+      {
+        auto const phi(
+          ctx->builder->CreatePHI(is_return ? ctx->builder->getVoidTy() : ctx->builder->getPtrTy(),
+                                  2,
+                                  "iftmp"));
+        phi->addIncoming(then, then_block);
+        phi->addIncoming(else_, else_block);
+
+        return phi;
+      }
     }
     return nullptr;
   }
@@ -1719,12 +1830,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      if(llvm::isa<llvm::AllocaInst>(converted))
-      {
-        converted = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), converted);
-      }
-
-      return ctx->builder->CreateRet(converted);
+      return ctx->builder->CreateRet(load_if_needed(ctx, converted));
     }
 
     return converted;

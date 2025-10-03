@@ -9,10 +9,12 @@ namespace jank::analyze::expr
                local_frame_ptr const frame,
                bool const needs_box,
                runtime::obj::persistent_list_ref const args,
-               native_vector<expression_ref> &&arg_exprs)
+               native_vector<expression_ref> &&arg_exprs,
+               jtl::option<let_ref> const &loop_target)
     : expression{ expr_kind, position, frame, needs_box }
     , args{ args }
     , arg_exprs{ std::move(arg_exprs) }
+    , loop_target{ loop_target }
   {
   }
 
