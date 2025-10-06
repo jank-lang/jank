@@ -258,6 +258,8 @@ namespace jank::read::parse
           return parse_ratio();
         case lex::token_kind::big_integer:
           return parse_big_integer();
+        case lex::token_kind::big_decimal:
+          return parse_big_decimal();
         case lex::token_kind::string:
           return parse_string();
         case lex::token_kind::escaped_string:
@@ -489,7 +491,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
 
     if(character.is_none())
@@ -622,6 +624,11 @@ namespace jank::read::parse
         return parse_reader_macro_var_quote();
       case lex::token_kind::reader_macro:
         return parse_reader_macro_symbolic_values();
+      case lex::token_kind::symbol:
+        return parse_reader_macro_tagged();
+      case lex::token_kind::string:
+      case lex::token_kind::escaped_string:
+        return parse_regex();
       default:
         return error::parse_unsupported_reader_macro({ start_token.start, latest_token.end });
     }
@@ -810,6 +817,171 @@ namespace jank::read::parse
     return object_source_info{ wrapped, start_token, sym_end };
   }
 
+  processor::object_result processor::parse_regex()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto const str_result(parse_string());
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    try
+    {
+      auto const wrapped(make_box<obj::re_pattern>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_regex(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_regex(try_object<obj::persistent_string>(e)->data,
+                                        { start_token.start, latest_token.end });
+    }
+  }
+
+  processor::object_result processor::parse_tagged_uuid()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#uuid' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    if(str_end.kind != lex::token_kind::string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#uuid' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    try
+    {
+      auto const wrapped(make_box<obj::uuid>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
+                                       { start_token.start, latest_token.end });
+    }
+  }
+
+  processor::object_result processor::parse_tagged_inst()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#inst' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+
+    if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#inst' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    try
+    {
+      auto const wrapped(make_box<obj::inst>(str->data));
+      return object_source_info{ wrapped, start_token, str_end };
+    }
+    catch(jank::runtime::object * const e)
+    {
+      return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
+                                       { start_token.start, latest_token.end });
+    }
+  }
+
+  processor::object_result processor::parse_tagged_cpp()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto str_result(next());
+
+    if(str_result.is_err())
+    {
+      return str_result;
+    }
+    else if(str_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The string literal after this '#cpp' is missing.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str_end(str_result.expect_ok().unwrap().end);
+
+    if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+    {
+      return error::parse_invalid_reader_tag_value(
+        "The form after '#cpp' must be a string literal.",
+        { start_token.start, latest_token.end });
+    }
+
+    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+
+    auto const wrapped(make_box<obj::persistent_list>(
+      std::in_place,
+      make_box<obj::symbol>("cpp/value"),
+      make_box(util::format("\"{}\"", util::escape(str->data))).erase()));
+
+    return object_source_info{ wrapped, start_token, str_end };
+  }
+
+  processor::object_result processor::parse_reader_macro_tagged()
+  {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    auto const sym_result(next());
+    auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
+    auto const sym_end(sym_result.expect_ok().unwrap().end);
+
+    if(sym->name == "uuid")
+    {
+      return parse_tagged_uuid();
+    }
+    else if(sym->name == "inst")
+    {
+      return parse_tagged_inst();
+    }
+    else if(sym->name == "cpp")
+    {
+      return parse_tagged_cpp();
+    }
+    else
+    {
+      return error::parse_invalid_reader_symbolic_value(
+        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently "
+        "supported.",
+        { start_token.start, latest_token.end });
+    }
+  }
+
   processor::object_result processor::parse_reader_macro_comment()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
@@ -983,6 +1155,51 @@ namespace jank::read::parse
       seq);
   }
 
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const seq)
+  {
+    if(seq.is_nil())
+    {
+      return seq;
+    }
+
+    return visit_seqable(
+      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
+        runtime::detail::native_transient_vector ret;
+        for(auto const item : make_sequence_range(typed_seq))
+        {
+          if(syntax_quote_is_unquote(item, false))
+          {
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             second(item)));
+          }
+          else if(syntax_quote_is_unquote(item, true))
+          {
+            ret.push_back(second(item));
+          }
+          else
+          {
+            auto quoted_item(syntax_quote(item));
+            if(quoted_item.is_err())
+            {
+              return quoted_item;
+            }
+            ret.push_back(
+              make_box<obj::persistent_list>(std::in_place,
+                                             make_box<obj::symbol>("clojure.core", "list"),
+                                             quoted_item.expect_ok()));
+          }
+        }
+        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        return vec;
+      },
+      []() -> jtl::result<object_ref, error_ref> {
+        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
+      },
+      seq);
+  }
+
   bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
   {
     return visit_seqable(
@@ -1118,7 +1335,27 @@ namespace jank::read::parse
           }
           if constexpr(behavior::set_like<T>)
           {
-            return err(error::internal_parse_failure("nyi: set"));
+            auto const seq(typed_form->seq());
+            if(seq.is_nil())
+            {
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "hash-set"));
+            }
+            auto expanded(syntax_quote_expand_seq(seq));
+            if(expanded.is_err())
+            {
+              return expanded;
+            }
+
+            return make_box<obj::persistent_list>(
+              std::in_place,
+              make_box<obj::symbol>("clojure.core", "apply*"),
+              make_box<obj::symbol>("clojure.core", "hash-set"),
+              make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "seq"),
+                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
           }
           if constexpr(behavior::sequenceable<T>)
           {
@@ -1191,10 +1428,8 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    context::binding_scope const scope{ *__rt_ctx,
-                                        obj::persistent_hash_map::create_unique(
-                                          std::make_pair(__rt_ctx->gensym_env_var,
-                                                         obj::persistent_hash_map::empty())) };
+    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->gensym_env_var, obj::persistent_hash_map::empty())) };
 
     auto const old_quoted(quoted);
     quoted = false;
@@ -1287,7 +1522,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const slash(sv.find('/'));
     jtl::immutable_string ns, name;
     if(slash != jtl::immutable_string::npos)
@@ -1382,7 +1617,7 @@ namespace jank::read::parse
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(start_token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     /* A :: keyword either resolves to the current ns or an alias, depending on
      * whether or not it's qualified. */
     bool const resolved{ sv[0] != ':' };
@@ -1431,6 +1666,15 @@ namespace jank::read::parse
     return object_source_info{ bi, token, token };
   }
 
+  processor::object_result processor::parse_big_decimal()
+  {
+    auto const token{ token_current->expect_ok() };
+    ++token_current;
+    auto const &[number_literal](std::get<lex::big_decimal>(token.data));
+    auto const bd(obj::big_decimal::create(number_literal));
+    return object_source_info{ bd, token, token };
+  }
+
   processor::object_result processor::parse_ratio()
   {
     auto const token(token_current->expect_ok());
@@ -1472,7 +1716,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(token.data));
     return object_source_info{ make_box<obj::persistent_string>(
                                  jtl::immutable_string{ sv.data(), sv.size() }),
                                token,
@@ -1483,13 +1727,12 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    auto const sv(std::get<native_persistent_string_view>(token.data));
+    auto const sv(std::get<jtl::immutable_string_view>(token.data));
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return error::internal_parse_failure(
-        util::format("Unable to unescape string: {}", res.expect_err().message),
-        { token.start, latest_token.end });
+      return error::internal_parse_failure(res.expect_err().message,
+                                           { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

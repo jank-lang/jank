@@ -7,7 +7,7 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CMAKE_CXX_CLANG_TIDY "")
   set(CPPTRACE_STD_FORMAT OFF CACHE BOOL "Disable std::format usage, to speed up compilation")
 
-  add_subdirectory(third-party/cpptrace)
+  add_subdirectory(third-party/cpptrace EXCLUDE_FROM_ALL)
 
   unset(CPPTRACE_STD_FORMAT)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_OLD}")

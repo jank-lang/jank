@@ -6,7 +6,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 using namespace std::string_view_literals;
 
@@ -19,9 +19,9 @@ namespace jank::read::lex
       [&](auto &&arg) {
         using T = std::decay_t<decltype(arg)>;
         if constexpr(std::is_same_v<T, jtl::immutable_string>
-                     || std::is_same_v<T, native_persistent_string_view>)
+                     || std::is_same_v<T, jtl::immutable_string_view>)
         {
-          os << std::quoted(arg);
+          os << std::quoted(std::string_view{ arg.data(), arg.size() });
         }
         else
         {
@@ -77,7 +77,7 @@ namespace jank::read::lex
   token::token(movable_position const &s,
                movable_position const &e,
                token_kind const k,
-               native_persistent_string_view const d)
+               jtl::immutable_string_view const d)
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
@@ -92,7 +92,7 @@ namespace jank::read::lex
     : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
     , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
     , kind{ k }
-    , data{ native_persistent_string_view{ d } }
+    , data{ jtl::immutable_string_view{ d } }
   {
   }
 
@@ -129,6 +129,17 @@ namespace jank::read::lex
   {
   }
 
+  token::token(movable_position const &s,
+               movable_position const &e,
+               token_kind const k,
+               big_decimal const &d)
+    : start{ s } /* NOLINT(cppcoreguidelines-slicing) */
+    , end{ e } /* NOLINT(cppcoreguidelines-slicing) */
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
 #ifdef JANK_TEST
   token::token(usize const offset, usize const width, token_kind const k)
     : start{ offset, 1, offset + 1 }
@@ -156,7 +167,7 @@ namespace jank::read::lex
   token::token(usize const offset,
                usize const width,
                token_kind const k,
-               native_persistent_string_view const d)
+               jtl::immutable_string_view const d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -168,7 +179,7 @@ namespace jank::read::lex
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
-    , data{ native_persistent_string_view{ d } }
+    , data{ jtl::immutable_string_view{ d } }
   {
   }
 
@@ -189,6 +200,14 @@ namespace jank::read::lex
   }
 
   token::token(usize const offset, usize const width, token_kind const k, big_integer const &d)
+    : start{ offset, 1, offset + 1 }
+    , end{ offset + width, 1, offset + width + 1 }
+    , kind{ k }
+    , data{ d }
+  {
+  }
+
+  token::token(usize const offset, usize const width, token_kind const k, big_decimal const &d)
     : start{ offset, 1, offset + 1 }
     , end{ offset + width, 1, offset + width + 1 }
     , kind{ k }
@@ -293,18 +312,23 @@ namespace jank::read::lex
     }
     else
     {
-      os << r.radix << "r" << r.number_literal;
+      os << static_cast<int>(r.radix) << "r" << r.number_literal;
     }
     return os;
   }
 
-  processor::processor(native_persistent_string_view const &f)
+  static std::ostream &operator<<(std::ostream &os, big_decimal const &r)
+  {
+    return os << r.number_literal;
+  }
+
+  processor::processor(jtl::immutable_string_view const &f)
     : pos{ .proc = this }
     , file{ f }
   {
   }
 
-  processor::processor(native_persistent_string_view const &f, usize const offset)
+  processor::processor(jtl::immutable_string_view const &f, usize const offset)
     : pos{ .proc = this }
     , file{ f }
   {
@@ -417,7 +441,7 @@ namespace jank::read::lex
   }
 
   static jtl::result<codepoint, error_ref>
-  convert_to_codepoint(native_persistent_string_view const sv, movable_position const &pos)
+  convert_to_codepoint(jtl::immutable_string_view const sv, movable_position const &pos)
   {
     std::mbstate_t state{};
     wchar_t wc{};
@@ -574,11 +598,6 @@ namespace jank::read::lex
           {
             return ch.expect_err();
           }
-          else if(std::iswspace(static_cast<int>(ch.expect_ok().character)))
-          {
-            return error::lex_incomplete_character("A \\ must be followed by a character value.",
-                                                   { token_start, pos });
-          }
 
           while(pos <= file.size())
           {
@@ -590,8 +609,13 @@ namespace jank::read::lex
             pos += pt.expect_ok().len;
           }
 
-          native_persistent_string_view const data{ file.data() + token_start,
-                                                    ++pos - token_start };
+          jtl::immutable_string_view const data{ file.data() + token_start, ++pos - token_start };
+
+          if(data == "\\ ")
+          {
+            return ok(token{ token_start, pos, token_kind::character, "\\space" });
+          }
+
           return ok(token{ token_start, pos, token_kind::character, data });
         }
       case ';':
@@ -628,8 +652,8 @@ namespace jank::read::lex
           else
           {
             ++pos;
-            native_persistent_string_view const comment{ file.data() + token_start + leading_semis,
-                                                         pos - token_start - leading_semis };
+            jtl::immutable_string_view const comment{ file.data() + token_start + leading_semis,
+                                                      pos - token_start - leading_semis };
             return ok(token{ token_start, pos, token_kind::comment, comment });
           }
         }
@@ -649,7 +673,8 @@ namespace jank::read::lex
           bool expecting_exponent{};
           bool expecting_more_digits{};
           bool found_N{};
-          int radix{ 10 };
+          bool found_M{};
+          i8 radix{ 10 };
           auto r_pos{ pos }; /* records the 'r' position if one is found */
           bool found_beginning_negative{};
 
@@ -765,7 +790,12 @@ namespace jank::read::lex
             {
               if(radix == 10 && !found_r)
               {
-                if(found_exponent_sign || !is_scientific || !expecting_exponent)
+                if(!expecting_exponent)
+                {
+                  break;
+                }
+
+                if(found_exponent_sign || !is_scientific)
                 {
                   ++pos;
                   return error::lex_invalid_number(
@@ -843,11 +873,12 @@ namespace jank::read::lex
                 if(radix == 8 && *(file.data() + token_start) == '0')
                 {
                   numerator.assign(
-                    std::string(file.data() + token_start + 1, slash_pos - token_start - 1));
+                    std::string_view{ file.data() + token_start + 1, slash_pos - token_start - 1 });
                 }
                 else
                 {
-                  numerator.assign(std::string(file.data() + token_start, slash_pos - token_start));
+                  numerator.assign(
+                    std::string_view{ file.data() + token_start, slash_pos - token_start });
                 }
                 if(denominator.expect_ok().kind == token_kind::integer)
                 {
@@ -865,8 +896,10 @@ namespace jank::read::lex
                     pos,
                     token_kind::ratio,
                     { .numerator = numerator,
-                      .denominator = native_big_integer(
-                        std::get<lex::big_integer>(denominator_token.data).number_literal) }));
+                      /* We need to explicitly construct a string_view here or boost does
+                       * some weird shit with our number.  */
+                      .denominator = native_big_integer(std::string_view{
+                        std::get<lex::big_integer>(denominator_token.data).number_literal }) }));
                 }
               }
               return denominator.expect_err();
@@ -880,11 +913,6 @@ namespace jank::read::lex
                 return error::lex_invalid_number("Missing exponent from end of number.",
                                                  { token_start, pos });
               }
-              if(contains_dot)
-              {
-                /* If we have a dot, then we are parsing a decimal real number. */
-                break;
-              }
               if(!contains_leading_digit)
               {
                 /* If we don't have a leading digit, then we are parsing a symbol. */
@@ -892,6 +920,10 @@ namespace jank::read::lex
               }
               if(c == 'N')
               {
+                if(contains_dot)
+                {
+                  break;
+                }
                 ++pos;
                 /* big integer */
                 if(found_N)
@@ -907,8 +939,47 @@ namespace jank::read::lex
                                                    { token_start, pos },
                                                    error::note{ "Found 'N' here.", pos });
                 }
+                if(found_M)
+                {
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
                 found_N = true;
                 expecting_more_digits = false;
+                break;
+              }
+              if(c == 'M')
+              {
+                /* Big decimal number. */
+                ++pos;
+                if(found_M)
+                {
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
+                if(found_slash_after_number)
+                {
+                  found_slash_after_number = false;
+                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'M' here.", pos });
+                }
+                if(found_N)
+                {
+                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                                                   { token_start, pos },
+                                                   error::note{ "Found 'N' here.", pos });
+                }
+                found_M = true;
+                expecting_more_digits = false;
+                break;
+              }
+              if(contains_dot)
+              {
+                /* If we have a dot and do not have an 'M', then we are parsing a regular decimal
+                 * real number. */
                 break;
               }
               /* When parsing decimal numbers only, we would break if we see a non-digit char. */
@@ -974,10 +1045,10 @@ namespace jank::read::lex
             }
             if(found_r)
             {
-              radix = std::stoi(file.data() + token_start, nullptr);
+              radix = static_cast<i8>(std::stoi(file.data() + token_start, nullptr));
               if(radix < 0)
               {
-                radix = -radix;
+                radix = static_cast<i8>(-radix);
                 found_beginning_negative = true;
               }
               if(radix < 2 || radix > 36)
@@ -997,7 +1068,7 @@ namespace jank::read::lex
 
             /* Check for invalid digits. */
             native_vector<char> invalid_digits{};
-            auto const number_end{ found_N ? pos - 1 : pos };
+            auto const number_end{ found_N || found_M ? pos - 1 : pos };
             for(auto i{ number_start }; i < number_end; i++)
             {
               if(!is_valid_num_char(file[i], radix))
@@ -1008,10 +1079,22 @@ namespace jank::read::lex
             if(!invalid_digits.empty())
             {
               return error::lex_invalid_number(
-                util::format("Characters '{}' are invalid for a base {} number.",
-                             std::string(invalid_digits.begin(), invalid_digits.end()),
-                             radix),
+                util::format(
+                  "Characters '{}' are invalid for a base {} number.",
+                  jtl::immutable_string_view{ invalid_digits.begin(), invalid_digits.end() },
+                  radix),
                 { token_start, pos });
+            }
+            if(found_M)
+            {
+              auto const number_literal(
+                found_beginning_negative
+                  ? jtl::immutable_string_view{ file.data() + number_start - 1,
+                                                number_end - number_start + 1 }
+                  : jtl::immutable_string_view{ file.data() + number_start,
+                                                number_end - number_start });
+              return ok(
+                token{ token_start, pos, token_kind::big_decimal, big_decimal{ number_literal } });
             }
             /* Real numbers. */
             if(contains_dot || is_scientific || found_exponent_sign)
@@ -1028,9 +1111,8 @@ namespace jank::read::lex
                                    * (found_beginning_negative ? -1 : 1) };
             if(errno == ERANGE || found_N)
             {
-              native_persistent_string_view const number_literal{ file.data() + number_start,
-                                                                  number_end - number_start };
-
+              jtl::immutable_string_view const number_literal{ file.data() + number_start,
+                                                               number_end - number_start };
               return ok(token{
                 token_start,
                 pos,
@@ -1079,8 +1161,7 @@ namespace jank::read::lex
             pos += size;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start,
-                                                    ++pos - token_start };
+          jtl::immutable_string_view const name{ file.data() + token_start, ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           {
             return error::lex_invalid_symbol("A symbol may not start with a '/'.",
@@ -1123,8 +1204,23 @@ namespace jank::read::lex
           if(c == ':')
           {
             ++pos;
+            auto const after_dd_colon(peek());
+            if(after_dd_colon.is_ok() && after_dd_colon.expect_ok().character == '/')
+            {
+              /* Invalid ::/ pattern found. Consume the entire invalid token. */
+              while(true)
+              {
+                auto const result(convert_to_codepoint(file.substr(pos), pos));
+                if(result.is_err() || !is_symbol_char(result.expect_ok().character))
+                {
+                  break;
+                }
+                pos += result.expect_ok().len;
+              }
+              return error::lex_invalid_keyword("An auto-resolved keyword may not start with '/'.",
+                                                { token_start, pos });
+            }
           }
-
           while(true)
           {
             auto const oc(peek());
@@ -1141,8 +1237,8 @@ namespace jank::read::lex
             pos += codepoint.len;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start + 1,
-                                                    ++pos - token_start - 1 };
+          jtl::immutable_string_view const name{ file.data() + token_start + 1,
+                                                 ++pos - token_start - 1 };
 
           if(name[0] == '/' && name.size() > 1)
           {
@@ -1181,29 +1277,9 @@ namespace jank::read::lex
               break;
             }
 
+            /* Escape sequences will be validated during parsing. */
             if(escaped)
             {
-              switch(oc.expect_ok().character)
-              {
-                case '"':
-                case '?':
-                case '\'':
-                case '\\':
-                case 'a':
-                case 'b':
-                case 'f':
-                case 'n':
-                case 'r':
-                case 't':
-                case 'v':
-                  break;
-                default:
-                  util::string_builder sb;
-                  return error::lex_invalid_string_escape(
-                    util::format("Unsupported string escape character '{}'.",
-                                 sb(oc.expect_ok().character).view()),
-                    { pos, pos + 2llu });
-              }
               escaped = false;
             }
             else if(oc.expect_ok().character == '\\')
@@ -1223,7 +1299,7 @@ namespace jank::read::lex
             token_start,
             pos,
             kind,
-            native_persistent_string_view(file.data() + token_start + 1, pos - token_start - 2) });
+            jtl::immutable_string_view(file.data() + token_start + 1, pos - token_start - 2) });
         }
         /* Meta hints. */
       case '^':
@@ -1297,8 +1373,7 @@ namespace jank::read::lex
                 else
                 {
                   auto const length{ pos - token_start - 2 };
-                  native_persistent_string_view const comment{ file.data() + token_start + 2,
-                                                               length };
+                  jtl::immutable_string_view const comment{ file.data() + token_start + 2, length };
                   return ok(token{ token_start, pos, token_kind::comment, comment });
                 }
               }
@@ -1381,7 +1456,7 @@ namespace jank::read::lex
             pos += result.expect_ok().len;
           }
           require_space = true;
-          native_persistent_string_view const name{ file.data() + token_start, pos - token_start };
+          jtl::immutable_string_view const name{ file.data() + token_start, pos - token_start };
 
           return ok(token{ token_start, pos, token_kind::symbol, name });
         }

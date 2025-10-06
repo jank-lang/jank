@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <deque>
 
 #include <ftxui/dom/elements.hpp>
@@ -489,7 +488,15 @@ namespace jank::error
       {
         case line::kind::file_data:
           line_num = line_number(max_line_number_width, std::to_string(l.number));
-          line_content = highlighted_lines.at(l.number);
+          /* TODO:There's a bug here. We should always contain this line number. */
+          if(highlighted_lines.contains(l.number))
+          {
+            line_content = highlighted_lines.at(l.number);
+          }
+          else
+          {
+            line_content = text(" ");
+          }
           break;
         case line::kind::note:
           line_num = line_number(max_line_number_width, "");
@@ -539,21 +546,32 @@ namespace jank::error
     //      }),
     //    }) }) };
 
-    std::vector<Element> doc_body{
-      error,
-      text("\n"),
-    };
-
-    for(auto const &s : p.snippets)
     {
-      doc_body.emplace_back(code_snippet(s, max_width));
+      std::vector<Element> const doc_body{
+        error,
+        text("\n"),
+      };
+
+      auto document{ vbox(doc_body) };
+      auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
+      Render(screen, document);
+      screen.Print();
+      util::print("\n");
     }
 
-    auto document{ vbox(doc_body) };
-    auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
-    Render(screen, document);
-    screen.Print();
-    util::print("\n");
+    {
+      std::vector<Element> doc_body;
+      for(auto const &s : p.snippets)
+      {
+        doc_body.emplace_back(code_snippet(s, max_width));
+      }
+
+      auto document{ vbox(doc_body) };
+      auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
+      Render(screen, document);
+      screen.Print();
+      util::print("\n");
+    }
 
     if(e->cause)
     {

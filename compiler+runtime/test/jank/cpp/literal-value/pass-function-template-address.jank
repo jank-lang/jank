@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::literal_value::pass_function_template_address
+          {
+            template <typename T>
+            T foo(T const a)
+            {
+              return a + 1;
+            }
+          }")
+(let* [i ((cpp/value "&jank::cpp::literal_value::pass_function_template_address::foo<int>") (cpp/int 100))]
+  (if (= i 101)
+    :success))

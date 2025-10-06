@@ -4,6 +4,8 @@
 #include <cwctype>
 #include <ranges>
 
+#include <jtl/immutable_string.hpp>
+
 #include <jank/util/string.hpp>
 
 namespace jank::util
@@ -38,6 +40,13 @@ namespace jank::util
     auto const not_space{ [](unsigned char const ch) { return !std::isspace(ch); } };
     s.erase(s.begin(), std::ranges::find_if(s, not_space));
     s.erase(std::ranges::find_if(std::ranges::reverse_view(s), not_space).base(), s.end());
+  }
+
+  std::string trim(jtl::immutable_string const &s)
+  {
+    std::string ret{ s };
+    trim(ret);
+    return ret;
   }
 
   /* Doesn't support Unicode characters. */

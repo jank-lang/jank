@@ -93,7 +93,7 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void repeat::to_string(util::string_builder &buff)
+  void repeat::to_string(jtl::string_builder &buff)
   {
     runtime::to_string(seq(), buff);
   }

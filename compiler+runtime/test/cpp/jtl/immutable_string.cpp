@@ -6,6 +6,7 @@
 namespace jank
 {
   TEST_SUITE("jtl::immutable_string"){
+
     TEST_CASE("Constructor"){ SUBCASE("Default"){ jtl::immutable_string const s;
   CHECK(s.empty());
 }
@@ -109,6 +110,21 @@ TEST_CASE("Substring")
     jtl::immutable_string const s;
     auto const sub(s.substr(0, 100));
     CHECK(sub.empty());
+  }
+
+  SUBCASE("Non-empty corpus, pos = 0, low count")
+  {
+    jtl::immutable_string const s{ "foo bar" };
+    auto const sub(s.substr(0, 3));
+    CHECK_EQ(sub, "foo");
+  }
+
+  SUBCASE("Non-empty corpus, pos = 0, low count, assignment")
+  {
+    jtl::immutable_string s{ "foo bar" };
+    s = s.substr(0, 3);
+    CHECK_EQ(s, "foo");
+    CHECK_EQ(s.size(), 3);
   }
 
   SUBCASE("Non-empty corpus, pos = count, high count")

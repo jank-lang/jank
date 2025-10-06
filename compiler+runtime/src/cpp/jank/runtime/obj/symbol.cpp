@@ -105,7 +105,7 @@ namespace jank::runtime::obj
 
   static void to_string_impl(jtl::immutable_string const &ns,
                              jtl::immutable_string const &name,
-                             util::string_builder &buff)
+                             jtl::string_builder &buff)
   {
     if(!ns.empty())
     {
@@ -117,14 +117,14 @@ namespace jank::runtime::obj
     }
   }
 
-  void symbol::to_string(util::string_builder &buff) const
+  void symbol::to_string(jtl::string_builder &buff) const
   {
     to_string_impl(ns, name, buff);
   }
 
   jtl::immutable_string symbol::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(ns, name, buff);
     return buff.release();
   }

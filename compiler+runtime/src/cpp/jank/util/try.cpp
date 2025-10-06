@@ -19,12 +19,6 @@ namespace jank::util
     auto const paren{ frame.symbol.find('(') };
     if(paren == std::string::npos)
     {
-      /* TODO: Remove this once cpptrace supports JIT frames. */
-      if(frame.symbol.empty())
-      {
-        frame.symbol = "<jank jit frame -- not yet supported>";
-      }
-
       return std::move(frame);
     }
 
@@ -53,7 +47,7 @@ namespace jank::util
    * at the start/end of each stack trace. */
   static bool filter_frame(cpptrace::stacktrace_frame const &frame)
   {
-    static std::set<native_persistent_string_view> const symbols_to_ignore{
+    static std::set<jtl::immutable_string_view> const symbols_to_ignore{
       /* (Top) Linux exception pipework. */
       "get_adjusted_ptr",
       "__gxx_personality_v0",
@@ -125,7 +119,7 @@ namespace jank::util
      * compiler error output cleaner, since the stack trace isn't
      * actually going to provide any useful info. */
     jtl::ptr<error::base> original{ e };
-    cpptrace::stacktrace *deepest_trace{ original->trace.get() };
+    cpptrace::stacktrace const *deepest_trace{ original->trace.get() };
     while(original->cause)
     {
       original = original->cause;

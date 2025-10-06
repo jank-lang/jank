@@ -1,5 +1,6 @@
+#include <jtl/string_builder.hpp>
+
 #include <jank/util/escape.hpp>
-#include <jank/util/string_builder.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::util
@@ -7,7 +8,7 @@ namespace jank::util
   /* Converts escape sequences starting with backslash to their mapped character. e.g., \" => " */
   jtl::result<jtl::immutable_string, unescape_error> unescape(jtl::immutable_string const &input)
   {
-    util::string_builder sb{ input.size() };
+    jtl::string_builder sb{ input.size() };
     bool escape{};
 
     for(auto const c : input)
@@ -58,7 +59,8 @@ namespace jank::util
             sb('\b');
             break;
           default:
-            return err(unescape_error{ util::format("Invalid escape sequence '\\{}'", c) });
+            return err(
+              unescape_error{ util::format("String contains invalid escape sequence '\\{}'.", c) });
         }
         escape = false;
       }
@@ -73,7 +75,7 @@ namespace jank::util
     /* We can expect on relocation, since escaping anything will result in a larger string.
      * I'm not going to guess at the stats, to predict a better allocation, until this shows
      * up in the profiler, though. */
-    util::string_builder sb{ input.size() };
+    jtl::string_builder sb{ input.size() };
 
     for(auto const c : input)
     {

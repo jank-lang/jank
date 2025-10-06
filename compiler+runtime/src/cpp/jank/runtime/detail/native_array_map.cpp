@@ -154,7 +154,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  object_ref native_array_map::find(object_ref const key) const
+  jtl::option<object_ref> native_array_map::find(object_ref const key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -290,7 +290,7 @@ namespace jank::runtime::detail
         size) };
     }
 
-    auto const new_capacity{ size * 2 };
+    auto const new_capacity{ static_cast<u8>(size * 2) };
 
     if(new_capacity < cap)
     {

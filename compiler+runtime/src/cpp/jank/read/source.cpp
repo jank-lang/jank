@@ -67,7 +67,7 @@ namespace jank::read
 
   jtl::immutable_string source_position::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb("source_position(")(offset)(", ")(line)(":")(col)(")").release();
   }
 
@@ -92,17 +92,17 @@ namespace jank::read
 
   jtl::immutable_string source::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb("source(")(file_path)(" ")(start.to_string())(" -> ")(end.to_string())(")").release();
   }
 
   std::ostream &operator<<(std::ostream &os, source_position const &p)
   {
-    return os << p.to_string();
+    return os << p.to_string().c_str();
   }
 
   std::ostream &operator<<(std::ostream &os, source const &s)
   {
-    return os << s.to_string();
+    return os << s.to_string().c_str();
   }
 }

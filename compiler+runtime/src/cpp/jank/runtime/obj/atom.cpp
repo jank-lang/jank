@@ -1,13 +1,15 @@
-#include <jank/runtime/obj/atom.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/obj/atom.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
   atom::atom(object_ref const o)
     : val{ o.data }
+    , watches{ persistent_hash_map::empty() }
   {
   }
 
@@ -18,14 +20,14 @@ namespace jank::runtime::obj
 
   jtl::immutable_string atom::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void atom::to_string(util::string_builder &buff) const
+  void atom::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string atom::to_code_string() const
@@ -43,10 +45,25 @@ namespace jank::runtime::obj
     return val.load();
   }
 
+  static void notify_watches(atom_ref const a, object_ref const old_val, object_ref const new_val)
+  {
+    auto const locked_watches(a->watches.rlock());
+    for(auto const entry : (*locked_watches)->data)
+    {
+      auto const fn(entry.second);
+      if(fn.is_some())
+      {
+        dynamic_call(fn, entry.first, a, old_val, new_val);
+      }
+    }
+  }
+
   object_ref atom::reset(object_ref const o)
   {
     jank_debug_assert(o.is_some());
+    auto const v(val.load());
     val = o.data;
+    notify_watches(this, v, o);
     return o;
   }
 
@@ -57,12 +74,13 @@ namespace jank::runtime::obj
       auto v(val.load());
       if(val.compare_exchange_weak(v, o.data))
       {
+        notify_watches(this, v, o);
         return make_box<persistent_vector>(std::in_place, v, o);
       }
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn)
   {
     while(true)
@@ -71,12 +89,13 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return next;
       }
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1)
   {
     while(true)
@@ -85,12 +104,13 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v, a1));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return next;
       }
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   object_ref atom::swap(object_ref const fn, object_ref const a1, object_ref const a2)
   {
     while(true)
@@ -99,21 +119,24 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v, a1, a2));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return next;
       }
     }
   }
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap) */
   object_ref
+  /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
   atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
     while(true)
     {
       auto v(val.load());
-      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
+      auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
+      auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return next;
       }
     }
@@ -127,6 +150,7 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
@@ -140,6 +164,7 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v, a1));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
@@ -154,6 +179,7 @@ namespace jank::runtime::obj
       auto const next(dynamic_call(fn, v, a1, a2));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
@@ -167,9 +193,11 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(apply_to(fn, conj(a1, conj(a2, rest))));
+      auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
+      auto const next(apply_to(fn, args));
       if(val.compare_exchange_weak(v, next.data))
       {
+        notify_watches(this, v, next);
         return make_box<persistent_vector>(std::in_place, v, next);
       }
     }
@@ -177,7 +205,25 @@ namespace jank::runtime::obj
 
   object_ref atom::compare_and_set(object_ref const old_val, object_ref const new_val)
   {
+    /* NOLINTNEXTLINE(misc-const-correctness): Can't actually be const. */
     object *old{ old_val.data };
-    return make_box(val.compare_exchange_weak(old, new_val.data));
+    auto const ret(val.compare_exchange_weak(old, new_val.data));
+    if(ret)
+    {
+      notify_watches(this, old_val, new_val);
+    }
+    return make_box(ret);
+  }
+
+  void atom::add_watch(object_ref const key, object_ref const fn)
+  {
+    auto locked_watches(this->watches.wlock());
+    *locked_watches = (*locked_watches)->assoc(key, fn);
+  }
+
+  void atom::remove_watch(object_ref const key)
+  {
+    auto locked_watches(this->watches.wlock());
+    *locked_watches = (*locked_watches)->dissoc(key);
   }
 }

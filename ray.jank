@@ -3,42 +3,13 @@
 
 (def sqrt clojure.core-native/sqrt)
 (def tan clojure.core-native/tan)
-(def abs clojure.core-native/abs)
+;(def abs clojure.core-native/abs)
 (def pow clojure.core-native/pow)
 
-; TODO: jank can't have `or` yet, due to no
-; syntax quoting in macros. This program doesn't
-; require anything other than logical or on two bools, though.
-(defn either [l r]
-  (if l
-    l
-    r))
-
-; TODO: No proper `and` macro yet.
-(defn and [l r]
-  (if l
-    r
-    false))
-
-; TODO: Also since jank doesn't have syntax
-; quoting, as well as loop, there is no proper doseq.
-; This one generates an anonymous fn with a recur in
-; it, since jank can do that, and just calls it immediately.
-(defmacro doseq [bindings & body]
-  (let [binding-name (first bindings)
-        binding-seq (second bindings)]
-    (list (list 'fn 'doseq '[__gen_acc]
-                (list 'if (list 'empty? '__gen_acc)
-                      nil
-                      (cons 'let
-                            (cons (conj [binding-name] (list 'first '__gen_acc))
-                                  (conj (vec body) (list 'recur (list 'next '__gen_acc)))))))
-          binding-seq)))
-
-(defn println [& args]
+#_(defn println [& args]
   )
 
-(defn print [& args]
+#_(defn print [& args]
   )
 
 (defn print+space [data]
@@ -173,10 +144,10 @@
       nil
       (let [sqrt-d (sqrt discriminant)
             root (let [root (/ (- (- 0 half-b) sqrt-d) a)]
-                   (if (either (< root t-min) (< t-max root))
+                   (if (or (< root t-min) (< t-max root))
                      (/ (+ (- 0 half-b) sqrt-d) a)
                      root))]
-        (if (either (< root t-min) (< t-max root))
+        (if (or (< root t-min) (< t-max root))
           nil
           (let [point (ray-at ray root)
                 outward-normal (vec3-div (vec3-sub point center) radius)
@@ -246,8 +217,8 @@
                        1.0)
         sin-theta (sqrt (- 1.0 (* cos-theta cos-theta)))
         cannot-refract? (< 1.0 (* refraction-ratio sin-theta))
-        direction (if (either cannot-refract?
-                              (< (rand) (reflectance cos-theta refraction-ratio)))
+        direction (if (or cannot-refract?
+                          (< (rand) (reflectance cos-theta refraction-ratio)))
                     (vec3-reflect unit-direction normal)
                     (vec3-refract unit-direction normal refraction-ratio))]
     {:ray (ray-create (get hit-info :point) direction)
@@ -377,5 +348,5 @@
 
         (println "meow"))))
 
-(jank.perf/benchmark {:label "ray"} (-main))
+;(jank.perf/benchmark {:label "ray"} (-main))
 ;(-main)

@@ -19,6 +19,7 @@ namespace jank::analyze::expr
         jtl::option<runtime::object_ref> const &meta);
 
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     native_vector<std::pair<expression_ref, expression_ref>> data_exprs;
     jtl::option<runtime::object_ref> meta;

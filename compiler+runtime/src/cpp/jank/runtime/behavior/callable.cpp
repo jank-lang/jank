@@ -10,13 +10,18 @@ namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ref dynamic_call(object_ref source)
+  static object_ref pass_through_vars(object_ref source)
   {
-    if(source->type == object_type::var)
+    while(source->type == object_type::var)
     {
       source = runtime::deref(source);
     }
+    return source;
+  }
 
+  object_ref dynamic_call(object_ref const source)
+  {
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -36,19 +41,15 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 0 args to {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source, object_ref const a1)
+  object_ref dynamic_call(object_ref const source, object_ref const a1)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -76,26 +77,23 @@ namespace jank::runtime
                           || std::same_as<T, obj::persistent_array_map>
                           || std::same_as<T, obj::transient_vector>
                           || std::same_as<T, obj::transient_hash_set>
-                          || std::same_as<T, obj::keyword>)
+                          || std::same_as<T, obj::keyword>
+                          || std::same_as<T, obj::persistent_vector>)
         {
           return typed_source->call(a1);
         }
         else
         {
           throw std::runtime_error{ util::format("invalid call with 1 arg to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source, object_ref const a1, object_ref const a2)
+  object_ref dynamic_call(object_ref const source, object_ref const a1, object_ref const a2)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -130,20 +128,18 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 2 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref
-  dynamic_call(object_ref source, object_ref const a1, object_ref const a2, object_ref const a3)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -173,23 +169,19 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 3 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
                           object_ref const a4)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -221,24 +213,20 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 4 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
                           object_ref const a4,
                           object_ref const a5)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -272,13 +260,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 5 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -286,11 +274,7 @@ namespace jank::runtime
                           object_ref const a5,
                           object_ref const a6)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -338,13 +322,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 6 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -353,11 +337,7 @@ namespace jank::runtime
                           object_ref const a6,
                           object_ref const a7)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -409,13 +389,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 7 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -425,11 +405,7 @@ namespace jank::runtime
                           object_ref const a7,
                           object_ref const a8)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -485,13 +461,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 8 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -502,11 +478,7 @@ namespace jank::runtime
                           object_ref const a8,
                           object_ref const a9)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -563,13 +535,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 9 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -581,11 +553,7 @@ namespace jank::runtime
                           object_ref const a9,
                           object_ref const a10)
   {
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -688,13 +656,13 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("invalid call with 10 args to: {}",
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
-  object_ref dynamic_call(object_ref source,
+  object_ref dynamic_call(object_ref const source,
                           object_ref const a1,
                           object_ref const a2,
                           object_ref const a3,
@@ -708,11 +676,7 @@ namespace jank::runtime
                           obj::persistent_list_ref const rest)
   {
     /* TODO: Move call fns into var so we can remove these checks. */
-    if(source->type == object_type::var)
-    {
-      source = runtime::deref(source);
-    }
-
+    auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
         using T = typename decltype(typed_source)::value_type;
@@ -857,10 +821,10 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format("invalid call with {} args to: {}",
                                                  10 + sequence_length(rest),
-                                                 typed_source->to_string()) };
+                                                 typed_source->to_code_string()) };
         }
       },
-      source);
+      processed_source);
   }
 
   object_ref apply_to(object_ref const source, object_ref const args)
@@ -1008,38 +972,38 @@ namespace jank::runtime
   {
     object_ref callable::call()
     {
-      throw invalid_arity<0>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref)
     {
-      throw invalid_arity<1>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref)
     {
-      throw invalid_arity<2>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<3>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<4>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<5>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref
     callable::call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
     {
-      throw invalid_arity<6>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1050,7 +1014,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<7>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1062,7 +1026,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<8>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1075,7 +1039,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<9>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref callable::call(object_ref,
@@ -1089,7 +1053,7 @@ namespace jank::runtime
                               object_ref,
                               object_ref)
     {
-      throw invalid_arity<10>{ runtime::to_string(this_object_ref()) };
+      throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }
 
     callable::arity_flag_t callable::get_arity_flags() const

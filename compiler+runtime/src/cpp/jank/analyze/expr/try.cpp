@@ -59,4 +59,18 @@ namespace jank::analyze::expr
                                           make_box("finally"),
                                           jank::detail::to_runtime_data(finally_body)));
   }
+
+  void try_::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(body);
+    if(catch_body.is_some())
+    {
+      f(catch_body.unwrap().body);
+    }
+    if(finally_body.is_some())
+    {
+      f(finally_body.unwrap());
+    }
+    expression::walk(f);
+  }
 }

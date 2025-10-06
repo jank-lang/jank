@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::operator_::equalequal::pass_binary_reference
+          {
+            struct foo
+            {
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+          }")
+(let* [i0 (cpp/int.)
+       i10 (cpp/int. 10)
+       lhs-foo (cpp/jank.cpp.operator_.equalequal.pass_binary_reference.foo. i0 i10)]
+  (if (= true (cpp/== i10 (cpp/.-a lhs-foo)))
+    :success))

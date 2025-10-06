@@ -1,3 +1,6 @@
+#include <Interpreter/Compatibility.h>
+#include <Interpreter/CppInterOpInterpreter.h>
+#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
 #include <jank/runtime/context.hpp>
@@ -7,12 +10,17 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/clang_format.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
+#include <jank/error/analyze.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::evaluate
 {
@@ -134,20 +142,18 @@ namespace jank::evaluate
                                             native_vector<obj::symbol_ref> params)
   {
     auto ret{ jtl::make_ref<expr::function>() };
-    /* TODO: Deep clone? */
-    auto expr{ jtl::make_ref<E>(*orig_expr) };
+    auto expr{ make_ref<E>(orig_expr) };
     ret->kind = analyze::expression_kind::function;
     ret->name = name;
-    ret->unique_name = __rt_ctx->unique_string(ret->name);
+    ret->unique_name = __rt_ctx->unique_namespaced_string(ret->name);
     ret->meta = obj::persistent_hash_map::empty();
 
     auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));
 
-    auto const frame{
-      jtl::make_ref<local_frame>(local_frame::frame_type::fn, *__rt_ctx, expr->frame->parent)
-    };
+    auto const frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn,
+                                                 expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
-    expr::function_arity arity{ std::move(params),
+    expr::function_arity arity{ jtl::move(params),
                                 jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
                                 frame,
                                 fn_ctx };
@@ -160,15 +166,30 @@ namespace jank::evaluate
     arity.frame->fn_ctx = fn_ctx;
     arity.fn_ctx = fn_ctx;
 
+    arity.frame->lifted_vars = closest_fn_frame.lifted_vars;
     arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
 
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const sym : arity.params)
     {
-      arity.frame->locals.emplace(sym, local_binding{ sym, none, arity.frame });
+      arity.frame->locals.emplace(sym, local_binding{ sym, sym->name, none, arity.frame });
     }
 
-    arity.body->values.push_back(expr);
+    auto const expr_type{ cpp_util::expression_type(expr) };
+    expression_ref expr_to_add{ expr };
+    if(!cpp_util::is_untyped_object(expr_type))
+    {
+      jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
+      expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
+                                                  expr->frame,
+                                                  expr->needs_box,
+                                                  cpp_util::untyped_object_ptr_type(),
+                                                  expr_type,
+                                                  conversion_policy::into_object,
+                                                  expr);
+      expr->propagate_position(expression_position::value);
+    }
+    arity.body->values.push_back(expr_to_add);
 
     walk(arity, [&](auto const &form) {
       using T = std::decay_t<decltype(form)>;
@@ -183,7 +204,7 @@ namespace jank::evaluate
       }
     });
 
-    ret->arities.emplace_back(std::move(arity));
+    ret->arities.emplace_back(jtl::move(arity));
 
     /* We can't just assign the position here, since we need the position to propagate
      * downward. For example, if this expr is a let, setting its position to tail
@@ -219,19 +240,17 @@ namespace jank::evaluate
        * adding more, so let's not make assumptions yet. */
       body[0]->propagate_position(expression_position::statement);
 
-      if(exprs.size() > 1)
+      /* We normally wrap one expression, which is a return statement, but we'll be potentially
+       * adding more, so let's not make assumptions yet. */
+      for(auto it{ exprs.begin() + 1 }; it != exprs.end(); ++it)
       {
-        for(auto it(exprs.begin() + 1); it != exprs.end(); ++it)
-        {
-          auto &expr(*it);
-          expr->propagate_position(expression_position::statement);
-          body.emplace_back(expr);
-        }
+        auto const expr{ *it };
+        expr->propagate_position(expression_position::statement);
+        body.emplace_back(expr);
       }
 
       /* Finally, mark the last body item as our return. */
-      auto const last_body_index(body.size() - 1);
-      body[last_body_index]->propagate_position(expression_position::tail);
+      body.back()->propagate_position(expression_position::tail);
 
       return ret;
     }
@@ -242,7 +261,7 @@ namespace jank::evaluate
                                      native_vector<obj::symbol_ref> params)
   {
     return visit_expr(
-      [&](auto const typed_expr) { return wrap_expression(typed_expr, name, std::move(params)); },
+      [&](auto const typed_expr) { return wrap_expression(typed_expr, name, jtl::move(params)); },
       expr);
   }
 
@@ -289,7 +308,7 @@ namespace jank::evaluate
   object_ref eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
-    if(source->type == object_type::var)
+    while(source->type == object_type::var)
     {
       source = deref(source);
     }
@@ -396,6 +415,7 @@ namespace jank::evaluate
             }
           }
           else if constexpr(std::same_as<T, obj::persistent_hash_set>
+                            || std::same_as<T, obj::persistent_vector>
                             || std::same_as<T, obj::transient_vector>)
           {
             auto const s(expr->arg_exprs.size());
@@ -427,7 +447,7 @@ namespace jank::evaluate
           }
           else
           {
-            throw std::runtime_error{ util::format("Invalid call with 0 args to: {}",
+            throw std::runtime_error{ util::format("Invalid call with {} args to: {}",
                                                    expr->arg_exprs.size(),
                                                    typed_source->to_string()) };
           }
@@ -464,11 +484,11 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(expr->meta.unwrap(), std::move(npl));
+      return make_box<obj::persistent_list>(expr->meta.unwrap(), jtl::move(npl));
     }
     else
     {
-      return make_box<obj::persistent_list>(std::move(npl));
+      return make_box<obj::persistent_list>(jtl::move(npl));
     }
   }
 
@@ -544,18 +564,18 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), std::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), jtl::move(ret).persistent());
     }
     else
     {
-      return make_box<obj::persistent_hash_set>(std::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(jtl::move(ret).persistent());
     }
   }
 
   object_ref eval(expr::local_reference_ref const)
   /* Doesn't make sense to eval these, since let is wrapped in a fn and JIT compiled. */
   {
-    throw make_box("unsupported eval: local_reference");
+    throw make_box("unsupported eval: local_reference").erase();
   }
 
   object_ref eval(expr::function_ref const expr)
@@ -564,39 +584,60 @@ namespace jank::evaluate
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
                           munge(expr->unique_name)));
 
-    auto const wrapped_expr(evaluate::wrap_expression(expr, "repl_fn", {}));
-    codegen::llvm_processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-    cg_prc.gen().expect_ok();
-
+    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
     {
-      profile::timer const timer{ util::format("ir jit compile {}", expr->name) };
-      __rt_ctx->jit_prc.load_ir_module(std::move(cg_prc.ctx->module),
-                                       std::move(cg_prc.ctx->llvm_ctx));
+      /* TODO: Remove extra wrapper, if possible. Just create function object directly? */
+      auto const wrapped_expr(wrap_expression(expr, "repl_fn", {}));
+
+      codegen::llvm_processor const cg_prc{ wrapped_expr,
+                                            module,
+                                            codegen::compilation_target::eval };
+      cg_prc.gen().expect_ok();
+      cg_prc.optimize();
+
+      __rt_ctx->jit_prc.load_ir_module(jtl::move(cg_prc.get_module()));
 
       auto const fn(
-        __rt_ctx->jit_prc
-          .find_symbol<object *(*)()>(util::format("{}_0", munge(cg_prc.root_fn->unique_name)))
+        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.get_root_fn_name())))
           .expect_ok());
-      return fn();
+      return reinterpret_cast<object *(*)()>(fn)();
+    }
+    else
+    {
+      codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
+      util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+      __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
+      auto const expr_str{ cg_prc.expression_str(true) + ".erase()" };
+      clang::Value v;
+      auto res(
+        __rt_ctx->jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
+      if(res)
+      {
+        /* TODO: Helper to turn an llvm::Error into a string. */
+        jtl::immutable_string const msg{ "Unable to compile/eval C++ source." };
+        llvm::logAllUnhandledErrors(jtl::move(res), llvm::errs(), "error: ");
+        throw error::internal_codegen_failure(msg);
+      }
+      return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
     }
   }
 
   object_ref eval(expr::recur_ref const)
   /* This will always be in a fn or loop, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: recur");
+    throw make_box("unsupported eval: recur").erase();
   }
 
   object_ref eval(expr::recursion_reference_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: recursion_reference");
+    throw make_box("unsupported eval: recursion_reference").erase();
   }
 
   object_ref eval(expr::named_recursion_ref const)
   /* This will always be in a fn, which will be JIT compiled. */
   {
-    throw make_box("unsupported eval: named_recursion");
+    throw make_box("unsupported eval: named_recursion").erase();
   }
 
   object_ref eval(expr::do_ref const expr)
@@ -671,5 +712,92 @@ namespace jank::evaluate
   object_ref eval(expr::case_ref const expr)
   {
     return dynamic_call(eval(wrap_expression(expr, "case", {})));
+  }
+
+  object_ref eval(expr::cpp_raw_ref const expr)
+  {
+    return dynamic_call(eval(wrap_expression(expr, "cpp_raw", {})));
+  }
+
+  object_ref eval(expr::cpp_type_ref const)
+  {
+    throw make_box("unsupported eval: cpp_type").erase();
+  }
+
+  object_ref eval(expr::cpp_value_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
+  }
+
+  object_ref eval(expr::cpp_cast_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
+  }
+
+  object_ref eval(expr::cpp_call_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_call", {})));
+  }
+
+  object_ref eval(expr::cpp_constructor_call_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
+  }
+
+  object_ref eval(expr::cpp_member_call_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_member_call", {})));
+  }
+
+  object_ref eval(expr::cpp_member_access_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_member_access", {})));
+  }
+
+  object_ref eval(expr::cpp_builtin_operator_call_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_builtin_operator_call", {})));
+  }
+
+  object_ref eval(expr::cpp_box_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_box", {})));
+  }
+
+  object_ref eval(expr::cpp_unbox_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_unbox", {})));
+  }
+
+  object_ref eval(expr::cpp_new_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_new", {})));
+  }
+
+  object_ref eval(expr::cpp_delete_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_delete", {})));
   }
 }

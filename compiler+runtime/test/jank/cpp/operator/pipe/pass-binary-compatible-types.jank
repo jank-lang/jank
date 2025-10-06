@@ -1,0 +1,7 @@
+(let* [odd (cpp/int. 1)
+       i (cpp/int. 2)
+       l (cpp/long. 5)
+       _ (assert (= 2 (cpp/| i i)))
+       _ (assert (= 3 (cpp/| i odd)))
+       _ (assert (= 7 (cpp/| l i)))]
+  :success)

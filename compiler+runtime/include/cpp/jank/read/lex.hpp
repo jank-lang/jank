@@ -42,6 +42,8 @@ namespace jank::read::lex
     integer,
     /* Has big int data. */
     big_integer,
+    /* Has big decimal data. */
+    big_decimal,
     /* Has double data. */
     real,
     /* Has two integer data. */
@@ -105,6 +107,8 @@ namespace jank::read::lex
         return "integer";
       case token_kind::big_integer:
         return "big_integer";
+      case token_kind::big_decimal:
+        return "big_decimal";
       case token_kind::real:
         return "real";
       case token_kind::ratio:
@@ -130,12 +134,21 @@ namespace jank::read::lex
 
   struct big_integer
   {
-    native_persistent_string_view number_literal;
-    i64 radix{};
+    jtl::immutable_string_view number_literal;
+    i8 radix{};
     bool is_negative{};
 
+    /* TODO: Remove these from here and ratio. */
     bool operator==(big_integer const &) const;
     bool operator!=(big_integer const &) const;
+  };
+
+  struct big_decimal
+  {
+    jtl::immutable_string_view number_literal;
+
+    bool operator==(big_decimal const &) const = default;
+    bool operator!=(big_decimal const &) const = default;
   };
 
   /* Tokens have movable_positions, rather than just source_positions, which allows us to
@@ -166,7 +179,7 @@ namespace jank::read::lex
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
-          native_persistent_string_view const);
+          jtl::immutable_string_view const);
     token(movable_position const &s,
           movable_position const &e,
           token_kind const k,
@@ -177,17 +190,22 @@ namespace jank::read::lex
           movable_position const &e,
           token_kind const k,
           big_integer const &);
+    token(movable_position const &s,
+          movable_position const &e,
+          token_kind const k,
+          big_decimal const &);
 
 #ifdef JANK_TEST
     /* These assume everything is on one line; very useful for tests, but not elsewhere. */
     token(usize offset, usize width, token_kind const k);
     token(usize offset, usize width, token_kind const k, i64 const);
     token(usize offset, usize width, token_kind const k, f64 const);
-    token(usize offset, usize width, token_kind const k, native_persistent_string_view const);
+    token(usize offset, usize width, token_kind const k, jtl::immutable_string_view const);
     token(usize offset, usize width, token_kind const k, char const * const);
     token(usize offset, usize width, token_kind const k, bool const);
     token(usize offset, usize width, token_kind const k, ratio const &);
     token(usize offset, usize width, token_kind const k, big_integer const &);
+    token(usize offset, usize width, token_kind const k, big_decimal const &);
 #endif
 
     bool operator==(token const &rhs) const;
@@ -204,7 +222,9 @@ namespace jank::read::lex
     static constexpr usize ignore_pos{ std::numeric_limits<size_t>::max() };
     source_position start, end;
     token_kind kind{ token_kind::eof };
-    std::variant<no_data, i64, f64, native_persistent_string_view, bool, ratio, big_integer> data;
+    std::
+      variant<no_data, i64, f64, jtl::immutable_string_view, bool, ratio, big_integer, big_decimal>
+        data;
   };
 
   std::ostream &operator<<(std::ostream &os, movable_position const &p);
@@ -234,8 +254,8 @@ namespace jank::read::lex
       processor &p;
     };
 
-    processor(native_persistent_string_view const &f);
-    processor(native_persistent_string_view const &f, usize offset);
+    processor(jtl::immutable_string_view const &f);
+    processor(jtl::immutable_string_view const &f, usize offset);
 
     jtl::result<token, error_ref> next();
     jtl::result<codepoint, error_ref> peek(usize const ahead = 1) const;
@@ -249,6 +269,6 @@ namespace jank::read::lex
     bool require_space{};
     /* True when seeing a '/' following a number. */
     bool found_slash_after_number{};
-    native_persistent_string_view file;
+    jtl::immutable_string_view file;
   };
 }

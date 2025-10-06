@@ -1,0 +1,2 @@
+(if (nil? (cpp/raw ""))
+  :success)

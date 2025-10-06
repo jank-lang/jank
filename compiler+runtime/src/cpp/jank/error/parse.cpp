@@ -1,5 +1,6 @@
+#include <jtl/string_builder.hpp>
+
 #include <jank/error/parse.hpp>
-#include <jank/util/string_builder.hpp>
 
 namespace jank::error
 {
@@ -39,6 +40,7 @@ namespace jank::error
       case read::lex::token_kind::real:
       case read::lex::token_kind::ratio:
       case read::lex::token_kind::big_integer:
+      case read::lex::token_kind::big_decimal:
       case read::lex::token_kind::string:
       case read::lex::token_kind::escaped_string:
       case read::lex::token_kind::eof:
@@ -53,18 +55,17 @@ namespace jank::error
 
   error_ref parse_invalid_character(read::lex::token const &token)
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_error(
       kind::parse_invalid_character,
-      sb("Invalid character '")(std::get<native_persistent_string_view>(token.data))("'.")
-        .release(),
+      sb("Invalid character '")(std::get<jtl::immutable_string_view>(token.data))("'.").release(),
       read::source{ token.start, token.end });
   }
 
   error_ref parse_unexpected_closing_character(read::lex::token const &token)
   {
     /* TODO: Add a note to show last open token. */
-    util::string_builder sb;
+    jtl::string_builder sb;
     return make_error(
       kind::parse_unexpected_closing_character,
       sb("Unexpected closing character '")(delim_char_for_token_kind(token.kind))("'.").release(),
@@ -207,6 +208,27 @@ namespace jank::error
                                                 read::source const &source)
   {
     return make_error(kind::parse_invalid_reader_symbolic_value, message, source);
+  }
+
+  error_ref
+  parse_invalid_reader_tag_value(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_reader_tag_value, message, source);
+  }
+
+  error_ref parse_invalid_regex(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_regex, message, source);
+  }
+
+  error_ref parse_invalid_uuid(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_uuid, message, source);
+  }
+
+  error_ref parse_invalid_inst(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_inst, message, source);
   }
 
   error_ref

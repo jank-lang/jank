@@ -1,0 +1,5 @@
+(let [i (cpp/int. 5)
+      f (cpp/float. 5.0)
+      v [i f]]
+  (if (= [5 5.0] v)
+    :success))

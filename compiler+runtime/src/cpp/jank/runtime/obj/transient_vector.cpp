@@ -36,14 +36,14 @@ namespace jank::runtime::obj
 
   jtl::immutable_string transient_vector::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void transient_vector::to_string(util::string_builder &buff) const
+  void transient_vector::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string transient_vector::to_code_string() const

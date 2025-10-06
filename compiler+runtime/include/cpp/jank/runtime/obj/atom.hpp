@@ -1,11 +1,14 @@
 #pragma once
 
+#include <folly/Synchronized.h>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
 {
   using atom_ref = oref<struct atom>;
   using persistent_vector_ref = oref<struct persistent_vector>;
+  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
 
   struct atom : gc
   {
@@ -18,7 +21,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
@@ -44,7 +47,14 @@ namespace jank::runtime::obj
 
     object_ref compare_and_set(object_ref old_val, object_ref new_val);
 
+    /* behavior::ref_like */
+    void add_watch(object_ref key, object_ref fn);
+    void remove_watch(object_ref key);
+
     object base{ obj_type };
     std::atomic<object *> val{};
+    /* Since watches is a 'persistent_hash_map", there in no guarantee in which
+     * order watches are invoked. */
+    folly::Synchronized<persistent_hash_map_ref> watches{};
   };
 }

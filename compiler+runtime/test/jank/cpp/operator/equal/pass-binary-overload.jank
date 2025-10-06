@@ -1,0 +1,38 @@
+(cpp/raw "namespace jank::cpp::operator_::equal::pass_binary_overload
+          {
+            struct foo
+            {
+              foo& operator =(long *l)
+              {
+                a = *l;
+                return *this;
+              }
+              foo& operator=(foo const &rhs)
+              {
+                a = rhs.a;
+                return *this;
+              }
+
+              /* Not used. Ensures we're offsetting fields correctly. */
+              int padding{};
+              int a{};
+            };
+          }")
+(let* [i0 (cpp/int.)
+       i2 (cpp/int. 2)
+       i10 (cpp/int. 10)
+       lhs-foo (cpp/jank.cpp.operator_.equal.pass_binary_overload.foo. i0 i10)
+       rhs-foo (cpp/jank.cpp.operator_.equal.pass_binary_overload.foo. i0 i2)
+
+       ; foo = foo
+       _ (cpp/= lhs-foo lhs-foo)
+       _ (assert (= 10 (cpp/.-a lhs-foo)))
+       _ (cpp/= lhs-foo rhs-foo)
+       _ (assert (= 2 (cpp/.-a lhs-foo)))
+
+       ; member foo = long
+       l10 (cpp/long. -10)
+       &l10 (cpp/& l10)
+       _ (cpp/= lhs-foo &l10)
+       _ (assert (= -10 (cpp/.-a lhs-foo)))]
+  :success)

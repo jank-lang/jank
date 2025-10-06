@@ -10,7 +10,7 @@ namespace jank::error
 {
   static constexpr auto default_note_message{ "Found here." };
 
-  static constexpr native_persistent_string_view kind_to_message(kind const k)
+  static constexpr jtl::immutable_string_view kind_to_message(kind const k)
   {
     switch(k)
     {
@@ -85,6 +85,14 @@ namespace jank::error
         return "gensym literal is not within a syntax quote.";
       case kind::parse_invalid_reader_symbolic_value:
         return "Invalid reader symbolic value.";
+      case kind::parse_invalid_reader_tag_value:
+        return "Invalid reader tag value.";
+      case kind::parse_invalid_regex:
+        return "Invalid regex.";
+      case kind::parse_invalid_uuid:
+        return "Invalid UUID.";
+      case kind::parse_invalid_inst:
+        return "Unsupported date/time syntax.";
       case kind::parse_invalid_syntax_quote:
         return "Invalid syntax quote.";
       case kind::parse_invalid_syntax_unquote:
@@ -136,18 +144,61 @@ namespace jank::error
         return "Unresolved symbol.";
       case kind::analyze_macro_expansion_exception:
         return "Macro expansion exception.";
+      case kind::analyze_invalid_conversion:
+        return "Invalid conversion.";
+      case kind::analyze_invalid_cpp_operator_call:
+        return "Invalid C++ operator call.";
+      case kind::analyze_invalid_cpp_constructor_call:
+        return "Invalid C++ constructor call.";
+      case kind::analyze_invalid_cpp_member_call:
+        return "Invalid C++ member function call.";
+      case kind::analyze_invalid_cpp_capture:
+        return "Invalid C++ capture.";
+      case kind::analyze_invalid_cpp_function_call:
+        return "Invalid C++ function call.";
+      case kind::analyze_invalid_cpp_call:
+        return "Invalid C++ call.";
+      case kind::analyze_invalid_cpp_conversion:
+        return "Invalid C++ type returned.";
+      case kind::analyze_invalid_cpp_symbol:
+        return "Invalid C++ symbol.";
+      case kind::analyze_unresolved_cpp_symbol:
+        return "Unresolvable C++ symbol.";
+      case kind::analyze_invalid_cpp_raw:
+        return "Invalid C++ raw.";
+      case kind::analyze_invalid_cpp_type:
+        return "Invalid C++ type.";
+      case kind::analyze_invalid_cpp_value:
+        return "Invalid C++ value.";
+      case kind::analyze_invalid_cpp_cast:
+        return "Invalid C++ cast.";
+      case kind::analyze_invalid_cpp_box:
+        return "Invalid C++ box.";
+      case kind::analyze_invalid_cpp_unbox:
+        return "Invalid C++ unbox.";
+      case kind::analyze_invalid_cpp_new:
+        return "Invalid C++ new.";
+      case kind::analyze_invalid_cpp_delete:
+        return "Invalid C++ delete.";
+      case kind::analyze_invalid_cpp_member_access:
+        return "Invalid C++ member access.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
       case kind::internal_codegen_failure:
         return "Internal codegen failure.";
 
+      case kind::aot_unresolved_main:
+        return "Unresolved -main function.";
       case kind::aot_compilation_failure:
-        return "Ahead of Time compilation failure.";
-      case kind::aot_clang_executable_not_found:
-        return "Could not find clang++ executable.";
+        return "Ahead-of-time compilation failure.";
       case kind::internal_aot_failure:
         return "Internal ahead-of-time compilation failure.";
+
+      case kind::system_clang_executable_not_found:
+        return "Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.";
+      case kind::internal_system_failure:
+        return "Internal system failure.";
 
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
@@ -159,7 +210,7 @@ namespace jank::error
 
   jtl::immutable_string note::to_string() const
   {
-    util::string_builder sb;
+    jtl::string_builder sb;
     return sb("note(\"")(message)("\", ")(source.to_string())(", ")(note::kind_str(kind))(")")
       .release();
   }

@@ -18,10 +18,21 @@ namespace jank::analyze::expr
 
   object_ref def::to_runtime_data() const
   {
+    auto const value_data{ value.is_some() ? value.unwrap()->to_runtime_data()
+                                           : jank::detail::to_runtime_data(value) };
     return merge(expression::to_runtime_data(),
                  obj::persistent_array_map::create_unique(make_box("name"),
                                                           name,
                                                           make_box("value"),
-                                                          jank::detail::to_runtime_data(value)));
+                                                          value_data));
+  }
+
+  void def::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    if(value.is_some())
+    {
+      f(value.unwrap());
+    }
+    expression::walk(f);
   }
 }

@@ -40,55 +40,23 @@ namespace jank::analyze
       make_box(has_unboxed_usage));
   }
 
-  local_frame::local_frame(frame_type const &type,
-                           context &rt_ctx,
-                           jtl::option<jtl::ptr<local_frame>> const &p)
+  local_frame::local_frame(frame_type const &type, jtl::option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
-    , rt_ctx{ rt_ctx }
   {
   }
 
-  local_frame &local_frame::operator=(local_frame const &rhs)
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    /* TODO: Is this operator used? It's missing some members. */
-    type = rhs.type;
-    parent = rhs.parent;
-    locals = rhs.locals;
-
-    return *this;
-  }
-
-  local_frame &local_frame::operator=(local_frame &&rhs) noexcept
-  {
-    if(this == &rhs)
-    {
-      return *this;
-    }
-
-    type = rhs.type;
-    parent = std::move(rhs.parent);
-    locals = std::move(rhs.locals);
-
-    return *this;
-  }
-
-  static jtl::option<local_frame::find_result>
+  static jtl::option<local_frame::binding_find_result>
   find_local_impl(local_frame_ptr const start, obj::symbol_ref sym, bool const allow_captures)
   {
-    decltype(local_frame::find_result::crossed_fns) crossed_fns;
+    decltype(local_frame::binding_find_result::crossed_fns) crossed_fns;
 
     for(local_frame_ptr it{ start }; it != nullptr;)
     {
       auto const local_result(it->locals.find(sym));
       if(local_result != it->locals.end())
       {
-        return local_frame::find_result{ &local_result->second, std::move(crossed_fns) };
+        return local_frame::binding_find_result{ &local_result->second, std::move(crossed_fns) };
       }
 
       if(allow_captures)
@@ -96,7 +64,8 @@ namespace jank::analyze
         auto const capture_result(it->captures.find(sym));
         if(capture_result != it->locals.end())
         {
-          return local_frame::find_result{ &capture_result->second, std::move(crossed_fns) };
+          return local_frame::binding_find_result{ &capture_result->second,
+                                                   std::move(crossed_fns) };
         }
       }
 
@@ -117,16 +86,17 @@ namespace jank::analyze
     throw std::runtime_error{ util::format("unable to find local: {}", sym->to_string()) };
   }
 
-  jtl::option<local_frame::find_result>
+  jtl::option<local_frame::binding_find_result>
   local_frame::find_local_or_capture(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, true);
   }
 
-  void local_frame::register_captures(find_result const &result)
+  void local_frame::register_captures(binding_find_result const &result)
   {
     for(auto const &crossed_fn : result.crossed_fns)
     {
+      /* We intentionally copy the binding here. */
       auto res(crossed_fn->captures.emplace(result.binding->name, *result.binding));
       /* We know it needs a box, since it's captured. */
       res.first->second.needs_box = true;
@@ -136,25 +106,45 @@ namespace jank::analyze
     }
   }
 
-  jtl::option<local_frame::find_result>
+  void local_frame::register_captures(local_frame_ptr const frame,
+                                      named_recursion_find_result const &result)
+  {
+    local_binding b{ make_box<obj::symbol>(result.fn_frame->fn_ctx->name),
+                     result.fn_frame->fn_ctx->name,
+                     none,
+                     frame };
+    if(result.fn_frame->fn_ctx->fn)
+    {
+      b.value_expr = result.fn_frame->fn_ctx->fn;
+    }
+    register_captures(binding_find_result{ &b, result.crossed_fns });
+  }
+
+  jtl::option<local_frame::binding_find_result>
   local_frame::find_originating_local(obj::symbol_ref const sym)
   {
     return find_local_impl(this, sym, false);
   }
 
-  jtl::option<expr::function_context_ref>
+  jtl::option<local_frame::named_recursion_find_result>
   local_frame::find_named_recursion(obj::symbol_ref const sym)
   {
+    decltype(local_frame::named_recursion_find_result::crossed_fns) crossed_fns;
+
     auto const sym_str(sym->to_string());
     for(local_frame_ptr it{ this }; it != nullptr;)
     {
       if(it->type == frame_type::fn && it->fn_ctx->name == sym_str)
       {
-        return it->fn_ctx;
+        return local_frame::named_recursion_find_result{ it, jtl::move(crossed_fns) };
       }
 
       if(it->parent.is_some())
       {
+        if(it->type == local_frame::frame_type::fn)
+        {
+          crossed_fns.emplace_back(it);
+        }
         it = it->parent.unwrap();
       }
       else
@@ -205,7 +195,7 @@ namespace jank::analyze
     if(sym->ns.empty())
     {
       qualified_sym
-        = make_box<obj::symbol>(expect_object<ns>(rt_ctx.current_ns_var->deref())->name->name,
+        = make_box<obj::symbol>(expect_object<ns>(__rt_ctx->current_ns_var->deref())->name->name,
                                 sym->name);
     }
     else
@@ -214,11 +204,12 @@ namespace jank::analyze
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ qualified_sym };
+    lifted_var lv{ __rt_ctx->unique_namespaced_string(munge(qualified_sym->name)), qualified_sym };
     closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
     return qualified_sym;
   }
 
+  /* TODO: These are not used in IR gen. Remove entirely? */
   jtl::option<std::reference_wrapper<lifted_var const>>
   local_frame::find_lifted_var(obj::symbol_ref const &sym) const
   {
@@ -242,13 +233,11 @@ namespace jank::analyze
 
     auto const name(__rt_ctx->unique_symbol("const"));
     auto const unboxed_name{ visit_number_like(
-      [&](auto const) -> jtl::option<obj::symbol> {
-        return obj::symbol{ name.ns, name.name + "__unboxed" };
-      },
-      []() -> jtl::option<obj::symbol> { return none; },
+      [&](auto const) -> jtl::option<jtl::immutable_string> { return name.name + "__unboxed"; },
+      []() -> jtl::option<jtl::immutable_string> { return none; },
       constant) };
 
-    lifted_constant l{ constant };
+    lifted_constant l{ name.name, unboxed_name, constant };
     closest_fn.lifted_constants.emplace(constant, std::move(l));
   }
 

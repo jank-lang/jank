@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::type::pass_template
+          {
+            template <typename T1, typename T2>
+            struct foo
+            {
+              T1 d1{ 777 };
+              T2 d2{ 777 };
+            };
+          }")
+(let* [i (cpp/int. 444)
+       foo ((cpp/type "jank::cpp::type::pass_template::foo<int, long>") i)]
+  (if (and (= 444 (cpp/.-d1 foo))
+           (= 777 (cpp/.-d2 foo)))
+    :success))

@@ -32,14 +32,14 @@ namespace jank::runtime::obj
     return &base == &o;
   }
 
-  void transient_array_map::to_string(util::string_builder &buff) const
+  void transient_array_map::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "{}@{}", object_type_str(base.type), &base);
+    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
   }
 
   jtl::immutable_string transient_array_map::to_string() const
   {
-    util::string_builder buff{};
+    jtl::string_builder buff{};
     to_string(buff);
     return buff.release();
   }
@@ -64,32 +64,27 @@ namespace jank::runtime::obj
   object_ref transient_array_map::get(object_ref const key) const
   {
     assert_active();
-    return data.find(key);
+    return data.find(key).unwrap_or(jank_nil);
   }
 
   object_ref transient_array_map::get(object_ref const key, object_ref const fallback) const
   {
-    auto const res(get(key));
-    if(res.is_some())
-    {
-      return res;
-    }
-    return fallback;
+    return data.find(key).unwrap_or(fallback);
   }
 
   object_ref transient_array_map::get_entry(object_ref const key) const
   {
-    auto const res(get(key));
+    auto const res(data.find(key));
     if(res.is_some())
     {
-      return make_box<persistent_vector>(std::in_place, key, res);
+      return make_box<persistent_vector>(std::in_place, key, res.unwrap());
     }
     return jank_nil;
   }
 
   bool transient_array_map::contains(object_ref const key) const
   {
-    return get(key).is_some();
+    return data.find(key).is_some();
   }
 
   object_ref transient_array_map::assoc_in_place(object_ref const key, object_ref const value)

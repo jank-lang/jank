@@ -29,7 +29,7 @@ namespace jank::runtime::obj
       vec->data.end());
   }
 
-  void persistent_vector_sequence::to_string(util::string_builder &buff) const
+  void persistent_vector_sequence::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(vec->data.begin()
                          + static_cast<decltype(persistent_vector::data)::difference_type>(index),
@@ -41,7 +41,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string persistent_vector_sequence::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_string(vec->data.begin()
                          + static_cast<decltype(persistent_vector::data)::difference_type>(index),
                        vec->data.end(),
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string persistent_vector_sequence::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     runtime::to_code_string(
       vec->data.begin() + static_cast<decltype(persistent_vector::data)::difference_type>(index),
       vec->data.end(),

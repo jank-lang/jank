@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
@@ -71,6 +71,10 @@ namespace jank::runtime::obj
     object_ref get_entry(object_ref key) const;
     bool contains(object_ref key) const;
 
+    /* behavior::associatively_writable */
+    persistent_vector_ref assoc(object_ref key, object_ref val) const;
+    persistent_vector_ref dissoc(object_ref key) const;
+
     /* behavior::conjable */
     persistent_vector_ref conj(object_ref head) const;
 
@@ -81,6 +85,9 @@ namespace jank::runtime::obj
     /* behavior::indexable */
     object_ref nth(object_ref index) const;
     object_ref nth(object_ref index, object_ref fallback) const;
+
+    /* behavior::callable */
+    object_ref call(object_ref) const;
 
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;

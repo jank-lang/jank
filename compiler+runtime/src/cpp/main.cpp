@@ -4,7 +4,9 @@
 
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <jank/aot/processor.hpp>
+#include <Interpreter/Compatibility.h>
+#include <clang/Interpreter/CppInterOp.h>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -16,20 +18,29 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/c_api.h>
 #include <jank/jit/processor.hpp>
+#include <jank/aot/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/environment/check_health.hpp>
+#include <jank/runtime/convert/builtin.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <jank/perf_native.hpp>
 #include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 
+#ifdef JANK_PHASE_2
+extern "C" jank_object_ref jank_load_clojure_core();
+#endif
+
 namespace jank
 {
-  static void run(util::cli::options const &opts)
+  using util::cli::opts;
+
+  static void run()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -41,7 +52,8 @@ namespace jank
 
     {
       profile::timer const timer{ "eval user code" };
-      std::cout << runtime::to_code_string(__rt_ctx->eval_file(opts.target_file)) << "\n";
+      std::cout << runtime::to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file))
+                << "\n";
     }
 
     //ankerl::nanobench::Config config;
@@ -61,7 +73,7 @@ namespace jank
     //);
   }
 
-  static void run_main(util::cli::options const &opts)
+  static void run_main()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -95,7 +107,7 @@ namespace jank
     }
   }
 
-  static void compile_module(util::cli::options const &opts)
+  static void compile_module()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -107,7 +119,7 @@ namespace jank
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
-  static void repl(util::cli::options const &opts)
+  static void repl()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -122,6 +134,10 @@ namespace jank
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+
+    dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
+    dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
+                 make_box<obj::symbol>("clojure.core"));
 
     if(!opts.target_module.empty())
     {
@@ -154,6 +170,12 @@ namespace jank
       auto &line(*buf);
       util::trim(line);
 
+      if(line.empty())
+      {
+        std::cout << "\n";
+        continue;
+      }
+
       if(line.ends_with("\\"))
       {
         input.append(line.substr(0, line.size() - 1));
@@ -183,7 +205,7 @@ namespace jank
     }
   }
 
-  static void cpp_repl(util::cli::options const &opts)
+  static void cpp_repl()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -234,7 +256,7 @@ namespace jank
     }
   }
 
-  static void compile(util::cli::options const &opts)
+  static void compile()
   {
     using namespace jank;
     using namespace jank::runtime;
@@ -245,14 +267,7 @@ namespace jank
     }
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
-    auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
-    if(main_var.is_nil())
-    {
-      throw std::runtime_error{ util::format("Could not find #'{}/-main function!",
-                                             opts.target_module) };
-    }
-
-    jank::aot::processor const aot_prc{ opts };
+    jank::aot::processor const aot_prc{};
     aot_prc.compile(opts.target_module).expect_ok();
   }
 }
@@ -260,6 +275,9 @@ namespace jank
 // NOLINTNEXTLINE(bugprone-exception-escape): This can only happen if we fail to report an error.
 int main(int const argc, char const **argv)
 {
+  /* TODO: We need an init fn in libjank which sets all of this up so we don't
+   * need to duplicate it between here and the tests and so that anyone embedding
+   * jank doesn't need to duplicate it in their setup. */
   using namespace jank;
   using namespace jank::runtime;
 
@@ -269,42 +287,54 @@ int main(int const argc, char const **argv)
     {
       return parse_result.expect_err();
     }
-    auto const &opts(parse_result.expect_ok());
 
-    if(opts.gc_incremental)
+    if(jank::util::cli::opts.gc_incremental)
     {
       GC_enable_incremental();
     }
 
-    profile::configure(opts);
+    profile::configure();
     profile::timer const timer{ "main" };
 
-    __rt_ctx = new(GC) runtime::context{ opts };
+    if(util::cli::opts.command == util::cli::command::check_health)
+    {
+      return jank::environment::check_health() ? 0 : 1;
+    }
+
+    __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
-    jank_load_clojure_string_native();
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 
-    switch(opts.command)
+#ifdef JANK_PHASE_2
+    jank_load_clojure_core();
+    __rt_ctx->module_loader.set_is_loaded("/clojure.core");
+#endif
+
+    Cpp::EnableDebugOutput(false);
+
+    switch(jank::util::cli::opts.command)
     {
       case util::cli::command::run:
-        run(opts);
+        run();
         break;
       case util::cli::command::compile_module:
-        compile_module(opts);
+        compile_module();
         break;
       case util::cli::command::repl:
-        repl(opts);
+        repl();
         break;
       case util::cli::command::cpp_repl:
-        cpp_repl(opts);
+        cpp_repl();
         break;
       case util::cli::command::run_main:
-        run_main(opts);
+        run_main();
         break;
       case util::cli::command::compile:
-        compile(opts);
+        compile();
+        break;
+      case util::cli::command::check_health:
         break;
     }
     return 0;

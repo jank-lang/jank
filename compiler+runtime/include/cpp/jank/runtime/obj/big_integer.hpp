@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     /* behavior::object_like */
     bool equal(object const &) const;
     jtl::immutable_string to_string() const;
-    void to_string(util::string_builder &buff) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
@@ -77,23 +77,13 @@ namespace jank::runtime::obj
   /* For some reason, operators defined in jank::runtime namespace cannot be accessed from jank namespace.
    * We therefore added the following as a workaround. The root cause is not clear, likely due to boost cpp_int quirks.*/
   using jank::runtime::operator+;
-  using jank::runtime::operator+;
-  using jank::runtime::operator-;
   using jank::runtime::operator-;
   using jank::runtime::operator*;
-  using jank::runtime::operator*;
-  using jank::runtime::operator/;
   using jank::runtime::operator/;
   using jank::runtime::operator==;
-  using jank::runtime::operator==;
-  using jank::runtime::operator!=;
   using jank::runtime::operator!=;
   using jank::runtime::operator<;
-  using jank::runtime::operator<;
-  using jank::runtime::operator<=;
   using jank::runtime::operator<=;
   using jank::runtime::operator>;
-  using jank::runtime::operator>;
-  using jank::runtime::operator>=;
   using jank::runtime::operator>=;
 }

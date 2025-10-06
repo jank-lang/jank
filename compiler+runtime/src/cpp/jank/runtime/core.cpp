@@ -2,6 +2,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
+#include <jank/runtime/behavior/ref_like.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
@@ -58,6 +59,42 @@ namespace jank::runtime
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
+  object_ref to_unqualified_symbol(object_ref const o)
+  {
+    return runtime::visit_object(
+      [&](auto const typed_o) -> object_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::symbol>)
+        {
+          return typed_o;
+        }
+        else if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return make_box<obj::symbol>(typed_o->data);
+        }
+        else if constexpr(std::same_as<T, var>)
+        {
+          return make_box<obj::symbol>(typed_o->n->name->name, typed_o->name->name);
+        }
+        else if constexpr(std::same_as<T, obj::keyword>)
+        {
+          return typed_o->sym;
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("can't convert {} to a symbol",
+                                                 typed_o->to_code_string()) };
+        }
+      },
+      o);
+  }
+
+  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  {
+    return make_box<obj::symbol>(ns, name);
+  }
+
   object_ref print(object_ref const args)
   {
     visit_object(
@@ -66,7 +103,7 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {
@@ -97,7 +134,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_string(typed_more->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_more).skip(1))
           {
@@ -125,7 +162,7 @@ namespace jank::runtime
 
         if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {
@@ -156,7 +193,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          util::string_builder buff;
+          jtl::string_builder buff;
           runtime::to_code_string(typed_args->first().erase(), buff);
           for(auto const e : make_sequence_range(typed_args).skip(1))
           {
@@ -279,6 +316,24 @@ namespace jank::runtime
 
   object_ref keyword(object_ref const ns, object_ref const name)
   {
+    if(!ns.is_nil() && ns->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ util::format(
+        "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
+        runtime::to_code_string(ns)) };
+    }
+    if(name->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ util::format(
+        "The 'keyword' function expects the name to be a 'string', got {} instead.",
+        runtime::to_code_string(name)) };
+    }
+
+    if(ns.is_nil())
+    {
+      return __rt_ctx->intern_keyword(runtime::to_string(name)).expect_ok();
+    }
+
     return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
@@ -476,5 +531,182 @@ namespace jank::runtime
   bool is_tagged_literal(object_ref const o)
   {
     return o->type == object_type::tagged_literal;
+  }
+
+  object_ref re_pattern(object_ref const o)
+  {
+    return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
+  }
+
+  object_ref re_matcher(object_ref const re, object_ref const s)
+  {
+    return make_box<obj::re_matcher>(try_object<obj::re_pattern>(re),
+                                     try_object<obj::persistent_string>(s)->data);
+  }
+
+  object_ref smatch_to_vector(std::smatch const &match_results)
+  {
+    auto const size(match_results.size());
+    switch(size)
+    {
+      case 0:
+        return jank_nil;
+      case 1:
+        {
+          return make_box<obj::persistent_string>(match_results[0].str());
+        }
+      default:
+        {
+          native_vector<object_ref> vec;
+          vec.reserve(size);
+
+          for(auto const s : match_results)
+          {
+            vec.emplace_back(make_box<obj::persistent_string>(s.str()));
+          }
+
+          return make_box<obj::persistent_vector>(
+            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+        }
+    }
+  }
+
+  object_ref re_find(object_ref const m)
+  {
+    std::smatch match_results{};
+    auto const matcher(try_object<obj::re_matcher>(m));
+    std::regex_search(matcher->match_input, match_results, matcher->re->regex);
+
+    // Copy out the match result substrings before mutating the source
+    // match_input string below.
+    matcher->groups = smatch_to_vector(match_results);
+
+    if(!match_results.empty())
+    {
+      matcher->match_input = match_results.suffix().str();
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_groups(object_ref const m)
+  {
+    auto const matcher(try_object<obj::re_matcher>(m));
+
+    if(matcher->groups.is_nil())
+    {
+      throw std::runtime_error{ "No match found" };
+    }
+
+    return matcher->groups;
+  }
+
+  object_ref re_matches(object_ref const re, object_ref const s)
+  {
+    std::smatch match_results{};
+    std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
+
+    std::regex_search(search_str,
+                      match_results,
+                      try_object<obj::re_pattern>(re)->regex,
+                      std::regex_constants::match_continuous);
+
+    if(!match_results.suffix().str().empty())
+    {
+      return jank_nil;
+    }
+
+    return smatch_to_vector(match_results);
+  }
+
+  object_ref parse_uuid(object_ref const o)
+  {
+    if(o->type == object_type::persistent_string)
+    {
+      try
+      {
+        return make_box<obj::uuid>(expect_object<obj::persistent_string>(o)->data);
+      }
+      catch(...)
+      {
+        return jank_nil;
+      }
+    }
+    else
+    {
+      throw std::runtime_error{ util::format("expected string, got {}", object_type_str(o->type)) };
+    }
+  }
+
+  bool is_uuid(object_ref const o)
+  {
+    return o->type == object_type::uuid;
+  }
+
+  object_ref random_uuid()
+  {
+    return make_box<obj::uuid>();
+  }
+
+  bool is_inst(object_ref const o)
+  {
+    return o->type == object_type::inst;
+  }
+
+  i64 inst_ms(object_ref const o)
+  {
+    if(o->type != object_type::inst)
+    {
+      throw std::runtime_error{ util::format("The function 'inst-ms' expects an inst, got {}",
+                                             object_type_str(o->type)) };
+    }
+
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+             expect_object<obj::inst>(o)->value.time_since_epoch())
+      .count();
+  }
+
+  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  {
+    visit_object(
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          typed_reference->add_watch(key, fn);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'add-watch' because it is not ref_like: {}",
+            typed_reference->to_code_string()) };
+        }
+      },
+      reference);
+
+    return reference;
+  }
+
+  object_ref remove_watch(object_ref const reference, object_ref const key)
+  {
+    visit_object(
+      [=](auto const typed_reference) -> void {
+        using T = typename decltype(typed_reference)::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          typed_reference->remove_watch(key);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'remove-watch' because it is not ref_like: {}",
+            typed_reference->to_code_string()) };
+        }
+      },
+      reference);
+
+    return reference;
   }
 }

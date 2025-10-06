@@ -38,4 +38,15 @@ namespace jank::analyze::expr
                                                           make_box("else"),
                                                           jank::detail::to_runtime_data(else_)));
   }
+
+  void if_::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    f(condition);
+    f(then);
+    if(else_.is_some())
+    {
+      f(else_.unwrap());
+    }
+    expression::walk(f);
+  }
 }

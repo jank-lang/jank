@@ -13,7 +13,7 @@ namespace jtl
     template <bool Ok, typename T>
     struct result
     {
-      constexpr result(T const &t) noexcept
+      constexpr result(T const &t)
         : data{ t }
       {
       }
@@ -43,8 +43,8 @@ namespace jtl
     return { std::forward<R>(data) };
   }
   template <typename E, typename Decayed = std::decay_t<E>>
-  constexpr detail::result<false, Decayed> err(E &&data) noexcept
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+  constexpr detail::result<false, Decayed> err(E &&data)
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay) */
   {
     return { std::forward<E>(data) };
   }

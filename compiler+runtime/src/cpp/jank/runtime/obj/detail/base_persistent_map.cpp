@@ -48,7 +48,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   void base_persistent_map<PT, ST, V>::to_string_impl(typename V::const_iterator const &begin,
                                                       typename V::const_iterator const &end,
-                                                      util::string_builder &buff,
+                                                      jtl::string_builder &buff,
                                                       bool const to_code)
   {
     auto inserter(std::back_inserter(buff));
@@ -85,7 +85,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  void base_persistent_map<PT, ST, V>::to_string(util::string_builder &buff) const
+  void base_persistent_map<PT, ST, V>::to_string(jtl::string_builder &buff) const
   {
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
@@ -96,7 +96,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   jtl::immutable_string base_persistent_map<PT, ST, V>::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
                    buff,
@@ -107,7 +107,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   jtl::immutable_string base_persistent_map<PT, ST, V>::to_code_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(static_cast<PT const *>(this)->data.begin(),
                    static_cast<PT const *>(this)->data.end(),
                    buff,

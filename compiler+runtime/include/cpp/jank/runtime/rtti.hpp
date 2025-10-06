@@ -32,7 +32,7 @@ namespace jank::runtime
   {
     if(o->type != T::obj_type)
     {
-      util::string_builder sb;
+      jtl::string_builder sb;
       sb("invalid object type (expected ");
       sb(object_type_str(T::obj_type));
       sb(" found ");

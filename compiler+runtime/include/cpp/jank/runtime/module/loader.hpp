@@ -75,7 +75,7 @@ namespace jank::runtime::module
     char const *data() const;
     usize size() const;
 
-    native_persistent_string_view view() const;
+    jtl::immutable_string_view view() const;
 
   private:
     /* In the case where we map a file, we track this information so we can read it and
@@ -98,6 +98,7 @@ namespace jank::runtime::module
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
   bool is_nested_module(jtl::immutable_string const &module);
+  jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module);
 
   struct loader
   {
@@ -132,11 +133,13 @@ namespace jank::runtime::module
     /* These separators match what the JVM does on each system. */
 #ifdef _WIN32
     static constexpr char module_separator{ ';' };
+    static constexpr char const *module_separator_name{ "semicolon" };
 #else
     static constexpr char module_separator{ ':' };
+    static constexpr char const *module_separator_name{ "colon" };
 #endif
 
-    loader(context &rt_ctx, jtl::immutable_string const &ps);
+    loader();
 
     static jtl::string_result<file_view> read_file(jtl::immutable_string const &path);
 
@@ -153,9 +156,11 @@ namespace jank::runtime::module
     jtl::string_result<void> load_jank(file_entry const &entry) const;
     jtl::string_result<void> load_cljc(file_entry const &entry) const;
 
+    /* This only adds a single path, so it's assumed there's no separator present. */
+    void add_path(jtl::immutable_string const &path);
+
     object_ref to_runtime_data() const;
 
-    context &rt_ctx;
     jtl::immutable_string paths;
     /* TODO: These will need synchonization. */
     /* This maps module strings to entries. Module strings are like fully qualified Java

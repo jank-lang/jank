@@ -1,12 +1,11 @@
-#include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 #include <jank/runtime/core.hpp>
-#include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
-#include <jank/runtime/convert/function.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/re_pattern.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 #include <jank/util/string.hpp>
 
 namespace clojure::string_native
@@ -14,7 +13,7 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ref blank(object_ref const s)
+  object_ref blank(object_ref const s)
   {
     if(runtime::is_nil(s))
     {
@@ -24,69 +23,363 @@ namespace clojure::string_native
     return make_box(s_str.is_blank());
   }
 
-  static object_ref reverse(object_ref const s)
+  object_ref reverse(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box<obj::persistent_string>(jtl::immutable_string{ s_str.rbegin(), s_str.rend() });
   }
 
-  static object_ref lower_case(object_ref const s)
+  object_ref lower_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_lowercase(s_str));
   }
 
-  static object_ref starts_with(object_ref const s, object_ref const substr)
+  object_ref starts_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.starts_with(substr_str));
   }
 
-  static object_ref ends_with(object_ref const s, object_ref const substr)
+  object_ref ends_with(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.ends_with(substr_str));
   }
 
-  static object_ref includes(object_ref const s, object_ref const substr)
+  object_ref includes(object_ref const s, object_ref const substr)
   {
     auto const s_str(runtime::to_string(s));
     auto const substr_str(runtime::to_string(substr));
     return make_box(s_str.contains(substr_str));
   }
 
-  static object_ref upper_case(object_ref const s)
+  object_ref upper_case(object_ref const s)
   {
     auto const s_str(runtime::to_string(s));
     return make_box(util::to_uppercase(s_str));
   }
-}
 
-extern "C" jank_object_ref jank_load_clojure_string_native()
-{
-  using namespace jank;
-  using namespace jank::runtime;
-  using namespace clojure;
+  static jtl::immutable_string replace_first(jtl::immutable_string const &s,
+                                             jtl::immutable_string const &match,
+                                             jtl::immutable_string const &replacement)
+  {
+    auto const i(s.find(match));
 
-  auto const ns(__rt_ctx->intern_ns("clojure.string-native"));
+    if(i == jtl::immutable_string::npos)
+    {
+      return s;
+    }
 
-  auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
-    ns->intern_var(name)->bind_root(
-      make_box<obj::native_function_wrapper>(convert_function(fn))
-        ->with_meta(obj::persistent_hash_map::create_unique(std::make_pair(
-          __rt_ctx->intern_keyword("name").expect_ok(),
-          make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
-  });
+    auto const s_size(s.size());
+    auto const match_size(match.size());
+    auto const replacement_size(replacement.size());
 
-  intern_fn("blank?", &string_native::blank);
-  intern_fn("ends-with?", &string_native::ends_with);
-  intern_fn("includes?", &string_native::includes);
-  intern_fn("lower-case", &string_native::lower_case);
-  intern_fn("reverse", &string_native::reverse);
-  intern_fn("starts-with?", &string_native::starts_with);
-  intern_fn("upper-case", &string_native::upper_case);
+    jtl::string_builder buff{ s_size - match_size + replacement_size };
+    buff(s.substr(0, i));
+    buff(replacement);
 
-  return jank_nil.erase();
+    auto const rest_i(i + match_size);
+
+    if(rest_i < s_size)
+    {
+      buff(s.substr(rest_i));
+    }
+
+    return buff.release();
+  }
+
+  static jtl::immutable_string replace_first(jtl::immutable_string const &s,
+                                             std::regex const &match,
+                                             jtl::immutable_string const &replacement)
+  {
+    auto const out_str(std::regex_replace(s.c_str(),
+                                          match,
+                                          replacement.c_str(),
+                                          std::regex_constants::format_first_only));
+
+    return jtl::immutable_string{ out_str.c_str() };
+  }
+
+  static jtl::immutable_string replace_first(jtl::immutable_string const &s,
+                                             std::regex const &match,
+                                             object_ref const replacement)
+  {
+    std::smatch match_results{};
+    std::string const search_str{ s.c_str() };
+    std::regex_search(search_str, match_results, match);
+
+    if(match_results.empty())
+    {
+      return s;
+    }
+
+    auto const i(match_results.position(0));
+
+    jtl::string_builder buff;
+    buff(s.substr(0, i));
+
+    auto const group(smatch_to_vector(match_results));
+    auto const replacement_value(dynamic_call(replacement, group));
+    buff(try_object<obj::persistent_string>(replacement_value)->data);
+
+    auto const rest_i(i + match_results[0].str().size());
+
+    if(rest_i < s.size())
+    {
+      buff(s.substr(rest_i));
+    }
+
+    return buff.release();
+  }
+
+  static jtl::immutable_string replace_first(jtl::immutable_string const &s,
+                                             object_ref const match,
+                                             object_ref const replacement)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(match->type)
+    {
+      case object_type::character:
+        return replace_first(s,
+                             try_object<obj::character>(match)->data,
+                             try_object<obj::character>(replacement)->data);
+      case object_type::persistent_string:
+        return replace_first(s,
+                             try_object<obj::persistent_string>(match)->data,
+                             try_object<obj::persistent_string>(replacement)->data);
+      case object_type::re_pattern:
+        if(replacement->type == object_type::persistent_string)
+        {
+          return replace_first(s,
+                               try_object<obj::re_pattern>(match)->regex,
+                               try_object<obj::persistent_string>(replacement)->data);
+        }
+
+        return replace_first(s, try_object<obj::re_pattern>(match)->regex, replacement);
+      default:
+        throw std::runtime_error{ util::format("Invalid match arg: {}",
+                                               runtime::to_code_string(match)) };
+    }
+#pragma clang diagnostic pop
+  }
+
+  object_ref replace_first(object_ref const s, object_ref const match, object_ref const replacement)
+  {
+    auto const is_string(s->type == object_type::persistent_string);
+    auto const &s_str(is_string ? try_object<obj::persistent_string>(s)->data
+                                : runtime::to_string(s));
+
+    auto const output_str(replace_first(s_str, match, replacement));
+
+    return is_string && output_str == s_str ? s : make_box(output_str);
+  }
+
+  i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const value_str(runtime::to_string(value));
+    auto const pos(try_object<obj::integer>(from_index)->data);
+    return static_cast<i64>(s_str.find(value_str, pos));
+  }
+
+  i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const value_str(runtime::to_string(value));
+    auto const pos(try_object<obj::integer>(from_index)->data);
+    return static_cast<i64>(s_str.rfind(value_str, pos));
+  }
+
+  static object_ref empty_string()
+  {
+    static auto const s(make_box(jtl::immutable_string{}));
+    return s;
+  }
+
+  static jtl::immutable_string::size_type triml_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ 0 };
+
+    for(; i < s_size; ++i)
+    {
+      if(!std::isspace(s[i]))
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref triml(object_ref const s)
+  {
+    auto const s_str(runtime::to_string(s));
+    auto const l(triml_index(s_str));
+
+    if(l == 0)
+    {
+      return s;
+    }
+
+    if(l == s_str.size())
+    {
+      return empty_string();
+    }
+
+    return make_box(s_str.substr(l));
+  }
+
+  static jtl::immutable_string::size_type trimr_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ s_size };
+
+    for(; i > 0; --i)
+    {
+      if(!std::isspace(s[i - 1]))
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref trimr(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const r(trimr_index(s_str));
+
+    if(r == s_str.size())
+    {
+      return s;
+    }
+
+    if(r == 0)
+    {
+      return empty_string();
+    }
+
+    return make_box(s_str.substr(0, r));
+  }
+
+  object_ref trim(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const r(trimr_index(s_str));
+
+    if(r == 0)
+    {
+      return empty_string();
+    }
+
+    auto const l(triml_index(s_str));
+
+    if(l == 0 && r == s_str.size())
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(l, r - l));
+  }
+
+  static jtl::immutable_string::size_type trim_newline_index(jtl::immutable_string const &s)
+  {
+    auto const s_size(s.size());
+    jtl::immutable_string::size_type i{ s_size };
+
+    for(; i > 0; --i)
+    {
+      auto const c(s[i - 1]);
+      if(c != '\n' && c != '\r')
+      {
+        break;
+      }
+    }
+
+    return i;
+  }
+
+  object_ref trim_newline(object_ref const s)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const r(trim_newline_index(s_str));
+
+    if(r == s_str.size())
+    {
+      return s;
+    }
+
+    return make_box(s_str.substr(0, r));
+  }
+
+  object_ref split(object_ref const s, object_ref const re)
+  {
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const regex(try_object<obj::re_pattern>(re)->regex);
+
+    std::string const search_str{ s_str.c_str() };
+
+    native_vector<object_ref> vec;
+    std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
+    std::sregex_token_iterator const end;
+
+    if(iter != end && iter->str().empty())
+    {
+      ++iter;
+    }
+
+    for(; iter != end; ++iter)
+    {
+      vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
+    }
+
+    return make_box<obj::persistent_vector>(
+      runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+  }
+
+  object_ref split(object_ref const s, object_ref const re, object_ref const limit)
+  {
+    auto const limit_int(try_object<obj::integer>(limit)->data);
+
+    if(limit_int < 1)
+    {
+      return split(s, re);
+    }
+
+    auto const s_str(try_object<obj::persistent_string>(s)->data);
+    auto const regex(try_object<obj::re_pattern>(re)->regex);
+
+    std::string const search_str{ s_str.c_str() };
+
+    native_vector<object_ref> vec;
+    vec.reserve(limit_int);
+
+    std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
+    std::sregex_token_iterator const end;
+
+    if(iter != end && iter->str().empty())
+    {
+      ++iter;
+    }
+
+    int i{ 1 };
+    for(; i < limit_int && iter != end; ++i, ++iter)
+    {
+      vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
+    }
+
+    if(i == limit_int)
+    {
+      vec.emplace_back(make_box(s_str.substr(iter->first - search_str.begin())));
+    }
+
+    return make_box<obj::persistent_vector>(
+      runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+  }
 }

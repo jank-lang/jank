@@ -5,27 +5,9 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt/print.hpp>
-#include <jank/runtime/obj/big_integer.hpp>
 
 namespace jank::runtime
 {
-  template <typename T>
-  static auto to_number(T const &t)
-  {
-    if constexpr(std::same_as<T, obj::ratio_data>)
-    {
-      return t.to_real();
-    }
-    else if constexpr(std::same_as<T, native_big_integer>)
-    {
-      return t.template convert_to<f64>();
-    }
-    else
-    {
-      return t;
-    }
-  }
-
   template <typename T>
   static f64 to_real(T const &val)
   {
@@ -33,7 +15,8 @@ namespace jank::runtime
     {
       return static_cast<f64>(val);
     }
-    else if constexpr(std::is_same_v<T, native_big_integer>)
+    else if constexpr(std::is_same_v<T, native_big_integer>
+                      || std::is_same_v<T, native_big_decimal>)
     {
       return val.template convert_to<f64>();
     }
@@ -98,18 +81,22 @@ namespace jank::runtime
     return l->data + r->data;
   }
 
-  f64 add(obj::real_ref const l, object_ref const r)
+  object_ref add(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l + typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l + typed_r->data);
+      },
       r,
       l->data);
   }
 
-  f64 add(object_ref const l, obj::real_ref const r)
+  object_ref add(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data + typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data + typed_r);
+      },
       l,
       r->data);
   }
@@ -124,18 +111,22 @@ namespace jank::runtime
     return static_cast<f64>(l->data) + r->data;
   }
 
-  f64 add(object_ref const l, f64 const r)
+  object_ref add(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data + typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data + typed_r);
+      },
       l,
       r);
   }
 
-  f64 add(f64 const l, object_ref const r)
+  object_ref add(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l + typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l + typed_r->data);
+      },
       r,
       l);
   }
@@ -225,18 +216,22 @@ namespace jank::runtime
     return l->data - r->data;
   }
 
-  f64 sub(obj::real_ref const l, object_ref const r)
+  object_ref sub(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l - typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l - typed_r->data);
+      },
       r,
       l->data);
   }
 
-  f64 sub(object_ref const l, obj::real_ref const r)
+  object_ref sub(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data - typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data - typed_r);
+      },
       l,
       r->data);
   }
@@ -251,18 +246,22 @@ namespace jank::runtime
     return static_cast<f64>(l->data) - r->data;
   }
 
-  f64 sub(object_ref const l, f64 const r)
+  object_ref sub(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data - typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data - typed_r);
+      },
       l,
       r);
   }
 
-  f64 sub(f64 const l, object_ref const r)
+  object_ref sub(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l - typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l - typed_r->data);
+      },
       r,
       l);
   }
@@ -352,18 +351,22 @@ namespace jank::runtime
     return l->data / r->data;
   }
 
-  f64 div(obj::real_ref const l, object_ref const r)
+  object_ref div(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l / typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l / typed_r->data);
+      },
       r,
       l->data);
   }
 
-  f64 div(object_ref const l, obj::real_ref const r)
+  object_ref div(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data / typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data / typed_r);
+      },
       l,
       r->data);
   }
@@ -378,18 +381,22 @@ namespace jank::runtime
     return static_cast<f64>(l->data) / r->data;
   }
 
-  f64 div(object_ref const l, f64 const r)
+  object_ref div(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data / typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data / typed_r);
+      },
       l,
       r);
   }
 
-  f64 div(f64 const l, object_ref const r)
+  object_ref div(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l / typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l / typed_r->data);
+      },
       r,
       l);
   }
@@ -479,18 +486,22 @@ namespace jank::runtime
     return l->data * r->data;
   }
 
-  f64 mul(obj::real_ref const l, object_ref const r)
+  object_ref mul(obj::real_ref const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l * typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l * typed_r->data);
+      },
       r,
       l->data);
   }
 
-  f64 mul(object_ref const l, obj::real_ref const r)
+  object_ref mul(object_ref const l, obj::real_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data * typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data * typed_r);
+      },
       l,
       r->data);
   }
@@ -505,18 +516,22 @@ namespace jank::runtime
     return static_cast<f64>(l->data) * r->data;
   }
 
-  f64 mul(object_ref const l, f64 const r)
+  object_ref mul(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 { return typed_l->data * typed_r; },
+      [](auto const typed_l, auto const typed_r) -> object_ref {
+        return make_box(typed_l->data * typed_r);
+      },
       l,
       r);
   }
 
-  f64 mul(f64 const l, object_ref const r)
+  object_ref mul(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 { return typed_l * typed_r->data; },
+      [](auto const typed_r, auto const typed_l) -> object_ref {
+        return make_box(typed_l * typed_r->data);
+      },
       r,
       l);
   }
@@ -623,7 +638,7 @@ namespace jank::runtime
             }
             else
             {
-              return make_box(long(typed_l_data / typed_r_data)).erase();
+              return make_box(static_cast<i64>(typed_l_data / typed_r_data)).erase();
             }
           },
           r,
@@ -1354,25 +1369,25 @@ namespace jank::runtime
     return std::max(static_cast<f64>(l->data), r->data);
   }
 
-  f64 max(object_ref const l, f64 const r)
+  object_ref max(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
+      [](auto const typed_l, auto const typed_r) -> object_ref {
         auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
+        return make_box(std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data)));
       },
       l,
       r);
   }
 
-  f64 max(f64 const l, object_ref const r)
+  object_ref max(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
+      [](auto const typed_r, auto const typed_l) -> object_ref {
         auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
+        return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data)));
       },
       r,
       l);
@@ -1567,25 +1582,25 @@ namespace jank::runtime
     return std::pow(static_cast<f64>(l->data), r->data);
   }
 
-  f64 pow(object_ref const l, f64 const r)
+  object_ref pow(object_ref const l, f64 const r)
   {
     return visit_number_like(
-      [](auto const typed_l, auto const typed_r) -> f64 {
+      [](auto const typed_l, auto const typed_r) -> object_ref {
         auto const typed_l_data{ to_real(typed_l->data) };
         using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
-        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
+        return make_box(std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r)));
       },
       l,
       r);
   }
 
-  f64 pow(f64 const l, object_ref const r)
+  object_ref pow(f64 const l, object_ref const r)
   {
     return visit_number_like(
-      [](auto const typed_r, auto const typed_l) -> f64 {
+      [](auto const typed_r, auto const typed_l) -> object_ref {
         auto const typed_r_data{ to_real(typed_r->data) };
         using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
-        return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
+        return make_box(std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data)));
       },
       r,
       l);
@@ -1733,6 +1748,7 @@ namespace jank::runtime
       o);
   }
 
+  /* TODO: Rename these to match the type name. */
   i64 parse_long(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };

@@ -87,7 +87,7 @@ namespace jank::runtime
   bool is_map(object_ref o);
   bool is_associative(object_ref o);
   bool is_set(object_ref o);
-  bool is_counter(object_ref o);
+  bool is_counted(object_ref o);
   bool is_transientable(object_ref o);
   bool is_sorted(object_ref o);
 
@@ -135,6 +135,7 @@ namespace jank::runtime
   object_ref pop(object_ref o);
   object_ref empty(object_ref o);
 
+  jtl::immutable_string str(object_ref o);
   jtl::immutable_string str(object_ref o, object_ref args);
 
   obj::persistent_list_ref list(object_ref s);

@@ -1,0 +1,3 @@
+(let [npos cpp/std.string.npos]
+  (if (= "-1" (str npos))
+    :success))

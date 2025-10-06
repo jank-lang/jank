@@ -1,0 +1,8 @@
+(let* [x :success]
+  ((fn* y [done?]
+     (if done?
+       x
+       ((fn* z []
+          ((fn* a []
+             (y true)))))))
+   false))

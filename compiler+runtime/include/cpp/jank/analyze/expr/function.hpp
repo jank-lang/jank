@@ -20,7 +20,7 @@ namespace jank::analyze::expr
 
   struct function_context : gc
   {
-    static constexpr bool pointer_free{ true };
+    static constexpr bool pointer_free{ false };
 
     jtl::ptr<function> fn;
     jtl::immutable_string name;
@@ -70,6 +70,7 @@ namespace jank::analyze::expr
      * doesn't use any captures. */
     native_unordered_map<runtime::obj::symbol_ref, local_binding_ptr> captures() const;
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     jtl::immutable_string name;
     jtl::immutable_string unique_name;

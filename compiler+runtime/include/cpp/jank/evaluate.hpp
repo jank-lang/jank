@@ -35,7 +35,19 @@ namespace jank::analyze
     using throw_ref = jtl::ref<struct throw_>;
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
-    using function_ref = jtl::ref<struct function>;
+    using cpp_raw_ref = jtl::ref<struct cpp_raw>;
+    using cpp_type_ref = jtl::ref<struct cpp_type>;
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_call_ref = jtl::ref<struct cpp_call>;
+    using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+    using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
+    using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
+    using cpp_box_ref = jtl::ref<struct cpp_box>;
+    using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_new_ref = jtl::ref<struct cpp_new>;
+    using cpp_delete_ref = jtl::ref<struct cpp_delete>;
   }
 }
 
@@ -48,6 +60,8 @@ namespace jank::evaluate
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);
 
+  /* XXX: Evaluating an expression will modify it. Do NOT reuse that expression elsewhere
+   * afterward, unless it's also for eval. */
   runtime::object_ref eval(analyze::expression_ref);
   runtime::object_ref eval(analyze::expr::def_ref);
   runtime::object_ref eval(analyze::expr::var_deref_ref);
@@ -70,4 +84,17 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::throw_ref);
   runtime::object_ref eval(analyze::expr::try_ref);
   runtime::object_ref eval(analyze::expr::case_ref);
+  runtime::object_ref eval(analyze::expr::cpp_raw_ref);
+  runtime::object_ref eval(analyze::expr::cpp_type_ref);
+  runtime::object_ref eval(analyze::expr::cpp_value_ref);
+  runtime::object_ref eval(analyze::expr::cpp_cast_ref);
+  runtime::object_ref eval(analyze::expr::cpp_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_constructor_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_member_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_member_access_ref);
+  runtime::object_ref eval(analyze::expr::cpp_builtin_operator_call_ref);
+  runtime::object_ref eval(analyze::expr::cpp_box_ref);
+  runtime::object_ref eval(analyze::expr::cpp_unbox_ref);
+  runtime::object_ref eval(analyze::expr::cpp_new_ref);
+  runtime::object_ref eval(analyze::expr::cpp_delete_ref);
 }

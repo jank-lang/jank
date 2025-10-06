@@ -25,18 +25,25 @@ namespace jank::runtime
 
 namespace jank::analyze
 {
+  namespace expr
+  {
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using let_ptr = jtl::ptr<struct let>;
+  }
+
   enum class source_type : u8
   {
     repl,
     file
   };
 
+  enum class literal_kind : u8;
+
   struct processor
   {
     using expression_result = jtl::result<expression_ref, error_ref>;
 
-    processor() = delete;
-    processor(runtime::context &rt_ctx);
+    processor();
     processor(processor const &) = default;
     processor(processor &&) noexcept = default;
 
@@ -87,7 +94,7 @@ namespace jank::analyze
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   bool needs_box);
-    expression_result analyze_letfn(runtime::obj::persistent_list_ref const &,
+    expression_result analyze_letfn(runtime::obj::persistent_list_ref const,
                                     local_frame_ptr,
                                     expression_position,
                                     jtl::option<expr::function_context_ref> const &,
@@ -153,22 +160,84 @@ namespace jank::analyze
                                    expression_position,
                                    jtl::option<expr::function_context_ref> const &,
                                    bool needs_box);
+    expression_result analyze_cpp_symbol(runtime::obj::symbol_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool needs_box);
+    expression_result analyze_cpp_call(runtime::obj::persistent_list_ref const,
+                                       expression_ref,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_raw(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_literal(runtime::obj::persistent_list_ref const,
+                                          local_frame_ptr,
+                                          expression_position,
+                                          jtl::option<expr::function_context_ref> const &,
+                                          bool needs_box,
+                                          literal_kind kind);
+    expression_result analyze_cpp_type(runtime::obj::persistent_list_ref const,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_value(runtime::obj::persistent_list_ref const,
+                                        local_frame_ptr,
+                                        expression_position,
+                                        jtl::option<expr::function_context_ref> const &,
+                                        bool needs_box);
+    expression_result analyze_cpp_cast(runtime::obj::persistent_list_ref const,
+                                       local_frame_ptr,
+                                       expression_position,
+                                       jtl::option<expr::function_context_ref> const &,
+                                       bool needs_box);
+    expression_result analyze_cpp_box(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_unbox(runtime::obj::persistent_list_ref const,
+                                        local_frame_ptr,
+                                        expression_position,
+                                        jtl::option<expr::function_context_ref> const &,
+                                        bool needs_box);
+    expression_result analyze_cpp_new(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_delete(runtime::obj::persistent_list_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool needs_box);
+    expression_result analyze_cpp_member_access(runtime::obj::persistent_list_ref const,
+                                                expr::cpp_value_ref,
+                                                local_frame_ptr,
+                                                expression_position,
+                                                jtl::option<expr::function_context_ref> const &,
+                                                bool needs_box);
 
     /* Returns whether the form is a special symbol. */
     bool is_special(runtime::object_ref form);
 
     using special_function_type
-      = std::function<expression_result(runtime::obj::persistent_list_ref const,
-                                        local_frame_ptr,
-                                        expression_position,
-                                        jtl::option<expr::function_context_ref> const &,
-                                        bool)>;
+      = expression_result (processor::*)(runtime::obj::persistent_list_ref const,
+                                         local_frame_ptr,
+                                         expression_position,
+                                         jtl::option<expr::function_context_ref> const &,
+                                         bool);
 
     native_unordered_map<runtime::obj::symbol_ref, special_function_type> specials;
     native_unordered_map<runtime::var_ref, expression_ref> vars;
-    /* TODO: Remove this. */
-    runtime::context &rt_ctx;
     local_frame_ptr root_frame;
     native_vector<runtime::object_ref> macro_expansions;
+    jtl::option<expr::let_ptr> loop_details;
   };
 }

@@ -5,8 +5,8 @@
 
 namespace jank::runtime
 {
-  void to_string(object_ref o, util::string_builder &buff);
-  void to_code_string(object_ref o, util::string_builder &buff);
+  void to_string(object_ref o, jtl::string_builder &buff);
+  void to_code_string(object_ref o, jtl::string_builder &buff);
 
   namespace obj
   {
@@ -29,8 +29,8 @@ namespace jank::runtime::obj::detail
 
     /* behavior::object_like */
     bool equal(object const &o) const;
-    void to_string_impl(util::string_builder &buff, bool const to_code) const;
-    void to_string(util::string_builder &buff) const;
+    void to_string_impl(jtl::string_builder &buff, bool const to_code) const;
+    void to_string(jtl::string_builder &buff) const;
     jtl::immutable_string to_string() const;
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;

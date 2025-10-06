@@ -25,6 +25,15 @@
 [submodule "compiler+runtime/third-party/cpptrace"]
 	path = compiler+runtime/third-party/cpptrace
 	url = https://github.com/jank-lang/cpptrace
+[submodule "compiler+runtime/third-party/cppinterop"]
+	path = compiler+runtime/third-party/cppinterop
+	url = https://github.com/jank-lang/CppInterOp.git
 [submodule "compiler+runtime/third-party/boost-multiprecision"]
 	path = compiler+runtime/third-party/boost-multiprecision
 	url = https://github.com/jank-lang/boost-multiprecision.git
+[submodule "compiler+runtime/third-party/bdwgc"]
+	path = compiler+runtime/third-party/bdwgc
+	url = https://github.com/jank-lang/bdwgc.git
+[submodule "compiler+runtime/third-party/stduuid"]
+	path = compiler+runtime/third-party/stduuid
+	url = https://github.com/jank-lang/stduuid.git

@@ -55,20 +55,19 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  static void
-  to_string_impl(ns_ref const n, obj::symbol_ref const &name, util::string_builder &buff)
+  static void to_string_impl(ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
   {
     buff("#'")(n->name->name)('/')(name->name);
   }
 
-  void var::to_string(util::string_builder &buff) const
+  void var::to_string(jtl::string_builder &buff) const
   {
     to_string_impl(n, name, buff);
   }
   jtl::immutable_string var::to_string() const
   /* TODO: Maybe cache this. */
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string_impl(n, name, buff);
     return buff.release();
   }
@@ -130,7 +129,7 @@ namespace jank::runtime
     }
     else if(std::this_thread::get_id() != binding->thread_id)
     {
-      return err(util::format("Cannot set {} from a thread different from that which bound it",
+      return err(util::format("Cannot set {} from a thread different from that which bound it.",
                               to_string()));
     }
 
@@ -151,14 +150,14 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(n->rt_ctx.thread_binding_frames[&n->rt_ctx]);
+    auto &tbfs(__rt_ctx->thread_binding_frames[__rt_ctx]);
     if(tbfs.empty())
     {
       return {};
     }
 
     auto const found(tbfs.front().bindings->get_entry(this));
-    if(found == jank_nil)
+    if(found.is_nil())
     {
       return {};
     }
@@ -203,7 +202,7 @@ namespace jank::runtime
     return var_thread_binding::to_string();
   }
 
-  void var_thread_binding::to_string(util::string_builder &buff) const
+  void var_thread_binding::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(value, buff);
   }
@@ -225,12 +224,12 @@ namespace jank::runtime
 
   jtl::immutable_string var_unbound_root::to_string() const
   {
-    util::string_builder buff;
+    jtl::string_builder buff;
     to_string(buff);
     return buff.release();
   }
 
-  void var_unbound_root::to_string(util::string_builder &buff) const
+  void var_unbound_root::to_string(jtl::string_builder &buff) const
   {
     util::format_to(buff, "unbound@{} for var {}", &base, var->to_string());
   }

@@ -39,6 +39,11 @@ namespace jank::error
   error_ref parse_invalid_reader_symbolic_value(jtl::immutable_string const &message,
                                                 read::source const &source);
   error_ref
+  parse_invalid_reader_tag_value(jtl::immutable_string const &message, read::source const &source);
+  error_ref parse_invalid_regex(jtl::immutable_string const &message, read::source const &source);
+  error_ref parse_invalid_uuid(jtl::immutable_string const &message, read::source const &source);
+  error_ref parse_invalid_inst(jtl::immutable_string const &message, read::source const &source);
+  error_ref
   parse_invalid_syntax_quote(read::source const &source, jtl::immutable_string const &note);
   error_ref parse_invalid_syntax_unquote(read::source const &source);
   error_ref parse_invalid_syntax_unquote_splice(read::source const &source);

@@ -1,0 +1,7 @@
+(let* [i (cpp/int. 1)
+       p (cpp/& i)
+       np (cpp/- p i)
+       _ (assert (cpp/< np p))
+       ; C++ doesn't allow `int - ptr`.
+       _ (assert (cpp/== (cpp/- i p) np))]
+  :success)

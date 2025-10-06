@@ -1,0 +1,5 @@
+(let* [i (cpp/double 100.0)
+       f (cpp/value "static_cast<double (*)(double)>(&sqrt)")
+       r (f i)]
+  (if (= r 10.0)
+    :success))

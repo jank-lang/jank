@@ -74,6 +74,11 @@ namespace jank::read::parse
     object_result parse_reader_macro_fn();
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
+    object_result parse_regex();
+    object_result parse_tagged_uuid();
+    object_result parse_tagged_inst();
+    object_result parse_tagged_cpp();
+    object_result parse_reader_macro_tagged();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(bool splice);
     object_result parse_syntax_quote();
@@ -86,6 +91,7 @@ namespace jank::read::parse
     object_result parse_integer();
     object_result parse_ratio();
     object_result parse_big_integer();
+    object_result parse_big_decimal();
     object_result parse_real();
     object_result parse_string();
     object_result parse_escaped_string();
@@ -96,6 +102,7 @@ namespace jank::read::parse
   private:
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref form);
     jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_seq(runtime::object_ref seq);
+    jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_set(runtime::object_ref seq);
     static jtl::result<runtime::object_ref, error_ref>
     syntax_quote_flatten_map(runtime::object_ref seq);
     static bool syntax_quote_is_unquote(runtime::object_ref form, bool splice);

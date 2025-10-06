@@ -1,0 +1,12 @@
+(let* [i (cpp/int. 4)
+       _ (assert (= false (cpp/! i)))
+
+       l (cpp/long. 0)
+       _ (assert (= true (cpp/! l)))
+
+       f (cpp/float. 0.0)
+       _ (assert (= true (cpp/! f)))
+
+       f (cpp/float. 1.0)
+       _ (assert (= false (cpp/! f)))]
+  :success)

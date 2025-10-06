@@ -139,33 +139,46 @@ extern "C"
   jank_object_ref jank_const_false();
   jank_object_ref jank_integer_create(jank_i64 i);
   jank_object_ref jank_big_integer_create(char const * const s);
+  jank_object_ref jank_big_decimal_create(char const * const s);
   jank_object_ref jank_real_create(jank_f64 r);
   jank_object_ref jank_ratio_create(jank_object_ref numerator, jank_object_ref denominator);
   jank_object_ref jank_string_create(char const *s);
   jank_object_ref jank_symbol_create(jank_object_ref ns, jank_object_ref name);
   jank_object_ref jank_character_create(char const *s);
+  jank_object_ref jank_regex_create(char const *s);
+  jank_object_ref jank_uuid_create(char const *s);
+  jank_object_ref jank_inst_create(char const *s);
 
   jank_object_ref jank_list_create(jank_u64 size, ...);
   jank_object_ref jank_vector_create(jank_u64 size, ...);
   jank_object_ref jank_map_create(jank_u64 pairs, ...);
   jank_object_ref jank_set_create(jank_u64 size, ...);
 
+  jank_object_ref jank_box(void const *o);
+  void *jank_unbox(jank_object_ref o);
+
   jank_arity_flags jank_function_build_arity_flags(jank_u8 highest_fixed_arity,
                                                    jank_bool is_variadic,
                                                    jank_bool is_variadic_ambiguous);
   jank_object_ref jank_function_create(jank_arity_flags arity_flags);
-  void jank_function_set_arity0(jank_object_ref fn, jank_object_ref (*f)());
-  void jank_function_set_arity1(jank_object_ref fn, jank_object_ref (*f)(jank_object_ref));
-  void jank_function_set_arity2(jank_object_ref fn,
+  void jank_function_set_arity0(jank_object_ref fn, jank_object_ref (*f)(jank_object_ref));
+  void jank_function_set_arity1(jank_object_ref fn,
                                 jank_object_ref (*f)(jank_object_ref, jank_object_ref));
   void
-  jank_function_set_arity3(jank_object_ref fn,
+  jank_function_set_arity2(jank_object_ref fn,
                            jank_object_ref (*f)(jank_object_ref, jank_object_ref, jank_object_ref));
-  void jank_function_set_arity4(
+  void jank_function_set_arity3(
     jank_object_ref fn,
     jank_object_ref (*f)(jank_object_ref, jank_object_ref, jank_object_ref, jank_object_ref));
+  void jank_function_set_arity4(jank_object_ref fn,
+                                jank_object_ref (*f)(jank_object_ref,
+                                                     jank_object_ref,
+                                                     jank_object_ref,
+                                                     jank_object_ref,
+                                                     jank_object_ref));
   void jank_function_set_arity5(jank_object_ref fn,
                                 jank_object_ref (*f)(jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
@@ -176,9 +189,11 @@ extern "C"
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref));
   void jank_function_set_arity7(jank_object_ref fn,
                                 jank_object_ref (*f)(jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
@@ -193,9 +208,11 @@ extern "C"
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref));
   void jank_function_set_arity9(jank_object_ref fn,
                                 jank_object_ref (*f)(jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
@@ -214,27 +231,35 @@ extern "C"
                                                       jank_object_ref,
                                                       jank_object_ref,
                                                       jank_object_ref,
+                                                      jank_object_ref,
                                                       jank_object_ref));
 
   jank_object_ref jank_closure_create(jank_arity_flags arity_flags, void *context);
-  void jank_closure_set_arity0(jank_object_ref fn, jank_object_ref (*f)());
-  void jank_closure_set_arity1(jank_object_ref fn, jank_object_ref (*f)(jank_object_ref));
-  void jank_closure_set_arity2(jank_object_ref fn,
+  void jank_closure_set_arity0(jank_object_ref fn, jank_object_ref (*f)(jank_object_ref));
+  void jank_closure_set_arity1(jank_object_ref fn,
                                jank_object_ref (*f)(jank_object_ref, jank_object_ref));
   void
-  jank_closure_set_arity3(jank_object_ref fn,
+  jank_closure_set_arity2(jank_object_ref fn,
                           jank_object_ref (*f)(jank_object_ref, jank_object_ref, jank_object_ref));
-  void jank_closure_set_arity4(
+  void jank_closure_set_arity3(
     jank_object_ref fn,
     jank_object_ref (*f)(jank_object_ref, jank_object_ref, jank_object_ref, jank_object_ref));
+  void jank_closure_set_arity4(jank_object_ref fn,
+                               jank_object_ref (*f)(jank_object_ref,
+                                                    jank_object_ref,
+                                                    jank_object_ref,
+                                                    jank_object_ref,
+                                                    jank_object_ref));
   void jank_closure_set_arity5(jank_object_ref fn,
                                jank_object_ref (*f)(jank_object_ref,
+                                                    jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref));
   void jank_closure_set_arity6(jank_object_ref fn,
                                jank_object_ref (*f)(jank_object_ref,
+                                                    jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
@@ -247,9 +272,11 @@ extern "C"
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
+                                                    jank_object_ref,
                                                     jank_object_ref));
   void jank_closure_set_arity8(jank_object_ref fn,
                                jank_object_ref (*f)(jank_object_ref,
+                                                    jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
@@ -266,9 +293,11 @@ extern "C"
                                                     jank_object_ref,
                                                     jank_object_ref,
                                                     jank_object_ref,
+                                                    jank_object_ref,
                                                     jank_object_ref));
   void jank_closure_set_arity10(jank_object_ref fn,
                                 jank_object_ref (*f)(jank_object_ref,
+                                                     jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
                                                      jank_object_ref,
@@ -292,10 +321,19 @@ extern "C"
   void jank_profile_exit(char const *label);
   void jank_profile_report(char const *label);
 
+  void jank_resource_register(char const *name, char const *data, jank_usize size);
+  void jank_module_set_loaded(char const *module);
+
   int jank_init(int const argc,
                 char const ** const argv,
                 jank_bool const init_default_ctx,
                 int (*fn)(int const, char const ** const));
+  int jank_init_with_pch(int const argc,
+                         char const ** const argv,
+                         jank_bool const init_default_ctx,
+                         char const * const pch_data,
+                         jank_usize pch_size,
+                         int (*fn)(int const, char const ** const));
 
   jank_object_ref jank_parse_command_line_args(int const argc, char const **argv);
 

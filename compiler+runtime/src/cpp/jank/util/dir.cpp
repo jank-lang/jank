@@ -1,9 +1,18 @@
+#if defined(__APPLE__)
+  #include <mach-o/dyld.h>
+  #include <string>
+#endif
+
+#include <filesystem>
+
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
 
+#include <jtl/string_builder.hpp>
+
 #include <jank/util/dir.hpp>
 #include <jank/util/sha256.hpp>
-#include <jank/util/string_builder.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::util
@@ -24,7 +33,7 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string const &user_cache_dir()
+  jtl::immutable_string const &user_cache_dir(jtl::immutable_string const &binary_version)
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -32,13 +41,13 @@ namespace jank::util
       return res;
     }
 
-    auto const home(getenv("XDG_CACHE_HOME"));
-    if(home)
+    auto const xdg_cache(getenv("XDG_CACHE_HOME"));
+    if(xdg_cache)
     {
-      res = util::format("{}/jank", home);
+      res = util::format("{}/jank/{}", xdg_cache, binary_version);
       return res;
     }
-    res = util::format("{}/.cache/jank", user_home_dir());
+    res = util::format("{}/.cache/jank/{}", user_home_dir(), binary_version);
     return res;
   }
 
@@ -60,10 +69,7 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string const &
-  binary_cache_dir(i64 const optimization_level,
-                   native_vector<jtl::immutable_string> const &includes,
-                   native_vector<jtl::immutable_string> const &defines)
+  jtl::immutable_string const &binary_cache_dir(jtl::immutable_string const &binary_version)
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -71,7 +77,7 @@ namespace jank::util
       return res;
     }
 
-    return res = util::format("target/{}", binary_version(optimization_level, includes, defines));
+    return res = util::format("target/{}", binary_version);
   }
 
   /* The binary version is composed of two things:
@@ -85,9 +91,7 @@ namespace jank::util
    * every module. I think this is much safer than trying to reconcile ABI
    * changes more granularly.
    */
-  jtl::immutable_string const &binary_version(i64 const optimization_level,
-                                              native_vector<jtl::immutable_string> const &includes,
-                                              native_vector<jtl::immutable_string> const &defines)
+  jtl::immutable_string const &binary_version()
   {
     static jtl::immutable_string res;
     if(!res.empty())
@@ -95,29 +99,73 @@ namespace jank::util
       return res;
     }
 
-    string_builder sb;
-    for(auto const &inc : includes)
+    jtl::string_builder sb;
+    for(auto const &inc : util::cli::opts.include_dirs)
     {
       sb(inc);
     }
 
     sb(".");
 
-    for(auto const &def : defines)
+    for(auto const &def : util::cli::opts.define_macros)
     {
       sb(def);
     }
 
-    auto const input(util::format("{}.{}.{}.{}.{}",
+    auto const input(util::format("{}.{}.{}.{}.{}.{}",
                                   JANK_VERSION,
                                   clang::getClangRevision(),
                                   JANK_JIT_FLAGS,
-                                  optimization_level,
+                                  util::cli::opts.optimization_level,
+                                  static_cast<int>(util::cli::opts.codegen),
                                   sb.release()));
+    /* TODO: Actual target triple. */
     res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
 
     //util::println("binary_version {}", res);
 
     return res;
+  }
+
+  jtl::immutable_string process_path()
+  {
+#if defined(__APPLE__)
+    u32 path_length{};
+    if(_NSGetExecutablePath(nullptr, &path_length) != -1 || path_length <= 1)
+    {
+      return "";
+    }
+
+    std::string path(path_length, std::string::value_type{});
+    if(_NSGetExecutablePath(path.data(), &path_length) != 0)
+    {
+      return "";
+    }
+    return std::filesystem::canonical(path).string();
+#elif defined(__linux__)
+    return std::filesystem::canonical("/proc/self/exe").string();
+#else
+    static_assert(false, "Unsupported platform");
+#endif
+  }
+
+  jtl::immutable_string process_dir()
+  {
+    return std::filesystem::path{ process_path().c_str() }.parent_path().c_str();
+  }
+
+  jtl::immutable_string resource_dir()
+  {
+    std::filesystem::path const dir{ JANK_RESOURCE_DIR };
+    if(dir.is_absolute())
+    {
+      return dir.c_str();
+    }
+    else
+    {
+      std::filesystem::path const jank_path{ util::process_dir().c_str() };
+
+      return (jank_path / dir).c_str();
+    }
   }
 }

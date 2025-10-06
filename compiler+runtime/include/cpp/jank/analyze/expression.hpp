@@ -52,7 +52,23 @@ namespace jank::analyze
     if_,
     throw_,
     try_,
-    case_
+    case_,
+    /* We use min/max to easily group interop expressions. */
+    cpp_value_min,
+    cpp_raw = cpp_value_min,
+    cpp_type,
+    cpp_value,
+    cpp_cast,
+    cpp_call,
+    cpp_constructor_call,
+    cpp_member_call,
+    cpp_member_access,
+    cpp_builtin_operator_call,
+    cpp_box,
+    cpp_unbox,
+    cpp_new,
+    cpp_delete,
+    cpp_value_max = cpp_delete,
   };
 
   constexpr char const *expression_kind_str(expression_kind const kind)
@@ -103,6 +119,32 @@ namespace jank::analyze
         return "try_";
       case expression_kind::case_:
         return "case_";
+      case expression_kind::cpp_raw:
+        return "cpp_raw";
+      case expression_kind::cpp_type:
+        return "cpp_type";
+      case expression_kind::cpp_value:
+        return "cpp_value";
+      case expression_kind::cpp_cast:
+        return "cpp_cast";
+      case expression_kind::cpp_call:
+        return "cpp_call";
+      case expression_kind::cpp_constructor_call:
+        return "cpp_constructor_call";
+      case expression_kind::cpp_member_call:
+        return "cpp_member_call";
+      case expression_kind::cpp_member_access:
+        return "cpp_member_access";
+      case expression_kind::cpp_builtin_operator_call:
+        return "cpp_builtin_operator_call";
+      case expression_kind::cpp_box:
+        return "cpp_box";
+      case expression_kind::cpp_unbox:
+        return "cpp_unbox";
+      case expression_kind::cpp_new:
+        return "cpp_new";
+      case expression_kind::cpp_delete:
+        return "cpp_delete";
     }
     return "unknown";
   }
@@ -121,6 +163,7 @@ namespace jank::analyze
 
     virtual void propagate_position(expression_position const pos);
     virtual runtime::object_ref to_runtime_data() const;
+    virtual void walk(std::function<void(jtl::ref<expression>)> const &f);
 
     expression_kind kind{};
     expression_position position{};
@@ -129,6 +172,7 @@ namespace jank::analyze
   };
 
   using expression_ref = jtl::ref<expression>;
+  using expression_ptr = jtl::ptr<expression>;
 
   /* Captures both expressions and things which inherit from expression. */
   template <typename T>

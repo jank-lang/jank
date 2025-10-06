@@ -1,0 +1,11 @@
+(let* [ss (cpp/std.stringstream)
+       foo (cpp/cast cpp/std.string "foo")
+       bar (cpp/cast cpp/std.string "bar")
+       _ (-> ss
+             (cpp/<< foo)
+             (cpp/<< cpp/std.endl)
+             (cpp/<< bar)
+             (cpp/<< cpp/std.endl))
+       r (cpp/.str ss)]
+  (if (= "foo\nbar\n" r)
+    :success))

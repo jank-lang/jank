@@ -1,0 +1,6 @@
+(let* [i (cpp/int. 1)
+       pi (cpp/& i)
+       i2 (cpp/int. 1)
+       pi2 (cpp/& i2)
+       _ (assert (cpp/!= pi pi2))]
+  :success)

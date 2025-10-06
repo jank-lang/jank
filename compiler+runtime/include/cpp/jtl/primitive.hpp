@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NDEBUG
+  #define JANK_ASSERTIONS_ENABLED
+#endif
+
 namespace jtl
 {
   using i8 = signed char;
@@ -36,6 +40,28 @@ namespace jtl
   static_assert(sizeof(f64) == 8);
   static_assert(sizeof(uptr) == sizeof(void *));
   static_assert(sizeof(usize) == sizeof(void *));
+
+  enum class platform : i8
+  {
+    linux_like,
+    macos_like,
+    windows_like,
+    other_unix_like
+  };
+
+  static constexpr platform const current_platform{
+#if defined(_WIN32) || defined(__CYGWIN__)
+    platform::windows_like
+#elif defined(__linux__)
+    platform::linux_like
+#elif defined(__APPLE__) && defined(__MACH__)
+    platform::macos_like
+#elif defined(unix) || defined(__unix__) || defined(__unix)
+    platform::other_unix_like
+#else
+  #error Unsupported environment.
+#endif
+  };
 }
 
 namespace jank

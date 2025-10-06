@@ -16,7 +16,9 @@ namespace jank::analyze::expr
            expression_ref value);
 
     runtime::object_ref to_runtime_data() const override;
+    void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
+    /* TODO: Rename to value_expr. */
     expression_ref value;
   };
 }

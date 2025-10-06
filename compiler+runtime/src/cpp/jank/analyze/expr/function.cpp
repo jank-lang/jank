@@ -79,6 +79,15 @@ namespace jank::analyze::expr
                                                make_box("arities"),
                                                arity_maps));
   }
+
+  void function::walk(std::function<void(jtl::ref<expression>)> const &f)
+  {
+    for(auto const &arity : arities)
+    {
+      f(arity.body);
+    }
+    expression::walk(f);
+  }
 }
 
 namespace std

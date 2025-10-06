@@ -2,6 +2,9 @@
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
+#include <Interpreter/Compatibility.h>
+
+#include <jtl/format/style.hpp>
 
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -43,8 +46,16 @@ namespace jank::jit
        * individual failures being reported would be helpful. Thus all the manual tracking in
        * here. The outcome is nice, though. */
       native_vector<failure> failures;
+      native_vector<std::filesystem::path> skips;
 
-      /* TODO: Add color back in, once we have a good API for it. */
+      /* We will intentionally introduce some bad C++ code and we don't want Clang outputting
+       * compiler errors to stderr. If there are actual test issues which cause diagnostic
+       * issues, the test will fail anyway and we can run it separately to see the errors. */
+      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
         if(!std::filesystem::is_regular_file(dir_entry.path()))
@@ -53,12 +64,19 @@ namespace jank::jit
         }
 
         auto const filename(dir_entry.path().filename().string());
+
+        if(filename.starts_with("."))
+        {
+          continue;
+        }
+
         auto const expect_success(filename.starts_with("pass-"));
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));
         auto const allow_failure(filename.starts_with("warn-"));
-        CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw),
-                      "Test file needs to begin with pass- or fail- or throw- or warn-: ",
+        auto const skip(filename.starts_with("skip-"));
+        CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw || skip),
+                      "Test file needs to begin with pass- or fail- or throw- or warn- or skip-: ",
                       filename);
         ++test_count;
 
@@ -68,6 +86,14 @@ namespace jank::jit
         std::stringstream const captured_output;
 
         util::print("testing file {} => ", dir_entry.path().string());
+        std::fflush(stdout);
+
+        if(skip)
+        {
+          util::println("{}skipped{}", jtl::terminal_style::yellow, jtl::terminal_style::reset);
+          skips.push_back(dir_entry.path());
+          continue;
+        }
 
         try
         {
@@ -99,6 +125,7 @@ namespace jank::jit
             }
           }
         }
+        /* TODO: Use JANK_TRY here? */
         catch(std::exception const &e)
         {
           if(expect_success || expect_throw)
@@ -144,26 +171,48 @@ namespace jank::jit
 
         if(allow_failure)
         {
-          util::print("allowed failure\n");
+          util::println("{}allowed failure{}",
+                        jtl::terminal_style::yellow,
+                        jtl::terminal_style::reset);
         }
         else if(passed)
         {
-          util::print("success\n");
+          util::println("{}success{}", jtl::terminal_style::green, jtl::terminal_style::reset);
         }
         else
         {
-          util::print("failure\n");
+          util::println("{}failure{}", jtl::terminal_style::red, jtl::terminal_style::reset);
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
       }
 
+      util::println(
+        "\n===============================================================================");
       CHECK(failures.empty());
+      for(auto const &f : skips)
+      {
+        util::print("{}skip{}: {}\n",
+                    jtl::terminal_style::yellow,
+                    jtl::terminal_style::reset,
+                    f.string());
+      }
       for(auto const &f : failures)
       {
-        util::print("{}: {} {}\n", "failure", f.path.string(), f.error);
+        util::print("{}failure{}: {}\n\t{}\n",
+                    jtl::terminal_style::red,
+                    jtl::terminal_style::reset,
+                    f.path.string(),
+                    f.error);
       }
-      util::print("tested {} jank files\n", test_count);
+      util::print("tested {} jank files with {}{} skips{} and {}{} failures{}\n",
+                  test_count,
+                  (skips.empty() ? jtl::terminal_style::reset : jtl::terminal_style::yellow),
+                  skips.size(),
+                  jtl::terminal_style::reset,
+                  (failures.empty() ? jtl::terminal_style::reset : jtl::terminal_style::red),
+                  failures.size(),
+                  jtl::terminal_style::reset);
     }
   }
 }

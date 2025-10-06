@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::call::function_pointer::pass_return_value
+          {
+            int foo(int a)
+            { return a + 2; }
+
+            using fn_ptr = int (*) (int);
+            fn_ptr get_foo() { return foo; }
+          }")
+(let* [r ((cpp/jank.cpp.call.function_pointer.pass_return_value.get_foo) (cpp/int. 5))]
+  (if (= 7 r)
+    :success))

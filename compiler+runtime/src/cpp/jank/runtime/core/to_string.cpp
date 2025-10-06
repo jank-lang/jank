@@ -8,12 +8,12 @@ namespace jank::runtime
     return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
   }
 
-  void to_string(char const ch, util::string_builder &buff)
+  void to_string(char const ch, jtl::string_builder &buff)
   {
     obj::character{ ch }.to_string(buff);
   }
 
-  void to_string(object_ref const o, util::string_builder &buff)
+  void to_string(object_ref const o, jtl::string_builder &buff)
   {
     visit_object([&](auto const typed_o) { typed_o->to_string(buff); }, o);
   }
@@ -23,12 +23,12 @@ namespace jank::runtime
     return visit_object([](auto const typed_o) { return typed_o->to_code_string(); }, o);
   }
 
-  void to_code_string(char const ch, util::string_builder &buff)
+  void to_code_string(char const ch, jtl::string_builder &buff)
   {
     buff(obj::character{ ch }.to_code_string());
   }
 
-  void to_code_string(object_ref const o, util::string_builder &buff)
+  void to_code_string(object_ref const o, jtl::string_builder &buff)
   {
     auto const value{ visit_object([](auto const typed_o) { return typed_o->to_code_string(); },
                                    o) };

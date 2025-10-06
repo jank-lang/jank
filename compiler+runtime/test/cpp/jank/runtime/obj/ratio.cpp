@@ -391,7 +391,7 @@ namespace jank::runtime
     TEST_CASE("abs")
     {
       auto const result{ expect_object<obj::ratio>(
-        abs(make_box<obj::ratio>(obj::ratio_data(-3, 4)).erase())) };
+        abs(make_box<obj::ratio>(obj::ratio_data(-3, 4)))) };
       CHECK_EQ(result->data.numerator, 3);
       CHECK_EQ(result->data.denominator, 4);
     }
@@ -399,13 +399,13 @@ namespace jank::runtime
     TEST_CASE("sqrt")
     {
       auto const result{ make_box<obj::ratio>(obj::ratio_data(3, 4)) };
-      CHECK_EQ(sqrt(result.erase()), doctest::Approx(std::sqrt(3.0 / 4.0)));
+      CHECK_EQ(sqrt(result), doctest::Approx(std::sqrt(3.0 / 4.0)));
     }
 
     TEST_CASE("pow")
     {
       auto const a{ make_box<obj::ratio>(obj::ratio_data(3, 4)) };
-      CHECK_EQ(pow(a.erase(), a.erase()), doctest::Approx(std::pow(3.0 / 4.0, 3.0 / 4.0)));
+      CHECK_EQ(pow(a, a), doctest::Approx(std::pow(3.0 / 4.0, 3.0 / 4.0)));
     }
   }
 }

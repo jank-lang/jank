@@ -1,5 +1,6 @@
+#include <jtl/string_builder.hpp>
+
 #include <jank/error/lex.hpp>
-#include <jank/util/string_builder.hpp>
 
 namespace jank::error
 {

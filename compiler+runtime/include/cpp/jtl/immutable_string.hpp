@@ -4,24 +4,19 @@
 
 #include <jtl/primitive.hpp>
 #include <jtl/assert.hpp>
+#include <jtl/immutable_string_view.hpp>
 
 #include <jank/type.hpp>
 
-namespace jank
+namespace jank::hash
 {
-  namespace hash
-  {
-    u32 integer(uhash const input);
-  }
-
-  namespace util
-  {
-    struct string_builder;
-  }
+  u32 integer(uhash const input);
 }
 
 namespace jtl
 {
+  struct string_builder;
+
   /* This is a not-completely-standard replacement for std::string, with a few goals in mind:
    *
    * 1. Be as fast, or faster, than `std::string` and `folly::fbstring`
@@ -72,7 +67,7 @@ namespace jtl
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-    friend struct jank::util::string_builder;
+    friend struct jtl::string_builder;
 
     constexpr immutable_string() noexcept
     {
@@ -157,7 +152,7 @@ namespace jtl
       }
     }
 
-    constexpr immutable_string(jank::native_persistent_string_view const &s)
+    constexpr immutable_string(immutable_string_view const &s)
       : immutable_string{ s.data(), s.size() }
     {
     }
@@ -219,13 +214,11 @@ namespace jtl
     }
 
     /*** Data accessors. ***/
-    [[gnu::const]]
     constexpr bool empty() const noexcept
     {
       return size() == 0;
     }
 
-    [[gnu::const]]
     constexpr size_type size() const noexcept
     {
       return (get_category() == category::small) ? get_small_size() : store.large.size;
@@ -233,7 +226,7 @@ namespace jtl
 
     /* XXX: The contents returned, for large shared strings, may not be null-terminated. If
      * you require that, use c_str(). Whenever possible, use data() and size(). */
-    [[gnu::returns_nonnull, gnu::const]]
+    [[gnu::returns_nonnull]]
     constexpr const_pointer_type data() const noexcept
     {
       return (get_category() == category::small) ? store.small : store.large.data;
@@ -262,28 +255,31 @@ namespace jtl
       }
     }
 
-    [[gnu::const]]
     constexpr value_type operator[](size_type const index) const noexcept
     {
       return data()[index];
     }
 
+    constexpr immutable_string_view view() const noexcept
+    {
+      return { data(), size() };
+    }
+
     /*** Searches. ***/
-    [[gnu::const]]
     constexpr size_type
     find(immutable_string const &pattern, size_type const pos = 0) const noexcept
     {
       return find(pattern.data(), pos, pattern.size());
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type
     find(const_pointer_type const pattern, size_type const pos = 0) const noexcept
     {
       return find(pattern, pos, traits_type::length(pattern));
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type find(const_pointer_type const pattern,
                              size_type const pos,
                              size_type const pattern_length) const noexcept
@@ -325,7 +321,6 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr size_type find(value_type c, size_type pos = 0) const noexcept
     {
       size_type ret{ npos };
@@ -344,19 +339,18 @@ namespace jtl
       return ret;
     }
 
-    [[gnu::const]]
     constexpr size_type rfind(immutable_string const &s, size_type const pos = npos) const noexcept
     {
       return rfind(s.data(), pos, s.size());
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type rfind(const_pointer_type const s, size_type const pos = npos) const noexcept
     {
       return rfind(s, pos, traits_type::length(s));
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr size_type
     rfind(const_pointer_type const s, size_type pos, size_type const n) const noexcept
     {
@@ -388,7 +382,6 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr size_type rfind(value_type const c, size_type const pos = npos) const noexcept
     {
       auto length(size());
@@ -410,13 +403,11 @@ namespace jtl
       return npos;
     }
 
-    [[gnu::const]]
     constexpr bool starts_with(value_type const c) const noexcept
     {
       return size() > 0 && data()[0] == c;
     }
 
-    [[gnu::const]]
     constexpr bool starts_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
@@ -428,8 +419,7 @@ namespace jtl
       return traits_type::compare(data(), s, s_sz) == 0;
     }
 
-    [[gnu::const]]
-    constexpr bool starts_with(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool starts_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -441,14 +431,12 @@ namespace jtl
       return traits_type::compare(data(), s.data(), s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool ends_with(value_type const c) const noexcept
     {
       auto const s(size());
       return s > 0 && data()[s - 1] == c;
     }
 
-    [[gnu::const]]
     constexpr bool ends_with(const_pointer_type const s) const noexcept
     {
       auto const this_sz(size());
@@ -460,8 +448,7 @@ namespace jtl
       return traits_type::compare(data() + this_sz - s_sz, s, s_sz) == 0;
     }
 
-    [[gnu::const]]
-    constexpr bool ends_with(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool ends_with(jtl::immutable_string_view const &s) const noexcept
     {
       auto const this_sz(size());
       auto const s_sz(s.size());
@@ -473,20 +460,17 @@ namespace jtl
       return traits_type::compare(data() + this_sz - s_sz, s.data(), s_sz) == 0;
     }
 
-    [[gnu::const]]
     constexpr bool contains(value_type const c) const noexcept
     {
       return find(c) != npos;
     }
 
-    [[gnu::const]]
     constexpr bool contains(const_pointer_type const s) const noexcept
     {
       return find(s) != npos;
     }
 
-    [[gnu::const]]
-    constexpr bool contains(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool contains(jtl::immutable_string_view const &s) const noexcept
     {
       return find(s) != npos;
     }
@@ -552,47 +536,42 @@ namespace jtl
     }
 
     /*** Comparisons. ***/
-    [[gnu::const]]
     constexpr bool operator!=(immutable_string const &s) const noexcept
     {
       auto const length(size());
       return length != s.size() || traits_type::compare(data(), s.data(), length);
     }
 
-    [[gnu::const]]
     constexpr bool operator==(immutable_string const &s) const noexcept
     {
       return !(*this != s);
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr bool operator!=(const_pointer_type const s) const noexcept
     {
       auto const length(traits_type::length(s));
       return size() != length || traits_type::compare(data(), s, length);
     }
 
-    [[gnu::const, gnu::nonnull(2)]]
+    [[gnu::nonnull(2)]]
     constexpr bool operator==(const_pointer_type const s) const noexcept
     {
       return !(*this != s);
     }
 
-    [[gnu::const]]
-    constexpr bool operator!=(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool operator!=(jtl::immutable_string_view const &s) const noexcept
     {
       auto const length(s.size());
       /* NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage) */
       return size() != length || traits_type::compare(data(), s.data(), length);
     }
 
-    [[gnu::const]]
-    constexpr bool operator==(jank::native_persistent_string_view const &s) const noexcept
+    constexpr bool operator==(jtl::immutable_string_view const &s) const noexcept
     {
       return !(*this != s);
     }
 
-    [[gnu::const]]
     constexpr int compare(immutable_string const &s) const
     {
       auto const length(size());
@@ -605,62 +584,53 @@ namespace jtl
     }
 
     /*** Iterators. ***/
-    [[gnu::const]]
     constexpr const_iterator begin() const noexcept
     {
       return data();
     }
 
-    [[gnu::const]]
     constexpr const_iterator cbegin() const noexcept
     {
       return begin();
     }
 
-    [[gnu::const]]
     constexpr const_iterator end() const noexcept
     {
       return data() + size();
     }
 
-    [[gnu::const]]
     constexpr const_iterator cend() const
     {
       return end();
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator rbegin() const noexcept
     {
       return const_reverse_iterator(end());
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator crbegin() const noexcept
     {
       return rbegin();
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator rend() const noexcept
     {
       return const_reverse_iterator(begin());
     }
 
-    [[gnu::const]]
     constexpr const_reverse_iterator crend() const noexcept
     {
       return rend();
     }
 
     /*** Conversions. ***/
-    constexpr operator jank::native_persistent_string_view() const
+    constexpr operator jtl::immutable_string_view() const
     {
       return { data(), size() };
     }
 
     /*** Miscellaneous predicates. ***/
-    [[gnu::const]]
     constexpr bool is_blank() const noexcept
     {
       for(auto const c : *this)
@@ -685,7 +655,7 @@ namespace jtl
       auto const ptr(data());
       for(size_type i{}; i != size(); ++i)
       {
-        store.hash = 31 * store.hash + (ptr[i] & 0xff);
+        store.hash = (31 * store.hash) + (ptr[i] & 0xff);
       }
       return store.hash = jank::hash::integer(store.hash);
     }
@@ -755,13 +725,11 @@ namespace jtl
       }
     }
 
-    [[gnu::const]]
     constexpr category get_category() const noexcept
     {
       return static_cast<category>(store.bytes[last_char_index] & category_extraction_mask);
     }
 
-    [[gnu::const]]
     constexpr size_type get_small_size() const noexcept
     {
       jank_debug_assert(get_category() == category::small);
@@ -789,32 +757,32 @@ namespace jtl
        * a word at a time, which may overshoot the null terminator. We never
        * use that data, but we do indeed copy it. Clang's address sanitizer
        * picks this up, so we only do it when that's not looking. */
-#ifndef JANK_SANITIZE
-      if((std::bit_cast<size_type>(data) & (sizeof(size_type) - 1)) == 0)
-      {
-        auto const aligned_data(std::assume_aligned<sizeof(size_type)>(data));
-        u8 const byte_size(size * sizeof(value_type));
-        constexpr u8 word_width{ sizeof(size_type) };
-        /* NOTE: We're writing in reverse order here, but it uses one less instruction and
-         * is marginally faster than duplicating the code each each case to write in order. */
-        /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
-        switch((byte_size + word_width - 1) / word_width)
-        {
-          case 3:
-            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
-            store.large.extra = std::bit_cast<size_type const *>(aligned_data)[2];
-          case 2:
-            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
-            store.large.size = std::bit_cast<size_type const *>(aligned_data)[1];
-          case 1:
-            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
-            store.large.data = std::bit_cast<pointer_type *>(aligned_data)[0];
-          case 0:
-            break;
-        }
-      }
-      else
-#endif
+      //#ifndef JANK_SANITIZE
+      //      if((std::bit_cast<size_type>(data) & (sizeof(size_type) - 1)) == 0)
+      //      {
+      //        auto const aligned_data(std::assume_aligned<sizeof(size_type)>(data));
+      //        u8 const byte_size(size * sizeof(value_type));
+      //        constexpr u8 word_width{ sizeof(size_type) };
+      //        /* NOTE: We're writing in reverse order here, but it uses one less instruction and
+      //         * is marginally faster than duplicating the code each each case to write in order. */
+      //        /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
+      //        switch((byte_size + word_width - 1) / word_width)
+      //        {
+      //          case 3:
+      //            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
+      //            store.large.extra = std::bit_cast<size_type const *>(aligned_data)[2];
+      //          case 2:
+      //            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
+      //            store.large.size = std::bit_cast<size_type const *>(aligned_data)[1];
+      //          case 1:
+      //            /* NOLINTNEXTLINE(bugprone-bitwise-pointer-cast): Safe. */
+      //            store.large.data = std::bit_cast<pointer_type *>(aligned_data)[0];
+      //          case 0:
+      //            break;
+      //        }
+      //      }
+      //      else
+      //#endif
       {
         traits_type::copy(store.small, data, size);
       }
@@ -917,14 +885,12 @@ namespace jtl
     storage store;
   };
 
-  [[gnu::const]]
   constexpr bool
-  operator==(jank::native_persistent_string_view const &lhs, immutable_string const &rhs) noexcept
+  operator==(jtl::immutable_string_view const &lhs, immutable_string const &rhs) noexcept
   {
     return !(rhs != lhs);
   }
 
-  [[gnu::const]]
   constexpr bool operator<(immutable_string const &lhs, immutable_string const &rhs) noexcept
   {
     return lhs.compare(rhs) < 0;
@@ -956,7 +922,7 @@ namespace jtl
 
   constexpr std::ostream &operator<<(std::ostream &os, immutable_string const &s)
   {
-    return os << static_cast<jank::native_persistent_string_view>(s);
+    return os << std::string_view{ s.data(), s.size() };
   }
 }
 

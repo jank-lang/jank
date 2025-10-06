@@ -22,8 +22,7 @@ jank's host is LLVM and its interop is with C++.
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
-The current tl;dr for jank's usability is: **still getting there, but not ready for
-use yet. Check back in a few months!**
+**jank is expected to have its alpha launch in December 2025!**
 
 ## Docs
 * [Installing jank](./compiler+runtime/doc/install.md)
@@ -53,8 +52,8 @@ use yet. Check back in a few months!**
 
 ; Interop with C++ can happen *seamlessly*.
 (defn sleep [ms]
-  (let [duration (c++/std.chrono.milliseconds ms)]
-    (c++/std.this_thread.sleep_for duration)))
+  (let [duration (cpp/std.chrono.milliseconds ms)]
+    (cpp/std.this_thread.sleep_for duration)))
 ```
 
 ## Sponsors
@@ -66,6 +65,12 @@ If you'd like your name, company, or logo here, you can
 <p align="center">
   <a href="https://www.clojuriststogether.org/">
     <img src="https://www.clojuriststogether.org/header-logo.svg" height="100px">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://nubank.com.br/">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Nubank_logo_2021.svg" height="100px">
   </a>
 </p>
 

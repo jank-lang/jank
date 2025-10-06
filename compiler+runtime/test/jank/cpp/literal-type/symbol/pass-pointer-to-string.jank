@@ -1,0 +1,5 @@
+(let* [s (cpp/std.string.)
+       &s (cpp/& s)
+       p (cpp/cast cpp/std.string* &s)]
+  (if (cpp/== p &s)
+    :success))

@@ -12,25 +12,27 @@ namespace jank::util
   template <typename T, typename... Args>
   void println(char const * const fmt, T &&arg, Args &&...args)
   {
-    string_builder sb;
+    jtl::string_builder sb;
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), stdout);
     std::putc('\n', stdout);
+    std::fflush(stdout);
   }
 
   template <typename T, typename... Args>
   void println(FILE * const file, char const * const fmt, T &&arg, Args &&...args)
   {
-    string_builder sb;
+    jtl::string_builder sb;
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), file);
     std::putc('\n', file);
+    std::fflush(stdout);
   }
 
   template <typename T, typename... Args>
   void print(char const * const fmt, T &&arg, Args &&...args)
   {
-    string_builder sb;
+    jtl::string_builder sb;
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), stdout);
   }
@@ -38,7 +40,7 @@ namespace jank::util
   template <typename T, typename... Args>
   void print(FILE * const file, char const * const fmt, T &&arg, Args &&...args)
   {
-    string_builder sb;
+    jtl::string_builder sb;
     format_to(sb, fmt, std::forward<T>(arg), std::forward<Args>(args)...);
     std::fwrite(sb.data(), 1, sb.size(), file);
   }

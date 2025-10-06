@@ -14,7 +14,10 @@
     (util/log-info "Not enabled")
     (let [bash-test-dir (str compiler+runtime-dir "/test/bash")
           test-files (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
-          extra-env {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
+          extra-env (merge {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
+                           (let [skip (System/getenv "JANK_SKIP_AOT_CHECK")]
+                             (when-not (empty? skip)
+                               {"JANK_SKIP_AOT_CHECK" skip})))
           passed? (volatile! true)]
       (doseq [test-file test-files]
         (let [skip? (clojure.string/ends-with? (str test-file) "skip-test")
@@ -25,20 +28,22 @@
           (if skip?
             (util/log-warning "Skipped " relative-dirname)
             (util/with-elapsed-time duration
-              (let [res @(b.p/process {:out :string
-                                       :err :out
-                                       :dir dirname
-                                       :extra-env extra-env}
-                                      test-file)]
-                (when (or (and (zero? (:exit res)) expect-failure?)
-                          (and (not (zero? (:exit res))) (not expect-failure?)))
-                  (vreset! unexpected-result res)))
+              (do
+                (util/log-info "Testing " relative-dirname)
+                (let [res @(b.p/process {:out :string
+                                         :err :out
+                                         :dir dirname
+                                         :extra-env extra-env}
+                                        test-file)]
+                  (when (or (and (zero? (:exit res)) expect-failure?)
+                            (and (not (zero? (:exit res))) (not expect-failure?)))
+                    (vreset! unexpected-result res))))
               (if-some [res @unexpected-result]
                 (do
                   (vreset! passed? false)
                   (println (:out res))
-                  (util/log-error-with-time duration "Failed " relative-dirname " with exit code " (:exit res)))
-                (util/log-info-with-time duration "Tested " relative-dirname))))))
+                  (util/log-error-with-time duration "Failed with exit code " (:exit res)))
+                (util/log-info-with-time duration "Done"))))))
 
       (when-not @passed?
         (System/exit 1)))))

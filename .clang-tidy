@@ -14,12 +14,15 @@ misc-definitions-in-headers,\
 -clang-diagnostic-unknown-warning-option,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
 -clang-analyzer-cplusplus.NewDelete,\
+-clang-analyzer-security.ArrayBound,\
+-clang-analyzer-optin.core.EnumCastOutOfRange,\
 -modernize-use-trailing-return-type,\
 -modernize-use-nodiscard,\
 -modernize-pass-by-value,\
 -modernize-avoid-c-arrays,\
 -modernize-use-designated-initializers,\
 -modernize-use-transparent-functors,\
+-modernize-use-scoped-lock,\
 -cppcoreguidelines-non-private-member-variables-in-classes,\
 -cppcoreguidelines-avoid-c-arrays,\
 -cppcoreguidelines-avoid-magic-numbers,\
@@ -39,6 +42,7 @@ misc-definitions-in-headers,\
 -bugprone-reserved-identifier,\
 -bugprone-multi-level-implicit-pointer-conversion,\
 -bugprone-crtp-constructor-accessibility,\
+-bugprone-bitwise-pointer-cast,\
 -readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
@@ -53,6 +57,7 @@ misc-definitions-in-headers,\
 -readability-qualified-auto,\
 -readability-redundant-declaration,\
 -readability-use-anyofallof,\
+-readability-enum-initial-value,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

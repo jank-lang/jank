@@ -26,6 +26,21 @@ namespace jank::runtime
     }
   };
 
+  template <typename T>
+  requires(jtl::is_any_same<T, object *, object const *>)
+  struct convert<T>
+  {
+    static constexpr object *into_object(T t)
+    {
+      return const_cast<object *>(t);
+    }
+
+    static constexpr object *from_object(T t)
+    {
+      return const_cast<object *>(t);
+    }
+  };
+
   /* Any typed object can convert to/from itself easily. */
   template <typename T>
   requires typed_object_ref<T>
@@ -38,7 +53,7 @@ namespace jank::runtime
 
     static constexpr T from_object(object_ref const t)
     {
-      return try_object<T::value_type>(t);
+      return try_object<typename T::value_type>(t);
     }
 
     static constexpr T from_object(T const t)
@@ -77,6 +92,20 @@ namespace jank::runtime
   };
 
   template <>
+  struct convert<jtl::nullptr_t>
+  {
+    static constexpr obj::nil_ref into_object(jtl::nullptr_t)
+    {
+      return jank_nil;
+    }
+
+    static constexpr jtl::nullptr_t from_object(object_ref)
+    {
+      return nullptr;
+    }
+  };
+
+  template <>
   struct convert<bool>
   {
     static constexpr obj::boolean_ref into_object(bool const o)
@@ -95,10 +124,49 @@ namespace jank::runtime
     }
   };
 
+  template <>
+  struct convert<char>
+  {
+    static constexpr obj::character_ref into_object(char const o)
+    {
+      return make_box(o);
+    }
+
+    static constexpr char from_object(object_ref const o)
+    {
+      return try_object<obj::character>(o)->data[0];
+    }
+
+    static constexpr char from_object(obj::character_ref const o)
+    {
+      return o->data[0];
+    }
+  };
+
+  template <typename T>
+  requires std::is_enum_v<T>
+  struct convert<T>
+  {
+    static constexpr obj::integer_ref into_object(T const o)
+    {
+      return make_box(static_cast<i64>(o));
+    }
+
+    static constexpr T from_object(object_ref const o)
+    {
+      return try_object<obj::integer>(o);
+    }
+
+    static constexpr T from_object(obj::integer_ref const o)
+    {
+      return o->data;
+    }
+  };
+
   /* Native integer primitives. */
   template <typename T>
   requires(std::is_integral_v<T>
-           && !jtl::is_any_same<bool, char, char8_t, char16_t, char32_t, wchar_t>)
+           && !jtl::is_any_same<T, bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<T>
   {
     static constexpr obj::integer_ref into_object(T const o)
@@ -158,9 +226,34 @@ namespace jank::runtime
     }
   };
 
+  /* C strings. */
+  template <typename T>
+  requires(jtl::is_any_same<std::decay_t<T>, char *, char const *>)
+  struct convert<T>
+  {
+    static constexpr obj::persistent_string_ref into_object(char const * const o)
+    {
+      if(o == nullptr)
+      {
+        return jank_nil;
+      }
+      return make_box(o);
+    }
+
+    static constexpr char const *from_object(object_ref const o)
+    {
+      return try_object<obj::persistent_string>(o)->data.c_str();
+    }
+
+    static constexpr char const *from_object(obj::persistent_string_ref const o)
+    {
+      return o->data.c_str();
+    }
+  };
+
   /* Native strings. */
   template <typename T>
-  requires(jtl::is_any_same<T, jtl::immutable_string, native_persistent_string_view, std::string>)
+  requires(jtl::is_any_same<T, jtl::immutable_string, jtl::immutable_string_view, std::string>)
   struct convert<T>
   {
     static constexpr obj::persistent_string_ref into_object(T const &o)
