@@ -21,8 +21,8 @@
           src = pkgs.fetchFromGitHub {
             owner = "jank-lang";
             repo = "llvm-project";
-            rev = "57bb1edd1923ee85736cec8a2d7ca57e5f961d58";
-            sha256 = "sha256-u9HHAjYjnoiW++66YaFY9SCgDPByfXZa1/y1TBavhLo=";
+            rev = "4e5928689f2399dc6aede8dde2536a98a96a1802";
+            sha256 = "sha256-mC8KHuiQ2ny6HkVeYEBGsSV5rPLuaO6h0u6SsD/mdzo=";
           };
         };
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
@@ -79,7 +79,7 @@
               # not allowed in the nix build sandbox.
               "-DFETCHCONTENT_SOURCE_DIR_LIBDWARF=${libdwarf-lite-src}"
               "-DFETCHCONTENT_SOURCE_DIR_ZSTD=${zstd-src}"
-              # Jank options
+              # jank options
               (lib.cmakeBool "jank_unity_build" true)
               (lib.cmakeBool "jank_test" finalAttrs.doCheck)
             ];

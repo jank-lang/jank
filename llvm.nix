@@ -37,7 +37,7 @@
 in
   wrapCC (stdenv.mkDerivation {
     pname = "llvm-jank";
-    version = "21.0.0-git";
+    version = "22.0.0-git";
     inherit src;
 
     nativeBuildInputs = [cmake ninja clang python3 makeWrapper];
@@ -53,7 +53,7 @@ in
       # from compiler+runtime/bin/build-clang
       (lib.cmakeBool "LLVM_BUILD_LLVM_DYLIB" true)
       (lib.cmakeBool "LLVM_LINK_LLVM_DYLIB" true)
-      (lib.cmakeFeature "LLVM_ENABLE_PROJECTS" "clang;compiler-rt")
+      (lib.cmakeFeature "LLVM_ENABLE_PROJECTS" "clang")
       (lib.cmakeFeature "LLVM_TARGETS_TO_BUILD" "host")
       (lib.cmakeBool "LLVM_ENABLE_EH" true)
       (lib.cmakeBool "LLVM_ENABLE_RTTI" true)
@@ -67,7 +67,7 @@ in
 
       # nix-specific changes
       (lib.cmakeFeature "C_INCLUDE_DIRS" "${gcc.libc.dev}/include")
-      (lib.cmakeFeature "LLVM_ENABLE_RUNTIMES" "libunwind")
+      (lib.cmakeFeature "LLVM_ENABLE_RUNTIMES" "libunwind;compiler-rt")
       # fix linking path for compiler-rt sanitize libs with
       # -fsanitize={address,undefined}
       (lib.cmakeBool "LLVM_ENABLE_PER_TARGET_RUNTIME_DIR" false)
