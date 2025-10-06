@@ -7,7 +7,7 @@
 (def compiler+runtime-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../compiler+runtime"))))
 (def llvm-bin-dir (str compiler+runtime-dir "/build/llvm-install/usr/local/bin"))
 
-(def llvm-version 21)
+(def llvm-version 22)
 
 (defn get-env
   ([s]
