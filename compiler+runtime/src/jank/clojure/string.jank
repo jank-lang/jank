@@ -161,18 +161,14 @@
   the maximum number of parts. Not lazy. Returns vector of the parts.
   Trailing empty strings are not returned - pass limit of -1 to return all."
   ([s re]
-   ;(LazilyPersistentVector/createOwning (.split re s))
-   (throw "TODO: port clojure.string/split"))
+   (cpp/clojure.string_native.split s re))
   ([s re limit]
-   ;(LazilyPersistentVector/createOwning (.split re s limit))
-   (throw "TODO: port clojure.string/split")))
+   (cpp/clojure.string_native.split s re limit)))
 
 (defn split-lines
   "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
   [s]
-  ;(split s #"\r?\n")
-  (throw "TODO: port clojure.string/split-lines")
-  )
+  (cpp/clojure.string_native.split s #"\r?\n"))
 
 (defn trim
   "Removes whitespace from both ends of string."

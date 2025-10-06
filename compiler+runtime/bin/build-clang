@@ -50,7 +50,8 @@ echo "Using ${make_j} cores to build"
 srcdir="${PWD}"
 
 llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_branch="jank-snapshot/llvm22"
+llvm_version=22
+llvm_branch="jank-snapshot/llvm${llvm_version}"
 
 function prepare()
 {
@@ -72,10 +73,10 @@ function build()
   cd "${srcdir}/llvm-build"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
-        -DLLVM_ENABLE_RUNTIMES=all \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" \
         -DLLVM_BUILD_LLVM_DYLIB=ON \
         -DLLVM_LINK_LLVM_DYLIB=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt" \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
         -DLLVM_TARGETS_TO_BUILD="host" \
         -DLLVM_ENABLE_EH=ON \
         -DLLVM_ENABLE_RTTI=ON \
@@ -91,8 +92,8 @@ function build()
 
   export DESTDIR="${srcdir}/llvm-install"
   ninja clang clang-repl compiler-rt clang-cpp clang-tidy install -j"${make_j}"
-  mkdir -p "${DESTDIR}"/usr/local/lib/clang/22/lib
-  cp -r lib/clang/22/lib/* "${DESTDIR}"/usr/local/lib/clang/22/lib/
+  mkdir -p "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib"
+  cp -r lib/clang/"${llvm_version}"/lib/* "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib/"
 }
 
 prepare

@@ -1,8 +1,10 @@
 #include <filesystem>
+#include <fstream>
 
 #include <Interpreter/Compatibility.h>
 
 #include <llvm/TargetParser/Host.h>
+#include <llvm/Support/Program.h>
 
 #include <ftxui/screen/screen.hpp>
 
@@ -12,11 +14,14 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/aot/processor.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/try.hpp>
+
+#include <clojure/core_native.hpp>
 
 namespace jank::environment
 {
@@ -261,15 +266,14 @@ namespace jank::environment
                           terminal_style::reset);
     }
 
-    return util::format(
-      "{}─ ✅{} jank pch dir: {}{}{} {}(no pch found, should be built automatically){}",
-      terminal_style::yellow,
-      terminal_style::reset,
-      terminal_style::blue,
-      util::user_cache_dir(util::binary_version()),
-      terminal_style::reset,
-      terminal_style::bright_black,
-      terminal_style::reset);
+    return util::format("{}─ ✅{} jank pch dir: {}{}{} {}(no pch found){}",
+                        terminal_style::yellow,
+                        terminal_style::reset,
+                        terminal_style::blue,
+                        util::user_cache_dir(util::binary_version()),
+                        terminal_style::reset,
+                        terminal_style::bright_black,
+                        terminal_style::reset);
   }
 
   static jtl::immutable_string check_cpp_jit()
@@ -302,7 +306,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot jit compile c++",
+      return util::format("{}─ ❌{} jank cannot jit compile c++",
                           terminal_style::red,
                           terminal_style::reset);
     }
@@ -333,16 +337,93 @@ namespace jank::environment
       error = true;
     })
 
+    fatal_error |= error;
+
+    if(error)
+    {
+      return util::format("{}─ ❌{} jank cannot jit compile llvm ir",
+                          terminal_style::red,
+                          terminal_style::reset);
+    }
+    return util::format("{}─ ✅{} jank can jit compile llvm ir",
+                        terminal_style::green,
+                        terminal_style::reset);
+  }
+
+  static jtl::immutable_string check_aot()
+  {
+    if(std::getenv("JANK_SKIP_AOT_CHECK"))
+    {
+      return util::format("{}─ ⚠️ {} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
+                          terminal_style::yellow,
+                          terminal_style::reset);
+    }
+
+    bool error{};
+
+    JANK_TRY
+    {
+      auto const tmp{ std::filesystem::temp_directory_path() };
+      std::string path_tmp{ tmp / "jank-aot-XXXXXX" };
+      mkstemp(path_tmp.data());
+      std::filesystem::remove(path_tmp);
+      std::filesystem::create_directories(path_tmp);
+
+      {
+        std::ofstream ofs{ std::filesystem::path{ path_tmp } / "health.jank" };
+        ofs << "(ns health)\n(defn -main [& args] (println \"healthy\"))";
+      }
+      auto const exe_output{ std::filesystem::path{ path_tmp } / "a.out" };
+
+      auto const saved_opts{ util::cli::opts };
+      util::cli::opts.target_module = "health";
+      util::cli::opts.output_filename = exe_output;
+      util::cli::opts.module_path = path_tmp;
+      util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
+                                      [=] { util::cli::opts = saved_opts; }
+      };
+
+      runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
+      runtime::__rt_ctx->module_loader.add_path(path_tmp);
+      runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
+
+      jank::aot::processor const aot_prc{};
+      aot_prc.compile(util::cli::opts.target_module).expect_ok();
+
+      auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
+      auto const proc_code{ llvm::sys::ExecuteAndWait(
+        exe_output.c_str(),
+        { exe_output.c_str() },
+        std::nullopt,
+        { std::nullopt, stdout_file.c_str(), std::nullopt },
+        5) };
+      if(proc_code != 0)
+      {
+        error = true;
+      }
+
+      std::ifstream ifs{ stdout_file };
+      std::string line;
+      std::getline(ifs, line);
+      if(line != "healthy")
+      {
+        error = true;
+      }
+    }
+    JANK_CATCH([&](auto const &e) {
+      jank::util::print_exception(e);
+      error = true;
+    })
 
     fatal_error |= error;
 
     if(error)
     {
-      return util::format("{}─ ✅{} jank cannot jit compile llvm ir",
+      return util::format("{}─ ❌{} jank cannot jit aot compile working binaries",
                           terminal_style::red,
                           terminal_style::reset);
     }
-    return util::format("{}─ ✅{} jank can jit compile llvm ir",
+    return util::format("{}─ ✅{} jank can aot compile working binaries",
                         terminal_style::green,
                         terminal_style::reset);
   }
@@ -383,7 +464,6 @@ namespace jank::environment
     util::print("{}", jank_asserts());
     util::println("{}", jank_resource_dir());
     util::println("{}", jank_user_cache_dir());
-    util::println("{}", pch_location());
     util::println("");
 
     util::println("{}", header("clang install", max_width));
@@ -396,12 +476,14 @@ namespace jank::environment
     {
       util::println("{}", header("jank runtime", max_width));
       runtime::__rt_ctx = new(GC) runtime::context{};
+      jank_load_clojure_core_native();
       util::println("{}─ ✅{} jank runtime initialized",
                     terminal_style::green,
                     terminal_style::reset);
+      util::println("{}", pch_location());
       util::println("{}", check_cpp_jit());
       util::println("{}", check_ir_jit());
-      /* TODO: Check AOT */
+      util::println("{}", check_aot());
       util::println("");
     }
 

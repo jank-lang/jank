@@ -14,7 +14,13 @@ namespace jank::runtime
   namespace obj
   {
     struct nil;
+    struct boolean;
   }
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::boolean> jank_true;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::boolean> jank_false;
 
   namespace detail
   {
@@ -420,6 +426,13 @@ namespace jank::runtime
       throw std::runtime_error{ "unable to allocate box" };
     }
     return ret;
+  }
+
+  template <typename T>
+  requires(T::obj_type == object_type::boolean)
+  oref<T> make_box(bool const b)
+  {
+    return b ? jank_true : jank_false;
   }
 
   template <typename T, typename... Args>

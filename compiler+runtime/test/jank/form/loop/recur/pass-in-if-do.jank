@@ -1,9 +1,9 @@
 (def tail
   (fn* [s]
     (loop* [n s]
-      (if (< 0 n)
+      (if (cpp/jank.runtime.lt 0 n)
         (do
-          (assert (< 0 n))
+          (assert (cpp/jank.runtime.lt 0 n))
           (recur (+ n -1)))
         n))))
 

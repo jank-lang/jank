@@ -1,0 +1,6 @@
+((fn* [n]
+   (if (= 1 n)
+     :success
+     (let [n (cpp/jank.runtime.add 1 n)]
+       (recur n))))
+ 0)

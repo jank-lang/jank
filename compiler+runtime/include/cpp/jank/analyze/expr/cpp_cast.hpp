@@ -9,6 +9,20 @@ namespace jank::analyze
     into_object,
     from_object
   };
+
+  [[gnu::visibility("default")]]
+  constexpr char const *conversion_policy_str(conversion_policy const policy)
+  {
+    switch(policy)
+    {
+      case conversion_policy::into_object:
+        return "into_object";
+      case conversion_policy::from_object:
+        return "from_object";
+      default:
+        return "unknown";
+    }
+  }
 }
 
 namespace jank::analyze::expr

@@ -1,0 +1,16 @@
+(let* [prefix (loop [i 5
+                     r []]
+                (if (= 0 i)
+                  r
+                  (recur (cpp/jank.runtime.dec i) (conj r i))))
+       fdecl (loop [fd [1]]
+               (if false
+                 (recur fd)
+                 nil))
+       decl (loop [p prefix
+                   d fdecl]
+              (if p
+                (recur (next p) (cons (first p) d))
+                d))]
+  (if (= [1 2 3 4 5] decl)
+      :success))

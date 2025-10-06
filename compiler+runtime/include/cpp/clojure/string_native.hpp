@@ -23,4 +23,7 @@ namespace clojure::string_native
   object_ref trimr(object_ref s);
   object_ref trim(object_ref s);
   object_ref trim_newline(object_ref s);
+
+  object_ref split(object_ref s, object_ref re);
+  object_ref split(object_ref s, object_ref re, object_ref limit);
 }

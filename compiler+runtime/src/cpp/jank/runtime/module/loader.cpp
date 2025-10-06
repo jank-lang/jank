@@ -361,8 +361,9 @@ namespace jank::runtime::module
   std::time_t file_entry::last_modified_at() const
   {
     auto const source_path{ archive_path.unwrap_or(path) };
-    return std::filesystem::last_write_time(
-             native_transient_string{ source_path }) // NOLINT(*-narrowing-conversions)
+
+    /* NOLINTNEXTLINE(*-narrowing-conversions) */
+    return std::filesystem::last_write_time(native_transient_string{ source_path })
       .time_since_epoch()
       .count();
   }
@@ -822,6 +823,16 @@ namespace jank::runtime::module
   jtl::string_result<void> loader::load_cljc(file_entry const &entry) const
   {
     return load_jank(entry);
+  }
+
+  void loader::add_path(jtl::immutable_string const &path)
+  {
+    jtl::string_builder sb;
+    sb(paths);
+    sb(module_separator);
+    sb(path);
+    paths = sb.release();
+    register_path(entries, path);
   }
 
   object_ref loader::to_runtime_data() const
