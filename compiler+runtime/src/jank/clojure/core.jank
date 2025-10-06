@@ -443,7 +443,9 @@
 
 ;; Utils.
 ; The full `apply` will be defined below, but it requires more helpers to support
-; all of its arities.
+; all of its arities. This version of apply* is used by the parser for syntax quoting.
+; This allows us to use syntax quoting sooner and also have more easily inlinable
+; syntax quoting code, since this version of apply is lighter than the full version.
 (def ^:private apply*
   (fn* apply* [source args]
     (cpp/jank.runtime.apply_to source args)))
