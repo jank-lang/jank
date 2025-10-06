@@ -210,12 +210,12 @@ namespace jank::runtime
 
     constexpr bool operator==(oref<object> const &rhs) const
     {
-      return !(*this != rhs);
+      return erase() == rhs;
     }
 
     constexpr bool operator!=(oref<object> const &rhs) const
     {
-      return erase() == rhs;
+      return erase() != rhs;
     }
 
     template <typename C>
