@@ -1,0 +1,56 @@
+name: Weekly package check
+
+on:
+  schedule:
+    # 10:00 AM Pacific Standard Time (winter) / 11:00 AM Pacific Daylight Time (summer)
+    - cron: "0 18 * * 1"
+  workflow_dispatch:
+
+jobs:
+  macos-binary-package-test:
+    runs-on: macos-26
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - name: Install jank
+        run: brew install jank-lang/jank/jank
+
+      - name: Check health
+        run: jank check-health
+
+  ubuntu-binary-package-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install jank
+        run: |
+          apt install -y curl gnupg
+          curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+          apt update
+          apt install -y jank
+
+      - name: Check health
+        run: jank check-health
+
+  arch-binary-package-test:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Bootstrap system
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git
+
+      - name: Create build user for yay
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+          su builder -c "git clone https://aur.archlinux.org/yay.git /home/builder/yay"
+          su builder -c "cd /home/builder/yay && makepkg -si --noconfirm"
+
+      - name: Install jank
+        run: su builder -c "yay -S --noconfirm jank-bin"
+
+      - name: Check health
+        run: jank check-health

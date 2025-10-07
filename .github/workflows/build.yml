@@ -1,4 +1,4 @@
-name: "Build"
+name: Build compiler+runtime
 
 on:
   pull_request:
