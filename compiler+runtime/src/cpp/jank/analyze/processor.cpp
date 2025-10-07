@@ -2082,11 +2082,9 @@ namespace jank::analyze
 
     if(ret.values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil,
-                                                current_frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal(jank_nil, current_frame, position, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
