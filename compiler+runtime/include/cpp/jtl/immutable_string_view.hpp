@@ -364,11 +364,13 @@ namespace jtl
 
     constexpr bool contains(value_type const c) const noexcept
     {
+      /* NOLINTNEXTLINE(readability-container-contains) */
       return find(c) != npos;
     }
 
     constexpr bool contains(const_pointer_type const s) const noexcept
     {
+      /* NOLINTNEXTLINE(readability-container-contains) */
       return find(s) != npos;
     }
 

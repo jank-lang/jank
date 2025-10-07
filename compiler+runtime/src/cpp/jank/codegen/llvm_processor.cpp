@@ -295,7 +295,7 @@ namespace jank::codegen
     auto const tsc{ ctx.module.getContext() };
     //std::unique_ptr<llvm::Module> module{ raw_module };
     //llvm::orc::ThreadSafeModule tsm{ jtl::move(module), tsc };
-    auto cloned_cpp_module{ llvm::orc::cloneToContext(*raw_module, tsc) };
+    auto cloned_cpp_module{ llvm::orc::cloneExternalModuleToContext(*raw_module, tsc) };
     cloned_cpp_module.consumingModuleDo([&](std::unique_ptr<llvm::Module> module) {
       llvm::Linker::linkModules(*ctx.module.getModuleUnlocked(), jtl::move(module));
     });
@@ -470,6 +470,13 @@ namespace jank::codegen
     return load_ret;
   }
 
+  static jtl::ref<llvm::LLVMContext> extract_context(llvm::orc::ThreadSafeModule const &module)
+  {
+    jtl::ptr<llvm::LLVMContext> raw_ctx;
+    module.getContext().withContextDo([&](auto const ctx) { raw_ctx = ctx; });
+    return raw_ctx.data;
+  }
+
   /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
    * makes sense to use with jank objects, as opposed to native values. */
   static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
@@ -504,10 +511,11 @@ namespace jank::codegen
     auto m{ std::make_unique<llvm::Module>(__rt_ctx->unique_munged_string(module_name).c_str(),
                                            *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
-    builder = std::make_unique<llvm::IRBuilder<>>(*module.getContext().getContextUnlocked());
-    global_ctor_block
-      = llvm::BasicBlock::Create(*module.getContext().getContextUnlocked(), "entry");
-    si = std::make_unique<llvm::StandardInstrumentations>(*module.getContext().getContextUnlocked(),
+
+    auto const raw_ctx{ extract_context(module) };
+    builder = std::make_unique<llvm::IRBuilder<>>(*raw_ctx);
+    global_ctor_block = llvm::BasicBlock::Create(*raw_ctx, "entry");
+    si = std::make_unique<llvm::StandardInstrumentations>(*raw_ctx,
                                                           /*DebugLogging*/ false);
 
     /* The LLVM front-end tips documentation suggests setting the target triple and
@@ -571,7 +579,7 @@ namespace jank::codegen
     : target{ target }
     , root_fn{ expr }
     , ctx{ std::make_unique<reusable_context>(module_name, std::make_unique<llvm::LLVMContext>()) }
-    , llvm_ctx{ ctx->module.getContext().getContextUnlocked() }
+    , llvm_ctx{ extract_context(ctx->module) }
     , llvm_module{ ctx->module.getModuleUnlocked() }
   {
   }
@@ -580,7 +588,7 @@ namespace jank::codegen
     : target{ compilation_target::function }
     , root_fn{ expr }
     , ctx{ std::move(ctx) }
-    , llvm_ctx{ this->ctx->module.getContext().getContextUnlocked() }
+    , llvm_ctx{ extract_context(this->ctx->module) }
     , llvm_module{ this->ctx->module.getModuleUnlocked() }
   {
   }

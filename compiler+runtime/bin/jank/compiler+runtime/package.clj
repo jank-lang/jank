@@ -40,7 +40,7 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
                        :extra-env {"DESTDIR" dir}}
                       "./bin/install")
     (util/quiet-shell {:dir compiler+runtime-dir}
-                      (format "tar xf %s %s" tarball dir))
+                      (format "tar czf %s %s" tarball dir))
     (when-some [gh-output (util/get-env "GITHUB_OUTPUT")]
       (b.f/copy (format "%s/%s" compiler+runtime-dir tarball) tarball)
       (spit gh-output (format "homebrew-tarball=%s" tarball)))))

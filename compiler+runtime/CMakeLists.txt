@@ -88,6 +88,7 @@ set(
   -Wno-invalid-offsetof
   -Wno-deprecated-declarations
   -Wno-c++23-extensions
+  -Wno-macro-redefined
   -Wno-c23-extensions
   -fno-common
   -frtti
@@ -145,10 +146,6 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 
 # ---- Clang/LLVM ----
 include(cmake/llvm.cmake)
-
-if(APPLE)
-  list(APPEND CMAKE_BUILD_RPATH "${llvm_dir}/lib")
-endif()
 
 if(
   NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"

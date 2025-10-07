@@ -9,7 +9,7 @@ if(NOT DEFINED clang_dir AND DEFINED llvm_dir)
 endif()
 
 ## Define supported version of clang and llvm
-set(CLANG_MIN_SUPPORTED 21.0)
+set(CLANG_MIN_SUPPORTED 22.0)
 set(CLANG_MAX_SUPPORTED "22.0.x")
 set(CLANG_VERSION_UPPER_BOUND 23.0.0)
 set(LLVM_MIN_SUPPORTED ${CLANG_MIN_SUPPORTED})
@@ -185,4 +185,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (APPLE)
   set(CMAKE_MODULE_LINKER_FLAGS "-Wl,-flat_namespace -Wl,-undefined -Wl,suppress")
+  list(APPEND CMAKE_BUILD_RPATH "${llvm_dir}/lib")
+  if (NOT jank_local_clang)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind")
+  endif ()
 endif ()
