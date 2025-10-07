@@ -38,11 +38,14 @@ misc-definitions-in-headers,\
 -cppcoreguidelines-rvalue-reference-param-not-moved,\
 -cppcoreguidelines-pro-bounds-constant-array-index,\
 -cppcoreguidelines-missing-std-forward,\
+-cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,\
 -bugprone-easily-swappable-parameters,\
 -bugprone-reserved-identifier,\
 -bugprone-multi-level-implicit-pointer-conversion,\
 -bugprone-crtp-constructor-accessibility,\
 -bugprone-bitwise-pointer-cast,\
+-bugprone-macro-parentheses,\
+-bugprone-throwing-static-initialization,\
 -readability-redundant-member-init,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
@@ -58,6 +61,7 @@ misc-definitions-in-headers,\
 -readability-redundant-declaration,\
 -readability-use-anyofallof,\
 -readability-enum-initial-value,\
+-readability-use-concise-preprocessor-directives,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

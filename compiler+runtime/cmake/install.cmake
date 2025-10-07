@@ -128,12 +128,21 @@ if(jank_local_clang AND jank_install_local_clang)
     DESTINATION lib/jank/${PROJECT_VERSION}/bin
   )
 
+if(APPLE)
+  install(
+    FILES
+    ${llvm_dir}/lib/libLLVM.dylib
+    ${llvm_dir}/lib/libclang-cpp.dylib
+    DESTINATION lib/jank/${PROJECT_VERSION}/lib
+  )
+else()
   install(
     FILES
     ${llvm_dir}/lib/libLLVM.so.${LLVM_VERSION_MAJOR}.0git
     ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
+endif()
 
   jank_glob_install_without_prefix(
     INPUT_PREFIX "${llvm_dir}/"
