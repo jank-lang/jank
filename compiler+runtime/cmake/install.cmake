@@ -143,6 +143,9 @@ if(APPLE)
     ${llvm_dir}/lib/libc++.1.0.dylib
     ${llvm_dir}/lib/libc++.1.dylib
     ${llvm_dir}/lib/libc++.dylib
+    ${llvm_dir}/lib/libc++abi.1.0.dylib
+    ${llvm_dir}/lib/libc++abi.1.dylib
+    ${llvm_dir}/lib/libc++abi.dylib
     ${llvm_dir}/lib/libunwind.1.0.dylib
     ${llvm_dir}/lib/libunwind.1.dylib
     ${llvm_dir}/lib/libunwind.dylib
