@@ -111,6 +111,10 @@ set(
   #-stdlib=libc++ -lc++abi
   )
 
+if (NOT jank_local_clang)
+  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
+endif ()
+
 # If the user opts into a specific build type, we will provide sane defaults. However, for
 # packaging, we can expect that CMAKE_BUILD_TYPE=None will be used and packagers will provide
 # the exact flags they desire.
@@ -548,6 +552,10 @@ target_link_libraries(
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
+
+if(APPLE)
+  target_link_libraries(jank_lib PUBLIC libzstd_static)
+endif()
 
 jank_hook_llvm(jank_lib)
 
