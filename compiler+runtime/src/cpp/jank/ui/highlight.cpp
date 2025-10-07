@@ -141,7 +141,7 @@ namespace jank::ui
        *
        * This only adds lines if it finds a new line character, though, so the normal
        * case of a single-line token is handled below. */
-      if(code_range.find('\n') != jtl::immutable_string_view::npos)
+      if(code_range.contains('\n'))
       {
         last_offset = token.start.offset;
         fill_in_lines(skip, token.start.offset + token_size, token_color(token));

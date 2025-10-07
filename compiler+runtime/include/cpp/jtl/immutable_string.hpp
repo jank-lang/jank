@@ -405,7 +405,7 @@ namespace jtl
 
     constexpr bool starts_with(value_type const c) const noexcept
     {
-      return size() > 0 && data()[0] == c;
+      return !empty() && data()[0] == c;
     }
 
     constexpr bool starts_with(const_pointer_type const s) const noexcept
@@ -462,16 +462,19 @@ namespace jtl
 
     constexpr bool contains(value_type const c) const noexcept
     {
+      /* NOLINTNEXTLINE(readability-container-contains) */
       return find(c) != npos;
     }
 
     constexpr bool contains(const_pointer_type const s) const noexcept
     {
+      /* NOLINTNEXTLINE(readability-container-contains) */
       return find(s) != npos;
     }
 
     constexpr bool contains(jtl::immutable_string_view const &s) const noexcept
     {
+      /* NOLINTNEXTLINE(readability-container-contains) */
       return find(s) != npos;
     }
 
