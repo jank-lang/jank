@@ -2,9 +2,15 @@ name: Weekly package check
 
 on:
   schedule:
-    # 10:00 AM Pacific Standard Time (winter) / 11:00 AM Pacific Daylight Time (summer)
+    # 10:00 AM Pacific Standard Time (doesn't handle DST).
     - cron: "0 18 * * 1"
+  # Allow manual runs of this workflow.
   workflow_dispatch:
+
+# Only allow one build at a time. New builds will cancel existing builds.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   macos-binary-package-test:
@@ -23,11 +29,11 @@ jobs:
     steps:
       - name: Install jank
         run: |
-          apt install -y curl gnupg
-          curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
-          curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
-          apt update
-          apt install -y jank
+          sudo apt install -y curl gnupg
+          curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+          sudo apt update
+          sudo apt install -y jank
 
       - name: Check health
         run: jank check-health
