@@ -118,7 +118,14 @@ if(jank_local_clang AND jank_install_local_clang)
   # When the compiler is installed, it needs to be relinked to its shared objects.
   # We know where they'll be, relative to the compiler, though.
   set(CMAKE_SKIP_INSTALL_RPATH OFF)
-  set_target_properties(jank_exe_phase_2 PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
+
+  # macOS doesn't use $ORIGIN in the same way as Linux. CMake doesn't provide a way to generalize.
+  # Details are here: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+  if(APPLE)
+    set_target_properties(jank_exe_phase_2 PROPERTIES INSTALL_RPATH "@executable_path/../lib/jank/${PROJECT_VERSION}/lib")
+  else()
+    set_target_properties(jank_exe_phase_2 PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/jank/${PROJECT_VERSION}/lib")
+  endif()
 
   install(
     PROGRAMS
