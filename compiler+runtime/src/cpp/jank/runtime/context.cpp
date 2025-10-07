@@ -537,13 +537,42 @@ namespace jank::runtime
     }
 
     auto locked_namespaces(namespaces.wlock());
-    auto const found_ns(locked_namespaces->find(make_box<obj::symbol>(qualified_sym->ns)));
+    obj::symbol const ns_sym{ qualified_sym->ns };
+    auto const found_ns(locked_namespaces->find(&ns_sym));
     if(found_ns == locked_namespaces->end())
     {
       return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
     }
 
     return ok(found_ns->second->intern_var(qualified_sym));
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
+  {
+    return intern_owned_var(make_box<obj::symbol>(ns, name));
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_owned_var(obj::symbol_ref const &qualified_sym)
+  {
+    /* TODO: Clean up duplication between this and intern_var. */
+    profile::timer const timer{ "intern_var" };
+    if(qualified_sym->ns.empty())
+    {
+      return err(
+        util::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
+    }
+
+    auto locked_namespaces(namespaces.wlock());
+    obj::symbol const ns_sym{ qualified_sym->ns };
+    auto const found_ns(locked_namespaces->find(&ns_sym));
+    if(found_ns == locked_namespaces->end())
+    {
+      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
+    }
+
+    return ok(found_ns->second->intern_owned_var(qualified_sym));
   }
 
   jtl::result<obj::keyword_ref, jtl::immutable_string>

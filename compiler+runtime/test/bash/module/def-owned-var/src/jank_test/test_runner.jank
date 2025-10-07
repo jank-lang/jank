@@ -1,0 +1,8 @@
+(ns jank-test.test-runner)
+
+(defn inc [i]
+  i)
+
+(defn -main []
+  (assert (= 0 (inc 0)) "We interned an owned var")
+  (assert (= 1 (clojure.core/inc 0)) "The previously referred var is untouched"))

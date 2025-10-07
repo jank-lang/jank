@@ -7,7 +7,7 @@
 
 namespace jank::runtime
 {
-  ns::ns(obj::symbol_ref const &name)
+  ns::ns(obj::symbol_ref const name)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -19,7 +19,7 @@ namespace jank::runtime
     return intern_var(make_box<obj::symbol>(name));
   }
 
-  var_ref ns::intern_var(obj::symbol_ref const &sym)
+  var_ref ns::intern_var(obj::symbol_ref const sym)
   {
     obj::symbol_ref unqualified_sym{ sym };
     if(!unqualified_sym->ns.empty())
@@ -32,6 +32,7 @@ namespace jank::runtime
     object_ref const * const found_var((*locked_vars)->data.find(unqualified_sym));
     if(found_var && found_var->is_some())
     {
+      /* TODO: Why not store var_ref instead? Relying on expect_object is not good. */
       return expect_object<var>(*found_var);
     }
 
@@ -41,7 +42,64 @@ namespace jank::runtime
     return new_var;
   }
 
-  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ref const &sym)
+  var_ref ns::intern_owned_var(jtl::immutable_string_view const &name)
+  {
+    return intern_owned_var(make_box<obj::symbol>(name));
+  }
+
+  /* Interning an owned var is different from just interning a var, since we will replace
+   * any existing referred var with our own. This leads to a warning. For example:
+   *
+   * ```
+   * user=> (ns foo)
+   * nil
+   *
+   * foo=> (defn println [])
+   * WARNING 'println' already referred to #'clojure.core/println in namespace 'foo' but has been replaced by #'foo/println
+   * ```
+   */
+  var_ref ns::intern_owned_var(obj::symbol_ref const sym)
+  {
+    obj::symbol_ref unqualified_sym{ sym };
+    if(!unqualified_sym->ns.empty())
+    {
+      unqualified_sym = make_box<obj::symbol>("", sym->name);
+    }
+
+    /* TODO: Read lock, then upgrade as needed? Benchmark. */
+    auto locked_vars(vars.wlock());
+    object_ref const * const found_var((*locked_vars)->data.find(unqualified_sym));
+    bool redefined{};
+    if(found_var && found_var->is_some())
+    {
+      auto const v{ expect_object<var>(*found_var) };
+      if(v->n == this)
+      {
+        return v;
+      }
+
+      redefined = true;
+    }
+
+    auto const new_var(make_box<var>(this, unqualified_sym));
+    if(redefined)
+    {
+      auto const v{ expect_object<var>(*found_var) };
+      /* TODO: Util for warning. */
+      util::println(
+        stderr,
+        "WARNING: '{}' already referred to {} in namespace '{}' but has been replaced by {}",
+        unqualified_sym->to_string(),
+        v->to_code_string(),
+        name->to_string(),
+        new_var->to_code_string());
+    }
+    *locked_vars
+      = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
+    return new_var;
+  }
+
+  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ref const sym)
   {
     if(!sym->ns.empty())
     {
@@ -53,7 +111,7 @@ namespace jank::runtime
     return ok();
   }
 
-  var_ref ns::find_var(obj::symbol_ref const &sym)
+  var_ref ns::find_var(obj::symbol_ref const sym)
   {
     if(!sym->ns.empty())
     {
@@ -71,7 +129,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, jtl::immutable_string>
-  ns::add_alias(obj::symbol_ref const &sym, ns_ref const &nsp)
+  ns::add_alias(obj::symbol_ref const sym, ns_ref const nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -92,13 +150,13 @@ namespace jank::runtime
     return ok();
   }
 
-  void ns::remove_alias(obj::symbol_ref const &sym)
+  void ns::remove_alias(obj::symbol_ref const sym)
   {
     auto locked_aliases(aliases.wlock());
     *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
   }
 
-  ns_ref ns::find_alias(obj::symbol_ref const &sym) const
+  ns_ref ns::find_alias(obj::symbol_ref const sym) const
   {
     auto locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));

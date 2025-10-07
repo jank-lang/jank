@@ -1284,7 +1284,8 @@ namespace jank::analyze
 
     auto qualified_sym(current_frame->lift_var(sym));
     qualified_sym->meta = sym->meta;
-    auto const var(__rt_ctx->intern_var(qualified_sym));
+    /* We always def in the current ns, so we want an owned var. */
+    auto const var(__rt_ctx->intern_owned_var(qualified_sym));
     if(var.is_err())
     {
       return error::internal_analyze_failure(var.expect_err(),
