@@ -187,6 +187,15 @@ namespace jank::codegen
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
     jtl::ptr<llvm::BasicBlock> current_loop;
+
+    /* Landingpad and catch basic block used for try...catch...finally */
+    struct lpad_and_catch_bb
+    {
+      llvm::BasicBlock *lpad_bb{};
+      llvm::BasicBlock *catch_bb{};
+    };
+
+    native_vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
   };
 
   struct llvm_type_info
@@ -918,7 +927,7 @@ namespace jank::codegen
     arg_handles.reserve(expr->arg_exprs.size() + 1);
     arg_types.reserve(expr->arg_exprs.size() + 1);
 
-    llvm::CallInst *call{};
+    llvm::Value *call{};
     if(cpp_util::is_any_object(cpp_util::expression_type(expr->source_expr)))
     {
       arg_handles.emplace_back(callee);
@@ -939,22 +948,28 @@ namespace jank::codegen
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
       auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      call = ctx->builder->CreateCall(fn, arg_handles);
+
+      if(lpad_and_catch_body_stack.empty())
+      {
+        call = ctx->builder->CreateCall(fn, arg_handles);
+      }
+      else
+      {
+        auto const normal_dest{ llvm::BasicBlock::Create(
+          *llvm_ctx,
+          util::format("invoke.{}.normal", call_fn_name).data(),
+          this->fn) };
+        call = ctx->builder->CreateInvoke(fn,
+                                          normal_dest,
+                                          lpad_and_catch_body_stack.back().lpad_bb,
+                                          arg_handles);
+        ctx->builder->SetInsertPoint(normal_dest);
+      }
     }
     /* TODO: This can be deleted, I'm pretty sure. */
     else
     {
-      for(auto const &arg_expr : expr->arg_exprs)
-      {
-        auto const arg_handle{ gen(arg_expr, arity) };
-        arg_handles.emplace_back(arg_handle);
-        arg_types.emplace_back(
-          llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(arg_expr)).type.data);
-      }
-
-      auto const ret_type{ llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(expr)) };
-      auto const fn_type(llvm::FunctionType::get(ret_type.type.data, arg_types, false));
-      call = ctx->builder->CreateCall(fn_type, callee, arg_handles);
+      throw std::runtime_error{ "oops, thought this was dead code" };
     }
 
     if(expr->position == expression_position::tail)
@@ -1628,7 +1643,7 @@ namespace jank::codegen
     if(!lpad_and_catch_body_stack.empty())
     {
       auto const unreachable_dest{
-        llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn)
+        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", this->fn)
       };
       ctx->builder->CreateInvoke(fn,
                                  unreachable_dest,
@@ -1669,7 +1684,7 @@ namespace jank::codegen
      */
     auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
                                                       /*isVarArg=*/true) };
-    auto personality_fn{ ctx->module->getOrInsertFunction("__gxx_personality_v0",
+    auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
                                                           personality_fn_type) };
     current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
 
@@ -1677,16 +1692,16 @@ namespace jank::codegen
 
     /* --- Block Setup --- */
     auto const original_insert_bb{ ctx->builder->GetInsertBlock() };
-    auto const finally_bb{ llvm::BasicBlock::Create(*ctx->llvm_ctx, "finally") };
-    auto const cont_bb{ llvm::BasicBlock::Create(*ctx->llvm_ctx, "try.cont") };
-    auto const lpad_bb{ llvm::BasicBlock::Create(*ctx->llvm_ctx, "lpad", current_fn) };
+    auto const finally_bb{ llvm::BasicBlock::Create(*llvm_ctx, "finally") };
+    auto const cont_bb{ llvm::BasicBlock::Create(*llvm_ctx, "try.cont") };
+    auto const lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "lpad", current_fn) };
 
     llvm::BasicBlock *catch_body_bb{};
 
     auto const has_catch{ expr->catch_body.is_some() };
     if(has_catch)
     {
-      catch_body_bb = llvm::BasicBlock::Create(*ctx->llvm_ctx, "catch.body");
+      catch_body_bb = llvm::BasicBlock::Create(*llvm_ctx, "catch.body");
     }
 
     lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
@@ -1715,7 +1730,7 @@ namespace jank::codegen
     ctx->builder->SetInsertPoint(lpad_bb);
     auto const ptr_ty{ ctx->builder->getPtrTy() };
     auto const i32_ty{ ctx->builder->getInt32Ty() };
-    auto const lpad_ty{ llvm::StructType::get(*ctx->llvm_ctx, { ptr_ty, i32_ty }) };
+    auto const lpad_ty{ llvm::StructType::get(*llvm_ctx, { ptr_ty, i32_ty }) };
     auto const landing_pad{ ctx->builder->CreateLandingPad(lpad_ty, 1) };
     if(expr->finally_body.is_some())
     {
@@ -1724,7 +1739,7 @@ namespace jank::codegen
 
     if(has_catch)
     {
-      auto const object_ptr_type_info{ ctx->module->getOrInsertGlobal(
+      auto const object_ptr_type_info{ llvm_module->getOrInsertGlobal(
         typeid(object_ref).name(),
         llvm::PointerType::get(ctx->builder->getInt8Ty(), 0)) };
       landing_pad->addClause(object_ptr_type_info);
@@ -1735,8 +1750,7 @@ namespace jank::codegen
 
     if(has_catch)
     {
-      auto const cleanup_lpad_bb
-        = llvm::BasicBlock::Create(*ctx->llvm_ctx, "cleanup.lpad", current_fn);
+      auto const cleanup_lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "cleanup.lpad", current_fn) };
       lpad_and_catch_body_stack.emplace_back(cleanup_lpad_bb, nullptr);
       util::scope_exit const pop_cleanup_lpad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
 
@@ -1748,7 +1762,7 @@ namespace jank::codegen
       auto old_locals(locals);
       auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
       auto const begin_catch_fn{
-        ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
+        llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
       };
       auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { exception_ptr }) };
       locals[sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
@@ -1760,7 +1774,7 @@ namespace jank::codegen
       } };
       catch_val = gen(body, arity);
 
-      auto const end_catch_fn{ ctx->module->getOrInsertFunction("__cxa_end_catch",
+      auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
                                                                 ctx->builder->getVoidTy()) };
       ctx->builder->CreateCall(end_catch_fn, {});
       locals = std::move(old_locals);
@@ -1798,20 +1812,20 @@ namespace jank::codegen
         /* rethrow the exception to the outer catch if one is available. */
         auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
         auto const begin_catch_fn{
-          ctx->module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
+          llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
         };
         auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { exception_ptr }) };
         auto const ex_val_ptr{ ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val") };
         auto const unreachable_dest{
-          llvm::BasicBlock::Create(*ctx->llvm_ctx, "unreachable.throw", this->fn)
+          llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", this->fn)
         };
 
         auto const fn_type{
           llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false)
         };
-        auto fn{ ctx->module->getOrInsertFunction("jank_throw", fn_type) };
+        auto fn{ llvm_module->getOrInsertFunction("jank_throw", fn_type) };
         llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
-        auto const end_catch_fn{ ctx->module->getOrInsertFunction("__cxa_end_catch",
+        auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
                                                                   ctx->builder->getVoidTy()) };
         ctx->builder->CreateCall(end_catch_fn, {});
         ctx->builder->CreateInvoke(fn,
