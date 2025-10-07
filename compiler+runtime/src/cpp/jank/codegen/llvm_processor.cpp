@@ -740,20 +740,17 @@ namespace jank::codegen
         if(ctx->builder->GetInsertBlock()->getTerminator())
         {
           block_terminated = true;
-          break; /* Exit the inner loop */
+          break;
         }
       }
 
       /* If the inner loop was terminated, we skip the final check. */
       if(block_terminated)
       {
-        continue; /* Start the next iteration of the outer loop */
+        continue;
       }
 
-      if(!ctx->builder->GetInsertBlock()->getTerminator())
-      {
-        ctx->builder->CreateRet(gen_global(jank_nil));
-      }
+      ctx->builder->CreateRet(gen_global(jank_nil));
     }
 
     if(target != compilation_target::function)
@@ -1690,8 +1687,8 @@ namespace jank::codegen
 
     auto const is_return(expr->position == expression_position::tail);
 
-    /* --- Block Setup --- */
-    auto const original_insert_bb{ ctx->builder->GetInsertBlock() };
+    /* --- Block setup --- */
+    //auto const original_insert_bb{ ctx->builder->GetInsertBlock() };
     auto const finally_bb{ llvm::BasicBlock::Create(*llvm_ctx, "finally") };
     auto const cont_bb{ llvm::BasicBlock::Create(*llvm_ctx, "try.cont") };
     auto const lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "lpad", current_fn) };
@@ -1707,14 +1704,16 @@ namespace jank::codegen
     lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
     util::scope_exit const pop_landing_pad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
 
-    /* --- Try Block --- */
-    ctx->builder->SetInsertPoint(original_insert_bb);
+    /* --- Try block --- */
+    //ctx->builder->SetInsertPoint(original_insert_bb);
     auto const original_try_pos{ expr->body->position };
+    /* We put the try body into value position so that no return is generated, which allows
+     * us to continue onto the finally block, if we have one. */
     expr->body->propagate_position(expression_position::value);
     auto const try_val{ gen(expr->body, arity) };
     expr->body->propagate_position(original_try_pos);
 
-    llvm::BasicBlock *try_end_bb = nullptr;
+    llvm::BasicBlock *try_end_bb{};
     if(try_val)
     {
       try_end_bb = ctx->builder->GetInsertBlock();
@@ -1737,19 +1736,16 @@ namespace jank::codegen
       landing_pad->setCleanup(true);
     }
 
+    llvm::Value *catch_val{};
+    llvm::BasicBlock *catch_end_bb{};
+
     if(has_catch)
     {
       auto const object_ptr_type_info{ llvm_module->getOrInsertGlobal(
         typeid(object_ref).name(),
         llvm::PointerType::get(ctx->builder->getInt8Ty(), 0)) };
       landing_pad->addClause(object_ptr_type_info);
-    }
 
-    llvm::Value *catch_val{};
-    llvm::BasicBlock *catch_end_bb{};
-
-    if(has_catch)
-    {
       auto const cleanup_lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "cleanup.lpad", current_fn) };
       lpad_and_catch_body_stack.emplace_back(cleanup_lpad_bb, nullptr);
       util::scope_exit const pop_cleanup_lpad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
@@ -1842,7 +1838,7 @@ namespace jank::codegen
       }
     }
 
-    /* --- Finally Block --- */
+    /* --- Finally block --- */
     current_fn->insert(current_fn->end(), finally_bb);
     ctx->builder->SetInsertPoint(finally_bb);
 
@@ -1878,7 +1874,7 @@ namespace jank::codegen
      * of this function's codegen. */
     lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
 
-    /* --- Continuation Block --- */
+    /* --- Continuation block --- */
     current_fn->insert(current_fn->end(), cont_bb);
     ctx->builder->SetInsertPoint(cont_bb);
 
@@ -1895,7 +1891,7 @@ namespace jank::codegen
       return nullptr;
     }
 
-    return final_val ? final_val : gen_global(jank_nil);
+    return final_val ?: gen_global(jank_nil);
   }
 
   llvm::Value *
