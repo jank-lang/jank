@@ -225,10 +225,12 @@ namespace jank::error
   }
 
   base::base(enum kind const k, read::source const &source)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ kind_to_message(k) }
     , source{ source }
-    , notes{{ default_note_message, source }}
+    , notes{ { default_note_message, source } }
   {
   }
 
@@ -241,32 +243,41 @@ namespace jank::error
   }
 
   base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ default_note_message, source }}
+    , notes{ { default_note_message, source } }
   {
   }
 
-  base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source, runtime::object_ref const expansion)
-    : kind{ k }
+  base::base(enum kind const k,
+             jtl::immutable_string const &message,
+             read::source const &source,
+             runtime::object_ref const expansion)
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ default_note_message, source }}
+    , notes{ { default_note_message, source } }
   {
     add_expansion_note(*this, expansion);
   }
 
   base::base(enum kind const k,
-         jtl::immutable_string const &message,
-         read::source const &source,
-         runtime::object_ref const expansion,
-         std::unique_ptr<cpptrace::stacktrace> trace)
-    : kind{ k }
+             jtl::immutable_string const &message,
+             read::source const &source,
+             runtime::object_ref const expansion,
+             std::unique_ptr<cpptrace::stacktrace> trace)
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ default_note_message, source }}
-    , trace{ std::move(trace) }
+    , notes{ { default_note_message, source } },
+    trace{ std::move(trace) }
   {
     add_expansion_note(*this, expansion);
   }
@@ -274,10 +285,12 @@ namespace jank::error
   base::base(enum kind const k,
              read::source const &source,
              jtl::immutable_string const &note_message)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ kind_to_message(k) }
     , source{ source }
-    , notes{{ note_message, source }}
+    , notes{ { note_message, source } }
   {
   }
 
@@ -285,10 +298,12 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              jtl::immutable_string const &note_message)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ note_message, source }}
+    , notes{ { note_message, source } }
   {
   }
 
@@ -297,10 +312,12 @@ namespace jank::error
              read::source const &source,
              jtl::immutable_string const &note_message,
              runtime::object_ref const expansion)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ note_message, source }}
+    , notes{ { note_message, source } }
   {
     add_expansion_note(*this, expansion);
   }
@@ -353,11 +370,13 @@ namespace jank::error
              read::source const &source,
              runtime::object_ref const expansion,
              jtl::ref<base> const cause)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ default_note_message, source }}
-    , cause{ cause }
+    , notes{ { default_note_message, source } },
+    cause{ cause }
   {
     add_expansion_note(*this, expansion);
   }
@@ -368,12 +387,13 @@ namespace jank::error
              runtime::object_ref const expansion,
              jtl::ref<base> const cause,
              std::unique_ptr<cpptrace::stacktrace> trace)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ message }
     , source{ source }
-    , notes{{ default_note_message, source }}
-    , cause{ cause }
-    , trace{ std::move(trace) }
+    , notes{ { default_note_message, source } },
+    cause{ cause }, trace{ std::move(trace) }
   {
     add_expansion_note(*this, expansion);
   }
