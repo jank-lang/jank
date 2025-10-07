@@ -1796,6 +1796,7 @@ namespace jank::codegen
       cleanup_lpad->setCleanup(true);
       if(expr->finally_body.is_some())
       {
+        /* TODO: Last form of this thinks it's in tail position. */
         gen(expr->finally_body.unwrap(), arity);
       }
       ctx->builder->CreateResume(cleanup_lpad);
