@@ -140,6 +140,12 @@ if(APPLE)
     FILES
     ${llvm_dir}/lib/libLLVM.dylib
     ${llvm_dir}/lib/libclang-cpp.dylib
+    ${llvm_dir}/lib/libc++.1.0.dylib
+    ${llvm_dir}/lib/libc++.1.dylib
+    ${llvm_dir}/lib/libc++.dylib
+    ${llvm_dir}/lib/libunwind.1.0.dylib
+    ${llvm_dir}/lib/libunwind.1.dylib
+    ${llvm_dir}/lib/libunwind.dylib
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
 else()
