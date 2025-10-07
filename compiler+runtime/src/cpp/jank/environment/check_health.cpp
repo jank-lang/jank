@@ -20,6 +20,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/try.hpp>
+#include <jank/c_api.h>
 
 #include <clojure/core_native.hpp>
 
@@ -84,7 +85,7 @@ namespace jank::environment
   static jtl::immutable_string jank_asserts()
   {
 #ifndef NDEBUG
-    return util::format("{}─ ✅ jank assertions are enabled; performance will be impacted {}\n",
+    return util::format("{}─ ⚠️ jank assertions are enabled; performance will be impacted {}\n",
                         terminal_style::yellow,
                         terminal_style::reset);
 #else
@@ -266,7 +267,7 @@ namespace jank::environment
                           terminal_style::reset);
     }
 
-    return util::format("{}─ ✅{} jank pch dir: {}{}{} {}(no pch found){}",
+    return util::format("{}─ ⚠️{} jank pch dir: {}{}{} {}(no pch found){}",
                         terminal_style::yellow,
                         terminal_style::reset,
                         terminal_style::blue,
@@ -475,16 +476,20 @@ namespace jank::environment
     if(!fatal_error)
     {
       util::println("{}", header("jank runtime", max_width));
-      runtime::__rt_ctx = new(GC) runtime::context{};
-      jank_load_clojure_core_native();
-      util::println("{}─ ✅{} jank runtime initialized",
-                    terminal_style::green,
-                    terminal_style::reset);
-      util::println("{}", pch_location());
-      util::println("{}", check_cpp_jit());
-      util::println("{}", check_ir_jit());
-      util::println("{}", check_aot());
-      util::println("");
+      jank_init(0, nullptr, true, [](int const, char const **) {
+        runtime::__rt_ctx = new(GC) runtime::context{};
+        jank_load_clojure_core_native();
+        util::println("{}─ ✅{} jank runtime initialized",
+                      terminal_style::green,
+                      terminal_style::reset);
+        util::println("{}", pch_location());
+        util::println("{}", check_cpp_jit());
+        util::println("{}", check_ir_jit());
+        util::println("{}", check_aot());
+        util::println("");
+
+        return 0;
+      });
     }
 
 
