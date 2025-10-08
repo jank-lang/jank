@@ -23,7 +23,7 @@
     (str "--codegen " (name value))
 
     :defines
-    (map (fn [[k v]] (str "-D" k "=" v)) value) 
+    (map (fn [[k v]] (str "-D" k "=" v)) value)
 
     :include-dirs
     (map (fn [v] (str "-I" v)) value)
@@ -31,7 +31,7 @@
     :library-dirs
     (map (fn [v] (str "-L" v)) value)
 
-    :linked-libraries 
+    :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
     (lmain/warn (str "Unknown flag " flag))))
