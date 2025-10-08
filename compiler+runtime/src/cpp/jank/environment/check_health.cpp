@@ -408,6 +408,7 @@ namespace jank::environment
       std::getline(ifs, line);
       if(line != "healthy")
       {
+        util::println(stderr, R"(Expected "healthy" from output, but received "{}")", line);
         error = true;
       }
     }
@@ -476,7 +477,7 @@ namespace jank::environment
     if(!fatal_error)
     {
       util::println("{}", header("jank runtime", max_width));
-      jank_init(0, nullptr, true, [](int const, char const **) {
+      auto const ret{ jank_init(0, nullptr, true, [](int const, char const **) {
         runtime::__rt_ctx = new(GC) runtime::context{};
         jank_load_clojure_core_native();
         util::println("{}─ ✅{} jank runtime initialized",
@@ -489,7 +490,11 @@ namespace jank::environment
         util::println("");
 
         return 0;
-      });
+      }) };
+      if(ret != 0)
+      {
+        fatal_error = true;
+      }
     }
 
 
