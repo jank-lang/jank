@@ -409,6 +409,7 @@ namespace jank::environment
       std::getline(ifs, line);
       if(line != "healthy")
       {
+        /* TODO: Show full file output here. */
         util::println(stderr, R"(Expected "healthy" from output, but received "{}")", line);
         error = true;
       }

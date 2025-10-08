@@ -119,6 +119,8 @@ namespace jank::util
       return result = unversioned_path->c_str();
     }
 
+    /* TODO: Find jank and look in its resource dir. */
+
     return none;
   }
 
@@ -188,8 +190,7 @@ namespace jank::util
     auto const compilation_result{ driver.BuildCompilation(args) };
     if(!compilation_result || compilation_result->containsError())
     {
-      return err(
-        error::internal_system_failure(format("Failed to build Clang steps.\n{}", buffer)));
+      return err(error::system_failure(format("Failed to build Clang steps.\n{}", buffer)));
     }
 
     /* Execute the compilation jobs (preprocess, compile, assemble).
@@ -203,7 +204,7 @@ namespace jank::util
 
     if(diags.hasErrorOccurred() || execution_exit_code != 0)
     {
-      return err(error::internal_system_failure(format("Clang failed with errors.\n{}", buffer)));
+      return err(error::system_failure(format("Clang failed with errors.\n{}", buffer)));
     }
 
     return ok();
@@ -255,7 +256,7 @@ namespace jank::util
       if(!std::filesystem::exists(install_path.c_str()))
       {
         println(stderr, "failed!");
-        return err(error::internal_system_failure(
+        return err(error::system_failure(
           util::format("Unable to find PCH entrypoint. Tried these paths:\n\n{}\n{}",
                        include_path.c_str(),
                        install_path)));

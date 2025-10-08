@@ -110,7 +110,7 @@ namespace jank::error
     internal_aot_failure,
 
     system_clang_executable_not_found,
-    internal_system_failure,
+    system_failure,
 
     internal_runtime_failure,
 
@@ -305,8 +305,8 @@ namespace jank::error
 
       case kind::system_clang_executable_not_found:
         return "system/clang-executable-not-found";
-      case kind::internal_system_failure:
-        return "internal/system-failure";
+      case kind::system_failure:
+        return "system/failure";
 
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";

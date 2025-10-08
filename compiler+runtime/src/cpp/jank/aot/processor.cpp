@@ -169,7 +169,8 @@ int main(int argc, const char** argv)
     auto const clang_path_str{ util::find_clang() };
     if(clang_path_str.is_none())
     {
-      return error::internal_system_failure("Unable to find Clang.");
+      return error::system_failure(
+        util::format("Unable to find Clang {}.", JANK_CLANG_MAJOR_VERSION));
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
     compiler_args.emplace_back(strdup("-I"));

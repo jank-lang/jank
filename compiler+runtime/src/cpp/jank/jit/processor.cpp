@@ -18,13 +18,14 @@
 
 #include <cpptrace/gdb_jit.hpp>
 
+#include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/jit/processor.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/error/system.hpp>
 
 namespace jank::jit
 {
@@ -106,8 +107,7 @@ namespace jank::jit
     auto const clang_path_str{ util::find_clang() };
     if(clang_path_str.is_none())
     {
-      /* TODO: Internal system error. */
-      throw std::runtime_error{ "Unable to find Clang." };
+      throw error::system_clang_executable_not_found();
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
     args.emplace_back("-I");
@@ -116,8 +116,8 @@ namespace jank::jit
     auto const clang_resource_dir{ util::find_clang_resource_dir() };
     if(clang_resource_dir.is_none())
     {
-      /* TODO: Internal system error. */
-      throw std::runtime_error{ "Unable to find Clang resource dir." };
+      throw error::system_failure(
+        util::format("Unable to find Clang {} resource dir.", JANK_CLANG_MAJOR_VERSION));
     }
     args.emplace_back("-resource-dir");
     args.emplace_back(clang_resource_dir.unwrap().c_str());
@@ -214,8 +214,7 @@ namespace jank::jit
     auto const &load_result{ load_dynamic_libs(util::cli::opts.libs) };
     if(load_result.is_err())
     {
-      /* TODO: Internal system error. */
-      throw std::runtime_error{ load_result.expect_err().c_str() };
+      throw error::system_failure(load_result.expect_err().c_str());
     }
   }
 

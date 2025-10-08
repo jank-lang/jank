@@ -197,8 +197,8 @@ namespace jank::error
 
       case kind::system_clang_executable_not_found:
         return "Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.";
-      case kind::internal_system_failure:
-        return "Internal system failure.";
+      case kind::system_failure:
+        return "System failure.";
 
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
