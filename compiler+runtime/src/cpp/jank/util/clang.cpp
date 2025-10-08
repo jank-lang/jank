@@ -119,8 +119,6 @@ namespace jank::util
       return result = unversioned_path->c_str();
     }
 
-    /* TODO: Find jank and look in its resource dir. */
-
     return none;
   }
 
