@@ -212,6 +212,7 @@ int main(int argc, const char** argv)
     {
       compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
     }
+
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));

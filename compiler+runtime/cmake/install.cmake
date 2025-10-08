@@ -3,6 +3,17 @@ set(CMAKE_SKIP_INSTALL_RPATH ON)
 install(TARGETS jank_exe_phase_2 DESTINATION bin)
 install(FILES ${CMAKE_BINARY_DIR}/libjank-standalone.a DESTINATION lib/jank/${PROJECT_VERSION}/lib)
 
+function(install_symlink target link_name dir)
+  install(CODE "
+    set(libdir \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${dir}\")
+    execute_process(
+      COMMAND \${CMAKE_COMMAND} -E create_symlink
+        ${target}
+        \"\${libdir}/${link_name}\"
+    )
+  ")
+endfunction()
+
 # This is a helper which recursively takes headers from one directory
 # and installs them into the same output include directory. It
 # handles various different situations of include/ or not, supports
@@ -158,6 +169,10 @@ else()
     ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
+
+  # Install unversioned symlinks so we can easily just link to -lLLVM.
+  install_symlink(libLLVM.so.${LLVM_VERSION_MAJOR}.0git libLLVM.so lib/jank/${PROJECT_VERSION}/lib)
+  install_symlink(libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git libclang-cpp.so lib/jank/${PROJECT_VERSION}/lib)
 endif()
 
   jank_glob_install_without_prefix(
