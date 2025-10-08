@@ -1,5 +1,7 @@
 name: Weekly package check
 
+# TODO: Run the e2e test suite after health check.
+
 on:
   schedule:
     # 10:00 AM Pacific Standard Time (doesn't handle DST).
