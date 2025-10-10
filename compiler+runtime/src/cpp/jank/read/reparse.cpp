@@ -24,8 +24,7 @@ namespace jank::read::parse
     auto const file(module::loader::read_file(file_path));
     if(file.is_err())
     {
-      return error::internal_parse_failure(
-        util::format("Unable to map file {} due to error: {}", file_path, file.expect_err()));
+      return file.expect_err();
     }
 
     lex::processor l_prc{ file.expect_ok().view(), offset };

@@ -2,8 +2,10 @@
 
 #include <filesystem>
 
-#include <jank/runtime/object.hpp>
 #include <jtl/result.hpp>
+
+#include <jank/runtime/object.hpp>
+#include <jank/error.hpp>
 
 namespace jank::runtime
 {
@@ -141,20 +143,20 @@ namespace jank::runtime::module
 
     loader();
 
-    static jtl::string_result<file_view> read_file(jtl::immutable_string const &path);
+    static jtl::result<file_view, error_ref> read_file(jtl::immutable_string const &path);
 
-    jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
+    jtl::result<find_result, error_ref> find(jtl::immutable_string const &module, origin const ori);
 
     bool is_loaded(jtl::immutable_string const &module);
     void set_is_loaded(jtl::immutable_string const &module);
 
-    jtl::string_result<void> load(jtl::immutable_string const &module, origin const ori);
-    jtl::string_result<void>
+    jtl::result<void, error_ref> load(jtl::immutable_string const &module, origin const ori);
+    jtl::result<void, error_ref>
     load_o(jtl::immutable_string const &module, file_entry const &entry) const;
-    jtl::string_result<void>
+    jtl::result<void, error_ref>
     load_cpp(jtl::immutable_string const &module, file_entry const &entry) const;
-    jtl::string_result<void> load_jank(file_entry const &entry) const;
-    jtl::string_result<void> load_cljc(file_entry const &entry) const;
+    jtl::result<void, error_ref> load_jank(file_entry const &entry) const;
+    jtl::result<void, error_ref> load_cljc(file_entry const &entry) const;
 
     /* This only adds a single path, so it's assumed there's no separator present. */
     void add_path(jtl::immutable_string const &path);

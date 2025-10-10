@@ -376,6 +376,7 @@ add_library(
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
   src/cpp/jank/error/analyze.cpp
+  src/cpp/jank/error/runtime.cpp
   src/cpp/jank/error/system.cpp
   src/cpp/jank/error/codegen.cpp
   src/cpp/jank/read/source.cpp

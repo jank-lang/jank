@@ -14,6 +14,7 @@ namespace cpptrace
 
 namespace jank::error
 {
+  /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
     lex_unexpected_eof,
@@ -112,6 +113,11 @@ namespace jank::error
     system_clang_executable_not_found,
     system_failure,
 
+    runtime_module_not_found,
+    runtime_module_binary_without_source,
+    runtime_unable_to_open_file,
+    runtime_invalid_cpp_eval,
+    runtime_unable_to_load_module,
     internal_runtime_failure,
 
     internal_failure,
@@ -308,8 +314,19 @@ namespace jank::error
       case kind::system_failure:
         return "system/failure";
 
+      case kind::runtime_module_not_found:
+        return "runtime/module-not-found";
+      case kind::runtime_module_binary_without_source:
+        return "runtime/module-binary-without-source";
+      case kind::runtime_unable_to_open_file:
+        return "runtime/unable-to-open-file";
+      case kind::runtime_invalid_cpp_eval:
+        return "runtime/invalid-cpp-eval";
+      case kind::runtime_unable_to_load_module:
+        return "runtime/unable-to-load-module";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
+
       case kind::internal_failure:
         return "internal/failure";
     }

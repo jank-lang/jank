@@ -24,6 +24,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/dir.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/error/runtime.hpp>
 
 namespace jank::runtime::module
 {
@@ -131,18 +132,21 @@ namespace jank::runtime::module
 
   /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
-  static void visit_jar_entry(file_entry const &entry, F const &fn)
+  static jtl::result<void, error_ref> visit_jar_entry(file_entry const &entry, F const &fn)
   {
     auto const &path(entry.archive_path.unwrap());
     libzippp::ZipArchive zf{ std::string{ path } };
     auto const success(zf.open(libzippp::ZipArchive::ReadOnly));
     if(!success)
     {
-      throw std::runtime_error{ util::format("Failed to open jar on module path: {}", path) };
+      return error::internal_runtime_failure(
+        util::format("Failed to open jar '{}'. Is it readable?", path));
     }
 
     auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
     fn(zip_entry);
+
+    return ok();
   }
 
   static void register_entry(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
@@ -351,7 +355,13 @@ namespace jank::runtime::module
       bool source_exists{};
       if(is_archive)
       {
-        visit_jar_entry(*this, [&](auto const &zip_entry) { source_exists = zip_entry.isFile(); });
+        auto const res{ visit_jar_entry(*this, [&](auto const &zip_entry) {
+          source_exists = zip_entry.isFile();
+        }) };
+        if(res.is_err())
+        {
+          return false;
+        }
       }
 
       return source_exists || std::filesystem::exists(native_transient_string{ path });
@@ -418,7 +428,7 @@ namespace jank::runtime::module
     return { data(), size() };
   }
 
-  static jtl::string_result<file_view> read_jar_file(jtl::immutable_string const &path)
+  static jtl::result<file_view, error_ref> read_jar_file(jtl::immutable_string const &path)
   {
     using namespace runtime;
     using namespace runtime::module;
@@ -437,25 +447,26 @@ namespace jank::runtime::module
     auto const success{ zf.open(libzippp::ZipArchive::ReadOnly) };
     if(!success)
     {
-      return err(util::format("Failed to open jar on module path: {}", path));
+      return error::internal_runtime_failure(
+        util::format("Failed to open jar '{}'. Is it readable?", jar_path));
     }
 
     auto const &zip_entry{ zf.getEntry(std::string{ file_path }) };
     return ok(file_view{ zip_entry.readAsText() });
   }
 
-  static jtl::string_result<file_view> map_file(jtl::immutable_string const &path)
+  static jtl::result<file_view, error_ref> map_file(jtl::immutable_string const &path)
   {
     if(!std::filesystem::exists(path.c_str()))
     {
-      return err("File doesn't exist");
+      return error::runtime_unable_to_open_file(util::format("File '{}' doesn't exist.", path));
     }
     auto const file_size(std::filesystem::file_size(path.c_str()));
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const fd(::open(path.c_str(), O_RDONLY));
     if(fd < 0)
     {
-      return err("Unable to open file");
+      return error::runtime_unable_to_open_file(util::format("Unable to open file '{}'.", path));
     }
     auto const head(
       reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
@@ -467,13 +478,13 @@ namespace jank::runtime::module
     if(head == MAP_FAILED)
 #pragma clang diagnostic pop
     {
-      return err("Mapping failed for unknown reason");
+      return error::runtime_unable_to_open_file(util::format("Unable to map file '{}'.", path));
     }
 
     return ok(file_view{ fd, head, file_size });
   }
 
-  jtl::string_result<file_view> loader::read_file(jtl::immutable_string const &path)
+  jtl::result<file_view, error_ref> loader::read_file(jtl::immutable_string const &path)
   {
     if(path.contains(".jar:"))
     {
@@ -482,7 +493,7 @@ namespace jank::runtime::module
     return map_file(path);
   }
 
-  jtl::string_result<loader::find_result>
+  jtl::result<loader::find_result, error_ref>
   loader::find(jtl::immutable_string const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
@@ -491,7 +502,8 @@ namespace jank::runtime::module
     auto const &entry(entries.find(patched_module));
     if(entry == entries.end())
     {
-      return err(util::format("unable to find module: {}", module));
+      /* TODO: If it contains -, suggest using _. Very common issue. */
+      return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
     }
 
     if(ori == origin::source)
@@ -544,8 +556,12 @@ namespace jank::runtime::module
         }
         else
         {
-          return err(
-            util::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
+          return error::runtime_module_binary_without_source(
+            util::format("Found a binary '{}' without a source while trying to load module '{}'. "
+                         "This module won't be loaded, since jank will not trust module binaries "
+                         "which are missing a corresponding source.",
+                         entry->second.o.unwrap().path,
+                         module));
         }
 
         if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
@@ -572,7 +588,8 @@ namespace jank::runtime::module
       }
     }
 
-    return err(util::format("No sources for registered module: {}", module));
+    return error::internal_runtime_failure(
+      util::format("No sources for registered module '{}'.", module));
   }
 
   bool loader::is_loaded(jtl::immutable_string const &module)
@@ -676,7 +693,7 @@ namespace jank::runtime::module
     util::println("Loading module {} from {}", module, path);
   }
 
-  jtl::string_result<void> loader::load(jtl::immutable_string const &module, origin const ori)
+  jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
     if(ori != origin::source && loader::is_loaded(module))
     {
@@ -686,10 +703,10 @@ namespace jank::runtime::module
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
-      return err(found_module.expect_err());
+      return found_module.expect_err();
     }
 
-    jtl::string_result<void> res(err(util::format("Couldn't load module: {}", module)));
+    jtl::result<void, error_ref> res{ ok() };
 
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
@@ -710,6 +727,9 @@ namespace jank::runtime::module
       case module_type::cljc:
         res = load_cljc(module_sources.cljc.unwrap());
         break;
+      default:
+        res = error::internal_runtime_failure(
+          util::format("Unknown module type '{}'.", module_type_to_load));
     }
 
     if(res.is_err())
@@ -725,7 +745,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  jtl::string_result<void>
+  jtl::result<void, error_ref>
   loader::load_o(jtl::immutable_string const &module, file_entry const &entry) const
   {
     profile::timer const timer{ util::format("load object {}", module) };
@@ -761,18 +781,22 @@ namespace jank::runtime::module
     return ok();
   }
 
-  jtl::string_result<void>
+  jtl::result<void, error_ref>
   loader::load_cpp(jtl::immutable_string const &module, file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
-      jtl::option<jtl::string_result<void>> res;
-      visit_jar_entry(entry, [&](auto const &zip_entry) {
+      jtl::result<void, error_ref> res{ ok() };
+      auto const visit_res{ visit_jar_entry(entry, [&](auto const &zip_entry) {
         res = __rt_ctx->eval_cpp_string(zip_entry.readAsText());
-      });
-      if(res.unwrap().is_err())
+      }) };
+      if(res.is_err())
       {
-        return res.unwrap();
+        return res;
+      }
+      if(visit_res.is_err())
+      {
+        return visit_res;
       }
     }
     else
@@ -780,8 +804,7 @@ namespace jank::runtime::module
       auto const file(module::loader::read_file(entry.path));
       if(file.is_err())
       {
-        return err(
-          util::format("Unable to map file {} due to error: {}", entry.path, file.expect_err()));
+        return file.expect_err();
       }
       auto const res{ __rt_ctx->eval_cpp_string(file.expect_ok().view()) };
       if(res.is_err())
@@ -800,17 +823,21 @@ namespace jank::runtime::module
     return ok();
   }
 
-  jtl::string_result<void> loader::load_jank(file_entry const &entry) const
+  jtl::result<void, error_ref> loader::load_jank(file_entry const &entry) const
   {
     if(entry.archive_path.is_some())
     {
-      visit_jar_entry(entry, [&](auto const &zip_entry) {
+      auto const res{ visit_jar_entry(entry, [&](auto const &zip_entry) {
         /* TODO: Helper to get a jar file path like this. */
         auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
         context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
           std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
         __rt_ctx->eval_string(zip_entry.readAsText());
-      });
+      }) };
+      if(res.is_err())
+      {
+        return res;
+      }
     }
     else
     {
@@ -820,7 +847,7 @@ namespace jank::runtime::module
     return ok();
   }
 
-  jtl::string_result<void> loader::load_cljc(file_entry const &entry) const
+  jtl::result<void, error_ref> loader::load_cljc(file_entry const &entry) const
   {
     return load_jank(entry);
   }
