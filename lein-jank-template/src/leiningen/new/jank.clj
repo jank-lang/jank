@@ -6,7 +6,7 @@
 
 (defn jank [name]
   (let [render (renderer "jank")
-        main-ns (multi-segment (sanitize-ns name))
+        main-ns (multi-segment (sanitize-ns name) "main")
         data {:raw-name name
               :name (project-name name)
               :namespace main-ns
