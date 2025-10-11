@@ -200,8 +200,19 @@ namespace jank::error
       case kind::system_failure:
         return "System failure.";
 
+      case kind::runtime_module_not_found:
+        return "Module not found.";
+      case kind::runtime_module_binary_without_source:
+        return "Module binary found, but no corresponding source was found.";
+      case kind::runtime_unable_to_open_file:
+        return "Unable to open file.";
+      case kind::runtime_invalid_cpp_eval:
+        return "Unable to compile the provided C++ source.";
+      case kind::runtime_unable_to_load_module:
+        return "Unable to load module.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
+
       case kind::internal_failure:
         return "Internal failure.";
     }
