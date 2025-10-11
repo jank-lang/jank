@@ -268,6 +268,35 @@ target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libnanobench.a ----
 
+# ---- libjankzip.a ----
+
+set(
+  jankzip_sources
+  third-party/zip/src/zip.c
+)
+
+add_library(jankzip_lib STATIC ${jankzip_sources})
+
+# Not our code. Don't try to lint it.
+set_source_files_properties(${jankzip_sources} PROPERTIES SKIP_LINTING ON)
+
+target_include_directories(
+    jankzip_lib
+    SYSTEM
+    PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
+)
+
+set_property(TARGET jankzip_lib PROPERTY OUTPUT_NAME jankzip)
+
+target_compile_options(jankzip_lib PUBLIC -w)
+
+#set_target_properties(jankzip_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjankzip.a ----
+
 # The sources for jank are used for both the compiler and its tests, so
 # they're just pulled into a static library. It's important that this
 # remains a static lib, since these symbols need to be accessible in the
@@ -300,6 +329,7 @@ set(jank_lib_standalone_deps
   ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
+  jankzip_lib
   bdwgc::gc bdwgc::gctba
   folly_lib
   clangCppInterOp
@@ -532,6 +562,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
