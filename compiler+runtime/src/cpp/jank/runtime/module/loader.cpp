@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <regex>
 
-#include <libzippp.h>
+#include <jankzip.h>
 
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/path.hpp>
@@ -28,6 +28,9 @@
 
 namespace jank::runtime::module
 {
+  using zip_ptr = std::unique_ptr<zip_t, decltype(&zip_close)>;
+  using zip_entry_ptr = std::unique_ptr<zip_t, decltype(&zip_entry_close)>;
+
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
   jtl::immutable_string path_to_module(std::filesystem::path const &path)
   {
@@ -130,21 +133,54 @@ namespace jank::runtime::module
     return ret;
   }
 
-  /* TODO: We can patch libzippp to not copy strings around so much. */
+  static zip_entry_ptr open_zip_entry(zip_t * const zip, jtl::immutable_string const &path)
+  {
+    zip_entry_open(zip, path.c_str());
+    return { zip, &zip_entry_close };
+  }
+
+  static zip_entry_ptr open_zip_entry(zip_t * const zip, ssize const index)
+  {
+    zip_entry_openbyindex(zip, index);
+    return { zip, &zip_entry_close };
+  }
+
+  static jtl::immutable_string read_zip_entry(zip_t * const zip)
+  {
+    auto const entry_size{ zip_entry_size(zip) };
+    jtl::string_builder sb;
+    sb.reserve(entry_size);
+    auto const read_result{
+      zip_entry_noallocread(zip, reinterpret_cast<void *>(sb.data()), entry_size)
+    };
+    if(read_result < 0)
+    {
+      /* TODO: Return error. */
+      util::println("BINGBONG read_zip_entry failed to read: {}",
+                    zip_strerror(static_cast<int>(read_result)));
+      return "";
+    }
+
+    sb.pos = read_result;
+    return sb.release();
+    ;
+  }
+
   template <typename F>
   static jtl::result<void, error_ref> visit_jar_entry(file_entry const &entry, F const &fn)
   {
     auto const &path(entry.archive_path.unwrap());
-    libzippp::ZipArchive zf{ std::string{ path } };
-    auto const success(zf.open(libzippp::ZipArchive::ReadOnly));
-    if(!success)
+
+    int ziperr{};
+    zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
+    if(ziperr < 0)
     {
       return error::internal_runtime_failure(
-        util::format("Failed to open jar '{}'. Is it readable?", path));
+        util::format("Failed to open jar '{}' with error '{}'.", path, zip_strerror(ziperr)));
     }
 
-    auto const &zip_entry(zf.getEntry(std::string{ entry.path }));
-    fn(zip_entry);
+    auto const entry_handle{ open_zip_entry(zip.get(), entry.path.c_str()) };
+    fn(zip.get());
 
     return ok();
   }
@@ -241,21 +277,26 @@ namespace jank::runtime::module
   static void register_jar(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                            jtl::immutable_string const &path)
   {
-    libzippp::ZipArchive zf{ std::string{ path } };
-    auto success(zf.open(libzippp::ZipArchive::ReadOnly));
-    if(!success)
+    int ziperr{};
+    zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
+    if(ziperr < 0)
     {
       //util::println(stderr, "Failed to open jar on module path: {}\n", path);
       return;
     }
 
-    auto const &zip_entries(zf.getEntries());
-    for(auto const &entry : zip_entries)
+    auto const entry_count{ zip_entries_total(zip.get()) };
+    for(ssize i{}; i < entry_count; ++i)
     {
-      auto const &name(entry.getName());
-      if(!entry.isDirectory())
+      auto const entry_handle{ open_zip_entry(zip.get(), i) };
       {
-        register_entry(entries, name, { path, name });
+        auto const entry_name{ zip_entry_name(zip.get()) };
+        auto const is_dir{ static_cast<bool>(zip_entry_isdir(zip.get())) };
+
+        if(!is_dir)
+        {
+          register_entry(entries, entry_name, { path, entry_name });
+        }
       }
     }
   }
@@ -355,8 +396,8 @@ namespace jank::runtime::module
       bool source_exists{};
       if(is_archive)
       {
-        auto const res{ visit_jar_entry(*this, [&](auto const &zip_entry) {
-          source_exists = zip_entry.isFile();
+        auto const res{ visit_jar_entry(*this, [&](zip_t * const zip) {
+          source_exists = static_cast<bool>(zip_entry_isdir(zip));
         }) };
         if(res.is_err())
         {
@@ -443,16 +484,16 @@ namespace jank::runtime::module
       return err(found_module.expect_err());
     }
 
-    libzippp::ZipArchive zf{ std::string{ jar_path } };
-    auto const success{ zf.open(libzippp::ZipArchive::ReadOnly) };
-    if(!success)
+    int ziperr{};
+    zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
+    if(ziperr < 0)
     {
       return error::internal_runtime_failure(
-        util::format("Failed to open jar '{}'. Is it readable?", jar_path));
+        util::format("Failed to open jar '{}' with error '{}'.", jar_path, zip_strerror(ziperr)));
     }
 
-    auto const &zip_entry{ zf.getEntry(std::string{ file_path }) };
-    return ok(file_view{ zip_entry.readAsText() });
+    auto const entry_handle{ open_zip_entry(zip.get(), jar_path) };
+    return ok(file_view{ read_zip_entry(zip.get()) });
   }
 
   static jtl::result<file_view, error_ref> map_file(jtl::immutable_string const &path)
@@ -787,8 +828,8 @@ namespace jank::runtime::module
     if(entry.archive_path.is_some())
     {
       jtl::result<void, error_ref> res{ ok() };
-      auto const visit_res{ visit_jar_entry(entry, [&](auto const &zip_entry) {
-        res = __rt_ctx->eval_cpp_string(zip_entry.readAsText());
+      auto const visit_res{ visit_jar_entry(entry, [&](zip_t * const zip) {
+        res = __rt_ctx->eval_cpp_string(read_zip_entry(zip));
       }) };
       if(res.is_err())
       {
@@ -827,12 +868,12 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      auto const res{ visit_jar_entry(entry, [&](auto const &zip_entry) {
+      auto const res{ visit_jar_entry(entry, [&](zip_t * const zip) {
         /* TODO: Helper to get a jar file path like this. */
         auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
         context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
           std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
-        __rt_ctx->eval_string(zip_entry.readAsText());
+        __rt_ctx->eval_string(read_zip_entry(zip));
       }) };
       if(res.is_err())
       {
