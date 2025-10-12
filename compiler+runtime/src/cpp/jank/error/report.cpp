@@ -472,7 +472,7 @@ namespace jank::error
     if(file.is_err())
     {
       return window(text(util::format(" {} ", s.file_path)),
-                    hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
+                    hbox({ text(file.expect_err()->message) }));
     }
 
     auto const highlighted_lines{ ui::highlight(file.expect_ok(), s.line_start, s.line_end) };

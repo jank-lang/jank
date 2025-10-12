@@ -5,12 +5,12 @@
 
 namespace jank::runtime::obj
 {
-  keyword::keyword(detail::must_be_interned, jtl::immutable_string_view const &s)
+  keyword::keyword(runtime::detail::must_be_interned, jtl::immutable_string_view const &s)
     : sym{ make_box<obj::symbol>(s) }
   {
   }
 
-  keyword::keyword(detail::must_be_interned,
+  keyword::keyword(runtime::detail::must_be_interned,
                    jtl::immutable_string_view const &ns,
                    jtl::immutable_string_view const &n)
     : sym{ make_box<obj::symbol>(ns, n) }

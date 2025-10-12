@@ -6,13 +6,13 @@ a script to compile this from source. See the section on compiling Clang/LLVM be
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs zip build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++
+sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libbz2-dev doctest-dev gcc g++
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr doctest libzip lbzip2 libxml2 libedit
+sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr doctest libxml2 libedit
 ```
 
 For Nix:
@@ -29,7 +29,7 @@ This will automatically compile Clang/LLVM, so you can skip directly to compilin
 For macOS:
 
 ```bash
-brew install curl git git-lfs zip entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest libzip lbzip2
+brew install curl git git-lfs entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest
 
 # Ensure you have this set up in your shell.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
