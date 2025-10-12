@@ -324,7 +324,6 @@ configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
 set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge")
 set(jank_lib_standalone_deps
   jank_lib
-  libzippp::libzippp
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
@@ -368,7 +367,6 @@ set(BUILD_SHARED_LIBS OFF)
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/ftxui.cmake)
-include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
@@ -562,7 +560,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
@@ -577,7 +574,6 @@ target_include_directories(
 target_link_libraries(
   jank_lib PRIVATE
   clangCppInterOp
-  libzippp::libzippp
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
