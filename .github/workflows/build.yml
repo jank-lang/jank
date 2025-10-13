@@ -149,7 +149,7 @@ jobs:
           ## Release
           - name: macOS - release
             os: macos-26
-            build_type: Release
+            build_type: RelWithDebInfo
             sanitize: none
             package: on
     runs-on: ${{ matrix.os }}
