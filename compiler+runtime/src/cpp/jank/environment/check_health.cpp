@@ -402,7 +402,7 @@ namespace jank::environment
         5) };
       if(proc_code != 0)
       {
-        util::println(stderr, R"(Compiled program exited with code {})", proc_code);
+        util::println(stderr, R"(Compiled program exited with code '{}'.)", proc_code);
         error = true;
       }
 

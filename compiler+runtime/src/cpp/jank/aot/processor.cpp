@@ -122,6 +122,7 @@ int main(int argc, const char** argv)
 
   jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
   {
+    util::println("aot compile {}", module);
     auto const main_var(__rt_ctx->find_var(module, "-main"));
     if(main_var.is_nil())
     {
