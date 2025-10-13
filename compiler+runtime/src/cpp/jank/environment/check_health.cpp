@@ -124,23 +124,25 @@ namespace jank::environment
                     JANK_RESOURCE_DIR,
                     terminal_style::reset,
                     terminal_style::bright_black,
-                    (exists ? " (found)" : " (not found)"),
+                    /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+                    (relative ? "" : (exists ? " (found)" : " (not found)")),
                     terminal_style::reset);
 
     if(relative)
     {
-      util::format_to(sb,
-                      "\n{}─ {}{} jank resolved resource dir: {}{}{} {}{}{}",
-                      col,
-                      icon,
-                      terminal_style::reset,
-                      terminal_style::blue,
-                      dir.c_str(),
-                      terminal_style::reset,
-                      terminal_style::bright_black,
-                      /* TODO: Logic is not right here. */
-                      dev_build ? " (ignored for dev build)" : " (not found)",
-                      terminal_style::reset);
+      util::format_to(
+        sb,
+        "\n{}─ {}{} jank resolved resource dir: {}{}{} {}{}{}",
+        col,
+        icon,
+        terminal_style::reset,
+        terminal_style::blue,
+        dir.c_str(),
+        terminal_style::reset,
+        terminal_style::bright_black,
+        /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+        (exists ? "(found)" : (dev_build ? "(ignored for dev build)" : "(not found)")),
+        terminal_style::reset);
     }
 
     return sb.release();
@@ -157,7 +159,7 @@ namespace jank::environment
                         path,
                         terminal_style::reset,
                         terminal_style::bright_black,
-                        configured_path_exists ? " (found)" : " (not found)",
+                        configured_path_exists ? "(found)" : "(not found)",
                         terminal_style::reset);
   }
 
