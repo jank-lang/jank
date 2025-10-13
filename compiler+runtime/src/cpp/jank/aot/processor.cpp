@@ -270,7 +270,7 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-o"));
     compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
 
-    //util::println("compilation command: {} ", compiler_args);
+    util::println("compilation command: {} ", compiler_args);
 
     auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())
