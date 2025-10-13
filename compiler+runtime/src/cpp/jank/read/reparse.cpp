@@ -36,14 +36,15 @@ namespace jank::read::parse
     {
       if(it->is_err())
       {
-        return error::internal_parse_failure(util::format("Unable to reparse {} due to error: {}",
-                                                          file_path,
-                                                          it->expect_err()->message));
+        return error::internal_parse_failure(
+          util::format("Unable to reparse '{}' due to error '{}'.",
+                       file_path,
+                       it->expect_err()->message));
       }
     }
     if(it->is_err())
     {
-      return error::internal_parse_failure(util::format("Unable to reparse {} due to error: {}",
+      return error::internal_parse_failure(util::format("Unable to reparse '{}' due to error '{}'.",
                                                         file_path,
                                                         it->expect_err()->message));
     }
@@ -61,8 +62,14 @@ namespace jank::read::parse
     }
 
     /* Add one to skip the ( for the list. */
-    return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
-      .unwrap_move();
+    auto const res{
+      reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
+    };
+    if(res.is_err())
+    {
+      return source::unknown;
+    }
+    return res.expect_ok();
   }
 
   source reparse_nth(runtime::obj::persistent_vector_ref const o, usize const n)
@@ -74,8 +81,14 @@ namespace jank::read::parse
     }
 
     /* Add one to skip the [ for the vector. */
-    return reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
-      .unwrap_move();
+    auto const res{
+      reparse_nth(source.file_path, source.start.offset + 1, n, source.macro_expansion)
+    };
+    if(res.is_err())
+    {
+      return source::unknown;
+    }
+    return res.expect_ok();
   }
 
   source reparse_nth(runtime::object_ref const o, usize const n)
@@ -96,12 +109,12 @@ namespace jank::read::parse
         else
         {
           throw error::internal_parse_failure(
-            util::format("Unsupported object for reparsing {}", typed_o->to_code_string()));
+            util::format("Unsupported object for reparsing '{}'.", typed_o->to_code_string()));
         }
       },
       [=]() -> source {
         throw error::internal_parse_failure(
-          util::format("Unable to reparse object {}", to_code_string(o)));
+          util::format("Unable to reparse object '{}'.", to_code_string(o)));
       },
       o,
       n);

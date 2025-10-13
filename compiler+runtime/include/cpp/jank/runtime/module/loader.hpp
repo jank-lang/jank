@@ -166,8 +166,8 @@ namespace jank::runtime::module
 
     jtl::immutable_string paths;
     /* TODO: These will need synchonization. */
-    /* This maps module strings to entries. Module strings are like fully qualified Java
-     * class names. For example, `clojure.core`, `jank.compiler`, etc. */
+    /* This maps module strings to entries. Module strings are like fully qualified namespace
+     * names. For example, `clojure.core`, `jank.compiler`, etc. */
     native_unordered_map<jtl::immutable_string, entry> entries;
   };
 }
