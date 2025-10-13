@@ -19,7 +19,7 @@
 Version: %s
 Architecture: amd64
 Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
-Depends: libssl-dev, gcc, libzip-dev, libbz2-dev, libxml2-dev, libstdc++-14-dev
+Depends: libssl-dev, gcc, libzip-dev, libbz2-dev, libzstd-dev, libxml2-dev, libstdc++-14-dev
 Description: The native Clojure dialect hosted on LLVM with seamless C++ interop.
 " jank-version)]
     (util/quiet-shell {:dir compiler+runtime-dir
