@@ -129,6 +129,12 @@ namespace jank::runtime::module
     return ret;
   }
 
+  bool is_core_module(jtl::immutable_string const &module)
+  {
+    static std::set<jtl::immutable_string> const modules{ "clojure.core" };
+    return modules.contains(module);
+  }
+
   /* TODO: We can patch libzippp to not copy strings around so much. */
   template <typename F>
   static void visit_jar_entry(file_entry const &entry, F const &fn)
