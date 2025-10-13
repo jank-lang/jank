@@ -179,11 +179,16 @@ namespace jank::util
 
       /* However, if the configured path doesn't exist, and we're not in a dev build, chances
        * are we're running an AOT compiled jank program. For that case, we want to find where
-       * jank is and get its resource dir. */
-      auto const installed_jank_path{ llvm::sys::findProgramByName("jank") };
-      if(installed_jank_path)
+       * jank is and get its resource dir.
+       *
+       * This means that jank needs to be installed on a system which is running an AOT compiled
+       * jank binary (dynamic runtime). jank also needs to be accessible via PATH in order
+       * for this to work. Just as Clojure uberjars require you to have the JVM installed. */
+      auto const installed_jank_res{ llvm::sys::findProgramByName("jank") };
+      if(installed_jank_res)
       {
-        return (*installed_jank_path / dir).c_str();
+        std::filesystem::path const installed_jank_path{ *installed_jank_res };
+        return (installed_jank_path.parent_path() / dir).c_str();
       }
 
       /* Otherwise, just return what we can and we'll raise an error down the road when we

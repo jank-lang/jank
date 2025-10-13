@@ -100,6 +100,9 @@ namespace jank::runtime::module
   bool is_nested_module(jtl::immutable_string const &module);
   jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module);
 
+  /* A core module is one baked into the jank runtime. For example, clojure.core. */
+  bool is_core_module(jtl::immutable_string const &module);
+
   struct loader
   {
     /* A module entry represents one or more files on the module path which prove that module.

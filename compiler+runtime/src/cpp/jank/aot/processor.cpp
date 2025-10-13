@@ -135,6 +135,12 @@ int main(int argc, const char** argv)
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
     {
+      /* Core modules will be linked as part of libjank-standalone.a. */
+      if(runtime::module::is_core_module(it))
+      {
+        continue;
+      }
+
       auto const &module_path{ util::format("{}.o",
                                             relative_to_cache_dir(module::module_to_path(it))) };
 
