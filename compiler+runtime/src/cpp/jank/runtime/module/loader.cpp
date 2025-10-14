@@ -491,7 +491,7 @@ namespace jank::runtime::module
     }
 
     auto const &zip_entry{ zf.getEntry(std::string{ file_path }) };
-    return ok(file_view{ file_path, zip_entry.readAsText() });
+    return ok(file_view{ path, zip_entry.readAsText() });
   }
 
   static jtl::string_result<file_view> map_file(jtl::immutable_string const &path)

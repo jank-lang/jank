@@ -4,6 +4,7 @@
 #include <jank/read/lex.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -138,9 +139,11 @@ namespace jank::read::lex
     return runtime::make_box<error::base>(
       kind,
       read::source{
+        read::no_source_path,
         runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()),
         {         offset, 1,         offset + 1 },
-        { offset + width, 1, offset + width + 1 }
+        { offset + width, 1, offset + width + 1 },
+        runtime::jank_nil
     });
   }
 

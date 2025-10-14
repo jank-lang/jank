@@ -13,6 +13,7 @@ namespace jank::read::parse
   using namespace jank::runtime;
 
   static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &module,
+                                                    jtl::immutable_string const &file,
                                                     usize const offset,
                                                     usize const n,
                                                     object_ref const macro_expansion)
@@ -22,14 +23,23 @@ namespace jank::read::parse
       return error::internal_parse_failure("Cannot reparse object with no source path.");
     }
 
-    auto const file(runtime::__rt_ctx->module_loader.read_module(module));
-    if(file.is_err())
+    auto mapped_file(runtime::module::loader::read_file(file));
+    if(mapped_file.is_err())
     {
-      return error::internal_parse_failure(
-        util::format("Unable to map module '{}' due to error '{}'.", module, file.expect_err()));
+      if(file != read::no_source_path)
+      {
+        mapped_file = runtime::__rt_ctx->module_loader.read_module(module);
+      }
+      if(mapped_file.is_err())
+      {
+        return error::internal_parse_failure(
+          util::format("Unable to map module '{}' due to error '{}'.",
+                       module,
+                       mapped_file.expect_err()));
+      }
     }
 
-    lex::processor l_prc{ file.expect_ok().view(), offset };
+    lex::processor l_prc{ mapped_file.expect_ok().view(), offset };
     parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     auto it{ p_prc.begin() };
@@ -52,7 +62,7 @@ namespace jank::read::parse
     }
 
     auto const &res{ it->expect_ok().unwrap() };
-    return source{ module, res.start.start, res.end.end, macro_expansion };
+    return source{ file, module, res.start.start, res.end.end, macro_expansion };
   }
 
   source reparse_nth(obj::persistent_list_ref const o, usize const n)
@@ -65,7 +75,7 @@ namespace jank::read::parse
 
     /* Add one to skip the ( for the list. */
     auto const res{
-      reparse_nth(source.module, source.start.offset + 1, n, source.macro_expansion)
+      reparse_nth(source.module, source.file, source.start.offset + 1, n, source.macro_expansion)
     };
     if(res.is_err())
     {
@@ -84,7 +94,7 @@ namespace jank::read::parse
 
     /* Add one to skip the [ for the vector. */
     auto const res{
-      reparse_nth(source.module, source.start.offset + 1, n, source.macro_expansion)
+      reparse_nth(source.module, source.file, source.start.offset + 1, n, source.macro_expansion)
     };
     if(res.is_err())
     {
