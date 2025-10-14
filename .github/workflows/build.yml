@@ -17,34 +17,34 @@ concurrency:
 jobs:
   # Rather than having every job in the matrix try to build its own Clang, we built it once
   # before running the matrix. Then we can just restore it from the cache in each job.
-  #ubuntu-build-clang:
-  #  name: Ubuntu - clang
-  #  runs-on: ubuntu-24.04
-  #  timeout-minutes: 200
-  #  steps:
-  #    - uses: actions/checkout@v4
-  #      with:
-  #        submodules: true
-  #    - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
-  #      with:
-  #        packages: curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
-  #        # Increment this when the package list changes.
-  #        version: 1
-  #    - name: Cache Clang/LLVM
-  #      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-  #      with:
-  #        path: |
-  #          ${{ github.workspace }}/compiler+runtime/build/llvm-install
-  #        key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
-  #    - name: Build Clang/LLVM
-  #      run: |
-  #        if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
-  #        then
-  #          pushd ${{ github.workspace }}/compiler+runtime
-  #            ./bin/build-clang
-  #          popd
-  #        fi
-  #        ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+  ubuntu-build-clang:
+    name: Ubuntu - clang
+    runs-on: ubuntu-24.04
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
+        with:
+          packages: curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
+          # Increment this when the package list changes.
+          version: 1
+      - name: Cache Clang/LLVM
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Build Clang/LLVM
+        run: |
+          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
+            pushd ${{ github.workspace }}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
   macos-build-clang:
     name: macOS - clang
     runs-on: macos-26
@@ -76,80 +76,80 @@ jobs:
 
   build-jank:
     needs:
-      #- ubuntu-build-clang
+      - ubuntu-build-clang
       - macos-build-clang
     strategy:
       fail-fast: false
       matrix:
         include:
-          ## Ubuntu
-          ### Lint all sources
-          #- name: Ubuntu - lint
+          # Ubuntu
+          ## Lint all sources
+          - name: Ubuntu - lint
+            os: ubuntu-24.04
+            lint: true
+          ## Debug + clang-tidy + coverage
+          - name: Ubuntu - debug, analysis, coverage
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: none
+            coverage: on
+            analyze: on
+
+          ## Debug + sanitization
+          - name: Ubuntu - address sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: address
+
+          - name: Ubuntu - undefined behavior sanitizer
+            os: ubuntu-24.04
+            build_type: Debug
+            sanitize: undefined
+
+          ## TODO: Fix this. Causes linker issues.
+          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
+          #- name: Ubuntu - thread sanitizer
           #  os: ubuntu-24.04
-          #  lint: true
-          ### Debug + clang-tidy + coverage
-          #- name: Ubuntu - debug, analysis, coverage
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: none
-          #  coverage: on
-          #  analyze: on
-
-          ### Debug + sanitization
-          #- name: Ubuntu - address sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: address
-
-          #- name: Ubuntu - undefined behavior sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: undefined
-
-          ### TODO: Fix this. Causes linker issues.
-          ## https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          ##- name: Ubuntu - thread sanitizer
-          ##  os: ubuntu-24.04
-          ##  build_type: Debug
-          ##  sanitize: thread
-
-          ### Release
-          #- name: Ubuntu - release
-          #  os: ubuntu-24.04
-          #  build_type: Release
-          #  sanitize: none
-          #  package: on
-
-          # macOS
-          ### Debug + clang-tidy
-          #- name: macOS - debug, analysis
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: none
-          #  analyze: on
-
-          ### Debug + sanitization
-          ## TODO: Enable once the libunwind failure is fixed
-          ## https://github.com/jank-lang/jank/actions/runs/17883057337/job/50853231570?pr=514
-          ##- name: macOS - address sanitizer
-          ##  os: macos-26
-          ##  build_type: Debug
-          ##  sanitize: address
-
-          #- name: macOS - undefined behavior sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: undefined
-
-          #- name: macOS - thread sanitizer
-          #  os: macos-26
           #  build_type: Debug
           #  sanitize: thread
 
           ## Release
+          - name: Ubuntu - release
+            os: ubuntu-24.04
+            build_type: Release
+            sanitize: none
+            package: on
+
+          # macOS
+          ## Debug + clang-tidy
+          - name: macOS - debug, analysis
+            os: macos-26
+            build_type: Debug
+            sanitize: none
+            analyze: on
+
+          ## Debug + sanitization
+          # TODO: Enable once the libunwind failure is fixed
+          # https://github.com/jank-lang/jank/actions/runs/17883057337/job/50853231570?pr=514
+          #- name: macOS - address sanitizer
+          #  os: macos-26
+          #  build_type: Debug
+          #  sanitize: address
+
+          - name: macOS - undefined behavior sanitizer
+            os: macos-26
+            build_type: Debug
+            sanitize: undefined
+
+          - name: macOS - thread sanitizer
+            os: macos-26
+            build_type: Debug
+            sanitize: thread
+
+          ## Release
           - name: macOS - release
             os: macos-26
-            build_type: RelWithDebInfo
+            build_type: Release
             sanitize: none
             package: on
     runs-on: ${{ matrix.os }}
@@ -224,35 +224,35 @@ jobs:
           name: jank-deb
           path: ${{ steps.jank-build-step.outputs.deb }}
       - name: Upload Homebrew tarball for publishing
-        #if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.homebrew-tarball
+        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.homebrew-tarball
         uses: actions/upload-artifact@v4
         with:
           name: jank-homebrew-tarball
           path: ${{ steps.jank-build-step.outputs.homebrew-tarball }}
 
-  #publish-deb:
-  #  if: github.ref == 'refs/heads/main'
-  #  needs: build-jank
-  #  name: Publish .deb
-  #  runs-on: ubuntu-24.04
-  #  timeout-minutes: 5
-  #  steps:
-  #    - uses: actions/download-artifact@v5
-  #      with:
-  #        name: jank-deb
-  #        path: ~/
-  #    - name: Import SSH key
-  #      run: |
-  #        mkdir -p ~/.ssh
-  #        echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
-  #        chmod 400 ~/.ssh/jank_id_ed25519
-  #    - name: Publish to PPA
-  #      run: |
-  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+  publish-deb:
+    if: github.ref == 'refs/heads/main'
+    needs: build-jank
+    name: Publish .deb
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: jank-deb
+          path: ~/
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to PPA
+        run: |
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
 
   publish-homebrew-tarball:
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: build-jank
     name: Publish Homebrew package
     runs-on: macos-26
@@ -271,26 +271,26 @@ jobs:
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
-  #build-nix:
-  #  name: "Nix - release"
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #  - name: "Set up nix"
-  #    uses: cachix/install-nix-action@v31
-  #    with:
-  #      nix_path: nixpkgs=channel:nixos-unstable
-  #  - name: "Set up cachix"
-  #    uses: cachix/cachix-action@v16
-  #    with:
-  #      name: jank-lang
-  #      # If you chose API tokens for write access OR if you have a private cache
-  #      authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-  #      # Only push to cache on main branch, not PRs
-  #      skipPush: "${{ github.ref != 'refs/heads/main' }}"
-  #  - uses: actions/checkout@v4
-  #    with:
-  #      submodules: 'recursive'
-  #  - name: "Build jank"
-  #    run: nix build .?submodules=1 -L
-  #  - name: "Check health"
-  #    run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
+  build-nix:
+    name: "Nix - release"
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Set up nix"
+      uses: cachix/install-nix-action@v31
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: "Set up cachix"
+      uses: cachix/cachix-action@v16
+      with:
+        name: jank-lang
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        # Only push to cache on main branch, not PRs
+        skipPush: "${{ github.ref != 'refs/heads/main' }}"
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    - name: "Build jank"
+      run: nix build .?submodules=1 -L
+    - name: "Check health"
+      run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
