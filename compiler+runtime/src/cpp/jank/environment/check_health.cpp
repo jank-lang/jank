@@ -487,6 +487,8 @@ namespace jank::environment
       auto const ret{ jank_init(0, nullptr, true, [](int const, char const **) {
         runtime::__rt_ctx = new(GC) runtime::context{};
         jank_load_clojure_core_native();
+        runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest)
+          .expect_ok();
         util::println("{}─ ✅{} jank runtime initialized",
                       terminal_style::green,
                       terminal_style::reset);
