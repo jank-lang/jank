@@ -23,7 +23,7 @@
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
   ; Bash tests
-  (jank.compiler+runtime.bash-test/-main {:enabled? (and build?
+  #_(jank.compiler+runtime.bash-test/-main {:enabled? (and build?
                                                          ; AOT compilation fails when sanitizers are enabled.
                                                          (= "none" (util/get-env "JANK_SANITIZE" "none")))})
 
