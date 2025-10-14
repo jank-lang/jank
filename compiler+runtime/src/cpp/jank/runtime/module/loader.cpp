@@ -7,6 +7,7 @@
 
 #include <libzippp.h>
 
+#include <jank/type.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
@@ -129,10 +130,15 @@ namespace jank::runtime::module
     return ret;
   }
 
+  static native_set<jtl::immutable_string> const &core_modules()
+  {
+    static native_set<jtl::immutable_string> const modules{ "clojure.core" };
+    return modules;
+  }
+
   bool is_core_module(jtl::immutable_string const &module)
   {
-    static std::set<jtl::immutable_string> const modules{ "clojure.core" };
-    return modules.contains(module);
+    return core_modules().contains(module);
   }
 
   /* TODO: We can patch libzippp to not copy strings around so much. */
