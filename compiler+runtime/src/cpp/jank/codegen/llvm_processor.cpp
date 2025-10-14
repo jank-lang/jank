@@ -1673,17 +1673,20 @@ namespace jank::codegen
 
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
 
-    /* To signal to the unwinder that this fn can handle exceptions, we must have a
-     * personality function registered. The personality function tells the unwinder if this fn can
-     * (or cannot) handle a specific exception. Once the unwinder finds a match, it transfers
-     * control flow to the exception handling code. The personality function then populates the
-     * exception information and transfers control flow to the landing pad block.
-     */
-    auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
-                                                      /*isVarArg=*/true) };
-    auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
-                                                          personality_fn_type) };
-    current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
+    if(!current_fn->hasPersonalityFn())
+    {
+      /* To signal to the unwinder that this fn can handle exceptions, we must have a
+       * personality function registered. The personality function tells the unwinder if this fn can
+       * (or cannot) handle a specific exception. Once the unwinder finds a match, it transfers
+       * control flow to the exception handling code. The personality function then populates the
+       * exception information and transfers control flow to the landing pad block.
+       */
+      auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
+                                                        /*isVarArg=*/true) };
+      auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
+                                                            personality_fn_type) };
+      current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
+    }
 
     auto const is_return(expr->position == expression_position::tail);
 
