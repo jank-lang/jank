@@ -1673,11 +1673,11 @@ namespace jank::codegen
 
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
 
-    /* In order to signal to the unwinder that this fn can handle exceptions, we must have a
+    /* To signal to the unwinder that this fn can handle exceptions, we must have a
      * personality function registered. The personality function tells the unwinder if this fn can
      * (or cannot) handle a specific exception. Once the unwinder finds a match, it transfers
      * control flow to the exception handling code. The personality function then populates the
-     * exception information and transfer control flow to the landingpad block.
+     * exception information and transfers control flow to the landing pad block.
      */
     auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
                                                       /*isVarArg=*/true) };
@@ -1688,7 +1688,6 @@ namespace jank::codegen
     auto const is_return(expr->position == expression_position::tail);
 
     /* --- Block setup --- */
-    //auto const original_insert_bb{ ctx->builder->GetInsertBlock() };
     auto const finally_bb{ llvm::BasicBlock::Create(*llvm_ctx, "finally") };
     auto const cont_bb{ llvm::BasicBlock::Create(*llvm_ctx, "try.cont") };
     auto const lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "lpad", current_fn) };
@@ -1705,9 +1704,8 @@ namespace jank::codegen
     util::scope_exit const pop_landing_pad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
 
     /* --- Try block --- */
-    //ctx->builder->SetInsertPoint(original_insert_bb);
     auto const original_try_pos{ expr->body->position };
-    /* We put the try body into value position so that no return is generated, which allows
+    /* We put the try body into the value position so that no return is generated, which allows
      * us to continue onto the finally block, if we have one. */
     expr->body->propagate_position(expression_position::value);
     auto const try_val{ gen(expr->body, arity) };
@@ -1724,7 +1722,7 @@ namespace jank::codegen
     }
 
     /* --- Landing Pad & Catch/Resume Logic --- */
-    /* Exceptions from inside the catch/finally blocks should not be caught by this same try. */
+    /* This same try should not catch exceptions from inside the catch/finally blocks. */
     lpad_and_catch_body_stack.pop_back();
     ctx->builder->SetInsertPoint(lpad_bb);
     auto const ptr_ty{ ctx->builder->getPtrTy() };
@@ -1799,14 +1797,13 @@ namespace jank::codegen
     }
     else
     {
-      if(expr->finally_body.is_some())
-      {
-        gen(expr->finally_body.unwrap(), arity);
-      }
+      gen(expr->finally_body.unwrap(), arity);
 
       if(!lpad_and_catch_body_stack.empty())
       {
-        /* rethrow the exception to the outer catch if one is available. */
+        /* We do not have a catch in this "try" statement. However, we might have one in an outer "try". Therefore, the
+         * exception needs to be caught there. What we do here is essentially "catching" the exception with an internal
+         * "catch" and then rethrow the exception, with the outer try's landing pad as the "rethrow"'s landing pad. */
         auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
         auto const begin_catch_fn{
           llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
