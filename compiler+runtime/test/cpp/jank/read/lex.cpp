@@ -2,6 +2,8 @@
 #include <ostream>
 
 #include <jank/read/lex.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/to_string.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -133,11 +135,12 @@ namespace jank::read::lex
 
   static error_ref make_error(error::kind const kind, usize const offset, usize const width)
   {
-    return runtime::make_box<error::base>(kind,
-                                          read::source{
-                                            "NO_SOURCE_PATH",
-                                            {         offset, 1,         offset + 1 },
-                                            { offset + width, 1, offset + width + 1 }
+    return runtime::make_box<error::base>(
+      kind,
+      read::source{
+        runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()),
+        {         offset, 1,         offset + 1 },
+        { offset + width, 1, offset + width + 1 }
     });
   }
 

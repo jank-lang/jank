@@ -67,7 +67,8 @@ namespace jank::error
     void add_ellipsis(read::source const &body_source, note const &n);
     void add(note const &n);
 
-    jtl::immutable_string file_path;
+    jtl::immutable_string module;
+    jtl::immutable_string file;
     /* Zero means we have no lines yet. */
     usize line_start{};
     usize line_end{};
@@ -100,7 +101,7 @@ namespace jank::error
 
   bool snippet::can_fit_without_ellipsis(note const &n) const
   {
-    jank_debug_assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.module == module);
 
     if(line_end == 0)
     {
@@ -149,7 +150,7 @@ namespace jank::error
   /* TODO: Handle multiple notes on one line by building bridges. */
   void snippet::add(read::source const &body_source, note const &n)
   {
-    jank_debug_assert(n.source.file_path == file_path);
+    jank_debug_assert(n.source.module == module);
 
     /* Adding a note follows some rules to determine how it will fit.
      *
@@ -230,7 +231,7 @@ namespace jank::error
   void snippet::add_ellipsis(read::source const &body_source, note const &n)
   {
     /* First we add the note to an empty snippet. */
-    snippet s{ .file_path = n.source.file_path };
+    snippet s{ .module = n.source.module, .file = n.source.file };
     s.add(body_source, n);
 
     /* Then we stitch that snippet into this one, with an ellipsis in between.
@@ -361,7 +362,7 @@ namespace jank::error
     bool added{ false };
     for(auto &snippet : snippets)
     {
-      if(snippet.file_path == n.source.file_path)
+      if(snippet.module == n.source.module)
       {
         snippet.add(body_source, n);
         added = true;
@@ -371,7 +372,7 @@ namespace jank::error
 
     if(!added)
     {
-      snippets.emplace_back(n.source.file_path).add(body_source, n);
+      snippets.emplace_back(n.source.module, n.source.file).add(body_source, n);
     }
   }
 
@@ -468,10 +469,16 @@ namespace jank::error
 
   static Element code_snippet(snippet const &s, usize const max_width)
   {
-    auto const file(module::loader::read_file(s.file_path));
+    /* We may not be able to read the file, so we fall back to trying to read the module.
+     * This can happen for baked-in core libs like clojure.core for an installed jank. */
+    auto file(runtime::__rt_ctx->module_loader.read_file(s.file));
     if(file.is_err())
     {
-      return window(text(util::format(" {} ", s.file_path)),
+      file = runtime::__rt_ctx->module_loader.read_module(s.module);
+    }
+    if(file.is_err())
+    {
+      return window(text(util::format(" {} ", s.module)),
                     hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
     }
 
@@ -513,7 +520,10 @@ namespace jank::error
 
     /* We want to render paths as relative, if we can. This not only keeps them shorter,
      * it also makes our test suite more portable. */
-    return code_snippet_box(util::relative_path(s.file_path), line_numbers, lines, max_width);
+    return code_snippet_box(util::relative_path(file.expect_ok().file_path()),
+                            line_numbers,
+                            lines,
+                            max_width);
   }
 
   void report(error_ref const e)

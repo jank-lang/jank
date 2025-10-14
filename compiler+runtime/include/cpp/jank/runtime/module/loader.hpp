@@ -68,16 +68,22 @@ namespace jank::runtime::module
     file_view() = default;
     file_view(file_view const &) = delete;
     file_view(file_view &&) noexcept;
-    file_view(int const f, char const * const h, usize const s);
-    file_view(jtl::immutable_string const &buff);
+    file_view(jtl::immutable_string const &file, int const f, char const * const h, usize const s);
+    file_view(jtl::immutable_string const &file, jtl::immutable_string const &buff);
     ~file_view();
 
     char const *data() const;
     usize size() const;
+    jtl::immutable_string const &file_path() const;
+
+    file_view &operator=(file_view const &file_view) = delete;
+    file_view &operator=(file_view &&file_view);
 
     jtl::immutable_string_view view() const;
 
   private:
+    void reset();
+
     /* In the case where we map a file, we track this information so we can read it and
      * later unmap it. */
     int fd{};
@@ -88,6 +94,9 @@ namespace jank::runtime::module
      * we'll just have the data instead. Checking data.empty() is how we know which
      * of these cases to follow. */
     jtl::immutable_string buff;
+
+    /* In either case, we keep track of the file name. */
+    jtl::immutable_string file;
   };
 
   jtl::immutable_string path_to_module(std::filesystem::path const &path);
@@ -145,6 +154,7 @@ namespace jank::runtime::module
     loader();
 
     static jtl::string_result<file_view> read_file(jtl::immutable_string const &path);
+    jtl::string_result<file_view> read_module(jtl::immutable_string const &module);
 
     jtl::string_result<find_result> find(jtl::immutable_string const &module, origin const ori);
 
