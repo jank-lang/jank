@@ -353,7 +353,6 @@ namespace jank::runtime
   jtl::result<void, jtl::immutable_string>
   context::compile_module(jtl::immutable_string_view const &module)
   {
-    util::println("compile_module {}", module);
     module_dependencies.clear();
 
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(

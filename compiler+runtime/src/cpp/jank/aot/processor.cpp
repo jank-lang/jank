@@ -122,7 +122,6 @@ int main(int argc, const char** argv)
 
   jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
   {
-    util::println("aot compile {}", module);
     auto const main_var(__rt_ctx->find_var(module, "-main"));
     if(main_var.is_nil())
     {
@@ -271,7 +270,7 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-o"));
     compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
 
-    util::println("compilation command: {} ", compiler_args);
+    //util::println("compilation command: {} ", compiler_args);
 
     auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())
