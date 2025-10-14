@@ -413,7 +413,7 @@ namespace jank::runtime::module
     reset();
   }
 
-  file_view &file_view::operator=(file_view &&fv)
+  file_view &file_view::operator=(file_view &&fv) noexcept
   {
     if(this == &fv)
     {

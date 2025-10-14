@@ -76,8 +76,8 @@ namespace jank::runtime::module
     usize size() const;
     jtl::immutable_string const &file_path() const;
 
-    file_view &operator=(file_view const &file_view) = delete;
-    file_view &operator=(file_view &&file_view);
+    file_view &operator=(file_view const &) = delete;
+    file_view &operator=(file_view &&fv) noexcept;
 
     jtl::immutable_string_view view() const;
 

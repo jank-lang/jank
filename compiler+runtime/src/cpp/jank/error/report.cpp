@@ -471,8 +471,8 @@ namespace jank::error
   {
     /* We may not be able to read the file, so we fall back to trying to read the module.
      * This can happen for baked-in core libs like clojure.core for an installed jank. */
-    auto file(runtime::__rt_ctx->module_loader.read_file(s.file));
-    if(file.is_err())
+    auto file(runtime::module::loader::read_file(s.file));
+    if(file.is_err() && s.file != read::no_source_path)
     {
       file = runtime::__rt_ctx->module_loader.read_module(s.module);
     }
