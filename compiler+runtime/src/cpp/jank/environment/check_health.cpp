@@ -386,7 +386,7 @@ namespace jank::environment
                                       [=] { util::cli::opts = saved_opts; }
       };
 
-      runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
+      //runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
