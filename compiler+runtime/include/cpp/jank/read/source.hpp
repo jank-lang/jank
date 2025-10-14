@@ -33,6 +33,10 @@ namespace jank::read
     source(jtl::immutable_string const &file,
            jtl::immutable_string const &module,
            source_position const &start,
+           source_position const &end);
+    source(jtl::immutable_string const &file,
+           jtl::immutable_string const &module,
+           source_position const &start,
            source_position const &end,
            runtime::object_ref macro_expansion);
 

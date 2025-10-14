@@ -1,7 +1,6 @@
 #include <jank/read/source.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::read
 {
@@ -9,8 +8,7 @@ namespace jank::read
   source const source::unknown{ no_source_path,
                                 no_source_path,
                                 source_position::unknown,
-                                source_position::unknown,
-                                runtime::jank_nil };
+                                source_position::unknown };
 
   source::source(source_position const &start)
     : source{ start, start }
@@ -22,7 +20,17 @@ namespace jank::read
     , module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) }
     , start{ start }
     , end{ end }
-    , macro_expansion{ runtime::jank_nil }
+  {
+  }
+
+  source::source(jtl::immutable_string const &file,
+                 jtl::immutable_string const &module,
+                 source_position const &start,
+                 source_position const &end)
+    : file{ file }
+    , module{ module }
+    , start{ start }
+    , end{ end }
   {
   }
 
