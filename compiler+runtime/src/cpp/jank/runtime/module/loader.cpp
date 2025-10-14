@@ -525,6 +525,11 @@ namespace jank::runtime::module
 
   jtl::string_result<file_view> loader::read_file(jtl::immutable_string const &path)
   {
+    if(path == read::no_source_path)
+    {
+      return err("No source file to read.");
+    }
+
     if(path.contains(".jar:"))
     {
       return read_jar_file(path);

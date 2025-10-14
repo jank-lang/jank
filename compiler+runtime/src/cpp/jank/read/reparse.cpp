@@ -12,8 +12,8 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &module,
-                                                    jtl::immutable_string const &file,
+  static jtl::result<source, error_ref> reparse_nth(jtl::immutable_string const &file,
+                                                    jtl::immutable_string const &module,
                                                     usize const offset,
                                                     usize const n,
                                                     object_ref const macro_expansion)
@@ -75,7 +75,7 @@ namespace jank::read::parse
 
     /* Add one to skip the ( for the list. */
     auto const res{
-      reparse_nth(source.module, source.file, source.start.offset + 1, n, source.macro_expansion)
+      reparse_nth(source.file, source.module, source.start.offset + 1, n, source.macro_expansion)
     };
     if(res.is_err())
     {
@@ -94,7 +94,7 @@ namespace jank::read::parse
 
     /* Add one to skip the [ for the vector. */
     auto const res{
-      reparse_nth(source.module, source.file, source.start.offset + 1, n, source.macro_expansion)
+      reparse_nth(source.file, source.module, source.start.offset + 1, n, source.macro_expansion)
     };
     if(res.is_err())
     {

@@ -362,7 +362,7 @@ namespace jank::error
     bool added{ false };
     for(auto &snippet : snippets)
     {
-      if(snippet.module == n.source.module)
+      if(snippet.file == n.source.file)
       {
         snippet.add(body_source, n);
         added = true;

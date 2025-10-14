@@ -133,13 +133,13 @@ namespace jank::runtime
 
     return {
       runtime::to_string(file),
-      to_string(module),
+      module.is_some() ? to_string(module) : "",
       { static_cast<size_t>(to_int(start_offset)),
-                static_cast<size_t>(to_int(start_line)),
-                static_cast<size_t>(to_int(start_col)) },
+                                           static_cast<size_t>(to_int(start_line)),
+                                           static_cast<size_t>(to_int(start_col)) },
       {   static_cast<size_t>(to_int(end_offset)),
-                static_cast<size_t>(to_int(end_line)),
-                static_cast<size_t>(to_int(end_col))  },
+                                           static_cast<size_t>(to_int(end_line)),
+                                           static_cast<size_t>(to_int(end_col))  },
       macro_expansion
     };
   }
