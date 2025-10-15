@@ -15,7 +15,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/clang.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 
 namespace jank::aot
 {
