@@ -3,37 +3,32 @@
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 
-#include <llvm/IR/Verifier.h>
-#include <llvm/Transforms/Utils/ModuleUtils.h>
-#include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/TargetParser/Host.h>
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/Transforms/InstCombine/InstCombine.h>
-#include <llvm/Transforms/Scalar/GVN.h>
-#include <llvm/Transforms/Scalar/Reassociate.h>
-#include <llvm/Transforms/Scalar/SimplifyCFG.h>
-#include <llvm/Linker/Linker.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/Passes/StandardInstrumentations.h>
-#include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
+#include <llvm/Analysis/LoopAnalysisManager.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Passes/PassBuilder.h>
+#include <llvm/Passes/StandardInstrumentations.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Utils/ModuleUtils.h>
 
-#include <jank/runtime/visit.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/runtime/context.hpp>
-#include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/core.hpp>
-#include <jank/analyze/visit.hpp>
-#include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/rtti.hpp>
+#include <jank/analyze/visit.hpp>
+#include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/util/clang.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
-#include <jank/util/clang.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
