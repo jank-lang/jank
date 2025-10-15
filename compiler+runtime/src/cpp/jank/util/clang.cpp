@@ -191,7 +191,7 @@ namespace jank::util
       std::string flag;
       while(std::getline(flags, flag, ' '))
       {
-        args.emplace_back(flag.c_str());
+        args.emplace_back(strdup(flag.c_str()));
       }
     }
 
@@ -298,7 +298,7 @@ namespace jank::util
     args.emplace_back("-std=gnu++20");
 
     //args.emplace_back("-v");
-    //println("args {}", args);
+    println("clang args {}", args);
 
     auto const res{ invoke_clang(args) };
     if(res.is_err())

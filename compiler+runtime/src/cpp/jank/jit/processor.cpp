@@ -105,7 +105,7 @@ namespace jank::jit
       std::string flag;
       while(std::getline(flags, flag, ' '))
       {
-        args.emplace_back(flag.c_str());
+        args.emplace_back(strdup(flag.c_str()));
       }
     }
 
@@ -171,7 +171,7 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
-    //util::println("jit flags {}", args);
+    util::println("jit flags {}", args);
 
 #ifdef JANK_SANITIZE
     /* ASan leads to larger code size, which can run us up against the 32 bit limit of the
