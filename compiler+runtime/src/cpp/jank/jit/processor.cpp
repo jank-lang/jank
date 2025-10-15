@@ -20,7 +20,7 @@
 
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
@@ -154,6 +154,8 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
+    util::add_system_flags(args);
+
     /********* Every flag after this line is user-provided. *********/
 
     for(auto const &include_path : util::cli::opts.include_dirs)
@@ -171,7 +173,7 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
-    util::println("jit flags {}", args);
+    //util::println("jit flags {}", args);
 
 #ifdef JANK_SANITIZE
     /* ASan leads to larger code size, which can run us up against the 32 bit limit of the

@@ -15,7 +15,7 @@
 #include <llvm/Support/VirtualFileSystem.h>
 
 #include <jank/util/clang.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
@@ -184,6 +184,7 @@ namespace jank::util
 
     /* The first argument should be the clang executable. */
     args.insert(args.begin(), clang_path.c_str());
+    util::add_system_flags(args);
 
     if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
     {
@@ -298,7 +299,7 @@ namespace jank::util
     args.emplace_back("-std=gnu++20");
 
     //args.emplace_back("-v");
-    println("clang args {}", args);
+    //println("clang args {}", args);
 
     auto const res{ invoke_clang(args) };
     if(res.is_err())
