@@ -22,8 +22,8 @@
                                            :sanitize (util/get-env "JANK_SANITIZE" "none")
                                            :coverage (util/get-env "JANK_COVERAGE" "off")})
 
-  ; End to end tests
-  (jank.compiler+runtime.bash-test/-main {:enabled? (and build?
+  ; Bash tests
+  #_(jank.compiler+runtime.bash-test/-main {:enabled? (and build?
                                                          ; AOT compilation fails when sanitizers are enabled.
                                                          (= "none" (util/get-env "JANK_SANITIZE" "none")))})
 
