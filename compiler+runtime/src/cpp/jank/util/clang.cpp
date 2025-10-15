@@ -185,6 +185,16 @@ namespace jank::util
     /* The first argument should be the clang executable. */
     args.insert(args.begin(), clang_path.c_str());
 
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(flag.c_str());
+      }
+    }
+
     auto const compilation_result{ driver.BuildCompilation(args) };
     if(!compilation_result || compilation_result->containsError())
     {

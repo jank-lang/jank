@@ -99,6 +99,16 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
 
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(flag.c_str());
+      }
+    }
+
     if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
       args.emplace_back("-g");
