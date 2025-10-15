@@ -61,7 +61,7 @@ jobs:
       - name: Bootstrap system
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm base-devel git jre-openjdk-headless clojure
+          pacman -S --noconfirm base-devel git jdk-openjdk jre-openjdk-headless clojure
 
       - uses: actions/checkout@v4
         with:
