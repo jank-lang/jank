@@ -28,8 +28,6 @@ jobs:
       - name: Install jank
         run: |
           brew install jank-lang/jank/jank clojure/tools/clojure
-          # TODO: Needed?
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost libzip openssl zlib doctest boost libzip lbzip2
 
       - uses: ./.github/actions/e2e-test
 
