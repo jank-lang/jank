@@ -1,12 +1,12 @@
 #include <jank/read/source.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/obj/nil.hpp>
 
 namespace jank::read
 {
   source_position const source_position::unknown{ 0, 0, 0 };
   source const source::unknown{ no_source_path,
+                                no_source_path,
                                 source_position::unknown,
                                 source_position::unknown };
 
@@ -16,29 +16,31 @@ namespace jank::read
   }
 
   source::source(source_position const &start, source_position const &end)
-    : start{ start }
-    , end{ end }
-    , macro_expansion{ runtime::jank_nil }
-  {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    file_path = runtime::to_string(file);
-  }
-
-  source::source(jtl::immutable_string const &file_path,
-                 source_position const &start,
-                 source_position const &end)
-    : file_path{ file_path }
+    : file{ runtime::to_string(runtime::__rt_ctx->current_file_var->deref()) }
+    , module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) }
     , start{ start }
     , end{ end }
-    , macro_expansion{ runtime::jank_nil }
   {
   }
 
-  source::source(jtl::immutable_string const &file_path,
+  source::source(jtl::immutable_string const &file,
+                 jtl::immutable_string const &module,
+                 source_position const &start,
+                 source_position const &end)
+    : file{ file }
+    , module{ module }
+    , start{ start }
+    , end{ end }
+  {
+  }
+
+  source::source(jtl::immutable_string const &file,
+                 jtl::immutable_string const &module,
                  source_position const &start,
                  source_position const &end,
                  runtime::object_ref const macro_expansion)
-    : file_path{ file_path }
+    : file{ file }
+    , module{ module }
     , start{ start }
     , end{ end }
     , macro_expansion{ macro_expansion }
@@ -73,7 +75,8 @@ namespace jank::read
 
   bool source::operator==(source const &rhs) const
   {
-    return file_path == rhs.file_path && start == rhs.start && end == rhs.end;
+    /* TODO: Can this be default? Missing macro_expansion right now. */
+    return file == rhs.file && module == rhs.module && start == rhs.start && end == rhs.end;
   }
 
   bool source::operator!=(source const &rhs) const
@@ -83,7 +86,7 @@ namespace jank::read
 
   bool source::overlaps(source const &rhs) const
   {
-    if(file_path != rhs.file_path)
+    if(file != rhs.file || module != rhs.module)
     {
       return false;
     }
@@ -93,7 +96,8 @@ namespace jank::read
   jtl::immutable_string source::to_string() const
   {
     jtl::string_builder sb;
-    return sb("source(")(file_path)(" ")(start.to_string())(" -> ")(end.to_string())(")").release();
+    return sb("source(")(file)(" (")(module)(") ")(start.to_string())(" -> ")(end.to_string())(")")
+      .release();
   }
 
   std::ostream &operator<<(std::ostream &os, source_position const &p)

@@ -30,10 +30,12 @@ namespace jank::read
     source(source &&) noexcept = default;
     source(source_position const &start);
     source(source_position const &start, source_position const &end);
-    source(jtl::immutable_string const &file_path,
+    source(jtl::immutable_string const &file,
+           jtl::immutable_string const &module,
            source_position const &start,
            source_position const &end);
-    source(jtl::immutable_string const &file_path,
+    source(jtl::immutable_string const &file,
+           jtl::immutable_string const &module,
            source_position const &start,
            source_position const &end,
            runtime::object_ref macro_expansion);
@@ -48,7 +50,8 @@ namespace jank::read
 
     jtl::immutable_string to_string() const;
 
-    jtl::immutable_string file_path;
+    jtl::immutable_string file{ no_source_path };
+    jtl::immutable_string module{ no_source_path };
     /* Note that start may be equal to end, if the source occupies a single byte. */
     source_position start, end;
     /* The form (and its meta) from which the form at this location expanded. Note
