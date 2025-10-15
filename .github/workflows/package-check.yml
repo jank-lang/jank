@@ -1,11 +1,9 @@
-name: Weekly package check
-
-# TODO: Run the e2e test suite after health check.
+name: Daily package check
 
 on:
   schedule:
     # 10:00 AM Pacific Standard Time (doesn't handle DST).
-    - cron: "0 18 * * 1"
+    - cron: "0 18 * * *"
   # Allow manual runs of this workflow.
   workflow_dispatch:
 
@@ -23,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install jank
-        run: brew install jank-lang/jank/jank
+        run: brew install jank-lang/jank/jank clojure/tools/clojure
 
       - uses: ./.github/actions/e2e-test
 
@@ -31,6 +29,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Bootstrap system
+        run: |
+          curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+          chmod +x linux-install.sh
+          sudo ./linux-install.sh
 
       - name: Install jank
         run: |
@@ -53,6 +57,9 @@ jobs:
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm base-devel git
+          curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+          chmod +x linux-install.sh
+          sudo ./linux-install.sh
 
       - name: Create build user for yay
         run: |
