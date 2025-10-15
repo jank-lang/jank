@@ -115,6 +115,8 @@ namespace jank::runtime
       return read::source::unknown;
     }
 
+    auto const module(get(source, __rt_ctx->intern_keyword("module").expect_ok()));
+
     auto const start(get(source, __rt_ctx->intern_keyword("start").expect_ok()));
     auto const end(get(source, __rt_ctx->intern_keyword("end").expect_ok()));
 
@@ -130,13 +132,14 @@ namespace jank::runtime
       get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
     return {
-      to_string(file),
+      runtime::to_string(file),
+      module.is_some() ? to_string(module) : "",
       { static_cast<size_t>(to_int(start_offset)),
-              static_cast<size_t>(to_int(start_line)),
-              static_cast<size_t>(to_int(start_col)) },
+                                           static_cast<size_t>(to_int(start_line)),
+                                           static_cast<size_t>(to_int(start_col)) },
       {   static_cast<size_t>(to_int(end_offset)),
-              static_cast<size_t>(to_int(end_line)),
-              static_cast<size_t>(to_int(end_col))  },
+                                           static_cast<size_t>(to_int(end_line)),
+                                           static_cast<size_t>(to_int(end_col))  },
       macro_expansion
     };
   }
@@ -161,10 +164,19 @@ namespace jank::runtime
                                               read::source_position const &start,
                                               read::source_position const &end)
   {
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-
     auto const source{ obj::persistent_array_map::empty()->to_transient() };
-    source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
+
+    auto const module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) };
+    if(runtime::module::is_core_module(module))
+    {
+      source->assoc_in_place(__rt_ctx->intern_keyword("module").expect_ok(), make_box(module));
+    }
+
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    if(file.is_some())
+    {
+      source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
+    }
 
     auto const start_map{ obj::persistent_array_map::create_unique(
       __rt_ctx->intern_keyword("offset").expect_ok(),

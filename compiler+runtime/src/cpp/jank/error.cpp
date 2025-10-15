@@ -420,7 +420,7 @@ namespace jank::error
       return lhs.source.start.line < rhs.source.start.line;
     });
     std::ranges::stable_sort(notes, [](note const &lhs, note const &rhs) -> bool {
-      return lhs.source.file_path < rhs.source.file_path;
+      return lhs.source.file < rhs.source.file;
     });
   }
 
