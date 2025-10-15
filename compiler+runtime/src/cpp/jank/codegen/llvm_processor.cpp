@@ -479,18 +479,26 @@ namespace jank::codegen
 
   /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
    * makes sense to use with jank objects, as opposed to native values. */
-  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
+  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx,
+                                     llvm::Value *arg,
+                                     jtl::ptr<void> const type)
   {
     if(!arg)
     {
       return arg;
     }
 
-    if(llvm::isa<llvm::AllocaInst>(arg))
+    if(llvm::isa<llvm::AllocaInst>(arg) && cpp_util::is_any_object(type))
     {
       arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
     }
     return arg;
+  }
+
+  static llvm::Value *
+  load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value * const arg)
+  {
+    return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
@@ -1525,11 +1533,12 @@ namespace jank::codegen
     auto then_block(llvm::BasicBlock::Create(*llvm_ctx, "then", current_fn));
     auto else_block(llvm::BasicBlock::Create(*llvm_ctx, "else"));
     auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "postif"));
+    auto const if_type{ cpp_util::expression_type(expr) };
 
     ctx->builder->CreateCondBr(cmp, then_block, else_block);
 
     ctx->builder->SetInsertPoint(then_block);
-    auto const then(load_if_needed(ctx, gen(expr->then, arity)));
+    auto const then(load_if_needed(ctx, gen(expr->then, arity), if_type));
 
     if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
@@ -1545,7 +1554,7 @@ namespace jank::codegen
 
     if(expr->else_.is_some())
     {
-      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity));
+      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity), if_type);
     }
     else
     {

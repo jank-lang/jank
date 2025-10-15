@@ -1,0 +1,6 @@
+(let* [i (cpp/int 77)
+       f (cpp/float)
+       r (if true
+           i
+           f)]
+  :success)
