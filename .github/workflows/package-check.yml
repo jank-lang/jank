@@ -58,10 +58,6 @@ jobs:
     container:
       image: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
       - name: Bootstrap system
         run: |
           pacman -Syu --noconfirm
@@ -69,6 +65,10 @@ jobs:
           curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
           chmod +x linux-install.sh
           sudo ./linux-install.sh
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Create build user for yay
         run: |
