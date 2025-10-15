@@ -20,6 +20,8 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install jank
         run: brew install jank-lang/jank/jank
 
@@ -28,6 +30,8 @@ jobs:
   ubuntu-binary-package-test:
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install jank
         run: |
           sudo apt install -y curl gnupg
@@ -43,6 +47,8 @@ jobs:
     container:
       image: archlinux:latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Bootstrap system
         run: |
           pacman -Syu --noconfirm
