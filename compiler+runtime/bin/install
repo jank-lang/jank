@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-cmake --install build --strip "$@"
+cmake --install build "$@"

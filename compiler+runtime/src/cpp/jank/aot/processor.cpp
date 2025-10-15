@@ -135,6 +135,12 @@ int main(int argc, const char** argv)
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
     {
+      /* Core modules will be linked as part of libjank-standalone.a. */
+      if(runtime::module::is_core_module(it))
+      {
+        continue;
+      }
+
       auto const &module_path{ util::format("{}.o",
                                             relative_to_cache_dir(module::module_to_path(it))) };
 
@@ -169,7 +175,8 @@ int main(int argc, const char** argv)
     auto const clang_path_str{ util::find_clang() };
     if(clang_path_str.is_none())
     {
-      return error::internal_system_failure("Unable to find Clang.");
+      return error::system_failure(
+        util::format("Unable to find Clang {}.", JANK_CLANG_MAJOR_VERSION));
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
     compiler_args.emplace_back(strdup("-I"));
@@ -212,6 +219,7 @@ int main(int argc, const char** argv)
     {
       compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
     }
+
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));

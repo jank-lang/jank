@@ -7,6 +7,7 @@
 
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
+#include <llvm/Support/Program.h>
 
 #include <jtl/string_builder.hpp>
 
@@ -165,7 +166,34 @@ namespace jank::util
     {
       std::filesystem::path const jank_path{ util::process_dir().c_str() };
 
-      return (jank_path / dir).c_str();
+      /* For a dev build, we don't worry about the configured resource dir not existing, since
+       * we're running in-source. */
+      auto const dev_build{ jank_path.filename() == "build"
+                            && jank_path.parent_path().filename() == "compiler+runtime" };
+
+      auto const configured_path{ (jank_path / dir) };
+      if(std::filesystem::exists(configured_path) || dev_build)
+      {
+        return configured_path.c_str();
+      }
+
+      /* However, if the configured path doesn't exist, and we're not in a dev build, chances
+       * are we're running an AOT compiled jank program. For that case, we want to find where
+       * jank is and get its resource dir.
+       *
+       * This means that jank needs to be installed on a system which is running an AOT compiled
+       * jank binary (dynamic runtime). jank also needs to be accessible via PATH in order
+       * for this to work. Just as Clojure uberjars require you to have the JVM installed. */
+      auto const installed_jank_res{ llvm::sys::findProgramByName("jank") };
+      if(installed_jank_res)
+      {
+        std::filesystem::path const installed_jank_path{ *installed_jank_res };
+        return (installed_jank_path.parent_path() / dir).c_str();
+      }
+
+      /* Otherwise, just return what we can and we'll raise an error down the road when we
+       * fail to find things. */
+      return configured_path.c_str();
     }
   }
 }
