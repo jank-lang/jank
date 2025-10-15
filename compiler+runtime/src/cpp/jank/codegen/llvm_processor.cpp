@@ -1767,7 +1767,7 @@ namespace jank::codegen
      *    - If there's no 'finally' block, it branches directly to the continuation
      *      block 'cont_bb', as the try-catch-finally construct is complete.
      */
-    if(try_val && ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
+    if(try_val && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateStore(try_val, result_slot);
       if(has_finally)
@@ -1901,7 +1901,7 @@ namespace jank::codegen
       ctx->builder->CreateCall(end_catch_fn, {});
       locals = std::move(old_locals);
 
-      if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
       {
         if(!catch_val)
         {
@@ -1974,7 +1974,7 @@ namespace jank::codegen
 
       gen(expr->finally_body.unwrap(), arity);
 
-      if(ctx->builder->GetInsertBlock()->getTerminator() == nullptr)
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
       {
         auto unwind_flag = ctx->builder->CreateLoad(ctx->builder->getInt1Ty(), unwind_flag_slot);
         ctx->builder->CreateCondBr(unwind_flag, unwind_action_bb, cont_bb);
