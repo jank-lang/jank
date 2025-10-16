@@ -88,7 +88,7 @@ namespace jank::codegen
          compilation_target target);
     /* For this ctor, we're inheriting the context from another function, which means
      * we're building a nested function. */
-    impl(analyze::expr::function_ref expr, std::unique_ptr<reusable_context> ctx);
+    impl(analyze::expr::function_ref expr, jtl::ref<reusable_context> ctx);
 
     jtl::string_result<void> gen();
     llvm::Value *gen(analyze::expression_ref, analyze::expr::function_arity const &);
@@ -181,10 +181,9 @@ namespace jank::codegen
     compilation_target target{};
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> fn{};
-    std::unique_ptr<reusable_context> ctx;
+    jtl::ref<reusable_context> ctx;
     native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
-    /* TODO: Use gc allocator to avoid leaks. */
-    std::list<deferred_init> deferred_inits{};
+    native_list<deferred_init> deferred_inits{};
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
     jtl::ptr<llvm::BasicBlock> current_loop;
@@ -479,9 +478,8 @@ namespace jank::codegen
 
   /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
    * makes sense to use with jank objects, as opposed to native values. */
-  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx,
-                                     llvm::Value *arg,
-                                     jtl::ptr<void> const type)
+  static llvm::Value *
+  load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value *arg, jtl::ptr<void> const type)
   {
     if(!arg)
     {
@@ -495,8 +493,7 @@ namespace jank::codegen
     return arg;
   }
 
-  static llvm::Value *
-  load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value * const arg)
+  static llvm::Value *load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value * const arg)
   {
     return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
   }
@@ -576,8 +573,8 @@ namespace jank::codegen
   }
 
   llvm_processor::llvm_processor(expr::function_ref const expr,
-                                 std::unique_ptr<reusable_context> ctx)
-    : _impl{ make_ref<impl>(expr, jtl::move(ctx)) }
+                                 jtl::ref<reusable_context> const ctx)
+    : _impl{ make_ref<impl>(expr, ctx) }
   {
   }
 
@@ -586,13 +583,13 @@ namespace jank::codegen
                              compilation_target const target)
     : target{ target }
     , root_fn{ expr }
-    , ctx{ std::make_unique<reusable_context>(module_name, std::make_unique<llvm::LLVMContext>()) }
+    , ctx{ make_ref<reusable_context>(module_name, std::make_unique<llvm::LLVMContext>()) }
     , llvm_ctx{ extract_context(ctx->module) }
     , llvm_module{ ctx->module.getModuleUnlocked() }
   {
   }
 
-  llvm_processor::impl::impl(expr::function_ref const expr, std::unique_ptr<reusable_context> ctx)
+  llvm_processor::impl::impl(expr::function_ref const expr, jtl::ref<reusable_context> ctx)
     : target{ compilation_target::function }
     , root_fn{ expr }
     , ctx{ std::move(ctx) }
@@ -1147,27 +1144,13 @@ namespace jank::codegen
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
-      llvm_processor nested{ expr, std::move(ctx) };
-
-      /* We need to make sure to transfer ownership of the context back, even if an exception
-       * is thrown. */
-      util::scope_exit const finally{ [&]() {
-        if(nested._impl->ctx)
-        {
-          ctx = std::move(nested._impl->ctx);
-        }
-      } };
-
+      llvm_processor nested{ expr, ctx };
       auto const res{ nested.gen() };
       if(res.is_err())
       {
         /* TODO: Return error. */
         res.expect_ok();
       }
-
-      /* This is covered by finally, but clang-tidy can't figure that out, so we have
-       * to make this more clear. */
-      ctx = std::move(nested._impl->ctx);
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
