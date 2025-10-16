@@ -186,7 +186,7 @@ namespace jank::runtime
       auto const name{ module::module_to_load_function(module) };
 
       auto const form{ runtime::conj(
-        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(std::move(forms)),
+        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(jtl::move(forms)),
                                     obj::persistent_vector::empty()),
                       make_box<obj::symbol>(name)),
         make_box<obj::symbol>("fn*")) };
