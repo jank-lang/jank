@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -15,6 +13,8 @@
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
+#include <llvm/ExecutionEngine/Orc/Mangling.h>
 
 #include <cpptrace/gdb_jit.hpp>
 
@@ -25,6 +25,7 @@
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/runtime/object.hpp>
 #include <jank/error/system.hpp>
 
 namespace jank::jit
@@ -186,6 +187,32 @@ namespace jank::jit
     interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args, {}, vfs)));
 #endif
 
+    /* Add a search generator that can resolve symbols from the main executable itself.
+     * This is essential for the JIT to find runtime functions and RTTI data
+     * (like typeinfo for exceptions) that live in the host process. */
+    auto &lljit{ *interpreter->getExecutionEngine() };
+    auto &jd{ lljit.getMainJITDylib() };
+    auto const &dl{ lljit.getDataLayout() };
+
+    /* 1. Add the standard dynamic library search generator. This is best practice
+     * and will resolve most symbols from the host process. */
+    jd.addGenerator(llvm::cantFail(
+      llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(dl.getGlobalPrefix())));
+
+    /* 2. Manually define the absolute address of the RTTI symbol. This is the most
+     * robust way to ensure it's found, bypassing any linker visibility issues. */
+    llvm::orc::MangleAndInterner mangle_and_interner(lljit.getExecutionSession(), dl);
+    llvm::orc::SymbolMap symbols;
+
+    /* Programmatically get the mangled name and address, don't hardcode them. */
+    auto const *typeinfo_name{ typeid(jank::runtime::object_ref).name() };
+    auto const *typeinfo_addr{ &typeid(jank::runtime::object_ref) };
+    symbols[mangle_and_interner(typeinfo_name)] = llvm::orc::ExecutorSymbolDef(
+      llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(typeinfo_addr)),
+      llvm::JITSymbolFlags());
+
+    llvm::cantFail(jd.define(llvm::orc::absoluteSymbols(symbols)));
+
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
      * into its recorded data (via `perf inject`).
@@ -208,7 +235,6 @@ namespace jank::jit
    = { llvm::orc::ExecutorAddr::fromPtr(&(name)),                         \
        llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable }, \
    llvm::orc::ExecutorAddr::fromPtr(&(name)))
-
       llvm::orc::SymbolMap perf_fns;
       auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
       auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
