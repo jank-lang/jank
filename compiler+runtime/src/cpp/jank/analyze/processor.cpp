@@ -2436,13 +2436,7 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                          cpp_util::untyped_object_ptr_type(),
-                                          macro_expansions);
-    if(then_expr.is_err())
-    {
-      return then_expr.expect_err();
-    }
+    auto const then_type{ cpp_util::expression_type(then_expr.expect_ok()) };
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2453,12 +2447,36 @@ namespace jank::analyze
       {
         return else_expr.expect_err();
       }
-      else_expr = apply_implicit_conversion(else_expr.expect_ok(),
-                                            cpp_util::untyped_object_ptr_type(),
-                                            macro_expansions);
-      if(else_expr.is_err())
+      auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
+      auto const is_then_object{ cpp_util::is_any_object(then_type) };
+      auto const is_else_object{ cpp_util::is_any_object(else_type) };
+      auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
+      auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+
+      if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+         && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
       {
-        return else_expr.expect_err();
+        return error::analyze_mismatched_if_types(
+          util::format(
+            "Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
+            "the same type.",
+            Cpp::GetTypeAsString(then_type),
+            Cpp::GetTypeAsString(else_type)),
+          object_source(o->first()),
+          latest_expansion(macro_expansions));
+      }
+
+      if(is_then_convertible)
+      {
+        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
+      }
+      else if(is_else_convertible)
+      {
+        else_expr = apply_implicit_conversion(else_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
       }
 
       else_expr_opt = else_expr.expect_ok();
