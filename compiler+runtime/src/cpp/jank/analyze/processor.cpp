@@ -2448,8 +2448,11 @@ namespace jank::analyze
         return else_expr.expect_err();
       }
       auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
+      auto const is_then_object{ cpp_util::is_any_object(then_type) };
+      auto const is_else_object{ cpp_util::is_any_object(else_type) };
 
-      if(Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+      if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+         && (!is_then_object || !is_else_object))
       {
         return error::analyze_mismatched_if_types(
           util::format(
@@ -2457,7 +2460,7 @@ namespace jank::analyze
             "the same type.",
             Cpp::GetTypeAsString(then_type),
             Cpp::GetTypeAsString(else_type)),
-          object_source(o),
+          object_source(o->first()),
           latest_expansion(macro_expansions));
       }
 
