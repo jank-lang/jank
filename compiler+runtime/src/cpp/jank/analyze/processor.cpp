@@ -2453,6 +2453,12 @@ namespace jank::analyze
       auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
       auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
 
+      /* If one of the branches has a native type, we need to match one of these scenarios.
+       *
+       * 1. The other branch has the same native type.
+       * 2. The other branch has an object type and the native branch is trait convertible.
+       *
+       * If neither of these are the case, we have an error. */
       if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
          && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
       {
