@@ -174,7 +174,7 @@ namespace jank::codegen
                                                 std::vector<llvm::Type *> const &fields) const;
     compilation_target target{};
     analyze::expr::function_ref root_fn;
-    jtl::ptr<llvm::Function> fn{};
+    jtl::ptr<llvm::Function> llvm_fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
     /* TODO: Use gc allocator to avoid leaks. */
@@ -600,12 +600,12 @@ namespace jank::codegen
   {
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
     auto const name(munge(root_fn->unique_name));
-    fn = llvm::Function::Create(fn_type,
+    llvm_fn = llvm::Function::Create(fn_type,
                                 llvm::Function::ExternalLinkage,
                                 name.c_str(),
                                 *llvm_module);
 
-    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", fn));
+    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
   }
 
@@ -625,10 +625,10 @@ namespace jank::codegen
                           ? jtl::immutable_string{ name }
                           : util::format("{}_{}", name, arity.params.size()) };
     auto fn_value(llvm_module->getOrInsertFunction(fn_name.c_str(), fn_type));
-    fn = llvm::cast<llvm::Function>(fn_value.getCallee());
-    fn->setLinkage(llvm::Function::ExternalLinkage);
+    llvm_fn = llvm::cast<llvm::Function>(fn_value.getCallee());
+    llvm_fn->setLinkage(llvm::Function::ExternalLinkage);
 
-    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", fn));
+    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
 
     /* JIT loaded object files don't support global ctors, so we need to call ours manually.
@@ -665,7 +665,7 @@ namespace jank::codegen
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
-    auto this_arg(fn->getArg(0));
+    auto this_arg(llvm_fn->getArg(0));
     this_arg->setName("this");
     /* We need a way to represent the current object, but we don't want to conflict with
      * any existing symbols in the scope, so we introduce a qualified symbol. This will be
@@ -676,7 +676,7 @@ namespace jank::codegen
     for(usize i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
-      auto arg(fn->getArg(i + 1));
+      auto arg(llvm_fn->getArg(i + 1));
       arg->setName(param->get_name().c_str());
       locals[param] = arg;
     }
@@ -950,7 +950,7 @@ namespace jank::codegen
         auto const normal_dest{ llvm::BasicBlock::Create(
           *llvm_ctx,
           util::format("invoke.{}.normal", call_fn_name).data(),
-          this->fn) };
+          this->llvm_fn) };
         call = ctx->builder->CreateInvoke(fn,
                                           normal_dest,
                                           lpad_and_catch_body_stack.back().lpad_bb,
@@ -1512,22 +1512,7 @@ namespace jank::codegen
     llvm::Value *last{};
     for(auto const &form : expr->values)
     {
-      /* If the previous expression terminated the block (e.g., via a throw or recur),
-       * we must not generate any more code in this path. */
-      if(ctx->builder->GetInsertBlock()->getTerminator())
-      {
-        /* We return nullptr to signal to our caller that this `do` block as a whole
-         * has a terminating path. */
-        return nullptr;
-      }
-
       last = gen(form, arity);
-    }
-    /* If the very last expression was a terminator, `last` will be nullptr.
-     * In that case, we just propagate the nullptr up. */
-    if(!last)
-    {
-      return nullptr;
     }
 
     /* Codegen for this already generated a return. */
@@ -1635,7 +1620,7 @@ namespace jank::codegen
     if(!lpad_and_catch_body_stack.empty())
     {
       auto const unreachable_dest{
-        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", this->fn)
+        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", this->llvm_fn)
       };
       ctx->builder->CreateInvoke(fn,
                                  unreachable_dest,
