@@ -150,7 +150,7 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(__rt_ctx->thread_binding_frames[std::this_thread::get_id()]);
+    auto &tbfs(runtime::context::thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return {};

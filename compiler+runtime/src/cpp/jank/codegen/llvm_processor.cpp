@@ -1144,7 +1144,7 @@ namespace jank::codegen
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
-      llvm_processor nested{ expr, ctx };
+      llvm_processor const nested{ expr, ctx };
       auto const res{ nested.gen() };
       if(res.is_err())
       {
