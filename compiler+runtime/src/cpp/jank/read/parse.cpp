@@ -409,7 +409,7 @@ namespace jank::read::parse
 
         parsed_keys.insert({ key.ptr, key });
 
-        if constexpr(std::same_as<T, runtime::detail::native_array_map>)
+        if constexpr(jtl::is_same<T, runtime::detail::native_array_map>)
         {
           map.insert_or_assign(key.ptr, value.unwrap().ptr);
         }
@@ -435,7 +435,7 @@ namespace jank::read::parse
 
       return object_source_info{ make_box<obj::persistent_array_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(map)),
+                                   jtl::move(map)),
                                  start_token,
                                  latest_token };
     }
@@ -453,7 +453,7 @@ namespace jank::read::parse
 
       return object_source_info{ make_box<obj::persistent_hash_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(map)),
+                                   jtl::move(map)),
                                  start_token,
                                  latest_token };
     }
@@ -538,7 +538,7 @@ namespace jank::read::parse
     auto meta_result(visit_object(
       [&](auto const typed_val) -> processor::object_result {
         using T = typename decltype(typed_val)::value_type;
-        if constexpr(std::same_as<T, obj::keyword>)
+        if constexpr(jtl::is_same<T, obj::keyword>)
         {
           return object_source_info{ obj::persistent_array_map::create_unique(typed_val, jank_true),
                                      start_token,
@@ -683,7 +683,7 @@ namespace jank::read::parse
     expected_closer = prev_expected_closer;
     return object_source_info{ make_box<obj::persistent_hash_set>(
                                  source_to_meta(start_token.start, latest_token.end),
-                                 std::move(ret).persistent()),
+                                 jtl::move(ret).persistent()),
                                start_token,
                                latest_token };
   }
@@ -1285,7 +1285,7 @@ namespace jank::read::parse
         [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
           using T = typename decltype(typed_form)::value_type;
 
-          if constexpr(std::same_as<T, obj::persistent_vector>)
+          if constexpr(jtl::is_same<T, obj::persistent_vector>)
           {
             auto const seq(typed_form->seq());
             if(seq.is_nil())

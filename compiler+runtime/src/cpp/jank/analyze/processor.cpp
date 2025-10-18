@@ -1632,7 +1632,7 @@ namespace jank::analyze
 
     native_vector<runtime::obj::symbol_ref> param_symbols;
     param_symbols.reserve(params->data.size());
-    std::set<runtime::obj::symbol> unique_param_symbols;
+    native_set<runtime::obj::symbol> unique_param_symbols;
 
     bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)

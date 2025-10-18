@@ -1017,7 +1017,6 @@ extern "C"
       /* The GC needs to enabled even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
-      GC_enable();
       GC_init();
 
       llvm::llvm_shutdown_obj const Y{};
