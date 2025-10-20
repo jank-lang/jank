@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jank/read/source.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
@@ -14,7 +15,8 @@ namespace jank::analyze::expr
               local_frame_ptr frame,
               bool needs_box,
               jtl::ptr<void> type,
-              expression_ref value_expr);
+              expression_ref value_expr,
+              read::source const &source);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
@@ -22,5 +24,6 @@ namespace jank::analyze::expr
 
     jtl::ptr<void> type{};
     expression_ref value_expr;
+    read::source source;
   };
 }

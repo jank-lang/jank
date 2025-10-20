@@ -4030,7 +4030,11 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
+    return jtl::make_ref<expr::cpp_box>(position,
+                                        current_frame,
+                                        needs_box,
+                                        value_expr,
+                                        object_source(l->first()));
   }
 
   processor::expression_result
@@ -4124,7 +4128,8 @@ namespace jank::analyze
                                           current_frame,
                                           needs_box,
                                           type_expr->type,
-                                          value_expr);
+                                          value_expr,
+                                          object_source(l->first()));
   }
 
   processor::expression_result
