@@ -2272,7 +2272,8 @@ namespace jank::codegen
                               false));
     auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
 
-    auto const type_str{ gen_c_string(Cpp::GetTypeAsString(Cpp::GetCanonicalType(expr_type))) };
+    auto const type_str{ gen_c_string(
+      Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expr_type)))) };
     llvm::SmallVector<llvm::Value *, 2> const args{ type_str, value };
     auto const call(ctx->builder->CreateCall(fn, args));
 
