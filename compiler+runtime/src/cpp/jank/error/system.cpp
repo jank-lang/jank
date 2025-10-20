@@ -1,4 +1,3 @@
-#include <jank/error.hpp>
 #include <jank/error/system.hpp>
 #include <jank/util/fmt.hpp>
 

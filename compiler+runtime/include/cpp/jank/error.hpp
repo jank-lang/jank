@@ -113,6 +113,7 @@ namespace jank::error
     system_clang_executable_not_found,
     system_failure,
 
+    runtime_invalid_unbox,
     internal_runtime_failure,
 
     internal_failure,
@@ -311,8 +312,11 @@ namespace jank::error
       case kind::system_failure:
         return "system/failure";
 
+      case kind::runtime_invalid_unbox:
+        return "runtime/invalid-unbox";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
+
       case kind::internal_failure:
         return "internal/failure";
     }

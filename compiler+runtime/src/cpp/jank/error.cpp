@@ -202,8 +202,11 @@ namespace jank::error
       case kind::system_failure:
         return "System failure.";
 
+      case kind::runtime_invalid_unbox:
+        return "Invalid unbox type.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
+
       case kind::internal_failure:
         return "Internal failure.";
     }

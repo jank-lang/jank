@@ -1,11 +1,13 @@
 #include <jank/runtime/obj/opaque_box.hpp>
+#include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
-  opaque_box::opaque_box(jtl::ptr<void> const data)
+  opaque_box::opaque_box(jtl::ptr<void> const data, jtl::immutable_string const &canonical_type)
     : data{ data }
+    , canonical_type{ canonical_type }
   {
   }
 
@@ -40,5 +42,11 @@ namespace jank::runtime::obj
   uhash opaque_box::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(data.data));
+  }
+
+  opaque_box_ref opaque_box::with_meta(object_ref const m)
+  {
+    meta = behavior::detail::validate_meta(m);
+    return this;
   }
 }
