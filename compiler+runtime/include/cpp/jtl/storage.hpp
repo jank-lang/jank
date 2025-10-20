@@ -43,7 +43,7 @@ namespace jtl
 
     template <typename... Args>
     requires is_constructible<T, Args...>
-    constexpr void construct(Args &&...args) noexcept
+    constexpr void construct(Args &&...args)
     {
       new(value) T{ jtl::forward<Args>(args)... };
     }
