@@ -13,8 +13,6 @@
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/IRReader/IRReader.h>
-#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
-#include <llvm/ExecutionEngine/Orc/Mangling.h>
 
 #include <cpptrace/gdb_jit.hpp>
 
@@ -25,7 +23,6 @@
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/runtime/object.hpp>
 #include <jank/error/system.hpp>
 
 namespace jank::jit
@@ -209,6 +206,7 @@ namespace jank::jit
    = { llvm::orc::ExecutorAddr::fromPtr(&(name)),                         \
        llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable }, \
    llvm::orc::ExecutorAddr::fromPtr(&(name)))
+
       llvm::orc::SymbolMap perf_fns;
       auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
       auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };

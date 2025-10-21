@@ -2,7 +2,6 @@
 
 #include <clang/Interpreter/CppInterOp.h>
 #include <clang/Sema/Sema.h>
-#include <clang/AST/Mangle.h>
 #include <Interpreter/Compatibility.h>
 
 #include <jank/analyze/cpp_util.hpp>
