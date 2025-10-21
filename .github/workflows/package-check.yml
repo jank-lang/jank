@@ -26,7 +26,8 @@ jobs:
           submodules: true
 
       - name: Install jank
-        run: brew install jank-lang/jank/jank clojure/tools/clojure
+        run: |
+          brew install jank-lang/jank/jank clojure/tools/clojure
 
       - uses: ./.github/actions/e2e-test
 
@@ -61,10 +62,7 @@ jobs:
       - name: Bootstrap system
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm base-devel git
-          curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
-          chmod +x linux-install.sh
-          sudo ./linux-install.sh
+          pacman -S --noconfirm base-devel git jdk-openjdk clojure
 
       - uses: actions/checkout@v4
         with:

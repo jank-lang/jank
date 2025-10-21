@@ -4,7 +4,7 @@
 #include <clang/Format/Format.h>
 
 #include <jank/util/clang_format.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::util

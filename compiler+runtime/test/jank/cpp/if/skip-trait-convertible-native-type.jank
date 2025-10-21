@@ -1,0 +1,10 @@
+(let* [i (cpp/int 77)
+       then (if true
+              10
+              i)
+       else (if true
+              i
+              10)
+       sum (cpp/+ then else)]
+  (if (= 87 sum)
+    :success))

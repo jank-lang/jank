@@ -2434,13 +2434,7 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                          cpp_util::untyped_object_ptr_type(),
-                                          macro_expansions);
-    if(then_expr.is_err())
-    {
-      return then_expr.expect_err();
-    }
+    auto const then_type{ cpp_util::expression_type(then_expr.expect_ok()) };
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2451,12 +2445,42 @@ namespace jank::analyze
       {
         return else_expr.expect_err();
       }
-      else_expr = apply_implicit_conversion(else_expr.expect_ok(),
-                                            cpp_util::untyped_object_ptr_type(),
-                                            macro_expansions);
-      if(else_expr.is_err())
+      auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
+      auto const is_then_object{ cpp_util::is_any_object(then_type) };
+      auto const is_else_object{ cpp_util::is_any_object(else_type) };
+      auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
+      auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+
+      /* If one of the branches has a native type, we need to match one of these scenarios.
+       *
+       * 1. The other branch has the same native type.
+       * 2. The other branch has an object type and the native branch is trait convertible.
+       *
+       * If neither of these are the case, we have an error. */
+      if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+         && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
       {
-        return else_expr.expect_err();
+        return error::analyze_mismatched_if_types(
+          util::format(
+            "Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
+            "the same type.",
+            Cpp::GetTypeAsString(then_type),
+            Cpp::GetTypeAsString(else_type)),
+          object_source(o->first()),
+          latest_expansion(macro_expansions));
+      }
+
+      if(is_then_convertible)
+      {
+        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
+      }
+      else if(is_else_convertible)
+      {
+        else_expr = apply_implicit_conversion(else_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
       }
 
       else_expr_opt = else_expr.expect_ok();
@@ -4011,7 +4035,11 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
+    return jtl::make_ref<expr::cpp_box>(position,
+                                        current_frame,
+                                        needs_box,
+                                        value_expr,
+                                        object_source(l->first()));
   }
 
   processor::expression_result
@@ -4105,7 +4133,8 @@ namespace jank::analyze
                                           current_frame,
                                           needs_box,
                                           type_expr->type,
-                                          value_expr);
+                                          value_expr,
+                                          object_source(l->first()));
   }
 
   processor::expression_result

@@ -357,7 +357,7 @@ add_library(
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
   src/cpp/jank/util/sha256.cpp
-  src/cpp/jank/util/dir.cpp
+  src/cpp/jank/util/environment.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
   src/cpp/jank/util/clang_format.cpp
@@ -375,6 +375,7 @@ add_library(
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
   src/cpp/jank/error/analyze.cpp
+  src/cpp/jank/error/runtime.cpp
   src/cpp/jank/error/system.cpp
   src/cpp/jank/error/codegen.cpp
   src/cpp/jank/read/source.cpp

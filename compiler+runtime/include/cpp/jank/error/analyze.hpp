@@ -105,6 +105,9 @@ namespace jank::error
   error_ref analyze_invalid_cpp_capture(jtl::immutable_string const &message,
                                         read::source const &source,
                                         runtime::object_ref expansion);
+  error_ref analyze_mismatched_if_types(jtl::immutable_string const &message,
+                                        read::source const &source,
+                                        runtime::object_ref expansion);
   error_ref analyze_invalid_cpp_function_call(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref expansion);

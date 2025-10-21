@@ -396,6 +396,10 @@ namespace jank::analyze::cpp_util
         {
           return expression_type(typed_expr->body);
         }
+        else if constexpr(jtl::is_same<T, expr::if_>)
+        {
+          return expression_type(typed_expr->then);
+        }
         else if constexpr(jtl::is_same<T, expr::do_>)
         {
           if(typed_expr->values.empty())

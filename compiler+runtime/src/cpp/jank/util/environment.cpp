@@ -4,6 +4,7 @@
 #endif
 
 #include <filesystem>
+#include <fstream>
 
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
@@ -11,10 +12,11 @@
 
 #include <jtl/string_builder.hpp>
 
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/sha256.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/error/system.hpp>
 
 namespace jank::util
 {
@@ -194,6 +196,55 @@ namespace jank::util
       /* Otherwise, just return what we can and we'll raise an error down the road when we
        * fail to find things. */
       return configured_path.c_str();
+    }
+  }
+
+  void add_system_flags(std::vector<char const *> &args)
+  {
+    /* Compilation on macOS relies on the XCode developer tools being installed. Clang needs to
+     * use this installation as its base for libc. When we install Clang from Homebrew, this is
+     * done for us. However, the Clang which we ship alongside jank (for now), cannot know
+     * which version of the XCode developer tools the user's machine will be using. To remedy
+     * this, we need to ask at runtime. */
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      static std::string sdk_path;
+      if(sdk_path.empty())
+      {
+        auto const tmp{ std::filesystem::temp_directory_path() };
+        std::string path_tmp{ tmp / "jank-xcrun-XXXXXX" };
+        mkstemp(path_tmp.data());
+
+        auto const xcrun_path{ llvm::sys::findProgramByName("xcrun") };
+        if(!xcrun_path)
+        {
+          throw error::system_failure("Unable to find 'xcrun' binary. Please make sure you have "
+                                      "the XCode developer tools installed.");
+        }
+
+        auto const proc_code{ llvm::sys::ExecuteAndWait(*xcrun_path,
+                                                        { *xcrun_path, "--show-sdk-path" },
+                                                        std::nullopt,
+                                                        { std::nullopt, path_tmp, std::nullopt }) };
+        if(proc_code < 0)
+        {
+          throw error::system_failure(util::format("Unable to run '{}'. Please make sure you have "
+                                                   "the XCode developer tools properly installed.",
+                                                   *xcrun_path));
+        }
+        std::ifstream ifs{ path_tmp };
+        std::getline(ifs, sdk_path);
+        if(sdk_path.empty())
+        {
+          throw error::system_failure(
+            util::format("Unable to get a valid path from '{}'. Please make sure you have the "
+                         "XCode developer tools properly installed.",
+                         *xcrun_path));
+        }
+      }
+
+      args.emplace_back(strdup("-isysroot"));
+      args.emplace_back(strdup(sdk_path.c_str()));
     }
   }
 }

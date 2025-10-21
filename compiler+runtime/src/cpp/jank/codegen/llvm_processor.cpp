@@ -482,18 +482,26 @@ namespace jank::codegen
 
   /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
    * makes sense to use with jank objects, as opposed to native values. */
-  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value *arg)
+  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx,
+                                     llvm::Value *arg,
+                                     jtl::ptr<void> const type)
   {
     if(!arg)
     {
       return arg;
     }
 
-    if(llvm::isa<llvm::AllocaInst>(arg))
+    if(llvm::isa<llvm::AllocaInst>(arg) && cpp_util::is_any_object(type))
     {
       arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
     }
     return arg;
+  }
+
+  static llvm::Value *
+  load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value * const arg)
+  {
+    return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
@@ -1537,11 +1545,12 @@ namespace jank::codegen
     auto then_block(llvm::BasicBlock::Create(*llvm_ctx, "then", current_fn));
     auto else_block(llvm::BasicBlock::Create(*llvm_ctx, "else"));
     auto const merge_block(llvm::BasicBlock::Create(*llvm_ctx, "postif"));
+    auto const if_type{ cpp_util::expression_type(expr) };
 
     ctx->builder->CreateCondBr(cmp, then_block, else_block);
 
     ctx->builder->SetInsertPoint(then_block);
-    auto const then(load_if_needed(ctx, gen(expr->then, arity)));
+    auto const then(load_if_needed(ctx, gen(expr->then, arity), if_type));
 
     if(!is_return && !ctx->builder->GetInsertBlock()->getTerminator())
     {
@@ -1557,7 +1566,7 @@ namespace jank::codegen
 
     if(expr->else_.is_some())
     {
-      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity));
+      else_ = load_if_needed(ctx, gen(expr->else_.unwrap(), arity), if_type);
     }
     else
     {
@@ -2661,20 +2670,38 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(analyze::expr::cpp_box_ref const expr,
                                          analyze::expr::function_arity const &arity)
   {
+    auto const expr_type{ cpp_util::expression_type(expr->value_expr) };
     auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
 
     /* We want to be sure that we're only boxing pointers, so if we have a reference we need
      * to get past it. */
-    if(Cpp::IsReferenceType(cpp_util::expression_type(expr->value_expr)))
+    if(Cpp::IsReferenceType(expr_type))
     {
       value = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), value);
     }
     auto const fn_type(
-      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                              { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                              false));
     auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 1> const args{ value };
+    auto const type_str{ gen_c_string(
+      Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expr_type)))) };
+    llvm::SmallVector<llvm::Value *, 2> const args{ type_str, value };
     auto const call(ctx->builder->CreateCall(fn, args));
+
+    {
+      auto const set_meta_fn_type(
+        llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                                { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                                false));
+      auto const set_meta_fn(llvm_module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
+
+      /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
+         * Otherwise, we need this info for unboxing errors. */
+      auto const meta(gen_global_from_read_string(source_to_meta(expr->source)));
+      ctx->builder->CreateCall(set_meta_fn, { call, meta });
+    }
 
     if(expr->position == expression_position::tail)
     {
@@ -2691,11 +2718,15 @@ namespace jank::codegen
       ctx->builder->getPtrTy(),
       llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
     auto const value{ gen(expr->value_expr, arity) };
-    auto const fn_type(
-      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-    auto const fn(llvm_module->getOrInsertFunction("jank_unbox", fn_type));
+    auto const fn_type(llvm::FunctionType::get(
+      ctx->builder->getPtrTy(),
+      { ctx->builder->getPtrTy(), ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+      false));
+    auto const fn(llvm_module->getOrInsertFunction("jank_unbox_with_source", fn_type));
 
-    llvm::SmallVector<llvm::Value *, 1> const args{ value };
+    auto const type_str{ gen_c_string(Cpp::GetTypeAsString(Cpp::GetCanonicalType(expr->type))) };
+    auto const source_meta{ gen_global_from_read_string(source_to_meta(expr->source)) };
+    llvm::SmallVector<llvm::Value *, 3> const args{ type_str, value, source_meta };
     auto const call(ctx->builder->CreateCall(fn, args));
     ctx->builder->CreateStore(call, alloc);
 

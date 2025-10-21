@@ -66,6 +66,13 @@
     jtl::do_assertion_throw(jank::util::format((fmt), __VA_ARGS__).view()); \
   }
 
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+#define jank_panic(msg) jtl::do_assertion_panic((msg));
+
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+#define jank_panic_fmt(fmt, ...) \
+  jtl::do_assertion_panic(jank::util::format((fmt), __VA_ARGS__).view());
+
 namespace jtl
 {
   struct immutable_string_view;

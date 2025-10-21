@@ -8,9 +8,11 @@ namespace jank::analyze::expr
   cpp_box::cpp_box(expression_position const position,
                    local_frame_ptr const frame,
                    bool const needs_box,
-                   expression_ref const value_expr)
+                   expression_ref const value_expr,
+                   read::source const &source)
     : expression{ expr_kind, position, frame, needs_box }
     , value_expr{ value_expr }
+    , source{ source }
   {
   }
 

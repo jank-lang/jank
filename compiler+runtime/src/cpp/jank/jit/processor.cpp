@@ -20,7 +20,7 @@
 
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
@@ -100,6 +100,16 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
 
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(strdup(flag.c_str()));
+      }
+    }
+
     if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
       args.emplace_back("-g");
@@ -144,6 +154,8 @@ namespace jank::jit
     auto const &pch_path_str{ pch_path.unwrap() };
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
+
+    util::add_system_flags(args);
 
     /********* Every flag after this line is user-provided. *********/
 
