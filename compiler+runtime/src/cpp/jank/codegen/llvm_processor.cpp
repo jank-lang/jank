@@ -601,9 +601,9 @@ namespace jank::codegen
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
     auto const name(munge(root_fn->unique_name));
     llvm_fn = llvm::Function::Create(fn_type,
-                                llvm::Function::ExternalLinkage,
-                                name.c_str(),
-                                *llvm_module);
+                                     llvm::Function::ExternalLinkage,
+                                     name.c_str(),
+                                     *llvm_module);
 
     auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
@@ -1832,8 +1832,9 @@ namespace jank::codegen
        *
        * TODO: Add proper exception type matching. For now, assume it always matches.
        */
-      auto const object_ptr_type_info{ llvm_module->getOrInsertGlobal(typeid(object_ref).name(),
-                                                                      ctx->builder->getPtrTy()) };
+      auto const object_ptr_type_info{ llvm_module->getOrInsertGlobal(
+        Cpp::MangleRTTI(expr->catch_body.unwrap().type),
+        ctx->builder->getPtrTy()) };
       landing_pad->addClause(object_ptr_type_info);
 
       /*
@@ -1866,7 +1867,7 @@ namespace jank::codegen
       current_fn->insert(current_fn->end(), catch_body_bb);
       ctx->builder->SetInsertPoint(catch_body_bb);
 
-      auto const &[sym, body]{ expr->catch_body.unwrap() };
+      auto const &[sym, catch_type, body]{ expr->catch_body.unwrap() };
       auto old_locals(locals);
       auto const begin_catch_fn{
         llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
