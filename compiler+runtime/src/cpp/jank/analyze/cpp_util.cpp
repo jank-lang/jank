@@ -284,6 +284,17 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
+  jtl::immutable_string mangle_rtti(jtl::ptr<void> const type)
+  {
+    auto res{ Cpp::MangleRTTI(type) };
+    /* macOS adds its own _ prefix, so we remove it here. */
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      res.erase(0, 1);
+    }
+    return res;
+  }
+
   jtl::ptr<void> untyped_object_ptr_type()
   {
     static jtl::ptr<void> const ret{ Cpp::GetPointerType(Cpp::GetTypeFromScope(

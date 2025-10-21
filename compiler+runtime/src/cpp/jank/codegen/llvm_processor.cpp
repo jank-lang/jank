@@ -1827,7 +1827,7 @@ namespace jank::codegen
        * exception's type info with the clauses added to the landing pads in the call stack.
        * If a match is found, control is transferred to this landing pad. */
       auto const exception_rtti{ llvm_module->getOrInsertGlobal(
-        Cpp::MangleRTTI(expr->catch_body.unwrap().type),
+        cpp_util::mangle_rtti(expr->catch_body.unwrap().type),
         ctx->builder->getPtrTy()) };
       landing_pad->addClause(exception_rtti);
 
