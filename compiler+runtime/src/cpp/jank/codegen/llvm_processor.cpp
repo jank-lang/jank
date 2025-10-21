@@ -958,7 +958,7 @@ namespace jank::codegen
         auto const normal_dest{ llvm::BasicBlock::Create(
           *llvm_ctx,
           util::format("invoke.{}.normal", call_fn_name).data(),
-          this->llvm_fn) };
+          llvm_fn) };
         call = ctx->builder->CreateInvoke(fn,
                                           normal_dest,
                                           lpad_and_catch_body_stack.back().lpad_bb,
@@ -1629,7 +1629,7 @@ namespace jank::codegen
     if(!lpad_and_catch_body_stack.empty())
     {
       auto const unreachable_dest{
-        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", this->llvm_fn)
+        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", llvm_fn)
       };
       ctx->builder->CreateInvoke(fn,
                                  unreachable_dest,
@@ -1655,13 +1655,13 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
-    if(!expr->catch_body.is_some() && !expr->finally_body.is_some())
+    if(expr->catch_body.is_none() && expr->finally_body.is_none())
     {
       return gen(expr->body, arity);
     }
 
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
-    auto &entry_bb = current_fn->getEntryBlock();
+    auto &entry_bb{ current_fn->getEntryBlock() };
     llvm::IRBuilder<> entry_builder(&entry_bb, entry_bb.getFirstInsertionPt());
     auto const ptr_ty{ ctx->builder->getPtrTy() };
 
@@ -1671,8 +1671,7 @@ namespace jank::codegen
        * personality function registered. The personality function tells the unwinder if this fn can
        * (or cannot) handle a specific exception. Once the unwinder finds a match, it transfers
        * control flow to the exception handling code. The personality function then populates the
-       * exception information and transfers control flow to the landing pad block.
-       */
+       * exception information and transfers control flow to the landing pad block. */
       auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
                                                         /*isVarArg=*/true) };
       auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
@@ -1684,33 +1683,30 @@ namespace jank::codegen
     auto const has_finally{ expr->finally_body.is_some() };
     auto const has_catch{ expr->catch_body.is_some() };
 
-    /* unwind_flag_slot: An alloca for a boolean (i1). This flag is set to true if the "finally"
+    /* unwind_flag_slot: An alloca for a boolean (i1). This flag is set to true if the 'finally'
      * block is being entered as part of an exception unwinding process (e.g., from a landing pad).
      * It's false if 'finally' is entered after normal completion of the try or catch block.
-     * This controls whether to resume unwinding or continue normally after the "finally" block.
-     */
+     * This controls whether to resume unwinding or continue normally after the "finally" block. */
     llvm::AllocaInst *unwind_flag_slot{};
 
     /* exception_slot: An alloca for a pointer. When unwinding_flag_slot is true, this slot holds
      * the exception object (typically an i8* or a struct pointer) that was caught by the landing
      * pad. This pointer is needed if the exception needs to be resumed or rethrown after the
-     * "finally" block.
-     */
-
+     * 'finally' block. */
     llvm::AllocaInst *exception_slot{};
-    /*
-     * result_slot: An alloca for a pointer (object_ref). This slot holds the llvm::Value*
+
+    /* result_slot: An alloca for a pointer (object_ref). This slot holds the llvm::Value*
      * that represents the result of the (try ...) expression.
+     *
      * - If the 'try' block completes without an exception, its result is stored here.
      * - If an exception is caught and handled by a 'catch' block, the result of the
      *   'catch' block is stored here.
+     *
      * This value is then loaded in the continuation block ('cont_bb') after any
-     * 'finally' block has executed. Because control flow
-     * always passes through the 'finally' block on normal exits (if a finally exists),
-     * we can't directly use a PHI node in 'cont_bb' with predecessors from
-     * the end of 'try' and 'catch'. This slot acts as a temporary variable
-     * to hold the result before entering 'finally'.
-     */
+     * 'finally' block has executed. Because control flow always passes through the 'finally'
+     * block on normal exits (if a finally exists), we can't directly use a PHI node in
+     * 'cont_bb' with predecessors from the end of 'try' and 'catch'. This slot acts as a
+     * temporary variable to hold the result before entering 'finally'. */
     llvm::AllocaInst *result_slot{ entry_builder.CreateAlloca(ptr_ty, nullptr, "try.result.slot") };
     llvm::BasicBlock *finally_bb{};
     llvm::BasicBlock *unwind_action_bb{};
@@ -1738,29 +1734,27 @@ namespace jank::codegen
 
     /* --- Try block --- */
     auto const original_try_pos{ expr->body->position };
+
     /* We put the try body into the value position so that no return is generated, which allows
-     * us to continue onto the finally block, if we have one.
-     */
+     * us to continue onto the finally block, if we have one. */
     expr->body->propagate_position(expression_position::value);
     auto const try_val{ gen(expr->body, arity) };
     expr->body->propagate_position(original_try_pos);
 
-    /*
-     * Handles the normal completion of the 'try' block.
+    /* Handles the normal completion of the 'try' block.
      * If code generation for the 'try' body produces a value (try_val is not null)
      * and the current basic block doesn't already have a terminator (e.g., from a return
      * or throw within the try body itself), this block adds the necessary instructions.
      *
      * 1. Store Result: The result of the 'try' block (try_val) is stored into the
      *    'result_slot' to be potentially used after the 'finally' block.
-     * 2. Branch to Finally or Continuation:
+     * 2. Branch to finally or continuation:
      *    - If a 'finally' block exists ('has_finally' is true), it prepares for
      *      entering the finally block normally. This involves setting the 'unwind_flag_slot'
      *      to false (signifying not unwinding from an exception) and creating an
      *      unconditional branch to 'finally_bb'.
      *    - If there's no 'finally' block, it branches directly to the continuation
-     *      block 'cont_bb', as the try-catch-finally construct is complete.
-     */
+     *      block 'cont_bb', as the try-catch-finally construct is complete. */
     if(try_val && !ctx->builder->GetInsertBlock()->getTerminator())
     {
       ctx->builder->CreateStore(try_val, result_slot);
@@ -1788,8 +1782,7 @@ namespace jank::codegen
      * 'lpad_and_catch_body_stack'. This stack is used by 'CreateInvoke' to determine
      * the unwind destination. By popping, any 'invoke' calls within the catch/finally
      * code will use the *next* landing pad on the stack (if any), belonging to an
-     * enclosing 'try' statement.
-     */
+     * enclosing 'try' statement. */
     lpad_and_catch_body_stack.pop_back();
     ctx->builder->SetInsertPoint(lpad_bb);
     auto const i32_ty{ ctx->builder->getInt32Ty() };
@@ -1798,8 +1791,7 @@ namespace jank::codegen
 
     if(has_finally)
     {
-      /*
-       * Mark the landing pad as a "cleanup" landing pad.
+      /* Mark the landing pad as a "cleanup" landing pad.
        * A cleanup landing pad indicates that there is cleanup code (the 'finally' block)
        * that MUST be executed regardless of whether the current exception is caught by
        * any of the clauses in this landing pad instruction or not.
@@ -1816,52 +1808,41 @@ namespace jank::codegen
        * In essence, 'setCleanup(true)' ensures that the unwinding process will not
        * bypass the 'finally' block's execution. After the 'finally' block, the exception
        * handling might continue (e.g., by resuming the unwind if the exception wasn't
-       * fully handled).
-       */
+       * fully handled). */
       landing_pad->setCleanup(true);
     }
 
     auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
     if(has_catch)
     {
-      /*
-       * To make the landing pad catch specific types of exceptions, we need to add clauses.
+      /* To make the landing pad catch specific types of exceptions, we need to add clauses.
        * Each clause represents a type of exception this landing pad can handle.
-       * In this system, exceptions are expected to be of a type related to 'object_ref'.
        *
        * We need a reference to the type information for the exception type we want to catch.
        * The Itanium C++ ABI exception handling mechanism uses type info globals.
-       * Here, we get or insert a global variable that acts as the type info for 'object_ref'.
        * The exact type of the global doesn't matter as much as its address, which is used
        * by the personality function to identify the exception type.
        *
        * When an exception is thrown, the personality function compares the thrown
        * exception's type info with the clauses added to the landing pads in the call stack.
-       * If a match is found, control is transferred to this landing pad.
-       *
-       * TODO: Add proper exception type matching. For now, assume it always matches.
-       */
-      auto const object_ptr_type_info{ llvm_module->getOrInsertGlobal(
+       * If a match is found, control is transferred to this landing pad. */
+      auto const exception_rtti{ llvm_module->getOrInsertGlobal(
         Cpp::MangleRTTI(expr->catch_body.unwrap().type),
         ctx->builder->getPtrTy()) };
-      landing_pad->addClause(object_ptr_type_info);
+      landing_pad->addClause(exception_rtti);
 
-      /*
-       * Setup for handling exceptions that might be thrown FROM WITHIN the catch block itself.
+      /* Setup for handling exceptions that might be thrown FROM WITHIN the catch block itself.
        * We need to ensure that if an exception occurs inside the 'catch' body,
        * any 'finally' block is still executed. This is achieved by having a dedicated
-       * landing pad ('cleanup_lpad_bb') for the 'catch' body's scope.
-       */
+       * landing pad ('cleanup_lpad_bb') for the 'catch' body's scope. */
       llvm::BasicBlock *cleanup_lpad_bb{};
       if(has_finally)
       {
-        /*
-         * To make any potentially throwing function calls (which will be generated as
+        /* To make any potentially throwing function calls (which will be generated as
          * llvm::InvokeInst) within the *catch body* unwind to our 'cleanup_lpad_bb',
          * we must push 'cleanup_lpad_bb' onto the 'lpad_and_catch_body_stack'.
          * The code generation for 'invoke' uses the top of this stack as the
-         * unwind destination.
-         */
+         * unwind destination. */
         cleanup_lpad_bb = llvm::BasicBlock::Create(*llvm_ctx, "cleanup.lpad", current_fn);
         lpad_and_catch_body_stack.emplace_back(cleanup_lpad_bb, nullptr);
       }
@@ -1916,39 +1897,32 @@ namespace jank::codegen
 
       if(has_finally)
       {
-        /*
-        * This block populates 'cleanup_lpad_bb', which acts as the landing pad
+        /* This block populates 'cleanup_lpad_bb', which acts as the landing pad
         * for any exception thrown *within* the execution of the 'catch' block body.
         * Its primary purpose is to ensure the 'finally' block is executed
-        * even if the catch handler itself throws.
-        */
+        * even if the catch handler itself throws. */
         ctx->builder->SetInsertPoint(cleanup_lpad_bb);
 
-        /*
-         * Create the landing pad instruction for the catch block's cleanup.
+        /* Create the landing pad instruction for the catch block's cleanup.
          * It takes no clauses because it's not trying to "catch" and handle
          * the exception in the sense of stopping propagation, but rather to
-         * perform the necessary cleanups.
-         */
+         * perform the necessary cleanups. */
         auto const cleanup_lpad{ ctx->builder->CreateLandingPad(lpad_ty, 0) };
         cleanup_lpad->setCleanup(true);
 
         /* Extract the pointer to the new exception object that was caught. And store the pointer
          * to the exception object that was caught *inside the catch block*.
          * This exception object will be needed in 'unwind_action_bb' after the 'finally'
-         * block runs to resume the stack unwinding process with this new exception.
-         */
+         * block runs to resume the stack unwinding process with this new exception. */
         auto cleanup_ex_ptr{ ctx->builder->CreateExtractValue(cleanup_lpad, 0, "cleanup.ex.ptr") };
         ctx->builder->CreateStore(cleanup_ex_ptr, exception_slot);
 
-        /*
-         * Set the unwind flag to TRUE. We are inside a landing pad (cleanup_lpad_bb),
+        /* Set the unwind flag to TRUE. We are inside a landing pad (cleanup_lpad_bb),
          * which is only ever entered as a result of an exception being thrown.
          * Therefore, we are definitely in an exception unwinding state. This flag
          * signals to the code in 'finally_bb' that it should branch to
          * 'unwind_action_bb' after completing the 'finally' logic, rather than
-         * continuing to 'cont_bb' as would happen in a normal execution flow.
-         */
+         * continuing to 'cont_bb' as would happen in a normal execution flow. */
         ctx->builder->CreateStore(ctx->builder->getTrue(), unwind_flag_slot);
         ctx->builder->CreateBr(finally_bb);
       }
@@ -1980,28 +1954,23 @@ namespace jank::codegen
        * was executed as part of an exception unwinding process (i.e., unwind_flag_slot was true).
        * The purpose of this block is to continue the exception propagation after
        * the cleanup code in 'finally_bb' has run. The exception object to be
-       * propagated was saved in 'exception_slot'.
-       */
+       * propagated was saved in 'exception_slot'. */
       current_fn->insert(current_fn->end(), unwind_action_bb);
       ctx->builder->SetInsertPoint(unwind_action_bb);
       auto current_ex = ctx->builder->CreateLoad(ptr_ty, exception_slot);
 
-      /*
-       * Determine how to propagate the exception:
+      /* Determine how to propagate the exception:
        * - If 'lpad_and_catch_body_stack' is not empty, it means there's an enclosing
        *   'try' block within the *same* function. We should "rethrow" the exception
        *   in a way that it can be caught by the landing pad of that outer 'try' block.
        * - If the stack is empty, there are no more exception handlers within this
        *   function to transfer control to, so we must resume the standard stack unwinding
-       *   process, allowing handlers in caller functions to catch the exception.
-       */
+       *   process, allowing handlers in caller functions to catch the exception. */
       if(!lpad_and_catch_body_stack.empty())
       {
-        /*
-         * Propagate to an outer landing pad in the same function.
+        /* Propagate to an outer landing pad in the same function.
          * To ensure the outer catch receives the correct user exception object,
-         * we first need to extract it using the C++ ABI helper functions.
-         */
+         * we first need to extract it using the C++ ABI helper functions. */
         auto exception_ptr_reloaded{ current_ex };
         auto const begin_catch_fn{
           llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
@@ -2013,11 +1982,9 @@ namespace jank::codegen
                                                                   ctx->builder->getVoidTy()) };
         ctx->builder->CreateCall(end_catch_fn, {});
 
-        /*
-         * Now, rethrow the *user exception object* (ex_val_ptr) using jank_throw.
+        /* Now, rethrow the *user exception object* (ex_val_ptr) using jank_throw.
          * This call is wrapped in CreateInvoke, with the outer try's landing pad
-         * as the unwind destination.
-         */
+         * as the unwind destination. */
         auto const unreachable_dest{
           llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", current_fn)
         };
@@ -2036,18 +2003,17 @@ namespace jank::codegen
       }
       else
       {
-        /*
-         * No outer 'try' handlers within this function's scope. We need to resume
+        /* No outer 'try' handlers within this function's scope. We need to resume
          * the standard stack unwinding process. This allows the exception to propagate
          * up the call stack to potentially be caught by handlers in caller functions.
          * The 'llvm.resume' instruction is used for this purpose.
          *
          * We need to reconstruct the two-element struct { i8*, i32 } that 'llvm.resume'
          * expects. This struct is the same type as what a 'landing pad' instruction returns.
-         * The first element is the exception pointer, and the second is a selector value.
-         */
-        llvm::Value *lpad_val
-          = ctx->builder->CreateInsertValue(llvm::UndefValue::get(lpad_ty), current_ex, 0);
+         * The first element is the exception pointer, and the second is a selector value. */
+        auto lpad_val{
+          ctx->builder->CreateInsertValue(llvm::UndefValue::get(lpad_ty), current_ex, 0)
+        };
         lpad_val = ctx->builder->CreateInsertValue(lpad_val, ctx->builder->getInt32(0), 1);
         ctx->builder->CreateResume(lpad_val);
       }
@@ -2056,8 +2022,7 @@ namespace jank::codegen
     /* We pushed the landing pad for our `try` block. It has now been popped, before
      * generating catch/finally. We must push it back on so that the scope_exit
      * guard at the top can correctly pop it later, restoring the stack for the rest
-     * of this function's codegen.
-     */
+     * of this function's codegen. */
     lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
 
     /* --- Continuation block --- */

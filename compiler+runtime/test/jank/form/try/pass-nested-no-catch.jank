@@ -1,67 +1,67 @@
-(let [steps (atom [])
-      b     (fn* b []
-              (try
-                (throw :bthrow)
-                (finally (swap! steps conj :b-finally))))
-      a     (fn* a []
-              (try
-                (b)
-                (catch e (swap! steps conj :a-catch))))]
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (finally (swap! steps conj :b-finally))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (catch e (swap! steps conj :a-catch))))]
   (a)
   (assert (= [:b-finally :a-catch] @steps)
           (pr-str @steps)))
 
-(let [steps (atom [])
-      b     (fn* b []
-              (try
-                (throw :bthrow)
-                (catch e (swap! steps conj :b-catch))))
-      a     (fn* a []
-              (try
-                (b)
-                (finally (swap! steps conj :a-finally))))]
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (catch e (swap! steps conj :b-catch))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (finally (swap! steps conj :a-finally))))]
   (a)
   (assert (= [:b-catch :a-finally] @steps)
           (pr-str @steps)))
 
-(let [steps (atom [])
-      b     (fn* b []
-              (try
-                (throw :bthrow)
-                (finally (swap! steps conj :b-finally))))
-      a     (fn* a []
-              (try
-                (b)
-                (catch e (swap! steps conj :a-catch))
-                (finally (swap! steps conj :a-finally))))]
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (finally (swap! steps conj :b-finally))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (catch e (swap! steps conj :a-catch))
+                 (finally (swap! steps conj :a-finally))))]
   (a)
   (assert (= [:b-finally :a-catch :a-finally] @steps)
           (pr-str @steps)))
 
-(let [steps (atom [])
-      b     (fn* b []
-              (try
-                (throw :bthrow)
-                (catch e (swap! steps conj :b-catch) (throw e))))
-      a     (fn* a []
-              (try
-                (b)
-                (catch e (swap! steps conj :a-catch))))]
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (catch e (swap! steps conj :b-catch) (throw e))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (catch e (swap! steps conj :a-catch))))]
   (a)
   (assert (= [:b-catch :a-catch] @steps)
           (pr-str @steps)))
 
-(let [steps (atom [])
-      b     (fn* b []
-              (try
-                (throw :bthrow)
-                (catch e (swap! steps conj :b-catch) (throw e))
-                (finally (swap! steps conj :b-finally))))
-      a     (fn* a []
-              (try
-                (b)
-                (catch e (swap! steps conj :a-catch))
-                (finally (swap! steps conj :a-finally))))]
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (catch e (swap! steps conj :b-catch) (throw e))
+                 (finally (swap! steps conj :b-finally))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (catch e (swap! steps conj :a-catch))
+                 (finally (swap! steps conj :a-finally))))]
   (a)
   (assert (= [:b-catch :b-finally :a-catch :a-finally] @steps)
           (pr-str @steps)))
