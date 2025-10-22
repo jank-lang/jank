@@ -304,8 +304,8 @@ namespace jank::analyze::cpp_util
     auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
     llvm::orc::SymbolMap symbols;
     llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
-    auto const symbol{ Cpp::MangleRTTI(type) };
-    symbols[interner(symbol.c_str())] = llvm::orc::ExecutorSymbolDef(
+    auto const &symbol{ Cpp::MangleRTTI(type) };
+    symbols[interner(symbol)] = llvm::orc::ExecutorSymbolDef(
       llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(value.getPtr())),
       llvm::JITSymbolFlags());
 
