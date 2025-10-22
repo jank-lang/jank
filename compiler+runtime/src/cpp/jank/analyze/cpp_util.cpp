@@ -112,9 +112,16 @@ namespace jank::analyze::cpp_util
           auto const fns{ Cpp::GetFunctionsUsingName(old_scope, subs) };
           if(fns.empty())
           {
-            return err(util::format("Unable to find '{}' within namespace '{}'.",
-                                    subs,
-                                    Cpp::GetQualifiedName(old_scope)));
+            auto const old_scope_name{ Cpp::GetQualifiedName(old_scope) };
+            if(old_scope_name.empty())
+            {
+              return err(util::format("Unable to find '{}' within global namespace.", subs));
+            }
+            else
+            {
+              return err(
+                util::format("Unable to find '{}' within namespace '{}'.", subs, old_scope_name));
+            }
           }
           if(auto const res = instantiate_if_needed(fns[0]); res.is_err())
           {
