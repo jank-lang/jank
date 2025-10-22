@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>

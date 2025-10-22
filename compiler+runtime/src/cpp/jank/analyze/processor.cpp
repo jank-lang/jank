@@ -2083,11 +2083,9 @@ namespace jank::analyze
 
     if(ret.values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil,
-                                                current_frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal(jank_nil, current_frame, position, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2758,7 +2756,14 @@ namespace jank::analyze
               return do_res.expect_err();
             }
 
-            ret->catch_body = expr::catch_{ sym, static_ref_cast<expr::do_>(do_res.expect_ok()) };
+            /* TODO: Read this from the catch form. */
+            static auto const object_ref_type{ cpp_util::resolve_literal_type(
+                                                 "jank::runtime::oref<jank::runtime::object>")
+                                                 .expect_ok() };
+
+            ret->catch_body = expr::catch_{ sym,
+                                            object_ref_type,
+                                            static_ref_cast<expr::do_>(do_res.expect_ok()) };
           }
           break;
         case try_expression_type::finally_:

@@ -3,38 +3,32 @@
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 
-#include <llvm/IR/Verifier.h>
-#include <llvm/Transforms/Utils/ModuleUtils.h>
-#include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/TargetParser/Host.h>
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/Transforms/InstCombine/InstCombine.h>
-#include <llvm/Transforms/Scalar/GVN.h>
-#include <llvm/Transforms/Scalar/Reassociate.h>
-#include <llvm/Transforms/Scalar/SimplifyCFG.h>
-#include <llvm/Linker/Linker.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/Passes/StandardInstrumentations.h>
-#include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/CGSCCPassManager.h>
+#include <llvm/Analysis/LoopAnalysisManager.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Passes/PassBuilder.h>
+#include <llvm/Passes/StandardInstrumentations.h>
+#include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Utils/ModuleUtils.h>
 
-#include <jank/runtime/visit.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/runtime/context.hpp>
-#include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/core.hpp>
-#include <jank/evaluate.hpp>
-#include <jank/analyze/visit.hpp>
-#include <jank/analyze/rtti.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/rtti.hpp>
+#include <jank/analyze/visit.hpp>
+#include <jank/codegen/llvm_processor.hpp>
 #include <jank/profile/time.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/visit.hpp>
+#include <jank/util/clang.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
-#include <jank/util/clang.hpp>
 
 /* TODO: Remove exceptions. */
 namespace jank::codegen
@@ -178,9 +172,10 @@ namespace jank::codegen
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
+
     compilation_target target{};
     analyze::expr::function_ref root_fn;
-    jtl::ptr<llvm::Function> fn{};
+    jtl::ptr<llvm::Function> llvm_fn{};
     std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
     /* TODO: Use gc allocator to avoid leaks. */
@@ -188,6 +183,19 @@ namespace jank::codegen
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
     jtl::ptr<llvm::BasicBlock> current_loop;
+
+    /* Landingpad and catch basic block used for try...catch...finally */
+    struct lpad_and_catch_bb
+    {
+      llvm::BasicBlock *lpad_bb{};
+      llvm::BasicBlock *catch_bb{};
+    };
+
+    native_vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
+    /* These are the registered RTTI modules compiled as part of this fn.
+     * We don't use this within the current fn, but it's passsed upward to
+     * the fn gen which is above us, all the way up to the module level. */
+    native_unordered_map<jtl::immutable_string, Cpp::AotCall> global_rtti;
   };
 
   struct llvm_type_info
@@ -605,12 +613,12 @@ namespace jank::codegen
   {
     auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
     auto const name(munge(root_fn->unique_name));
-    fn = llvm::Function::Create(fn_type,
-                                llvm::Function::ExternalLinkage,
-                                name.c_str(),
-                                *llvm_module);
+    llvm_fn = llvm::Function::Create(fn_type,
+                                     llvm::Function::ExternalLinkage,
+                                     name.c_str(),
+                                     *llvm_module);
 
-    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", fn));
+    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
   }
 
@@ -630,10 +638,10 @@ namespace jank::codegen
                           ? jtl::immutable_string{ name }
                           : util::format("{}_{}", name, arity.params.size()) };
     auto fn_value(llvm_module->getOrInsertFunction(fn_name.c_str(), fn_type));
-    fn = llvm::cast<llvm::Function>(fn_value.getCallee());
-    fn->setLinkage(llvm::Function::ExternalLinkage);
+    llvm_fn = llvm::cast<llvm::Function>(fn_value.getCallee());
+    llvm_fn->setLinkage(llvm::Function::ExternalLinkage);
 
-    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", fn));
+    auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
 
     /* JIT loaded object files don't support global ctors, so we need to call ours manually.
@@ -655,7 +663,7 @@ namespace jank::codegen
        * the same namespace again, we will define new symbols.
        *
        * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
-       * on intial load.
+       * on initial load.
        */
       auto const current_ns{ __rt_ctx->current_ns() };
       auto const fn_type(
@@ -670,7 +678,7 @@ namespace jank::codegen
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
 
-    auto this_arg(fn->getArg(0));
+    auto this_arg(llvm_fn->getArg(0));
     this_arg->setName("this");
     /* We need a way to represent the current object, but we don't want to conflict with
      * any existing symbols in the scope, so we introduce a qualified symbol. This will be
@@ -681,7 +689,7 @@ namespace jank::codegen
     for(usize i{}; i < arity.params.size(); ++i)
     {
       auto &param(arity.params[i]);
-      auto arg(fn->getArg(i + 1));
+      auto arg(llvm_fn->getArg(i + 1));
       arg->setName(param->get_name().c_str());
       locals[param] = arg;
     }
@@ -733,21 +741,24 @@ namespace jank::codegen
     {
       /* TODO: Add profiling to the fn body? Need to exit on every return. */
       create_function(arity);
+      bool block_terminated{};
       for(auto const form : arity.body->values)
       {
         gen(form, arity);
+        if(ctx->builder->GetInsertBlock()->getTerminator())
+        {
+          block_terminated = true;
+          break;
+        }
       }
 
-      /* If we have an empty function, ensure we're still returning nil. */
-      if(arity.body->values.empty())
+      /* If the inner loop was terminated, we skip the final check. */
+      if(block_terminated)
       {
-        ctx->builder->CreateRet(gen_global(jank_nil));
+        continue;
       }
-    }
 
-    if(target == compilation_target::eval)
-    {
-      //to_string();
+      ctx->builder->CreateRet(gen_global(jank_nil));
     }
 
     if(target != compilation_target::function)
@@ -766,6 +777,19 @@ namespace jank::codegen
       }
 
       ctx->builder->CreateRetVoid();
+    }
+
+    /* For modules, we need to make sure to define RTTI symbols manually. Since
+     * these will be introduced by nested fns, we have a way to float those up
+     * from those fns all the way here to the module level. Here, we just need
+     * to link those modules into our own in order to get the necessary type info
+     * globals defined. */
+    if(target == compilation_target::module)
+    {
+      for(auto const &rtti : global_rtti)
+      {
+        link_module(*ctx, reinterpret_cast<llvm::Module *>(rtti.second.getModule()));
+      }
     }
 
     return ok();
@@ -921,7 +945,7 @@ namespace jank::codegen
     arg_handles.reserve(expr->arg_exprs.size() + 1);
     arg_types.reserve(expr->arg_exprs.size() + 1);
 
-    llvm::CallInst *call{};
+    llvm::Value *call{};
     if(cpp_util::is_any_object(cpp_util::expression_type(expr->source_expr)))
     {
       arg_handles.emplace_back(callee);
@@ -942,22 +966,28 @@ namespace jank::codegen
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
       auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      call = ctx->builder->CreateCall(fn, arg_handles);
+
+      if(lpad_and_catch_body_stack.empty())
+      {
+        call = ctx->builder->CreateCall(fn, arg_handles);
+      }
+      else
+      {
+        auto const normal_dest{ llvm::BasicBlock::Create(
+          *llvm_ctx,
+          util::format("invoke.{}.normal", call_fn_name).data(),
+          llvm_fn) };
+        call = ctx->builder->CreateInvoke(fn,
+                                          normal_dest,
+                                          lpad_and_catch_body_stack.back().lpad_bb,
+                                          arg_handles);
+        ctx->builder->SetInsertPoint(normal_dest);
+      }
     }
     /* TODO: This can be deleted, I'm pretty sure. */
     else
     {
-      for(auto const &arg_expr : expr->arg_exprs)
-      {
-        auto const arg_handle{ gen(arg_expr, arity) };
-        arg_handles.emplace_back(arg_handle);
-        arg_types.emplace_back(
-          llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(arg_expr)).type.data);
-      }
-
-      auto const ret_type{ llvm_type(*ctx, llvm_ctx, cpp_util::expression_type(expr)) };
-      auto const fn_type(llvm::FunctionType::get(ret_type.type.data, arg_types, false));
-      call = ctx->builder->CreateCall(fn_type, callee, arg_handles);
+      throw std::runtime_error{ "oops, thought this was dead code" };
     }
 
     if(expr->position == expression_position::tail)
@@ -1168,6 +1198,8 @@ namespace jank::codegen
       /* This is covered by finally, but clang-tidy can't figure that out, so we have
        * to make this more clear. */
       ctx = std::move(nested._impl->ctx);
+
+      global_rtti.insert(nested._impl->global_rtti.begin(), nested._impl->global_rtti.end());
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
@@ -1451,7 +1483,7 @@ namespace jank::codegen
     /* We generate bindings left-to-right, so for mutually recursive letfn bindings
      * we must defer some initialization via `deferred_inits`.
      *
-     * In the following example, `b` is easy to to generate since `a` is already initialized at line 6.
+     * In the following example, `b` is easy to generate since `a` is already initialized at line 6.
      * However, `b` is not available when initializing `a` at line 2, so it is moved to line 8.
      *
      *   (jank.compiler/native-source '(letfn [(a [] b) (b [] a)]))
@@ -1608,55 +1640,443 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::throw_ref const expr, expr::function_arity const &arity)
   {
-    /* TODO: Generate direct call to __cxa_throw. */
     auto const value(gen(expr->value, arity));
     auto const fn_type(
-      llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
+      llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
     auto fn(llvm_module->getOrInsertFunction("jank_throw", fn_type));
     llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
-    llvm::SmallVector<llvm::Value *, 1> const args{ value };
-    auto const call(ctx->builder->CreateCall(fn, args));
+    if(!lpad_and_catch_body_stack.empty())
+    {
+      auto const unreachable_dest{
+        llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", llvm_fn)
+      };
+      ctx->builder->CreateInvoke(fn,
+                                 unreachable_dest,
+                                 lpad_and_catch_body_stack.back().lpad_bb,
+                                 { value });
+      ctx->builder->SetInsertPoint(unreachable_dest);
+    }
+    else
+    {
+      ctx->builder->CreateCall(fn, { value });
+    }
 
+    /* Since this code path never completes, it doesn't matter what we return.
+     * Using `jank_nil` to satisfy some IR requirements. */
+    auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
     {
-      return ctx->builder->CreateRet(call);
+      return ctx->builder->CreateRet(ret);
     }
-    return call;
+    return ret;
   }
 
   llvm::Value *
   llvm_processor::impl::gen(expr::try_ref const expr, expr::function_arity const &arity)
   {
-    auto const wrapped_body(evaluate::wrap_expression(expr->body, "try_body", {}));
-    auto const wrapped_catch(expr->catch_body.map([](auto const &catch_body) {
-      return evaluate::wrap_expression(catch_body.body, "catch", { catch_body.sym });
-    }));
-    auto const wrapped_finally(expr->finally_body.map(
-      [](auto const &finally) { return evaluate::wrap_expression(finally, "finally", {}); }));
-
-    auto const body(gen(wrapped_body, arity));
-    auto const catch_(
-      wrapped_catch.map([&](auto const &catch_body) { return gen(catch_body, arity); }));
-    auto const finally(
-      wrapped_finally.map([&](auto const &finally) { return gen(finally, arity); }));
-
-    auto const fn_type(llvm::FunctionType::get(
-      ctx->builder->getPtrTy(),
-      { ctx->builder->getPtrTy(), ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
-      false));
-    auto const fn(llvm_module->getOrInsertFunction("jank_try", fn_type));
-
-    llvm::SmallVector<llvm::Value *, 3> const args{ body,
-                                                    catch_.unwrap_or(gen_global(jank_nil)),
-                                                    finally.unwrap_or(gen_global(jank_nil)) };
-    auto const call(ctx->builder->CreateCall(fn, args));
-
-    if(expr->position == expression_position::tail)
+    if(expr->catch_body.is_none() && expr->finally_body.is_none())
     {
-      return ctx->builder->CreateRet(call);
+      return gen(expr->body, arity);
     }
-    return call;
+
+    auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
+    auto &entry_bb{ current_fn->getEntryBlock() };
+    llvm::IRBuilder<> entry_builder(&entry_bb, entry_bb.getFirstInsertionPt());
+    auto const ptr_ty{ ctx->builder->getPtrTy() };
+
+    if(!current_fn->hasPersonalityFn())
+    {
+      /* To signal to the unwinder that this fn can handle exceptions, we must have a
+       * personality function registered. The personality function tells the unwinder if this fn can
+       * (or cannot) handle a specific exception. Once the unwinder finds a match, it transfers
+       * control flow to the exception handling code. The personality function then populates the
+       * exception information and transfers control flow to the landing pad block. */
+      auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
+                                                        /*isVarArg=*/true) };
+      auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
+                                                            personality_fn_type) };
+      current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
+    }
+
+    auto const is_return(expr->position == expression_position::tail);
+    auto const has_finally{ expr->finally_body.is_some() };
+    auto const has_catch{ expr->catch_body.is_some() };
+
+    /* unwind_flag_slot: An alloca for a boolean (i1). This flag is set to true if the 'finally'
+     * block is being entered as part of an exception unwinding process (e.g., from a landing pad).
+     * It's false if 'finally' is entered after normal completion of the try or catch block.
+     * This controls whether to resume unwinding or continue normally after the "finally" block. */
+    llvm::AllocaInst *unwind_flag_slot{};
+
+    /* exception_slot: An alloca for a pointer. When unwinding_flag_slot is true, this slot holds
+     * the exception object (typically an i8* or a struct pointer) that was caught by the landing
+     * pad. This pointer is needed if the exception needs to be resumed or rethrown after the
+     * 'finally' block. */
+    llvm::AllocaInst *exception_slot{};
+
+    /* result_slot: An alloca for a pointer (object_ref). This slot holds the llvm::Value*
+     * that represents the result of the (try ...) expression.
+     *
+     * - If the 'try' block completes without an exception, its result is stored here.
+     * - If an exception is caught and handled by a 'catch' block, the result of the
+     *   'catch' block is stored here.
+     *
+     * This value is then loaded in the continuation block ('cont_bb') after any
+     * 'finally' block has executed. Because control flow always passes through the 'finally'
+     * block on normal exits (if a finally exists), we can't directly use a PHI node in
+     * 'cont_bb' with predecessors from the end of 'try' and 'catch'. This slot acts as a
+     * temporary variable to hold the result before entering 'finally'. */
+    llvm::AllocaInst *result_slot{ entry_builder.CreateAlloca(ptr_ty, nullptr, "try.result.slot") };
+    llvm::BasicBlock *finally_bb{};
+    llvm::BasicBlock *unwind_action_bb{};
+    ctx->builder->CreateStore(gen_global(jank_nil), result_slot);
+
+    if(has_finally)
+    {
+      unwind_flag_slot
+        = entry_builder.CreateAlloca(ctx->builder->getInt1Ty(), nullptr, "unwind.flag.slot");
+      exception_slot = entry_builder.CreateAlloca(ptr_ty, nullptr, "exception.slot");
+      finally_bb = llvm::BasicBlock::Create(*llvm_ctx, "finally");
+      unwind_action_bb = llvm::BasicBlock::Create(*llvm_ctx, "unwind.action");
+    }
+    auto const cont_bb{ llvm::BasicBlock::Create(*llvm_ctx, "try.cont") };
+    auto const lpad_bb{ llvm::BasicBlock::Create(*llvm_ctx, "lpad", current_fn) };
+
+    llvm::BasicBlock *catch_body_bb{};
+    if(has_catch)
+    {
+      catch_body_bb = llvm::BasicBlock::Create(*llvm_ctx, "catch.body");
+    }
+
+    lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
+    util::scope_exit const pop_landing_pad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
+
+    /* --- Try block --- */
+    auto const original_try_pos{ expr->body->position };
+
+    /* We put the try body into the value position so that no return is generated, which allows
+     * us to continue onto the finally block, if we have one. */
+    expr->body->propagate_position(expression_position::value);
+    auto const try_val{ gen(expr->body, arity) };
+    expr->body->propagate_position(original_try_pos);
+
+    /* Handles the normal completion of the 'try' block.
+     * If code generation for the 'try' body produces a value (try_val is not null)
+     * and the current basic block doesn't already have a terminator (e.g., from a return
+     * or throw within the try body itself), this block adds the necessary instructions.
+     *
+     * 1. Store Result: The result of the 'try' block (try_val) is stored into the
+     *    'result_slot' to be potentially used after the 'finally' block.
+     * 2. Branch to finally or continuation:
+     *    - If a 'finally' block exists ('has_finally' is true), it prepares for
+     *      entering the finally block normally. This involves setting the 'unwind_flag_slot'
+     *      to false (signifying not unwinding from an exception) and creating an
+     *      unconditional branch to 'finally_bb'.
+     *    - If there's no 'finally' block, it branches directly to the continuation
+     *      block 'cont_bb', as the try-catch-finally construct is complete. */
+    if(try_val && !ctx->builder->GetInsertBlock()->getTerminator())
+    {
+      ctx->builder->CreateStore(try_val, result_slot);
+      if(has_finally)
+      {
+        ctx->builder->CreateStore(ctx->builder->getFalse(), unwind_flag_slot);
+        ctx->builder->CreateBr(finally_bb);
+      }
+      else
+      {
+        ctx->builder->CreateBr(cont_bb);
+      }
+    }
+
+    /* --- Landing Pad & Catch/Resume Logic ---
+     * We are now about to generate code for the landing pad (lpad_bb), which catches
+     * exceptions thrown from the preceding 'try' block.
+     *
+     * IMPORTANT: Exceptions thrown from *within* the 'catch' or 'finally' clauses
+     * associated with THIS try-catch-finally statement should NOT be caught by this same
+     * landing pad (lpad_bb). Instead, they should be handled by any outer exception
+     * handlers or propagate up.
+     *
+     * To achieve this, we pop the current (lpad_bb, catch_body_bb) pair from the
+     * 'lpad_and_catch_body_stack'. This stack is used by 'CreateInvoke' to determine
+     * the unwind destination. By popping, any 'invoke' calls within the catch/finally
+     * code will use the *next* landing pad on the stack (if any), belonging to an
+     * enclosing 'try' statement. */
+    lpad_and_catch_body_stack.pop_back();
+    ctx->builder->SetInsertPoint(lpad_bb);
+    auto const i32_ty{ ctx->builder->getInt32Ty() };
+    auto const lpad_ty{ llvm::StructType::get(*llvm_ctx, { ptr_ty, i32_ty }) };
+    auto const landing_pad{ ctx->builder->CreateLandingPad(lpad_ty, 1) };
+
+    if(has_finally)
+    {
+      /* Mark the landing pad as a "cleanup" landing pad.
+       * A cleanup landing pad indicates that there is cleanup code (the 'finally' block)
+       * that MUST be executed regardless of whether the current exception is caught by
+       * any of the clauses in this landing pad instruction or not.
+       *
+       * Effect: When an exception is caught by this landing_pad:
+       * 1. The personality function is called.
+       * 2. If the exception type matches any of the 'addClause' types, control might
+       *    go to the catch block.
+       * 3. CRUCIALLY, because setCleanup(true) is set, even if the exception type does
+       *    NOT match any clause, or after a catch block finishes, the control flow
+       *    is structured to eventually execute the cleanup code associated with this
+       *    unwind path (which we've designed to be the 'finally_bb').
+       *
+       * In essence, 'setCleanup(true)' ensures that the unwinding process will not
+       * bypass the 'finally' block's execution. After the 'finally' block, the exception
+       * handling might continue (e.g., by resuming the unwind if the exception wasn't
+       * fully handled). */
+      landing_pad->setCleanup(true);
+    }
+
+    auto exception_ptr{ ctx->builder->CreateExtractValue(landing_pad, 0, "ex.ptr") };
+    if(has_catch)
+    {
+      /* To make the landing pad catch specific types of exceptions, we need to add clauses.
+       * Each clause represents a type of exception this landing pad can handle.
+       *
+       * We need a reference to the type information for the exception type we want to catch.
+       * The Itanium C++ ABI exception handling mechanism uses type info globals.
+       * The exact type of the global doesn't matter as much as its address, which is used
+       * by the personality function to identify the exception type.
+       *
+       * When an exception is thrown, the personality function compares the thrown
+       * exception's type info with the clauses added to the landing pads in the call stack.
+       * If a match is found, control is transferred to this landing pad. */
+      auto const catch_type{ expr->catch_body.unwrap().type };
+      auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
+
+      /* macOS requires explicit registration of RTTI symbols. */
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        static native_set<jtl::immutable_string> rtti_syms;
+        if(!rtti_syms.contains(exception_rtti))
+        {
+          /* We need to register this RTTI right now, for the JIT. */
+          cpp_util::register_rtti(catch_type);
+          rtti_syms.emplace(exception_rtti);
+        }
+
+        /* We also need to surface this RTTI upward, to the module level, so it
+         * can end up in the generated object file. */
+        auto const callable{
+          Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
+        };
+        global_rtti.emplace(exception_rtti, callable);
+      }
+
+      auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti,
+                                                                       ctx->builder->getPtrTy()) };
+
+      landing_pad->addClause(exception_rtti_global);
+
+      /* Setup for handling exceptions that might be thrown FROM WITHIN the catch block itself.
+       * We need to ensure that if an exception occurs inside the 'catch' body,
+       * any 'finally' block is still executed. This is achieved by having a dedicated
+       * landing pad ('cleanup_lpad_bb') for the 'catch' body's scope. */
+      llvm::BasicBlock *cleanup_lpad_bb{};
+      if(has_finally)
+      {
+        /* To make any potentially throwing function calls (which will be generated as
+         * llvm::InvokeInst) within the *catch body* unwind to our 'cleanup_lpad_bb',
+         * we must push 'cleanup_lpad_bb' onto the 'lpad_and_catch_body_stack'.
+         * The code generation for 'invoke' uses the top of this stack as the
+         * unwind destination. */
+        cleanup_lpad_bb = llvm::BasicBlock::Create(*llvm_ctx, "cleanup.lpad", current_fn);
+        lpad_and_catch_body_stack.emplace_back(cleanup_lpad_bb, nullptr);
+      }
+      util::scope_exit const pop_cleanup_lpad{ [this, has_finally]() {
+        if(has_finally)
+        {
+          lpad_and_catch_body_stack.pop_back();
+        }
+      } };
+
+      ctx->builder->CreateBr(catch_body_bb);
+      current_fn->insert(current_fn->end(), catch_body_bb);
+      ctx->builder->SetInsertPoint(catch_body_bb);
+
+      auto const &[catch_sym, _, catch_body]{ expr->catch_body.unwrap() };
+      auto old_locals(locals);
+      auto const begin_catch_fn{
+        llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
+      };
+      auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { exception_ptr }) };
+      locals[catch_sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
+
+      auto const original_catch_pos{ catch_body->position };
+      catch_body->propagate_position(expression_position::value);
+      util::scope_exit const restore_catch_pos{ [&]() {
+        catch_body->propagate_position(original_catch_pos);
+      } };
+      auto catch_val{ gen(catch_body, arity) };
+
+      auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
+                                                                ctx->builder->getVoidTy()) };
+      ctx->builder->CreateCall(end_catch_fn, {});
+      locals = std::move(old_locals);
+
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
+      {
+        if(!catch_val)
+        {
+          catch_val = gen_global(jank_nil);
+        }
+        ctx->builder->CreateStore(catch_val, result_slot);
+        if(has_finally)
+        {
+          ctx->builder->CreateStore(ctx->builder->getFalse(), unwind_flag_slot);
+          ctx->builder->CreateBr(finally_bb);
+        }
+        else
+        {
+          ctx->builder->CreateBr(cont_bb);
+        }
+      }
+
+      if(has_finally)
+      {
+        /* This block populates 'cleanup_lpad_bb', which acts as the landing pad
+        * for any exception thrown *within* the execution of the 'catch' block body.
+        * Its primary purpose is to ensure the 'finally' block is executed
+        * even if the catch handler itself throws. */
+        ctx->builder->SetInsertPoint(cleanup_lpad_bb);
+
+        /* Create the landing pad instruction for the catch block's cleanup.
+         * It takes no clauses because it's not trying to "catch" and handle
+         * the exception in the sense of stopping propagation, but rather to
+         * perform the necessary cleanups. */
+        auto const cleanup_lpad{ ctx->builder->CreateLandingPad(lpad_ty, 0) };
+        cleanup_lpad->setCleanup(true);
+
+        /* Extract the pointer to the new exception object that was caught. And store the pointer
+         * to the exception object that was caught *inside the catch block*.
+         * This exception object will be needed in 'unwind_action_bb' after the 'finally'
+         * block runs to resume the stack unwinding process with this new exception. */
+        auto cleanup_ex_ptr{ ctx->builder->CreateExtractValue(cleanup_lpad, 0, "cleanup.ex.ptr") };
+        ctx->builder->CreateStore(cleanup_ex_ptr, exception_slot);
+
+        /* Set the unwind flag to TRUE. We are inside a landing pad (cleanup_lpad_bb),
+         * which is only ever entered as a result of an exception being thrown.
+         * Therefore, we are definitely in an exception unwinding state. This flag
+         * signals to the code in 'finally_bb' that it should branch to
+         * 'unwind_action_bb' after completing the 'finally' logic, rather than
+         * continuing to 'cont_bb' as would happen in a normal execution flow. */
+        ctx->builder->CreateStore(ctx->builder->getTrue(), unwind_flag_slot);
+        ctx->builder->CreateBr(finally_bb);
+      }
+    }
+    else
+    {
+      /* No catch, must have 'finally'. */
+      ctx->builder->CreateStore(exception_ptr, exception_slot);
+      ctx->builder->CreateStore(ctx->builder->getTrue(), unwind_flag_slot);
+      ctx->builder->CreateBr(finally_bb);
+    }
+
+    /* --- Finally block --- */
+    if(has_finally)
+    {
+      current_fn->insert(current_fn->end(), finally_bb);
+      ctx->builder->SetInsertPoint(finally_bb);
+
+      gen(expr->finally_body.unwrap(), arity);
+
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
+      {
+        auto unwind_flag = ctx->builder->CreateLoad(ctx->builder->getInt1Ty(), unwind_flag_slot);
+        ctx->builder->CreateCondBr(unwind_flag, unwind_action_bb, cont_bb);
+      }
+
+      /* --- Unwind Action block ---
+       * This block is entered from 'finally_bb' ONLY when the 'finally' block
+       * was executed as part of an exception unwinding process (i.e., unwind_flag_slot was true).
+       * The purpose of this block is to continue the exception propagation after
+       * the cleanup code in 'finally_bb' has run. The exception object to be
+       * propagated was saved in 'exception_slot'. */
+      current_fn->insert(current_fn->end(), unwind_action_bb);
+      ctx->builder->SetInsertPoint(unwind_action_bb);
+      auto current_ex = ctx->builder->CreateLoad(ptr_ty, exception_slot);
+
+      /* Determine how to propagate the exception:
+       * - If 'lpad_and_catch_body_stack' is not empty, it means there's an enclosing
+       *   'try' block within the *same* function. We should "rethrow" the exception
+       *   in a way that it can be caught by the landing pad of that outer 'try' block.
+       * - If the stack is empty, there are no more exception handlers within this
+       *   function to transfer control to, so we must resume the standard stack unwinding
+       *   process, allowing handlers in caller functions to catch the exception. */
+      if(!lpad_and_catch_body_stack.empty())
+      {
+        /* Propagate to an outer landing pad in the same function.
+         * To ensure the outer catch receives the correct user exception object,
+         * we first need to extract it using the C++ ABI helper functions. */
+        auto exception_ptr_reloaded{ current_ex };
+        auto const begin_catch_fn{
+          llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
+        };
+        auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn,
+                                                        { exception_ptr_reloaded }) };
+        auto const ex_val_ptr{ ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val") };
+        auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
+                                                                  ctx->builder->getVoidTy()) };
+        ctx->builder->CreateCall(end_catch_fn, {});
+
+        /* Now, rethrow the *user exception object* (ex_val_ptr) using jank_throw.
+         * This call is wrapped in CreateInvoke, with the outer try's landing pad
+         * as the unwind destination. */
+        auto const unreachable_dest{
+          llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", current_fn)
+        };
+        auto const fn_type{
+          llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false)
+        };
+        auto function_callee{ llvm_module->getOrInsertFunction("jank_throw", fn_type) };
+        llvm::cast<llvm::Function>(function_callee.getCallee())->setDoesNotReturn();
+
+        ctx->builder->CreateInvoke(function_callee,
+                                   unreachable_dest,
+                                   lpad_and_catch_body_stack.back().lpad_bb,
+                                   { ex_val_ptr });
+        ctx->builder->SetInsertPoint(unreachable_dest);
+        ctx->builder->CreateUnreachable();
+      }
+      else
+      {
+        /* No outer 'try' handlers within this function's scope. We need to resume
+         * the standard stack unwinding process. This allows the exception to propagate
+         * up the call stack to potentially be caught by handlers in caller functions.
+         * The 'llvm.resume' instruction is used for this purpose.
+         *
+         * We need to reconstruct the two-element struct { i8*, i32 } that 'llvm.resume'
+         * expects. This struct is the same type as what a 'landing pad' instruction returns.
+         * The first element is the exception pointer, and the second is a selector value. */
+        auto lpad_val{
+          ctx->builder->CreateInsertValue(llvm::UndefValue::get(lpad_ty), current_ex, 0)
+        };
+        lpad_val = ctx->builder->CreateInsertValue(lpad_val, ctx->builder->getInt32(0), 1);
+        ctx->builder->CreateResume(lpad_val);
+      }
+    }
+
+    /* We pushed the landing pad for our `try` block. It has now been popped, before
+     * generating catch/finally. We must push it back on so that the scope_exit
+     * guard at the top can correctly pop it later, restoring the stack for the rest
+     * of this function's codegen. */
+    lpad_and_catch_body_stack.emplace_back(lpad_bb, catch_body_bb);
+
+    /* --- Continuation block --- */
+    current_fn->insert(current_fn->end(), cont_bb);
+    ctx->builder->SetInsertPoint(cont_bb);
+    auto final_val = ctx->builder->CreateLoad(ptr_ty, result_slot);
+
+    if(is_return)
+    {
+      ctx->builder->CreateRet(final_val);
+    }
+    return final_val;
   }
 
   llvm::Value *
@@ -3130,6 +3550,7 @@ namespace jank::codegen
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
     auto const captures(expr->captures());
+    jank_debug_assert(!expr->arities.empty());
     for(auto const &arity : expr->arities)
     {
       if(arity.fn_ctx->is_variadic)
@@ -3148,8 +3569,12 @@ namespace jank::codegen
 
     /* If there's a variadic arity, the highest fixed args is however many precede the "rest"
      * args. Otherwise, the highest fixed args is just the highest fixed arity. */
-    auto const highest_fixed_args(variadic_arity ? variadic_arity->fn_ctx->param_count - 1
-                                                 : highest_fixed_arity->fn_ctx->param_count);
+    auto const highest_fixed_args(variadic_arity
+                                    ? variadic_arity->fn_ctx->param_count - 1
+                                    /* This is only a concern if expr->arities is empty,
+                                     * which will never happen.
+                                     * NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) */
+                                    : highest_fixed_arity->fn_ctx->param_count);
 
     auto const arity_flags_fn_type(llvm::FunctionType::get(
       ctx->builder->getInt8Ty(),

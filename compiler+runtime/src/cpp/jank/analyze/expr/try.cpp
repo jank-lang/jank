@@ -38,10 +38,7 @@ namespace jank::analyze::expr
     {
       catch_body.unwrap().propagate_position(pos);
     }
-    if(finally_body)
-    {
-      finally_body.unwrap()->propagate_position(pos);
-    }
+    /* The result of the 'finally' body is discarded, so we always keep it in statement position. */
   }
 
   runtime::object_ref try_::to_runtime_data() const

@@ -318,9 +318,6 @@ extern "C"
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
 
   void jank_throw(jank_object_ref o);
-  jank_object_ref
-  jank_try(jank_object_ref try_fn, jank_object_ref catch_fn, jank_object_ref finally_fn);
-
   void jank_profile_enter(char const *label);
   void jank_profile_exit(char const *label);
   void jank_profile_report(char const *label);

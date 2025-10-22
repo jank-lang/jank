@@ -80,6 +80,22 @@ namespace jank::codegen
     function,
     eval
   };
+
+  constexpr char const *compilation_target_str(compilation_target const t)
+  {
+    switch(t)
+    {
+      case compilation_target::module:
+        return "module";
+      case compilation_target::function:
+        return "function";
+      case compilation_target::eval:
+        return "eval";
+      default:
+        return "unknown";
+    }
+  }
+
   enum class var_root_kind : u8;
 
   struct reusable_context;

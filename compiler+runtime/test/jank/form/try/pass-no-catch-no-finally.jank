@@ -1,1 +1,3 @@
-(try :success)
+(let* [v (try (+ 1 2))]
+  (if (= v 3)
+    :success))

@@ -16,11 +16,9 @@
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/c_api.h>
-#include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
