@@ -1847,7 +1847,7 @@ namespace jank::codegen
        * exception's type info with the clauses added to the landing pads in the call stack.
        * If a match is found, control is transferred to this landing pad. */
       auto const catch_type{ expr->catch_body.unwrap().type };
-      auto const exception_rtti{ cpp_util::mangle_rtti(catch_type) };
+      auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
 
       /* macOS requires explicit registration of RTTI symbols. */
       if constexpr(jtl::current_platform == jtl::platform::macos_like)

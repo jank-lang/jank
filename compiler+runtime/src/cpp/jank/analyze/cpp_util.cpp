@@ -285,17 +285,6 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
-  jtl::immutable_string mangle_rtti(jtl::ptr<void> const type)
-  {
-    auto res{ Cpp::MangleRTTI(type) };
-    /* macOS adds its own _ prefix, so we remove it here. */
-    if constexpr(jtl::current_platform == jtl::platform::macos_like)
-    {
-      //res.erase(0, 1);
-    }
-    return res;
-  }
-
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)
@@ -315,7 +304,7 @@ namespace jank::analyze::cpp_util
     auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
     llvm::orc::SymbolMap symbols;
     llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
-    auto const symbol{ mangle_rtti(type) };
+    auto const symbol{ Cpp::MangleRTTI(type) };
     symbols[interner(symbol.c_str())] = llvm::orc::ExecutorSymbolDef(
       llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(value.getPtr())),
       llvm::JITSymbolFlags());
