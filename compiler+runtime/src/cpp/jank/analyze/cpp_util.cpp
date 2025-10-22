@@ -11,6 +11,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::analyze::cpp_util
 {
@@ -290,9 +291,39 @@ namespace jank::analyze::cpp_util
     /* macOS adds its own _ prefix, so we remove it here. */
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
-      res.erase(0, 1);
+      //res.erase(0, 1);
     }
     return res;
+  }
+
+  /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
+   * this for exception catching. */
+  void register_rtti(jtl::ptr<void> const type)
+  {
+    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    clang::DiagnosticErrorTrap const trap{ diag };
+    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    auto const code{ util::format("&typeid({})", Cpp::GetTypeAsString(type)) };
+    clang::Value value;
+    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
+    if(exec_res || trap.hasErrorOccurred())
+    {
+      throw error::internal_codegen_failure(
+        util::format("Unable to get RTTI for '{}'.", Cpp::GetTypeAsString(type)));
+    }
+
+    auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
+    llvm::orc::SymbolMap symbols;
+    llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
+    auto const symbol{ mangle_rtti(type) };
+    symbols[interner(symbol.c_str())] = llvm::orc::ExecutorSymbolDef(
+      llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(value.getPtr())),
+      llvm::JITSymbolFlags());
+
+    auto res{ lljit->getMainJITDylib().define(llvm::orc::absoluteSymbols(symbols)) };
+    /* We may have duplicate definitions of RTTI in some circumstances, but we
+     * can just ignore those. */
+    llvm::consumeError(jtl::move(res));
   }
 
   jtl::ptr<void> untyped_object_ptr_type()

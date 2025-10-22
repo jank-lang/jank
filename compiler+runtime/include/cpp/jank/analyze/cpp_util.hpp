@@ -29,6 +29,7 @@ namespace jank::analyze::cpp_util
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);
   jtl::immutable_string mangle_rtti(jtl::ptr<void> type);
+  void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);

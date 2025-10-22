@@ -172,6 +172,7 @@ namespace jank::codegen
 
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
+
     compilation_target target{};
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> llvm_fn{};
@@ -191,6 +192,10 @@ namespace jank::codegen
     };
 
     native_vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
+    /* These are the registered RTTI modules compiled as part of this fn.
+     * We don't use this within the current fn, but it's passsed upward to
+     * the fn gen which is above us, all the way up to the module level. */
+    native_unordered_map<jtl::immutable_string, Cpp::AotCall> global_rtti;
   };
 
   struct llvm_type_info
@@ -774,6 +779,19 @@ namespace jank::codegen
       ctx->builder->CreateRetVoid();
     }
 
+    /* For modules, we need to make sure to define RTTI symbols manually. Since
+     * these will be introduced by nested fns, we have a way to float those up
+     * from those fns all the way here to the module level. Here, we just need
+     * to link those modules into our own in order to get the necessary type info
+     * globals defined. */
+    if(target == compilation_target::module)
+    {
+      for(auto const &rtti : global_rtti)
+      {
+        link_module(*ctx, reinterpret_cast<llvm::Module *>(rtti.second.getModule()));
+      }
+    }
+
     return ok();
   }
 
@@ -1180,6 +1198,8 @@ namespace jank::codegen
       /* This is covered by finally, but clang-tidy can't figure that out, so we have
        * to make this more clear. */
       ctx = std::move(nested._impl->ctx);
+
+      global_rtti.insert(nested._impl->global_rtti.begin(), nested._impl->global_rtti.end());
     }
 
     auto const fn_obj(gen_function_instance(expr, fn_arity));
@@ -1826,10 +1846,32 @@ namespace jank::codegen
        * When an exception is thrown, the personality function compares the thrown
        * exception's type info with the clauses added to the landing pads in the call stack.
        * If a match is found, control is transferred to this landing pad. */
-      auto const exception_rtti{ llvm_module->getOrInsertGlobal(
-        cpp_util::mangle_rtti(expr->catch_body.unwrap().type).c_str(),
-        ctx->builder->getPtrTy()) };
-      landing_pad->addClause(exception_rtti);
+      auto const catch_type{ expr->catch_body.unwrap().type };
+      auto const exception_rtti{ cpp_util::mangle_rtti(catch_type) };
+
+      /* macOS requires explicit registration of RTTI symbols. */
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        static native_set<jtl::immutable_string> rtti_syms;
+        if(!rtti_syms.contains(exception_rtti))
+        {
+          /* We need to register this RTTI right now, for the JIT. */
+          cpp_util::register_rtti(catch_type);
+          rtti_syms.emplace(exception_rtti);
+        }
+
+        /* We also need to surface this RTTI upward, to the module level, so it
+         * can end up in the generated object file. */
+        auto const callable{ Cpp::MakeRTTICallable(catch_type,
+                                                   exception_rtti.c_str(),
+                                                   __rt_ctx->unique_munged_string()) };
+        global_rtti.emplace(exception_rtti, callable);
+      }
+
+      auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti.c_str(),
+                                                                       ctx->builder->getPtrTy()) };
+
+      landing_pad->addClause(exception_rtti_global);
 
       /* Setup for handling exceptions that might be thrown FROM WITHIN the catch block itself.
        * We need to ensure that if an exception occurs inside the 'catch' body,
@@ -1857,20 +1899,20 @@ namespace jank::codegen
       current_fn->insert(current_fn->end(), catch_body_bb);
       ctx->builder->SetInsertPoint(catch_body_bb);
 
-      auto const &[sym, catch_type, body]{ expr->catch_body.unwrap() };
+      auto const &[catch_sym, _, catch_body]{ expr->catch_body.unwrap() };
       auto old_locals(locals);
       auto const begin_catch_fn{
         llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
       };
       auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { exception_ptr }) };
-      locals[sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
+      locals[catch_sym] = ctx->builder->CreateLoad(ptr_ty, caught_ptr, "ex.val");
 
-      auto const original_catch_pos{ body->position };
-      body->propagate_position(expression_position::value);
+      auto const original_catch_pos{ catch_body->position };
+      catch_body->propagate_position(expression_position::value);
       util::scope_exit const restore_catch_pos{ [&]() {
-        body->propagate_position(original_catch_pos);
+        catch_body->propagate_position(original_catch_pos);
       } };
-      auto catch_val{ gen(body, arity) };
+      auto catch_val{ gen(catch_body, arity) };
 
       auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
                                                                 ctx->builder->getVoidTy()) };

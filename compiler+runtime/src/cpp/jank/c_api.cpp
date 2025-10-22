@@ -1,9 +1,12 @@
 #include <cstdarg>
 
+#include <Interpreter/Compatibility.h>
 #include <llvm-c/Target.h>
+#include <llvm/ExecutionEngine/Orc/AbsoluteSymbols.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/ExecutionEngine/Orc/Mangling.h>
 
 #include <utility>
 
