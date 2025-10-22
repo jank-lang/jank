@@ -1,0 +1,11 @@
+(cpp/raw "#define JANK_FOO \"foo\"
+          #define JANK_SYM jank::cpp::preprocessor::pass_normal::sym
+
+          namespace jank::cpp::preprocessor::pass_normal
+          {
+            auto const sym{ 5 };
+          }")
+(let* [f cpp/JANK_FOO
+       s cpp/JANK_SYM]
+  (if (and (= "foo" f) (= 5 s))
+    :success))

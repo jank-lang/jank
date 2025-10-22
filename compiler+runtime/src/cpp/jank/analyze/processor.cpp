@@ -3411,7 +3411,7 @@ namespace jank::analyze
   processor::analyze_cpp_symbol(obj::symbol_ref const sym,
                                 local_frame_ptr const current_frame,
                                 expression_position const position,
-                                jtl::option<expr::function_context_ref> const &,
+                                jtl::option<expr::function_context_ref> const &fn_ctx,
                                 bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
@@ -3524,6 +3524,33 @@ namespace jank::analyze
     auto const scope_res{ cpp_util::resolve_scope(name) };
     if(scope_res.is_err())
     {
+      /* If we fail to resolve a symbol, it could be that it's a C preprocessor define. Normal
+       * Clang resolution only works with Clang Decls (variables, classes, enums, etc). This
+       * entirely skips past the preprocessor. Just in case, since we failed to find it as
+       * as Decl, let's try to sent it through the preprocessor for full parsing and see if
+       * that works.
+       *
+       * We silence the diagnostics for this because it'll likely fail for any invalid symbols
+       * anyway. */
+      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+
+      /* So just wrap our cpp/foo into a (cpp/value "foo") and analyze that. */
+      runtime::detail::native_persistent_list const cpp_value_form{ make_box<obj::symbol>("cpp",
+                                                                                          "value"),
+                                                                    make_box(name) };
+      auto const literal_res{ analyze_cpp_value(make_box<obj::persistent_list>(cpp_value_form),
+                                                current_frame,
+                                                position,
+                                                fn_ctx,
+                                                needs_box) };
+      if(literal_res.is_ok())
+      {
+        return literal_res;
+      }
+
       return error::analyze_unresolved_cpp_symbol(util::format("{}", scope_res.expect_err()),
                                                   object_source(sym),
                                                   latest_expansion(macro_expansions));
