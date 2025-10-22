@@ -1862,13 +1862,13 @@ namespace jank::codegen
 
         /* We also need to surface this RTTI upward, to the module level, so it
          * can end up in the generated object file. */
-        auto const callable{ Cpp::MakeRTTICallable(catch_type,
-                                                   exception_rtti.c_str(),
-                                                   __rt_ctx->unique_munged_string()) };
+        auto const callable{
+          Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
+        };
         global_rtti.emplace(exception_rtti, callable);
       }
 
-      auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti.c_str(),
+      auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti,
                                                                        ctx->builder->getPtrTy()) };
 
       landing_pad->addClause(exception_rtti_global);
@@ -3550,6 +3550,7 @@ namespace jank::codegen
     expr::function_arity const *variadic_arity{};
     expr::function_arity const *highest_fixed_arity{};
     auto const captures(expr->captures());
+    jank_debug_assert(!expr->arities.empty());
     for(auto const &arity : expr->arities)
     {
       if(arity.fn_ctx->is_variadic)
@@ -3568,8 +3569,12 @@ namespace jank::codegen
 
     /* If there's a variadic arity, the highest fixed args is however many precede the "rest"
      * args. Otherwise, the highest fixed args is just the highest fixed arity. */
-    auto const highest_fixed_args(variadic_arity ? variadic_arity->fn_ctx->param_count - 1
-                                                 : highest_fixed_arity->fn_ctx->param_count);
+    auto const highest_fixed_args(variadic_arity
+                                    ? variadic_arity->fn_ctx->param_count - 1
+                                    /* This is only a concern if expr->arities is empty,
+                                     * which will never happen.
+                                     * NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) */
+                                    : highest_fixed_arity->fn_ctx->param_count);
 
     auto const arity_flags_fn_type(llvm::FunctionType::get(
       ctx->builder->getInt8Ty(),
