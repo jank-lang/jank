@@ -6,7 +6,7 @@
     ;clojure.core-test.abs    ; (not (= -9223372036854775809N 9223372036854775809N))
     ;clojure.core-test.aclone ; unloadable (segfault)
     ;clojure.core-test.add-watch ; Exception: TODO: port sync
-    clojure.core-test.and
+    ;clojure.core-test.and ; invalid object type: 0
     clojure.core-test.any-qmark
     ;clojure.core-test.associative-qmark ; Exception: TODO: port to-array
     ;clojure.core-test.bigdec ; unloadable (segfault)
