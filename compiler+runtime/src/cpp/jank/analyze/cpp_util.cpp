@@ -115,7 +115,7 @@ namespace jank::analyze::cpp_util
             auto const old_scope_name{ Cpp::GetQualifiedName(old_scope) };
             if(old_scope_name.empty())
             {
-              return err(util::format("Unable to find '{}' within global namespace.", subs));
+              return err(util::format("Unable to find '{}' within the global namespace.", subs));
             }
             else
             {
