@@ -16,15 +16,7 @@
         lib,
         ...
       }: let
-        # remember to bump this rev/sha with new llvm commits
-        llvm-jank = pkgs.callPackage ./llvm.nix {
-          src = pkgs.fetchFromGitHub {
-            owner = "jank-lang";
-            repo = "llvm-project";
-            rev = "4e5928689f2399dc6aede8dde2536a98a96a1802";
-            sha256 = "sha256-mC8KHuiQ2ny6HkVeYEBGsSV5rPLuaO6h0u6SsD/mdzo=";
-          };
-        };
+        llvm-jank = pkgs.llvmPackages_git;
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
@@ -58,7 +50,7 @@
               ];
             });
 
-            nativeBuildInputs = with pkgs; [git cmake ninja llvm-jank];
+            nativeBuildInputs = with pkgs; [git cmake ninja llvm-jank.llvm llvm-jank.clang llvm-jank.libclang];
             buildInputs = with pkgs; [libzip openssl];
             checkInputs = with pkgs; [glibcLocales doctest];
 
@@ -69,8 +61,8 @@
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvm-jank}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvm-jank}/bin/clang++"
+              "-DCMAKE_C_COMPILER=${llvm-jank.clang}/bin/clang"
+              "-DCMAKE_CXX_COMPILER=${llvm-jank.clang}/bin/clang++"
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
@@ -105,7 +97,9 @@
             cmake
             ninja
             pkg-config
-            llvm-jank
+            llvm-jank.llvm
+            llvm-jank.clang
+            llvm-jank.libclang
 
             ## Required libs.
             boehmgc
@@ -121,7 +115,7 @@
             nixd
             shellcheck
             # For clangd & clang-tidy.
-            clang-tools
+            llvm-jank.clang-tools
             gdb
             clangbuildanalyzer
             openjdk
@@ -131,8 +125,8 @@
           ];
 
           shellHook = ''
-            export CC=${llvm-jank}/bin/clang
-            export CXX=${llvm-jank}/bin/clang++
+            export CC=${llvm-jank.clang}/bin/clang
+            export CXX=${llvm-jank.clang}/bin/clang++
             export ASAN_OPTIONS=detect_leaks=0
           '';
 
