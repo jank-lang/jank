@@ -8,23 +8,15 @@
   };
 
   outputs = inputs @ {flake-parts, ...}:
-    flake-parts.lib.mkFlake {inherit inputs;} {
+    flake-parts.lib.mkFlake { inherit inputs; } {
       systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin"];
+
       perSystem = {
         self',
         pkgs,
         lib,
         ...
       }: let
-        # remember to bump this rev/sha with new llvm commits
-        llvm-jank = pkgs.callPackage ./llvm.nix {
-          src = pkgs.fetchFromGitHub {
-            owner = "jank-lang";
-            repo = "llvm-project";
-            rev = "4e5928689f2399dc6aede8dde2536a98a96a1802";
-            sha256 = "sha256-mC8KHuiQ2ny6HkVeYEBGsSV5rPLuaO6h0u6SsD/mdzo=";
-          };
-        };
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
@@ -32,12 +24,16 @@
           rev = "5e71a74491dddc231664bbcd6a8cf8a8643918e9";
           sha256 = "sha256-qHikjAG5xuuHquqqKGuiDHXVZSlg/MbNp9JNSAKM/Hs=";
         };
+
         zstd-src = pkgs.fetchFromGitHub {
           owner = "facebook";
           repo = "zstd";
           rev = "v1.5.7";
           sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
         };
+
+        llvm = pkgs.llvmPackages_git;
+
       in {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
@@ -49,36 +45,67 @@
             pname = "jank";
             version = "git";
 
-            # Add only essential files so that the source hash is consistent.
             src = lib.cleanSource (lib.fileset.toSource {
               root = ./.;
+
               fileset = lib.fileset.unions [
                 ./.clang-format
                 ./compiler+runtime
               ];
             });
 
-            nativeBuildInputs = with pkgs; [git cmake ninja llvm-jank];
-            buildInputs = with pkgs; [libzip openssl];
-            checkInputs = with pkgs; [glibcLocales doctest];
+            nativeBuildInputs = [
+              llvm.libclang.dev
+            ] ++ (with pkgs; [
+              cmake
+              git
+              ninja
+            ]);
+
+            buildInputs = [
+              llvm.libllvm.dev
+            ] ++ (with pkgs; [
+              bzip2
+              libzip
+              openssl
+              zstd
+            ]);
+
+            checkInputs = with pkgs; [
+              doctest
+              glibcLocales
+            ];
 
             postPatch = ''
               patchShebangs ./compiler+runtime/bin/ar-merge
             '';
 
+            preConfigure = ''
+              export JANK_EXTRA_AOT_FLAGS=" \
+                  $(cat ${llvm.clang}/nix-support/cc-cflags) \
+                  $(cat ${llvm.clang}/nix-support/libc-crt1-cflags) \
+                  $(cat ${llvm.clang}/nix-support/cc-ldflags) \
+                  $NIX_LDFLAGS \
+              "
+            '';
+
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
+
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvm-jank}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvm-jank}/bin/clang++"
+              "-DCMAKE_C_COMPILER=${llvm.clang}/bin/clang"
+              "-DCMAKE_CXX_COMPILER=${llvm.clang}/bin/clang++"
+
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
               "-DCMAKE_SKIP_RPATH=ON"
+
               # Manually provide any FetchContent sources as network requests are
               # not allowed in the nix build sandbox.
               "-DFETCHCONTENT_SOURCE_DIR_LIBDWARF=${libdwarf-lite-src}"
               "-DFETCHCONTENT_SOURCE_DIR_ZSTD=${zstd-src}"
+
               # jank options
               (lib.cmakeBool "jank_unity_build" true)
               (lib.cmakeBool "jank_test" finalAttrs.doCheck)
@@ -89,6 +116,7 @@
             LC_ALL = "C.UTF-8";
 
             doCheck = true;
+
             checkPhase = ''
               pushd ../
               ./build/jank-test
@@ -105,7 +133,7 @@
             cmake
             ninja
             pkg-config
-            llvm-jank
+            llvm.clang
 
             ## Required libs.
             boehmgc
@@ -131,8 +159,8 @@
           ];
 
           shellHook = ''
-            export CC=${llvm-jank}/bin/clang
-            export CXX=${llvm-jank}/bin/clang++
+            export CC=${llvm.clang}/bin/clang
+            export CXX=${llvm.clang}/bin/clang++
             export ASAN_OPTIONS=detect_leaks=0
           '';
 
