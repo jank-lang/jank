@@ -421,7 +421,7 @@ namespace jank::codegen
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
 
-    auto const func(llvm_module->getFunction(fn_callable.getName()));
+    auto const fn(llvm_module->getFunction(fn_callable.getName()));
     auto const args_array_type{ llvm::ArrayType::get(ctx.builder->getPtrTy(), 1) };
     auto const args_array{ ctx.builder->CreateAlloca(args_array_type,
                                                      nullptr,
@@ -443,7 +443,7 @@ namespace jank::codegen
       args_array,
       ret_alloc
     };
-    ctx.builder->CreateCall(func, args);
+    ctx.builder->CreateCall(fn, args);
     if(policy == conversion_policy::from_object)
     {
       return ret_alloc;
@@ -671,10 +671,10 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getVoidTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty() },
                                 false));
-      auto const func(llvm_module->getOrInsertFunction("jank_ns_set_symbol_counter", func_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_ns_set_symbol_counter", func_type));
 
       ctx->builder->CreateCall(
-        func,
+        fn,
         { gen_c_string(current_ns->name->get_name()),
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), current_ns->symbol_counter.load()) });
     }
@@ -771,9 +771,9 @@ namespace jank::codegen
       {
         auto const fn_type(
           llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
-        auto const func(llvm_module->getOrInsertFunction("jank_profile_exit", fn_type));
+        auto const fn(llvm_module->getOrInsertFunction("jank_profile_exit", fn_type));
         ctx->builder->CreateCall(
-          func,
+          fn,
           { gen_c_string(util::format("global ctor for {}", root_fn->name)) });
       }
 
@@ -815,10 +815,10 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
-      auto const func(llvm_module->getOrInsertFunction("jank_var_bind_root", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_var_bind_root", fn_type));
       auto const var_root(gen(expr->value.unwrap(), arity));
       llvm::SmallVector<llvm::Value *, 2> const args{ ref, var_root };
-      ctx->builder->CreateCall(func, args);
+      ctx->builder->CreateCall(fn, args);
 
       /* Here if compiling into a jank module, a var-root can be initialized directly with the parameter
        * being used by the call to "jank_var_bind_root". There is no deref needed. */
@@ -893,10 +893,10 @@ namespace jank::codegen
       auto const ref(gen_var(var_qualified_name));
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const func(llvm_module->getOrInsertFunction("jank_deref", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_deref", fn_type));
 
       llvm::SmallVector<llvm::Value *, 1> const args{ ref };
-      call = ctx->builder->CreateCall(func, args);
+      call = ctx->builder->CreateCall(fn, args);
     }
     if(expr->position == expression_position::tail)
     {
@@ -963,11 +963,11 @@ namespace jank::codegen
 
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-      auto const func(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
 
       if(lpad_and_catch_body_stack.empty())
       {
-        call = ctx->builder->CreateCall(func, arg_handles);
+        call = ctx->builder->CreateCall(fn, arg_handles);
       }
       else
       {
@@ -975,7 +975,7 @@ namespace jank::codegen
           *llvm_ctx,
           util::format("invoke.{}.normal", call_fn_name).data(),
           llvm_fn) };
-        call = ctx->builder->CreateInvoke(func,
+        call = ctx->builder->CreateInvoke(fn,
                                           normal_dest,
                                           lpad_and_catch_body_stack.back().lpad_bb,
                                           arg_handles);
@@ -1048,7 +1048,7 @@ namespace jank::codegen
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
-    auto const func(llvm_module->getOrInsertFunction("jank_list_create", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("jank_list_create", fn_type));
 
     auto const size(expr->data_exprs.size());
     std::vector<llvm::Value *> args;
@@ -1060,7 +1060,7 @@ namespace jank::codegen
       args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
     {
@@ -1075,7 +1075,7 @@ namespace jank::codegen
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
-    auto const func(llvm_module->getOrInsertFunction("jank_vector_create", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("jank_vector_create", fn_type));
 
     auto const size(expr->data_exprs.size());
     std::vector<llvm::Value *> args;
@@ -1087,7 +1087,7 @@ namespace jank::codegen
       args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
     {
@@ -1102,7 +1102,7 @@ namespace jank::codegen
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
-    auto const func(llvm_module->getOrInsertFunction("jank_map_create", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("jank_map_create", fn_type));
 
     auto const size(expr->data_exprs.size());
     std::vector<llvm::Value *> args;
@@ -1115,7 +1115,7 @@ namespace jank::codegen
       args.emplace_back(load_if_needed(ctx, gen(pair.second, arity)));
     }
 
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
     {
@@ -1130,7 +1130,7 @@ namespace jank::codegen
   {
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, true));
-    auto const func(llvm_module->getOrInsertFunction("jank_set_create", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("jank_set_create", fn_type));
 
     auto const size(expr->data_exprs.size());
     std::vector<llvm::Value *> args;
@@ -1142,7 +1142,7 @@ namespace jank::codegen
       args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
 
     if(expr->position == expression_position::tail)
     {
@@ -1289,8 +1289,8 @@ namespace jank::codegen
       auto const call_fn_name(
         util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-      auto const func(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      auto const call(ctx->builder->CreateCall(func, arg_handles));
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      auto const call(ctx->builder->CreateCall(fn, arg_handles));
       call->setTailCall();
 
       if(expr->position == expression_position::tail)
@@ -1379,16 +1379,16 @@ namespace jank::codegen
     {
       auto const call_fn_name(arity_to_call_fn(expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-      auto const func(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      call = ctx->builder->CreateCall(func, arg_handles);
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      call = ctx->builder->CreateCall(fn, arg_handles);
     }
     else
     {
       auto const call_fn_name(
         util::format("{}_{}", munge(fn_expr.unique_name), expr->arg_exprs.size()));
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), arg_types, false));
-      auto const func(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
-      call = ctx->builder->CreateCall(func, arg_handles);
+      auto const fn(llvm_module->getOrInsertFunction(call_fn_name.c_str(), fn_type));
+      call = ctx->builder->CreateCall(fn, arg_handles);
     }
 
     if(expr->position == expression_position::tail)
@@ -1553,9 +1553,9 @@ namespace jank::codegen
     auto const condition(load_if_needed(ctx, gen(expr->condition, arity)));
     auto const truthy_fn_type(
       llvm::FunctionType::get(ctx->builder->getInt8Ty(), { ctx->builder->getPtrTy() }, false));
-    auto const func(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("jank_truthy", truthy_fn_type));
     llvm::SmallVector<llvm::Value *, 1> const args{ condition };
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
     auto const cmp(ctx->builder->CreateICmpEQ(call, ctx->builder->getInt8(1), "iftmp"));
 
     auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
@@ -1640,15 +1640,15 @@ namespace jank::codegen
     auto const value(gen(expr->value, arity));
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
-    auto func(llvm_module->getOrInsertFunction("jank_throw", fn_type));
-    llvm::cast<llvm::Function>(func.getCallee())->setDoesNotReturn();
+    auto fn(llvm_module->getOrInsertFunction("jank_throw", fn_type));
+    llvm::cast<llvm::Function>(fn.getCallee())->setDoesNotReturn();
 
     if(!lpad_and_catch_body_stack.empty())
     {
       auto const unreachable_dest{
         llvm::BasicBlock::Create(*llvm_ctx, "unreachable.throw", llvm_fn)
       };
-      ctx->builder->CreateInvoke(func,
+      ctx->builder->CreateInvoke(fn,
                                  unreachable_dest,
                                  lpad_and_catch_body_stack.back().lpad_bb,
                                  { value });
@@ -1656,7 +1656,7 @@ namespace jank::codegen
     }
     else
     {
-      ctx->builder->CreateCall(func, { value });
+      ctx->builder->CreateCall(fn, { value });
     }
 
     /* Since this code path never completes, it doesn't matter what we return.
@@ -2087,14 +2087,14 @@ namespace jank::codegen
       ctx->builder->getInt64Ty(),
       { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty(), ctx->builder->getInt64Ty() },
       false));
-    auto const func(
+    auto const fn(
       llvm_module->getOrInsertFunction("jank_shift_mask_case_integer", integer_fn_type));
     llvm::SmallVector<llvm::Value *, 3> const args{
       value,
       llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr->shift),
       llvm::ConstantInt::getSigned(ctx->builder->getInt64Ty(), expr->mask)
     };
-    auto const call(ctx->builder->CreateCall(func, args));
+    auto const call(ctx->builder->CreateCall(fn, args));
     auto const switch_val(ctx->builder->CreateIntCast(call, ctx->builder->getInt64Ty(), true));
     auto const default_block{ llvm::BasicBlock::Create(*llvm_ctx, "default", current_fn) };
     auto const switch_{ ctx->builder->CreateSwitch(switch_val, default_block, expr->keys.size()) };
@@ -2232,14 +2232,14 @@ namespace jank::codegen
     link_module(*ctx, reinterpret_cast<llvm::Module *>(callable.getModule()));
 
     auto const alloc{ alloc_type(*ctx, llvm_ctx, expr->type) };
-    auto const func(llvm_module->getFunction(callable.getName()));
+    auto const fn(llvm_module->getFunction(callable.getName()));
     llvm::SmallVector<llvm::Value *, 4> const args{
       llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
       llvm::ConstantInt::getSigned(ctx->builder->getInt32Ty(), 0),
       llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
       alloc
     };
-    ctx->builder->CreateCall(func, args);
+    ctx->builder->CreateCall(fn, args);
 
     if(expr->position == expression_position::tail)
     {
@@ -2751,13 +2751,13 @@ namespace jank::codegen
       llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getInt64Ty() }, false));
-    auto const func(llvm_module->getOrInsertFunction("GC_malloc", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("GC_malloc", fn_type));
 
     auto const size{ Cpp::GetSizeOfType(expr->type) };
     llvm::SmallVector<llvm::Value *, 1> const args{
       llvm::ConstantInt::get(ctx->builder->getInt64Ty(), size)
     };
-    auto const gc_alloc(ctx->builder->CreateCall(func, args));
+    auto const gc_alloc(ctx->builder->CreateCall(fn, args));
     ctx->builder->CreateStore(gc_alloc, alloc);
 
     if(!Cpp::IsTriviallyDestructible(expr->type))
@@ -2827,10 +2827,10 @@ namespace jank::codegen
 
     auto const fn_type(
       llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
-    auto const func(llvm_module->getOrInsertFunction("GC_free", fn_type));
+    auto const fn(llvm_module->getOrInsertFunction("GC_free", fn_type));
 
     llvm::SmallVector<llvm::Value *, 1> const args{ val };
-    ctx->builder->CreateCall(func, args);
+    ctx->builder->CreateCall(fn, args);
 
     auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
@@ -2863,11 +2863,11 @@ namespace jank::codegen
         llvm::FunctionType::get(ctx->builder->getPtrTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
-      auto const func(llvm_module->getOrInsertFunction("jank_var_intern_c", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_var_intern_c", fn_type));
 
       llvm::SmallVector<llvm::Value *, 2> const args{ gen_c_string(qualified_name->ns),
                                                       gen_c_string(qualified_name->name) };
-      auto const call(ctx->builder->CreateCall(func, args));
+      auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)
@@ -2914,10 +2914,10 @@ namespace jank::codegen
     {
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const func(llvm_module->getOrInsertFunction("jank_deref", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_deref", fn_type));
 
       llvm::SmallVector<llvm::Value *, 1> const args{ gen_var(qualified_name) };
-      auto const call(ctx->builder->CreateCall(func, args));
+      auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
       return global;
     }
@@ -2931,10 +2931,10 @@ namespace jank::codegen
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getPtrTy(), { ctx->builder->getPtrTy() }, false));
-      auto const func(llvm_module->getOrInsertFunction("jank_deref", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_deref", fn_type));
 
       llvm::SmallVector<llvm::Value *, 1> const args{ gen_var(qualified_name) };
-      auto const call(ctx->builder->CreateCall(func, args));
+      auto const call(ctx->builder->CreateCall(fn, args));
       ctx->builder->CreateStore(call, global);
 
       if(prev_block == ctx->global_ctor_block)
@@ -3709,8 +3709,8 @@ namespace jank::codegen
 
       auto const fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(), { ctx->builder->getPtrTy() }, false));
-      auto const func(llvm_module->getOrInsertFunction("jank_profile_enter", fn_type));
-      ctx->builder->CreateCall(func,
+      auto const fn(llvm_module->getOrInsertFunction("jank_profile_enter", fn_type));
+      ctx->builder->CreateCall(fn,
                                { gen_c_string(util::format("global ctor for {}", root_fn->name)) });
     }
   }
