@@ -109,7 +109,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::try_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_raw_ref, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
+    static llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
@@ -154,7 +154,7 @@ namespace jank::codegen
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
     llvm::Value *gen_aot_call(Cpp::AotCall const &call,
-                              jtl::ptr<void> const func,
+                              jtl::ptr<void> const fn,
                               jtl::ptr<void> const expr_type,
                               jtl::immutable_string const &name,
                               native_vector<analyze::expression_ref> const &arg_exprs,
@@ -163,7 +163,7 @@ namespace jank::codegen
                               analyze::expr::function_arity const &arity);
     llvm::Value *gen_aot_call(Cpp::AotCall const &call,
                               llvm::Value *ret_alloc,
-                              jtl::ptr<void> const func,
+                              jtl::ptr<void> const fn,
                               jtl::ptr<void> const expr_type,
                               jtl::immutable_string const &name,
                               native_vector<analyze::expression_ref> const &arg_exprs,
@@ -194,7 +194,7 @@ namespace jank::codegen
 
     native_vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
     /* These are the registered RTTI modules compiled as part of this fn.
-     * We don't use this within the current fn, but it's passsed upward to
+     * We don't use this within the current fn, but it's passed upward to
      * the fn gen which is above us, all the way up to the module level. */
     native_unordered_map<jtl::immutable_string, Cpp::AotCall> global_rtti;
   };
@@ -782,9 +782,9 @@ namespace jank::codegen
     }
 
     /* For modules, we need to make sure to define RTTI symbols manually. Since
-     * these will be introduced by nested fns, we have a way to float those up
+     * nested fns will introduce these, we have a way to float those up
      * from those fns all the way here to the module level. Here, we just need
-     * to link those modules into our own in order to get the necessary type info
+     * to link those modules into our own to get the necessary type info
      * globals defined. */
     if(target == compilation_target::module)
     {
@@ -801,7 +801,7 @@ namespace jank::codegen
   llvm_processor::impl::gen(expression_ref const ex, expr::function_arity const &fn_arity)
   {
     llvm::Value *ret{};
-    visit_expr([&, this](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
+    visit_expr([&](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
     return ret;
   }
 
@@ -873,7 +873,7 @@ namespace jank::codegen
     llvm::Value *call{};
     auto const var_qualified_name(make_box<obj::symbol>(expr->var->n, expr->var->name));
 
-    /* For direct-calls, when derefing a var we need to handle two different types of var-derefs.
+    /* For direct-calls, when derefing a var, we need to handle two different types of var-derefs.
      * We only direct-call vars that are not dynamic.
      * When generating the IR for a var-root, if the function is a jank_load function,
      * the var_root is derefed directly in the "jank_load" function.
@@ -2272,7 +2272,7 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::impl::gen_aot_call(Cpp::AotCall const &call,
-                                                  jtl::ptr<void> const func,
+                                                  jtl::ptr<void> const fn,
                                                   jtl::ptr<void> const expr_type,
                                                   jtl::immutable_string const &name,
                                                   native_vector<expression_ref> const &arg_exprs,
@@ -2288,12 +2288,12 @@ namespace jank::codegen
       ret_alloc = alloc_type(*ctx, llvm_ctx, expr_type, util::format("{}.res", name));
     }
 
-    return gen_aot_call(call, ret_alloc, func, expr_type, name, arg_exprs, position, kind, arity);
+    return gen_aot_call(call, ret_alloc, fn, expr_type, name, arg_exprs, position, kind, arity);
   }
 
   llvm::Value *llvm_processor::impl::gen_aot_call(Cpp::AotCall const &call,
                                                   llvm::Value *ret_alloc,
-                                                  jtl::ptr<void> const func,
+                                                  jtl::ptr<void> const fn,
                                                   jtl::ptr<void> const expr_type,
                                                   jtl::immutable_string const &name,
                                                   native_vector<expression_ref> const &arg_exprs,
@@ -2349,14 +2349,13 @@ namespace jank::codegen
       }
 
       auto const is_arg_untyped_obj{ cpp_util::is_untyped_object(arg_type) };
-      jtl::ptr<void> param_type{ func ? Cpp::GetFunctionArgType(func, i - member_offset)
-                                      : nullptr };
+      jtl::ptr<void> param_type{ fn ? Cpp::GetFunctionArgType(fn, i - member_offset) : nullptr };
       /* If our function is variadic, we won't have a param type for each variadic
        * param. Instead, we use the arg type. */
       if(!param_type)
       {
         /* If we're constructing a builtin type, we don't have a ctor fn. We know the
-         * param type we need though. */
+         * param type we need, though. */
         if(kind == expression_kind::cpp_constructor_call)
         {
           param_type = expr_type.data;
@@ -2679,7 +2678,7 @@ namespace jank::codegen
     auto const expr_type{ cpp_util::expression_type(expr->value_expr) };
     auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
 
-    /* We want to be sure that we're only boxing pointers, so if we have a reference we need
+    /* We want to be sure that we're only boxing pointers, so if we have a reference, we need
      * to get past it. */
     if(Cpp::IsReferenceType(expr_type))
     {
