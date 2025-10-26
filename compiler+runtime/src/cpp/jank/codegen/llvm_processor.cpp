@@ -716,11 +716,12 @@ namespace jank::codegen
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
       usize index{};
-      for(auto const &key : capture_list | std::views::keys)
+      for(auto const &capture : capture_list)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
-        locals[key]
-          = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), field_ptr, key->name.c_str());
+        locals[capture.first] = ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
+                                                         field_ptr,
+                                                         capture.first->name.c_str());
       }
     }
   }
@@ -1428,14 +1429,14 @@ namespace jank::codegen
      * corresponding `alloca` before jumping back to the start of the loop block. */
     if(expr->is_loop)
     {
-      for(auto const &key : expr->pairs | std::views::keys)
+      for(auto const &pair : expr->pairs)
       {
         auto const alloc{ ctx->builder->CreateAlloca(
           ctx->builder->getPtrTy(),
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-        alloc->setName(key->to_string().c_str());
-        ctx->builder->CreateStore(load_if_needed(ctx, locals[key]), alloc);
-        locals[key] = alloc;
+        alloc->setName(pair.first->to_string().c_str());
+        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
+        locals[pair.first] = alloc;
       }
 
       auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
