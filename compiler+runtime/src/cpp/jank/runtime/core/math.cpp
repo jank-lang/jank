@@ -1774,4 +1774,9 @@ namespace jank::runtime
       throw make_box(util::format("Expected string, got {}", object_type_str(o->type))).erase();
     }
   }
+
+  bool is_big_decimal(object_ref const o)
+  {
+    return o->type == object_type::big_decimal;
+  }
 }

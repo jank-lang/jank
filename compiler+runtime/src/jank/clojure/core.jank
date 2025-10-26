@@ -5434,7 +5434,7 @@
   "Returns true if n is a BigDecimal"
   [n]
   ;; (instance? BigDecimal n)
-  (throw "TODO: port decimal?"))
+  (cpp/jank.runtime.is_big_decimal n))
 
 (defn rational?
   "Returns true if n is a rational number"

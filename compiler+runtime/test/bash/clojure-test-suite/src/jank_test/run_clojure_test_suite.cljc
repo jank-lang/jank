@@ -33,7 +33,7 @@
     ;clojure.core-test.compare ; Uncaught exception: not comparable: []
     ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.dec ; TODO underflow \n Uncaught exception: failed
-    ;clojure.core-test.decimal-qmark ; TODO: port decimal?, Expecting whitespace after the last token. due to M.
+    clojure.core-test.decimal-qmark
     ;clojure.core-test.denominator ; Failed a test. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.double ; TODO: port double, Expecting whitespace after the last token. due to M.
     ;clojure.core-test.double-qmark ; TODO: port double, Expecting whitespace after the last token. due to M.
@@ -95,9 +95,9 @@
     ;clojure.core-test.rand ; unloadable, In clojure.core-test.rand$fn_2-71, duplicate definition of symbol '_jank_global_init_70', unloadable
     ;clojure.core-test.rand-int ; unloadable, In clojure.core-test.rand-int$fn_2-56, duplicate definition of symbol '_fn_2_0', unloadable
     clojure.core-test.ratio-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.rational-qmark ; TODO: port decimal?, Expecting whitespace after the last token. due to M.
+    ;clojure.core-test.rational-qmark ; (= true (rational? 0N))
     ;clojure.core-test.rationalize ; TODO: port rationalize, Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.rem ; TODO: port decimal?, Expecting whitespace after the last token. due to M.
+    ;clojure.core-test.rem ; Fails the test cases.
     ;clojure.core-test.remove-watch ;Exception: TODO: port sync
     clojure.core-test.rest
     clojure.core-test.second
