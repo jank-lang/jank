@@ -298,6 +298,45 @@ namespace jank::runtime::module
     }
   }
 
+  static void
+  register_module_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
+                       jtl::immutable_string const &paths,
+                       bool skip_jar = false)
+  {
+    usize start{};
+    usize i{ paths.find(loader::module_separator, start) };
+
+    /* Looks like it's either an empty path list or there's only entry. */
+    if(i == jtl::immutable_string::npos)
+    {
+      if(!skip_jar || !paths.ends_with(".jar"))
+      {
+        register_path(entries, paths);
+      }
+    }
+    else
+    {
+      while(i != jtl::immutable_string::npos)
+      {
+        auto const path(paths.substr(start, i - start));
+
+        if(!skip_jar || !path.ends_with(".jar"))
+        {
+          register_path(entries, path);
+        }
+
+        start = i + 1;
+        i = paths.find(loader::module_separator, start);
+      }
+
+      auto const path(paths.substr(start, i - start));
+      if(!skip_jar || !path.ends_with(".jar"))
+      {
+        register_path(entries, path);
+      }
+    }
+  }
+
   loader::loader()
   {
     std::filesystem::path const jank_path{ jank::util::process_dir().c_str() };
@@ -317,27 +356,7 @@ namespace jank::runtime::module
     this->paths = paths;
 
     //util::println("module paths: {}", paths);
-
-    usize start{};
-    usize i{ paths.find(module_separator, start) };
-
-    /* Looks like it's either an empty path list or there's only entry. */
-    if(i == jtl::immutable_string::npos)
-    {
-      register_path(entries, paths);
-    }
-    else
-    {
-      while(i != jtl::immutable_string::npos)
-      {
-        register_path(entries, paths.substr(start, i - start));
-
-        start = i + 1;
-        i = paths.find(module_separator, start);
-      }
-
-      register_path(entries, paths.substr(start, i - start));
-    }
+    register_module_path(entries, paths);
   }
 
   object_ref file_entry::to_runtime_data() const
@@ -586,27 +605,56 @@ namespace jank::runtime::module
     }
   }
 
+  static jtl::option<loader::entry>
+  find_module(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
+              jtl::immutable_string const &paths,
+              jtl::immutable_string const &module)
+  {
+    auto const &first_find(entries.find(module));
+
+    if(first_find != entries.end())
+    {
+      return first_find->second;
+    }
+
+    // Skip jars after the initial indexing since we can consider them immutable
+    // for development purposes.
+    register_module_path(entries, paths, true);
+
+    auto const &second_find(entries.find(module));
+
+    if(second_find != entries.end())
+    {
+      return second_find->second;
+    }
+
+    return {};
+  }
+
   jtl::string_result<loader::find_result>
   loader::find(jtl::immutable_string const &module, origin const ori)
   {
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
     patched_module = std::regex_replace(patched_module, underscore, "-");
-    auto const &entry(entries.find(patched_module));
-    if(entry == entries.end())
+    auto const &found(find_module(entries, paths, patched_module));
+
+    if(found.is_none())
     {
       return err(util::format("unable to find module: {}", module));
     }
 
+    auto const entry(found.unwrap());
+
     if(ori == origin::source)
     {
-      if(entry->second.jank.is_some())
+      if(entry.jank.is_some())
       {
-        return find_result{ entry->second, module_type::jank };
+        return find_result{ entry, module_type::jank };
       }
-      else if(entry->second.cljc.is_some())
+      else if(entry.cljc.is_some())
       {
-        return find_result{ entry->second, module_type::cljc };
+        return find_result{ entry, module_type::cljc };
       }
     }
     else
@@ -621,58 +669,55 @@ namespace jank::runtime::module
        * Portability:
        * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
        * making it hard to share them. */
-      if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
-         && entry->second.o.unwrap().exists()
-         && (entry->second.jank.is_some() || entry->second.cljc.is_some()
-             || entry->second.cpp.is_some()))
+      if(entry.o.is_some() && entry.o.unwrap().archive_path.is_none() && entry.o.unwrap().exists()
+         && (entry.jank.is_some() || entry.cljc.is_some() || entry.cpp.is_some()))
       {
-        auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
+        auto const o_file_path{ native_transient_string{ entry.o.unwrap().path } };
 
         std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry->second.jank.is_some() && entry->second.jank.unwrap().exists())
+        if(entry.jank.is_some() && entry.jank.unwrap().exists())
         {
-          source_modified_time = entry->second.jank.unwrap().last_modified_at();
+          source_modified_time = entry.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
         }
-        else if(entry->second.cljc.is_some() && entry->second.cljc.unwrap().exists())
+        else if(entry.cljc.is_some() && entry.cljc.unwrap().exists())
         {
-          source_modified_time = entry->second.cljc.unwrap().last_modified_at();
+          source_modified_time = entry.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
         }
-        else if(entry->second.cpp.is_some() && entry->second.cpp.unwrap().exists())
+        else if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
         {
-          source_modified_time = entry->second.cpp.unwrap().last_modified_at();
+          source_modified_time = entry.cpp.unwrap().last_modified_at();
           module_type = module_type::cpp;
         }
         else
         {
-          return err(
-            util::format("Found a binary ({}), without a source", entry->second.o.unwrap().path));
+          return err(util::format("Found a binary ({}), without a source", entry.o.unwrap().path));
         }
 
         if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
            >= source_modified_time)
         {
-          return find_result{ entry->second, module_type::o };
+          return find_result{ entry, module_type::o };
         }
         else
         {
-          return find_result{ entry->second, module_type };
+          return find_result{ entry, module_type };
         }
       }
-      else if(entry->second.cpp.is_some())
+      else if(entry.cpp.is_some())
       {
-        return find_result{ entry->second, module_type::cpp };
+        return find_result{ entry, module_type::cpp };
       }
-      else if(entry->second.jank.is_some())
+      else if(entry.jank.is_some())
       {
-        return find_result{ entry->second, module_type::jank };
+        return find_result{ entry, module_type::jank };
       }
-      else if(entry->second.cljc.is_some())
+      else if(entry.cljc.is_some())
       {
-        return find_result{ entry->second, module_type::cljc };
+        return find_result{ entry, module_type::cljc };
       }
     }
 
