@@ -1,4 +1,5 @@
 #include <list>
+#include <ranges>
 
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
@@ -108,7 +109,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::try_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::case_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_raw_ref, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
+    static llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
@@ -193,7 +194,7 @@ namespace jank::codegen
 
     native_vector<lpad_and_catch_bb> lpad_and_catch_body_stack{};
     /* These are the registered RTTI modules compiled as part of this fn.
-     * We don't use this within the current fn, but it's passsed upward to
+     * We don't use this within the current fn, but it's passed upward to
      * the fn gen which is above us, all the way up to the module level. */
     native_unordered_map<jtl::immutable_string, Cpp::AotCall> global_rtti;
   };
@@ -205,7 +206,7 @@ namespace jank::codegen
     usize alignment{};
   };
 
-  static llvm::Type *llvm_builtin_type(reusable_context &ctx,
+  static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
                                        jtl::ref<llvm::LLVMContext> const llvm_ctx,
                                        jtl::ptr<void> const type)
   {
@@ -237,7 +238,7 @@ namespace jank::codegen
                           Cpp::GetTypeAsString(type));
   }
 
-  static llvm_type_info llvm_type(reusable_context &ctx,
+  static llvm_type_info llvm_type(reusable_context const &ctx,
                                   jtl::ref<llvm::LLVMContext> const llvm_ctx,
                                   jtl::ptr<void> const type)
   {
@@ -286,7 +287,7 @@ namespace jank::codegen
     return { ir_type, size, alignment };
   }
 
-  static llvm::Value *alloc_type(reusable_context &ctx,
+  static llvm::Value *alloc_type(reusable_context const &ctx,
                                  jtl::ref<llvm::LLVMContext> const llvm_ctx,
                                  jtl::ptr<void> const type,
                                  jtl::immutable_string const &name = "")
@@ -567,7 +568,7 @@ namespace jank::codegen
    *    This applies to ahead-of-time compiled modules.
    *
    * 3. load_init: Initialized and derefed in the "jank_load" IR function.
-   *    This like 2. applies to ahead-of-time compiled modules.
+   *    This, like 2, applies to ahead-of-time compiled modules.
    */
   enum class var_root_kind : u8
   {
@@ -644,9 +645,9 @@ namespace jank::codegen
     auto const entry(llvm::BasicBlock::Create(*llvm_ctx, "entry", llvm_fn));
     ctx->builder->SetInsertPoint(entry);
 
-    /* JIT loaded object files don't support global ctors, so we need to call ours manually.
-     * Fortunately, we have our load function which we can hook into. So, if we're compiling
-     * a module and we've just created the load function fo that module, the first thing
+    /* JIT-loaded object files don't support global ctors, so we need to call ours manually.
+     * Fortunately, we have our load function, which we can hook into. So, if we're compiling
+     * a module, and we've just created the load function for that module, the first thing
      * we want to do is call our global ctor. */
     if(target == compilation_target::module
        && root_fn->unique_name == module::module_to_load_function(ctx->module_name))
@@ -663,14 +664,14 @@ namespace jank::codegen
        * the same namespace again, we will define new symbols.
        *
        * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
-       * on initial load.
+       * on an initial load.
        */
       auto const current_ns{ __rt_ctx->current_ns() };
-      auto const fn_type(
+      auto const func_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getInt64Ty() },
                                 false));
-      auto const fn(llvm_module->getOrInsertFunction("jank_ns_set_symbol_counter", fn_type));
+      auto const fn(llvm_module->getOrInsertFunction("jank_ns_set_symbol_counter", func_type));
 
       ctx->builder->CreateCall(
         fn,
@@ -696,10 +697,10 @@ namespace jank::codegen
 
     if(is_closure)
     {
-      static auto const offset_of_base{ offsetof(runtime::obj::jit_closure, base) };
-      static auto const offset_of_context{ offsetof(runtime::obj::jit_closure, context) };
+      static constexpr auto offset_of_base{ offsetof(runtime::obj::jit_closure, base) };
+      static constexpr auto offset_of_context{ offsetof(runtime::obj::jit_closure, context) };
       jank_debug_assert(offset_of_base < offset_of_context);
-      static auto const offset_of_context_from_base{ offset_of_context - offset_of_base };
+      static constexpr auto offset_of_context_from_base{ offset_of_context - offset_of_base };
 
       auto const context_ptr{ ctx->builder->CreateInBoundsGEP(
         ctx->builder->getInt8Ty(),
@@ -708,13 +709,14 @@ namespace jank::codegen
       auto const context{
         ctx->builder->CreateLoad(ctx->builder->getPtrTy(), context_ptr, "this.context")
       };
-      auto const captures(root_fn->captures());
-      std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
+      auto const capture_list(root_fn->captures());
+      std::vector<llvm::Type *> const capture_types{ capture_list.size(),
+                                                     ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
       usize index{};
-      for(auto const &capture : captures)
+      for(auto const &capture : capture_list)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
         locals[capture.first] = ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
@@ -780,9 +782,9 @@ namespace jank::codegen
     }
 
     /* For modules, we need to make sure to define RTTI symbols manually. Since
-     * these will be introduced by nested fns, we have a way to float those up
+     * nested fns will introduce these, we have a way to float those up
      * from those fns all the way here to the module level. Here, we just need
-     * to link those modules into our own in order to get the necessary type info
+     * to link those modules into our own to get the necessary type info
      * globals defined. */
     if(target == compilation_target::module)
     {
@@ -799,7 +801,7 @@ namespace jank::codegen
   llvm_processor::impl::gen(expression_ref const ex, expr::function_arity const &fn_arity)
   {
     llvm::Value *ret{};
-    visit_expr([&, this](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
+    visit_expr([&](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
     return ret;
   }
 
@@ -828,20 +830,17 @@ namespace jank::codegen
       }
     }
 
-    jtl::option<std::reference_wrapper<lifted_constant const>> meta;
     if(expr->name->meta.is_some())
     {
-      meta = expr->frame->find_lifted_constant(expr->name->meta.unwrap()).unwrap();
-
       auto const set_meta_fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const set_meta_fn(llvm_module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta(
+      auto const meta_val(
         gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
-      ctx->builder->CreateCall(set_meta_fn, { ref, meta });
+      ctx->builder->CreateCall(set_meta_fn, { ref, meta_val });
     }
 
     auto const set_dynamic_fn_type(
@@ -874,7 +873,7 @@ namespace jank::codegen
     llvm::Value *call{};
     auto const var_qualified_name(make_box<obj::symbol>(expr->var->n, expr->var->name));
 
-    /* For direct-calls, when derefing a var we need to handle two different types of var-derefs.
+    /* For direct-calls, when derefing a var, we need to handle two different types of var-derefs.
      * We only direct-call vars that are not dynamic.
      * When generating the IR for a var-root, if the function is a jank_load function,
      * the var_root is derefed directly in the "jank_load" function.
@@ -923,7 +922,7 @@ namespace jank::codegen
 
   static jtl::immutable_string arity_to_call_fn(usize const arity)
   {
-    /* Anything max_params + 1 or higher gets packed into a list so we
+    /* Anything max_params + 1 or higher gets packed into a list, so we
      * just end up calling max_params + 1 at most. */
     switch(arity)
     {
@@ -1003,7 +1002,7 @@ namespace jank::codegen
   {
     auto const ret(runtime::visit_object(
       [&](auto const typed_o) -> llvm::Value * {
-        using T = typename decltype(typed_o)::value_type;
+        using T = decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, runtime::obj::nil> || std::same_as<T, runtime::obj::boolean>
                      || std::same_as<T, runtime::obj::integer>
@@ -1057,9 +1056,9 @@ namespace jank::codegen
     args.reserve(1 + size);
     args.emplace_back(ctx->builder->getInt64(size));
 
-    for(auto const &expr : expr->data_exprs)
+    for(auto const &data_expr : expr->data_exprs)
     {
-      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
+      args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1084,9 +1083,9 @@ namespace jank::codegen
     args.reserve(1 + size);
     args.emplace_back(ctx->builder->getInt64(size));
 
-    for(auto const &expr : expr->data_exprs)
+    for(auto const &data_expr : expr->data_exprs)
     {
-      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
+      args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1139,9 +1138,9 @@ namespace jank::codegen
     args.reserve(1 + size);
     args.emplace_back(ctx->builder->getInt64(size));
 
-    for(auto const &expr : expr->data_exprs)
+    for(auto const &data_expr : expr->data_exprs)
     {
-      args.emplace_back(load_if_needed(ctx, gen(expr, arity)));
+      args.emplace_back(load_if_needed(ctx, gen(data_expr, arity)));
     }
 
     auto const call(ctx->builder->CreateCall(fn, args));
@@ -1215,7 +1214,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::recur_ref const expr, expr::function_arity const &arity)
   {
-    /* Using `recur` in a loop will just mean calculating the new values for the each
+    /* Using `recur` in a loop will just mean calculating the new values for the
      * loop binding's `alloca` and then storing the values. We store all values at the
      * end, since the old values must be used for all calculations of the new values. */
     if(expr->loop_target.is_some())
@@ -1323,7 +1322,7 @@ namespace jank::codegen
     return fn_obj;
   }
 
-  /* Named recursion is a special kind of call. We can't go always through a var, since there
+  /* Named recursion is a special kind of call. We can't always go through a var, since there
    * may not be one. We can't just use the fn's name, since we could be recursing into a
    * different arity.
    *
@@ -1334,10 +1333,9 @@ namespace jank::codegen
   llvm_processor::impl::gen(expr::named_recursion_ref const expr, expr::function_arity const &arity)
   {
     auto const &fn_expr(*expr->recursion_ref.fn_ctx->fn);
-    auto const &captures(fn_expr.captures());
 
-    /* We may have a named recursion in a closure which crosses another function in order to
-     * recurse. For example:
+    /* We may have a named recursion in a closure which crosses another function to
+     * recurse. For example,
      *
      * ```clojure
      * (let [a 1]
@@ -1347,8 +1345,8 @@ namespace jank::codegen
      *       (foo))))
      * ```
      *
-     * Here, the `(foo)` call is a named recursion, but we're not actually in the `foo` fn.
-     * We need to "cross" `bar` in order to get back into `foo`. This is an important
+     * Here, the `(foo)` call is a named recursion, but we're not in the `foo` fn.
+     * We need to "cross" `bar` to get back into `foo`. This is an important
      * distinction, since the closure context for `foo` and `bar` may be different, such
      * as if `bar` closes over more data than `foo` does.
      *
@@ -1549,7 +1547,7 @@ namespace jank::codegen
 
   llvm::Value *llvm_processor::impl::gen(expr::if_ref const expr, expr::function_arity const &arity)
   {
-    /* If we're in return position, our then/else branches will generate return instructions
+    /* If we're in the return position, our then/else branches will generate return instructions
      * for us. Since LLVM basic blocks can only have one terminating instruction, we need
      * to take care to not generate our own, too. */
     auto const is_return(expr->position == expression_position::tail);
@@ -1610,7 +1608,7 @@ namespace jank::codegen
       current_fn->insert(current_fn->end(), merge_block);
       ctx->builder->SetInsertPoint(merge_block);
 
-      /* If we're leaving a branch from then/else, we don't actually need a phi, since we only have
+      /* If we're leaving a branch from then/else, we don't need a phi, since we only have
        * one value to select. This can happen in a loop, for example, where the `then` will
        * always just `recur` (which leads to a branch) and only the `else` actually produces a
        * value. */
@@ -2357,7 +2355,7 @@ namespace jank::codegen
       if(!param_type)
       {
         /* If we're constructing a builtin type, we don't have a ctor fn. We know the
-         * param type we need though. */
+         * param type we need, though. */
         if(kind == expression_kind::cpp_constructor_call)
         {
           param_type = expr_type.data;
@@ -2539,9 +2537,9 @@ namespace jank::codegen
     else if(expr->is_aggregate)
     {
       std::vector<Cpp::TemplateArgInfo> arg_types;
-      for(auto const &expr : expr->arg_exprs)
+      for(auto const &arg_expr : expr->arg_exprs)
       {
-        arg_types.emplace_back(cpp_util::expression_type(expr));
+        arg_types.emplace_back(cpp_util::expression_type(arg_expr));
       }
       ctor_fn_callable
         = Cpp::MakeAggregateInitializationAotCallable(expr->type,
@@ -2602,9 +2600,9 @@ namespace jank::codegen
                                          analyze::expr::function_arity const &arity)
   {
     /* If we're doing a deref, there are a couple of special cases. If our output is a
-     * reference, that means we're dereferencing a pointer to a reference, which doesn't actually
+     * reference, that means we're dereferencing a pointer to a reference, which doesn't
      * change the underlying codegen value, so we don't do any deref. If our output is a
-     * pointer, that means we're dereferencing a pointer to pointer, so we just short circuit
+     * pointer, that means we're dereferencing a pointer to pointer, so we just short-circuit
      * the whole CppInterOp dance and do a load. */
     if(expr->op == Cpp::OP_Star && expr->arg_exprs.size() == 1)
     {
@@ -2680,7 +2678,7 @@ namespace jank::codegen
     auto const expr_type{ cpp_util::expression_type(expr->value_expr) };
     auto value{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), gen(expr->value_expr, arity)) };
 
-    /* We want to be sure that we're only boxing pointers, so if we have a reference we need
+    /* We want to be sure that we're only boxing pointers, so if we have a reference, we need
      * to get past it. */
     if(Cpp::IsReferenceType(expr_type))
     {
@@ -2954,7 +2952,7 @@ namespace jank::codegen
     {
       return found->second;
     }
-    return ctx->c_string_globals[s] = ctx->builder->CreateGlobalStringPtr(s.c_str());
+    return ctx->c_string_globals[s] = ctx->builder->CreateGlobalString(s.c_str());
   }
 
   llvm::Value *llvm_processor::impl::gen_global(obj::nil_ref const nil) const
@@ -3511,7 +3509,7 @@ namespace jank::codegen
 
       runtime::visit_object(
         [&](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
+          using T = decltype(typed_o)::value_type;
 
           if constexpr(behavior::metadatable<T>)
           {
