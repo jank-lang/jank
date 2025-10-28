@@ -1,7 +1,7 @@
 ((fn* [fun]
   (try
     (fun true)
-    (catch _
+    (catch cpp/jank.runtime.object_ref _
       (fun false))
     (finally
       )))

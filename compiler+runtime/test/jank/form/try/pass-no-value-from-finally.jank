@@ -1,6 +1,6 @@
 (assert (= (try
              1
-             (catch _
+             (catch cpp/jank.runtime.object_ref _
                2)
              (finally
                3))
@@ -8,7 +8,7 @@
 
 (assert (= (try
              (throw :anything)
-             (catch _
+             (catch cpp/jank.runtime.object_ref _
                2)
              (finally
                3))

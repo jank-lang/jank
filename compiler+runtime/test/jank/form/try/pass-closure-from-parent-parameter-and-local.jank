@@ -2,7 +2,7 @@
   (let [b 1]
     (try
       (throw (= a b))
-      (catch r
+      (catch cpp/jank.runtime.object_ref r
         (when (and r (= 1 b))
           :success)))))
  1)

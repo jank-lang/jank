@@ -1,0 +1,13 @@
+;; Test catching std::runtime_error
+(cpp/raw "void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }")
+
+(let [caught (atom false)]
+  (try
+    (cpp/throw_runtime_error)
+    (catch cpp/std.logic_error e
+      (println "Wrong: caught logic_error"))
+    (catch cpp/std.runtime_error e
+      (reset! caught true)))
+  (assert @caught "Should have caught std::runtime_error"))
+
+:success

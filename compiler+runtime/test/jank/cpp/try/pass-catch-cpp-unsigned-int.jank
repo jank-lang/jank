@@ -1,0 +1,14 @@
+;; Test catching C++ unsigned int exception
+(cpp/raw "using my_uint = unsigned int;")
+(cpp/raw "void throw_uint_42() { throw (my_uint)42; }")
+
+(assert
+ (= 42
+    (try
+      (cpp/throw_uint_42)
+      (catch cpp/int i
+        (println "Wrong: caught int")
+        -1)
+      (catch cpp/my_uint u u))))
+
+:success

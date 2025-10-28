@@ -1,0 +1,13 @@
+;; Test catching std::invalid_argument
+(cpp/raw "void throw_invalid_argument() { throw std::invalid_argument(\"invalid argument\"); }")
+
+(let [caught (atom false)]
+  (try
+    (cpp/throw_invalid_argument)
+    (catch cpp/std.runtime_error e
+      (println "Wrong: caught runtime_error"))
+    (catch cpp/std.invalid_argument e
+      (reset! caught true)))
+  (assert @caught "Should have caught std::invalid_argument"))
+
+:success

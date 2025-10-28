@@ -1,5 +1,5 @@
 (fn* []
   (try
     (recur)
-    (catch _
+    (catch cpp/jank.runtime.object_ref _
       )))
