@@ -1,0 +1,13 @@
+;; Test catching std::out_of_range
+(cpp/raw "void throw_out_of_range() { throw std::out_of_range(\"out of range\"); }")
+
+(let [caught (atom false)]
+  (try
+    (cpp/throw_out_of_range)
+    (catch cpp/std.runtime_error e
+      (println "Wrong: caught runtime_error"))
+    (catch cpp/std.out_of_range e
+      (reset! caught true)))
+  (assert @caught "Should have caught std::out_of_range"))
+
+:success

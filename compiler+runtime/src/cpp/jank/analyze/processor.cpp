@@ -2788,6 +2788,7 @@ namespace jank::analyze
                 catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
               }
             }
+            auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
 
             /* Check for duplicate catch types. */
             /*TODO Add full error handling for duplicated catch types:

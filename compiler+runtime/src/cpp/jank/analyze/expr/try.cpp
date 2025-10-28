@@ -65,7 +65,11 @@ namespace jank::analyze::expr
     {
       for(auto const &catch_body : catch_bodies)
       {
+<<<<<<< HEAD
         f(catch_body.body);
+=======
+        f(catch_body.unwrap().body);
+>>>>>>> 34f5c165c (Implement support for typed catch clauses)
       }
     }
     if(finally_body.is_some())

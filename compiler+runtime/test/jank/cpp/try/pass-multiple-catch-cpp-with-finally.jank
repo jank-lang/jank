@@ -1,0 +1,37 @@
+;; Test multiple catch with C++ exceptions and finally blocks
+(cpp/raw "void throw_cpp_double() { throw 5.5; }")
+
+(let [cleanup (atom false)]
+  (assert (= 5.5
+             (try
+               (cpp/throw_cpp_double)
+               (catch cpp/int i
+                 (println "Wrong type"))
+               (catch cpp/double d
+                 d)
+               (catch cpp/std.runtime_error e
+                 -1.0)
+               (finally
+                 (reset! cleanup true)))))
+  (assert (true? @cleanup) "Finally should execute"))
+
+;; Test finally executes even when exception is not caught
+(cpp/raw "void throw_uncaught_type() { throw 'x'; }")
+
+(let [cleanup (atom false)
+      caught (atom false)]
+  (try
+    (try
+      (cpp/throw_uncaught_type)
+      (catch cpp/int i
+        (reset! caught true))
+      (catch cpp/double d
+        (reset! caught true))
+      (finally
+        (reset! cleanup true)))
+    (catch cpp/char c
+      :outer-caught))
+  (assert (true? @cleanup) "Finally should execute before unwinding")
+  (assert (false? @caught) "No inner catch should match"))
+
+:success
