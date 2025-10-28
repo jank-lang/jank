@@ -1,10 +1,15 @@
-; A box will be required.
-(def a (fn* []
-         (let* [a 5
-                b (try
-                    7
-                    (catch _
-                      ))]
-           [])))
+;; Regression test: Verify that unboxed values from try expressions
+;; are correctly boxed when assigned to bindings and used in boxed contexts
+(def a
+  (fn* []
+    (let* [a 5
+           b (try 7
+               (catch cpp/jank.runtime.object_ref _))]
+      (assert (= 7 b) "Try should return unboxed value 7")
+      (assert (= [7] [b]) "Boxed value should work correctly in vector")
+      [])))
+
+;; Execute the test function
+(a)
 
 :success

@@ -1,7 +1,8 @@
-(let* [result :success
+((fn* []
+  (let* [result :success
        foo (fn* foo [loop?]
-             ((fn* bar []
-                (if loop?
-                  (foo false)
-                  result))))]
-  (foo true))
+                ((fn* bar []
+                      (if loop?
+                        (foo false)
+                        result))))]
+    (foo true))))
