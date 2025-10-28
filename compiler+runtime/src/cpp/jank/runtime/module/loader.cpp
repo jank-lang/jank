@@ -301,7 +301,7 @@ namespace jank::runtime::module
   static void
   register_module_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
                        jtl::immutable_string const &paths,
-                       bool skip_jar = false)
+                       bool const skip_jar)
   {
     usize start{};
     usize i{ paths.find(loader::module_separator, start) };
@@ -356,7 +356,7 @@ namespace jank::runtime::module
     this->paths = paths;
 
     //util::println("module paths: {}", paths);
-    register_module_path(entries, paths);
+    register_module_path(entries, paths, false);
   }
 
   object_ref file_entry::to_runtime_data() const
@@ -617,8 +617,8 @@ namespace jank::runtime::module
       return first_find->second;
     }
 
-    // Skip jars after the initial indexing since we can consider them immutable
-    // for development purposes.
+    /* Skip jars after the initial indexing since we can consider them immutable
+     * for development purposes. */
     register_module_path(entries, paths, true);
 
     auto const &second_find(entries.find(module));
@@ -644,7 +644,7 @@ namespace jank::runtime::module
       return err(util::format("unable to find module: {}", module));
     }
 
-    auto const entry(found.unwrap());
+    auto const &entry(found.unwrap());
 
     if(ori == origin::source)
     {
