@@ -1563,7 +1563,7 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &fn_arity,
                                      bool const box_needed)
   {
-    auto const has_catch{ expr->catch_body.is_some() };
+    auto const has_catch{ !expr->catch_bodies.empty() };
     auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("try")));
     util::format_to(body_buffer, "object_ref {}{ };", ret_tmp);
 
@@ -1599,8 +1599,8 @@ namespace jank::codegen
      */
       util::format_to(body_buffer,
                       "catch(jank::runtime::object_ref const {}) {",
-                      runtime::munge(expr->catch_body.unwrap().sym->name));
-      auto const &catch_tmp(gen(expr->catch_body.unwrap().body, fn_arity, box_needed));
+                      runtime::munge(expr->catch_bodies[0].unwrap().sym->name));
+      auto const &catch_tmp(gen(expr->catch_bodies[0].unwrap().body, fn_arity, box_needed));
       if(catch_tmp.is_some())
       {
         util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(box_needed));

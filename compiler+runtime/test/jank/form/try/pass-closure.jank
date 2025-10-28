@@ -1,7 +1,7 @@
 (let* [a 1]
   (try
     (throw a)
-    (catch e
+    (catch cpp/jank.runtime.object_ref e
       (when (= a e)
         :success))
     (finally

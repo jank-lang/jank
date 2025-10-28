@@ -1,0 +1,13 @@
+;; Test catching C++ double exception
+(cpp/raw "void throw_double_pi() { throw 3.14159; }")
+
+(assert
+ (= 3.14159
+    (try
+      (cpp/throw_double_pi)
+      (catch cpp/int i
+        (println "Wrong: caught int")
+        -1)
+      (catch cpp/double d d))))
+
+:success

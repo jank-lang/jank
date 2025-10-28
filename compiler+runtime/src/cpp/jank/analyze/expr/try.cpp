@@ -34,9 +34,12 @@ namespace jank::analyze::expr
   {
     position = pos;
     body->propagate_position(pos);
-    if(catch_body)
+    if(!catch_bodies.empty())
     {
-      catch_body.unwrap().propagate_position(pos);
+      for(auto const &catch_body : catch_bodies)
+      {
+        catch_body.unwrap().propagate_position(pos);
+      }
     }
     /* The result of the 'finally' body is discarded, so we always keep it in statement position. */
   }
@@ -50,7 +53,7 @@ namespace jank::analyze::expr
       persistent_array_map::create_unique(make_box("body"),
                                           body->to_runtime_data(),
                                           make_box("catch"),
-                                          jank::detail::to_runtime_data(catch_body),
+                                          jank::detail::to_runtime_data(catch_bodies),
                                           make_box("finally"),
                                           jank::detail::to_runtime_data(finally_body)));
   }
@@ -58,9 +61,12 @@ namespace jank::analyze::expr
   void try_::walk(std::function<void(jtl::ref<expression>)> const &f)
   {
     f(body);
-    if(catch_body.is_some())
+    if(!catch_bodies.empty())
     {
-      f(catch_body.unwrap().body);
+      for(auto const &catch_body : catch_bodies)
+      {
+        f(catch_body.unwrap().body);
+      }
     }
     if(finally_body.is_some())
     {

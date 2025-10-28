@@ -74,9 +74,12 @@ namespace jank::evaluate
     else if constexpr(std::same_as<T, expr::try_>)
     {
       walk(expr.body, f);
-      if(expr.catch_body.is_some())
+      if(!expr.catch_bodies.empty())
       {
-        walk(expr.catch_body.unwrap().body, f);
+        for(auto const &catch_body : expr.catch_bodies)
+        {
+          walk(catch_body.unwrap().body, f);
+        }
       }
       if(expr.finally_body.is_some())
       {
@@ -685,28 +688,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::try_ref const expr)
   {
-    util::scope_exit const finally{ [=]() {
-      if(expr->finally_body)
-      {
-        eval(expr->finally_body.unwrap());
-      }
-    } };
-
-    if(!expr->catch_body)
-    {
-      return eval(expr->body);
-    }
-    try
-    {
-      return eval(expr->body);
-    }
-    catch(object_ref const e)
-    {
-      return dynamic_call(eval(wrap_expression(expr->catch_body.unwrap().body,
-                                               "catch",
-                                               { expr->catch_body.unwrap().sym })),
-                          e);
-    }
+    return dynamic_call(eval(wrap_expression(expr, "try", {})));
   }
 
   object_ref eval(expr::case_ref const expr)

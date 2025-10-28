@@ -1,7 +1,9 @@
 #pragma once
 
+
 #include <jtl/option.hpp>
 
+#include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::runtime::obj
@@ -36,7 +38,7 @@ namespace jank::analyze::expr
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     do_ref body;
-    jtl::option<catch_> catch_body{};
+    native_vector<jtl::option<catch_>> catch_bodies{};
     jtl::option<do_ref> finally_body{};
   };
 }

@@ -2616,7 +2616,6 @@ namespace jank::analyze
     auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
-    auto catch_frame(jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
     auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
     auto ret{ jtl::make_ref<expr::try_>(position, try_frame, true, jtl::make_ref<expr::do_>()) };
 
@@ -2701,29 +2700,37 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
-            if(has_catch)
-            {
-              /* TODO: Note where the other catch is. */
-              return error::analyze_invalid_try("Only one 'catch' form may be supplied.",
-                                                object_source(item),
-                                                latest_expansion(macro_expansions));
-            }
             has_catch = true;
 
-            /* Verify we have (catch <sym> ...) */
+            /* Verify we have (catch cpp/type <sym> ...) */
             auto const catch_list(runtime::list(item));
             auto const catch_body_size(catch_list->count());
-            if(catch_body_size == 1)
+            if(catch_body_size < 3)
             {
               return error::analyze_invalid_try(
-                "A symbol is required after 'catch', which is used as the binding to "
-                "hold the exception value.",
+                "Catch clause requires a type, a symbol, and a body.",
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+            auto catch_it(catch_list->data.rest());
+            auto const catch_type_form(catch_it.first().unwrap());
+            catch_it = catch_it.rest();
+            auto const catch_sym_form(catch_it.first().unwrap());
+            auto const catch_type(analyze(catch_type_form, current_frame, position, fn_ctx, true));
+            if(catch_type.is_err() || catch_type.expect_ok()->kind != expression_kind::cpp_type)
+            {
+              return error::analyze_invalid_try(
+                       "An exception type required after 'catch'",
+                       object_source(item),
+                       error::note{
+                         "An exception type is required before this form.",
+                         object_source(catch_list->data.rest().rest().first().unwrap()),
+                       },
+                       latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 1));
+            }
 
-            auto const sym_obj(catch_list->data.rest().first().unwrap());
-            if(sym_obj->type != runtime::object_type::symbol)
+            if(catch_sym_form->type != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
                        "A symbol required after 'catch', which is used as the binding to "
@@ -2731,39 +2738,45 @@ namespace jank::analyze
                        object_source(item),
                        error::note{
                          "A symbol is required before this form.",
-                         object_source(sym_obj),
+                         object_source(catch_sym_form),
                        },
                        latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
+                ->add_usage(read::parse::reparse_nth(item, 2));
             }
-
-            auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
-            if(!sym->get_namespace().empty())
+            auto const catch_sym(runtime::expect_object<runtime::obj::symbol>(catch_sym_form));
+            if(!catch_sym->get_namespace().empty())
             {
-              return error::analyze_invalid_try("The symbol after 'catch' must be unqualified.",
-                                                object_source(sym_obj),
-                                                latest_expansion(macro_expansions));
+              return error::analyze_invalid_try(
+                "The binding symbol in 'catch' must be unqualified.",
+                object_source(item),
+                latest_expansion(macro_expansions));
             }
+            auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
 
-            catch_frame->locals.emplace(sym, local_binding{ sym, sym->name, none, catch_frame });
+            auto catch_frame(
+              jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
+            catch_frame->locals.emplace(catch_sym,
+                                        local_binding{ catch_sym,
+                                                       catch_sym->name,
+                                                       none,
+                                                       catch_frame,
+                                                       true,
+                                                       false,
+                                                       false,
+                                                       catch_type_ref->type });
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
-            auto const do_list(
-              catch_list->data.rest().rest().conj(make_box<runtime::obj::symbol>("do")));
+            auto const do_list(catch_it.rest().conj(make_box<runtime::obj::symbol>("do")));
             auto const do_res(analyze(make_box(do_list), catch_frame, position, fn_ctx, true));
             if(do_res.is_err())
             {
               return do_res.expect_err();
             }
-
-            /* TODO: Read this from the catch form. */
-            static auto const object_ref_type{ cpp_util::resolve_literal_type(
-                                                 "jank::runtime::oref<jank::runtime::object>")
-                                                 .expect_ok() };
-
-            ret->catch_body = expr::catch_{ sym,
-                                            object_ref_type,
-                                            static_ref_cast<expr::do_>(do_res.expect_ok()) };
+            do_res.expect_ok()->frame = catch_frame;
+            ret->catch_bodies.emplace_back(
+              expr::catch_{ catch_sym,
+                            catch_type_ref->type,
+                            static_ref_cast<expr::do_>(do_res.expect_ok()) });
           }
           break;
         case try_expression_type::finally_:
@@ -2797,10 +2810,6 @@ namespace jank::analyze
 
     ret->body->frame = try_frame;
     ret->body->propagate_position(position);
-    if(ret->catch_body.is_some())
-    {
-      ret->catch_body.unwrap().body->frame = catch_frame;
-    }
     if(ret->finally_body.is_some())
     {
       ret->finally_body.unwrap()->frame = finally_frame;
