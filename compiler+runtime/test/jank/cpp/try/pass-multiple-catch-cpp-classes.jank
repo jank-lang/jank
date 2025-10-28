@@ -1,0 +1,53 @@
+;; Test multiple catch with C++ class types
+(cpp/raw "void throw_runtime_error() { throw std::runtime_error(\"test error\"); }")
+(cpp/raw "void throw_logic_error() { throw std::logic_error(\"logic error\"); }")
+
+;; Test catching runtime_error
+(try
+  (cpp/throw_runtime_error)
+  (catch cpp/int i
+    (assert false "Should not catch int"))
+  (catch cpp/std.runtime_error e
+    :caught-runtime-error)
+  (catch cpp/std.logic_error e
+    (assert false "Should not catch logic_error")))
+
+;; Test catching logic_error
+(try
+  (cpp/throw_logic_error)
+  (catch cpp/std.runtime_error e
+    (assert false "Should not catch runtime_error"))
+  (catch cpp/std.logic_error e
+    :caught-logic-error))
+
+;; Test multiple C++ types in one try
+(cpp/raw "void throw_based_on_value(int v) {
+  if (v == 1) throw 1;
+  if (v == 2) throw 2.0;
+  throw std::runtime_error(\"error\");
+}")
+
+(assert (= 1
+           (try
+             (cpp/throw_based_on_value 1)
+             (catch cpp/double d 0.0)
+             (catch cpp/int i i)
+             (catch cpp/std.runtime_error e -1))))
+
+(assert (= 2.0
+           (try
+             (cpp/throw_based_on_value 2)
+             (catch cpp/int i 0)
+             (catch cpp/double d d)
+             (catch cpp/std.runtime_error e -1))))
+
+(try
+  (cpp/throw_based_on_value 3)
+  (catch cpp/int i
+    (assert false "Should not catch int"))
+  (catch cpp/double d
+    (assert false "Should not catch double"))
+  (catch cpp/std.runtime_error e
+    :caught-runtime-error))
+
+:success

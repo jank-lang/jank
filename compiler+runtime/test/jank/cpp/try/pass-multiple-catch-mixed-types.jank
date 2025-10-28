@@ -1,0 +1,32 @@
+;; Test mixing Jank and C++ exception types in multiple catch
+(cpp/raw "void throw_cpp_int() { throw 123; }")
+
+;; Test Jank exception followed by C++ catches
+(assert (= :jank-caught
+           (try
+             (throw :jank-exception)
+             (catch cpp/int i
+               :cpp-int-caught)
+             (catch cpp/jank.runtime.object_ref e
+               :jank-caught))))
+
+;; Test C++ exception followed by Jank catch
+(assert (= 123
+           (try
+             (cpp/throw_cpp_int)
+             (catch cpp/int i
+               i)
+             (catch cpp/jank.runtime.object_ref e
+               :jank-caught))))
+
+;; Test that Jank catch operates independently from C++ catches
+(cpp/raw "void throw_runtime_error_mix() { throw std::runtime_error(\"mixed\"); }")
+
+(try
+  (cpp/throw_runtime_error_mix)
+  (catch cpp/std.runtime_error ex
+    :cpp-caught)
+  (catch cpp/jank.runtime.object_ref e
+    (assert false "Should not reach Jank catch for C++ exception")))
+
+:success

@@ -69,6 +69,8 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
+
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
@@ -76,9 +78,15 @@ namespace jank::analyze::cpp_util
      * exact type for "char". */
     if(sym == "char")
     {
+<<<<<<< HEAD
       if(auto const res{ resolve_literal_type("char").expect_ok() })
       {
         return apply_pointers(res, ptr_count);
+=======
+      if(auto const res = resolve_literal_type("char"); res.is_ok())
+      {
+        return apply_pointers(res.expect_ok(), ptr_count);
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       }
     }
 

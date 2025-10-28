@@ -1,0 +1,16 @@
+;; Test catching C++ void* exception
+(cpp/raw "using void_ptr = void*;")
+(cpp/raw "void throw_void_ptr() { throw (void_ptr)0x1234; }")
+
+;; We can't easily assert the value of a void* in Jank yet without casting,
+;; but we can verify we caught the right type.
+(let [caught (atom false)]
+  (try
+    (cpp/throw_void_ptr)
+    (catch cpp/int i
+      (println "Wrong: caught int"))
+    (catch cpp/void_ptr p
+      (reset! caught true)))
+  (assert @caught "Should have caught void*"))
+
+:success

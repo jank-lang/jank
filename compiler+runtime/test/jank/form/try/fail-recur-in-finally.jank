@@ -1,6 +1,11 @@
 (fn* []
   (try
     :success
+<<<<<<< HEAD
     (catch cpp/jank.runtime.object_ref _)
+=======
+    (catch cpp/jank.runtime.object_ref _
+      )
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
     (finally
       (recur))))

@@ -104,9 +104,14 @@ namespace jank::detail
   }
 
   template <typename T>
+<<<<<<< HEAD
   object_ref to_runtime_data(native_vector<T> const &m)
   {
     /* NOLINTNEXTLINE(misc-const-correctness): Can't be const. */
+=======
+  object_ref to_runtime_data(native_vector<jtl::option<T>> const &m)
+  {
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
     runtime::detail::native_persistent_vector ret;
     for(auto const &e : m)
     {

@@ -38,7 +38,11 @@ namespace jank::analyze::expr
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     do_ref body;
+<<<<<<< HEAD
     native_vector<catch_> catch_bodies{};
+=======
+    native_vector<jtl::option<catch_>> catch_bodies{};
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
     jtl::option<do_ref> finally_body{};
   };
 }

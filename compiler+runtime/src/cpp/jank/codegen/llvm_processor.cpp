@@ -142,7 +142,11 @@ namespace jank::codegen
                                    llvm::Value *selector,
                                    llvm::BasicBlock *current_block) const;
 
+<<<<<<< HEAD
     void register_catch_clause_rtti(expr::catch_ const &catch_clause,
+=======
+    void register_catch_clause_rtti(jtl::option<expr::catch_> const &catch_clause,
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
                                     llvm::LandingPadInst *landing_pad,
                                     native_set<llvm::Value *> &registered_rtti);
 
@@ -1746,11 +1750,20 @@ namespace jank::codegen
     }
   }
 
+<<<<<<< HEAD
   void llvm_processor::impl::register_catch_clause_rtti(expr::catch_ const &catch_clause,
                                                         llvm::LandingPadInst *landing_pad,
                                                         native_set<llvm::Value *> &registered_rtti)
   {
     auto const catch_type{ catch_clause.type };
+=======
+  void
+  llvm_processor::impl::register_catch_clause_rtti(jtl::option<expr::catch_> const &catch_clause,
+                                                   llvm::LandingPadInst *landing_pad,
+                                                   native_set<llvm::Value *> &registered_rtti)
+  {
+    auto const catch_type{ catch_clause.unwrap().type };
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
     auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
@@ -1761,7 +1774,11 @@ namespace jank::codegen
         rtti_syms.emplace(exception_rtti);
       }
       auto const callable{
+<<<<<<< HEAD
         Cpp::MakeRTTICallable(catch_type, exception_rtti, unique_munged_string())
+=======
+        Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       };
       global_rtti.emplace(exception_rtti, callable);
     }
@@ -1786,7 +1803,11 @@ namespace jank::codegen
   {
     auto const ptr_ty{ ctx->builder->getPtrTy() };
     auto const &catch_clause{ expr->catch_bodies[catch_index] };
+<<<<<<< HEAD
     auto const &[catch_sym, catch_type, catch_body]{ catch_clause };
+=======
+    auto const &[catch_sym, catch_type, catch_body]{ catch_clause.unwrap() };
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
 
     ctx->builder->SetInsertPoint(catch_block);
 
@@ -1796,6 +1817,7 @@ namespace jank::codegen
     };
     auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { current_ex_ptr }) };
     auto const ex_val_type{ llvm_type(*ctx, llvm_ctx, catch_type).type.data };
+<<<<<<< HEAD
     /* For pointer types (e.g., void*, int*), the exception system stores the pointer VALUE
      * itself at caught_ptr, so we use it directly. For non-pointer types (e.g., int, double),
      * the value is stored AT the caught_ptr address, so we must dereference with CreateLoad. */
@@ -1827,6 +1849,24 @@ namespace jank::codegen
       locals[catch_sym] = ex_val_slot;
     }
 
+=======
+    llvm::Value *raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
+
+    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
+    llvm::AllocaInst *ex_val_slot{};
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
+      llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
+                                            current_fn->getEntryBlock().getFirstInsertionPt());
+      ex_val_slot
+        = entry_builder_local.CreateAlloca(ex_val_type,
+                                           nullptr,
+                                           util::format("{}.slot", catch_sym->name).data());
+    }
+    ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
+
+    locals[catch_sym] = ex_val_slot;
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
 
     auto const original_catch_pos{ catch_body->position };
     catch_body->propagate_position(expression_position::value);
@@ -1928,7 +1968,11 @@ namespace jank::codegen
     for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
     {
       auto const &catch_clause{ expr->catch_bodies[i] };
+<<<<<<< HEAD
       auto const catch_type{ catch_clause.type };
+=======
+      auto const catch_type{ catch_clause.unwrap().type };
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
       auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti,
                                                                        ctx->builder->getPtrTy()) };
@@ -2089,7 +2133,10 @@ namespace jank::codegen
     auto const dispatch_block{ llvm::BasicBlock::Create(*llvm_ctx, "dispatch", current_fn) };
 
     llvm::BasicBlock *catch_cleanup_block{};
+<<<<<<< HEAD
     /* NOLINTNEXTLINE(misc-const-correctness): Can't be const. */
+=======
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
     llvm::BasicBlock *catch_body_block{};
     if(has_catch)
     {

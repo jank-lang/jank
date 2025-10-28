@@ -2699,11 +2699,19 @@ namespace jank::analyze
 
             /* Verify we have (catch cpp/type <sym> ...) */
             auto const catch_list(runtime::list(item));
+<<<<<<< HEAD
             if(auto const catch_body_size(catch_list->count()); catch_body_size < 2)
             {
               return error::analyze_invalid_try(
                 "Each 'catch' form requires the type of exception to catch and a symbol for the "
                 "name of the exception value.",
+=======
+            auto const catch_body_size(catch_list->count());
+            if(catch_body_size < 3)
+            {
+              return error::analyze_invalid_try(
+                "Catch clause requires a type, a symbol, and a body.",
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
@@ -2712,6 +2720,7 @@ namespace jank::analyze
             catch_it = catch_it.rest();
             auto const catch_sym_form(catch_it.first().unwrap());
             auto const catch_type(analyze(catch_type_form, current_frame, position, fn_ctx, true));
+<<<<<<< HEAD
             if(catch_type.is_err())
             {
               return error::analyze_invalid_try(catch_type.expect_err()->message,
@@ -2736,6 +2745,21 @@ namespace jank::analyze
                 ->add_usage(read::parse::reparse_nth(item, 1));
             }
 
+=======
+            if(catch_type.is_err() || catch_type.expect_ok()->kind != expression_kind::cpp_type)
+            {
+              return error::analyze_invalid_try(
+                       "An exception type required after 'catch'",
+                       object_source(item),
+                       error::note{
+                         "An exception type is required before this form.",
+                         object_source(catch_list->data.rest().rest().first().unwrap()),
+                       },
+                       latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 1));
+            }
+
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
             if(catch_sym_form->type != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
@@ -2756,6 +2780,7 @@ namespace jank::analyze
                 "The binding symbol in 'catch' must be unqualified.",
                 object_source(item),
                 latest_expansion(macro_expansions));
+<<<<<<< HEAD
             }
             auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
@@ -2775,8 +2800,12 @@ namespace jank::analyze
               {
                 catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
               }
+=======
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
             }
+            auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
 
+<<<<<<< HEAD
             /* Check for duplicate catch types. */
             /*TODO Add full error handling for duplicated catch types:
              * Add a new error kind and notes pointing to the duplicated types*/
@@ -2790,6 +2819,8 @@ namespace jank::analyze
               }
             }
             bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
+=======
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
             catch_frame->locals.emplace(catch_sym,
@@ -2797,7 +2828,11 @@ namespace jank::analyze
                                                        catch_sym->name,
                                                        none,
                                                        catch_frame,
+<<<<<<< HEAD
                                                        is_object,
+=======
+                                                       true,
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
                                                        false,
                                                        false,
                                                        catch_type_ref->type });
@@ -2810,9 +2845,16 @@ namespace jank::analyze
               return do_res.expect_err();
             }
             do_res.expect_ok()->frame = catch_frame;
+<<<<<<< HEAD
             ret->catch_bodies.emplace_back(catch_sym,
                                            catch_type_ref->type,
                                            static_ref_cast<expr::do_>(do_res.expect_ok()));
+=======
+            ret->catch_bodies.emplace_back(
+              expr::catch_{ catch_sym,
+                            catch_type_ref->type,
+                            static_ref_cast<expr::do_>(do_res.expect_ok()) });
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
           }
           break;
         case try_expression_type::finally_:

@@ -1419,7 +1419,23 @@ namespace jank::codegen
       }
       util::format_to(body_buffer, "}");
 
+<<<<<<< HEAD
       for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+=======
+      /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ref, which
+       * means we need to be throwing an object_ref. Since we're not using inheritance, we can't
+       * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
+       * throw a persistent_string_ref, for example, it will not be caught as an object_ref.
+       *
+       * We mitigate this by ensuring during the codegen for throw that we type-erase to
+       * an object_ref.
+       */
+      util::format_to(body_buffer,
+                      "catch(jank::runtime::object_ref const {}) {",
+                      runtime::munge(expr->catch_bodies[0].unwrap().sym->name));
+      auto const &catch_tmp(gen(expr->catch_bodies[0].unwrap().body, fn_arity, box_needed));
+      if(catch_tmp.is_some())
+>>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       {
         auto const &catch_body = expr->catch_bodies[i];
         util::format_to(body_buffer,
