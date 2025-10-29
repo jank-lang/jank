@@ -485,14 +485,17 @@ namespace jank::runtime::module
     }
 
     int ziperr{};
-    zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
+    zip_ptr const zip{ zip_openwitherror(jar_path.c_str(), 0, 'r', &ziperr), &zip_close };
     if(ziperr < 0)
     {
       return error::internal_runtime_failure(
-        util::format("Failed to open jar '{}' with error '{}'.", jar_path, zip_strerror(ziperr)));
+        util::format("Failed to open jar '{}' with error {}, '{}'.",
+                     jar_path,
+                     ziperr,
+                     zip_strerror(ziperr)));
     }
 
-    auto const entry_handle{ open_zip_entry(zip.get(), jar_path) };
+    auto const entry_handle{ open_zip_entry(zip.get(), file_path) };
     return ok(file_view{ read_zip_entry(zip.get()) });
   }
 
