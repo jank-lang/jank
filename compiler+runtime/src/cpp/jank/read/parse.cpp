@@ -937,19 +937,47 @@ namespace jank::read::parse
 
     auto const str_end(str_result.expect_ok().unwrap().end);
 
-    if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
+    jtl::immutable_string str{};
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(str_end.kind)
     {
-      return error::parse_invalid_reader_tag_value(
-        "The form after '#cpp' must be a string literal.",
-        { start_token.start, latest_token.end });
+      case lex::token_kind::string:
+      case lex::token_kind::escaped_string:
+        {
+          auto string{ expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr) };
+          str = util::format("\"{}\"", util::escape(string->data));
+          break;
+        }
+      case lex::token_kind::boolean:
+        {
+          auto boolean{ expect_object<obj::boolean>(str_result.expect_ok().unwrap().ptr) };
+          str = util::format("{}", boolean->data);
+          break;
+        }
+      case lex::token_kind::integer:
+        {
+          auto integer{ expect_object<obj::integer>(str_result.expect_ok().unwrap().ptr) };
+          str = util::format("static_cast<jank::i64>({})", integer->data);
+          break;
+        }
+      case lex::token_kind::real:
+        {
+          auto real{ expect_object<obj::real>(str_result.expect_ok().unwrap().ptr) };
+          str = util::format("static_cast<jank::f64>({})", real->data);
+          break;
+        }
+      default:
+        return error::parse_invalid_reader_tag_value(
+          "The form after '#cpp' must either be a string, boolean, integer or real literal.",
+          { start_token.start, latest_token.end });
     }
+#pragma clang diagnostic pop
 
-    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
-
-    auto const wrapped(make_box<obj::persistent_list>(
-      std::in_place,
-      make_box<obj::symbol>("cpp/value"),
-      make_box(util::format("\"{}\"", util::escape(str->data))).erase()));
+    auto const wrapped(make_box<obj::persistent_list>(std::in_place,
+                                                      make_box<obj::symbol>("cpp/value"),
+                                                      make_box(util::format("{}", str)).erase()));
 
     return object_source_info{ wrapped, start_token, str_end };
   }
