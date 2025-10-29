@@ -20,4 +20,16 @@ namespace jank::error
                         error::note{ "Boxed here.", box_source, error::note::kind::info }
     });
   }
+
+  error_ref
+  runtime_non_metadatable_value(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::runtime_non_metadatable_value, message, source);
+  }
+
+  error_ref
+  internal_runtime_failure(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::internal_runtime_failure, message, source);
+  }
 }
