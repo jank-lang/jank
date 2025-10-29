@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/big_decimal.hpp>
 
 namespace jank::runtime
 {
@@ -279,4 +280,5 @@ namespace jank::runtime
   f64 parse_double(object_ref o);
 
   bool is_big_decimal(object_ref o);
+  object_ref to_big_decimal(object_ref o);
 }

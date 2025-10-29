@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/ratio.hpp>
 
 namespace jank::runtime
 {
@@ -42,6 +43,10 @@ namespace jank::runtime::obj
     explicit big_decimal(native_big_decimal const &);
     explicit big_decimal(native_big_decimal &&);
     explicit big_decimal(jtl::immutable_string const &);
+    explicit big_decimal(native_big_integer const &);
+    explicit big_decimal(native_big_integer &&);
+    explicit big_decimal(ratio const &);
+    explicit big_decimal(ratio &&);
 
     /* behavior::object_like */
     bool equal(object const &) const;
