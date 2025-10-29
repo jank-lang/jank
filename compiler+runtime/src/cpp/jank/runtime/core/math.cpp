@@ -1790,21 +1790,14 @@ namespace jank::runtime
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
-        else if constexpr(std::same_as<T, obj::big_integer>)
+        else if constexpr(std::same_as<T, obj::big_integer> || std::same_as<T, obj::real>
+                          || std::same_as<T, obj::ratio>)
         {
           return make_box<obj::big_decimal>(typed_o->data);
         }
         else if constexpr(std::same_as<T, obj::big_decimal>)
         {
           return typed_o;
-        }
-        else if constexpr(std::same_as<T, obj::real>)
-        {
-          return make_box<obj::big_decimal>(typed_o->data);
-        }
-        else if constexpr(std::same_as<T, obj::ratio>)
-        {
-          return make_box<obj::big_decimal>(typed_o->data);
         }
         else
         {
