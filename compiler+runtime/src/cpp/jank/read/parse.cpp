@@ -946,25 +946,26 @@ namespace jank::read::parse
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
         {
-          auto string{ expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr) };
+          auto const string{ expect_object<obj::persistent_string>(
+            str_result.expect_ok().unwrap().ptr) };
           str = util::format("\"{}\"", util::escape(string->data));
           break;
         }
       case lex::token_kind::boolean:
         {
-          auto boolean{ expect_object<obj::boolean>(str_result.expect_ok().unwrap().ptr) };
+          auto const boolean{ expect_object<obj::boolean>(str_result.expect_ok().unwrap().ptr) };
           str = util::format("{}", boolean->data);
           break;
         }
       case lex::token_kind::integer:
         {
-          auto integer{ expect_object<obj::integer>(str_result.expect_ok().unwrap().ptr) };
+          auto const integer{ expect_object<obj::integer>(str_result.expect_ok().unwrap().ptr) };
           str = util::format("static_cast<jank::i64>({})", integer->data);
           break;
         }
       case lex::token_kind::real:
         {
-          auto real{ expect_object<obj::real>(str_result.expect_ok().unwrap().ptr) };
+          auto const real{ expect_object<obj::real>(str_result.expect_ok().unwrap().ptr) };
           str = util::format("static_cast<jank::f64>({})", real->data);
           break;
         }
