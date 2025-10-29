@@ -51,7 +51,14 @@ namespace jtl
     constexpr option(D &&d) noexcept
       : set{ true }
     {
-      data.construct(jtl::forward<D>(d));
+      try
+      {
+        data.construct(jtl::forward<D>(d));
+      }
+      catch(...)
+      {
+        jank_panic("Unable to construct option, due to error.");
+      }
     }
 
     template <typename D>

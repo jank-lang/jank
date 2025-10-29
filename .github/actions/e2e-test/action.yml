@@ -1,0 +1,20 @@
+name: "Run end-to-end test suite"
+runs:
+  using: "composite"
+  steps:
+    - name: Install babashka
+      shell: bash
+      run: |
+        curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+        chmod +x install-bb
+        sudo ./install-bb
+
+    - name: Check health
+      shell: bash
+      run: jank check-health || exit 1
+
+    - name: Run end-to-end test suite
+      shell: bash
+      run: |
+        cd compiler+runtime
+        ./bin/jank/compiler+runtime/bash_test.clj

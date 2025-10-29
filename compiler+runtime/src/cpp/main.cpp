@@ -1,4 +1,3 @@
-#include <iostream>
 #include <filesystem>
 #include <fstream>
 
@@ -17,11 +16,9 @@
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/c_api.h>
-#include <jank/evaluate.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/profile/time.hpp>
-#include <jank/error/report.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -54,8 +51,7 @@ namespace jank
 
     {
       profile::timer const timer{ "eval user code" };
-      std::cout << runtime::to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file))
-                << "\n";
+      util::println("{}", to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file)));
     }
 
     //ankerl::nanobench::Config config;
@@ -174,7 +170,7 @@ namespace jank
 
       if(line.empty())
       {
-        std::cout << "\n";
+        util::println("");
         continue;
       }
 
@@ -202,7 +198,7 @@ namespace jank
       JANK_CATCH(jank::util::print_exception)
 
       input.clear();
-      std::cout << "\n";
+      util::println("");
       le.setPrompt(get_prompt("=> "));
     }
   }

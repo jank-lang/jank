@@ -16,13 +16,17 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/util/clang.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/try.hpp>
 #include <jank/c_api.h>
 
 #include <clojure/core_native.hpp>
+
+#ifdef JANK_PHASE_2
+extern "C" jank_object_ref jank_load_clojure_core();
+#endif
 
 namespace jank::environment
 {
@@ -124,23 +128,25 @@ namespace jank::environment
                     JANK_RESOURCE_DIR,
                     terminal_style::reset,
                     terminal_style::bright_black,
-                    (exists ? " (found)" : " (not found)"),
+                    /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+                    (relative ? "" : (exists ? " (found)" : " (not found)")),
                     terminal_style::reset);
 
     if(relative)
     {
-      util::format_to(sb,
-                      "\n{}─ {}{} jank resolved resource dir: {}{}{} {}{}{}",
-                      col,
-                      icon,
-                      terminal_style::reset,
-                      terminal_style::blue,
-                      dir.c_str(),
-                      terminal_style::reset,
-                      terminal_style::bright_black,
-                      /* TODO: Logic is not right here. */
-                      dev_build ? " (ignored for dev build)" : " (not found)",
-                      terminal_style::reset);
+      util::format_to(
+        sb,
+        "\n{}─ {}{} jank resolved resource dir: {}{}{} {}{}{}",
+        col,
+        icon,
+        terminal_style::reset,
+        terminal_style::blue,
+        dir.c_str(),
+        terminal_style::reset,
+        terminal_style::bright_black,
+        /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+        (exists ? "(found)" : (dev_build ? "(ignored for dev build)" : "(not found)")),
+        terminal_style::reset);
     }
 
     return sb.release();
@@ -157,7 +163,7 @@ namespace jank::environment
                         path,
                         terminal_style::reset,
                         terminal_style::bright_black,
-                        configured_path_exists ? " (found)" : " (not found)",
+                        configured_path_exists ? "(found)" : "(not found)",
                         terminal_style::reset);
   }
 
@@ -384,7 +390,12 @@ namespace jank::environment
                                       [=] { util::cli::opts = saved_opts; }
       };
 
-      runtime::__rt_ctx->compile_module("clojure.core").expect_ok();
+#ifdef JANK_PHASE_2
+      jank_load_clojure_core();
+      runtime::__rt_ctx->module_loader.set_is_loaded("/clojure.core");
+#else
+      runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest).expect_ok();
+#endif
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
@@ -400,7 +411,7 @@ namespace jank::environment
         5) };
       if(proc_code != 0)
       {
-        util::println(stderr, R"(Compiled program exited with code {})", proc_code);
+        util::println(stderr, R"(Compiled program exited with code '{}'.)", proc_code);
         error = true;
       }
 
@@ -409,8 +420,11 @@ namespace jank::environment
       std::getline(ifs, line);
       if(line != "healthy")
       {
-        /* TODO: Show full file output here. */
-        util::println(stderr, R"(Expected "healthy" from output, but received "{}")", line);
+        util::println(stderr, "{}", line);
+        while(std::getline(ifs, line))
+        {
+          util::println(stderr, "{}", line);
+        }
         error = true;
       }
     }
@@ -480,7 +494,6 @@ namespace jank::environment
     {
       util::println("{}", header("jank runtime", max_width));
       auto const ret{ jank_init(0, nullptr, true, [](int const, char const **) {
-        runtime::__rt_ctx = new(GC) runtime::context{};
         jank_load_clojure_core_native();
         util::println("{}─ ✅{} jank runtime initialized",
                       terminal_style::green,

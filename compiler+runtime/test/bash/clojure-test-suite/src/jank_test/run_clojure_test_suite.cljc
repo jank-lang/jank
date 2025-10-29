@@ -3,48 +3,48 @@
 
 (def namespaces
   '[
-    ;clojure.core-test.abs    ; Read error (405 - 423): number out of range
-    ;clojure.core-test.aclone ; unloadable
+    ;clojure.core-test.abs    ; (not (= -9223372036854775809N 9223372036854775809N))
+    ;clojure.core-test.aclone ; unloadable (segfault)
     ;clojure.core-test.add-watch ; Exception: TODO: port sync
-    ;clojure.core-test.and     ; unloadable
+    clojure.core-test.and
     clojure.core-test.any-qmark
-    ;clojure.core-test.associative-qmark ; unloadable
-    ;clojure.core-test.bigdec ; Read error (312 - 314): invalid number: chars 'M' are invalid for radix 10
-    ;clojure.core-test.bigint ; Read error (405 - 423): number out of range
+    ;clojure.core-test.associative-qmark ; Exception: TODO: port to-array
+    ;clojure.core-test.bigdec ; unloadable (segfault)
+    ;clojure.core-test.bigint ; unloadable (segfault)
     ;clojure.core-test.binding ; TODO: port future
-    ;clojure.core-test.bit-and ; Read error (405 - 423): number out of range
-    ;clojure.core-test.bit-and-not ; Read error (405 - 423): number out of range
-    ;clojure.core-test.bit-clear ;invalid object type: 0
-    ;clojure.core-test.bit-flip ;invalid object type: 0
-    ;clojure.core-test.bit-not ;invalid object type: 0
-    ;clojure.core-test.bit-or ; Read error (405 - 423): number out of range
-    ;clojure.core-test.bit-set ; Read error (570 - 590): number out of range
+    ;clojure.core-test.bit-and ; invalid object type: 0
+    ;clojure.core-test.bit-and-not ; invalid object type: 0
+    ;clojure.core-test.bit-clear ; invalid object type: 0
+    ;clojure.core-test.bit-flip ; invalid object type: 0
+    ;clojure.core-test.bit-not ; invalid object type: 0
+    ;clojure.core-test.bit-or ; invalid object type: 0
+    ;clojure.core-test.bit-set ; invalid object type: 0
     ;clojure.core-test.bit-shift-left ; invalid object type: 0
-    ;clojure.core-test.bit-shift-right  ; invalid object type: 0
-    ;clojure.core-test.bit-test   ; invalid object type: 0
-    ;clojure.core-test.bit-xor ; Read error (405 - 423): number out of range
-    ;clojure.core-test.boolean ; Read error (405 - 423): number out of range
+    ;clojure.core-test.bit-shift-right ; invalid object type: 0
+    ;clojure.core-test.bit-test ; invalid object type: 0
+    ;clojure.core-test.bit-xor ; invalid object type: 0
+    ;clojure.core-test.boolean ; Exception: TODO: port double
     ;clojure.core-test.bound-fn ; TODO: port future
     ;clojure.core-test.bound-fn-star ; TODO: port future
-    ;clojure.core-test.butlast ;https://github.com/jank-lang/jank/issues/243
-    ;clojure.core-test.byte ;Read error (759 - 761): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.char ; unloadable
-    ;clojure.core-test.char-qmark ; Read error (405 - 423): number out of range
-    ;clojure.core-test.compare ; Read error (413 - 418): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.dec ;Read error (351 - 353): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.decimal-qmark ; Read error (405 - 423): number out of range
-    ;clojure.core-test.denominator ; Read error (579 - 581): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.double ; Read error (384 - 386): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.double-qmark ; Read error (405 - 423): number out of range
-    ;clojure.core-test.drop ;https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
-    ;clojure.core-test.drop-last ;https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.drop-while ; https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
-    ;clojure.core-test.even-qmark ;Read error (445 - 449): invalid number: chars 'N' are invalid for radix 10
-    ;clojure.core-test.false-qmark ; Read error (405 - 423): number out of range
+    clojure.core-test.butlast
+    ;clojure.core-test.byte ; Exception: TODO: port byte
+    ;clojure.core-test.char ; Exception: TODO: port char
+    ;clojure.core-test.char-qmark ; Exception: TODO: port double
+    ;clojure.core-test.compare ; Exception: not comparable: []
+    ;clojure.core-test.count ; https://github.com/jank-lang/jank/issues/244
+    ;clojure.core-test.dec ; Exception: TODO underflow
+    ;clojure.core-test.decimal-qmark ; Exception: TODO: port decimal?
+    ;clojure.core-test.denominator ; Expected: (= 2 2N)
+    ;clojure.core-test.double ; Exception: TODO: port double
+    ;clojure.core-test.double-qmark ; Expected: (= false (double? (float 0.000000)))
+    ;clojure.core-test.drop ; Exception: not a number: nil
+    ;clojure.core-test.drop-last ; Exception: not a number: nil
+    ;clojure.core-test.drop-while ; Exception: invalid call with 1 arg to: nil
+    ;clojure.core-test.even-qmark ; Exception: invalid object type: 3
+    ;clojure.core-test.false-qmark ; Exception: TODO: port double
     clojure.core-test.first
-    ;clojure.core-test.float ;Read error (405 - 423): number out of range
-    ;clojure.core-test.float-qmark ; Read error (405 - 423): number out of range
+    ;clojure.core-test.float ; missing bounds checks
+    ;clojure.core-test.float-qmark ; Exception: TODO: port double
     ;clojure.core-test.fnil  ;unloadable
     ;clojure.core-test.format ;TODO: port format
     ;clojure.core-test.get ;unloadable

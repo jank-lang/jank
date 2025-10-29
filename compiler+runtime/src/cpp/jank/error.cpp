@@ -154,6 +154,8 @@ namespace jank::error
         return "Invalid C++ member function call.";
       case kind::analyze_invalid_cpp_capture:
         return "Invalid C++ capture.";
+      case kind::analyze_mismatched_if_types:
+        return "Mismatched if types.";
       case kind::analyze_invalid_cpp_function_call:
         return "Invalid C++ function call.";
       case kind::analyze_invalid_cpp_call:
@@ -210,6 +212,8 @@ namespace jank::error
         return "Unable to compile the provided C++ source.";
       case kind::runtime_unable_to_load_module:
         return "Unable to load module.";
+      case kind::runtime_invalid_unbox:
+        return "Invalid unbox type.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
 
@@ -431,7 +435,7 @@ namespace jank::error
       return lhs.source.start.line < rhs.source.start.line;
     });
     std::ranges::stable_sort(notes, [](note const &lhs, note const &rhs) -> bool {
-      return lhs.source.file_path < rhs.source.file_path;
+      return lhs.source.file < rhs.source.file;
     });
   }
 

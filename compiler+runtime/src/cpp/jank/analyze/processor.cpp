@@ -2083,11 +2083,9 @@ namespace jank::analyze
 
     if(ret.values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil,
-                                                current_frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal(jank_nil, current_frame, position, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2436,13 +2434,7 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                          cpp_util::untyped_object_ptr_type(),
-                                          macro_expansions);
-    if(then_expr.is_err())
-    {
-      return then_expr.expect_err();
-    }
+    auto const then_type{ cpp_util::expression_type(then_expr.expect_ok()) };
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2453,12 +2445,42 @@ namespace jank::analyze
       {
         return else_expr.expect_err();
       }
-      else_expr = apply_implicit_conversion(else_expr.expect_ok(),
-                                            cpp_util::untyped_object_ptr_type(),
-                                            macro_expansions);
-      if(else_expr.is_err())
+      auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
+      auto const is_then_object{ cpp_util::is_any_object(then_type) };
+      auto const is_else_object{ cpp_util::is_any_object(else_type) };
+      auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
+      auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+
+      /* If one of the branches has a native type, we need to match one of these scenarios.
+       *
+       * 1. The other branch has the same native type.
+       * 2. The other branch has an object type and the native branch is trait convertible.
+       *
+       * If neither of these are the case, we have an error. */
+      if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+         && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
       {
-        return else_expr.expect_err();
+        return error::analyze_mismatched_if_types(
+          util::format(
+            "Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
+            "the same type.",
+            Cpp::GetTypeAsString(then_type),
+            Cpp::GetTypeAsString(else_type)),
+          object_source(o->first()),
+          latest_expansion(macro_expansions));
+      }
+
+      if(is_then_convertible)
+      {
+        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
+      }
+      else if(is_else_convertible)
+      {
+        else_expr = apply_implicit_conversion(else_expr.expect_ok(),
+                                              cpp_util::untyped_object_ptr_type(),
+                                              macro_expansions);
       }
 
       else_expr_opt = else_expr.expect_ok();
@@ -2734,7 +2756,14 @@ namespace jank::analyze
               return do_res.expect_err();
             }
 
-            ret->catch_body = expr::catch_{ sym, static_ref_cast<expr::do_>(do_res.expect_ok()) };
+            /* TODO: Read this from the catch form. */
+            static auto const object_ref_type{ cpp_util::resolve_literal_type(
+                                                 "jank::runtime::oref<jank::runtime::object>")
+                                                 .expect_ok() };
+
+            ret->catch_body = expr::catch_{ sym,
+                                            object_ref_type,
+                                            static_ref_cast<expr::do_>(do_res.expect_ok()) };
           }
           break;
         case try_expression_type::finally_:
@@ -3382,7 +3411,7 @@ namespace jank::analyze
   processor::analyze_cpp_symbol(obj::symbol_ref const sym,
                                 local_frame_ptr const current_frame,
                                 expression_position const position,
-                                jtl::option<expr::function_context_ref> const &,
+                                jtl::option<expr::function_context_ref> const &fn_ctx,
                                 bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
@@ -3495,6 +3524,33 @@ namespace jank::analyze
     auto const scope_res{ cpp_util::resolve_scope(name) };
     if(scope_res.is_err())
     {
+      /* If we fail to resolve a symbol, it could be that it's a C preprocessor define. Normal
+       * Clang resolution only works with Clang Decls (variables, classes, enums, etc). This
+       * entirely skips past the preprocessor. Just in case, since we failed to find it as
+       * as Decl, let's try to sent it through the preprocessor for full parsing and see if
+       * that works.
+       *
+       * We silence the diagnostics for this because it'll likely fail for any invalid symbols
+       * anyway. */
+      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+
+      /* So just wrap our cpp/foo into a (cpp/value "foo") and analyze that. */
+      runtime::detail::native_persistent_list const cpp_value_form{ make_box<obj::symbol>("cpp",
+                                                                                          "value"),
+                                                                    make_box(name) };
+      auto const literal_res{ analyze_cpp_value(make_box<obj::persistent_list>(cpp_value_form),
+                                                current_frame,
+                                                position,
+                                                fn_ctx,
+                                                needs_box) };
+      if(literal_res.is_ok())
+      {
+        return literal_res;
+      }
+
       return error::analyze_unresolved_cpp_symbol(util::format("{}", scope_res.expect_err()),
                                                   object_source(sym),
                                                   latest_expansion(macro_expansions));
@@ -4006,7 +4062,11 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    return jtl::make_ref<expr::cpp_box>(position, current_frame, needs_box, value_expr);
+    return jtl::make_ref<expr::cpp_box>(position,
+                                        current_frame,
+                                        needs_box,
+                                        value_expr,
+                                        object_source(l->first()));
   }
 
   processor::expression_result
@@ -4100,7 +4160,8 @@ namespace jank::analyze
                                           current_frame,
                                           needs_box,
                                           type_expr->type,
-                                          value_expr);
+                                          value_expr,
+                                          object_source(l->first()));
   }
 
   processor::expression_result

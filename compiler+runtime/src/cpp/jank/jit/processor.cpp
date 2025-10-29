@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -20,7 +18,7 @@
 
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/runtime/context.hpp>
@@ -99,6 +97,16 @@ namespace jank::jit
       args.emplace_back(strdup(flag.c_str()));
     }
 
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(strdup(flag.c_str()));
+      }
+    }
+
     if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
       args.emplace_back("-g");
@@ -144,6 +152,8 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
+    util::add_system_flags(args);
+
     /********* Every flag after this line is user-provided. *********/
 
     for(auto const &include_path : util::cli::opts.include_dirs)
@@ -163,16 +173,8 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
-#ifdef JANK_SANITIZE
-    /* ASan leads to larger code size, which can run us up against the 32 bit limit of the
-     * default 'small' JIT code model. When we know we're running ASan, we want to opt
-     * into the 'large' code model instead. This may have some marginal perf impact, but
-     * for ASan builds, that's not a problem. */
     interpreter.reset(static_cast<Cpp::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
-#else
-    interpreter.reset(static_cast<Cpp::Interpreter *>(Cpp::CreateInterpreter(args, {}, vfs)));
-#endif
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info

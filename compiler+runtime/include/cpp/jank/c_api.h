@@ -154,8 +154,9 @@ extern "C"
   jank_object_ref jank_map_create(jank_u64 pairs, ...);
   jank_object_ref jank_set_create(jank_u64 size, ...);
 
-  jank_object_ref jank_box(void const *o);
-  void *jank_unbox(jank_object_ref o);
+  jank_object_ref jank_box(char const *type, void const *o);
+  void *jank_unbox(char const *type, jank_object_ref o);
+  void *jank_unbox_with_source(char const *type, jank_object_ref o, jank_object_ref source);
 
   jank_arity_flags jank_function_build_arity_flags(jank_u8 highest_fixed_arity,
                                                    jank_bool is_variadic,
@@ -317,9 +318,6 @@ extern "C"
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
 
   void jank_throw(jank_object_ref o);
-  jank_object_ref
-  jank_try(jank_object_ref try_fn, jank_object_ref catch_fn, jank_object_ref finally_fn);
-
   void jank_profile_enter(char const *label);
   void jank_profile_exit(char const *label);
   void jank_profile_report(char const *label);

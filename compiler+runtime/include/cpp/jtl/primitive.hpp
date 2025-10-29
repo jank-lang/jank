@@ -50,6 +50,23 @@ namespace jtl
     other_unix_like
   };
 
+  constexpr char const *platform_str(platform const p)
+  {
+    switch(p)
+    {
+      case platform::linux_like:
+        return "linux-like";
+      case platform::macos_like:
+        return "macos-like";
+      case platform::windows_like:
+        return "windows-like";
+      case platform::other_unix_like:
+        return "other unix-like";
+      default:
+        return "unknown";
+    }
+  }
+
   static constexpr platform const current_platform{
 #if defined(_WIN32) || defined(__CYGWIN__)
     platform::windows_like

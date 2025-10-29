@@ -102,6 +102,7 @@ namespace jank::error
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
     analyze_invalid_cpp_capture,
+    analyze_mismatched_if_types,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -118,6 +119,7 @@ namespace jank::error
     runtime_unable_to_open_file,
     runtime_invalid_cpp_eval,
     runtime_unable_to_load_module,
+    runtime_invalid_unbox,
     internal_runtime_failure,
 
     internal_failure,
@@ -296,6 +298,8 @@ namespace jank::error
         return "analyze/invalid-cpp-member-access";
       case kind::analyze_invalid_cpp_capture:
         return "analyze/invalid-cpp-capture";
+      case kind::analyze_mismatched_if_types:
+        return "analyze/mismatched-if-types";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
 
@@ -324,6 +328,8 @@ namespace jank::error
         return "runtime/invalid-cpp-eval";
       case kind::runtime_unable_to_load_module:
         return "runtime/unable-to-load-module";
+      case kind::runtime_invalid_unbox:
+        return "runtime/invalid-unbox";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
 

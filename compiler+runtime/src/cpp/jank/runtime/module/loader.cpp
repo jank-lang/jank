@@ -7,6 +7,7 @@
 
 #include <jankzip.h>
 
+#include <jank/type.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
@@ -22,7 +23,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/util/dir.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/runtime.hpp>
 
@@ -131,6 +132,17 @@ namespace jank::runtime::module
     }
 
     return ret;
+  }
+
+  static native_set<jtl::immutable_string> const &core_modules()
+  {
+    static native_set<jtl::immutable_string> const modules{ "clojure.core" };
+    return modules;
+  }
+
+  bool is_core_module(jtl::immutable_string const &module)
+  {
+    return core_modules().contains(module);
   }
 
   static zip_entry_ptr open_zip_entry(zip_t * const zip, jtl::immutable_string const &path)
@@ -331,6 +343,45 @@ namespace jank::runtime::module
     }
   }
 
+  static void
+  register_module_path(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
+                       jtl::immutable_string const &paths,
+                       bool const skip_jar)
+  {
+    usize start{};
+    usize i{ paths.find(loader::module_separator, start) };
+
+    /* Looks like it's either an empty path list or there's only entry. */
+    if(i == jtl::immutable_string::npos)
+    {
+      if(!skip_jar || !paths.ends_with(".jar"))
+      {
+        register_path(entries, paths);
+      }
+    }
+    else
+    {
+      while(i != jtl::immutable_string::npos)
+      {
+        auto const path(paths.substr(start, i - start));
+
+        if(!skip_jar || !path.ends_with(".jar"))
+        {
+          register_path(entries, path);
+        }
+
+        start = i + 1;
+        i = paths.find(loader::module_separator, start);
+      }
+
+      auto const path(paths.substr(start, i - start));
+      if(!skip_jar || !path.ends_with(".jar"))
+      {
+        register_path(entries, path);
+      }
+    }
+  }
+
   loader::loader()
   {
     std::filesystem::path const jank_path{ jank::util::process_dir().c_str() };
@@ -350,27 +401,7 @@ namespace jank::runtime::module
     this->paths = paths;
 
     //util::println("module paths: {}", paths);
-
-    usize start{};
-    usize i{ paths.find(module_separator, start) };
-
-    /* Looks like it's either an empty path list or there's only entry. */
-    if(i == jtl::immutable_string::npos)
-    {
-      register_path(entries, paths);
-    }
-    else
-    {
-      while(i != jtl::immutable_string::npos)
-      {
-        register_path(entries, paths.substr(start, i - start));
-
-        start = i + 1;
-        i = paths.find(module_separator, start);
-      }
-
-      register_path(entries, paths.substr(start, i - start));
-    }
+    register_module_path(entries, paths, false);
   }
 
   object_ref file_entry::to_runtime_data() const
@@ -423,35 +454,53 @@ namespace jank::runtime::module
     : fd{ mf.fd }
     , head{ mf.head }
     , len{ mf.len }
-    , buff{ std::move(mf.buff) }
+    , buff{ jtl::move(mf.buff) }
+    , file{ jtl::move(mf.file) }
   {
     mf.fd = -1;
     mf.head = nullptr;
   }
 
-  file_view::file_view(int const f, char const * const h, usize const s)
+  file_view::file_view(jtl::immutable_string const &file,
+                       int const f,
+                       char const * const h,
+                       usize const s)
     : fd{ f }
     , head{ h }
     , len{ s }
+    , file{ file }
   {
   }
 
-  file_view::file_view(jtl::immutable_string const &buff)
+  file_view::file_view(jtl::immutable_string const &file, jtl::immutable_string const &buff)
     : buff{ buff }
+    , file{ file }
   {
   }
 
   file_view::~file_view()
   {
-    if(head != nullptr)
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): I want const everywhere else. */
+    reset();
+  }
+
+  file_view &file_view::operator=(file_view &&fv) noexcept
+  {
+    if(this == &fv)
     {
-      munmap(reinterpret_cast<void *>(const_cast<char *>(head)), len);
+      return *this;
     }
-    if(fd >= 0)
-    {
-      ::close(fd);
-    }
+
+    reset();
+    fd = fv.fd;
+    head = fv.head;
+    len = fv.len;
+    buff = jtl::move(fv.buff);
+    file = jtl::move(fv.file);
+
+    fv.fd = -1;
+    fv.head = nullptr;
+
+    return *this;
   }
 
   char const *file_view::data() const
@@ -464,9 +513,29 @@ namespace jank::runtime::module
     return buff.empty() ? len : buff.size();
   }
 
+  jtl::immutable_string const &file_view::file_path() const
+  {
+    return file;
+  }
+
   jtl::immutable_string_view file_view::view() const
   {
     return { data(), size() };
+  }
+
+  void file_view::reset()
+  {
+    if(head != nullptr)
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): I want const everywhere else. */
+    {
+      munmap(reinterpret_cast<void *>(const_cast<char *>(head)), len);
+      head = nullptr;
+    }
+    if(fd >= 0)
+    {
+      ::close(fd);
+      fd = -1;
+    }
   }
 
   static jtl::result<file_view, error_ref> read_jar_file(jtl::immutable_string const &path)
@@ -496,7 +565,7 @@ namespace jank::runtime::module
     }
 
     auto const entry_handle{ open_zip_entry(zip.get(), file_path) };
-    return ok(file_view{ read_zip_entry(zip.get()) });
+    return ok(file_view{ path, read_zip_entry(zip.get()) });
   }
 
   static jtl::result<file_view, error_ref> map_file(jtl::immutable_string const &path)
@@ -525,16 +594,100 @@ namespace jank::runtime::module
       return error::runtime_unable_to_open_file(util::format("Unable to map file '{}'.", path));
     }
 
-    return ok(file_view{ fd, head, file_size });
+    return ok(file_view{ path, fd, head, file_size });
   }
 
   jtl::result<file_view, error_ref> loader::read_file(jtl::immutable_string const &path)
   {
+    if(path == read::no_source_path)
+    {
+      return error::internal_runtime_failure("No source to read.");
+    }
+
     if(path.contains(".jar:"))
     {
       return read_jar_file(path);
     }
     return map_file(path);
+  }
+
+  jtl::result<file_view, error_ref> loader::read_module(jtl::immutable_string const &module)
+  {
+    auto const &found_module{ loader::find(module, origin::source) };
+    if(found_module.is_err())
+    {
+      return found_module.expect_err();
+    }
+
+    jtl::option<file_entry> res{};
+
+    auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
+    auto const &module_sources{ found_module.expect_ok().sources };
+
+    switch(module_type_to_load)
+    {
+      case module_type::jank:
+        res = module_sources.jank.unwrap();
+        break;
+      case module_type::o:
+        res = module_sources.o.unwrap();
+        break;
+      case module_type::cpp:
+        res = module_sources.cpp.unwrap();
+        break;
+      case module_type::cljc:
+        res = module_sources.cljc.unwrap();
+        break;
+    }
+
+    if(res.is_none())
+    {
+      return error::internal_runtime_failure(util::format("Unknown type for module '{}'.", module));
+    }
+
+    auto const &entry{ res.unwrap() };
+    if(entry.archive_path.is_some())
+    {
+      file_view file;
+      auto const visit_res{ visit_jar_entry(entry, [&](zip_t * const zip) {
+        file = file_view{ entry.archive_path.unwrap(), read_zip_entry(zip) };
+      }) };
+      if(visit_res.is_err())
+      {
+        return visit_res.expect_err();
+      }
+      return file;
+    }
+    else
+    {
+      return module::loader::read_file(entry.path);
+    }
+  }
+
+  static jtl::option<loader::entry>
+  find_module(native_unordered_map<jtl::immutable_string, loader::entry> &entries,
+              jtl::immutable_string const &paths,
+              jtl::immutable_string const &module)
+  {
+    auto const &first_find(entries.find(module));
+
+    if(first_find != entries.end())
+    {
+      return first_find->second;
+    }
+
+    /* Skip jars after the initial indexing since we can consider them immutable
+     * for development purposes. */
+    register_module_path(entries, paths, true);
+
+    auto const &second_find(entries.find(module));
+
+    if(second_find != entries.end())
+    {
+      return second_find->second;
+    }
+
+    return {};
   }
 
   jtl::result<loader::find_result, error_ref>
@@ -543,22 +696,25 @@ namespace jank::runtime::module
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
     patched_module = std::regex_replace(patched_module, underscore, "-");
-    auto const &entry(entries.find(patched_module));
-    if(entry == entries.end())
+    auto const &found(find_module(entries, paths, patched_module));
+
+    if(found.is_none())
     {
       /* TODO: If it contains -, suggest using _. Very common issue. */
       return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
     }
 
+    auto const &entry(found.unwrap());
+
     if(ori == origin::source)
     {
-      if(entry->second.jank.is_some())
+      if(entry.jank.is_some())
       {
-        return find_result{ entry->second, module_type::jank };
+        return find_result{ entry, module_type::jank };
       }
-      else if(entry->second.cljc.is_some())
+      else if(entry.cljc.is_some())
       {
-        return find_result{ entry->second, module_type::cljc };
+        return find_result{ entry, module_type::cljc };
       }
     }
     else
@@ -573,29 +729,27 @@ namespace jank::runtime::module
        * Portability:
        * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
        * making it hard to share them. */
-      if(entry->second.o.is_some() && entry->second.o.unwrap().archive_path.is_none()
-         && entry->second.o.unwrap().exists()
-         && (entry->second.jank.is_some() || entry->second.cljc.is_some()
-             || entry->second.cpp.is_some()))
+      if(entry.o.is_some() && entry.o.unwrap().archive_path.is_none() && entry.o.unwrap().exists()
+         && (entry.jank.is_some() || entry.cljc.is_some() || entry.cpp.is_some()))
       {
-        auto const o_file_path{ native_transient_string{ entry->second.o.unwrap().path } };
+        auto const o_file_path{ native_transient_string{ entry.o.unwrap().path } };
 
         std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry->second.jank.is_some() && entry->second.jank.unwrap().exists())
+        if(entry.jank.is_some() && entry.jank.unwrap().exists())
         {
-          source_modified_time = entry->second.jank.unwrap().last_modified_at();
+          source_modified_time = entry.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
         }
-        else if(entry->second.cljc.is_some() && entry->second.cljc.unwrap().exists())
+        else if(entry.cljc.is_some() && entry.cljc.unwrap().exists())
         {
-          source_modified_time = entry->second.cljc.unwrap().last_modified_at();
+          source_modified_time = entry.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
         }
-        else if(entry->second.cpp.is_some() && entry->second.cpp.unwrap().exists())
+        else if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
         {
-          source_modified_time = entry->second.cpp.unwrap().last_modified_at();
+          source_modified_time = entry.cpp.unwrap().last_modified_at();
           module_type = module_type::cpp;
         }
         else
@@ -604,31 +758,31 @@ namespace jank::runtime::module
             util::format("Found a binary '{}' without a source while trying to load module '{}'. "
                          "This module won't be loaded, since jank will not trust module binaries "
                          "which are missing a corresponding source.",
-                         entry->second.o.unwrap().path,
+                         entry.o.unwrap().path,
                          module));
         }
 
         if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
            >= source_modified_time)
         {
-          return find_result{ entry->second, module_type::o };
+          return find_result{ entry, module_type::o };
         }
         else
         {
-          return find_result{ entry->second, module_type };
+          return find_result{ entry, module_type };
         }
       }
-      else if(entry->second.cpp.is_some())
+      else if(entry.cpp.is_some())
       {
-        return find_result{ entry->second, module_type::cpp };
+        return find_result{ entry, module_type::cpp };
       }
-      else if(entry->second.jank.is_some())
+      else if(entry.jank.is_some())
       {
-        return find_result{ entry->second, module_type::jank };
+        return find_result{ entry, module_type::jank };
       }
-      else if(entry->second.cljc.is_some())
+      else if(entry.cljc.is_some())
       {
-        return find_result{ entry->second, module_type::cljc };
+        return find_result{ entry, module_type::cljc };
       }
     }
 

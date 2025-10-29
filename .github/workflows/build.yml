@@ -45,6 +45,7 @@ jobs:
             popd
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+
   macos-build-clang:
     name: macOS - clang
     runs-on: macos-26
