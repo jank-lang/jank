@@ -1780,10 +1780,10 @@ namespace jank::runtime
     return o->type == object_type::big_decimal;
   }
 
-  object_ref to_big_decimal(object_ref o)
+  obj::big_decimal_ref to_big_decimal(object_ref const o)
   {
     return visit_number_like(
-      [=](auto const typed_o) -> object_ref {
+      [&](auto const typed_o) -> obj::big_decimal_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::integer>)

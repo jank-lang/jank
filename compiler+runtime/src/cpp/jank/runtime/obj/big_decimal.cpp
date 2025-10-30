@@ -129,17 +129,7 @@ namespace jank::runtime::obj
   {
   }
 
-  big_decimal::big_decimal(native_big_integer &&val)
-    : data{ val.real() }
-  {
-  }
-
   big_decimal::big_decimal(ratio const &val)
-    : data(native_big_decimal(val.data.numerator) / val.data.denominator)
-  {
-  }
-
-  big_decimal::big_decimal(ratio &&val)
     : data(native_big_decimal(val.data.numerator) / val.data.denominator)
   {
   }
