@@ -6,10 +6,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/read/reparse.hpp>
-#include <jank/error/report.hpp>
 #include <jank/util/fmt.hpp>
-#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
