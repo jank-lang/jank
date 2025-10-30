@@ -1,0 +1,4 @@
+(let* [t #cpp true
+       f #cpp false]
+  (if (and (cpp/== cpp/true t) (cpp/== cpp/false f))
+    :success))
