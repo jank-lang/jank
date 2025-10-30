@@ -277,4 +277,7 @@ namespace jank::runtime
 
   i64 parse_long(object_ref o);
   f64 parse_double(object_ref o);
+
+  bool is_big_decimal(object_ref const o);
+  obj::big_decimal_ref to_big_decimal(object_ref const o);
 }
