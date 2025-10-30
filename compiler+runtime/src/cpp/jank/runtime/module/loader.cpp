@@ -157,7 +157,7 @@ namespace jank::runtime::module
     return { zip, &zip_entry_close };
   }
 
-  static jtl::immutable_string read_zip_entry(zip_t * const zip)
+  static jtl::result<jtl::immutable_string, error_ref> read_zip_entry(zip_t * const zip)
   {
     auto const entry_size{ zip_entry_size(zip) };
     jtl::string_builder sb;
@@ -167,15 +167,15 @@ namespace jank::runtime::module
     };
     if(read_result < 0)
     {
-      /* TODO: Return error. */
-      util::println("BINGBONG read_zip_entry failed to read: {}",
-                    zip_strerror(static_cast<int>(read_result)));
-      return "";
+      auto const entry_name{ zip_entry_name(zip) };
+      return error::internal_runtime_failure(
+        util::format("Failed to read jar entry '{}' with error '{}'.",
+                     entry_name,
+                     zip_strerror(read_result)));
     }
 
     sb.pos = read_result;
     return sb.release();
-    ;
   }
 
   template <typename F>
@@ -192,7 +192,11 @@ namespace jank::runtime::module
     }
 
     auto const entry_handle{ open_zip_entry(zip.get(), entry.path.c_str()) };
-    fn(zip.get());
+    auto const res{ fn(zip.get()) };
+    if(res.is_err())
+    {
+      return res.expect_err();
+    }
 
     return ok();
   }
@@ -427,9 +431,11 @@ namespace jank::runtime::module
       bool source_exists{};
       if(is_archive)
       {
-        auto const res{ visit_jar_entry(*this, [&](zip_t * const zip) {
-          source_exists = static_cast<bool>(zip_entry_isdir(zip));
-        }) };
+        auto const res{ visit_jar_entry(*this,
+                                        [&](zip_t * const zip) -> jtl::result<void, error_ref> {
+                                          source_exists = static_cast<bool>(zip_entry_isdir(zip));
+                                          return ok();
+                                        }) };
         if(res.is_err())
         {
           return false;
@@ -565,7 +571,12 @@ namespace jank::runtime::module
     }
 
     auto const entry_handle{ open_zip_entry(zip.get(), file_path) };
-    return ok(file_view{ path, read_zip_entry(zip.get()) });
+    auto const read_result{ read_zip_entry(zip.get()) };
+    if(read_result.is_err())
+    {
+      return read_result.expect_err();
+    }
+    return ok(file_view{ path, read_result.expect_ok() });
   }
 
   static jtl::result<file_view, error_ref> map_file(jtl::immutable_string const &path)
@@ -649,9 +660,17 @@ namespace jank::runtime::module
     if(entry.archive_path.is_some())
     {
       file_view file;
-      auto const visit_res{ visit_jar_entry(entry, [&](zip_t * const zip) {
-        file = file_view{ entry.archive_path.unwrap(), read_zip_entry(zip) };
-      }) };
+      auto const visit_res{ visit_jar_entry(entry,
+                                            [&](zip_t * const zip) -> jtl::result<void, error_ref> {
+                                              auto const read_result{ read_zip_entry(zip) };
+                                              if(read_result.is_err())
+                                              {
+                                                return read_result.expect_err();
+                                              }
+                                              file = file_view{ entry.archive_path.unwrap(),
+                                                                read_result.expect_ok() };
+                                              return ok();
+                                            }) };
       if(visit_res.is_err())
       {
         return visit_res.expect_err();
@@ -985,9 +1004,17 @@ namespace jank::runtime::module
     if(entry.archive_path.is_some())
     {
       jtl::result<void, error_ref> res{ ok() };
-      auto const visit_res{ visit_jar_entry(entry, [&](zip_t * const zip) {
-        res = __rt_ctx->eval_cpp_string(read_zip_entry(zip));
-      }) };
+      auto const visit_res{ visit_jar_entry(entry,
+                                            [&](zip_t * const zip) -> jtl::result<void, error_ref> {
+                                              auto const read_result{ read_zip_entry(zip) };
+                                              if(read_result.is_err())
+                                              {
+                                                return read_result.expect_err();
+                                              }
+                                              res = __rt_ctx->eval_cpp_string(
+                                                read_result.expect_ok());
+                                              return ok();
+                                            }) };
       if(res.is_err())
       {
         return res;
@@ -1025,13 +1052,22 @@ namespace jank::runtime::module
   {
     if(entry.archive_path.is_some())
     {
-      auto const res{ visit_jar_entry(entry, [&](zip_t * const zip) {
-        /* TODO: Helper to get a jar file path like this. */
-        auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
-        context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
-          std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
-        __rt_ctx->eval_string(read_zip_entry(zip));
-      }) };
+      auto const res{ visit_jar_entry(
+        entry,
+        [&](zip_t * const zip) -> jtl::result<void, error_ref> {
+          auto const read_result{ read_zip_entry(zip) };
+          if(read_result.is_err())
+          {
+            return read_result.expect_err();
+          }
+
+          /* TODO: Helper to get a jar file path like this. */
+          auto const path{ util::format("{}:{}", entry.archive_path.unwrap(), entry.path) };
+          context::binding_scope const preserve{ runtime::obj::persistent_hash_map::create_unique(
+            std::make_pair(__rt_ctx->current_file_var, make_box(path))) };
+          __rt_ctx->eval_string(read_result.expect_ok());
+          return ok();
+        }) };
       if(res.is_err())
       {
         return res;
