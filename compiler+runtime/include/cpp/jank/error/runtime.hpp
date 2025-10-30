@@ -11,6 +11,4 @@ namespace jank::error
                                   read::source const &box_source);
   error_ref
   runtime_non_metadatable_value(jtl::immutable_string const &message, read::source const &source);
-  error_ref
-  internal_runtime_failure(jtl::immutable_string const &message, read::source const &source);
 }

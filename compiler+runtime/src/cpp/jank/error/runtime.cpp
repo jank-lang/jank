@@ -26,10 +26,4 @@ namespace jank::error
   {
     return make_error(kind::runtime_non_metadatable_value, message, source);
   }
-
-  error_ref
-  internal_runtime_failure(jtl::immutable_string const &message, read::source const &source)
-  {
-    return make_error(kind::internal_runtime_failure, message, source);
-  }
 }
