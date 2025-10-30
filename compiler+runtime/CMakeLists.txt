@@ -268,6 +268,35 @@ target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
 set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libnanobench.a ----
 
+# ---- libjankzip.a ----
+
+set(
+  jankzip_sources
+  third-party/zip/src/zip.c
+)
+
+add_library(jankzip_lib STATIC ${jankzip_sources})
+
+# Not our code. Don't try to lint it.
+set_source_files_properties(${jankzip_sources} PROPERTIES SKIP_LINTING ON)
+
+target_include_directories(
+    jankzip_lib
+    SYSTEM
+    PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
+)
+
+set_property(TARGET jankzip_lib PROPERTY OUTPUT_NAME jankzip)
+
+target_compile_options(jankzip_lib PUBLIC -w)
+
+#set_target_properties(jankzip_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjankzip.a ----
+
 # The sources for jank are used for both the compiler and its tests, so
 # they're just pulled into a static library. It's important that this
 # remains a static lib, since these symbols need to be accessible in the
@@ -295,11 +324,11 @@ configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
 set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge")
 set(jank_lib_standalone_deps
   jank_lib
-  libzippp::libzippp
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
+  jankzip_lib
   bdwgc::gc bdwgc::gctba
   folly_lib
   clangCppInterOp
@@ -338,12 +367,10 @@ set(BUILD_SHARED_LIBS OFF)
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/ftxui.cmake)
-include(cmake/dependency/libzippp.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
-find_package(LibZip REQUIRED)
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 # ---- Other dependencies ----
 
@@ -531,7 +558,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/libzippp/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
@@ -539,13 +566,11 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   ${OPENSSL_INCLUDE_DIR}
-  ${LIBZIP_INCLUDE_DIR}
 )
 
 target_link_libraries(
   jank_lib PRIVATE
   clangCppInterOp
-  libzippp::libzippp
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
@@ -694,7 +719,7 @@ target_link_options(jank_exe_phase_1 PRIVATE ${jank_linker_flags} -L ${CMAKE_BIN
 target_link_libraries(
   jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}
-  libzip::zip z
+  z
   LLVM clang-cpp
   OpenSSL::Crypto
 )
@@ -795,7 +820,7 @@ if(jank_test)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}
-    libzip::zip z
+    z
     LLVM clang-cpp
     OpenSSL::Crypto
     doctest::doctest

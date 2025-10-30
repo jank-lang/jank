@@ -23,6 +23,7 @@ namespace jtl
 
   using uptr = unsigned long long;
   using usize = uptr;
+  using ssize = long long;
   using uhash = u32;
   using nullptr_t = decltype(nullptr);
 
@@ -100,6 +101,7 @@ namespace jank
 
   using jtl::uptr;
   using jtl::usize;
+  using jtl::ssize;
   using jtl::uhash;
   using jtl::nullptr_t;
 }
