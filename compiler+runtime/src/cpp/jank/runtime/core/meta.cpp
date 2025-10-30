@@ -6,6 +6,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/error/runtime.hpp>
 
 namespace jank::runtime
 {
@@ -35,7 +36,7 @@ namespace jank::runtime
   object_ref with_meta(object_ref const o, object_ref const m)
   {
     return visit_object(
-      [](auto const typed_o, object_ref const m) -> object_ref {
+      [&o](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -44,9 +45,11 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not metadatable: {} [{}]",
-                                                 typed_o->to_code_string(),
-                                                 object_type_str(typed_o->base.type)) };
+          throw error::runtime_non_metadatable_value(
+            util::format("{} [{}] can't hold any metadata.",
+                         typed_o->to_code_string(),
+                         object_type_str(o->type)),
+            object_source(o));
         }
       },
       o,

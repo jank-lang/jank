@@ -114,6 +114,7 @@ namespace jank::error
     system_failure,
 
     runtime_invalid_unbox,
+    runtime_non_metadatable_value,
     internal_runtime_failure,
 
     internal_failure,
@@ -314,6 +315,8 @@ namespace jank::error
 
       case kind::runtime_invalid_unbox:
         return "runtime/invalid-unbox";
+      case kind::runtime_non_metadatable_value:
+        return "runtime/non-metadatable-value";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
 
