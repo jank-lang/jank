@@ -171,7 +171,7 @@ namespace jank::runtime::module
       return error::internal_runtime_failure(
         util::format("Failed to read jar entry '{}' with error '{}'.",
                      entry_name,
-                     zip_strerror(read_result)));
+                     zip_strerror(static_cast<int>(read_result))));
     }
 
     sb.pos = read_result;
