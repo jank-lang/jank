@@ -40,6 +40,7 @@
     ;clojure.core-test.drop ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     ;clojure.core-test.drop-last ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.drop-while ; Assertion failed! val.is_some(), In clojure.core-test.drop-while$fn_8-90, duplicate definition of symbol '_fn_55_1', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
+    ;clojure.core-test.empty ; expected: (= (quote ()) (empty (range))) actual: (not (= () nil))
     ;clojure.core-test.even-qmark ; Uncaught exception: invalid object type: 3, Expecting whitespace after the last token. due to M.
     ;clojure.core-test.false-qmark ; TODO: port double, Expecting whitespace after the last token. due to M.
     clojure.core-test.first ; In clojure.core-test.first$fn_2-61, duplicate definition of symbol '_jank_global_init_60'
