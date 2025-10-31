@@ -36,4 +36,4 @@
 	url = https://github.com/jank-lang/stduuid.git
 [submodule "compiler+runtime/third-party/zip"]
 	path = compiler+runtime/third-party/zip
-	url = git@github.com:jank-lang/zip.git
+	url = https://github.com/jank-lang/zip.git
