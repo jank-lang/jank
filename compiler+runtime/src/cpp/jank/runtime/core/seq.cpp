@@ -18,6 +18,7 @@
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>
 
@@ -933,7 +934,8 @@ namespace jank::runtime
 
         if constexpr(behavior::collection_like<T>)
         {
-          return T::empty();
+          auto const empty{ T::empty() };
+          return with_meta(empty, meta(typed_o));
         }
         else
         {
