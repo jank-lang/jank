@@ -1205,20 +1205,33 @@ namespace jank::read::lex
           {
             ++pos;
             auto const after_dd_colon(peek());
-            if(after_dd_colon.is_ok() && after_dd_colon.expect_ok().character == '/')
+
+            /* Invalid ":: " source found. */
+            if(after_dd_colon.is_err())
             {
-              /* Invalid ::/ pattern found. Consume the entire invalid token. */
+              return error::lex_invalid_keyword(
+                "A auto-resolved keyword must contain a valid symbol after the '::'.",
+                { token_start, pos });
+            }
+
+            auto const ch{ after_dd_colon.expect_ok().character };
+
+            /* Invalid ::/, ::), etc. pattern found. */
+            if(after_dd_colon.is_ok() && (ch == '/' || !is_symbol_char(ch)))
+            {
+              /* Consume the entire invalid token. */
               while(true)
               {
                 auto const result(convert_to_codepoint(file.substr(pos), pos));
-                if(result.is_err() || !is_symbol_char(result.expect_ok().character))
+                if(result.is_err() || !is_symbol_char(ch))
                 {
                   break;
                 }
                 pos += result.expect_ok().len;
               }
-              return error::lex_invalid_keyword("An auto-resolved keyword may not start with '/'.",
-                                                { token_start, pos });
+              return error::lex_invalid_keyword(
+                util::format("An auto-resolved keyword may not start with '{}'.", ch),
+                { token_start, pos });
             }
           }
           while(true)
