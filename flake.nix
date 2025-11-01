@@ -16,15 +16,7 @@
         lib,
         ...
       }: let
-        # remember to bump this rev/sha with new llvm commits
-        llvm-jank = pkgs.callPackage ./llvm.nix {
-          src = pkgs.fetchFromGitHub {
-            owner = "jank-lang";
-            repo = "llvm-project";
-            rev = "4e5928689f2399dc6aede8dde2536a98a96a1802";
-            sha256 = "sha256-mC8KHuiQ2ny6HkVeYEBGsSV5rPLuaO6h0u6SsD/mdzo=";
-          };
-        };
+        llvm = pkgs.llvmPackages_git;
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
@@ -38,6 +30,19 @@
           rev = "v1.5.7";
           sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
         };
+        cmakeCxxFlags =
+          lib.concatStringsSep " "
+          [
+            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-cflags"))
+            (lib.trim (lib.readFile "${llvm.clang}/nix-support/libc-crt1-cflags"))
+            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-ldflags"))
+            "-Wl,-rpath,${pkgs.stdenv.cc.libc}/lib"
+            "-L${lib.getLib llvm.libllvm.lib}/lib"
+            "-L${lib.getLib pkgs.bzip2}/lib"
+            "-L${lib.getLib pkgs.openssl}/lib"
+            "-L${lib.getLib pkgs.zlib}/lib"
+            "-L${lib.getLib pkgs.zstd}/lib"
+          ];
       in {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
@@ -58,19 +63,46 @@
               ];
             });
 
-            nativeBuildInputs = with pkgs; [git cmake ninja llvm-jank];
-            buildInputs = with pkgs; [libzip openssl];
-            checkInputs = with pkgs; [glibcLocales doctest];
+            nativeBuildInputs =
+              [
+                llvm.libclang.dev
+              ]
+              ++ (with pkgs; [
+                cmake
+                git
+                ninja
+              ]);
+
+            buildInputs =
+              [
+                llvm.libllvm.dev
+              ]
+              ++ (with pkgs; [
+                bzip2
+                openssl
+                zstd
+              ]);
+
+            checkInputs = with pkgs; [
+              doctest
+              glibcLocales
+            ];
 
             postPatch = ''
               patchShebangs ./compiler+runtime/bin/ar-merge
             '';
 
+            preConfigure = ''
+              cmakeFlagsArray+=(
+                "-DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}"
+              )
+            '';
+
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvm-jank}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvm-jank}/bin/clang++"
+              "-DCMAKE_C_COMPILER=${llvm.clang}/bin/clang"
+              "-DCMAKE_CXX_COMPILER=${llvm.clang}/bin/clang++"
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
@@ -98,41 +130,47 @@
         };
 
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            stdenv.cc.cc.lib
+          packages = let
+            cmake' = pkgs.writeShellScriptBin "cmake" ''
+              exec ${pkgs.cmake}/bin/cmake -DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags} "$@"
+            '';
+          in
+            with pkgs; [
+              stdenv.cc.cc.lib
 
-            ## Required tools.
-            cmake
-            ninja
-            pkg-config
-            llvm-jank
+              ## Required tools.
+              cmake
+              cmake'
+              ninja
+              pkg-config
+              llvm.libclang
+              llvm.libllvm
 
-            ## Required libs.
-            boehmgc
-            libzip
-            openssl
+              ## Required libs.
+              boehmgc
+              openssl
 
-            ## Dev tools.
-            babashka
-            entr
-            gcovr
-            lcov
-            git
-            nixd
-            shellcheck
-            # For clangd & clang-tidy.
-            clang-tools
-            gdb
-            clangbuildanalyzer
-            openjdk
+              ## Dev tools.
+              babashka
+              entr
+              gcovr
+              lcov
+              git
+              nixd
+              shellcheck
+              # For clangd & clang-tidy.
+              clang-tools
+              gdb
+              clangbuildanalyzer
+              openjdk
 
-            ## Dev libs.
-            doctest
-          ];
+              ## Dev libs.
+              doctest
+            ];
 
           shellHook = ''
-            export CC=${llvm-jank}/bin/clang
-            export CXX=${llvm-jank}/bin/clang++
+            export CC=${llvm.clang}/bin/clang
+            export CXX=${llvm.clang}/bin/clang++
             export ASAN_OPTIONS=detect_leaks=0
           '';
 

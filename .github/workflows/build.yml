@@ -294,4 +294,4 @@ jobs:
     - name: "Build jank"
       run: nix build .?submodules=1 -L
     - name: "Check health"
-      run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
+      run: nix run .?submodules=1 check-health
