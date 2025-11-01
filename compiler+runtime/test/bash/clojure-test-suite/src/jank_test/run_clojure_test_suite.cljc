@@ -56,7 +56,7 @@
     ;clojure.core-test.int-qmark ; Falied a test. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.integer-qmark ; Failed a test. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.intern ;unloadable
-    ;clojure.core-test.keyword ;https://github.com/jank-lang/jank/issues/246
+    clojure.core-test.keyword
     clojure.core-test.keyword-qmark ; Expecting whitespace after the last token. due to M.
     ;clojure.core-test.long  ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
     ;clojure.core-test.max ; Unable to resolve symbol 'Exception'.
