@@ -1342,7 +1342,21 @@ namespace jank::analyze
       current_frame->lift_constant(qualified_sym->meta.unwrap());
     }
 
-    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, value_expr);
+    auto const meta{
+      analyze(qualified_sym->meta.unwrap(), current_frame, expression_position::value, fn_ctx, true)
+    };
+
+    if(meta.is_err())
+    {
+      return meta;
+    }
+
+    return jtl::make_ref<expr::def>(position,
+                                    current_frame,
+                                    true,
+                                    qualified_sym,
+                                    meta.expect_ok(),
+                                    value_expr);
   }
 
   processor::expression_result

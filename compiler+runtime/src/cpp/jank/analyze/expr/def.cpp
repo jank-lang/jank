@@ -9,9 +9,11 @@ namespace jank::analyze::expr
            local_frame_ptr const frame,
            bool const needs_box,
            runtime::obj::symbol_ref const name,
+           jtl::option<expression_ref> const &meta,
            jtl::option<expression_ref> const &value)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
+    , meta{ meta }
     , value{ value }
   {
   }
