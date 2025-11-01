@@ -61,3 +61,5 @@ node_modules
 # MacOS
 .DS_Store
 
+# Nix (outcome of `nix build`)
+/result
