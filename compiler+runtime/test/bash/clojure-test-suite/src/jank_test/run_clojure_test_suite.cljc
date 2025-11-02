@@ -31,6 +31,7 @@
     ;clojure.core-test.char ; TODO: port char
     ;clojure.core-test.char-qmark ; TODO: port double, Read error (405 - 423): number out of rangeExpecting whitespace after the last token. due to M.
     ;clojure.core-test.compare ; Uncaught exception: not comparable: []
+    clojure.core-test.conj
     ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.dec ; TODO underflow \n Uncaught exception: failed
     clojure.core-test.decimal-qmark

@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     persistent_list(persistent_list &&) noexcept = default;
     persistent_list(persistent_list const &) = default;
     persistent_list(value_type const &d);
-    persistent_list(object_ref meta, value_type const &d);
+    persistent_list(jtl::option<object_ref> const &meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */
