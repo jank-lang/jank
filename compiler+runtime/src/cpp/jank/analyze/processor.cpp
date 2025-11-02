@@ -1335,28 +1335,28 @@ namespace jank::analyze
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
 
+    jtl::option<expression_ref> meta{};
+
     /* Lift this so it can be used during codegen. */
     /* TODO: I don't think lifting meta is actually needed anymore. Verify. */
     if(qualified_sym->meta.is_some())
     {
       current_frame->lift_constant(qualified_sym->meta.unwrap());
+      auto const meta_result{ analyze(qualified_sym->meta.unwrap(),
+                                      current_frame,
+                                      expression_position::value,
+                                      fn_ctx,
+                                      true) };
+
+      if(meta_result.is_err())
+      {
+        return meta_result;
+      }
+
+      meta = meta_result.expect_ok();
     }
 
-    auto const meta{
-      analyze(qualified_sym->meta.unwrap(), current_frame, expression_position::value, fn_ctx, true)
-    };
-
-    if(meta.is_err())
-    {
-      return meta;
-    }
-
-    return jtl::make_ref<expr::def>(position,
-                                    current_frame,
-                                    true,
-                                    qualified_sym,
-                                    meta.expect_ok(),
-                                    value_expr);
+    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, meta, value_expr);
   }
 
   processor::expression_result
