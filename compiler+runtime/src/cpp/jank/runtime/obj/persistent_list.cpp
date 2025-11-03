@@ -11,7 +11,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_list::persistent_list(object_ref const meta,
+  persistent_list::persistent_list(jtl::option<object_ref> const &meta,
                                    runtime::detail::native_persistent_list const &d)
     : data{ d }
     , meta{ meta }
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
   persistent_list_ref persistent_list::conj(object_ref head) const
   {
     auto l(data.conj(head));
-    auto ret(make_box<persistent_list>(std::move(l)));
+    auto ret(make_box<persistent_list>(meta, std::move(l)));
     return ret;
   }
 
