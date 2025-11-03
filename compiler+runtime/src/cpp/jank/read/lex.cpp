@@ -1230,9 +1230,9 @@ namespace jank::read::lex
                 pos += result.expect_ok().len;
               }
               return error::lex_invalid_keyword(
-                ch == '/' ? "The namespace for an auto-resolved keyword can not be empty."
-                          : util::format("An unexpected end to an auto-resolved keyword. Expected "
-                                         "a valid symbol got '{}'.",
+                ch == '/' ? "The namespace symbol before '/' is missing."
+                          : util::format("This keyword unexpectedly ended. A symbol was expected, "
+                                         "here but '{}' was found.",
                                          ch),
                 { token_start, pos });
             }
