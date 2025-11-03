@@ -1210,7 +1210,7 @@ namespace jank::read::lex
             if(after_dd_colon.is_err())
             {
               return error::lex_invalid_keyword(
-                "An auto-resolved keyword must contain a valid symbol after the '::'.",
+                "An auto-resolved keyword must contain a valid symbol after '::'.",
                 { token_start, pos });
             }
 
@@ -1230,8 +1230,10 @@ namespace jank::read::lex
                 pos += result.expect_ok().len;
               }
               return error::lex_invalid_keyword(
-                ch == '/' ? "An auto-resolved keyword may not specify it's own namespace."
-                          : "An unexpected end to an auto-resolved keyword.",
+                ch == '/' ? "The namespace for an auto-resolved keyword can not be empty."
+                          : util::format("An unexpected end to an auto-resolved keyword. Expected "
+                                         "a valid symbol got '{}'.",
+                                         ch),
                 { token_start, pos });
             }
           }
