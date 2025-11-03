@@ -20,8 +20,7 @@ namespace jank::runtime::obj
     *lock = *other_lock;
   }
 
-  lazy_sequence &
-  lazy_sequence::operator=(lazy_sequence const &other)
+  lazy_sequence &lazy_sequence::operator=(lazy_sequence const &other)
   {
     if(this == &other)
     {
