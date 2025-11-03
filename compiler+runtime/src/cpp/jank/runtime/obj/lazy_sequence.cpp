@@ -11,54 +11,100 @@
 
 namespace jank::runtime::obj
 {
+  lazy_sequence::lazy_sequence(lazy_sequence const &other)
+  {
+    base = other.base;
+    meta = other.meta;
+    auto other_lock(other.lock_state());
+    auto lock(lock_state());
+    *lock = *other_lock;
+  }
+
+  lazy_sequence &
+  lazy_sequence::operator=(lazy_sequence const &other)
+  {
+    if(this == &other)
+    {
+      return *this;
+    }
+
+    base = other.base;
+    meta = other.meta;
+    auto other_lock(other.lock_state());
+    auto lock(lock_state());
+    *lock = *other_lock;
+    return *this;
+  }
+
   lazy_sequence::lazy_sequence(object_ref const fn)
-    : fn{ fn }
   {
     jank_debug_assert(fn.is_some());
+    auto lock(lock_state());
+    lock->fn = fn;
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
-    : fn{ fn }
-    , s{ sequence }
   {
+    auto lock(lock_state());
+    lock->fn = fn;
+    lock->s = sequence;
+  }
+
+  folly::Synchronized<lazy_sequence::state, std::recursive_mutex>::LockedPtr
+  lazy_sequence::lock_state() const
+  {
+    return const_cast<folly::Synchronized<state, std::recursive_mutex> &>(state_).lock();
+  }
+
+  void lazy_sequence::force_locked(
+    folly::Synchronized<state, std::recursive_mutex>::LockedPtr &lock) const
+  {
+    if(lock->fn.is_nil())
+    {
+      return;
+    }
+
+    lock->sv = dynamic_call(lock->fn);
+    lock->fn = jank_nil;
   }
 
   object_ref lazy_sequence::seq() const
   {
     realize();
-    return s;
+    auto lock(lock_state());
+    return lock->s;
   }
 
   lazy_sequence_ref lazy_sequence::fresh_seq() const
   {
-    realize();
-    if(s.is_nil())
+    auto const sequence(seq());
+    if(sequence.is_nil())
     {
       return {};
     }
-    auto const r(runtime::fresh_seq(s));
+    auto const r(runtime::fresh_seq(sequence));
     jank_debug_assert(r != jank_nil);
     return make_box<lazy_sequence>(jank_nil, r);
   }
 
   object_ref lazy_sequence::first() const
   {
-    realize();
-    if(s.is_nil())
+    auto const sequence(seq());
+    if(sequence.is_nil())
     {
-      return s;
+      return sequence;
     }
-    return runtime::first(s);
+    return runtime::first(sequence);
   }
 
   object_ref lazy_sequence::next() const
   {
-    realize();
-    if(s.is_nil())
+    auto const sequence(seq());
+    if(sequence.is_nil())
     {
       return {};
     }
-    auto const n(runtime::next(s));
+    auto const n(runtime::next(sequence));
     return n;
   }
 
@@ -99,46 +145,43 @@ namespace jank::runtime::obj
 
   void lazy_sequence::realize() const
   {
-    /* TODO: Lock. */
-    force();
-    if(sv.is_some())
+    auto lock(lock_state());
+    force_locked(lock);
+    if(lock->sv.is_nil())
     {
-      auto ls{ sv };
-      sv = jank_nil;
-      if(ls.is_some() && ls->type == object_type::lazy_sequence)
-      {
-        ls = unwrap(ls);
-      }
-      s = runtime::seq(ls);
+      return;
     }
+
+    auto ls(lock->sv);
+    lock->sv = jank_nil;
+    if(ls.is_some() && ls->type == object_type::lazy_sequence)
+    {
+      ls = unwrap(ls);
+    }
+    lock->s = runtime::seq(ls);
   }
 
   void lazy_sequence::force() const
   {
-    if(fn.is_some())
-    {
-      sv = dynamic_call(fn);
-      fn = jank_nil;
-    }
+    auto lock(lock_state());
+    force_locked(lock);
   }
 
   void lazy_sequence::lock_and_force() const
   {
-    /* TODO: Lock */
-    force();
+    auto lock(lock_state());
+    force_locked(lock);
   }
 
   object_ref lazy_sequence::sval() const
   {
-    if(fn.is_some())
+    auto lock(lock_state());
+    force_locked(lock);
+    if(lock->sv.is_some())
     {
-      lock_and_force();
+      return lock->sv;
     }
-    if(sv.is_some())
-    {
-      return sv;
-    }
-    return s;
+    return lock->s;
   }
 
   object_ref lazy_sequence::unwrap(object_ref ls) const
