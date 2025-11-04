@@ -5465,7 +5465,7 @@
   ;;   (ratio? x) (.bigIntegerValue ^clojure.lang.Ratio x)
   ;;   (number? x) (BigInteger/valueOf (long x))
   ;;   :else (BigInteger. x))
-  (throw "TODO: port biginteger"))
+  (cpp/jank.runtime.to_big_integer x))
 
 (defn bigdec
   "Coerce to BigDecimal"
