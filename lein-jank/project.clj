@@ -5,5 +5,6 @@
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies [[babashka/fs "0.5.20"]
                  [babashka/process "0.5.22"]
-                 [leiningen-core "2.11.2"]]
+                 [leiningen-core "2.11.2"]
+                 [clj-commons/pomegranate "1.2.25"]]
   :eval-in-leiningen true)

@@ -1,4 +1,4 @@
-(ns test-project.core)
+(ns test-project.main)
 
 (defn -main [x]
   (case x

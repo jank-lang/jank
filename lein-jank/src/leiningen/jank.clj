@@ -6,7 +6,8 @@
             [clojure.string :as string]
             [leiningen.core.project :as p]
             [leiningen.core.classpath :as lcp]
-            [leiningen.core.main :as lmain])
+            [leiningen.core.main :as lmain]
+            [leiningen.jank.build :as jank.build])
   (:import [java.io File]))
 
 (defn build-declarative-flag [flag value]
@@ -69,6 +70,7 @@
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
+  (jank.build/build-deps! project)
   (let [cp-str (build-module-path project)]
     (if (:main project)
       (shell-out! project cp-str "run-main" [(:main project)] args)
@@ -79,6 +81,7 @@
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
+  (jank.build/build-deps! project)
   (let [cp-str (build-module-path project)]
     (if (:main project)
       (shell-out! project cp-str "repl" [(:main project)] args)
@@ -89,6 +92,7 @@
 (defn compile!
   "Compile your project to an executable."
   [project & args]
+  (jank.build/build-deps! project)
   (let [cp-str (build-module-path project)]
     (if (:main project)
       (shell-out! project cp-str "compile" [(:main project)] args)
@@ -99,6 +103,7 @@
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
+  (jank.build/build-deps! project)
   (let [cp-str (build-module-path project)]
     (shell-out! project cp-str "compile-module" [] args)))
 
@@ -137,7 +142,9 @@
       (print-help!)
       (lmain/exit 1))))
 
-(def default-project {:aliases {"run" ^{:doc "Run your project, starting at the main entrypoint."}
+(def default-project {:filespecs [{:type :path
+                                   :path "build.clj"}]
+                      :aliases {"run" ^{:doc "Run your project, starting at the main entrypoint."}
                                 ["jank" "run"]
 
                                 "repl" ^{:doc "Start a terminal REPL in your :main ns."}
