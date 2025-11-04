@@ -19,6 +19,7 @@ namespace jank::analyze::expr
     runtime::object_ref to_runtime_data() const;
 
     runtime::obj::symbol_ref sym{};
+    jtl::ptr<void> type{};
     do_ref body;
   };
 

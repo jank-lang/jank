@@ -1,9 +1,12 @@
 #include <cstdarg>
 
+#include <Interpreter/Compatibility.h>
 #include <llvm-c/Target.h>
+#include <llvm/ExecutionEngine/Orc/AbsoluteSymbols.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/ExecutionEngine/Orc/Mangling.h>
 
 #include <utility>
 
@@ -11,7 +14,9 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/aot/resource.hpp>
+#include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/try.hpp>
@@ -507,15 +512,45 @@ extern "C"
     return trans.to_persistent().erase();
   }
 
-  jank_object_ref jank_box(void const * const o)
+  jank_object_ref jank_box(char const * const type, void const * const o)
   {
-    return make_box<obj::opaque_box>(o).erase();
+    return make_box<obj::opaque_box>(o, type).erase();
   }
 
-  void *jank_unbox(jank_object_ref const o)
+  void *jank_unbox(char const * const type, jank_object_ref const o)
   {
     auto const box_obj(reinterpret_cast<object *>(o));
-    return try_object<obj::opaque_box>(box_obj)->data;
+    auto const op_box{ try_object<obj::opaque_box>(box_obj) };
+    if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
+    {
+      throw error::runtime_invalid_unbox(
+        util::format("This opaque box holds a '{}', but it was unboxed as a '{}'.",
+                     op_box->canonical_type,
+                     type),
+        object_source(op_box));
+    }
+
+    return op_box->data;
+  }
+
+  void *jank_unbox_with_source(char const * const type,
+                               jank_object_ref const o,
+                               jank_object_ref const source)
+  {
+    auto const box_obj(reinterpret_cast<object *>(o));
+    auto const source_obj(reinterpret_cast<object *>(source));
+    auto const op_box{ try_object<obj::opaque_box>(box_obj) };
+    if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
+    {
+      throw error::runtime_invalid_unbox(
+        util::format("This opaque box holds a '{}', but it was unboxed as a '{}'.",
+                     op_box->canonical_type,
+                     type),
+        meta_source(source_obj),
+        object_source(op_box));
+    }
+
+    return op_box->data;
   }
 
   jank_arity_flags jank_function_build_arity_flags(jank_u8 const highest_fixed_arity,
@@ -936,34 +971,6 @@ extern "C"
   void jank_throw(jank_object_ref const o)
   {
     throw runtime::object_ref{ reinterpret_cast<object *>(o) };
-  }
-
-  jank_object_ref jank_try(jank_object_ref const try_fn,
-                           jank_object_ref const catch_fn,
-                           jank_object_ref const finally_fn)
-  {
-    util::scope_exit const finally{ [=]() {
-      auto const finally_fn_obj(reinterpret_cast<object *>(finally_fn));
-      if(finally_fn_obj != jank_nil)
-      {
-        dynamic_call(finally_fn_obj);
-      }
-    } };
-
-    auto const try_fn_obj(reinterpret_cast<object *>(try_fn));
-    auto const catch_fn_obj(reinterpret_cast<object *>(catch_fn));
-    if(catch_fn_obj == jank_nil)
-    {
-      return dynamic_call(try_fn_obj).erase();
-    }
-    try
-    {
-      return dynamic_call(try_fn_obj).erase();
-    }
-    catch(object_ref const e)
-    {
-      return dynamic_call(catch_fn_obj, e).erase();
-    }
   }
 
   void jank_profile_enter(char const * const label)

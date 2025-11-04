@@ -80,7 +80,7 @@ namespace jank::runtime
 
     object_ref eval_file(jtl::immutable_string const &path);
     object_ref eval_string(jtl::immutable_string_view const &code);
-    jtl::string_result<void> eval_cpp_string(jtl::immutable_string_view const &code) const;
+    jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string_view const &code) const;
     object_ref read_string(jtl::immutable_string_view const &code);
     native_vector<analyze::expression_ref>
     analyze_string(jtl::immutable_string_view const &code, bool const eval = true);
@@ -96,12 +96,11 @@ namespace jank::runtime
      * Module /meow.cat refers to module meow.cat
      * Module meow.cat refers to foo.bar$meow.cat
      */
-    jtl::result<void, jtl::immutable_string>
+    jtl::result<void, error_ref>
     load_module(jtl::immutable_string_view const &module, module::origin ori);
 
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
-    jtl::result<void, jtl::immutable_string>
-    compile_module(jtl::immutable_string_view const &module);
+    jtl::result<void, error_ref> compile_module(jtl::immutable_string_view const &module);
 
     object_ref eval(object_ref const o);
 

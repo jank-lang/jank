@@ -9,10 +9,12 @@ namespace jank::analyze::expr
                        local_frame_ptr const frame,
                        bool const needs_box,
                        jtl::ptr<void> type,
-                       expression_ref const value_expr)
+                       expression_ref const value_expr,
+                       read::source const &source)
     : expression{ expr_kind, position, frame, needs_box }
     , type{ type }
     , value_expr{ value_expr }
+    , source{ source }
   {
   }
 

@@ -6,6 +6,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/error/runtime.hpp>
 
 namespace jank::runtime
 {
@@ -35,7 +36,7 @@ namespace jank::runtime
   object_ref with_meta(object_ref const o, object_ref const m)
   {
     return visit_object(
-      [](auto const typed_o, object_ref const m) -> object_ref {
+      [&o](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(behavior::metadatable<T>)
@@ -44,9 +45,11 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not metadatable: {} [{}]",
-                                                 typed_o->to_code_string(),
-                                                 object_type_str(typed_o->base.type)) };
+          throw error::runtime_non_metadatable_value(
+            util::format("{} [{}] can't hold any metadata.",
+                         typed_o->to_code_string(),
+                         object_type_str(o->type)),
+            object_source(o));
         }
       },
       o,
@@ -154,48 +157,59 @@ namespace jank::runtime
     return meta_source(meta);
   }
 
-  obj::persistent_hash_map_ref
-  source_to_meta(read::source_position const &start, read::source_position const &end)
+  obj::persistent_hash_map_ref source_to_meta(read::source const &source)
   {
-    return source_to_meta(__rt_ctx->intern_keyword("jank/source").expect_ok(), start, end);
-  }
+    auto const source_map{ obj::persistent_array_map::empty()->to_transient() };
 
-  obj::persistent_hash_map_ref source_to_meta(object_ref const key,
-                                              read::source_position const &start,
-                                              read::source_position const &end)
-  {
-    auto const source{ obj::persistent_array_map::empty()->to_transient() };
-
-    auto const module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) };
-    if(runtime::module::is_core_module(module))
+    if(runtime::module::is_core_module(source.module))
     {
-      source->assoc_in_place(__rt_ctx->intern_keyword("module").expect_ok(), make_box(module));
+      source_map->assoc_in_place(__rt_ctx->intern_keyword("module").expect_ok(),
+                                 make_box(source.module));
     }
 
-    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    if(file.is_some())
+    if(source.file != read::no_source_path)
     {
-      source->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(), file);
+      source_map->assoc_in_place(__rt_ctx->intern_keyword("file").expect_ok(),
+                                 make_box(source.file));
     }
 
     auto const start_map{ obj::persistent_array_map::create_unique(
       __rt_ctx->intern_keyword("offset").expect_ok(),
-      make_box(start.offset),
+      make_box(source.start.offset),
       __rt_ctx->intern_keyword("line").expect_ok(),
-      make_box(start.line),
+      make_box(source.start.line),
       __rt_ctx->intern_keyword("col").expect_ok(),
-      make_box(start.col)) };
+      make_box(source.start.col)) };
     auto const end_map{ obj::persistent_array_map::create_unique(
       __rt_ctx->intern_keyword("offset").expect_ok(),
-      make_box(end.offset),
+      make_box(source.end.offset),
       __rt_ctx->intern_keyword("line").expect_ok(),
-      make_box(end.line),
+      make_box(source.end.line),
       __rt_ctx->intern_keyword("col").expect_ok(),
-      make_box(end.col)) };
-    source->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
-    source->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
+      make_box(source.end.col)) };
+    source_map->assoc_in_place(__rt_ctx->intern_keyword("start").expect_ok(), start_map);
+    source_map->assoc_in_place(__rt_ctx->intern_keyword("end").expect_ok(), end_map);
 
-    return obj::persistent_hash_map::create_unique(std::make_pair(key, source->to_persistent()));
+    auto const key{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
+    return obj::persistent_hash_map::create_unique(
+      std::make_pair(key, source_map->to_persistent()));
+  }
+
+  obj::persistent_hash_map_ref
+  source_to_meta(read::source_position const &start, read::source_position const &end)
+  {
+    read::source source{ start, end };
+
+    auto const module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) };
+    if(runtime::module::is_core_module(module))
+    {
+      source.module = module;
+    }
+
+    auto const file{ runtime::__rt_ctx->current_file_var->deref() };
+    source.file = runtime::to_string(file);
+
+    return source_to_meta(source);
   }
 
   object_ref strip_source_from_meta(object_ref const meta)

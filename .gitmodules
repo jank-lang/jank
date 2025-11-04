@@ -10,9 +10,6 @@
 [submodule "compiler+runtime/third-party/cli11"]
 	path = compiler+runtime/third-party/cli11
 	url = https://github.com/jank-lang/CLI11.git
-[submodule "compiler+runtime/third-party/libzippp"]
-	path = compiler+runtime/third-party/libzippp
-	url = https://github.com/jank-lang/libzippp.git
 [submodule "compiler+runtime/third-party/boost-preprocessor"]
 	path = compiler+runtime/third-party/boost-preprocessor
 	url = https://github.com/jank-lang/boost-preprocessor.git
@@ -37,3 +34,6 @@
 [submodule "compiler+runtime/third-party/stduuid"]
 	path = compiler+runtime/third-party/stduuid
 	url = https://github.com/jank-lang/stduuid.git
+[submodule "compiler+runtime/third-party/zip"]
+	path = compiler+runtime/third-party/zip
+	url = https://github.com/jank-lang/zip.git

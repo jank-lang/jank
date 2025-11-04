@@ -1,0 +1,3 @@
+(let* [n #cpp 42]
+  (if (cpp/== (cpp/value "42") n)
+    :success))

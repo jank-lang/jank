@@ -1,0 +1,11 @@
+; https://github.com/jank-lang/jank/issues/552
+(cpp/raw "
+namespace jank::cpp::cppinterop::pass_tuple
+{
+  std::tuple<int> foo{ 55 };
+  decltype(auto) first(auto &t)
+  { return std::get<0>(t); }
+}")
+(let* [i (cpp/jank.cpp.cppinterop.pass_tuple.first cpp/jank.cpp.cppinterop.pass_tuple.foo)]
+  (if (= 55 i)
+    :success))

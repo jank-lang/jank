@@ -28,6 +28,7 @@ namespace jank::analyze::cpp_util
   native_vector<jtl::ptr<void>> find_adl_scopes(native_vector<jtl::ptr<void>> const &starters);
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);
+  void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);

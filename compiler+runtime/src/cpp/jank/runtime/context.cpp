@@ -29,6 +29,7 @@
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/error/codegen.hpp>
+#include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
 
 namespace jank::runtime
@@ -144,9 +145,7 @@ namespace jank::runtime
     auto const file(module::loader::read_file(path));
     if(file.is_err())
     {
-      throw std::runtime_error{
-        util::format("unable to map file {} due to error: {}", path, file.expect_err())
-      };
+      throw file.expect_err();
     }
 
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
@@ -224,7 +223,8 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::string_result<void> context::eval_cpp_string(jtl::immutable_string_view const &code) const
+  jtl::result<void, error_ref>
+  context::eval_cpp_string(jtl::immutable_string_view const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
@@ -232,9 +232,8 @@ namespace jank::runtime
     if(!parse_res)
     {
       /* TODO: Helper to turn an llvm::Error into a string. */
-      jtl::immutable_string const res{ "Unable to compile provided C++ source." };
       llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-      return err(res);
+      return error::runtime_invalid_cpp_eval();
     }
     auto &partial_tu{ parse_res.get() };
 
@@ -249,9 +248,8 @@ namespace jank::runtime
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
     if(exec_res)
     {
-      jtl::immutable_string const res{ "Unable to compile provided C++ source." };
       llvm::logAllUnhandledErrors(std::move(exec_res), llvm::errs(), "error: ");
-      return err(res);
+      return error::runtime_invalid_cpp_eval();
     }
     return ok();
   }
@@ -307,7 +305,7 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::result<void, jtl::immutable_string>
+  jtl::result<void, error_ref>
   context::load_module(jtl::immutable_string_view const &module, module::origin const ori)
   {
     auto const ns(current_ns());
@@ -337,16 +335,15 @@ namespace jank::runtime
     }
     catch(std::exception const &e)
     {
-      return err(e.what());
+      return error::runtime_unable_to_load_module(e.what());
     }
     catch(object_ref const &e)
     {
-      return err(runtime::to_code_string(e));
+      return error::runtime_unable_to_load_module(runtime::to_code_string(e));
     }
   }
 
-  jtl::result<void, jtl::immutable_string>
-  context::compile_module(jtl::immutable_string_view const &module)
+  jtl::result<void, error_ref> context::compile_module(jtl::immutable_string_view const &module)
   {
     module_dependencies.clear();
 

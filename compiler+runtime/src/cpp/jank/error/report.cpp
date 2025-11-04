@@ -474,15 +474,15 @@ namespace jank::error
     auto file(runtime::module::loader::read_file(s.file));
     if(file.is_err())
     {
-      util::println("failed to read file '{}'", file.expect_err());
       if(s.file != read::no_source_path)
       {
         file = runtime::__rt_ctx->module_loader.read_module(s.module);
       }
       if(file.is_err())
       {
-        return window(text(util::format(" {} ", s.file)),
-                      hbox({ text(util::format("Unable to map file: {}", file.expect_err())) }));
+        return window(
+          text(util::format(" {} ", s.file)),
+          hbox({ text(util::format("Unable to map file: {}", file.expect_err()->message)) }));
       }
     }
 

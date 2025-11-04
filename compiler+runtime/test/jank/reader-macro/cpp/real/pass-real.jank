@@ -1,0 +1,3 @@
+(let* [f #cpp 4.2]
+  (if (cpp/== (cpp/value "4.2") f)
+    :success))

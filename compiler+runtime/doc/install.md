@@ -24,7 +24,7 @@ brew update
 brew reinstall jank-lang/jank/jank
 ```
 
-## Ubuntu Linux (24.04, 24.10)
+## Ubuntu Linux (24.04, 24.10, 25.04)
 ### Install
 We have binary jank packages in our PPA, so installation is quick and easy.
 

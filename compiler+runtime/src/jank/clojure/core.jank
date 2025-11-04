@@ -5434,7 +5434,7 @@
   "Returns true if n is a BigDecimal"
   [n]
   ;; (instance? BigDecimal n)
-  (throw "TODO: port decimal?"))
+  (cpp/jank.runtime.is_big_decimal n))
 
 (defn rational?
   "Returns true if n is a rational number"
@@ -5470,15 +5470,7 @@
 (defn bigdec
   "Coerce to BigDecimal"
   [x]
-  ;; (cond
-  ;;   (decimal? x) x
-  ;;   (float? x) (. BigDecimal valueOf (double x))
-  ;;   (ratio? x) (/ (BigDecimal. (.numerator ^clojure.lang.Ratio x)) (.denominator ^clojure.lang.Ratio x))
-  ;;   (instance? clojure.lang.BigInt x) (.toBigDecimal ^clojure.lang.BigInt x)
-  ;;   (instance? BigInteger x) (BigDecimal. ^BigInteger x)
-  ;;   (number? x) (BigDecimal/valueOf (long x))
-  ;;   :else (BigDecimal. x))
-   (throw "TODO: port bigdec"))
+   (cpp/jank.runtime.to_big_decimal x))
 
 (def ^:dynamic ^:private print-initialized false)
 

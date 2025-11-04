@@ -1774,4 +1774,37 @@ namespace jank::runtime
       throw make_box(util::format("Expected string, got {}", object_type_str(o->type))).erase();
     }
   }
+
+  bool is_big_decimal(object_ref const o)
+  {
+    return o->type == object_type::big_decimal;
+  }
+
+  obj::big_decimal_ref to_big_decimal(object_ref const o)
+  {
+    return visit_number_like(
+      [&](auto const typed_o) -> obj::big_decimal_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::integer>)
+        {
+          return make_box<obj::big_decimal>(typed_o->to_real());
+        }
+        else if constexpr(std::same_as<T, obj::big_integer> || std::same_as<T, obj::real>
+                          || std::same_as<T, obj::ratio>)
+        {
+          return make_box<obj::big_decimal>(typed_o->data);
+        }
+        else if constexpr(std::same_as<T, obj::big_decimal>)
+        {
+          return typed_o;
+        }
+        else
+        {
+          throw make_box(util::format("Expected a numeric value, got {}", object_type_str(o->type)))
+            .erase();
+        }
+      },
+      o);
+  }
 }

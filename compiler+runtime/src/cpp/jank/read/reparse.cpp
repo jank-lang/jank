@@ -32,10 +32,7 @@ namespace jank::read::parse
       }
       if(mapped_file.is_err())
       {
-        return error::internal_parse_failure(
-          util::format("Unable to map module '{}' due to error '{}'.",
-                       module,
-                       mapped_file.expect_err()));
+        return mapped_file.expect_err();
       }
     }
 

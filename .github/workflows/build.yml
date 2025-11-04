@@ -176,13 +176,13 @@ jobs:
         if: runner.os == 'Linux'
         uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs zip zipcmp zipmerge ziptool build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libzip-dev libbz2-dev doctest-dev gcc g++ libgc-dev
+          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev doctest-dev gcc g++ libgc-dev
           # Increment this when the package list changes.
-          version: 8
+          version: 9
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost libzip openssl zlib doctest boost libzip lbzip2 clojure/tools/clojure
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
@@ -294,4 +294,4 @@ jobs:
     - name: "Build jank"
       run: nix build .?submodules=1 -L
     - name: "Check health"
-      run: JANK_SKIP_AOT_CHECK=1 nix run .?submodules=1 check-health
+      run: nix run .?submodules=1 check-health

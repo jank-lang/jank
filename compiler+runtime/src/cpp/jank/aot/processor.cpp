@@ -225,19 +225,15 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
     }
 
-    for(auto const &lib : {
-          "-ljank-standalone",
-          /* Default libraries that jank depends on. */
-          "-lm",
-          "-lstdc++",
-          "-lLLVM",
-          "-lclang-cpp",
-          "-lcrypto",
-          "-lz",
-          "-lzstd",
-          "-lzip",
-          "-lbz2",
-        })
+    for(auto const &lib : { "-ljank-standalone",
+                            /* Default libraries that jank depends on. */
+                            "-lm",
+                            "-lstdc++",
+                            "-lLLVM",
+                            "-lclang-cpp",
+                            "-lcrypto",
+                            "-lz",
+                            "-lzstd" })
     {
       compiler_args.push_back(strdup(lib));
     }
