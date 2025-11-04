@@ -1207,7 +1207,9 @@ namespace jank::read::lex
             auto const after_dd_colon(peek());
 
             /* Invalid ":: " source found. */
-            if(after_dd_colon.is_err())
+            if(after_dd_colon.is_err()
+               || std::iswspace(static_cast<wint_t>(after_dd_colon.expect_ok().character))
+               || is_special_char(after_dd_colon.expect_ok().character))
             {
               return error::lex_invalid_keyword(
                 "An auto-resolved keyword must contain a valid symbol after '::'.",
@@ -1217,13 +1219,13 @@ namespace jank::read::lex
             auto const ch{ after_dd_colon.expect_ok().character };
 
             /* Invalid ::/, ::), etc. pattern found. */
-            if(after_dd_colon.is_ok() && (ch == '/' || !is_symbol_char(ch)))
+            if(after_dd_colon.is_ok() && ch == '/')
             {
               /* Consume the entire invalid token. */
               while(true)
               {
                 auto const result(convert_to_codepoint(file.substr(pos), pos));
-                if(result.is_err() || !is_symbol_char(ch))
+                if(result.is_err() || !is_symbol_char(result.expect_ok().character))
                 {
                   break;
                 }
