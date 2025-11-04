@@ -162,18 +162,39 @@
                                 "check-health" ^{:doc "Perform a health check on your jank install."}
                                 ["jank" "check-health"]}})
 
+(defn deep-merge-metadata
+  "Deep merges metadata from multiple maps. Returns merged metadata or nil."
+  [& maps]
+  (let [metadatas (keep meta maps)]
+    (when (seq metadatas)
+      (apply merge-with
+             (fn [old new]
+               (if (and (map? old) (map? new))
+                 (deep-merge-metadata old new)
+                 new))
+             metadatas))))
+
 (defn deep-merge* [& maps]
   (let [f (fn [old new]
             (if (and (map? old) (map? new))
               (merge-with deep-merge* old new)
-              new))]
-    (if (every? map? maps)
-      (apply merge-with f maps)
-      (last maps))))
+              new))
+        result (if (every? map? maps)
+                 (apply merge-with f maps)
+                 (last maps))]
+    ; Preserve and merge metadata if result is a map.
+    (if (and (map? result) (some meta maps))
+      (with-meta result (apply deep-merge-metadata maps))
+      result)))
 
 (defn deep-merge [& maps]
   (let [maps (filter some? maps)]
-    (apply merge-with deep-merge* maps)))
+    (when (seq maps)
+      (let [result (apply merge-with deep-merge* maps)]
+        ; Ensure top-level metadata is preserved.
+        (if (and (map? result) (some meta maps))
+          (with-meta result (apply deep-merge-metadata maps))
+          result)))))
 
 (defn middleware
   "Inject jank project details into your current project."
