@@ -18,8 +18,7 @@ namespace jank::runtime::obj
     transient_sorted_set() = default;
     transient_sorted_set(transient_sorted_set &&) noexcept = default;
     transient_sorted_set(transient_sorted_set const &) = default;
-    transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d);
-    transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d);
+    transient_sorted_set(value_type const &d);
     transient_sorted_set(value_type &&d);
 
     static transient_sorted_set_ref empty();
