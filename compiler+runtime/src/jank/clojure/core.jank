@@ -5444,27 +5444,11 @@
 (defn bigint
   "Coerce to BigInt"
   [x]
-  ;; (cond
-  ;;   (instance? clojure.lang.BigInt x) x
-  ;;   (instance? BigInteger x) (clojure.lang.BigInt/fromBigInteger x)
-  ;;   (decimal? x) (bigint (.toBigInteger ^BigDecimal x))
-  ;;   (float? x)  (bigint (. BigDecimal valueOf (double x)))
-  ;;   (ratio? x) (bigint (.bigIntegerValue ^clojure.lang.Ratio x))
-  ;;   (number? x) (clojure.lang.BigInt/valueOf (long x))
-  ;;   :else (bigint (BigInteger. x)))
-  (throw "TODO: port bigint"))
+  (cpp/jank.runtime.to_big_integer x))
 
 (defn biginteger
   "Coerce to BigInteger"
   [x]
-  ;; (cond
-  ;;   (instance? BigInteger x) x
-  ;;   (instance? clojure.lang.BigInt x) (.toBigInteger ^clojure.lang.BigInt x)
-  ;;   (decimal? x) (.toBigInteger ^BigDecimal x)
-  ;;   (float? x) (.toBigInteger (. BigDecimal valueOf (double x)))
-  ;;   (ratio? x) (.bigIntegerValue ^clojure.lang.Ratio x)
-  ;;   (number? x) (BigInteger/valueOf (long x))
-  ;;   :else (BigInteger. x))
   (cpp/jank.runtime.to_big_integer x))
 
 (defn bigdec
