@@ -10,7 +10,7 @@
     clojure.core-test.any-qmark
     ;clojure.core-test.associative-qmark ; TODO: port to-array
     clojure.core-test.bigdec ; Unable to resolve symbol 'java.math.BigDecimal'., Read error (312 - 314): invalid number: chars 'M' are invalid for radix 10
-    ;clojure.core-test.bigint ; Unable to resolve symbol 'clojure.lang.BigInt'.
+    ;clojure.core-test.bigint ; TODO: port inc' & dec'.
     ;clojure.core-test.binding ; TODO: port future
     ;clojure.core-test.bit-and ; Uncaught exception: invalid object type: 0
     ;clojure.core-test.bit-and-not ; Uncaught exception: invalid object type: 0
