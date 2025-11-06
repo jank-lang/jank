@@ -347,7 +347,7 @@ namespace jank::codegen
 
     static jtl::immutable_string boxed_local_name(jtl::immutable_string const &local_name)
     {
-      return local_name + "__boxed";
+      return local_name; // + "__boxed";
     }
   }
 
@@ -399,20 +399,21 @@ namespace jank::codegen
     }
   }
 
-  jtl::immutable_string handle::str(bool const needs_box) const
+  jtl::immutable_string handle::str([[maybe_unused]] bool const needs_box) const
   {
-    if(needs_box)
-    {
-      if(boxed_name.empty())
-      {
-        throw std::runtime_error{ util::format("Missing boxed name for handle {}", unboxed_name) };
-      }
-      return boxed_name;
-    }
-    else
-    {
-      return unboxed_name;
-    }
+    return boxed_name;
+    //if(needs_box)
+    //{
+    //  if(boxed_name.empty())
+    //  {
+    //    throw std::runtime_error{ util::format("Missing boxed name for handle {}", unboxed_name) };
+    //  }
+    //  return boxed_name;
+    //}
+    //else
+    //{
+    //  return unboxed_name;
+    //}
   }
 
   processor::processor(analyze::expr::function_ref const expr,
@@ -1296,12 +1297,40 @@ namespace jank::codegen
     }
 
     auto arg_tmp_it(arg_tmps.begin());
-    for(auto const &param : fn_arity.params)
+    if(expr->loop_target.is_some())
     {
-      util::format_to(body_buffer, "{} = {};", runtime::munge(param->name), arg_tmp_it->str(true));
-      ++arg_tmp_it;
+      auto const let{ expr->loop_target.unwrap() };
+      for(usize i{}; i < expr->arg_exprs.size(); ++i)
+      {
+        auto const &pair{ let->pairs[i] };
+        auto const local(expr->frame->find_local_or_capture(pair.first));
+        if(local.is_none())
+        {
+          throw std::runtime_error{ util::format("ICE: unable to find local: {}",
+                                                 pair.first->to_string()) };
+        }
+
+        auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+
+        util::format_to(body_buffer, "{} = {};", munged_name, arg_tmp_it->str(true));
+        ++arg_tmp_it;
+      }
+
+      util::format_to(body_buffer, "continue;");
     }
-    util::format_to(body_buffer, "continue;");
+    else
+    {
+      for(auto const &param : fn_arity.params)
+      {
+        util::format_to(body_buffer,
+                        "{} = {};",
+                        runtime::munge(param->name),
+                        arg_tmp_it->str(true));
+        ++arg_tmp_it;
+      }
+      util::format_to(body_buffer, "continue;");
+    }
+
     return none;
   }
 
@@ -1398,21 +1427,45 @@ namespace jank::codegen
 
       auto const &val_tmp(gen(pair.second, fn_arity, pair.second->needs_box));
       auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+
       /* Every binding is wrapped in its own scope, to allow shadowing.
        *
        * Also, bindings are references to their value expression, rather than a copy.
        * This is important for C++ interop, since the we don't want to, and we may not
-       * be able to, just copy stack-allocated C++ objects around willy nillly. */
-      util::format_to(body_buffer, "{ auto &&{}({}); ", munged_name, val_tmp.unwrap().str(false));
-
-      auto const binding(local.unwrap().binding);
-      if(!binding->needs_box && binding->has_boxed_usage)
+       * be able to, just copy stack-allocated C++ objects around willy nilly. */
+      if(expr->is_loop)
       {
-        util::format_to(body_buffer,
-                        "auto const {}({});",
-                        detail::boxed_local_name(munged_name),
-                        val_tmp.unwrap().str(true));
+        auto const local_type{ cpp_util::expression_type(pair.second) };
+        if(cpp_util::is_any_object(local_type))
+        {
+          util::format_to(body_buffer,
+                          "{ object_ref {}({}); ",
+                          munged_name,
+                          val_tmp.unwrap().str(true));
+        }
+        else
+        {
+          util::format_to(body_buffer, "{ auto {}({}); ", munged_name, val_tmp.unwrap().str(true));
+        }
       }
+      else
+      {
+        util::format_to(body_buffer, "{ auto &&{}({}); ", munged_name, val_tmp.unwrap().str(false));
+      }
+
+      //auto const binding(local.unwrap().binding);
+      //if(!binding->needs_box && binding->has_boxed_usage)
+      //{
+      //  util::format_to(body_buffer,
+      //                  "auto const {}({});",
+      //                  detail::boxed_local_name(munged_name),
+      //                  val_tmp.unwrap().str(true));
+      //}
+    }
+
+    if(expr->is_loop)
+    {
+      util::format_to(body_buffer, "while(true){");
     }
 
     for(auto it(expr->body->values.begin()); it != expr->body->values.end();)
@@ -1439,6 +1492,11 @@ namespace jank::codegen
     for(auto const &_ : expr->pairs)
     {
       static_cast<void>(_);
+      util::format_to(body_buffer, "}");
+    }
+
+    if(expr->is_loop)
+    {
       util::format_to(body_buffer, "}");
     }
 
@@ -1727,7 +1785,7 @@ namespace jank::codegen
       arg_tmps.reserve(expr->arg_exprs.size());
       for(auto const &arg_expr : expr->arg_exprs)
       {
-        arg_tmps.emplace_back(gen(arg_expr, arity, false).unwrap());
+        arg_tmps.emplace_back(gen(arg_expr, arity, true).unwrap());
       }
 
       util::format_to(body_buffer,
@@ -1742,7 +1800,7 @@ namespace jank::codegen
         {
           util::format_to(body_buffer, ", ");
         }
-        util::format_to(body_buffer, "{}", arg_tmp.str(false));
+        util::format_to(body_buffer, "{}", arg_tmp.str(true));
         need_comma = true;
       }
 

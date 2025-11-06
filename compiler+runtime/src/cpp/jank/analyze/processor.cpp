@@ -3597,7 +3597,7 @@ namespace jank::analyze
     for(usize i{}; i < arg_count; ++i, it = it.rest())
     {
       auto arg_expr{
-        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, needs_box)
+        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, true)
       };
       if(arg_expr.is_err())
       {

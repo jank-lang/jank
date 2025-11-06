@@ -48,11 +48,7 @@ namespace jank::runtime::obj
       this->meta = meta;
     }
 
-    static persistent_hash_map_ref empty()
-    {
-      static auto const ret(make_box<persistent_hash_map>());
-      return ret;
-    }
+    static persistent_hash_map_ref empty();
 
     using base_persistent_map::base_persistent_map;
 

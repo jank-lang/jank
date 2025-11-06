@@ -100,6 +100,14 @@ namespace jank::runtime
     constexpr oref &operator=(oref const &rhs) noexcept = default;
     constexpr oref &operator=(oref &&rhs) noexcept = default;
 
+    template <typename T>
+    requires behavior::object_like<T>
+    constexpr oref &operator=(oref<T> const &rhs) noexcept
+    {
+      data = &rhs->base;
+      return *this;
+    }
+
     constexpr bool operator==(oref const &rhs) const noexcept
     {
       return data == rhs.data;
@@ -499,5 +507,4 @@ namespace jank::runtime
   {
     return static_cast<D *>(ptr.data);
   }
-
 }
