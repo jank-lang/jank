@@ -1231,6 +1231,7 @@ namespace jank::read::lex
                 }
                 pos += result.expect_ok().len;
               }
+
               return error::lex_invalid_keyword(
                 ch == '/' ? "The namespace symbol before '/' is missing."
                           : util::format("This keyword unexpectedly ended. A symbol was expected, "

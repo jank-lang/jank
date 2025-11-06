@@ -1810,6 +1810,26 @@ namespace jank::read::lex
                 make_error(kind::lex_invalid_keyword, 0, 7),
               }));
       }
+
+      SUBCASE("Auto-resolved keyword with no symbol")
+      {
+        processor p{ "::" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+              }));
+      }
+
+      SUBCASE("Auto-resolved keyword with empty space")
+      {
+        processor p{ ":: " };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 1, 4),
+              }));
+      }
     }
 
     TEST_CASE("String")
