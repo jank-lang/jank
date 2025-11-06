@@ -35,7 +35,7 @@
 namespace jank::runtime
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
+  decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   context *__rt_ctx{};
@@ -92,11 +92,6 @@ namespace jank::runtime
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref())))
       .expect_ok();
-  }
-
-  context::~context()
-  {
-    thread_binding_frames.erase(this);
   }
 
   obj::symbol_ref context::qualify_symbol(obj::symbol_ref const &sym) const
@@ -190,7 +185,7 @@ namespace jank::runtime
       auto const name{ module::module_to_load_function(module) };
 
       auto const form{ runtime::conj(
-        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(std::move(forms)),
+        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(jtl::move(forms)),
                                     obj::persistent_vector::empty()),
                       make_box<obj::symbol>(name)),
         make_box<obj::symbol>("fn*")) };
@@ -705,7 +700,7 @@ namespace jank::runtime
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(!tbfs.empty())
     {
       bindings = tbfs.front().bindings;
@@ -734,7 +729,7 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(!tbfs.empty())
     {
       frame.bindings = tbfs.front().bindings;
@@ -777,7 +772,7 @@ namespace jank::runtime
 
   jtl::string_result<void> context::pop_thread_bindings()
   {
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return err("Mismatched thread binding pop");
@@ -790,7 +785,7 @@ namespace jank::runtime
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
-    auto const &tbfs(thread_binding_frames[this]);
+    auto const &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return obj::persistent_hash_map::empty();
@@ -800,7 +795,7 @@ namespace jank::runtime
 
   jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return none;

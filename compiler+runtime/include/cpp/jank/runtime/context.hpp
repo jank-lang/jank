@@ -43,7 +43,6 @@ namespace jank::runtime
     context();
     context(context const &) = delete;
     context(context &&) noexcept = delete;
-    ~context();
 
     ns_ref intern_ns(jtl::immutable_string const &);
     ns_ref intern_ns(obj::symbol_ref const &);
@@ -161,8 +160,8 @@ namespace jank::runtime
     /* Hold onto the CLI Options for use at runtime */
     util::cli::options opts;
 
-    /* TODO: Remove this map. Just use the list. */
-    static thread_local native_unordered_map<context const *, std::list<thread_binding_frame>>
+    /* XXX: We can't use thread_local here, due to bdwgc not supporting it. */
+    static native_unordered_map<std::thread::id, native_list<thread_binding_frame>>
       thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during

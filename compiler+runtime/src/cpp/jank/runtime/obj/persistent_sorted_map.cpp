@@ -56,9 +56,9 @@ namespace jank::runtime::obj
                                                      typed_seq->to_string()) };
             }
             auto const val(*it);
-            transient.insert_or_assign(key, val);
+            transient[key] = val;
           }
-          return transient.persistent();
+          return transient;
         }
         else
         {
@@ -100,19 +100,21 @@ namespace jank::runtime::obj
 
   bool persistent_sorted_map::contains(object_ref const key) const
   {
-    return data.find(key) != data.end();
+    return data.contains(key);
   }
 
   persistent_sorted_map_ref
   persistent_sorted_map::assoc(object_ref const key, object_ref const val) const
   {
-    auto copy(data.insert_or_assign(key, val));
+    auto copy(data);
+    copy[key] = val;
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   persistent_sorted_map_ref persistent_sorted_map::dissoc(object_ref const key) const
   {
-    auto copy(data.erase_key(key));
+    auto copy(data);
+    copy.erase(key);
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
