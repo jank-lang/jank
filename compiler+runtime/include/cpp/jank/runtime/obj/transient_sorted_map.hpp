@@ -18,8 +18,7 @@ namespace jank::runtime::obj
     transient_sorted_map() = default;
     transient_sorted_map(transient_sorted_map &&) noexcept = default;
     transient_sorted_map(transient_sorted_map const &) = default;
-    transient_sorted_map(runtime::detail::native_persistent_sorted_map const &d);
-    transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d);
+    transient_sorted_map(value_type const &d);
     transient_sorted_map(value_type &&d);
 
     static transient_sorted_map_ref empty();

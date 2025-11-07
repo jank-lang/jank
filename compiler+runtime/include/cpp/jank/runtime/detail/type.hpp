@@ -8,9 +8,6 @@
 #include <immer/set_transient.hpp>
 #include <immer/memory_policy.hpp>
 
-#include <bpptree/bpptree.hpp>
-#include <bpptree/ordered.hpp>
-
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
@@ -36,15 +33,6 @@ namespace immer
                                    jank::memory_policy>;
 }
 
-namespace bpptree::detail
-{
-  extern template struct BppTreeSet<jank::runtime::object_ref,
-                                    jank::runtime::detail::object_ref_compare>;
-  extern template struct BppTreeMap<jank::runtime::object_ref,
-                                    jank::runtime::object_ref,
-                                    jank::runtime::detail::object_ref_compare>;
-}
-
 namespace jank::runtime::detail
 {
   using native_persistent_vector = immer::vector<object_ref, memory_policy>;
@@ -54,11 +42,10 @@ namespace jank::runtime::detail
     set<object_ref, std::hash<object_ref>, std::equal_to<jank::runtime::object_ref>, memory_policy>;
   using native_transient_hash_set = native_persistent_hash_set::transient_type;
 
-  /* TODO: These BppTree types will leak until we get them GC allocated. */
+  /* TODO: Bring in proper immutable sorted maps/sets. */
   using native_persistent_sorted_set
-    = bpptree::BppTreeSet<object_ref, object_ref_compare>::Persistent;
-  using native_transient_sorted_set
-    = bpptree::BppTreeSet<object_ref, object_ref_compare>::Transient;
+    = std::set<object_ref, object_ref_compare, native_allocator<object_ref>>;
+  using native_transient_sorted_set = native_persistent_sorted_set;
 
   using native_persistent_hash_map = immer::map<object_ref,
                                                 object_ref,
@@ -68,9 +55,11 @@ namespace jank::runtime::detail
   using native_transient_hash_map = native_persistent_hash_map::transient_type;
 
   using native_persistent_sorted_map
-    = bpptree::BppTreeMap<object_ref, object_ref, object_ref_compare>::Persistent;
-  using native_transient_sorted_map
-    = bpptree::BppTreeMap<object_ref, object_ref, object_ref_compare>::Transient;
+    = std::map<object_ref,
+               object_ref,
+               object_ref_compare,
+               native_allocator<std::pair<object_ref const, object_ref>>>;
+  using native_transient_sorted_map = native_persistent_sorted_map;
 
   /* If an object requires this in its constructor, use your runtime context to intern
    * it instead. */
