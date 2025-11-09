@@ -115,6 +115,12 @@ if (NOT jank_local_clang)
   list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
 endif ()
 
+# Platform-specific: Remove -L/opt/homebrew/opt/llvm/lib/unwind on macOS
+# as it's not needed and can cause linking issues
+if(APPLE AND NOT jank_local_clang)
+  list(REMOVE_ITEM jank_linker_flags "-L/opt/homebrew/opt/llvm/lib/unwind")
+endif()
+
 # If the user opts into a specific build type, we will provide sane defaults. However, for
 # packaging, we can expect that CMAKE_BUILD_TYPE=None will be used and packagers will provide
 # the exact flags they desire.
@@ -374,6 +380,38 @@ include(cmake/dependency/boost-multiprecision.cmake)
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 # ---- Other dependencies ----
 
+# ---- Configure platform-specific default linker libraries ----
+# Configure default linker libraries based on platform
+set(JANK_DEFAULT_LINKER_LIBS
+  "-ljank-standalone"
+  "-lm"
+  "-lLLVM"
+  "-lclang-cpp"
+  "-lcrypto"
+  "-lz"
+  "-lzstd"
+)
+
+# Only link libstdc++ explicitly on non-Apple platforms
+# (macOS uses libc++ implicitly via Clang)
+if(NOT APPLE)
+  list(APPEND JANK_DEFAULT_LINKER_LIBS "-lstdc++")
+endif()
+
+# Generate C++ array initializer from the list
+set(DEFAULT_LIBS_INITIALIZER "")
+foreach(lib ${JANK_DEFAULT_LINKER_LIBS})
+  string(APPEND DEFAULT_LIBS_INITIALIZER "    \"${lib}\",\n")
+endforeach()
+
+# Configure the processor.cpp file with platform-specific libraries
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/jank/aot/processor.cpp.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/src/cpp/jank/aot/processor.cpp"
+  @ONLY
+)
+# ---- Platform-specific configuration complete ----
+
 # ---- libjank.a ----
 add_library(
   jank_lib STATIC
@@ -526,7 +564,7 @@ add_library(
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
   src/cpp/jank/jit/processor.cpp
-  src/cpp/jank/aot/processor.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/src/cpp/jank/aot/processor.cpp
   src/cpp/jank/aot/resource.cpp
 
   # Native module sources.
