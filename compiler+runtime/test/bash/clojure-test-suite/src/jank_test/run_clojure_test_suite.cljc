@@ -36,7 +36,7 @@
     ;clojure.core-test.dec ; TODO underflow \n Uncaught exception: failed
     clojure.core-test.decimal-qmark
     ;clojure.core-test.denominator ; Failed a test. Expecting whitespace after the last token. due to M.
-    clojure.core-test.double
+    ;clojure.core-test.double
     clojure.core-test.double-qmark
     ;clojure.core-test.drop ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     ;clojure.core-test.drop-last ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
