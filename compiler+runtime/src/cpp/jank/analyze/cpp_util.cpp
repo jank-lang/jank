@@ -292,6 +292,20 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
+    {
+      auto name{ get_qualified_name(scope) };
+      if(Cpp::IsPointerType(type))
+      {
+        name = name + "*";
+      }
+      return name;
+    }
+    return Cpp::GetTypeAsString(type);
+  }
+
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)

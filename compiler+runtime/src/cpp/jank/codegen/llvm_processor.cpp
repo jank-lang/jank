@@ -729,6 +729,7 @@ namespace jank::codegen
 
   jtl::string_result<void> llvm_processor::impl::gen()
   {
+    throw "no IR gen allowed!";
     profile::timer const timer{ "ir gen" };
     if(target != compilation_target::function)
     {

@@ -29,7 +29,7 @@ namespace jank::util::cli
     bool profiler_enabled{};
     bool perf_profiling_enabled{};
     bool gc_incremental{};
-    codegen_type codegen{ codegen_type::llvm_ir };
+    codegen_type codegen{ codegen_type::cpp };
 
     /* Native dependencies. */
     native_vector<jtl::immutable_string> include_dirs;

@@ -92,104 +92,69 @@ namespace jank::codegen
     processor(processor const &) = delete;
     processor(processor &&) noexcept = delete;
 
+    jtl::option<handle> gen(analyze::expression_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::def_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expression_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::var_deref_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::def_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::var_ref_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::var_deref_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::primitive_literal_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::vector_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::map_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::set_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::var_ref_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::local_reference_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::call_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle> gen(analyze::expr::primitive_literal_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
+    gen(analyze::expr::function_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::recur_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::vector_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::recursion_reference_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::map_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::named_recursion_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::let_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::letfn_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::do_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::if_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::throw_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::try_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::case_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::set_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle> gen(analyze::expr::local_reference_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
+    gen(analyze::expr::cpp_raw_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::function_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_type_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::recur_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle> gen(analyze::expr::recursion_reference_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
-    jtl::option<handle> gen(analyze::expr::named_recursion_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
+    gen(analyze::expr::cpp_value_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::let_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_cast_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::letfn_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::do_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_constructor_call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::if_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_member_call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::throw_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_member_access_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::try_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_builtin_operator_call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::case_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::cpp_raw_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_type_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_value_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_cast_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_call_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle> gen(analyze::expr::cpp_constructor_call_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
-    jtl::option<handle> gen(analyze::expr::cpp_member_call_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
-    jtl::option<handle> gen(analyze::expr::cpp_member_access_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
-    jtl::option<handle> gen(analyze::expr::cpp_builtin_operator_call_ref const,
-                            analyze::expr::function_arity const &,
-                            bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &, bool box_needed);
-    jtl::option<handle>
-    gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &, bool box_needed);
+    gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &);
 
     jtl::immutable_string declaration_str();
     void build_header();
     void build_body();
     void build_footer();
-    jtl::immutable_string expression_str(bool box_needed);
+    jtl::immutable_string expression_str();
 
     jtl::immutable_string module_init_str(jtl::immutable_string const &module);
 
-    void format_elided_var(jtl::immutable_string const &start,
-                           jtl::immutable_string const &end,
-                           jtl::immutable_string const &ret_tmp,
-                           native_vector<analyze::expression_ref> const &arg_exprs,
-                           analyze::expr::function_arity const &fn_arity,
-                           bool arg_box_needed,
-                           bool ret_box_needed);
-    void format_direct_call(jtl::immutable_string const &source_tmp,
-                            jtl::immutable_string const &ret_tmp,
-                            native_vector<analyze::expression_ref> const &arg_exprs,
-                            analyze::expr::function_arity const &fn_arity,
-                            bool arg_box_needed);
     void format_dynamic_call(jtl::immutable_string const &source_tmp,
                              jtl::immutable_string const &ret_tmp,
                              native_vector<analyze::expression_ref> const &arg_exprs,
-                             analyze::expr::function_arity const &fn_arity,
-                             bool arg_box_needed);
+                             analyze::expr::function_arity const &fn_arity);
 
     analyze::expr::function_ref root_fn;
     jtl::immutable_string module;

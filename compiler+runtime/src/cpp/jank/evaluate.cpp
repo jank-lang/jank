@@ -607,7 +607,7 @@ namespace jank::evaluate
       codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
       util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str(true) + ".erase()" };
+      auto const expr_str{ cg_prc.expression_str() + ".erase()" };
       clang::Value v;
       auto res(
         __rt_ctx->jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));

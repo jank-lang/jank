@@ -47,12 +47,12 @@ namespace jank::util::cli
       ->check(CLI::Range(0, 3));
 
     std::map<std::string, codegen_type> const codegen_types{
-      { "llvm_ir", codegen_type::llvm_ir },
+      { "llvm-ir", codegen_type::llvm_ir },
       {     "cpp",     codegen_type::cpp }
     };
     cli.add_option("--codegen", opts.codegen, "The type of code generation to use.")
-      ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm_ir,cpp}"))
-      ->default_str(make_default("llvm_ir"));
+      ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm-ir,cpp}"))
+      ->default_str(make_default("cpp"));
 
     /* Native dependencies. */
     cli.add_option("-I,--include-dir",

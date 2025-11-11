@@ -6,7 +6,6 @@ a.out
 .jank-repl-history
 .envrc
 .direnv
-/notes
 
 # Vim files
 /.ycm_extra_conf.py*
