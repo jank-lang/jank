@@ -232,6 +232,7 @@ namespace jank::runtime
   object_ref rem(object_ref l, object_ref r);
   object_ref quot(object_ref l, object_ref r);
   object_ref inc(object_ref l);
+  object_ref promoting_inc(object_ref const l);
   object_ref dec(object_ref l);
 
   bool is_zero(object_ref l);

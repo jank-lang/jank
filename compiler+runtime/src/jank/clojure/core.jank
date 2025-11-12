@@ -4483,7 +4483,7 @@
   See also: inc"
   [x]
   ;; (. clojure.lang.Numbers (incP x))
-  (throw "TODO: port inc'"))
+  (cpp/jank.runtime.promoting_inc x))
 
 ;; ;;math stuff
 ;; (defn ^:private nary-inline
