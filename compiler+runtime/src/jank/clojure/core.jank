@@ -4482,7 +4482,6 @@
   "Returns a number one greater than num. Supports arbitrary precision.
   See also: inc"
   [x]
-  ;; (. clojure.lang.Numbers (incP x))
   (cpp/jank.runtime.promoting_inc x))
 
 ;; ;;math stuff
@@ -4556,8 +4555,7 @@
   "Returns a number one less than num. Supports arbitrary precision.
   See also: dec"
   [x]
-  ;; (. clojure.lang.Numbers (decP x))
-  (throw "TODO: port dec'"))
+  (cpp/jank.runtime.promoting_dec x))
 
 (defn unchecked-inc-int
   "Returns a number one greater than x, an int.
