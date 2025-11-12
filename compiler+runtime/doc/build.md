@@ -46,7 +46,7 @@ Clone the repo as follows:
 git clone --depth 1 --single-branch --shallow-submodules --recurse-submodules https://github.com/jank-lang/jank.git
 
 # If you didn't recurse submodules when cloning, you'll need to run this.
-git submodule update --init --recursive --depth 1 --jobs 8
+git submodule update --init --recursive --depth 100 --jobs 8
 ```
 
 ## Compiling Clang/LLVM
