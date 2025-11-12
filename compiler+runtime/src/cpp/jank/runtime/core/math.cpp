@@ -700,6 +700,40 @@ namespace jank::runtime
       l);
   }
 
+  object_ref promoting_dec(object_ref const l)
+  {
+    return visit_number_like(
+      [](auto const typed_l) -> object_ref {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(std::same_as<T, obj::integer>)
+        {
+          if(std::numeric_limits<jank::i64>::min() < typed_l->data)
+          {
+            return make_box(typed_l->data - 1ll);
+          }
+
+          native_big_integer const v{ typed_l->data };
+          return make_box<obj::big_integer>(v - 1ll);
+        }
+        else if constexpr(std::same_as<T, obj::real>)
+        {
+          if(std::numeric_limits<jank::f64>::min() < typed_l->data)
+          {
+            return make_box(typed_l->data - 1ll);
+          }
+
+          native_big_decimal const v{ typed_l->data };
+          return make_box<obj::big_decimal>(v - 1ll);
+        }
+        else
+        {
+          return make_box(typed_l->data - 1ll);
+        }
+      },
+      l);
+  }
+
   bool is_zero(object_ref const l)
   {
     return visit_number_like(
