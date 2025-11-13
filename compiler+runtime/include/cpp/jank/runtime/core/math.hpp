@@ -41,6 +41,8 @@ namespace jank::runtime
   object_ref add(obj::ratio_ref l, obj::integer_ref r);
   obj::ratio_ref add(obj::integer_ref l, obj::ratio_ref r);
 
+  object_ref promoting_add(object_ref const l, object_ref const r);
+
   object_ref sub(object_ref l, object_ref r);
   object_ref sub(obj::integer_ref l, object_ref r);
   object_ref sub(object_ref l, obj::integer_ref r);
