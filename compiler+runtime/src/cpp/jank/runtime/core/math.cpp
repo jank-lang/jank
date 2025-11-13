@@ -1,4 +1,5 @@
 #include <random>
+#include <cmath>
 
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
@@ -169,6 +170,53 @@ namespace jank::runtime
   i64 add(i64 const l, i64 const r)
   {
     return l + r;
+  }
+
+  object_ref promoting_add(object_ref const l, object_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const r) -> object_ref {
+        using LT = typename decltype(typed_l)::value_type;
+
+        return visit_number_like(
+          [](auto const typed_r, auto const &l_val) -> object_ref {
+            using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            {
+              i64 res{};
+
+              if(static_cast<bool>(__builtin_add_overflow(l_val, typed_r->data, &res)))
+              {
+                native_big_integer const l{ l_val };
+                return make_box<obj::big_integer>(l + typed_r->data);
+              }
+
+              return make_box<obj::integer>(res);
+            }
+            else if constexpr(std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+            {
+              f64 const res{ l_val + typed_r->data };
+
+              /* TODO: Better overflow detection logic? */
+              if(!std::isfinite(res))
+              {
+                native_big_decimal const l{ l_val };
+                return make_box<obj::big_decimal>(l + typed_r->data);
+              }
+
+              return make_box<obj::real>(res);
+            }
+            else
+            {
+              return make_box(l_val + typed_r->data);
+            }
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
   }
 
   object_ref sub(object_ref const l, object_ref const r)
