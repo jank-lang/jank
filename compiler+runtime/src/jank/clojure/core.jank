@@ -4509,10 +4509,10 @@
   ([] 0)
   ([x]
   ;;  (cast Number x)
-   (throw "TODO: port +'"))
+   x)
   ([x y]
   ;;  (. clojure.lang.Numbers (addP x y))
-   (throw "TODO: port +'"))
+   (cpp/jank.runtime.promoting_add x y))
   ([x y & more]
    (reduce +' (+' x y) more)))
 
