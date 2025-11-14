@@ -4535,10 +4535,10 @@
   See also: -"
   ([x]
   ;;  (. clojure.lang.Numbers (minusP x))
-   (throw "TODO: port -'"))
+   x)
   ([x y]
   ;;  (. clojure.lang.Numbers (minusP x y))
-   (throw "TODO: port -'"))
+   (cpp/jank.runtime.promoting_sub x y))
   ([x y & more]
    (reduce -' (-' x y) more)))
 
