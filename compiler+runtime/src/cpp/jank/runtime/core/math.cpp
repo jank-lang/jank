@@ -194,7 +194,9 @@ namespace jank::runtime
 
               return make_box<obj::integer>(res);
             }
-            else if constexpr(std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
             {
               f64 const res{ l_val + typed_r->data };
 
@@ -376,7 +378,9 @@ namespace jank::runtime
 
               return make_box<obj::integer>(res);
             }
-            else if constexpr(std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
             {
               auto const res{ l_val - typed_r->data };
 
@@ -693,7 +697,9 @@ namespace jank::runtime
 
               return make_box<obj::integer>(res);
             }
-            else if constexpr(std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
+                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
             {
               auto const res{ l_val * typed_r->data };
 
@@ -818,7 +824,8 @@ namespace jank::runtime
 
           return make_box<obj::integer>(res);
         }
-        else if constexpr(std::same_as<T, obj::real>)
+        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::integer>
+                          || std::same_as<T, obj::real>)
         {
           auto const res{ typed_l->data + 1ll };
 
@@ -863,7 +870,8 @@ namespace jank::runtime
 
           return make_box<obj::integer>(res);
         }
-        else if constexpr(std::same_as<T, obj::real>)
+        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::integer>
+                          || std::same_as<T, obj::real>)
         {
           auto const res{ typed_l->data - 1ll };
 
