@@ -808,23 +808,27 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::integer>)
         {
-          if(typed_l->data < std::numeric_limits<jank::i64>::max())
+          i64 res{};
+
+          if(__builtin_add_overflow(typed_l->data, 1ll, &res))
           {
-            return make_box(typed_l->data + 1ll);
+            native_big_integer const v{ typed_l->data };
+            return make_box<obj::big_integer>(v + 1ll);
           }
 
-          native_big_integer const v{ typed_l->data };
-          return make_box<obj::big_integer>(v + 1ll);
+          return make_box<obj::integer>(res);
         }
         else if constexpr(std::same_as<T, obj::real>)
         {
-          if(typed_l->data < std::numeric_limits<jank::f64>::max())
+          auto const res{ typed_l->data + 1ll };
+
+          if(!std::isfinite(res))
           {
-            return make_box(typed_l->data + 1ll);
+            native_big_decimal const v{ typed_l->data };
+            return make_box<obj::big_decimal>(v + 1ll);
           }
 
-          native_big_decimal const v{ typed_l->data };
-          return make_box<obj::big_decimal>(v + 1ll);
+          return make_box<obj::real>(res);
         }
         else
         {
@@ -849,23 +853,27 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::integer>)
         {
-          if(std::numeric_limits<jank::i64>::min() < typed_l->data)
+          i64 res{};
+
+          if(__builtin_sub_overflow(typed_l->data, 1ll, &res))
           {
-            return make_box(typed_l->data - 1ll);
+            native_big_integer const v{ typed_l->data };
+            return make_box<obj::big_integer>(v - 1ll);
           }
 
-          native_big_integer const v{ typed_l->data };
-          return make_box<obj::big_integer>(v - 1ll);
+          return make_box<obj::integer>(res);
         }
         else if constexpr(std::same_as<T, obj::real>)
         {
-          if(std::numeric_limits<jank::f64>::min() < typed_l->data)
+          auto const res{ typed_l->data - 1ll };
+
+          if(!std::isfinite(res))
           {
-            return make_box(typed_l->data - 1ll);
+            native_big_decimal const v{ typed_l->data };
+            return make_box<obj::big_decimal>(v - 1ll);
           }
 
-          native_big_decimal const v{ typed_l->data };
-          return make_box<obj::big_decimal>(v - 1ll);
+          return make_box<obj::real>(res);
         }
         else
         {
