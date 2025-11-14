@@ -114,6 +114,8 @@ namespace jank::runtime
   object_ref mul(i64 l, object_ref r);
   i64 mul(i64 l, i64 r);
 
+  object_ref promoting_mul(object_ref const l, object_ref const r);
+
   bool lt(object_ref l, object_ref r);
   bool lt(obj::integer_ref l, object_ref r);
   bool lt(object_ref l, obj::integer_ref r);
