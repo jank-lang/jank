@@ -66,6 +66,8 @@ namespace jank::runtime
   object_ref sub(i64 l, object_ref r);
   i64 sub(i64 l, i64 r);
 
+  object_ref promoting_sub(object_ref const l, object_ref const r);
+
   object_ref div(object_ref l, object_ref r);
   object_ref div(obj::integer_ref l, object_ref r);
   object_ref div(object_ref l, obj::integer_ref r);
