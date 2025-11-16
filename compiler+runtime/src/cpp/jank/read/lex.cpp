@@ -1214,6 +1214,7 @@ namespace jank::read::lex
                || std::iswspace(static_cast<wint_t>(after_dd_colon.expect_ok().character))
                || is_special_char(after_dd_colon.expect_ok().character))
             {
+              ++pos;
               return error::lex_invalid_keyword(
                 "An auto-resolved keyword must contain a valid symbol after '::'.",
                 { token_start, pos });
