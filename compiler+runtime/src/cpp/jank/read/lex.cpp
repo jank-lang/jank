@@ -1191,14 +1191,17 @@ namespace jank::read::lex
           }
 
           auto const oc(peek());
-          auto const c(oc.expect_ok().character);
-          if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
+
+          if(oc.is_err() || std::iswspace(static_cast<wint_t>(oc.expect_ok().character))
+             || is_special_char(oc.expect_ok().character))
           {
             ++pos;
             return error::lex_invalid_keyword(
               "A keyword must contain a valid symbol after the ':'.",
               { token_start, pos });
           }
+
+          auto const c(oc.expect_ok().character);
 
           /* Support auto-resolved qualified keywords. */
           if(c == ':')
