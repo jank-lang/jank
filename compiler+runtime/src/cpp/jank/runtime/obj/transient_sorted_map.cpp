@@ -95,7 +95,7 @@ namespace jank::runtime::obj
   bool transient_sorted_map::contains(object_ref const key) const
   {
     assert_active();
-    return data.find(key) != data.end();
+    return data.contains(key);
   }
 
   transient_sorted_map_ref

@@ -12,13 +12,10 @@ namespace jtl
   using allocator_type = jank::native_allocator<string_builder::value_type>;
   using allocator_traits = std::allocator_traits<allocator_type>;
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  //static allocator_type allocator;
-
   static void realloc(string_builder &sb, usize const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
-    auto const new_data{ reinterpret_cast<char *>(GC_malloc(new_capacity)) };
+    auto const new_data{ reinterpret_cast<char *>(GC_malloc_atomic(new_capacity)) };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
     GC_free(sb.buffer);
     sb.buffer = new_data;

@@ -116,7 +116,7 @@ namespace jank::runtime::obj
   bool transient_sorted_set::contains(object_ref const elem) const
   {
     assert_active();
-    return data.find(elem) != data.end();
+    return data.contains(elem);
   }
 
   transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ref const elem)
