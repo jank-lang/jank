@@ -718,7 +718,7 @@ namespace jank::runtime
   bool is_odd(object_ref const l)
   {
     return visit_type<obj::integer>(
-      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 1; },
+      [=](auto const typed_l) -> bool { return typed_l->data % 2 != 0; },
       l);
   }
 
