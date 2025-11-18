@@ -5352,8 +5352,7 @@
 (defn double
   "Coerce to double"
   [#_Number x]
-  ;; (clojure.lang.RT/doubleCast x)
-  (throw "TODO: port double"))
+  (cpp/jank.runtime.to_real x))
 
 (defn short
   "Coerce to short"
