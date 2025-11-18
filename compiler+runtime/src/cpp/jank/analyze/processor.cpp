@@ -2434,7 +2434,7 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    auto const then_type{ cpp_util::expression_type(then_expr.expect_ok()) };
+    auto const then_type{ cpp_util::non_void_expression_type(then_expr.expect_ok()) };
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2445,7 +2445,7 @@ namespace jank::analyze
       {
         return else_expr.expect_err();
       }
-      auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
+      auto const else_type{ cpp_util::non_void_expression_type(else_expr.expect_ok()) };
       auto const is_then_object{ cpp_util::is_any_object(then_type) };
       auto const is_else_object{ cpp_util::is_any_object(else_type) };
       auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
