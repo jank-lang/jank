@@ -2009,7 +2009,8 @@ namespace jank::analyze
     }
 
 
-    native_vector<expression_ref> arg_exprs;
+    u8 arg_index{};
+    native_vector<expression_ref> arg_exprs, op_equal_exprs;
     arg_exprs.reserve(arg_count);
     for(auto const &form : list->data.rest())
     {
@@ -2018,14 +2019,40 @@ namespace jank::analyze
       {
         return arg_expr;
       }
-      arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
-                                           cpp_util::untyped_object_ptr_type(),
-                                           macro_expansions);
+
+      jtl::ptr<void> expected_type{ cpp_util::untyped_object_ptr_type() };
+      if(is_loop)
+      {
+        expected_type = cpp_util::expression_type(loop_details.unwrap()->pairs[arg_index].second);
+      }
+
+      /* Check if op = can be used, since we'll be using it to update the loop values. */
+      auto const op_equal_sym{ make_box<obj::symbol>("cpp", "=") };
+      auto const op_equal_call{ analyze_call(
+        make_box<obj::persistent_list>(std::in_place,
+                                       op_equal_sym,
+                                       loop_details.unwrap()->pairs[arg_index].first,
+                                       form),
+        current_frame,
+        expression_position::value,
+        fn_ctx,
+        false) };
+      if(op_equal_call.is_err())
+      {
+        /* TODO: Improve error to reference let binding and provide a custom recur message
+         * instead of operator = stuff. */
+        /* We add one to account for 'recur'. */
+        return op_equal_call.expect_err()->add_usage(read::parse::reparse_nth(list, arg_index + 1));
+      }
+
+      arg_expr = apply_implicit_conversion(arg_expr.expect_ok(), expected_type, macro_expansions);
       if(arg_expr.is_err())
       {
         return arg_expr;
       }
       arg_exprs.emplace_back(arg_expr.expect_ok());
+      op_equal_exprs.emplace_back(op_equal_call.expect_ok());
+      ++arg_index;
     }
 
     /* A loop* is only considered a loop if there's actually a recur. Otherwise, it's
@@ -2044,6 +2071,7 @@ namespace jank::analyze
                                       true,
                                       make_box<runtime::obj::persistent_list>(list->data.rest()),
                                       std::move(arg_exprs),
+                                      std::move(op_equal_exprs),
                                       is_loop ? some(loop_details.unwrap()) : none);
   }
 
