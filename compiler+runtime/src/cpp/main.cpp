@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <llvm/LineEditor/LineEditor.h>
 
 #include <Interpreter/Compatibility.h>
@@ -161,6 +162,19 @@ namespace jank
     std::string path_tmp{ tmp / "jank-repl-XXXXXX" };
     mkstemp(path_tmp.data());
 
+    auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
+    auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };
+    auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
+    auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
+
+    __rt_ctx
+      ->push_thread_bindings(
+        obj::persistent_hash_map::create_unique(std::make_pair(first_res_var, jank_nil),
+                                                std::make_pair(second_res_var, jank_nil),
+                                                std::make_pair(third_res_var, jank_nil),
+                                                std::make_pair(error_var, jank_nil)))
+      .expect_ok();
+
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     while(auto buf = le.readLine())
@@ -193,6 +207,11 @@ namespace jank
         }
 
         auto const res(__rt_ctx->eval_file(path_tmp));
+
+        third_res_var->set(second_res_var->deref()).expect_ok();
+        second_res_var->set(first_res_var->deref()).expect_ok();
+        first_res_var->set(res).expect_ok();
+
         util::println("{}", runtime::to_code_string(res));
       }
       JANK_CATCH(jank::util::print_exception)
