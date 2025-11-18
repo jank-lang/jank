@@ -1838,6 +1838,17 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens == make_results({ make_error(kind::lex_invalid_keyword, 0, 2) }));
       }
+
+      SUBCASE("Graceful lexing after invalid ::")
+      {
+        processor p{ ":: 42" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+                token{ 0, 3, token_kind::integer, "42" }
+        }));
+      }
     }
 
     TEST_CASE("String")
