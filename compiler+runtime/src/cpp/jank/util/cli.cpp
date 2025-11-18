@@ -52,7 +52,7 @@ namespace jank::util::cli
     };
     cli.add_option("--codegen", opts.codegen, "The type of code generation to use.")
       ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm-ir,cpp}"))
-      ->default_str(make_default("cpp"));
+      ->default_str(make_default(codegen_type_str(opts.codegen)));
 
     /* Native dependencies. */
     cli.add_option("-I,--include-dir",

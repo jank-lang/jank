@@ -21,6 +21,19 @@ namespace jank::util::cli
     cpp
   };
 
+  constexpr char const *codegen_type_str(codegen_type const type)
+  {
+    switch(type)
+    {
+      case codegen_type::llvm_ir:
+        return "llvm-ir";
+      case codegen_type::cpp:
+        return "cpp";
+      default:
+        return "unknown";
+    }
+  }
+
   struct options
   {
     /* Runtime. */
@@ -29,7 +42,7 @@ namespace jank::util::cli
     bool profiler_enabled{};
     bool perf_profiling_enabled{};
     bool gc_incremental{};
-    codegen_type codegen{ codegen_type::cpp };
+    codegen_type codegen{ codegen_type::llvm_ir };
 
     /* Native dependencies. */
     native_vector<jtl::immutable_string> include_dirs;
