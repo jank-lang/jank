@@ -1846,7 +1846,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 make_error(kind::lex_invalid_keyword, 0, 2),
-                token{ 0, 3, token_kind::integer, "42" }
+                token{ 3, 2, token_kind::integer, 42ll }
         }));
       }
     }
