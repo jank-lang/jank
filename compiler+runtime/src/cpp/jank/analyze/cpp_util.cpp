@@ -294,6 +294,12 @@ namespace jank::analyze::cpp_util
 
   jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
   {
+    if(type == untyped_object_ptr_type())
+    {
+      return "jank::runtime::object_ref";
+    }
+    /* TODO: Handle typed object refs, too. */
+
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {
       auto name{ get_qualified_name(scope) };

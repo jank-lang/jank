@@ -605,7 +605,14 @@ namespace jank::evaluate
     else
     {
       codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
-      util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+
+      /* TODO: Rename to something generic which makes sense for IR and C++ gen? */
+      jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
+      if(print_settings == "1")
+      {
+        util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+      }
+
       __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
       auto const expr_str{ cg_prc.expression_str() + ".erase()" };
       clang::Value v;

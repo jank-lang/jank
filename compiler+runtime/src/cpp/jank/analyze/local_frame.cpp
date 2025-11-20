@@ -6,6 +6,7 @@
 #include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -103,6 +104,13 @@ namespace jank::analyze
       res.first->second.has_boxed_usage = true;
       /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
+
+      /* Native values which are captured get auto-boxed, so we need to adjust the type
+       * of the binding. */
+      if(!cpp_util::is_any_object(res.first->second.type))
+      {
+        res.first->second.type = cpp_util::untyped_object_ptr_type();
+      }
     }
   }
 

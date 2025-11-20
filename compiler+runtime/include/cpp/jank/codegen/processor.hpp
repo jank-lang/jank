@@ -142,6 +142,10 @@ namespace jank::codegen
     gen(analyze::expr::cpp_box_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
     gen(analyze::expr::cpp_unbox_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle>
+    gen(analyze::expr::cpp_new_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle>
+    gen(analyze::expr::cpp_delete_ref const, analyze::expr::function_arity const &);
 
     jtl::immutable_string declaration_str();
     void build_header();
