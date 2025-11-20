@@ -243,8 +243,6 @@ namespace jank::codegen
   {
     jank_debug_assert(type);
     usize size{ 1 };
-    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
-    jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
     llvm::Type *ir_type{ ctx.builder->getInt8Ty() };
@@ -278,6 +276,16 @@ namespace jank::codegen
       ir_type = ctx.builder->getPtrTy();
       size = 1;
     }
+
+    //std::string ir_type_name;
+    //llvm::raw_string_ostream os{ ir_type_name };
+    //ir_type->print(os);
+    //util::println("alloc_type {}, ir type {}, size {}, alignment {}",
+    //              Cpp::GetTypeAsString(type),
+    //              ir_type_name,
+    //              size,
+    //              alignment);
+    jank_debug_assert(size > 0);
 
     jank_debug_assert_fmt_throw(ir_type,
                                 "Unable to find LLVM IR primitive to use for allocating type '{}'.",
@@ -506,7 +514,7 @@ namespace jank::codegen
   static llvm::Value *
   load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value * const arg)
   {
-    return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
+    return load_if_needed(ctx, arg, cpp_util::untyped_object_ref_type());
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
@@ -1423,7 +1431,7 @@ namespace jank::codegen
       locals[pair.first] = value;
       if(value->getName().empty())
       {
-        value->setName(util::format("{}_init", pair.first->to_string()).c_str());
+        value->setName(pair.first->to_string().c_str());
       }
     }
 
@@ -1435,17 +1443,17 @@ namespace jank::codegen
      * corresponding `alloca` before jumping back to the start of the loop block. */
     if(expr->is_loop)
     {
-      for(auto const &pair : expr->pairs)
-      {
-        auto const type{ cpp_util::expression_type(pair.second) };
-        auto const type_info{ llvm_type(*ctx, llvm_ctx, type) };
-        auto const alloc{ ctx->builder->CreateAlloca(
-          type_info.type.data,
-          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-        alloc->setName(pair.first->to_string().c_str());
-        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
-        locals[pair.first] = alloc;
-      }
+      //for(auto const &pair : expr->pairs)
+      //{
+      //  auto const type{ cpp_util::expression_type(pair.second) };
+      //  auto const type_info{ llvm_type(*ctx, llvm_ctx, type) };
+      //  auto const alloc{ ctx->builder->CreateAlloca(
+      //    type_info.type.data,
+      //    llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+      //  alloc->setName(pair.first->to_string().c_str());
+      //  ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
+      //  locals[pair.first] = alloc;
+      //}
 
       auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
       auto const loop_block(llvm::BasicBlock::Create(*llvm_ctx, "loop", current_fn));

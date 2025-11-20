@@ -1308,7 +1308,7 @@ namespace jank::analyze
         return value_result;
       }
       value_result = apply_implicit_conversion(value_result.expect_ok(),
-                                               cpp_util::untyped_object_ptr_type(),
+                                               cpp_util::untyped_object_ref_type(),
                                                macro_expansions);
       if(value_result.is_err())
       {
@@ -1379,7 +1379,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     value_expr = apply_implicit_conversion(value_expr.expect_ok(),
-                                           cpp_util::untyped_object_ptr_type(),
+                                           cpp_util::untyped_object_ref_type(),
                                            macro_expansions);
     if(value_expr.is_err())
     {
@@ -1759,7 +1759,7 @@ namespace jank::analyze
 
       auto const new_last_expression{ apply_implicit_conversion(last_expression,
                                                                 last_expression_type,
-                                                                cpp_util::untyped_object_ptr_type(),
+                                                                cpp_util::untyped_object_ref_type(),
                                                                 macro_expansions) };
       if(new_last_expression.is_err())
       {
@@ -2020,29 +2020,32 @@ namespace jank::analyze
         return arg_expr;
       }
 
-      jtl::ptr<void> expected_type{ cpp_util::untyped_object_ptr_type() };
+      jtl::ptr<void> expected_type{ cpp_util::untyped_object_ref_type() };
       if(is_loop)
       {
         expected_type = cpp_util::expression_type(loop_details.unwrap()->pairs[arg_index].second);
-      }
 
-      /* Check if op = can be used, since we'll be using it to update the loop values. */
-      auto const op_equal_sym{ make_box<obj::symbol>("cpp", "=") };
-      auto const op_equal_call{ analyze_call(
-        make_box<obj::persistent_list>(std::in_place,
-                                       op_equal_sym,
-                                       loop_details.unwrap()->pairs[arg_index].first,
-                                       form),
-        current_frame,
-        expression_position::value,
-        fn_ctx,
-        false) };
-      if(op_equal_call.is_err())
-      {
-        /* TODO: Improve error to reference let binding and provide a custom recur message
-         * instead of operator = stuff. */
-        /* We add one to account for 'recur'. */
-        return op_equal_call.expect_err()->add_usage(read::parse::reparse_nth(list, arg_index + 1));
+        /* Check if op = can be used, since we'll be using it to update the loop values. */
+        auto const op_equal_sym{ make_box<obj::symbol>("cpp", "=") };
+        auto const op_equal_call{ analyze_call(
+          make_box<obj::persistent_list>(std::in_place,
+                                         op_equal_sym,
+                                         loop_details.unwrap()->pairs[arg_index].first,
+                                         form),
+          current_frame,
+          expression_position::statement,
+          fn_ctx,
+          false) };
+        if(op_equal_call.is_err())
+        {
+          /* TODO: Improve error to reference let binding and provide a custom recur message
+           * instead of operator = stuff. */
+
+          /* We add one to account for 'recur'. */
+          return op_equal_call.expect_err()->add_usage(
+            read::parse::reparse_nth(list, arg_index + 1));
+        }
+        op_equal_exprs.emplace_back(op_equal_call.expect_ok());
       }
 
       arg_expr = apply_implicit_conversion(arg_expr.expect_ok(), expected_type, macro_expansions);
@@ -2051,7 +2054,6 @@ namespace jank::analyze
         return arg_expr;
       }
       arg_exprs.emplace_back(arg_expr.expect_ok());
-      op_equal_exprs.emplace_back(op_equal_call.expect_ok());
       ++arg_index;
     }
 
@@ -2449,7 +2451,7 @@ namespace jank::analyze
     }
     /* TODO: Support native types if they're compatible with bool. */
     condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                               cpp_util::untyped_object_ptr_type(),
+                                               cpp_util::untyped_object_ref_type(),
                                                macro_expansions);
     if(condition_expr.is_err())
     {
@@ -2501,13 +2503,13 @@ namespace jank::analyze
       if(is_then_convertible)
       {
         then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                              cpp_util::untyped_object_ptr_type(),
+                                              cpp_util::untyped_object_ref_type(),
                                               macro_expansions);
       }
       else if(is_else_convertible)
       {
         else_expr = apply_implicit_conversion(else_expr.expect_ok(),
-                                              cpp_util::untyped_object_ptr_type(),
+                                              cpp_util::untyped_object_ref_type(),
                                               macro_expansions);
       }
 
@@ -2622,7 +2624,7 @@ namespace jank::analyze
       return arg_expr.expect_err();
     }
     arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
-                                         cpp_util::untyped_object_ptr_type(),
+                                         cpp_util::untyped_object_ref_type(),
                                          macro_expansions);
     if(arg_expr.is_err())
     {
@@ -2871,7 +2873,7 @@ namespace jank::analyze
         return res.expect_err();
       }
       res = apply_implicit_conversion(res.expect_ok(),
-                                      cpp_util::untyped_object_ptr_type(),
+                                      cpp_util::untyped_object_ref_type(),
                                       macro_expansions);
       if(res.is_err())
       {
@@ -2940,7 +2942,7 @@ namespace jank::analyze
             return k_expr.expect_err();
           }
           k_expr = apply_implicit_conversion(k_expr.expect_ok(),
-                                             cpp_util::untyped_object_ptr_type(),
+                                             cpp_util::untyped_object_ref_type(),
                                              macro_expansions);
           if(k_expr.is_err())
           {
@@ -2953,7 +2955,7 @@ namespace jank::analyze
             return v_expr.expect_err();
           }
           v_expr = apply_implicit_conversion(v_expr.expect_ok(),
-                                             cpp_util::untyped_object_ptr_type(),
+                                             cpp_util::untyped_object_ref_type(),
                                              macro_expansions);
           if(v_expr.is_err())
           {
@@ -2994,7 +2996,7 @@ namespace jank::analyze
             return res.expect_err();
           }
           res = apply_implicit_conversion(res.expect_ok(),
-                                          cpp_util::untyped_object_ptr_type(),
+                                          cpp_util::untyped_object_ref_type(),
                                           macro_expansions);
           if(res.is_err())
           {
@@ -3210,7 +3212,7 @@ namespace jank::analyze
         return arg_expr;
       }
       arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
-                                           cpp_util::untyped_object_ptr_type(),
+                                           cpp_util::untyped_object_ref_type(),
                                            macro_expansions);
       if(arg_expr.is_err())
       {

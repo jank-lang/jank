@@ -46,7 +46,7 @@ namespace jank
 
     {
       profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      //__rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {

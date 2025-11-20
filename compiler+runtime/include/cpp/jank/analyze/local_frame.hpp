@@ -17,7 +17,7 @@ namespace jank::runtime
 
 namespace jank::analyze::cpp_util
 {
-  jtl::ptr<void> untyped_object_ptr_type();
+  jtl::ptr<void> untyped_object_ref_type();
 }
 
 namespace jank::analyze
@@ -59,7 +59,7 @@ namespace jank::analyze
     bool has_unboxed_usage{};
     /* TODO: This gets stomped when a binding is shadowed. Do we
      * need to handle shadowing more delicately? */
-    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ptr_type() };
+    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ref_type() };
 
     runtime::object_ref to_runtime_data() const;
   };

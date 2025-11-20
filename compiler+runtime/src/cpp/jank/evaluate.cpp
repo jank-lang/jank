@@ -183,7 +183,7 @@ namespace jank::evaluate
       expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
                                                   expr->frame,
                                                   expr->needs_box,
-                                                  cpp_util::untyped_object_ptr_type(),
+                                                  cpp_util::untyped_object_ref_type(),
                                                   expr_type,
                                                   conversion_policy::into_object,
                                                   expr);
