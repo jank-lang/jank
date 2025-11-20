@@ -1493,34 +1493,61 @@ namespace jank::codegen
       return ret_tmp;
     }
 
-    util::format_to(body_buffer, "{} {}( ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+    util::format_to(body_buffer, "{} {}{ ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
 
-    auto const is_primitive{ cpp_util::is_primitive(expr->type) };
-    auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
-    auto const needs_conversion{ !Cpp::IsConstructible(expr->type, arg_type) };
-    if(is_primitive && needs_conversion)
+    if(!expr->arg_exprs.empty())
     {
-      util::format_to(body_buffer,
-                      "jank::runtime::convert<{}>::{}({}.get())",
-                      cpp_util::get_qualified_type_name(expr->type),
-                      "from_object",
-                      arg_tmps[0].str(false));
-    }
-    else
-    {
-      bool need_comma{};
-      for(auto const &arg_tmp : arg_tmps)
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+      bool needs_conversion{};
+      jtl::immutable_string conversion_type;
+      if(cpp_util::is_any_object(expr->type) && !cpp_util::is_any_object(arg_type))
       {
-        if(need_comma)
+        needs_conversion = true;
+        conversion_type = "into_object";
+      }
+      else if(!cpp_util::is_any_object(expr->type) && cpp_util::is_any_object(arg_type))
+      {
+        needs_conversion = true;
+        conversion_type = "from_object";
+      }
+
+      if(needs_conversion)
+      {
+        util::format_to(body_buffer,
+                        "jank::runtime::convert<{}>::{}({}.get())",
+                        cpp_util::get_qualified_type_name(expr->type),
+                        conversion_type,
+                        arg_tmps[0].str(false));
+      }
+      else
+      {
+        auto const needs_static_cast{ expr->type != arg_type && expr->arg_exprs.size() == 1 };
+        if(needs_static_cast)
         {
-          util::format_to(body_buffer, ", ");
+          util::format_to(body_buffer,
+                          "static_cast<{}>(",
+                          cpp_util::get_qualified_type_name(expr->type));
         }
-        util::format_to(body_buffer, "{}", arg_tmp.str(false));
-        need_comma = true;
+
+        bool need_comma{};
+        for(auto const &arg_tmp : arg_tmps)
+        {
+          if(need_comma)
+          {
+            util::format_to(body_buffer, ", ");
+          }
+          util::format_to(body_buffer, "{}", arg_tmp.str(false));
+          need_comma = true;
+        }
+
+        if(needs_static_cast)
+        {
+          util::format_to(body_buffer, ")");
+        }
       }
     }
 
-    util::format_to(body_buffer, " );");
+    util::format_to(body_buffer, " };");
 
     if(expr->position == expression_position::tail)
     {
