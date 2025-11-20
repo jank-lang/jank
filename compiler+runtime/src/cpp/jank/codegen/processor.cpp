@@ -1375,7 +1375,7 @@ namespace jank::codegen
 
       if(is_void)
       {
-        util::format_to(body_buffer, "object_ref const {};", ret_tmp);
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
       }
       else
       {
@@ -1385,13 +1385,22 @@ namespace jank::codegen
       util::format_to(body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
 
       bool need_comma{};
-      for(auto const &arg_tmp : arg_tmps)
+      for(u8 arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
       {
+        auto const arg_expr{ expr->arg_exprs[arg_idx] };
+        auto const arg_type{ cpp_util::expression_type(arg_expr) };
+        auto const param_type{ Cpp::GetFunctionArgType(source->scope, arg_idx) };
+        auto const &arg_tmp{ arg_tmps[arg_idx] };
+
         if(need_comma)
         {
           util::format_to(body_buffer, ", ");
         }
         util::format_to(body_buffer, "{}", arg_tmp.str(true));
+        if(Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
+        {
+          util::format_to(body_buffer, ".erase()");
+        }
         need_comma = true;
       }
 
@@ -1431,7 +1440,7 @@ namespace jank::codegen
 
       if(is_void)
       {
-        util::format_to(body_buffer, "object_ref const {};", ret_tmp);
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
       }
       else
       {
@@ -1867,20 +1876,21 @@ namespace jank::codegen
           }
           used_constants.emplace(v.second.native_name.to_hash());
 
+          /* TODO: Typed lifted constants. */
           util::format_to(header_buffer,
                           "{} const {};",
                           detail::gen_constant_type(v.second.data, true),
                           runtime::munge(v.second.native_name));
 
-          if(v.second.unboxed_native_name.is_some())
-          {
-            util::format_to(header_buffer,
-                            "static constexpr {} const {}{ ",
-                            detail::gen_constant_type(v.second.data, false),
-                            runtime::munge(v.second.unboxed_native_name.unwrap()));
-            detail::gen_constant(v.second.data, header_buffer, false);
-            util::format_to(header_buffer, "};");
-          }
+          //if(v.second.unboxed_native_name.is_some())
+          //{
+          //  util::format_to(header_buffer,
+          //                  "static constexpr {} const {}{ ",
+          //                  detail::gen_constant_type(v.second.data, false),
+          //                  runtime::munge(v.second.unboxed_native_name.unwrap()));
+          //  detail::gen_constant(v.second.data, header_buffer, false);
+          //  util::format_to(header_buffer, "};");
+          //}
         }
 
         /* TODO: More useful types here. */
@@ -2026,7 +2036,9 @@ namespace jank::codegen
 
       if(!param_shadows_fn)
       {
-        util::format_to(body_buffer, "object_ref const {}{ this };", runtime::munge(root_fn->name));
+        util::format_to(body_buffer,
+                        "jank::runtime::object_ref const {}{ this };",
+                        runtime::munge(root_fn->name));
       }
 
       if(arity.fn_ctx->is_tail_recursive)
