@@ -1697,11 +1697,16 @@ namespace jank::codegen
   {
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_box")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
+    auto const value_expr_type{ cpp_util::expression_type(expr->value_expr) };
+    auto const type_str{ Cpp::GetTypeAsString(
+      Cpp::GetCanonicalType(Cpp::GetNonReferenceType(value_expr_type))) };
 
-    util::format_to(body_buffer,
-                    "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}) };",
-                    ret_tmp,
-                    value_tmp.unwrap().str(false));
+    util::format_to(
+      body_buffer,
+      "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}, \"{}\") };",
+      ret_tmp,
+      value_tmp.unwrap().str(false),
+      type_str);
 
     if(expr->position == expression_position::tail)
     {
