@@ -710,16 +710,34 @@ namespace jank::runtime
 
   bool is_even(object_ref const l)
   {
-    return visit_type<obj::integer>(
-      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 0; },
-      l);
+    if(l->type == object_type::integer)
+    {
+      return expect_object<obj::integer>(l)->data % 2 == 0;
+    }
+
+    if(l->type == object_type::big_integer)
+    {
+      return expect_object<obj::big_integer>(l)->data % 2 == 0;
+    }
+
+    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
+      .erase();
   }
 
   bool is_odd(object_ref const l)
   {
-    return visit_type<obj::integer>(
-      [=](auto const typed_l) -> bool { return typed_l->data % 2 != 0; },
-      l);
+    if(l->type == object_type::integer)
+    {
+      return expect_object<obj::integer>(l)->data % 2 != 0;
+    }
+
+    if(l->type == object_type::big_integer)
+    {
+      return expect_object<obj::big_integer>(l)->data % 2 != 0;
+    }
+
+    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
+      .erase();
   }
 
   bool is_equiv(object_ref const l, object_ref const r)
