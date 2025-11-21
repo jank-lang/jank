@@ -1002,6 +1002,7 @@ namespace jank::codegen
                                                pair.first->to_string()) };
       }
 
+      auto const local_type{ cpp_util::expression_type(pair.second) };
       auto const &val_tmp(gen(pair.second, fn_arity));
       auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
 
@@ -1012,7 +1013,6 @@ namespace jank::codegen
        * be able to, just copy stack-allocated C++ objects around willy nilly. */
       if(expr->is_loop)
       {
-        auto const local_type{ cpp_util::expression_type(pair.second) };
         if(cpp_util::is_any_object(local_type))
         {
           util::format_to(body_buffer,
@@ -1027,17 +1027,24 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(body_buffer, "{ auto &&{}({}); ", munged_name, val_tmp.unwrap().str(false));
+        /* Local array refs should be turned into pointers so we can work with them more easily. */
+        if(Cpp::IsArrayType(Cpp::GetNonReferenceType(local_type)))
+        {
+          util::format_to(body_buffer,
+                          "{ {} {}({}); ",
+                          cpp_util::get_qualified_type_name(Cpp::GetPointerType(
+                            Cpp::GetArrayElementType(Cpp::GetNonReferenceType(local_type)))),
+                          munged_name,
+                          val_tmp.unwrap().str(false));
+        }
+        else
+        {
+          util::format_to(body_buffer,
+                          "{ auto &&{}({}); ",
+                          munged_name,
+                          val_tmp.unwrap().str(false));
+        }
       }
-
-      //auto const binding(local.unwrap().binding);
-      //if(!binding->needs_box && binding->has_boxed_usage)
-      //{
-      //  util::format_to(body_buffer,
-      //                  "auto const {}({});",
-      //                  detail::boxed_local_name(munged_name),
-      //                  val_tmp.unwrap().str(true));
-      //}
     }
 
     if(expr->is_loop)
@@ -1672,25 +1679,11 @@ namespace jank::codegen
 
     if(expr->arg_exprs.size() == 1)
     {
-      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
-      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(arg_type)))
-      {
-        util::format_to(body_buffer,
-                        "auto &&{}( {} static_cast<{}>({}) );",
-                        ret_tmp,
-                        cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
-                        cpp_util::get_qualified_type_name(
-                          Cpp::GetPointerType(Cpp::GetArrayElementType(arg_type))),
-                        arg_tmps[0].str(false));
-      }
-      else
-      {
-        util::format_to(body_buffer,
-                        "auto &&{}( {}{} );",
-                        ret_tmp,
-                        cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
-                        arg_tmps[0].str(false));
-      }
+      util::format_to(body_buffer,
+                      "auto &&{}( {}{} );",
+                      ret_tmp,
+                      cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
+                      arg_tmps[0].str(false));
     }
     else
     {
@@ -1905,16 +1898,6 @@ namespace jank::codegen
                           "{} const {};",
                           detail::gen_constant_type(v.second.data, true),
                           runtime::munge(v.second.native_name));
-
-          //if(v.second.unboxed_native_name.is_some())
-          //{
-          //  util::format_to(header_buffer,
-          //                  "static constexpr {} const {}{ ",
-          //                  detail::gen_constant_type(v.second.data, false),
-          //                  runtime::munge(v.second.unboxed_native_name.unwrap()));
-          //  detail::gen_constant(v.second.data, header_buffer, false);
-          //  util::format_to(header_buffer, "};");
-          //}
         }
 
         /* TODO: More useful types here. */

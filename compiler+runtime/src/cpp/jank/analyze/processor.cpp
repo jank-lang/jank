@@ -3353,10 +3353,6 @@ namespace jank::analyze
         /* TODO: Error if it's static and non-primitive. */
         type = Cpp::GetLValueReferenceType(type);
       }
-      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
-      {
-        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
-      }
     }
     else if(Cpp::IsEnumConstant(scope))
     {
