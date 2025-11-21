@@ -723,7 +723,8 @@ namespace jank::evaluate
 
   object_ref eval(expr::cpp_raw_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "cpp_raw", {})));
+    __rt_ctx->jit_prc.eval_string(expr->code);
+    return runtime::jank_nil;
   }
 
   object_ref eval(expr::cpp_type_ref const)

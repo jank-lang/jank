@@ -230,8 +230,11 @@ namespace jank::jit
     profile::timer const timer{ "jit eval_string" };
     //util::println("// eval_string:\n{}\n", s);
     auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
-    /* TODO: Throw on errors. */
-    llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+    if(err)
+    {
+      llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+      throw std::runtime_error{ "Failed to evaluate C++ code." };
+    }
     register_jit_stack_frames();
   }
 
