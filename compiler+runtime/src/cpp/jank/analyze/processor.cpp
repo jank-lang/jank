@@ -2259,7 +2259,7 @@ namespace jank::analyze
 
     /* All bindings in a letfn appear simultaneously and may be mutually recursive.
      * This makes creating a letfn locals frame a bit more involved than let, where locals
-     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)]) 
+     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)])
      * requires the other to be in scope in order to be analyzed.
      *
      * We tackle this in two steps. First, we create empty local bindings for all names.
@@ -2308,7 +2308,7 @@ namespace jank::analyze
 
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
       auto it(ret->pairs.emplace_back(sym, fexpr));
-      auto local(ret->frame->locals.find(sym)->second);
+      auto &local(ret->frame->locals.find(sym)->second);
       local.value_expr = some(it.second);
       local.needs_box = it.second->needs_box;
     }

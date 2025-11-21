@@ -906,12 +906,6 @@ namespace jank::codegen
       {
         auto const &pair{ let->pairs[i] };
         auto const local(expr->frame->find_local_or_capture(pair.first));
-        if(local.is_none())
-        {
-          throw std::runtime_error{ util::format("ICE: unable to find local: {}",
-                                                 pair.first->to_string()) };
-        }
-
         auto const &local_name(runtime::munge(local.unwrap().binding->native_name));
         auto const &val_name(arg_tmp_it->str(true));
 
@@ -979,43 +973,24 @@ namespace jank::codegen
     auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")) };
     bool used_option{};
 
-    //if(expr->needs_box)
-    {
-      /* TODO: The type may not be default constructible so this may fail. We likely
-       * want an array the same size as the desired type. When we have the last expression,
-       * we can then do a placement new with the move ctor.
-       *
-       * Also add a test for this. */
-      auto const last_expr_type{ cpp_util::expression_type(
-        expr->body->values[expr->body->values.size() - 1]) };
+    auto const last_expr_type{ cpp_util::expression_type(
+      expr->body->values[expr->body->values.size() - 1]) };
 
-      jtl::immutable_string type_name;
-      /* In analysis, we treat untyped objects as object*, since that's easier for IR.
-       * However, for C++, we want to normalize that to object_ref to take full advantage
-       * of richer types. */
-      if(cpp_util::is_untyped_object(last_expr_type))
-      {
-        type_name = "object_ref";
-        util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp);
-      }
-      else
-      {
-        used_option = true;
-        type_name = Cpp::GetTypeAsString(Cpp::GetNonReferenceType(last_expr_type));
-        /* TODO: Test for this with something non-default constructible. */
-        util::format_to(body_buffer, "jtl::option<{}> {}{ }; {", type_name, ret_tmp);
-      }
+    auto const &type_name{ cpp_util::get_qualified_type_name(
+      Cpp::GetNonReferenceType(last_expr_type)) };
+    if(cpp_util::is_any_object(last_expr_type))
+    {
+      util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp);
+    }
+    else
+    {
+      used_option = true;
+      util::format_to(body_buffer, "jtl::option<{}> {}{ }; {", type_name, ret_tmp);
     }
 
     for(auto const &pair : expr->pairs)
     {
       auto const local(expr->frame->find_local_or_capture(pair.first));
-      if(local.is_none())
-      {
-        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
-                                               pair.first->to_string()) };
-      }
-
       auto const local_type{ cpp_util::expression_type(pair.second) };
       auto const &val_tmp(gen(pair.second, fn_arity));
       auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
@@ -1108,9 +1083,108 @@ namespace jank::codegen
   }
 
   jtl::option<handle>
-  processor::gen(analyze::expr::letfn_ref const, analyze::expr::function_arity const &)
+  processor::gen(analyze::expr::letfn_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    return none;
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")) };
+    bool used_option{};
+
+    auto const last_expr_type{ cpp_util::expression_type(
+      expr->body->values[expr->body->values.size() - 1]) };
+
+    auto const &type_name{ cpp_util::get_qualified_type_name(
+      Cpp::GetNonReferenceType(last_expr_type)) };
+    if(cpp_util::is_any_object(last_expr_type))
+    {
+      util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp);
+    }
+    else
+    {
+      used_option = true;
+      util::format_to(body_buffer, "jtl::option<{}> {}{ }; {", type_name, ret_tmp);
+    }
+
+    /* We don't handle shadowed bindings very well, so we can run into problems where our
+     * codegen doesn't work. For letfn, we detect shadowed bindings and get around potential
+     * assignment issues by just using an object_ref. This can be removed once we
+     * properly give shadowed bindings individual local_binding entries or we have some other
+     * mechanism for tracking them. */
+    bool has_shadowed_bindings{};
+    native_set<jtl::immutable_string> seen_names;
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const &name{ local.unwrap().binding->native_name };
+      if(seen_names.contains(name))
+      {
+        has_shadowed_bindings = true;
+        break;
+      }
+      seen_names.emplace(name);
+    }
+
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
+      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const type_name{ (
+        has_shadowed_bindings
+          ? "jank::runtime::object_ref"
+          : util::format("jank::runtime::oref<{}>", runtime::munge(val_expr->unique_name))) };
+      util::format_to(body_buffer, "{ {} {};", type_name, munged_name);
+    }
+
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const &val_tmp(gen(pair.second, fn_arity));
+      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+
+      util::format_to(body_buffer, "{} = {}; ", munged_name, val_tmp.unwrap().str(false));
+    }
+
+    for(auto const &pair : expr->pairs)
+    {
+      auto const local(expr->frame->find_local_or_capture(pair.first));
+
+      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
+      for(auto const &capture_pair : val_expr->captures())
+      {
+        auto const &capture_name(runtime::munge(capture_pair.second->native_name));
+        util::format_to(body_buffer, "{}->{} = {}; ", munged_name, capture_name, capture_name);
+      }
+    }
+
+    for(auto it(expr->body->values.begin()); it != expr->body->values.end();)
+    {
+      auto const &val_tmp(gen(*it, fn_arity));
+
+      /* We ignore all values but the last. */
+      if(++it == expr->body->values.end() && val_tmp.is_some())
+      {
+        /* The last expression tmp needs to be movable. */
+        util::format_to(body_buffer,
+                        "{} = std::move({});",
+                        ret_tmp,
+                        val_tmp.unwrap().str(expr->needs_box));
+      }
+    }
+    for(auto const &_ : expr->pairs)
+    {
+      static_cast<void>(_);
+      util::format_to(body_buffer, "}");
+    }
+
+    util::format_to(body_buffer, "}");
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {}{};", ret_tmp, (used_option ? ".unwrap()" : ""));
+      return none;
+    }
+
+    return util::format("{}{}", ret_tmp, (used_option ? ".unwrap()" : ""));
   }
 
   jtl::option<handle>
@@ -1914,8 +1988,9 @@ namespace jank::codegen
           }
           used_captures.emplace(v.first->to_hash());
 
+          /* Captures aren't const since they could be late-assigned, in the case of a letfn. */
           util::format_to(header_buffer,
-                          "jank::runtime::object_ref const {};",
+                          "jank::runtime::object_ref {};",
                           runtime::munge(v.second.native_name));
         }
       }
