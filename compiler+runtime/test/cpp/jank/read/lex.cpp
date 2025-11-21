@@ -5,6 +5,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -1809,6 +1810,44 @@ namespace jank::read::lex
               == make_results({
                 make_error(kind::lex_invalid_keyword, 0, 7),
               }));
+      }
+
+      SUBCASE("Auto-resolved keyword with no symbol")
+      {
+        processor p{ "::" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+              }));
+      }
+
+      SUBCASE("Auto-resolved keyword with empty space")
+      {
+        processor p{ ":: " };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+              }));
+      }
+
+      SUBCASE("Comma after ::")
+      {
+        processor p{ "::," };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ make_error(kind::lex_invalid_keyword, 0, 2) }));
+      }
+
+      SUBCASE("Graceful lexing after invalid ::")
+      {
+        processor p{ ":: 42" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+                token{ 3, 2, token_kind::integer, 42ll }
+        }));
       }
     }
 
