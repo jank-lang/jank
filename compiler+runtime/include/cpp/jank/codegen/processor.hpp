@@ -101,6 +101,7 @@ namespace jank::codegen
     jtl::option<handle> gen(analyze::expr::call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
     gen(analyze::expr::primitive_literal_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle> gen(analyze::expr::list_ref const, analyze::expr::function_arity const &);
     jtl::option<handle> gen(analyze::expr::vector_ref const, analyze::expr::function_arity const &);
     jtl::option<handle> gen(analyze::expr::map_ref const, analyze::expr::function_arity const &);
     jtl::option<handle> gen(analyze::expr::set_ref const, analyze::expr::function_arity const &);

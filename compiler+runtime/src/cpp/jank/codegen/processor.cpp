@@ -589,22 +589,11 @@ namespace jank::codegen
                     "auto const {}(jank::runtime::dynamic_call({}",
                     ret_tmp,
                     source_tmp);
-    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    for(size_t i{}; i < arg_tmps.size(); ++i)
     {
       util::format_to(body_buffer, ", {}", arg_tmps[i].str(true));
     }
 
-    if(runtime::max_params < arg_tmps.size())
-    {
-      util::format_to(
-        body_buffer,
-        ", jank::runtime::make_box<jank::runtime::obj::persistent_list>(std::in_place");
-      for(size_t i{ runtime::max_params }; i < arg_tmps.size(); ++i)
-      {
-        util::format_to(body_buffer, ", {}", arg_tmps[i].str(true));
-      }
-      util::format_to(body_buffer, ")");
-    }
     util::format_to(body_buffer, "));");
   }
 
@@ -652,6 +641,42 @@ namespace jank::codegen
           return none;
         }
     }
+  }
+
+  jtl::option<handle>
+  processor::gen(analyze::expr::list_ref const expr, analyze::expr::function_arity const &fn_arity)
+  {
+    native_vector<handle> data_tmps;
+    data_tmps.reserve(expr->data_exprs.size());
+    for(auto const &data_expr : expr->data_exprs)
+    {
+      data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap());
+    }
+
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("list")));
+    util::format_to(body_buffer,
+                    "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_list>(",
+                    ret_tmp);
+    if(expr->meta.is_some())
+    {
+      detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+      util::format_to(body_buffer, ", ");
+    }
+    util::format_to(body_buffer, "std::in_place ");
+    for(auto const &tmp : data_tmps)
+    {
+      util::format_to(body_buffer, ", ");
+      util::format_to(body_buffer, "{}", tmp.str(true));
+    }
+    util::format_to(body_buffer, "));");
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(analyze::expr::vector_ref const expr,
@@ -951,11 +976,10 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::let_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    handle const ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")),
-                          expr->needs_box };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")) };
     bool used_option{};
 
-    if(expr->needs_box)
+    //if(expr->needs_box)
     {
       /* TODO: The type may not be default constructible so this may fail. We likely
        * want an array the same size as the desired type. When we have the last expression,
@@ -972,25 +996,15 @@ namespace jank::codegen
       if(cpp_util::is_untyped_object(last_expr_type))
       {
         type_name = "object_ref";
-        util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp.str(expr->needs_box));
+        util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp);
       }
       else
       {
         used_option = true;
         type_name = Cpp::GetTypeAsString(Cpp::GetNonReferenceType(last_expr_type));
         /* TODO: Test for this with something non-default constructible. */
-        util::format_to(body_buffer,
-                        "jtl::option<{}> {}{ }; {",
-                        type_name,
-                        ret_tmp.str(expr->needs_box));
+        util::format_to(body_buffer, "jtl::option<{}> {}{ }; {", type_name, ret_tmp);
       }
-    }
-    else
-    {
-      util::format_to(body_buffer,
-                      "auto const {}([&](){}{",
-                      ret_tmp.str(expr->needs_box),
-                      (expr->needs_box ? "-> object_ref" : ""));
     }
 
     for(auto const &pair : expr->pairs)
@@ -1059,22 +1073,15 @@ namespace jank::codegen
       /* We ignore all values but the last. */
       if(++it == expr->body->values.end() && val_tmp.is_some())
       {
-        if(expr->needs_box)
-        {
-          /* The last expression tmp needs to be movable. */
-          util::format_to(body_buffer,
-                          "{} = std::move({});",
-                          ret_tmp.str(true),
-                          val_tmp.unwrap().str(expr->needs_box));
+        /* The last expression tmp needs to be movable. */
+        util::format_to(body_buffer,
+                        "{} = std::move({});",
+                        ret_tmp,
+                        val_tmp.unwrap().str(expr->needs_box));
 
-          if(expr->is_loop)
-          {
-            util::format_to(body_buffer, " break;");
-          }
-        }
-        else
+        if(expr->is_loop)
         {
-          util::format_to(body_buffer, "return {};", val_tmp.unwrap().str(expr->needs_box));
+          util::format_to(body_buffer, " break;");
         }
       }
     }
@@ -1089,25 +1096,15 @@ namespace jank::codegen
       util::format_to(body_buffer, "}");
     }
 
-    if(expr->needs_box)
-    {
-      util::format_to(body_buffer, "}");
-    }
-    else
-    {
-      util::format_to(body_buffer, "}());");
-    }
+    util::format_to(body_buffer, "}");
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer,
-                      "return {}{};",
-                      ret_tmp.str(expr->needs_box),
-                      (used_option ? ".unwrap()" : ""));
+      util::format_to(body_buffer, "return {}{};", ret_tmp, (used_option ? ".unwrap()" : ""));
       return none;
     }
 
-    return util::format("{}{}", ret_tmp.str(expr->needs_box), (used_option ? ".unwrap()" : ""));
+    return util::format("{}{}", ret_tmp, (used_option ? ".unwrap()" : ""));
   }
 
   jtl::option<handle>
