@@ -1335,6 +1335,11 @@ namespace jank::codegen
 
     if(Cpp::IsVoid(expr->conversion_type))
     {
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+        return none;
+      }
       return "jank::runtime::jank_nil";
     }
 
@@ -1379,7 +1384,7 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(body_buffer, "auto const &{}{ ", ret_tmp);
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
       }
 
       util::format_to(body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
@@ -1397,7 +1402,7 @@ namespace jank::codegen
           util::format_to(body_buffer, ", ");
         }
         util::format_to(body_buffer, "{}", arg_tmp.str(true));
-        if(Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
+        if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
           util::format_to(body_buffer, ".erase()");
         }
@@ -1444,7 +1449,7 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(body_buffer, "auto const &{}{ ", ret_tmp);
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
       }
 
       util::format_to(body_buffer, "{}(", source_tmp.str(true));
@@ -1667,16 +1672,30 @@ namespace jank::codegen
 
     if(expr->arg_exprs.size() == 1)
     {
-      util::format_to(body_buffer,
-                      "auto {}( {}{} );",
-                      ret_tmp,
-                      cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
-                      arg_tmps[0].str(false));
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(arg_type)))
+      {
+        util::format_to(body_buffer,
+                        "auto &&{}( {} static_cast<{}>({}) );",
+                        ret_tmp,
+                        cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
+                        cpp_util::get_qualified_type_name(
+                          Cpp::GetPointerType(Cpp::GetArrayElementType(arg_type))),
+                        arg_tmps[0].str(false));
+      }
+      else
+      {
+        util::format_to(body_buffer,
+                        "auto &&{}( {}{} );",
+                        ret_tmp,
+                        cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
+                        arg_tmps[0].str(false));
+      }
     }
     else
     {
       util::format_to(body_buffer,
-                      "auto {}( {} {} {} );",
+                      "auto &&{}( {} {} {} );",
                       ret_tmp,
                       arg_tmps[0].str(false),
                       cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
