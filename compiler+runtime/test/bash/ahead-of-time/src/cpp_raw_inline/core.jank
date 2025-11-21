@@ -1,0 +1,10 @@
+(ns cpp-raw-inline.core)
+
+(cpp/raw "
+ inline int cpp_rawinline_hello() {
+  return 10;
+}
+")
+
+(defn -main []
+  (println (cpp/cpp_rawinline_hello)))
