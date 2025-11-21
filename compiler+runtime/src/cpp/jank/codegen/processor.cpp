@@ -1677,13 +1677,19 @@ namespace jank::codegen
       arg_tmps.emplace_back(gen(arg_expr, arity).unwrap());
     }
 
+    auto const op_name{ cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap() };
+
     if(expr->arg_exprs.size() == 1)
     {
+      util::format_to(body_buffer, "auto &&{}( {}{} );", ret_tmp, op_name, arg_tmps[0].str(false));
+    }
+    else if(op_name == "aget")
+    {
       util::format_to(body_buffer,
-                      "auto &&{}( {}{} );",
+                      "auto &&{}( {}[{}] );",
                       ret_tmp,
-                      cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
-                      arg_tmps[0].str(false));
+                      arg_tmps[0].str(false),
+                      arg_tmps[1].str(false));
     }
     else
     {
@@ -1691,7 +1697,7 @@ namespace jank::codegen
                       "auto &&{}( {} {} {} );",
                       ret_tmp,
                       arg_tmps[0].str(false),
-                      cpp_util::operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap(),
+                      op_name,
                       arg_tmps[1].str(false));
     }
 
@@ -1734,13 +1740,15 @@ namespace jank::codegen
   {
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
+    auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "static_cast<{}>(jank::runtime::try_object<jank::runtime::obj::opaque_box>({})-"
-                    ">data.data) };",
+                    "static_cast<{}>(jank_unbox(\"{}\", {}.data)"
+                    ") };",
                     ret_tmp,
-                    Cpp::GetTypeAsString(expr->type),
+                    type_name,
+                    type_name,
                     value_tmp.unwrap().str(false));
 
     if(expr->position == expression_position::tail)
