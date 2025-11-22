@@ -10,5 +10,4 @@
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/util/scope_exit.hpp>
-
-extern "C" void *jank_unbox(char const *type, void *o);
+#include <jank/c_api.h>

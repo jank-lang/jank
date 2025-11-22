@@ -940,8 +940,8 @@ extern "C"
     {
       if(o_obj->type == object_type::integer)
       {
-        /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
-         * case macro. */
+        /* We don't hash the integer if it's within an i32 value.
+         * This is to be consistent with how keys are hashed in jank's case macro. */
         integer = (integer >= std::numeric_limits<i32>::min()
                    && integer <= std::numeric_limits<i32>::max())
           ? integer

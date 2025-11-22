@@ -186,6 +186,25 @@ namespace jank::codegen
                             "f64>({}))",
                             typed_o->data);
           }
+          else if constexpr(std::same_as<T, runtime::obj::big_integer>)
+          {
+            util::format_to(buffer,
+                            "jank::runtime::make_box<jank::runtime::obj::big_integer>(\"{}\")",
+                            typed_o->to_string());
+          }
+          else if constexpr(std::same_as<T, runtime::obj::big_decimal>)
+          {
+            util::format_to(buffer,
+                            "jank::runtime::make_box<jank::runtime::obj::big_decimal>(\"{}\")",
+                            typed_o->to_string());
+          }
+          else if constexpr(std::same_as<T, runtime::obj::ratio>)
+          {
+            util::format_to(buffer,
+                            "jank::runtime::obj::ratio::create({}, {})",
+                            typed_o->data.numerator,
+                            typed_o->data.denominator);
+          }
           else if constexpr(std::same_as<T, runtime::obj::symbol>)
           {
             if(typed_o->meta.is_some())
@@ -1085,7 +1104,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::letfn_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")) };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("letfn")) };
     bool used_option{};
 
     auto const last_expr_type{ cpp_util::expression_type(
@@ -1347,9 +1366,51 @@ namespace jank::codegen
   }
 
   jtl::option<handle>
-  processor::gen(analyze::expr::case_ref const, analyze::expr::function_arity const &)
+  processor::gen(analyze::expr::case_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    return none;
+    auto const is_tail{ expr->position == analyze::expression_position::tail };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("case")) };
+
+    util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
+
+    auto const &value_tmp{ gen(expr->value_expr, fn_arity) };
+
+    util::format_to(body_buffer,
+                    "switch(jank_shift_mask_case_integer({}.erase(), {}, {})) {",
+                    value_tmp.unwrap().str(true),
+                    expr->shift,
+                    expr->mask);
+
+    jank_debug_assert(expr->keys.size() == expr->exprs.size());
+    for(usize i{}; i < expr->keys.size(); ++i)
+    {
+      util::format_to(body_buffer, "case {}: {", expr->keys[i]);
+
+      auto const &case_tmp{ gen(expr->exprs[i], fn_arity) };
+      if(!is_tail)
+      {
+        util::format_to(body_buffer, "{} = {};", ret_tmp, case_tmp.unwrap().str(true));
+      }
+      util::format_to(body_buffer, "break; }");
+    }
+
+    util::format_to(body_buffer, "default: {");
+
+    auto const &default_tmp{ gen(expr->default_expr, fn_arity) };
+    if(!is_tail)
+    {
+      util::format_to(body_buffer, "{} = {};", ret_tmp, default_tmp.unwrap().str(true));
+    }
+
+    util::format_to(body_buffer, "} }");
+
+    if(is_tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
