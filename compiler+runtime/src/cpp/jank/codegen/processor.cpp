@@ -1455,7 +1455,7 @@ namespace jank::codegen
       return util::format("{}", val);
     }
 
-    auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
+    auto const tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
 
     if(expr->position == expression_position::tail)
     {
