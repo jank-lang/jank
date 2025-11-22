@@ -3345,12 +3345,8 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
-      /* TODO: A Clang bug prevents us from supporting references to static members.
-       * https://github.com/llvm/llvm-project/issues/146956
-       */
-      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
+      if(!Cpp::IsPointerType(type))
       {
-        /* TODO: Error if it's static and non-primitive. */
         type = Cpp::GetLValueReferenceType(type);
       }
     }
@@ -4355,8 +4351,18 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 0));
       }
 
+      if(Cpp::IsStaticDatamember(member_scope))
+      {
+        return error::analyze_known_issue(
+                 "A blocking Clang bug prevents access to static members in some scenarios. See "
+                 "https://github.com/llvm/llvm-project/issues/146956 for details.",
+                 object_source(member),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 0));
+      }
+
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetTypeFromScope(member_scope);
+      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
       val->scope = member_scope;
       return val;
     }

@@ -184,6 +184,8 @@ namespace jank::error
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
         return "Invalid C++ member access.";
+      case kind::analyze_known_issue:
+        return "Known issue.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
