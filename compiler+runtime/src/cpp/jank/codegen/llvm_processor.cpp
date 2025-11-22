@@ -3749,7 +3749,7 @@ namespace jank::codegen
      * as well, to detect cases where we're not restoring in the correct order. */
     return { [stack_ptr, this]() {
       ssize found{ -1 };
-      for(ssize i{}; i != static_cast<ssize>(stack_saves.size()); ++i)
+      for(ssize i{}; std::cmp_not_equal(i, stack_saves.size()); ++i)
       {
         if(stack_saves[i].data == stack_ptr)
         {

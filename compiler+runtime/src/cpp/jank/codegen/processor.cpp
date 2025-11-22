@@ -1455,7 +1455,7 @@ namespace jank::codegen
       return util::format("{}", val);
     }
 
-    auto const tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
+    auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
 
     if(expr->position == expression_position::tail)
     {
@@ -1529,7 +1529,7 @@ namespace jank::codegen
       util::format_to(body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
 
       bool need_comma{};
-      for(u8 arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
+      for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
       {
         auto const arg_expr{ expr->arg_exprs[arg_idx] };
         auto const arg_type{ cpp_util::expression_type(arg_expr) };
@@ -2271,7 +2271,6 @@ namespace jank::codegen
 
     if(!generated_expression)
     {
-      jtl::immutable_string close = ")";
       util::format_to(expression_buffer,
                       "jank::runtime::make_box<{}>(",
                       runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
@@ -2327,7 +2326,7 @@ namespace jank::codegen
         }
       }
 
-      util::format_to(expression_buffer, "{}", close);
+      util::format_to(expression_buffer, ")");
 
       generated_expression = true;
     }
