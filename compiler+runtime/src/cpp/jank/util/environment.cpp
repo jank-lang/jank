@@ -115,6 +115,15 @@ namespace jank::util
       sb(def);
     }
 
+    sb(".");
+
+    sb("pch_includes:");
+    for(auto const &def : util::cli::opts.pch_includes)
+    {
+      sb(def);
+      sb(",");
+    }
+
     auto const input(util::format("{}.{}.{}.{}.{}.{}",
                                   JANK_VERSION,
                                   clang::getClangRevision(),

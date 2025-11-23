@@ -234,24 +234,56 @@ namespace jank::util
       return "/virtual/incremental.pch";
     }
 
-    auto dev_path{ jank_path / "incremental.pch" };
-    if(std::filesystem::exists(dev_path))
-    {
-      return dev_path.c_str();
-    }
-
     std::string const installed_path{ format("{}/incremental.pch",
                                              user_cache_dir(binary_version)) };
     if(std::filesystem::exists(installed_path))
     {
       return installed_path.c_str();
     }
-
     return none;
   }
 
+  /* In order to allow the user of jank to be guaranteed access to specific system
+   * libraries at runtime in their program, we allow them to customize the 
+   * pre-compiled header, the template for which, is the prelude.hpp file. The flag
+   * by which they do this is --include-pch. This function takes those inputs, such as
+   * "float.h" or "cfloat" and appends them as #include directives to a copy of the prelude.hpp file. 
+   * This ensures that when the user includes these headers in their program, they will be available. 
+   * It prevents the user from depending on transitive dependencies included by jank itself as a basis 
+   * for writing jank programs. 
+   * 
+   * Given the original prelude.hpp path, the pch_includes from the CLI opts, and the binary version
+   * Return the filesystem path of the customized prelude header file.
+   */
+  std::filesystem::path customize_prelude (
+    std::filesystem::path prelude_path, 
+    native_vector<jtl::immutable_string> pch_includes, 
+    jtl::immutable_string const &binary_version) 
+  {
+
+    /* Copy the prelude.hpp template to a temporary directory */
+
+    std::filesystem::path customized_prelude_path = format("/tmp/jank_prelude_customized_{}.hpp", binary_version).c_str();
+    const auto copy_options = std::filesystem::copy_options::overwrite_existing;
+    std::filesystem::copy(prelude_path, customized_prelude_path, copy_options);
+
+    /* Append user includes to customized prelude file */
+
+    std::ofstream customized_prelude_file_out(customized_prelude_path, std::ios::app);
+
+    customized_prelude_file_out << "\n\n /* Hello user, you have provided the include(s) below via the --include-pch flag(s) in your jank command. */ \n\n";
+
+    for (auto pch_include : pch_includes) {
+      customized_prelude_file_out << format("#include <{}> \n", pch_include);
+    }
+
+    customized_prelude_file_out.close();
+
+    return customized_prelude_path;
+  }
+
   jtl::result<jtl::immutable_string, error_ref>
-  build_pch(std::vector<char const *> args, jtl::immutable_string const &binary_version)
+  build_pch(std::vector<char const *> args, native_vector<jtl::immutable_string> pch_includes, jtl::immutable_string const &binary_version)
   {
     /* TODO: Remove these logs for the alpha release. */
     print(stderr,
@@ -271,11 +303,14 @@ namespace jank::util
                        install_path)));
       }
       include_path = install_path;
-    }
+    } 
+
+    /* Customize prelude.hpp with user supplied --include-pch flags */
+    include_path = customize_prelude(include_path, pch_includes, binary_version);  
 
     std::filesystem::path const output_path{ format("{}/incremental.pch",
                                                     user_cache_dir(binary_version)) };
-    std::filesystem::create_directories(output_path.parent_path());
+    std::filesystem::create_directories(output_path.parent_path()); 
 
     args.emplace_back("-Xclang");
     args.emplace_back("-fincremental-extensions");

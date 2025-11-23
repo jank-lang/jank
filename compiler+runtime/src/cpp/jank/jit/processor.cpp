@@ -141,7 +141,7 @@ namespace jank::jit
     auto pch_path{ util::find_pch(binary_version) };
     if(pch_path.is_none())
     {
-      auto const res{ util::build_pch(args, binary_version) };
+      auto const res{ util::build_pch(args, util::cli::opts.pch_includes, binary_version) };
       if(res.is_err())
       {
         throw res.expect_err();
