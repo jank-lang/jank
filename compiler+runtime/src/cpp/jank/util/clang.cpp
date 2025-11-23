@@ -263,7 +263,7 @@ namespace jank::util
 
     /* Copy the prelude.hpp template to a temporary directory */
 
-    std::filesystem::path customized_prelude_path = format("/tmp/jank_prelude_customized_{}.hpp", binary_version).c_str();
+    std::filesystem::path customized_prelude_path = format("{}/jank_prelude_customized_{}.hpp", std::filesystem::temp_directory_path(), binary_version).c_str();
     const auto copy_options = std::filesystem::copy_options::overwrite_existing;
     std::filesystem::copy(prelude_path, customized_prelude_path, copy_options);
 
