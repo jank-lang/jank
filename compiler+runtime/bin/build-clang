@@ -49,7 +49,7 @@ echo "Using ${make_j} cores to build"
 
 srcdir="${PWD}"
 
-llvm_url="https://github.com/jank-lang/llvm-project.git"
+llvm_url="https://github.com/pfeodrippe/llvm-project.git"
 llvm_version=22
 llvm_branch="jank-snapshot/llvm${llvm_version}"
 
