@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <clang/AST/Decl.h>
+#include <clang/AST/Type.h>
 #include <clang/Interpreter/CppInterOp.h>
 #include <clang/Sema/Sema.h>
 #include <Interpreter/Compatibility.h>
@@ -299,6 +301,24 @@ namespace jank::analyze::cpp_util
       return "jank::runtime::object_ref";
     }
     /* TODO: Handle typed object refs, too. */
+
+    auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
+    if(auto const *typedef_type
+       = llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()))
+    {
+      if(auto const *alias_decl = typedef_type->getDecl())
+      {
+        auto alias_name{ alias_decl->getQualifiedNameAsString() };
+        if(!alias_name.empty())
+        {
+          if(Cpp::IsPointerType(type))
+          {
+            alias_name += "*";
+          }
+          return alias_name;
+        }
+      }
+    }
 
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {

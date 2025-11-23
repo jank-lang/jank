@@ -1,0 +1,16 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::template_instantiation
+          {
+            struct foo
+            {
+              template <typename T>
+              foo(T t)
+                : a(std::to_string(t))
+              { }
+
+              std::string a{};
+            };
+          }")
+(let* [arg (cpp/int 53)
+       d (cpp/jank.cpp.constructor.complex.template_instantiation.foo arg)]
+  (when (= (cpp/.-a d) "53")
+    :success))

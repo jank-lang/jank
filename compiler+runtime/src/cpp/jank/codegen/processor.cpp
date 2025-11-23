@@ -248,6 +248,12 @@ namespace jank::codegen
                             R"(jank::runtime::make_box<jank::runtime::obj::uuid>("{}"))",
                             typed_o->to_string());
           }
+          else if constexpr(std::same_as<T, runtime::obj::inst>)
+          {
+            util::format_to(buffer,
+                            R"(jank::runtime::make_box<jank::runtime::obj::inst>("{}"))",
+                            util::escape(typed_o->to_string()));
+          }
           else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
           {
             util::format_to(buffer,
