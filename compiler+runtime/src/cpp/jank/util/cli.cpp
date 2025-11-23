@@ -70,6 +70,13 @@ namespace jank::util::cli
                    opts.libs,
                    "Library identifiers, absolute or relative paths eg. -lfoo for libfoo.so or "
                    "foo.dylib. Can be specified multiple times.");
+    cli.add_option("--include-pch",
+                   opts.pch_includes,
+                  "Include a system header that you or your dependencies will need at runtime in your program. "
+                  "Some system headers are included transitively by Jank, but those can change arbitrarily. "
+                  "Use this to ensure stability in your program. "
+                  "Can be specified multiple times. "
+                  "Ex. --include-pch \"float.h\""); 
 
     /* Run subcommand. */
     auto &cli_run(*cli.add_subcommand("run", "Load and run a file."));
