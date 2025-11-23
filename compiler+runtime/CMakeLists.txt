@@ -764,7 +764,7 @@ if(jank_enable_phase_2)
   #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
   add_custom_command(
-    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_o} ${jank_incremental_pch_flag}
+    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_o} 
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT ${CMAKE_BINARY_DIR}/jank
     COMMAND ln -sf jank-phase-1 jank
@@ -838,41 +838,6 @@ if(jank_test)
 endif()
 # ---- Tests ----
 
-# ---- Incremental PCH ----
-# Once we boot up jank, the first thing we do is load a PCH so that the JIT environment
-# can know all of the types and functions within the jank runtime. This PCH is our
-# "incremental" PCH, named that way since it uses Clang's -fincremental-extensions flag.
-
-# Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
-set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
-
-separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
-list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
-add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1
-  OUTPUT ${jank_incremental_pch_flag}
-  COMMAND_EXPAND_LISTS
-  VERBATIM
-  COMMAND ${CMAKE_CXX_COMPILER}
-          #${jank_incremental_pch_cxx_flags}
-          ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes}
-          -Xclang -fincremental-extensions
-          -Xclang -emit-pch
-          -Xclang -fmodules-embed-all-files
-          -fno-modules-validate-system-headers
-          -fpch-instantiate-templates
-          -x c++-header
-          -w
-          -c ${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp
-          -o ${jank_incremental_pch_flag}
-)
-add_custom_target(
-  jank_incremental_pch
-  ALL
-  DEPENDS ${jank_incremental_pch_flag}
-)
-# ---- Incremental PCH ----
-
 # ---- Compiled Clojure libraries ----
 # We do a bit of a dance here, to have a custom command generate a file
 # which is a then a dependency of a custom target. This is because custom
@@ -884,7 +849,7 @@ add_custom_target(
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag "${CMAKE_BINARY_DIR}/classes/core-libraries")
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank 
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_o}
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -o ${jank_clojure_core_o} clojure.core
