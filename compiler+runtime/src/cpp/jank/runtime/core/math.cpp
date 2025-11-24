@@ -1,5 +1,4 @@
 #include <random>
-#include <cmath>
 
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/number_like.hpp>
@@ -194,21 +193,6 @@ namespace jank::runtime
 
               return make_box<obj::integer>(res);
             }
-            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
-            {
-              f64 const res{ l_val + typed_r->data };
-
-              /* TODO: Better overflow detection logic? */
-              if(!std::isfinite(res))
-              {
-                native_big_decimal const l{ l_val };
-                return make_box<obj::big_decimal>(l + typed_r->data);
-              }
-
-              return make_box<obj::real>(res);
-            }
             else
             {
               return make_box(l_val + typed_r->data);
@@ -377,21 +361,6 @@ namespace jank::runtime
               }
 
               return make_box<obj::integer>(res);
-            }
-            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
-            {
-              auto const res{ l_val - typed_r->data };
-
-              /* TODO: Better overflow detection logic? */
-              if(!std::isfinite(res))
-              {
-                native_big_decimal const l{ l_val };
-                return make_box<obj::big_decimal>(l - typed_r->data);
-              }
-
-              return make_box<obj::real>(res);
             }
             else
             {
@@ -697,20 +666,6 @@ namespace jank::runtime
 
               return make_box<obj::integer>(res);
             }
-            else if constexpr((std::same_as<LT, obj::real> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::integer> && std::same_as<RT, obj::real>)
-                              || (std::same_as<LT, obj::real> && std::same_as<RT, obj::integer>))
-            {
-              auto const res{ l_val * typed_r->data };
-
-              if(!std::isfinite(res))
-              {
-                native_big_decimal const l{ l_val };
-                return make_box<obj::big_decimal>(l * typed_r->data);
-              }
-
-              return make_box<obj::real>(res);
-            }
             else
             {
               return make_box(l_val * typed_r->data);
@@ -824,19 +779,6 @@ namespace jank::runtime
 
           return make_box<obj::integer>(res);
         }
-        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::integer>
-                          || std::same_as<T, obj::real>)
-        {
-          auto const res{ typed_l->data + 1ll };
-
-          if(!std::isfinite(res))
-          {
-            native_big_decimal const v{ typed_l->data };
-            return make_box<obj::big_decimal>(v + 1ll);
-          }
-
-          return make_box<obj::real>(res);
-        }
         else
         {
           return make_box(typed_l->data + 1ll);
@@ -869,19 +811,6 @@ namespace jank::runtime
           }
 
           return make_box<obj::integer>(res);
-        }
-        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::integer>
-                          || std::same_as<T, obj::real>)
-        {
-          auto const res{ typed_l->data - 1ll };
-
-          if(!std::isfinite(res))
-          {
-            native_big_decimal const v{ typed_l->data };
-            return make_box<obj::big_decimal>(v - 1ll);
-          }
-
-          return make_box<obj::real>(res);
         }
         else
         {
