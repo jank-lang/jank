@@ -221,7 +221,6 @@ namespace jank::util
 
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version)
   {
-    std::filesystem::path const jank_path{ process_dir().c_str() };
 
     /* For AOT compiled jank programs, the PCH is embedded within the executable as a resource.
      * In this case, we just grab a pointer to the data and set it up with Clang's VFS so
