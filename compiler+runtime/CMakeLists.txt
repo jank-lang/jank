@@ -112,7 +112,7 @@ set(
   )
 
 if (NOT jank_local_clang)
-  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
+  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++)
 endif ()
 
 # If the user opts into a specific build type, we will provide sane defaults. However, for
@@ -220,6 +220,20 @@ list(APPEND jank_common_compiler_flags
   -DJANK_CLANG_RESOURCE_DIR="${clang_resource_dir}"
 )
 
+# Platform-specific filtering of system include paths for JIT flags
+# On macOS, filter out SDK paths that should come from -isysroot at JIT time
+# This prevents baking absolute SDK paths into the binary's JIT flags
+set(clang_jit_include_flags "${clang_system_include_flags}")
+if(APPLE)
+  set(_filtered_jit_flags "")
+  foreach(flag ${clang_system_include_flags})
+    if(NOT flag MATCHES "/SDKs/")
+      list(APPEND _filtered_jit_flags "${flag}")
+    endif()
+  endforeach()
+  set(clang_jit_include_flags "${_filtered_jit_flags}")
+endif()
+
 set(
   jank_jit_compiler_flags
   # We don't actually want to see any warnings for JIT compiled code.
@@ -230,7 +244,7 @@ set(
   -Xclang -fno-validate-pch
   -Xclang -fno-pch-timestamp
   ${LLVM_DEFINITIONS_LIST}
-  ${clang_system_include_flags}
+  ${clang_jit_include_flags}
 )
 # ---- Clang JIT environment ----
 
