@@ -98,6 +98,10 @@
               )
             '';
 
+            preBuild = ''
+              export HOME=$TMPDIR
+            '';
+
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [

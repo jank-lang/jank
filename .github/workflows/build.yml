@@ -292,10 +292,6 @@ jobs:
       with:
         submodules: 'recursive'
     - name: "Build jank"
-      run: |
-        TEMP_HOME=$(mktemp -d)
-        HOME=$TEMP_HOME nix build .?submodules=1 -L
+      run: nix build .?submodules=1 -L
     - name: "Check health"
-      run: |
-        TEMP_HOME=$(mktemp -d)
-        HOME=$TEMP_HOME nix run .?submodules=1 check-health
+      run: nix run .?submodules=1 check-health
