@@ -68,7 +68,7 @@ namespace jank::util
     {
       return err(llvm::toString(formatted_code.takeError()));
     }
-    jtl::immutable_string ret{ *formatted_code };
+    jtl::immutable_string const ret{ *formatted_code };
     return ok(ret);
   }
 }

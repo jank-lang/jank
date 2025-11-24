@@ -97,10 +97,11 @@ jobs:
             analyze: on
 
           ## Debug + sanitization
-          - name: Ubuntu - address sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: address
+          # TODO: Fix this. GC issue: https://github.com/bdwgc/bdwgc/issues/772
+          #- name: Ubuntu - address sanitizer
+          #  os: ubuntu-24.04
+          #  build_type: Debug
+          #  sanitize: address
 
           - name: Ubuntu - undefined behavior sanitizer
             os: ubuntu-24.04
