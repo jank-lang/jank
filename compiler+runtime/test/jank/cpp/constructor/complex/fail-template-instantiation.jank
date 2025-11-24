@@ -10,6 +10,6 @@
               std::string a{};
             };
           }")
-(let* [arg (cpp/int 5)
+(let* [arg (cpp/int* cpp/nullptr)
        _ (cpp/jank.cpp.constructor.complex.fail_template_instantiation.foo arg)]
   :success)
