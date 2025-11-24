@@ -294,7 +294,7 @@ namespace jank::util
 
   jtl::result<jtl::immutable_string, error_ref>
   build_pch(std::vector<char const *> args,
-            native_vector<jtl::immutable_string> pch_includes,
+            native_vector<jtl::immutable_string> const &pch_includes,
             jtl::immutable_string const &binary_version)
   {
     /* TODO: Remove these logs for the alpha release. */
@@ -318,7 +318,7 @@ namespace jank::util
     }
 
     /* Customize prelude.hpp with user supplied --include-pch flags */
-    include_path = customize_prelude(include_path, std::move(pch_includes), binary_version);
+    include_path = customize_prelude(include_path, pch_includes, binary_version);
 
     std::filesystem::path const output_path{ format("{}/incremental.pch",
                                                     user_cache_dir(binary_version)) };
