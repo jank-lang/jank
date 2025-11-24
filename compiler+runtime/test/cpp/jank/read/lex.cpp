@@ -79,7 +79,12 @@ namespace jank::read::lex
 
         auto const &lhs_err(lhs.expect_err());
         auto const &rhs_err(rhs.expect_err());
-        return lhs_err->kind == rhs_err->kind && lhs_err->source == rhs_err->source;
+        auto const is_eq{ lhs_err->kind == rhs_err->kind && lhs_err->source == rhs_err->source };
+
+        if(!is_eq)
+        {
+          return false;
+        }
       }
       else
       {
@@ -90,7 +95,12 @@ namespace jank::read::lex
 
         auto const &lhs_token(lhs.expect_ok());
         auto const &rhs_token(rhs.expect_ok());
-        return lhs_token == rhs_token;
+        auto const is_eq{ lhs_token == rhs_token };
+
+        if(!is_eq)
+        {
+          return false;
+        }
       }
     }
 
@@ -1826,6 +1836,7 @@ namespace jank::read::lex
       {
         processor p{ ":: " };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+
         CHECK(tokens
               == make_results({
                 make_error(kind::lex_invalid_keyword, 0, 2),
@@ -1841,12 +1852,13 @@ namespace jank::read::lex
 
       SUBCASE("Graceful lexing after invalid ::")
       {
-        processor p{ ":: 42" };
+        processor p{ "::   42" };
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+
         CHECK(tokens
               == make_results({
                 make_error(kind::lex_invalid_keyword, 0, 2),
-                token{ 3, 2, token_kind::integer, 42ll }
+                token{ 5, 2, token_kind::integer, 42ll }
         }));
       }
     }
