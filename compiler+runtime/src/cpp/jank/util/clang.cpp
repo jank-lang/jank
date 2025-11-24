@@ -234,6 +234,12 @@ namespace jank::util
       return "/virtual/incremental.pch";
     }
 
+    auto dev_path{ jank_path / "incremental.pch" };
+    if(std::filesystem::exists(dev_path))
+    {
+      return dev_path.c_str();
+    }
+
     std::string const installed_path{ format("{}/incremental.pch",
                                              user_cache_dir(binary_version)) };
     if(std::filesystem::exists(installed_path))

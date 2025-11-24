@@ -63,6 +63,8 @@ export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llv
 
 Now configure and build jank as normal, but pass `-Djank_local_clang=on` when you configure.
 
+If you need to customize Jank's Pre-Compiled Header (PCH), then pass `-Djank_runtime_pch=off` and use `--include-pch` flags in your jank command.
+
 ## Compiling jank
 ### Release
 A typical release build just needs the following:
