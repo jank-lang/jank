@@ -261,9 +261,10 @@ namespace jank::util
    * Given the original prelude.hpp path, the pch_includes from the CLI opts, and the binary version
    * Return the filesystem path of the customized prelude header file.
    */
-  std::filesystem::path customize_prelude(std::filesystem::path prelude_path,
-                                          native_vector<jtl::immutable_string> pch_includes,
-                                          jtl::immutable_string const &binary_version)
+  static std::filesystem::path
+  customize_prelude(std::filesystem::path const &prelude_path,
+                    native_vector<jtl::immutable_string> const &pch_includes,
+                    jtl::immutable_string const &binary_version)
   {
     /* Copy the prelude.hpp template to a temporary directory */
 
@@ -281,7 +282,7 @@ namespace jank::util
     customized_prelude_file_out << "\n\n /* Hello user, you have provided the include(s) below via "
                                    "the --include-pch flag(s) in your jank command. */ \n\n";
 
-    for(auto pch_include : pch_includes)
+    for(auto const &pch_include : pch_includes)
     {
       customized_prelude_file_out << format("#include <{}> \n", pch_include);
     }
@@ -317,7 +318,7 @@ namespace jank::util
     }
 
     /* Customize prelude.hpp with user supplied --include-pch flags */
-    include_path = customize_prelude(include_path, pch_includes, binary_version);
+    include_path = customize_prelude(include_path, std::move(pch_includes), binary_version);
 
     std::filesystem::path const output_path{ format("{}/incremental.pch",
                                                     user_cache_dir(binary_version)) };
