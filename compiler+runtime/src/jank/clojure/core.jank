@@ -1126,7 +1126,7 @@
   ([]
    0)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.add l r))
   ([l r & args]
@@ -1156,7 +1156,7 @@
   ([]
    1)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.mul l r))
   ([l r & args]
@@ -4508,10 +4508,8 @@
   See also: +"
   ([] 0)
   ([x]
-  ;;  (cast Number x)
-   x)
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (addP x y))
    (cpp/jank.runtime.promoting_add x y))
   ([x y & more]
    (reduce +' (+' x y) more)))
@@ -4521,11 +4519,9 @@
   See also: *"
   ([] 1)
   ([x]
-  ;;  (cast Number x)
-   x)
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (multiplyP x y))
-  (cpp/jank.runtime.promoting_mul x y))
+   (cpp/jank.runtime.promoting_mul x y))
   ([x y & more]
    (reduce *' (*' x y) more)))
 
@@ -4534,10 +4530,8 @@
   the ys from x and returns the result. Supports arbitrary precision.
   See also: -"
   ([x]
-  ;;  (. clojure.lang.Numbers (minusP x))
-   x)
+   (-' 0 x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (minusP x y))
    (cpp/jank.runtime.promoting_sub x y))
   ([x y & more]
    (reduce -' (-' x y) more)))
@@ -5338,8 +5332,7 @@
 (defn num
   "Coerce to Number"
   [x]
-  ;; (. clojure.lang.Numbers (num x))
-  (throw "TODO: port num"))
+  (cpp/jank.runtime.number x))
 
 (defn long
   "Coerce to long"

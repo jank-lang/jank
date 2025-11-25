@@ -277,6 +277,8 @@ namespace jank::runtime
   f64 to_real(object_ref o);
 
   bool is_number(object_ref o);
+  object_ref number(object_ref const o);
+
   bool is_integer(object_ref o);
   bool is_real(object_ref o);
   bool is_ratio(object_ref o);
