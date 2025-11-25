@@ -1952,6 +1952,11 @@ namespace jank::runtime
     }
   }
 
+  bool is_big_integer(object_ref const o)
+  {
+    return o->type == object_type::big_integer;
+  }
+
   obj::big_integer_ref to_big_integer(object_ref const o)
   {
     return visit_number_like(

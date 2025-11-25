@@ -83,7 +83,7 @@
     ;clojure.core-test.or ; unloadable, In clojure.core-test.or$fn_2-159, duplicate definition of symbol '_fn_2_0', unloadable
     ;clojure.core-test.partial ;unloadable
     ;clojure.core-test.plus ; error: Unable to resolve symbol 'Exception'
-    ;clojure.core-test.plus-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.plus-squote
     clojure.core-test.pos-int-qmark ; Expecting whitespace after the last token. due to M.
     ;clojure.core-test.pos-qmark ; Uncaught exception: not a number: nil. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.pr-str ; Uncaught exception: invalid call to clojure.core/pr-str with 2 args provided, In clojure.core-test.pr-str$fn_2-49, duplicate definition of symbol '_fn_2_0', unloadable
