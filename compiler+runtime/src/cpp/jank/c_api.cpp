@@ -68,6 +68,17 @@ extern "C"
     return __rt_ctx->read_string(s).erase();
   }
 
+  jank_object_ref jank_ns_intern(jank_object_ref const sym)
+  {
+    auto const sym_obj(try_object<obj::symbol>(reinterpret_cast<object *>(sym)));
+    return __rt_ctx->intern_ns(sym_obj).erase();
+  }
+
+  jank_object_ref jank_ns_intern_c(char const * const sym)
+  {
+    return __rt_ctx->intern_ns(sym).erase();
+  }
+
   void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count)
   {
     auto const ns_obj(__rt_ctx->intern_ns(ns));
