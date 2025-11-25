@@ -1282,16 +1282,18 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    auto qualified_sym(current_frame->lift_var(sym));
+    auto qualified_sym(runtime::__rt_ctx->qualify_symbol(sym));
     qualified_sym->meta = sym->meta;
     /* We always def in the current ns, so we want an owned var. */
-    auto const var(__rt_ctx->intern_owned_var(qualified_sym));
-    if(var.is_err())
+    auto const var_res(__rt_ctx->intern_owned_var(qualified_sym));
+    if(var_res.is_err())
     {
-      return error::internal_analyze_failure(var.expect_err(),
+      return error::internal_analyze_failure(var_res.expect_err(),
                                              meta_source(sym),
                                              latest_expansion(macro_expansions));
     }
+
+    current_frame->lift_var(var_res.expect_ok());
 
     jtl::option<jtl::ref<expression>> value_expr;
     bool const has_value{ 3 <= length };
@@ -1316,7 +1318,7 @@ namespace jank::analyze
       }
       value_expr = some(value_result.expect_ok());
 
-      vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
+      vars.insert_or_assign(var_res.expect_ok(), value_expr.unwrap());
     }
 
     if(has_docstring)
@@ -1599,7 +1601,7 @@ namespace jank::analyze
     auto const macro_kw(__rt_ctx->intern_keyword("", "macro", true).expect_ok());
     if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw).is_nil())
     {
-      current_frame->lift_var(qualified_sym);
+      current_frame->lift_var(var);
     }
     return jtl::make_ref<expr::var_deref>(position, current_frame, true, qualified_sym, var);
   }
@@ -2544,7 +2546,7 @@ namespace jank::analyze
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
 
-    auto const qualified_sym(current_frame->lift_var(arg_sym));
+    auto const qualified_sym{ __rt_ctx->qualify_symbol(arg_sym) };
     auto const found_var(__rt_ctx->find_var(qualified_sym));
     if(found_var.is_nil())
     {
@@ -2553,6 +2555,7 @@ namespace jank::analyze
         meta_source(o->meta),
         latest_expansion(macro_expansions));
     }
+    current_frame->lift_var(found_var);
 
     return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, found_var);
   }
@@ -2566,8 +2569,17 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
-    auto const qualified_sym(
-      current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
+    auto const qualified_sym(__rt_ctx->qualify_symbol(o->to_qualified_symbol()));
+
+    auto const found_var(__rt_ctx->find_var(qualified_sym));
+    if(found_var.is_nil())
+    {
+      return error::analyze_unresolved_var(
+        util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
+        meta_source(o->meta),
+        latest_expansion(macro_expansions));
+    }
+    current_frame->lift_var(found_var);
     return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, o);
   }
 

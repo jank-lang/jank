@@ -190,34 +190,21 @@ namespace jank::analyze
     return &find_closest_fn_frame(*l) == &find_closest_fn_frame(*r);
   }
 
-  obj::symbol_ref local_frame::lift_var(obj::symbol_ref const &sym)
+  void local_frame::lift_var(var_ref const &var)
   {
     auto &closest_fn(find_closest_fn_frame(*this));
-    auto const &found(closest_fn.lifted_vars.find(sym));
+    auto const qualified_sym{ make_box<obj::symbol>(var->n->name->name, var->name->name) };
+    auto const &found(closest_fn.lifted_vars.find(qualified_sym));
     if(found != closest_fn.lifted_vars.end())
     {
-      return found->first;
-    }
-
-    obj::symbol_ref qualified_sym{};
-    if(sym->ns.empty())
-    {
-      qualified_sym
-        = make_box<obj::symbol>(expect_object<ns>(__rt_ctx->current_ns_var->deref())->name->name,
-                                sym->name);
-    }
-    else
-    {
-      qualified_sym = make_box<obj::symbol>(*sym);
+      return;
     }
 
     /* We use unique native names, just so var names don't clash with the underlying C++ API. */
     lifted_var lv{ __rt_ctx->unique_namespaced_string(munge(qualified_sym->name)), qualified_sym };
-    closest_fn.lifted_vars.emplace(qualified_sym, std::move(lv));
-    return qualified_sym;
+    closest_fn.lifted_vars.emplace(qualified_sym, jtl::move(lv));
   }
 
-  /* TODO: These are not used in IR gen. Remove entirely? */
   jtl::option<std::reference_wrapper<lifted_var const>>
   local_frame::find_lifted_var(obj::symbol_ref const &sym) const
   {

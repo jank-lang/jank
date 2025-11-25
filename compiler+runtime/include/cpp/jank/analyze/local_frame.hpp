@@ -8,6 +8,7 @@
 namespace jank::runtime
 {
   struct context;
+  using var_ref = oref<struct var>;
 
   namespace obj
   {
@@ -135,7 +136,7 @@ namespace jank::analyze
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 
-    runtime::obj::symbol_ref lift_var(runtime::obj::symbol_ref const &);
+    void lift_var(runtime::var_ref const &);
     jtl::option<std::reference_wrapper<lifted_var const>>
     find_lifted_var(runtime::obj::symbol_ref const &) const;
 

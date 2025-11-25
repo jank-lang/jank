@@ -555,7 +555,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_deref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(expr->frame->find_lifted_var(expr->qualified_name).unwrap().get());
+    auto const &var(expr->frame->find_lifted_var(expr->var->to_qualified_symbol()).unwrap().get());
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -2256,11 +2256,7 @@ namespace jank::codegen
     util::format_to(footer_buffer, "};");
 
     /* Namespace. */
-    //if(!runtime::module::is_nested_module(module))
-    //if(target == compilation_target::module)
-    {
-      util::format_to(footer_buffer, "}");
-    }
+    util::format_to(footer_buffer, "}");
 
     if(target == compilation_target::module)
     {
