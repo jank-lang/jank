@@ -1864,6 +1864,11 @@ namespace jank::runtime
                              o);
   }
 
+  object_ref number(object_ref const o)
+  {
+    return visit_number_like([](auto const typed_l) -> object_ref { return typed_l; }, o);
+  }
+
   bool is_integer(object_ref const o)
   {
     return o->type == object_type::integer;

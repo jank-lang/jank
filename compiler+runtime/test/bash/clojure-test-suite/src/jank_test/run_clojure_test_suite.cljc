@@ -75,7 +75,7 @@
     ;clojure.core-test.nth ; Uncaught exception: index out of bounds: -1, In clojure.core-test.nth$fn_2-64, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
     ;clojure.core-test.nthnext ; Uncaught exception: not a number: nil, In clojure.core-test.nthnext$fn_2-83, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.nthrest ; Uncaught exception: not a number: nil, In clojure.core-test.nthrest$fn_2-85, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
-    clojure.core-test.num ; Expecting whitespace after the last token. due to M.
+    clojure.core-test.num
     clojure.core-test.number-qmark ; Expecting whitespace after the last token. due to M.
     clojure.core-test.number-range
     ;clojure.core-test.numerator ; Failed a test. Expecting whitespace after the last token. due to M.
@@ -96,7 +96,7 @@
     ;clojure.core-test.quot ; Failed tests. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rand ; unloadable, In clojure.core-test.rand$fn_2-71, duplicate definition of symbol '_jank_global_init_70', unloadable
     ;clojure.core-test.rand-int ; unloadable, In clojure.core-test.rand-int$fn_2-56, duplicate definition of symbol '_fn_2_0', unloadable
-    clojure.core-test.ratio-qmark ; Expecting whitespace after the last token. due to M.
+    ;clojure.core-test.ratio-qmark ; `jank.runtime.div` seems to be incorrect.
     ;clojure.core-test.rational-qmark ; (= true (rational? 0N))
     ;clojure.core-test.rationalize ; TODO: port rationalize, Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rem ; Fails the test cases.
