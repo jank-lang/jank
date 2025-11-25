@@ -112,7 +112,7 @@
     ;clojure.core-test.slash ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
     ;clojure.core-test.some-qmark ;Read error (437 - 437): unsupported reader macro
     ;clojure.core-test.star ; error: Unable to resolve symbol 'Exception'.
-    ;clojure.core-test.star-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.star-squote
     ;clojure.core-test.str ; TODO: port double, Expecting whitespace after the last token. due to M.
     clojure.core-test.string-qmark
     ;clojure.core-test.subs ; Uncaught exception: end index 1 is less than start 2, In clojure.core-test.subs$fn_2-70, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244
