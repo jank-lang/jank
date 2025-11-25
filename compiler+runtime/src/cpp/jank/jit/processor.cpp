@@ -121,17 +121,20 @@ namespace jank::jit
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
 
+    /* On macOS, we've seen some nasty issues with FP_NAN, FLT_MAX, and other C stdlib defines
+     * not getting picked up since Clang is defaulting to the system libc++ instead of our
+     * preferred libc++. We get around that by telling Clang to not add stdandard include paths
+     * and we instead add our own. Outside of macOS, we don't use libc++, so this doesn't make
+     * sense to have. */
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
       args.emplace_back("-nostdinc++");
-      args.emplace_back("-isystem");
+      args.emplace_back("-I");
       args.emplace_back(strdup((clang_dir / "../include/c++/v1").c_str()));
     }
-    else
-    {
-      args.emplace_back("-I");
-      args.emplace_back(strdup((clang_dir / "../include").c_str()));
-    }
+
+    args.emplace_back("-I");
+    args.emplace_back(strdup((clang_dir / "../include").c_str()));
 
     auto const clang_resource_dir{ util::find_clang_resource_dir() };
     if(clang_resource_dir.is_none())
