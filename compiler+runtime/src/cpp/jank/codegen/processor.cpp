@@ -6,6 +6,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -361,7 +362,7 @@ namespace jank::codegen
             util::format_to(
               buffer,
               "jank::runtime::make_box<jank::runtime::obj::persistent_list>(std::in_place");
-            for(auto it : runtime::make_sequence_range(typed_o))
+            for(auto const it : runtime::make_sequence_range(typed_o))
             {
               util::format_to(buffer, ", ");
               gen_constant(it, buffer, true);
@@ -1853,10 +1854,16 @@ namespace jank::codegen
 
     util::format_to(
       body_buffer,
-      "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}, \"{}\") };",
+      "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}, \"{}\") };\n",
       ret_tmp,
       value_tmp.unwrap().str(false),
       type_str);
+
+    auto const meta{ runtime::source_to_meta(expr->source) };
+    util::format_to(body_buffer,
+                    "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->read_string(\"{}\"));",
+                    ret_tmp,
+                    util::escape(runtime::to_code_string(meta)));
 
     if(expr->position == expression_position::tail)
     {
@@ -1873,15 +1880,18 @@ namespace jank::codegen
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
+    auto const meta{ runtime::source_to_meta(expr->source) };
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "static_cast<{}>(jank_unbox(\"{}\", {}.data)"
+                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.data, "
+                    "jank::runtime::__rt_ctx->read_string(\"{}\").data)"
                     ") };",
                     ret_tmp,
                     type_name,
                     type_name,
-                    value_tmp.unwrap().str(false));
+                    value_tmp.unwrap().str(false),
+                    util::escape(runtime::to_code_string(meta)));
 
     if(expr->position == expression_position::tail)
     {
