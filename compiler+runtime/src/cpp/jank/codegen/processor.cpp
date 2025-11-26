@@ -1294,7 +1294,13 @@ namespace jank::codegen
     util::format_to(body_buffer,
                     "throw static_cast<jank::runtime::object_ref>({});",
                     value_tmp.unwrap().str(true));
-    return none;
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+    }
+
+    return "jank::runtime::jank_nil";
   }
 
   jtl::option<handle>
