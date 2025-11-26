@@ -13,6 +13,7 @@
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang_format.hpp>
+#include <jank/profile/time.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
@@ -1436,7 +1437,7 @@ namespace jank::codegen
 
   jtl::option<handle> processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
   {
-    util::format_to(deps_buffer, "{}\n", expr->code);
+    util::format_to(deps_buffer, "\n{}\n", expr->code);
 
     if(expr->position == analyze::expression_position::tail)
     {
@@ -1996,6 +1997,7 @@ namespace jank::codegen
   {
     if(!generated_declaration)
     {
+      profile::timer const timer{ util::format("cpp gen {}", root_fn->name) };
       build_header();
       build_body();
       build_footer();
@@ -2283,7 +2285,28 @@ namespace jank::codegen
       util::format_to(footer_buffer,
                       "extern \"C\" void* {}(){",
                       runtime::module::module_to_load_function(module));
+
+      /* First thing we do when loading this module is to intern our ns. Everything else will
+       * build on that. */
       util::format_to(footer_buffer, "jank_ns_intern_c(\"{}\");", module);
+
+      /* This dance is performed to keep symbol names unique across all the modules.
+       * Considering LLVM JIT symbols to be global, we need to define them with
+       * unique names to avoid conflicts during JIT recompilation/reloading.
+       *
+       * The approach, right now, is for each namespace, we will keep a counter
+       * and will increase it every time we define a new symbol. When we JIT reload
+       * the same namespace again, we will define new symbols.
+       *
+       * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
+       * on an initial load.
+       */
+      auto const current_ns{ __rt_ctx->current_ns() };
+      util::format_to(footer_buffer,
+                      "jank_ns_set_symbol_counter(\"{}\", {});",
+                      current_ns->name->get_name(),
+                      current_ns->symbol_counter.load());
+
       util::format_to(footer_buffer,
                       "return {}::{}{ }.call().erase();",
                       runtime::module::module_to_native_ns(module),

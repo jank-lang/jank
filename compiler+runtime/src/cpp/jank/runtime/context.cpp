@@ -181,6 +181,7 @@ namespace jank::runtime
      * targeted at AOT and doesn't have access to what's loaded in the JIT runtime. */
     if(truthy(compile_files_var->deref()))
     {
+      profile::timer const timer{ "rt compile-module" };
       auto const &module(runtime::to_string(current_module_var->deref()));
       auto const name{ module::module_to_load_function(module) };
 
@@ -203,6 +204,7 @@ namespace jank::runtime
       }
       else
       {
+        profile::timer const timer{ "rt compile-module parse + write" };
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };

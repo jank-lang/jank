@@ -25,6 +25,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::jit
 {
@@ -231,15 +232,20 @@ namespace jank::jit
 
   void processor::eval_string(jtl::immutable_string const &s) const
   {
+    return eval_string(s, nullptr);
+  }
+
+  void processor::eval_string(jtl::immutable_string const &s, clang::Value * const ret) const
+  {
     profile::timer const timer{ "jit eval_string" };
     auto const &formatted{ s };
     //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
     //util::println("// eval_string:\n{}\n", formatted);
-    auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }));
+    auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
     if(err)
     {
-      llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
-      throw std::runtime_error{ "Failed to evaluate C++ code." };
+      llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
+      throw error::internal_codegen_failure("Unable to compile C++ source.");
     }
     register_jit_stack_frames();
   }

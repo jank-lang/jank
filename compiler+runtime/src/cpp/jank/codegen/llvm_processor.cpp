@@ -735,7 +735,7 @@ namespace jank::codegen
 
   jtl::string_result<void> llvm_processor::impl::gen()
   {
-    profile::timer const timer{ "ir gen" };
+    profile::timer const timer{ util::format("ir gen {}", root_fn->name) };
     if(target != compilation_target::function)
     {
       create_global_ctor();

@@ -20,7 +20,6 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/error/analyze.hpp>
-#include <jank/error/codegen.hpp>
 
 namespace jank::evaluate
 {
@@ -267,7 +266,8 @@ namespace jank::evaluate
 
   object_ref eval(expression_ref const ex)
   {
-    profile::timer const timer{ "eval ast node" };
+    profile::timer const timer{ util::format("eval ast node {}",
+                                             analyze::expression_kind_str(ex->kind)) };
     object_ref ret{};
     visit_expr([&ret](auto const typed_ex) { ret = eval(typed_ex); }, ex);
     return ret;
@@ -580,6 +580,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::function_ref const expr)
   {
+    profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
                           munge(expr->unique_name)));
@@ -616,15 +617,7 @@ namespace jank::evaluate
       __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
       auto const expr_str{ cg_prc.expression_str() + ".erase()" };
       clang::Value v;
-      auto res(
-        __rt_ctx->jit_prc.interpreter->ParseAndExecute({ expr_str.data(), expr_str.size() }, &v));
-      if(res)
-      {
-        /* TODO: Helper to turn an llvm::Error into a string. */
-        jtl::immutable_string const msg{ "Unable to compile/eval C++ source." };
-        llvm::logAllUnhandledErrors(jtl::move(res), llvm::errs(), "error: ");
-        throw error::internal_codegen_failure(msg);
-      }
+      __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
       return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
     }
   }
