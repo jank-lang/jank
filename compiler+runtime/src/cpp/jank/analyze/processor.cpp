@@ -4358,16 +4358,6 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 0));
       }
 
-      if(Cpp::IsStaticDatamember(member_scope))
-      {
-        return error::analyze_known_issue(
-                 "A blocking Clang bug prevents access to static members in some scenarios. See "
-                 "https://github.com/llvm/llvm-project/issues/146956 for details.",
-                 object_source(member),
-                 latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 0));
-      }
-
       val->val_kind = expr::cpp_value::value_kind::variable;
       val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
       val->scope = member_scope;
