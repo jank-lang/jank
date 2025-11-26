@@ -1,5 +1,9 @@
 #pragma once
 
+#include <folly/Synchronized.h>
+
+#include <mutex>
+
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
@@ -19,7 +23,8 @@ namespace jank::runtime::obj
 
     lazy_sequence() = default;
     lazy_sequence(lazy_sequence &&) noexcept = default;
-    lazy_sequence(lazy_sequence const &) = default;
+    lazy_sequence(lazy_sequence const &);
+    lazy_sequence &operator=(lazy_sequence const &);
     lazy_sequence(object_ref fn);
     lazy_sequence(object_ref fn, object_ref sequence);
 
@@ -46,6 +51,16 @@ namespace jank::runtime::obj
     lazy_sequence_ref with_meta(object_ref m) const;
 
   private:
+    struct state
+    {
+      object_ref fn{};
+      object_ref sv{};
+      object_ref s{};
+    };
+
+    folly::Synchronized<state, std::recursive_mutex>::LockedPtr lock_state() const;
+    void force_locked(folly::Synchronized<state, std::recursive_mutex>::LockedPtr &lock) const;
+
     object_ref resolve_fn() const;
     object_ref resolve_seq() const;
 
@@ -56,11 +71,8 @@ namespace jank::runtime::obj
     object_ref unwrap(object_ref ls) const;
 
   public:
-    /* TODO: Synchronize. */
     object base{ obj_type };
-    mutable object_ref fn{};
-    mutable object_ref sv{};
-    mutable object_ref s{};
+    mutable folly::Synchronized<state, std::recursive_mutex> state_;
     jtl::option<object_ref> meta;
   };
 }
