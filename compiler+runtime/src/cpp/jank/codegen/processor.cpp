@@ -184,8 +184,22 @@ namespace jank::codegen
           {
             util::format_to(buffer,
                             "jank::runtime::make_box<jank::runtime::obj::real>(static_cast<jank::"
-                            "f64>({}))",
-                            typed_o->data);
+                            "f64>(");
+
+            if(std::isinf(typed_o->data))
+            {
+              util::format_to(buffer, "INFINITY");
+            }
+            else if(std::isnan(typed_o->data))
+            {
+              util::format_to(buffer, "NAN");
+            }
+            else
+            {
+              util::format_to(buffer, "{}", typed_o->data);
+            }
+
+            util::format_to(buffer, "))");
           }
           else if constexpr(std::same_as<T, runtime::obj::big_integer>)
           {
