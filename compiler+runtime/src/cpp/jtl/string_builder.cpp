@@ -122,18 +122,18 @@ namespace jtl
 
   string_builder &string_builder::operator()(float const d) &
   {
-    /* snprintf %G implicitly casts to double anyway. */
+    /* snprintf %f implicitly casts to double anyway. */
     return (*this)(static_cast<double>(d));
   }
 
   string_builder &string_builder::operator()(double const d) &
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%G", d) };
+    auto const required{ snprintf(nullptr, 0, "%f", d) };
     maybe_realloc(*this, required);
 
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%G", d);
+    snprintf(buffer + pos, capacity - pos, "%f", d);
     pos += required;
 
     return *this;
