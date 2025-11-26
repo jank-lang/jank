@@ -113,7 +113,9 @@ set(
   )
 
 if (NOT jank_local_clang)
-  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++)
+  # On macOS, we need to link to LLVM's custom libunwind, instead of the system's. Otherwise,
+  # we're unable to catch exceptions thrown across JIT compiled frames.
+  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
 endif ()
 
 # If the user opts into a specific build type, we will provide sane defaults. However, for
