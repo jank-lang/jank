@@ -1597,12 +1597,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    /* Macros aren't lifted, since they're not used during runtime. */
-    auto const macro_kw(__rt_ctx->intern_keyword("", "macro", true).expect_ok());
-    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw).is_nil())
-    {
-      current_frame->lift_var(var);
-    }
+    current_frame->lift_var(var);
     return jtl::make_ref<expr::var_deref>(position, current_frame, true, qualified_sym, var);
   }
 
