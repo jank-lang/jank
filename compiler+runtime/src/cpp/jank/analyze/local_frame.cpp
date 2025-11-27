@@ -14,16 +14,6 @@ namespace jank::analyze
 {
   using namespace jank::runtime;
 
-  object_ref lifted_var::to_runtime_data() const
-  {
-    return obj::persistent_array_map::create_unique(make_box("var_name"), var_name);
-  }
-
-  object_ref lifted_constant::to_runtime_data() const
-  {
-    return obj::persistent_array_map::create_unique(make_box("data"), data);
-  }
-
   object_ref local_binding::to_runtime_data() const
   {
     return obj::persistent_array_map::create_unique(
@@ -190,78 +180,15 @@ namespace jank::analyze
     return &find_closest_fn_frame(*l) == &find_closest_fn_frame(*r);
   }
 
-  void local_frame::lift_var(var_ref const &var)
-  {
-    auto &closest_fn(find_closest_fn_frame(*this));
-    auto const qualified_sym{ make_box<obj::symbol>(var->n->name->name, var->name->name) };
-    auto const &found(closest_fn.lifted_vars.find(qualified_sym));
-    if(found != closest_fn.lifted_vars.end())
-    {
-      return;
-    }
-
-    /* We use unique native names, just so var names don't clash with the underlying C++ API. */
-    lifted_var lv{ __rt_ctx->unique_namespaced_string(munge(qualified_sym->name)), qualified_sym };
-    closest_fn.lifted_vars.emplace(qualified_sym, jtl::move(lv));
-  }
-
-  jtl::option<std::reference_wrapper<lifted_var const>>
-  local_frame::find_lifted_var(obj::symbol_ref const &sym) const
-  {
-    auto const &closest_fn(find_closest_fn_frame(*this));
-    auto const &found(closest_fn.lifted_vars.find(sym));
-    if(found != closest_fn.lifted_vars.end())
-    {
-      return some(std::ref(found->second));
-    }
-    return none;
-  }
-
-  void local_frame::lift_constant(object_ref const constant)
-  {
-    auto &closest_fn(find_closest_fn_frame(*this));
-    auto const &found(closest_fn.lifted_constants.find(constant));
-    if(found != closest_fn.lifted_constants.end())
-    {
-      return;
-    }
-
-    auto const name(__rt_ctx->unique_symbol("const"));
-    auto const unboxed_name{ visit_number_like(
-      [&](auto const) -> jtl::option<jtl::immutable_string> { return name.name + "__unboxed"; },
-      []() -> jtl::option<jtl::immutable_string> { return none; },
-      constant) };
-
-    lifted_constant l{ name.name, unboxed_name, constant };
-    closest_fn.lifted_constants.emplace(constant, std::move(l));
-  }
-
-  jtl::option<std::reference_wrapper<lifted_constant const>>
-  local_frame::find_lifted_constant(object_ref const o) const
-  {
-    auto const &closest_fn(find_closest_fn_frame(*this));
-    auto const &found(closest_fn.lifted_constants.find(o));
-    if(found != closest_fn.lifted_constants.end())
-    {
-      return some(std::ref(found->second));
-    }
-    return none;
-  }
-
   object_ref local_frame::to_runtime_data() const
   {
-    return obj::persistent_array_map::create_unique(
-      make_box("type"),
-      make_box(frame_type_str(type)),
-      make_box("parent"),
-      jank::detail::to_runtime_data(parent),
-      make_box("locals"),
-      jank::detail::to_runtime_data(locals),
-      make_box("captures"),
-      jank::detail::to_runtime_data(captures),
-      make_box("lifted_vars"),
-      jank::detail::to_runtime_data(lifted_vars),
-      make_box("lifted_constants"),
-      jank::detail::to_runtime_data(lifted_constants));
+    return obj::persistent_array_map::create_unique(make_box("type"),
+                                                    make_box(frame_type_str(type)),
+                                                    make_box("parent"),
+                                                    jank::detail::to_runtime_data(parent),
+                                                    make_box("locals"),
+                                                    jank::detail::to_runtime_data(locals),
+                                                    make_box("captures"),
+                                                    jank::detail::to_runtime_data(captures));
   }
 }

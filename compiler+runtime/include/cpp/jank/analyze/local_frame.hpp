@@ -30,25 +30,6 @@ namespace jank::analyze
     using function_context_ref = jtl::ref<struct function_context>;
   }
 
-  struct lifted_var
-  {
-    jtl::immutable_string native_name{};
-    runtime::obj::symbol_ref var_name{};
-
-    runtime::object_ref to_runtime_data() const;
-  };
-
-  /* TODO: Track constant usages to figure out if boxing is needed at all,
-   * rather than just doing both. */
-  struct lifted_constant
-  {
-    jtl::immutable_string native_name{};
-    jtl::option<jtl::immutable_string> unboxed_native_name{};
-    runtime::object_ref data{};
-
-    runtime::object_ref to_runtime_data() const;
-  };
-
   struct local_binding
   {
     runtime::obj::symbol_ref name{};
@@ -136,14 +117,6 @@ namespace jank::analyze
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 
-    void lift_var(runtime::var_ref const &);
-    jtl::option<std::reference_wrapper<lifted_var const>>
-    find_lifted_var(runtime::obj::symbol_ref const &) const;
-
-    void lift_constant(runtime::object_ref);
-    jtl::option<std::reference_wrapper<lifted_constant const>>
-      find_lifted_constant(runtime::object_ref) const;
-
     static local_frame const &find_closest_fn_frame(local_frame const &frame);
     static local_frame &find_closest_fn_frame(local_frame &frame);
 
@@ -153,12 +126,6 @@ namespace jank::analyze
     jtl::option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> captures;
-    native_unordered_map<runtime::obj::symbol_ref, lifted_var> lifted_vars;
-    native_unordered_map<runtime::object_ref,
-                         lifted_constant,
-                         std::hash<runtime::object_ref>,
-                         runtime::very_equal_to>
-      lifted_constants;
     /* This is only set if the frame type is fn. */
     jtl::ptr<expr::function_context> fn_ctx;
   };

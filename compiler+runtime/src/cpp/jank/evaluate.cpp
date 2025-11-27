@@ -129,12 +129,7 @@ namespace jank::evaluate
   }
 
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
-   * For those, we wrap them in a fn expression and then JIT compile and call them.
-   *
-   * There's an oddity here, since that expr wouldn't've been analyzed within a fn frame, so
-   * its lifted vars/constants, for example, aren't in a fn frame. Instead, they're put in the
-   * root frame. So, when wrapping this expr, we give the fn the root frame, but change its
-   * type to a fn frame. */
+   * For those, we wrap them in a fn expression and then JIT compile and call them. */
   template <typename E>
   static expr::function_ref wrap_expression(jtl::ref<E> const orig_expr,
                                             jtl::immutable_string const &name,
@@ -147,8 +142,6 @@ namespace jank::evaluate
     ret->unique_name = __rt_ctx->unique_namespaced_string(ret->name);
     ret->meta = obj::persistent_hash_map::empty();
 
-    auto const &closest_fn_frame(local_frame::find_closest_fn_frame(*expr->frame));
-
     auto const frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn,
                                                  expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
@@ -158,15 +151,11 @@ namespace jank::evaluate
                                 fn_ctx };
     expr->frame->parent = arity.frame;
     ret->frame = arity.frame->parent.unwrap_or(arity.frame);
-    ret->frame->lift_constant(ret->meta);
     fn_ctx->name = ret->name;
     fn_ctx->unique_name = ret->unique_name;
     fn_ctx->fn = ret;
     arity.frame->fn_ctx = fn_ctx;
     arity.fn_ctx = fn_ctx;
-
-    arity.frame->lifted_vars = closest_fn_frame.lifted_vars;
-    arity.frame->lifted_constants = closest_fn_frame.lifted_constants;
 
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const sym : arity.params)

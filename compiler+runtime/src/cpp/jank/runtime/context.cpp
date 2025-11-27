@@ -154,7 +154,7 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  object_ref context::eval_string(jtl::immutable_string_view const &code)
+  object_ref context::eval_string(jtl::immutable_string const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
@@ -225,8 +225,7 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::result<void, error_ref>
-  context::eval_cpp_string(jtl::immutable_string_view const &code) const
+  jtl::result<void, error_ref> context::eval_cpp_string(jtl::immutable_string const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
@@ -256,7 +255,7 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(jtl::immutable_string_view const &code)
+  object_ref context::read_string(jtl::immutable_string const &code)
   {
     profile::timer const timer{ "rt read_string" };
 
@@ -278,7 +277,7 @@ namespace jank::runtime
   }
 
   native_vector<analyze::expression_ref>
-  context::analyze_string(jtl::immutable_string_view const &code, bool const eval)
+  context::analyze_string(jtl::immutable_string const &code, bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -308,7 +307,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, error_ref>
-  context::load_module(jtl::immutable_string_view const &module, module::origin const ori)
+  context::load_module(jtl::immutable_string const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -345,7 +344,7 @@ namespace jank::runtime
     }
   }
 
-  jtl::result<void, error_ref> context::compile_module(jtl::immutable_string_view const &module)
+  jtl::result<void, error_ref> context::compile_module(jtl::immutable_string const &module)
   {
     module_dependencies.clear();
 
@@ -418,26 +417,25 @@ namespace jank::runtime
     return unique_namespaced_string("G_");
   }
 
-  jtl::immutable_string
-  context::unique_namespaced_string(jtl::immutable_string_view const &prefix) const
+  jtl::immutable_string context::unique_namespaced_string(jtl::immutable_string const &prefix) const
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
     return util::format("{}-{}-{}",
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
-                        prefix.data(),
+                        prefix.c_str(),
                         ++ns->symbol_counter);
   }
 
-  jtl::immutable_string context::unique_munged_string() const
+  jtl::immutable_string context::unique_string() const
   {
-    return munge(unique_namespaced_string());
+    return unique_string("G_");
   }
 
-  jtl::immutable_string
-  context::unique_munged_string(jtl::immutable_string_view const &prefix) const
+  jtl::immutable_string context::unique_string(jtl::immutable_string const &prefix) const
   {
-    return munge(unique_namespaced_string(prefix));
+    auto const ns{ current_ns() };
+    return util::format("{}-{}", prefix.c_str(), ++ns->symbol_counter);
   }
 
   obj::symbol context::unique_symbol() const
@@ -445,7 +443,7 @@ namespace jank::runtime
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
+  obj::symbol context::unique_symbol(jtl::immutable_string const &prefix) const
   {
     return { "", unique_namespaced_string(prefix) };
   }
@@ -512,6 +510,12 @@ namespace jank::runtime
   ns_ref context::current_ns() const
   {
     return expect_object<ns>(current_ns_var->deref());
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_var(jtl::immutable_string const &qualified_name)
+  {
+    return intern_var(make_box<obj::symbol>(qualified_name));
   }
 
   jtl::result<var_ref, jtl::immutable_string>

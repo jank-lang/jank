@@ -484,17 +484,53 @@ namespace jank::codegen
     return ret;
   }
 
+  static jtl::immutable_string
+  lift_var(native_unordered_map<jtl::immutable_string, jtl::immutable_string> &lifted_vars,
+           jtl::immutable_string const &qualified_name)
+  {
+    auto const existing{ lifted_vars.find(qualified_name) };
+    if(existing != lifted_vars.end())
+    {
+      return existing->second;
+    }
+
+    static jtl::immutable_string const dot{ "\\." };
+    auto const us{ __rt_ctx->unique_string(qualified_name) };
+    auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
+    //util::println("lifting var '{}' with '{}' as '{}'", qualified_name, us, native_name);
+    lifted_vars.emplace(qualified_name, native_name);
+    return native_name;
+  }
+
+  static jtl::immutable_string
+  lift_constant(native_unordered_map<runtime::object_ref,
+                                     jtl::immutable_string,
+                                     std::hash<runtime::object_ref>,
+                                     runtime::very_equal_to> &lifted_constants,
+                object_ref const &o)
+  {
+    auto const existing{ lifted_constants.find(o) };
+    if(existing != lifted_constants.end())
+    {
+      return existing->second;
+    }
+
+    auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
+    //util::println("lifting constant {} as {}", runtime::to_code_string(o), native_name);
+    lifted_constants.emplace(o, native_name);
+    return native_name;
+  }
+
   jtl::option<handle>
   processor::gen(analyze::expr::def_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &var(expr->frame->find_lifted_var(expr->name).unwrap().get());
-    auto const &munged_name(runtime::munge(var.native_name));
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(munged_name)));
+    auto const &var(lift_var(lifted_vars, expr->name->to_string()));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(var)));
 
-    jtl::option<std::reference_wrapper<analyze::lifted_constant const>> meta;
+    jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
     {
-      meta = expr->frame->find_lifted_constant(expr->name->meta.unwrap()).unwrap();
+      meta = lift_constant(lifted_constants, expr->name->meta.unwrap());
     }
 
     /* Forward declarations just intern the var and evaluate to it. */
@@ -503,16 +539,12 @@ namespace jank::codegen
       if(meta.is_some())
       {
         auto const dynamic{ truthy(
-          get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-        return util::format("{}->with_meta({})->set_dynamic({})",
-                            runtime::munge(var.native_name),
-                            runtime::munge(meta.unwrap().get().native_name),
-                            dynamic);
+          get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+        return util::format("{}->with_meta({})->set_dynamic({})", var, meta.unwrap(), dynamic);
       }
       else
       {
-        return util::format("{}->with_meta(jank::runtime::jank_nil)",
-                            runtime::munge(var.native_name));
+        return util::format("{}->with_meta(jank::runtime::jank_nil)", var);
       }
     }
 
@@ -524,17 +556,17 @@ namespace jank::codegen
           if(meta.is_some())
           {
             auto const dynamic{ truthy(
-              get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+              get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
             return util::format("{}->bind_root({})->with_meta({})->set_dynamic({})",
-                                runtime::munge(var.native_name),
+                                var,
                                 val.str(true),
-                                runtime::munge(meta.unwrap().get().native_name),
+                                meta.unwrap(),
                                 dynamic);
           }
           else
           {
             return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
-                                runtime::munge(var.native_name),
+                                var,
                                 val.str(true));
           }
         }
@@ -548,19 +580,19 @@ namespace jank::codegen
           if(meta.is_some())
           {
             auto const dynamic{ truthy(
-              get(meta.unwrap().get().data, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+              get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
             util::format_to(body_buffer,
                             "{}->bind_root({})->with_meta({})->set_dynamic({});",
-                            runtime::munge(var.native_name),
+                            var,
                             val.str(true),
-                            runtime::munge(meta.unwrap().get().native_name),
+                            meta.unwrap(),
                             dynamic);
           }
           else
           {
             util::format_to(body_buffer,
                             "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
-                            runtime::munge(var.native_name),
+                            var,
                             val.str(true));
           }
           return none;
@@ -571,17 +603,17 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_deref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(expr->frame->find_lifted_var(expr->var->to_qualified_symbol()).unwrap().get());
+    auto const &var(lift_var(lifted_vars, expr->var->to_qualified_symbol()->to_string()));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
         {
-          return util::format("{}->deref()", runtime::munge(var.native_name));
+          return util::format("{}->deref()", var);
         }
       case analyze::expression_position::tail:
         {
-          util::format_to(body_buffer, "return {}->deref();", runtime::munge(var.native_name));
+          util::format_to(body_buffer, "return {}->deref();", var);
           return none;
         }
     }
@@ -590,17 +622,17 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(expr->frame->find_lifted_var(expr->qualified_name).unwrap().get());
+    auto const &var(lift_var(lifted_vars, expr->qualified_name->to_string()));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
         {
-          return runtime::munge(var.native_name);
+          return var;
         }
       case analyze::expression_position::tail:
         {
-          util::format_to(body_buffer, "return {};", runtime::munge(var.native_name));
+          util::format_to(body_buffer, "return {};", var);
           return none;
         }
     }
@@ -667,14 +699,7 @@ namespace jank::codegen
     }
     else
     {
-      auto const &constant(expr->frame->find_lifted_constant(expr->data).unwrap().get());
-
-      ret = runtime::munge(constant.native_name);
-      if(constant.unboxed_native_name.is_some())
-      {
-        ret = { runtime::munge(constant.native_name),
-                runtime::munge(constant.unboxed_native_name.unwrap()) };
-      }
+      ret = lift_constant(lifted_constants, expr->data);
     }
 
     switch(expr->position)
@@ -2012,8 +2037,8 @@ namespace jank::codegen
     if(!generated_declaration)
     {
       profile::timer const timer{ util::format("cpp gen {}", root_fn->name) };
-      build_header();
       build_body();
+      build_header();
       build_footer();
       generated_declaration = true;
     }
@@ -2044,39 +2069,9 @@ namespace jank::codegen
                     runtime::munge(struct_name.name));
 
     {
-      /* TODO: Constants and vars are not shared across arities. We'd need stable names. */
-      native_set<uhash> used_vars, used_constants, used_captures;
+      native_set<uhash> used_captures;
       for(auto const &arity : root_fn->arities)
       {
-        for(auto const &v : arity.frame->lifted_vars)
-        {
-          auto const hash{ v.first->to_hash() };
-          if(used_vars.contains(hash))
-          {
-            continue;
-          }
-          used_vars.emplace(hash);
-
-          util::format_to(header_buffer,
-                          "jank::runtime::var_ref const {};",
-                          runtime::munge(v.second.native_name));
-        }
-
-        for(auto const &v : arity.frame->lifted_constants)
-        {
-          if(used_constants.contains(runtime::to_hash(v.first)))
-          {
-            continue;
-          }
-          used_constants.emplace(runtime::to_hash(v.first));
-
-          /* TODO: Typed lifted constants (in analysis). */
-          util::format_to(header_buffer,
-                          "{} const {};",
-                          detail::gen_constant_type(v.second.data, true),
-                          runtime::munge(v.second.native_name));
-        }
-
         /* TODO: More useful types here. */
         for(auto const &v : arity.frame->captures)
         {
@@ -2092,6 +2087,21 @@ namespace jank::codegen
                           "jank::runtime::object_ref {};",
                           runtime::munge(v.second.native_name));
         }
+      }
+
+      for(auto const &v : lifted_vars)
+      {
+        util::format_to(header_buffer, "jank::runtime::var_ref const {};", v.second);
+      }
+
+
+      for(auto const &v : lifted_constants)
+      {
+        /* TODO: Typed lifted constants (in analysis). */
+        util::format_to(header_buffer,
+                        "{} const {};",
+                        detail::gen_constant_type(v.first, true),
+                        v.second);
       }
     }
 
@@ -2123,8 +2133,6 @@ namespace jank::codegen
 
     {
       native_set<uhash> used_captures;
-      native_map<uhash, lifted_var> used_vars;
-      native_map<uhash, lifted_constant> used_constants;
       util::format_to(header_buffer, ") : jank::runtime::obj::jit_function{ ");
       /* TODO: All of the meta in clojure.core alone costs 2s to JIT compile at run-time.
        * How can this be faster? */
@@ -2133,40 +2141,6 @@ namespace jank::codegen
 
       for(auto const &arity : root_fn->arities)
       {
-        for(auto &v : arity.frame->lifted_vars)
-        {
-          auto const hash{ v.first->to_hash() };
-          auto const existing{ used_vars.find(hash) };
-          if(existing != used_vars.end())
-          {
-            v.second = existing->second;
-            continue;
-          }
-          used_vars.emplace(hash, v.second);
-
-          util::format_to(header_buffer,
-                          R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}", "{}").expect_ok() })",
-                          runtime::munge(v.second.native_name),
-                          v.second.var_name->ns,
-                          v.second.var_name->name);
-        }
-
-        for(auto &v : arity.frame->lifted_constants)
-        {
-          auto const hash{ runtime::to_hash(v.first) };
-          auto const existing{ used_constants.find(hash) };
-          if(existing != used_constants.end())
-          {
-            v.second = existing->second;
-            continue;
-          }
-          used_constants.emplace(hash, v.second);
-
-          util::format_to(header_buffer, ", {}{", runtime::munge(v.second.native_name));
-          detail::gen_constant(v.second.data, header_buffer, true);
-          util::format_to(header_buffer, "}");
-        }
-
         for(auto const &v : arity.frame->captures)
         {
           auto const hash{ v.first->to_hash() };
@@ -2179,6 +2153,22 @@ namespace jank::codegen
           auto const name{ runtime::munge(v.second.native_name) };
           util::format_to(header_buffer, ", {}{ {} }", name, name);
         }
+      }
+
+      for(auto const &v : lifted_vars)
+      {
+        util::format_to(header_buffer,
+                        R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
+                        v.second,
+                        v.first);
+      }
+
+
+      for(auto const &v : lifted_constants)
+      {
+        util::format_to(header_buffer, ", {}{", v.second);
+        detail::gen_constant(v.first, header_buffer, true);
+        util::format_to(header_buffer, "}");
       }
     }
 

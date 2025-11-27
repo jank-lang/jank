@@ -16,6 +16,7 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/evaluate.hpp>
@@ -942,7 +943,9 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
     if(is_ctor
-       && Cpp::IsAggregateConstructible(val->type, arg_types, __rt_ctx->unique_munged_string()))
+       && Cpp::IsAggregateConstructible(val->type,
+                                        arg_types,
+                                        runtime::munge(__rt_ctx->unique_namespaced_string())))
     {
       //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -1293,8 +1296,6 @@ namespace jank::analyze
                                              latest_expansion(macro_expansions));
     }
 
-    current_frame->lift_var(var_res.expect_ok());
-
     jtl::option<jtl::ref<expression>> value_expr;
     bool const has_value{ 3 <= length };
     bool const has_docstring{ 4 <= length };
@@ -1335,13 +1336,6 @@ namespace jank::analyze
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
-    }
-
-    /* Lift this so it can be used during codegen. */
-    /* TODO: I don't think lifting meta is actually needed anymore. Verify. */
-    if(qualified_sym->meta.is_some())
-    {
-      current_frame->lift_constant(qualified_sym->meta.unwrap());
     }
 
     return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, value_expr);
@@ -1597,7 +1591,6 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    current_frame->lift_var(var);
     return jtl::make_ref<expr::var_deref>(position, current_frame, true, qualified_sym, var);
   }
 
@@ -2550,7 +2543,6 @@ namespace jank::analyze
         meta_source(o->meta),
         latest_expansion(macro_expansions));
     }
-    current_frame->lift_var(found_var);
 
     return jtl::make_ref<expr::var_ref>(position,
                                         current_frame,
@@ -2569,7 +2561,6 @@ namespace jank::analyze
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     auto const qualified_sym(__rt_ctx->qualify_symbol(o->to_qualified_symbol()));
-    current_frame->lift_var(o);
     return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, o);
   }
 
@@ -2819,12 +2810,6 @@ namespace jank::analyze
                                        bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-
-    /* There's no need to lift these, since we'll just codgen the public constants for them. */
-    if(o->type != object_type::nil && o->type != object_type::boolean)
-    {
-      current_frame->lift_constant(o);
-    }
     return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o);
   }
 
@@ -2868,9 +2853,6 @@ namespace jank::analyze
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
       auto const o(evaluate::eval(pre_eval_expr));
-
-      /* TODO: Order lifted constants. Use sub constants during codegen. */
-      current_frame->lift_constant(o);
 
       return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
     }
@@ -2979,9 +2961,6 @@ namespace jank::analyze
                                                             std::move(exprs),
                                                             typed_o->meta));
           auto const constant(evaluate::eval(pre_eval_expr));
-
-          /* TODO: Order lifted constants. Use sub constants during codegen. */
-          current_frame->lift_constant(constant);
 
           return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, constant);
         }

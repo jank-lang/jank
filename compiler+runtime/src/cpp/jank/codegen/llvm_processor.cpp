@@ -210,6 +210,16 @@ namespace jank::codegen
     usize alignment{};
   };
 
+  static jtl::immutable_string unique_munged_string()
+  {
+    return runtime::munge(__rt_ctx->unique_namespaced_string());
+  }
+
+  static jtl::immutable_string unique_munged_string(jtl::immutable_string const &prefix)
+  {
+    return runtime::munge(__rt_ctx->unique_namespaced_string(prefix));
+  }
+
   static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
                                        jtl::ref<llvm::LLVMContext> const llvm_ctx,
                                        jtl::ptr<void> const type)
@@ -409,7 +419,7 @@ namespace jank::codegen
                                       || Cpp::IsPointerType(param_type)
                                       /*|| Cpp::IsArrayType(param_type)*/) };
 
-    auto const fn_callable{ Cpp::MakeAotCallable(match, __rt_ctx->unique_munged_string()) };
+    auto const fn_callable{ Cpp::MakeAotCallable(match, unique_munged_string()) };
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
 
     llvm::Value *arg_alloc{ arg };
@@ -515,7 +525,7 @@ namespace jank::codegen
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
-    , ctor_name{ __rt_ctx->unique_munged_string("jank_global_init") }
+    , ctor_name{ unique_munged_string("jank_global_init") }
     //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
     //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
     //              reinterpret_cast<void *>(
@@ -527,8 +537,7 @@ namespace jank::codegen
     , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
     , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
-    auto m{ std::make_unique<llvm::Module>(__rt_ctx->unique_munged_string(module_name).c_str(),
-                                           *llvm_ctx) };
+    auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
 
     auto const raw_ctx{ extract_context(module) };
@@ -1853,7 +1862,7 @@ namespace jank::codegen
         /* We also need to surface this RTTI upward, to the module level, so it
          * can end up in the generated object file. */
         auto const callable{
-          Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
+          Cpp::MakeRTTICallable(catch_type, exception_rtti, unique_munged_string())
         };
         global_rtti.emplace(exception_rtti, callable);
       }
@@ -2213,14 +2222,14 @@ namespace jank::codegen
       return alloc;
     }
 
-    auto const callable{ Cpp::IsFunctionPointerType(expr->type)
-                           /* We pass the type and the scope in here so that unresolved template
+    auto const callable{
+      Cpp::IsFunctionPointerType(expr->type)
+        /* We pass the type and the scope in here so that unresolved template
                             * scopes can be turned into the correct specialization which matches
                             * the type we have. */
-                           ? Cpp::MakeFunctionValueAotCallable(expr->scope,
-                                                               expr->type,
-                                                               __rt_ctx->unique_munged_string())
-                           : Cpp::MakeAotCallable(expr->scope, __rt_ctx->unique_munged_string()) };
+        ? Cpp::MakeFunctionValueAotCallable(expr->scope, expr->type, unique_munged_string())
+        : Cpp::MakeAotCallable(expr->scope, unique_munged_string())
+    };
     jank_debug_assert(callable);
     link_module(*ctx, reinterpret_cast<llvm::Module *>(callable.getModule()));
 
@@ -2471,30 +2480,28 @@ namespace jank::codegen
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ llvm::cast<expr::cpp_value>(expr->source_expr.data) };
-      return gen_aot_call(
-        Cpp::MakeAotCallable(source->scope, arg_types, __rt_ctx->unique_munged_string()),
-        source->scope,
-        expr->type,
-        Cpp::GetName(source->scope),
-        expr->arg_exprs,
-        expr->position,
-        expr->kind,
-        arity);
+      return gen_aot_call(Cpp::MakeAotCallable(source->scope, arg_types, unique_munged_string()),
+                          source->scope,
+                          expr->type,
+                          Cpp::GetName(source->scope),
+                          expr->arg_exprs,
+                          expr->position,
+                          expr->kind,
+                          arity);
     }
     else
     {
       auto const source_type{ cpp_util::expression_type(expr->source_expr) };
       auto arg_exprs{ expr->arg_exprs };
       arg_exprs.insert(arg_exprs.begin(), expr->source_expr);
-      return gen_aot_call(
-        Cpp::MakeApplyCallable(source_type, arg_types, __rt_ctx->unique_munged_string()),
-        nullptr,
-        expr->type,
-        "call",
-        jtl::move(arg_exprs),
-        expr->position,
-        expr->kind,
-        arity);
+      return gen_aot_call(Cpp::MakeApplyCallable(source_type, arg_types, unique_munged_string()),
+                          nullptr,
+                          expr->type,
+                          "call",
+                          jtl::move(arg_exprs),
+                          expr->position,
+                          expr->kind,
+                          arity);
     }
   }
 
@@ -2512,7 +2519,7 @@ namespace jank::codegen
          * We can save ourselves the time of JIT compiling more C++ and make the IR easier
          * to optimize. */
         ctor_fn_callable
-          = Cpp::MakeBuiltinConstructorAotCallable(expr->type, __rt_ctx->unique_munged_string());
+          = Cpp::MakeBuiltinConstructorAotCallable(expr->type, unique_munged_string());
       }
       else
       {
@@ -2523,7 +2530,7 @@ namespace jank::codegen
         ctor_fn_callable
           = Cpp::MakeBuiltinConstructorAotCallable(expr->type,
                                                    needs_conversion ? expr->type : arg_type,
-                                                   __rt_ctx->unique_munged_string());
+                                                   unique_munged_string());
       }
     }
     else if(expr->is_aggregate)
@@ -2533,15 +2540,14 @@ namespace jank::codegen
       {
         arg_types.emplace_back(cpp_util::expression_type(arg_expr));
       }
-      ctor_fn_callable
-        = Cpp::MakeAggregateInitializationAotCallable(expr->type,
-                                                      arg_types,
-                                                      __rt_ctx->unique_munged_string());
+      ctor_fn_callable = Cpp::MakeAggregateInitializationAotCallable(expr->type,
+                                                                     arg_types,
+                                                                     unique_munged_string());
     }
     else
     {
       jank_debug_assert(expr->fn);
-      ctor_fn_callable = Cpp::MakeAotCallable(expr->fn, __rt_ctx->unique_munged_string());
+      ctor_fn_callable = Cpp::MakeAotCallable(expr->fn, unique_munged_string());
     }
     jank_debug_assert(ctor_fn_callable);
 
@@ -2565,7 +2571,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::cpp_member_call_ref const expr, expr::function_arity const &arity)
   {
-    return gen_aot_call(Cpp::MakeAotCallable(expr->fn, __rt_ctx->unique_munged_string()),
+    return gen_aot_call(Cpp::MakeAotCallable(expr->fn, unique_munged_string()),
                         expr->fn,
                         cpp_util::expression_type(expr),
                         Cpp::GetName(expr->fn),
@@ -2578,7 +2584,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(expr::cpp_member_access_ref const expr,
                                          expr::function_arity const &arity)
   {
-    return gen_aot_call(Cpp::MakeAotCallable(expr->scope, __rt_ctx->unique_munged_string()),
+    return gen_aot_call(Cpp::MakeAotCallable(expr->scope, unique_munged_string()),
                         nullptr,
                         expr->type,
                         Cpp::GetName(expr->scope),
@@ -2654,7 +2660,7 @@ namespace jank::codegen
     return gen_aot_call(Cpp::MakeBuiltinOperatorAotCallable(static_cast<Cpp::Operator>(expr->op),
                                                             expr->type,
                                                             arg_types,
-                                                            __rt_ctx->unique_munged_string()),
+                                                            unique_munged_string()),
                         nullptr,
                         expr->type,
                         name.getAsString(),
@@ -2755,7 +2761,7 @@ namespace jank::codegen
     if(!Cpp::IsTriviallyDestructible(expr->type))
     {
       auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(expr->type)) };
-      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, __rt_ctx->unique_munged_string()) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, unique_munged_string()) };
       link_module(*ctx, reinterpret_cast<llvm::Module *>(dtor_callable.getModule()));
 
       auto const reg_fn_type(llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -2803,7 +2809,7 @@ namespace jank::codegen
     if(!Cpp::IsTriviallyDestructible(value_type))
     {
       auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(value_type)) };
-      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, __rt_ctx->unique_munged_string()) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, unique_munged_string()) };
       link_module(*ctx, reinterpret_cast<llvm::Module *>(dtor_callable.getModule()));
 
       auto const dtor_fn_type(
