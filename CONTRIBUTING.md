@@ -14,13 +14,12 @@ see if you can chip in $10/month.
 Otherwise, work your way through this list and see what may be a good match for
 you.
 
-* If you want to install jank and tinker with it, you can report any bugs you find
+* If you want to build something cool with jank, do it!
   * Please host your jank projects on Github and share them with the community
 * If you know C++, you can pick up an unassigned issue with the `help-wanted` tag here: https://github.com/jank-lang/jank/issues
 * If you know Clojure, you can check out the [clojure-test-suite](https://github.com/jank-lang/clojure-test-suite) repo, where we're organizing a suite of unit tests for all core Clojure functions
 * If you're familiar with distro packaging, we can often use help with deb/rpm/arch/nix packages
 * If you're a [Clojurists Together](https://www.clojuriststogether.org/) member, please vote for my proposals
-* Again, if you're in a spot to be able to sponsor, you can do so [here](https://github.com/sponsors/jeaye)
 * Either way, consider joining the [jank community](https://clojurians.slack.com/archives/C03SRH97FDK) on Slack and chat
 
 ## Code of Conduct
@@ -36,6 +35,19 @@ best place to ask questions to the community. If you can't/won't use Slack,
 Please use jank's Github [issue tracker](https://github.com/jank-lang/jank/issues) for reporting
 bugs. Before creating a new issue, please search for an existing issue on your
 topic and use that if it exists.
+
+## Pull request process
+Once you're ready to share your changes with use for review and merge
+consideration, please make a pull request on Github. Add a description of your
+change to your pull request, as well as a descriptive title. 
+
+To convey that your pull request is ready for review, please add me (Jeaye Wilkerson)
+as a reviewer. I will then review your pull request when I am next available.
+
+After review, I may request iteration on your pull request. If you iterate and
+you're ready for review again, please add me as a reviewer again in order to
+request another review. Github emails me with every change you push, but I
+cannot know which one is final. A request for review is unambiguous.
 
 ## AI-assisted contribution policy
 You **MAY** use AI assistance for contributing to jank, as long as you follow
@@ -97,16 +109,3 @@ email to conduct@jank-lang.org.
 The key words **MAY**, **MUST**, **MUST NOT**, and **SHOULD** in this document
 are to be interpreted as described in
 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
-
-## Pull request process
-Once you're ready to share your changes with use for review and merge
-consideration, please make a pull request on Github. Add a description of your
-change to your pull request, as well as a descriptive title. 
-
-To convey that your pull request is ready for review, please add me (Jeaye Wilkerson)
-as a reviewer. I will then review your pull request when I am next available.
-
-After review, I may request iteration on your pull request. If you iterate and
-you're ready for review again, please add me as a reviewer again in order to
-request another review. Github emails me with every change you push, but I
-cannot know which one is final. A request for review is unambiguous.
