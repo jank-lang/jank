@@ -267,9 +267,16 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
           {
-            util::format_to(buffer,
-                            "jank::runtime::make_box<jank::runtime::obj::persistent_string>({})",
-                            typed_o->to_code_string());
+            if(typed_o->data.empty())
+            {
+              util::format_to(buffer, "jank::runtime::obj::persistent_string::empty()");
+            }
+            else
+            {
+              util::format_to(buffer,
+                              "jank::runtime::make_box<jank::runtime::obj::persistent_string>({})",
+                              typed_o->to_code_string());
+            }
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
