@@ -273,103 +273,174 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
           {
-            util::format_to(buffer,
-                            "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
-            if(typed_o->meta.is_some())
+            if(typed_o->data.empty())
             {
-              /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-              util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-            }
-            util::format_to(buffer, "std::in_place ");
-            for(auto const &form : typed_o->data)
-            {
-              util::format_to(buffer, ", ");
-              gen_constant(form, buffer, true);
-            }
-            util::format_to(buffer, ")");
-          }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
-          {
-            util::format_to(buffer,
-                            "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
-            if(typed_o->meta.is_some())
-            {
-              util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-            }
-            util::format_to(buffer, "std::in_place ");
-            for(auto const &form : typed_o->data)
-            {
-              util::format_to(buffer, ", ");
-              gen_constant(form, buffer, true);
-            }
-            util::format_to(buffer, ")");
-          }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
-          {
-            util::format_to(buffer,
-                            "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
-            if(typed_o->meta.is_some())
-            {
-              util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-            }
-            util::format_to(buffer, "std::in_place ");
-            for(auto const &form : typed_o->data)
-            {
-              util::format_to(buffer, ", ");
-              gen_constant(form, buffer, true);
-            }
-            util::format_to(buffer, ")");
-          }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
-          {
-            bool need_comma{};
-            if(typed_o->meta.is_some())
-            {
-              util::format_to(buffer,
-                              "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
-              util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
-                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
-              need_comma = true;
+              util::format_to(buffer, "jank::runtime::obj::persistent_vector::empty()");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
             }
             else
             {
-              util::format_to(buffer, "jank::runtime::obj::persistent_array_map::create_unique(");
-            }
-            for(auto const &form : typed_o->data)
-            {
-              if(need_comma)
+              util::format_to(buffer,
+                              "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+              util::format_to(buffer, "std::in_place ");
+              for(auto const &form : typed_o->data)
               {
                 util::format_to(buffer, ", ");
+                gen_constant(form, buffer, true);
               }
-              need_comma = true;
-              gen_constant(form.first, buffer, true);
-              util::format_to(buffer, ", ");
-              gen_constant(form.second, buffer, true);
+              util::format_to(buffer, ")");
             }
-            util::format_to(buffer, ")");
+          }
+          else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
+          {
+            if(typed_o->data.empty())
+            {
+              util::format_to(buffer, "jank::runtime::obj::persistent_list::empty()");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+            }
+            else
+            {
+              util::format_to(buffer,
+                              "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
+              if(typed_o->meta.is_some())
+              {
+                util::format_to(buffer,
+                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+              util::format_to(buffer, "std::in_place ");
+              for(auto const &form : typed_o->data)
+              {
+                util::format_to(buffer, ", ");
+                gen_constant(form, buffer, true);
+              }
+              util::format_to(buffer, ")");
+            }
+          }
+          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
+          {
+            if(typed_o->data.empty())
+            {
+              util::format_to(buffer, "jank::runtime::obj::persistent_hash_set::empty()");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+            }
+            else
+            {
+              util::format_to(buffer,
+                              "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
+              if(typed_o->meta.is_some())
+              {
+                util::format_to(buffer,
+                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+              util::format_to(buffer, "std::in_place ");
+              for(auto const &form : typed_o->data)
+              {
+                util::format_to(buffer, ", ");
+                gen_constant(form, buffer, true);
+              }
+              util::format_to(buffer, ")");
+            }
+          }
+          else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
+          {
+            if(typed_o->data.empty())
+            {
+              util::format_to(buffer, "jank::runtime::obj::persistent_array_map::empty()");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
+            }
+            else
+            {
+              bool need_comma{};
+              if(typed_o->meta.is_some())
+              {
+                util::format_to(
+                  buffer,
+                  "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
+                util::format_to(buffer,
+                                "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                need_comma = true;
+              }
+              else
+              {
+                util::format_to(buffer, "jank::runtime::obj::persistent_array_map::create_unique(");
+              }
+              for(auto const &form : typed_o->data)
+              {
+                if(need_comma)
+                {
+                  util::format_to(buffer, ", ");
+                }
+                need_comma = true;
+                gen_constant(form.first, buffer, true);
+                util::format_to(buffer, ", ");
+                gen_constant(form.second, buffer, true);
+              }
+              util::format_to(buffer, ")");
+            }
           }
           else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
           {
-            auto const has_meta{ typed_o->meta.is_some() };
-            if(has_meta)
+            if(typed_o->data.empty())
             {
-              util::format_to(buffer, "jank::runtime::reset_meta(");
+              util::format_to(buffer, "jank::runtime::obj::persistent_hash_map::empty()");
+              if(typed_o->meta.is_some())
+              {
+                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
+                util::format_to(buffer,
+                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
             }
-            util::format_to(buffer,
-                            "jank::runtime::__rt_ctx->read_string(\"{}\")",
-                            util::escape(typed_o->to_code_string()));
-            if(has_meta)
+            else
             {
+              auto const has_meta{ typed_o->meta.is_some() };
+              if(has_meta)
+              {
+                util::format_to(buffer, "jank::runtime::with_meta(");
+              }
               util::format_to(buffer,
-                              ", jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                              util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                              util::escape(typed_o->to_code_string()));
+              if(has_meta)
+              {
+                util::format_to(buffer,
+                                ", jank::runtime::__rt_ctx->read_string(\"{}\"))",
+                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+              }
             }
           }
           /* Cons, etc. */
