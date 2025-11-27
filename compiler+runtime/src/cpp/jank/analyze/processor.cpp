@@ -2820,7 +2820,11 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
-    current_frame->lift_constant(o);
+    /* There's no need to lift these, since we'll just codgen the public constants for them. */
+    if(o->type != object_type::nil && o->type != object_type::boolean)
+    {
+      current_frame->lift_constant(o);
+    }
     return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o);
   }
 

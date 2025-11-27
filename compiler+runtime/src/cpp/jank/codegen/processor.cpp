@@ -7,6 +7,7 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -654,13 +655,26 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::primitive_literal_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto const &constant(expr->frame->find_lifted_constant(expr->data).unwrap().get());
-
-    handle ret{ runtime::munge(constant.native_name) };
-    if(constant.unboxed_native_name.is_some())
+    handle ret;
+    if(expr->data->type == runtime::object_type::nil)
     {
-      ret = { runtime::munge(constant.native_name),
-              runtime::munge(constant.unboxed_native_name.unwrap()) };
+      ret = handle{ "jank::runtime::jank_nil" };
+    }
+    else if(expr->data->type == runtime::object_type::boolean)
+    {
+      ret = handle{ runtime::truthy(expr->data) ? "jank::runtime::jank_true"
+                                                : "jank::runtime::jank_false" };
+    }
+    else
+    {
+      auto const &constant(expr->frame->find_lifted_constant(expr->data).unwrap().get());
+
+      ret = runtime::munge(constant.native_name);
+      if(constant.unboxed_native_name.is_some())
+      {
+        ret = { runtime::munge(constant.native_name),
+                runtime::munge(constant.unboxed_native_name.unwrap()) };
+      }
     }
 
     switch(expr->position)
@@ -1040,7 +1054,7 @@ namespace jank::codegen
         if(cpp_util::is_any_object(local_type))
         {
           util::format_to(body_buffer,
-                          "{ object_ref {}({}); ",
+                          "{ jank::runtime::object_ref {}({}); ",
                           munged_name,
                           val_tmp.unwrap().str(true));
         }
@@ -1323,7 +1337,7 @@ namespace jank::codegen
   {
     auto const has_catch{ expr->catch_body.is_some() };
     auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("try")));
-    util::format_to(body_buffer, "object_ref {}{ };", ret_tmp);
+    util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
     util::format_to(body_buffer, "{");
     if(expr->finally_body.is_some())
@@ -2020,17 +2034,7 @@ namespace jank::codegen
 
   void processor::build_header()
   {
-    /* TODO: We don't want this for nested modules, but we do if they're in their own file.
-     * Do we need three module compilation targets? Top-level, nested, local?
-     *
-     * Local fns are within a struct already, so we can't enter the ns again. */
-    //if(!runtime::module::is_nested_module(module))
-    //if(target == compilation_target::module)
-    {
-      util::format_to(header_buffer,
-                      "namespace {} {",
-                      runtime::module::module_to_native_ns(module));
-    }
+    util::format_to(header_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
 
     util::format_to(header_buffer,
                     R"(
@@ -2041,16 +2045,17 @@ namespace jank::codegen
 
     {
       /* TODO: Constants and vars are not shared across arities. We'd need stable names. */
-      native_set<i64> used_vars, used_constants, used_captures;
+      native_set<uhash> used_vars, used_constants, used_captures;
       for(auto const &arity : root_fn->arities)
       {
         for(auto const &v : arity.frame->lifted_vars)
         {
-          if(used_vars.contains(v.second.native_name.to_hash()))
+          auto const hash{ v.first->to_hash() };
+          if(used_vars.contains(hash))
           {
             continue;
           }
-          used_vars.emplace(v.second.native_name.to_hash());
+          used_vars.emplace(hash);
 
           util::format_to(header_buffer,
                           "jank::runtime::var_ref const {};",
@@ -2059,13 +2064,13 @@ namespace jank::codegen
 
         for(auto const &v : arity.frame->lifted_constants)
         {
-          if(used_constants.contains(v.second.native_name.to_hash()))
+          if(used_constants.contains(runtime::to_hash(v.first)))
           {
             continue;
           }
-          used_constants.emplace(v.second.native_name.to_hash());
+          used_constants.emplace(runtime::to_hash(v.first));
 
-          /* TODO: Typed lifted constants. */
+          /* TODO: Typed lifted constants (in analysis). */
           util::format_to(header_buffer,
                           "{} const {};",
                           detail::gen_constant_type(v.second.data, true),
@@ -2075,11 +2080,12 @@ namespace jank::codegen
         /* TODO: More useful types here. */
         for(auto const &v : arity.frame->captures)
         {
-          if(used_captures.contains(v.first->to_hash()))
+          auto const hash{ v.first->to_hash() };
+          if(used_captures.contains(hash))
           {
             continue;
           }
-          used_captures.emplace(v.first->to_hash());
+          used_captures.emplace(hash);
 
           /* Captures aren't const since they could be late-assigned, in the case of a letfn. */
           util::format_to(header_buffer,
@@ -2090,7 +2096,7 @@ namespace jank::codegen
     }
 
     {
-      native_set<i64> used_captures;
+      native_set<uhash> used_captures;
       util::format_to(header_buffer, "{}(", runtime::munge(struct_name.name));
 
       bool need_comma{};
@@ -2098,11 +2104,12 @@ namespace jank::codegen
       {
         for(auto const &v : arity.frame->captures)
         {
-          if(used_captures.contains(v.first->to_hash()))
+          auto const hash{ v.first->to_hash() };
+          if(used_captures.contains(hash))
           {
             continue;
           }
-          used_captures.emplace(v.first->to_hash());
+          used_captures.emplace(hash);
 
           /* TODO: More useful types here. */
           util::format_to(header_buffer,
@@ -2115,7 +2122,9 @@ namespace jank::codegen
     }
 
     {
-      native_set<i64> used_vars, used_constants, used_captures;
+      native_set<uhash> used_captures;
+      native_map<uhash, lifted_var> used_vars;
+      native_map<uhash, lifted_constant> used_constants;
       util::format_to(header_buffer, ") : jank::runtime::obj::jit_function{ ");
       /* TODO: All of the meta in clojure.core alone costs 2s to JIT compile at run-time.
        * How can this be faster? */
@@ -2124,13 +2133,16 @@ namespace jank::codegen
 
       for(auto const &arity : root_fn->arities)
       {
-        for(auto const &v : arity.frame->lifted_vars)
+        for(auto &v : arity.frame->lifted_vars)
         {
-          if(used_vars.contains(v.second.native_name.to_hash()))
+          auto const hash{ v.first->to_hash() };
+          auto const existing{ used_vars.find(hash) };
+          if(existing != used_vars.end())
           {
+            v.second = existing->second;
             continue;
           }
-          used_vars.emplace(v.second.native_name.to_hash());
+          used_vars.emplace(hash, v.second);
 
           util::format_to(header_buffer,
                           R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}", "{}").expect_ok() })",
@@ -2139,13 +2151,16 @@ namespace jank::codegen
                           v.second.var_name->name);
         }
 
-        for(auto const &v : arity.frame->lifted_constants)
+        for(auto &v : arity.frame->lifted_constants)
         {
-          if(used_constants.contains(v.second.native_name.to_hash()))
+          auto const hash{ runtime::to_hash(v.first) };
+          auto const existing{ used_constants.find(hash) };
+          if(existing != used_constants.end())
           {
+            v.second = existing->second;
             continue;
           }
-          used_constants.emplace(v.second.native_name.to_hash());
+          used_constants.emplace(hash, v.second);
 
           util::format_to(header_buffer, ", {}{", runtime::munge(v.second.native_name));
           detail::gen_constant(v.second.data, header_buffer, true);
@@ -2154,11 +2169,12 @@ namespace jank::codegen
 
         for(auto const &v : arity.frame->captures)
         {
-          if(used_captures.contains(v.first->to_hash()))
+          auto const hash{ v.first->to_hash() };
+          if(used_captures.contains(hash))
           {
             continue;
           }
-          used_captures.emplace(v.first->to_hash());
+          used_captures.emplace(hash);
 
           auto const name{ runtime::munge(v.second.native_name) };
           util::format_to(header_buffer, ", {}{ {} }", name, name);
@@ -2205,12 +2221,7 @@ namespace jank::codegen
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer,
-                      R"(
-          ) final {
-          using namespace jank;
-          using namespace jank::runtime;
-        )");
+      util::format_to(body_buffer, ") final {");
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
@@ -2381,54 +2392,5 @@ namespace jank::codegen
       generated_expression = true;
     }
     return { expression_buffer.data(), expression_buffer.size() };
-  }
-
-  /* TODO: Not sure if we want any of this. The module dependency loading feels wrong,
-   * since it should be tied to calls to require instead. */
-  jtl::immutable_string processor::module_init_str(jtl::immutable_string const &module)
-  {
-    jtl::string_builder module_buffer;
-
-    util::format_to(module_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
-
-    util::format_to(module_buffer,
-                    R"(
-        struct __ns__init
-        {
-      )");
-
-    util::format_to(module_buffer, "static void __init(){");
-    //util::format_to(module_buffer, "jank::profile::timer __timer{ \"ns __init\" };");
-    util::format_to(module_buffer,
-                    "constexpr auto const deps(jank::util::make_array<jtl::immutable_string>(");
-    bool needs_comma{};
-    for(auto const &dep : __rt_ctx->module_dependencies[module])
-    {
-      if(needs_comma)
-      {
-        util::format_to(module_buffer, ", ");
-      }
-      util::format_to(module_buffer, "\"/{}\"", dep);
-      needs_comma = true;
-    }
-    util::format_to(module_buffer, "));");
-
-    util::format_to(module_buffer, "for(auto const &dep : deps){");
-    util::format_to(module_buffer, "jank::runtime::__rt_ctx->load_module(dep).expect_ok();");
-    util::format_to(module_buffer, "}");
-
-    /* __init fn */
-    util::format_to(module_buffer, "}");
-
-    /* Struct */
-    util::format_to(module_buffer, "};");
-
-    /* Namespace */
-    util::format_to(module_buffer, "}");
-
-    native_transient_string ret;
-    ret.reserve(module_buffer.size());
-    ret += jtl::immutable_string_view{ module_buffer.data(), module_buffer.size() };
-    return ret;
   }
 }

@@ -154,8 +154,6 @@ namespace jank::codegen
     void build_footer();
     jtl::immutable_string expression_str();
 
-    jtl::immutable_string module_init_str(jtl::immutable_string const &module);
-
     void format_dynamic_call(jtl::immutable_string const &source_tmp,
                              jtl::immutable_string const &ret_tmp,
                              native_vector<analyze::expression_ref> const &arg_exprs,
