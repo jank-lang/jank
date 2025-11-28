@@ -106,6 +106,7 @@ namespace jank::detail
   template <typename T>
   object_ref to_runtime_data(native_vector<jtl::option<T>> const &m)
   {
+    /* NOLINTNEXTLINE(misc-const-correctness): Can't be const. */
     runtime::detail::native_persistent_vector ret;
     for(auto const &e : m)
     {

@@ -2072,6 +2072,7 @@ namespace jank::codegen
     auto const dispatch_block{ llvm::BasicBlock::Create(*llvm_ctx, "dispatch", current_fn) };
 
     llvm::BasicBlock *catch_cleanup_block{};
+    /* NOLINTNEXTLINE(misc-const-correctness): Can't be const. */
     llvm::BasicBlock *catch_body_block{};
     if(has_catch)
     {
