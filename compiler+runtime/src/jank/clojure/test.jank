@@ -502,7 +502,7 @@
     `(try (do ~@body)
           (do-report {:type :fail :message ~msg
                       :expected '~form :actual nil})
-          (catch e#
+          (catch cpp/jank.runtime.object_ref e#
             (do-report {:type :pass :message ~msg
                         :expected '~form :actual e#})
             e#))))
@@ -516,7 +516,7 @@
         body (nthnext form 2)]
     `(try (do ~@body)
           (do-report {:type :fail :message ~msg :expected '~form :actual nil})
-          (catch e#
+          (catch cpp/jank.runtime.object_ref e#
             (let [m# (ex-message e#)]
               (if (and (string? m#) (re-find ~re m#))
                 (do-report {:type :pass :message ~msg
@@ -531,7 +531,7 @@
   You don't call this."
   [msg form]
   `(try (do ~(assert-expr msg form))
-        (catch t#
+        (catch cpp/jank.runtime.object_ref t#
           (do-report {:type :error :message ~msg
                       :expected '~form :actual t#}))))
 
@@ -715,7 +715,7 @@
       (do-report {:type :begin-test-var :var v})
       (inc-report-counter :test)
       (try (t)
-           (catch e
+           (catch cpp/jank.runtime.object_ref e
              (do-report {:type :error :message "Uncaught exception, not in assertion."
                          :expected nil :actual e})))
       (do-report {:type :end-test-var :var v}))))
