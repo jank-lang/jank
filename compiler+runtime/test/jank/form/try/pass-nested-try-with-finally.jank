@@ -1,0 +1,14 @@
+;; Test nested try blocks with finally
+;; Inner try has finally, outer try has catch
+;; Verify that inner finally executes and outer catch receives the exception
+(let* [finally-executed (atom false)
+       caught-exception (try
+                          (try
+                            (throw "inner-throw")
+                            (finally (reset! finally-executed true)))
+                          (catch cpp/jank.runtime.object_ref e e))]
+  (assert @finally-executed "inner finally should have executed")
+  (assert (= "inner-throw" caught-exception)
+          (str "expected 'inner-throw' but got: " caught-exception)))
+
+:success

@@ -1,6 +1,6 @@
 (try
   (+ 1 2)
-  (catch e
+  (catch cpp/jank.runtime.object_ref e
     )
   (finally
     )

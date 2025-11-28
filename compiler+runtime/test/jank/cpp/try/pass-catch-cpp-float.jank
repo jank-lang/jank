@@ -1,0 +1,13 @@
+;; Test catching C++ float exception
+(cpp/raw "void throw_float_half() { throw 0.5f; }")
+
+(assert
+ (= 0.5
+    (try
+      (cpp/throw_float_half)
+      (catch cpp/double d
+        (println "Wrong: caught double")
+        -1.0)
+      (catch cpp/float f f))))
+
+:success

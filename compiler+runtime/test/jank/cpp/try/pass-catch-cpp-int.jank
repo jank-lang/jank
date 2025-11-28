@@ -1,0 +1,13 @@
+;; Test catching C++ int exception
+(cpp/raw "void throw_int_42() { throw 42; }")
+
+(assert
+ (= 42
+    (try
+      (cpp/throw_int_42)
+      (catch cpp/double d
+        (println "Wrong: caught double")
+        -1)
+      (catch cpp/int i i))))
+
+:success

@@ -1,7 +1,7 @@
 (try
   (try
     (throw :success)
-    (catch e1
+    (catch cpp/jank.runtime.object_ref e1
       (throw e1)))
-  (catch e2
-    e2))
+  (catch cpp/jank.runtime.object_ref e2
+   (if (= e2 :success) :success)))

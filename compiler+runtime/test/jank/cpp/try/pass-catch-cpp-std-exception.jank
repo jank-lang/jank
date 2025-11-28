@@ -1,0 +1,11 @@
+;; Test catching std::exception base class
+(cpp/raw "void throw_runtime_error_as_exception() { throw std::runtime_error(\"derived error\"); }")
+
+(let [caught (atom false)]
+  (try
+    (cpp/throw_runtime_error_as_exception)
+    (catch cpp/std.exception e
+      (reset! caught true)))
+  (assert @caught "Should have caught std::runtime_error as std::exception"))
+
+:success

@@ -4228,7 +4228,7 @@
     (if load
       (try
         (load lib need-ns? require)
-        (catch e
+        (catch cpp/jank.runtime.object_ref e
           (when undefined-on-entry?
             (remove-ns lib))
           (throw e)))

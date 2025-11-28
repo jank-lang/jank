@@ -1,6 +1,6 @@
 (assert (= (try
              (throw :success)
-             (catch e
+             (catch cpp/jank.runtime.object_ref e
                e))))
 
 :success

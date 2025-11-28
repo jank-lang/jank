@@ -1,0 +1,25 @@
+;; Test multiple catch with finally block - first matching catch executes
+(let [execution-order (atom [])]
+  (try
+    (swap! execution-order conj :try)
+    (throw :exception)
+    (catch cpp/jank.runtime.object_ref e1
+      (swap! execution-order conj :catch1))
+    (catch cpp/jank.runtime.object_ref e2
+      (swap! execution-order conj :catch2))
+    (finally
+      (swap! execution-order conj :finally)))
+  (assert (= [:try :catch1 :finally] @execution-order)))
+
+;; Test that finally executes after catch
+(let [cleanup (atom false)]
+  (assert (= :caught
+             (try
+               (throw "error")
+               (catch cpp/jank.runtime.object_ref e
+                 :caught)
+               (finally
+                 (reset! cleanup true)))))
+  (assert (true? @cleanup)))
+
+:success

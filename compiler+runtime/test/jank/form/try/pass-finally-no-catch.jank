@@ -13,7 +13,7 @@
          (swap! a conj :inner-try-after-throw)
          (finally
            (swap! a conj :inner-finally)))
-       (catch e
+       (catch cpp/jank.runtime.object_ref e
          (swap! a conj [:outer-catch e])))
   (assert (= [:inner-try :inner-finally [:outer-catch "skip finally"]] @a)
           (pr-str @a)))
