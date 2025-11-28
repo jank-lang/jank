@@ -38,10 +38,10 @@ namespace jank::analyze::expr
     {
       for(auto const &catch_body : catch_bodies)
       {
-        catch_body.unwrap().propagate_position(pos);
+        catch_body.propagate_position(pos);
       }
     }
-    /* The result of the 'finally' body is discarded, so we always keep it in statement position. */
+    /* The result of the 'finally' body is discarded, so we always keep it in the statement position. */
   }
 
   runtime::object_ref try_::to_runtime_data() const
@@ -65,7 +65,7 @@ namespace jank::analyze::expr
     {
       for(auto const &catch_body : catch_bodies)
       {
-        f(catch_body.unwrap().body);
+        f(catch_body.body);
       }
     }
     if(finally_body.is_some())

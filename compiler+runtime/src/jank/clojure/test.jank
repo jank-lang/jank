@@ -415,7 +415,7 @@
   "Like var-get but returns nil if the var is unbound."
   [v]
   (try (var-get v)
-       (catch _)))
+       (catch cpp/jank.runtime.object_ref _)))
 
 (defn function?
   "Returns true if argument is a function or a symbol that resolves to
