@@ -829,16 +829,14 @@ namespace jank::codegen
       }
     }
 
-    if(expr->name->meta.is_some())
+    if(expr->meta.is_some())
     {
       auto const set_meta_fn_type(
         llvm::FunctionType::get(ctx->builder->getVoidTy(),
                                 { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
                                 false));
       auto const set_meta_fn(llvm_module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
-
-      auto const meta_val(
-        gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
+      auto const meta_val(gen(expr->meta.unwrap(), arity));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta_val });
     }
 
