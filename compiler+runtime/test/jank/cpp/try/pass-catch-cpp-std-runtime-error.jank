@@ -1,9 +1,10 @@
-;; Test catching std::runtime_error
-(cpp/raw "void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }")
+; throw_runtime_error3 is named with a "3" suffix because there is already throw_runtime_error
+; and throw_runtime_error2 defined in other files and different files are not run independently.
+(cpp/raw "void throw_runtime_error3() { throw std::runtime_error(\"runtime error\"); }")
 
 (let [caught (atom false)]
   (try
-    (cpp/throw_runtime_error)
+    (cpp/throw_runtime_error3)
     (catch cpp/std.logic_error e
       (println "Wrong: caught logic_error"))
     (catch cpp/std.runtime_error e
