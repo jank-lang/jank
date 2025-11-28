@@ -1,9 +1,11 @@
-(cpp/raw "void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }")
+; throw_runtime_error2 is named with a "2" suffix because there is already another throw_runtime_error
+; defined in different test jank file and different files are not run independently.
+(cpp/raw "void throw_runtime_error2() { throw std::runtime_error(\"runtime error\"); }")
 
 (let [a (atom [])]
   (try
     (try
-      (cpp/throw_runtime_error)
+      (cpp/throw_runtime_error2)
       ;; No matching catch for runtime_error (inner catch is for logic_error)
       (catch cpp/std.logic_error e
         (swap! a conj :wrong-catch))
