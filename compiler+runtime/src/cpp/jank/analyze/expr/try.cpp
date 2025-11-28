@@ -38,11 +38,7 @@ namespace jank::analyze::expr
     {
       for(auto const &catch_body : catch_bodies)
       {
-<<<<<<< HEAD
         catch_body.propagate_position(pos);
-=======
-        catch_body.unwrap().propagate_position(pos);
->>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       }
     }
     /* The result of the 'finally' body is discarded, so we always keep it in the statement position. */
@@ -69,11 +65,7 @@ namespace jank::analyze::expr
     {
       for(auto const &catch_body : catch_bodies)
       {
-<<<<<<< HEAD
         f(catch_body.body);
-=======
-        f(catch_body.unwrap().body);
->>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       }
     }
     if(finally_body.is_some())

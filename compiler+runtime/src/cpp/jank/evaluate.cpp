@@ -77,11 +77,7 @@ namespace jank::evaluate
       {
         for(auto const &catch_body : expr.catch_bodies)
         {
-<<<<<<< HEAD
           walk(catch_body.body, f);
-=======
-          walk(catch_body.unwrap().body, f);
->>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
         }
       }
       if(expr.finally_body.is_some())

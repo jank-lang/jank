@@ -1432,8 +1432,8 @@ namespace jank::codegen
        */
       util::format_to(body_buffer,
                       "catch(jank::runtime::object_ref const {}) {",
-                      runtime::munge(expr->catch_bodies[0].unwrap().sym->name));
-      auto const &catch_tmp(gen(expr->catch_bodies[0].unwrap().body, fn_arity, box_needed));
+                      runtime::munge(expr->catch_bodies[0].sym->name));
+      auto const &catch_tmp(gen(expr->catch_bodies[0].body, fn_arity, box_needed));
       if(catch_tmp.is_some())
 >>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       {
