@@ -1599,8 +1599,8 @@ namespace jank::codegen
      */
       util::format_to(body_buffer,
                       "catch(jank::runtime::object_ref const {}) {",
-                      runtime::munge(expr->catch_bodies[0].unwrap().sym->name));
-      auto const &catch_tmp(gen(expr->catch_bodies[0].unwrap().body, fn_arity, box_needed));
+                      runtime::munge(expr->catch_bodies[0].sym->name));
+      auto const &catch_tmp(gen(expr->catch_bodies[0].body, fn_arity, box_needed));
       if(catch_tmp.is_some())
       {
         util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(box_needed));
@@ -2339,11 +2339,13 @@ namespace jank::codegen
 
   /* TODO: Not sure if we want any of this. The module dependency loading feels wrong,
    * since it should be tied to calls to require instead. */
-  jtl::immutable_string processor::module_init_str(jtl::immutable_string const &module)
+  jtl::immutable_string processor::module_init_str(jtl::immutable_string const &module_name)
   {
     jtl::string_builder module_buffer;
 
-    util::format_to(module_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
+    util::format_to(module_buffer,
+                    "namespace {} {",
+                    runtime::module::module_to_native_ns(module_name));
 
     util::format_to(module_buffer,
                     R"(
@@ -2356,7 +2358,7 @@ namespace jank::codegen
     util::format_to(module_buffer,
                     "constexpr auto const deps(jank::util::make_array<jtl::immutable_string>(");
     bool needs_comma{};
-    for(auto const &dep : __rt_ctx->module_dependencies[module])
+    for(auto const &dep : __rt_ctx->module_dependencies[module_name])
     {
       if(needs_comma)
       {

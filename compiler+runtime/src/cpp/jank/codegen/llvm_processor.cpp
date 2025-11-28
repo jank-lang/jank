@@ -142,7 +142,7 @@ namespace jank::codegen
                                    llvm::Value *selector,
                                    llvm::BasicBlock *current_block) const;
 
-    void register_catch_clause_rtti(jtl::option<expr::catch_> const &catch_clause,
+    void register_catch_clause_rtti(expr::catch_ const &catch_clause,
                                     llvm::LandingPadInst *landing_pad,
                                     native_set<llvm::Value *> &registered_rtti);
 
@@ -1743,12 +1743,11 @@ namespace jank::codegen
     }
   }
 
-  void
-  llvm_processor::impl::register_catch_clause_rtti(jtl::option<expr::catch_> const &catch_clause,
-                                                   llvm::LandingPadInst *landing_pad,
-                                                   native_set<llvm::Value *> &registered_rtti)
+  void llvm_processor::impl::register_catch_clause_rtti(expr::catch_ const &catch_clause,
+                                                        llvm::LandingPadInst *landing_pad,
+                                                        native_set<llvm::Value *> &registered_rtti)
   {
-    auto const catch_type{ catch_clause.unwrap().type };
+    auto const catch_type{ catch_clause.type };
     auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
@@ -1784,7 +1783,7 @@ namespace jank::codegen
   {
     auto const ptr_ty{ ctx->builder->getPtrTy() };
     auto const &catch_clause{ expr->catch_bodies[catch_index] };
-    auto const &[catch_sym, catch_type, catch_body]{ catch_clause.unwrap() };
+    auto const &[catch_sym, catch_type, catch_body]{ catch_clause };
 
     ctx->builder->SetInsertPoint(catch_block);
 
@@ -1911,7 +1910,7 @@ namespace jank::codegen
     for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
     {
       auto const &catch_clause{ expr->catch_bodies[i] };
-      auto const catch_type{ catch_clause.unwrap().type };
+      auto const catch_type{ catch_clause.type };
       auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
       auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti,
                                                                        ctx->builder->getPtrTy()) };

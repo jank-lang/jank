@@ -78,7 +78,7 @@ namespace jank::evaluate
       {
         for(auto const &catch_body : expr.catch_bodies)
         {
-          walk(catch_body.unwrap().body, f);
+          walk(catch_body.body, f);
         }
       }
       if(expr.finally_body.is_some())

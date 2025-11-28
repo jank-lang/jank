@@ -171,7 +171,7 @@ namespace jank::codegen
     void build_footer();
     jtl::immutable_string expression_str(bool box_needed);
 
-    jtl::immutable_string module_init_str(jtl::immutable_string const &module);
+    jtl::immutable_string module_init_str(jtl::immutable_string const &module_name);
 
     void format_elided_var(jtl::immutable_string const &start,
                            jtl::immutable_string const &end,
