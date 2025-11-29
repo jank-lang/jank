@@ -143,9 +143,7 @@ namespace jank::runtime::obj
       throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }
 
-    data.insert_or_assign(vec->data[0], vec->data[1]);
-
-    return this;
+    return assoc_in_place(vec->data[0], vec->data[1]);
   }
 
   transient_array_map::persistent_type_ref transient_array_map::to_persistent()
