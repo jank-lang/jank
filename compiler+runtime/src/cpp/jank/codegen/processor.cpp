@@ -603,8 +603,17 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::def_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &var(lift_var(lifted_vars, expr->name->to_string(), true));
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(var)));
+    /* def uses a var, but we don't lift it. Even if it's lifted by another usage,
+     * it'll be re-interned here as an owned var. This needs to happen at the point
+     * of the def, rather than prior (i.e. due to lifting), since there could be
+     * some other var-related effects such as refer which need to happen before
+     * def. */
+    auto var_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("var")));
+    util::format_to(
+      body_buffer,
+      R"(auto const {}(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+      var_tmp,
+      expr->name->to_string());
 
     jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
@@ -619,11 +628,11 @@ namespace jank::codegen
       {
         auto const dynamic{ truthy(
           get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-        return util::format("{}->with_meta({})->set_dynamic({})", var, meta.unwrap(), dynamic);
+        return util::format("{}->with_meta({})->set_dynamic({})", var_tmp, meta.unwrap(), dynamic);
       }
       else
       {
-        return util::format("{}->with_meta(jank::runtime::jank_nil)", var);
+        return util::format("{}->with_meta(jank::runtime::jank_nil)", var_tmp);
       }
     }
 
@@ -637,7 +646,7 @@ namespace jank::codegen
             auto const dynamic{ truthy(
               get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
             return util::format("{}->bind_root({})->with_meta({})->set_dynamic({})",
-                                var,
+                                var_tmp,
                                 val.str(true),
                                 meta.unwrap(),
                                 dynamic);
@@ -645,7 +654,7 @@ namespace jank::codegen
           else
           {
             return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
-                                var,
+                                var_tmp,
                                 val.str(true));
           }
         }
@@ -662,7 +671,7 @@ namespace jank::codegen
               get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
             util::format_to(body_buffer,
                             "{}->bind_root({})->with_meta({})->set_dynamic({});",
-                            var,
+                            var_tmp,
                             val.str(true),
                             meta.unwrap(),
                             dynamic);
@@ -671,7 +680,7 @@ namespace jank::codegen
           {
             util::format_to(body_buffer,
                             "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
-                            var,
+                            var_tmp,
                             val.str(true));
           }
           return none;
