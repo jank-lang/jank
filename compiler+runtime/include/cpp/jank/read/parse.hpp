@@ -117,7 +117,7 @@ namespace jank::read::parse
      * token, we should check this list to see if there's already a form we should pull out.
      * This is needed because parse iteration works one form at a time and splicing potentially
      * turns one form into many. */
-    std::list<runtime::object_ref> pending_forms;
+    native_list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */

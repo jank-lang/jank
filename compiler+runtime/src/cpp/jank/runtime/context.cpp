@@ -35,7 +35,7 @@
 namespace jank::runtime
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
+  decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   context *__rt_ctx{};
@@ -92,11 +92,6 @@ namespace jank::runtime
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref())))
       .expect_ok();
-  }
-
-  context::~context()
-  {
-    thread_binding_frames.erase(this);
   }
 
   obj::symbol_ref context::qualify_symbol(obj::symbol_ref const &sym) const
@@ -159,7 +154,7 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  object_ref context::eval_string(jtl::immutable_string_view const &code)
+  object_ref context::eval_string(jtl::immutable_string const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
@@ -186,11 +181,12 @@ namespace jank::runtime
      * targeted at AOT and doesn't have access to what's loaded in the JIT runtime. */
     if(truthy(compile_files_var->deref()))
     {
+      profile::timer const timer{ "rt compile-module" };
       auto const &module(runtime::to_string(current_module_var->deref()));
       auto const name{ module::module_to_load_function(module) };
 
       auto const form{ runtime::conj(
-        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(std::move(forms)),
+        runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(jtl::move(forms)),
                                     obj::persistent_vector::empty()),
                       make_box<obj::symbol>(name)),
         make_box<obj::symbol>("fn*")) };
@@ -208,6 +204,7 @@ namespace jank::runtime
       }
       else
       {
+        profile::timer const timer{ "rt compile-module parse + write" };
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
@@ -228,8 +225,7 @@ namespace jank::runtime
     return ret;
   }
 
-  jtl::result<void, error_ref>
-  context::eval_cpp_string(jtl::immutable_string_view const &code) const
+  jtl::result<void, error_ref> context::eval_cpp_string(jtl::immutable_string const &code) const
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
@@ -259,7 +255,7 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(jtl::immutable_string_view const &code)
+  object_ref context::read_string(jtl::immutable_string const &code)
   {
     profile::timer const timer{ "rt read_string" };
 
@@ -281,7 +277,7 @@ namespace jank::runtime
   }
 
   native_vector<analyze::expression_ref>
-  context::analyze_string(jtl::immutable_string_view const &code, bool const eval)
+  context::analyze_string(jtl::immutable_string const &code, bool const eval)
   {
     profile::timer const timer{ "rt analyze_string" };
     read::lex::processor l_prc{ code };
@@ -311,7 +307,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, error_ref>
-  context::load_module(jtl::immutable_string_view const &module, module::origin const ori)
+  context::load_module(jtl::immutable_string const &module, module::origin const ori)
   {
     auto const ns(current_ns());
 
@@ -342,13 +338,17 @@ namespace jank::runtime
     {
       return error::runtime_unable_to_load_module(e.what());
     }
-    catch(object_ref const &e)
+    catch(object_ref const e)
     {
       return error::runtime_unable_to_load_module(runtime::to_code_string(e));
     }
+    catch(error_ref const e)
+    {
+      return error::runtime_unable_to_load_module(e);
+    }
   }
 
-  jtl::result<void, error_ref> context::compile_module(jtl::immutable_string_view const &module)
+  jtl::result<void, error_ref> context::compile_module(jtl::immutable_string const &module)
   {
     module_dependencies.clear();
 
@@ -421,26 +421,25 @@ namespace jank::runtime
     return unique_namespaced_string("G_");
   }
 
-  jtl::immutable_string
-  context::unique_namespaced_string(jtl::immutable_string_view const &prefix) const
+  jtl::immutable_string context::unique_namespaced_string(jtl::immutable_string const &prefix) const
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
     return util::format("{}-{}-{}",
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
-                        prefix.data(),
+                        prefix.c_str(),
                         ++ns->symbol_counter);
   }
 
-  jtl::immutable_string context::unique_munged_string() const
+  jtl::immutable_string context::unique_string() const
   {
-    return munge(unique_namespaced_string());
+    return unique_string("G_");
   }
 
-  jtl::immutable_string
-  context::unique_munged_string(jtl::immutable_string_view const &prefix) const
+  jtl::immutable_string context::unique_string(jtl::immutable_string const &prefix) const
   {
-    return munge(unique_namespaced_string(prefix));
+    auto const ns{ current_ns() };
+    return util::format("{}-{}", prefix.c_str(), ++ns->symbol_counter);
   }
 
   obj::symbol context::unique_symbol() const
@@ -448,7 +447,7 @@ namespace jank::runtime
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(jtl::immutable_string_view const &prefix) const
+  obj::symbol context::unique_symbol(jtl::immutable_string const &prefix) const
   {
     return { "", unique_namespaced_string(prefix) };
   }
@@ -518,6 +517,12 @@ namespace jank::runtime
   }
 
   jtl::result<var_ref, jtl::immutable_string>
+  context::intern_var(jtl::immutable_string const &qualified_name)
+  {
+    return intern_var(make_box<obj::symbol>(qualified_name));
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
   context::intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_var(make_box<obj::symbol>(ns, name));
@@ -548,6 +553,12 @@ namespace jank::runtime
   context::intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_owned_var(make_box<obj::symbol>(ns, name));
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_owned_var(jtl::immutable_string const &qualified_name)
+  {
+    return intern_owned_var(make_box<obj::symbol>(qualified_name));
   }
 
   jtl::result<var_ref, jtl::immutable_string>
@@ -705,7 +716,7 @@ namespace jank::runtime
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(!tbfs.empty())
     {
       bindings = tbfs.front().bindings;
@@ -734,7 +745,7 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(!tbfs.empty())
     {
       frame.bindings = tbfs.front().bindings;
@@ -777,7 +788,7 @@ namespace jank::runtime
 
   jtl::string_result<void> context::pop_thread_bindings()
   {
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return err("Mismatched thread binding pop");
@@ -790,7 +801,7 @@ namespace jank::runtime
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
-    auto const &tbfs(thread_binding_frames[this]);
+    auto const &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return obj::persistent_hash_map::empty();
@@ -800,7 +811,7 @@ namespace jank::runtime
 
   jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
-    auto &tbfs(thread_binding_frames[this]);
+    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return none;

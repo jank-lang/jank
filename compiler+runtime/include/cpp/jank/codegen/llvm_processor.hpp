@@ -110,7 +110,7 @@ namespace jank::codegen
                    compilation_target target);
     /* For this ctor, we're inheriting the context from another function, which means
      * we're building a nested function. */
-    llvm_processor(analyze::expr::function_ref expr, std::unique_ptr<reusable_context> ctx);
+    llvm_processor(analyze::expr::function_ref expr, jtl::ref<reusable_context> ctx);
     llvm_processor(llvm_processor const &) = delete;
     llvm_processor(llvm_processor &&) noexcept = default;
 

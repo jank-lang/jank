@@ -4,6 +4,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/error/report.hpp>
 
 namespace jank::runtime
 {
@@ -85,14 +86,12 @@ namespace jank::runtime
     if(redefined)
     {
       auto const v{ expect_object<var>(*found_var) };
-      /* TODO: Util for warning. */
-      util::println(
-        stderr,
-        "WARNING: '{}' already referred to {} in namespace '{}' but has been replaced by {}",
-        unqualified_sym->to_string(),
-        v->to_code_string(),
-        name->to_string(),
-        new_var->to_code_string());
+      error::warn(
+        util::format("'{}' already referred to {} in namespace '{}' but has been replaced by {}",
+                     unqualified_sym->to_string(),
+                     v->to_code_string(),
+                     name->to_string(),
+                     new_var->to_code_string()));
     }
     *locked_vars
       = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));

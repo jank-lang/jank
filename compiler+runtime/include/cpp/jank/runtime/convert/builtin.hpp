@@ -35,9 +35,19 @@ namespace jank::runtime
       return const_cast<object *>(t);
     }
 
+    static constexpr object *into_object(object_ref const t)
+    {
+      return t.erase();
+    }
+
     static constexpr object *from_object(T t)
     {
       return const_cast<object *>(t);
+    }
+
+    static constexpr object *from_object(object_ref const t)
+    {
+      return t.erase();
     }
   };
 

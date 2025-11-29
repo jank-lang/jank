@@ -3,6 +3,7 @@
 #include <jank/util/cli.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/runtime/module/loader.hpp>
+#include <jank/error/report.hpp>
 
 namespace jank::util::cli
 {
@@ -47,12 +48,12 @@ namespace jank::util::cli
       ->check(CLI::Range(0, 3));
 
     std::map<std::string, codegen_type> const codegen_types{
-      { "llvm_ir", codegen_type::llvm_ir },
+      { "llvm-ir", codegen_type::llvm_ir },
       {     "cpp",     codegen_type::cpp }
     };
     cli.add_option("--codegen", opts.codegen, "The type of code generation to use.")
-      ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm_ir,cpp}"))
-      ->default_str(make_default("llvm_ir"));
+      ->transform(CLI::CheckedTransformer(codegen_types).description("{llvm-ir,cpp}"))
+      ->default_str(make_default(codegen_type_str(opts.codegen)));
 
     /* Native dependencies. */
     cli.add_option("-I,--include-dir",
@@ -173,6 +174,12 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_check_health))
     {
       opts.command = command::check_health;
+    }
+
+    if(opts.codegen == codegen_type::llvm_ir)
+    {
+      error::warn(
+        "LLVM IR code generation is currently unstable and incomplete. Use at your own risk.");
     }
 
     return ok();

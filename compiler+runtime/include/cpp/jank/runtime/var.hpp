@@ -58,6 +58,7 @@ namespace jank::runtime
 
     var_ref set_dynamic(bool dyn);
 
+    obj::symbol_ref to_qualified_symbol() const;
     var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::derefable */

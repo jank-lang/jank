@@ -47,7 +47,7 @@ namespace jank::util
    * at the start/end of each stack trace. */
   static bool filter_frame(cpptrace::stacktrace_frame const &frame)
   {
-    static std::set<jtl::immutable_string_view> const symbols_to_ignore{
+    static native_set<jtl::immutable_string_view> const symbols_to_ignore{
       /* (Top) Linux exception pipework. */
       "get_adjusted_ptr",
       "__gxx_personality_v0",

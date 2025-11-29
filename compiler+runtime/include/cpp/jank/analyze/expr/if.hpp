@@ -25,6 +25,7 @@ namespace jank::analyze::expr
 
     /* TODO: Rename to have _expr suffixes. */
     expression_ref condition;
+    /* The then/else exprs are expected to have the same type. We handle this during analysis. */
     expression_ref then;
     jtl::option<expression_ref> else_;
   };

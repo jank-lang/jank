@@ -41,9 +41,9 @@ namespace jank::runtime::obj
         runtime::detail::native_transient_sorted_set transient;
         for(auto const e : make_sequence_range(typed_seq))
         {
-          transient.insert_v(e);
+          transient.insert(e);
         }
-        return transient.persistent();
+        return transient;
       },
       seq));
   }
@@ -130,8 +130,9 @@ namespace jank::runtime::obj
 
   persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const
   {
-    auto set(data.insert_v(head));
-    auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
+    auto copy(data);
+    copy.insert(head);
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
     return ret;
   }
 
@@ -140,7 +141,7 @@ namespace jank::runtime::obj
     auto const found(data.find(o));
     if(found != data.end())
     {
-      return found.get();
+      return *found;
     }
     return jank_nil;
   }
@@ -152,13 +153,14 @@ namespace jank::runtime::obj
 
   bool persistent_sorted_set::contains(object_ref const o) const
   {
-    return data.find(o) != data.end();
+    return data.contains(o);
   }
 
   persistent_sorted_set_ref persistent_sorted_set::disj(object_ref const o) const
   {
-    auto set(data.erase_key(o));
-    auto ret(make_box<persistent_sorted_set>(meta, std::move(set)));
+    auto copy(data);
+    copy.erase(o);
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
     return ret;
   }
 }

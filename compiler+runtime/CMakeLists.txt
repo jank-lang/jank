@@ -42,6 +42,7 @@ option(jank_coverage "Enable code coverage measurement" OFF)
 option(jank_analyze "Enable static analysis" OFF)
 option(jank_test "Enable jank's test suite" OFF)
 option(jank_unity_build "Optimize translation unit compilation for the number of cores" OFF)
+option(jank_debug_gc "Enable GC debug assertions" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
@@ -569,7 +570,6 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bpptree/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
@@ -903,7 +903,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_o}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -o ${jank_clojure_core_o} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -O3 -o ${jank_clojure_core_o} clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

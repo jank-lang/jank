@@ -150,6 +150,9 @@ namespace jank::error
   error_ref analyze_invalid_cpp_member_access(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref expansion);
+  error_ref analyze_known_issue(jtl::immutable_string const &message,
+                                read::source const &source,
+                                runtime::object_ref expansion);
   error_ref
   internal_analyze_failure(jtl::immutable_string const &message, runtime::object_ref expansion);
   error_ref internal_analyze_failure(jtl::immutable_string const &message,

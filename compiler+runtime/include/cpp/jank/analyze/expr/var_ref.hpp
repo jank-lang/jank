@@ -26,6 +26,12 @@ namespace jank::analyze::expr
 
     runtime::object_ref to_runtime_data() const override;
 
+    /* Holds the fully qualified name for the originally resolved var.
+     * It will be useful to know that the var ref happened through a
+     * referred var, for static analysis and error reporting.
+     *
+     * For all the other purposes, `var` member should be used that points
+     * to the actual value of the var.. */
     runtime::obj::symbol_ref qualified_name{};
     runtime::var_ref var{};
   };

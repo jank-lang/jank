@@ -1,9 +1,9 @@
 (let [i (cpp/int. 5)
-      ifn (fn* []
+      ifn (fn* capture-i []
             (assert (= 5 i)))
       _ (ifn)
       f (cpp/float. 5.0)
-      ffn (fn* []
+      ffn (fn* capture-f []
             (if (= 5.0 f)
               :success))]
   (ffn))

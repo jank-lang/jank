@@ -143,6 +143,11 @@ namespace jank::runtime
     return this;
   }
 
+  obj::symbol_ref var::to_qualified_symbol() const
+  {
+    return make_box<runtime::obj::symbol>(n->name->name, name->name);
+  }
+
   var_thread_binding_ref var::get_thread_binding() const
   {
     if(!thread_bound.load())
@@ -150,7 +155,7 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(__rt_ctx->thread_binding_frames[__rt_ctx]);
+    auto &tbfs(runtime::context::thread_binding_frames[std::this_thread::get_id()]);
     if(tbfs.empty())
     {
       return {};

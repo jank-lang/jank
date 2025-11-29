@@ -16,6 +16,7 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
 #include <jank/evaluate.hpp>
@@ -942,7 +943,9 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
     if(is_ctor
-       && Cpp::IsAggregateConstructible(val->type, arg_types, __rt_ctx->unique_munged_string()))
+       && Cpp::IsAggregateConstructible(val->type,
+                                        arg_types,
+                                        runtime::munge(__rt_ctx->unique_namespaced_string())))
     {
       //util::println("using aggregate initializaation");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
@@ -1282,13 +1285,13 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    auto qualified_sym(current_frame->lift_var(sym));
+    auto qualified_sym(runtime::__rt_ctx->qualify_symbol(sym));
     qualified_sym->meta = sym->meta;
     /* We always def in the current ns, so we want an owned var. */
-    auto const var(__rt_ctx->intern_owned_var(qualified_sym));
-    if(var.is_err())
+    auto const var_res(__rt_ctx->intern_owned_var(qualified_sym));
+    if(var_res.is_err())
     {
-      return error::internal_analyze_failure(var.expect_err(),
+      return error::internal_analyze_failure(var_res.expect_err(),
                                              meta_source(sym),
                                              latest_expansion(macro_expansions));
     }
@@ -1316,7 +1319,7 @@ namespace jank::analyze
       }
       value_expr = some(value_result.expect_ok());
 
-      vars.insert_or_assign(var.expect_ok(), value_expr.unwrap());
+      vars.insert_or_assign(var_res.expect_ok(), value_expr.unwrap());
     }
 
     if(has_docstring)
@@ -1333,13 +1336,6 @@ namespace jank::analyze
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
-    }
-
-    /* Lift this so it can be used during codegen. */
-    /* TODO: I don't think lifting meta is actually needed anymore. Verify. */
-    if(qualified_sym->meta.is_some())
-    {
-      current_frame->lift_constant(qualified_sym->meta.unwrap());
     }
 
     return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, value_expr);
@@ -1595,12 +1591,6 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    /* Macros aren't lifted, since they're not used during runtime. */
-    auto const macro_kw(__rt_ctx->intern_keyword("", "macro", true).expect_ok());
-    if(var->meta.is_none() || get(var->meta.unwrap(), macro_kw).is_nil())
-    {
-      current_frame->lift_var(qualified_sym);
-    }
     return jtl::make_ref<expr::var_deref>(position, current_frame, true, qualified_sym, var);
   }
 
@@ -1632,7 +1622,7 @@ namespace jank::analyze
 
     native_vector<runtime::obj::symbol_ref> param_symbols;
     param_symbols.reserve(params->data.size());
-    std::set<runtime::obj::symbol> unique_param_symbols;
+    native_set<runtime::obj::symbol> unique_param_symbols;
 
     bool is_variadic{};
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
@@ -2259,7 +2249,7 @@ namespace jank::analyze
 
     /* All bindings in a letfn appear simultaneously and may be mutually recursive.
      * This makes creating a letfn locals frame a bit more involved than let, where locals
-     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)]) 
+     * are introduced left-to-right. For example, each binding in (letfn [(a [] b) (b [] a)])
      * requires the other to be in scope in order to be analyzed.
      *
      * We tackle this in two steps. First, we create empty local bindings for all names.
@@ -2308,7 +2298,7 @@ namespace jank::analyze
 
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
       auto it(ret->pairs.emplace_back(sym, fexpr));
-      auto local(ret->frame->locals.find(sym)->second);
+      auto &local(ret->frame->locals.find(sym)->second);
       local.value_expr = some(it.second);
       local.needs_box = it.second->needs_box;
     }
@@ -2544,7 +2534,7 @@ namespace jank::analyze
 
     auto const arg_sym(runtime::expect_object<runtime::obj::symbol>(arg));
 
-    auto const qualified_sym(current_frame->lift_var(arg_sym));
+    auto const qualified_sym{ __rt_ctx->qualify_symbol(arg_sym) };
     auto const found_var(__rt_ctx->find_var(qualified_sym));
     if(found_var.is_nil())
     {
@@ -2554,7 +2544,11 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, found_var);
+    return jtl::make_ref<expr::var_ref>(position,
+                                        current_frame,
+                                        true,
+                                        found_var->to_qualified_symbol(),
+                                        found_var);
   }
 
   processor::expression_result
@@ -2566,8 +2560,7 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
-    auto const qualified_sym(
-      current_frame->lift_var(make_box<runtime::obj::symbol>(o->n->name->name, o->name->name)));
+    auto const qualified_sym(__rt_ctx->qualify_symbol(o->to_qualified_symbol()));
     return jtl::make_ref<expr::var_ref>(position, current_frame, true, qualified_sym, o);
   }
 
@@ -2817,8 +2810,6 @@ namespace jank::analyze
                                        bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-
-    current_frame->lift_constant(o);
     return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o);
   }
 
@@ -2863,9 +2854,6 @@ namespace jank::analyze
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
       auto const o(evaluate::eval(pre_eval_expr));
 
-      /* TODO: Order lifted constants. Use sub constants during codegen. */
-      current_frame->lift_constant(o);
-
       return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
     }
 
@@ -2884,27 +2872,12 @@ namespace jank::analyze
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
       [&](auto const typed_o) -> processor::expression_result {
-        using T = typename decltype(typed_o)::value_type;
-
         native_vector<std::pair<expression_ref, expression_ref>> exprs;
         exprs.reserve(typed_o->data.size());
 
         for(auto const &kv : typed_o->data)
         {
-          /* The two maps (hash and sorted) have slightly different iterators, so we need to
-           * pull out the entries differently. */
-          object_ref first{}, second{};
-          if constexpr(std::same_as<T, obj::persistent_sorted_map>)
-          {
-            auto const &entry(kv.get());
-            first = entry.first;
-            second = entry.second;
-          }
-          else
-          {
-            first = kv.first;
-            second = kv.second;
-          }
+          object_ref const first{ kv.first }, second{ kv.second };
 
           auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
           if(k_expr.is_err())
@@ -2988,9 +2961,6 @@ namespace jank::analyze
                                                             std::move(exprs),
                                                             typed_o->meta));
           auto const constant(evaluate::eval(pre_eval_expr));
-
-          /* TODO: Order lifted constants. Use sub constants during codegen. */
-          current_frame->lift_constant(constant);
 
           return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, constant);
         }
@@ -3360,17 +3330,9 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
-      /* TODO: A Clang bug prevents us from supporting references to static members.
-       * https://github.com/llvm/llvm-project/issues/146956
-       */
-      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
+      if(!Cpp::IsPointerType(type))
       {
-        /* TODO: Error if it's static and non-primitive. */
         type = Cpp::GetLValueReferenceType(type);
-      }
-      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
-      {
-        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
       }
     }
     else if(Cpp::IsEnumConstant(scope))
@@ -3597,7 +3559,7 @@ namespace jank::analyze
     for(usize i{}; i < arg_count; ++i, it = it.rest())
     {
       auto arg_expr{
-        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, needs_box)
+        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, true)
       };
       if(arg_expr.is_err())
       {
@@ -4387,7 +4349,7 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetTypeFromScope(member_scope);
+      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
       val->scope = member_scope;
       return val;
     }

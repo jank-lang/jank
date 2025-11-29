@@ -68,6 +68,17 @@ extern "C"
     return __rt_ctx->read_string(s).erase();
   }
 
+  jank_object_ref jank_ns_intern(jank_object_ref const sym)
+  {
+    auto const sym_obj(try_object<obj::symbol>(reinterpret_cast<object *>(sym)));
+    return __rt_ctx->intern_ns(sym_obj).erase();
+  }
+
+  jank_object_ref jank_ns_intern_c(char const * const sym)
+  {
+    return __rt_ctx->intern_ns(sym).erase();
+  }
+
   void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count)
   {
     auto const ns_obj(__rt_ctx->intern_ns(ns));
@@ -940,8 +951,8 @@ extern "C"
     {
       if(o_obj->type == object_type::integer)
       {
-        /* We don't hash the integer if it's an int32 value. This is to be consistent with how keys are hashed in jank's
-         * case macro. */
+        /* We don't hash the integer if it's within an i32 value.
+         * This is to be consistent with how keys are hashed in jank's case macro. */
         integer = (integer >= std::numeric_limits<i32>::min()
                    && integer <= std::numeric_limits<i32>::max())
           ? integer
@@ -1024,7 +1035,6 @@ extern "C"
       /* The GC needs to enabled even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
-      GC_enable();
       GC_init();
 
       llvm::llvm_shutdown_obj const Y{};

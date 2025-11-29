@@ -184,6 +184,8 @@ namespace jank::error
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
         return "Invalid C++ member access.";
+      case kind::analyze_known_issue:
+        return "Known issue.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
@@ -468,5 +470,17 @@ namespace jank::error
   std::ostream &operator<<(std::ostream &os, base const &e)
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";
+  }
+
+  error_ref internal_failure(jtl::immutable_string const &message)
+  {
+    auto const e{ make_error(kind::internal_failure, message, read::source::unknown) };
+    e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
+    return e;
+  }
+
+  void throw_internal_failure(jtl::immutable_string const &message)
+  {
+    throw internal_failure(message);
   }
 }
