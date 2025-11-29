@@ -232,7 +232,7 @@ namespace jank::jit
 
   void processor::eval_string(jtl::immutable_string const &s) const
   {
-    return eval_string(s, nullptr);
+    eval_string(s, nullptr);
   }
 
   void processor::eval_string(jtl::immutable_string const &s, clang::Value * const ret) const
