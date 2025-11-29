@@ -13,7 +13,6 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
-#include <jank/util/clang_format.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
@@ -75,73 +74,45 @@ namespace jank::codegen
       switch(o->type)
       {
         case jank::runtime::object_type::nil:
-          {
-            return "jank::runtime::obj::nil_ref";
-          }
+          return "jank::runtime::obj::nil_ref";
         case jank::runtime::object_type::boolean:
-          {
-            return "jank::runtime::obj::boolean_ref";
-          }
+          return "jank::runtime::obj::boolean_ref";
         case jank::runtime::object_type::integer:
+          if(boxed)
           {
-            if(boxed)
-            {
-              return "jank::runtime::obj::integer_ref";
-            }
-            return "jank::i64";
+            return "jank::runtime::obj::integer_ref";
           }
+          return "jank::i64";
         case jank::runtime::object_type::character:
+          if(boxed)
           {
-            if(boxed)
-            {
-              return "jank::runtime::obj::character_ref";
-            }
-            return "jank::runtime::obj::character";
+            return "jank::runtime::obj::character_ref";
           }
+          return "jank::runtime::obj::character";
         case jank::runtime::object_type::real:
+          if(boxed)
           {
-            if(boxed)
-            {
-              return "jank::runtime::obj::real_ref";
-            }
-            return "jank::f64";
+            return "jank::runtime::obj::real_ref";
           }
+          return "jank::f64";
         case jank::runtime::object_type::symbol:
-          {
-            return "jank::runtime::obj::symbol_ref";
-          }
+          return "jank::runtime::obj::symbol_ref";
         case jank::runtime::object_type::keyword:
-          {
-            return "jank::runtime::obj::keyword_ref";
-          }
+          return "jank::runtime::obj::keyword_ref";
         case jank::runtime::object_type::persistent_string:
-          {
-            return "jank::runtime::obj::persistent_string_ref";
-          }
+          return "jank::runtime::obj::persistent_string_ref";
         case jank::runtime::object_type::persistent_list:
-          {
-            return "jank::runtime::obj::persistent_list_ref";
-          }
+          return "jank::runtime::obj::persistent_list_ref";
         case jank::runtime::object_type::persistent_vector:
-          {
-            return "jank::runtime::obj::persistent_vector_ref";
-          }
+          return "jank::runtime::obj::persistent_vector_ref";
         case jank::runtime::object_type::persistent_hash_set:
-          {
-            return "jank::runtime::obj::persistent_hash_set_ref";
-          }
+          return "jank::runtime::obj::persistent_hash_set_ref";
         case jank::runtime::object_type::persistent_array_map:
-          {
-            return "jank::runtime::obj::persistent_array_map_ref";
-          }
+          return "jank::runtime::obj::persistent_array_map_ref";
         case jank::runtime::object_type::var:
-          {
-            return "jank::runtime::var_ref";
-          }
+          return "jank::runtime::var_ref";
         default:
-          {
-            return "jank::runtime::object_ref";
-          }
+          return "jank::runtime::object_ref";
       }
 #pragma clang diagnostic pop
     }
@@ -635,51 +606,45 @@ namespace jank::codegen
     switch(expr->position)
     {
       case analyze::expression_position::value:
+        if(meta.is_some())
         {
-          if(meta.is_some())
-          {
-            auto const dynamic{ truthy(
-              get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-            return util::format("{}->bind_root({})->with_meta({})->set_dynamic({})",
-                                var_tmp,
-                                val.str(true),
-                                meta.unwrap(),
-                                dynamic);
-          }
-          else
-          {
-            return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
-                                var_tmp,
-                                val.str(true));
-          }
+          auto const dynamic{ truthy(
+            get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+          return util::format("{}->bind_root({})->with_meta({})->set_dynamic({})",
+                              var_tmp,
+                              val.str(true),
+                              meta.unwrap(),
+                              dynamic);
+        }
+        else
+        {
+          return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
+                              var_tmp,
+                              val.str(true));
         }
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return ");
-        }
+        util::format_to(body_buffer, "return ");
         [[fallthrough]];
       case analyze::expression_position::statement:
+        if(meta.is_some())
         {
-          if(meta.is_some())
-          {
-            auto const dynamic{ truthy(
-              get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-            util::format_to(body_buffer,
-                            "{}->bind_root({})->with_meta({})->set_dynamic({});",
-                            var_tmp,
-                            val.str(true),
-                            meta.unwrap(),
-                            dynamic);
-          }
-          else
-          {
-            util::format_to(body_buffer,
-                            "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
-                            var_tmp,
-                            val.str(true));
-          }
-          return none;
+          auto const dynamic{ truthy(
+            get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+          util::format_to(body_buffer,
+                          "{}->bind_root({})->with_meta({})->set_dynamic({});",
+                          var_tmp,
+                          val.str(true),
+                          meta.unwrap(),
+                          dynamic);
         }
+        else
+        {
+          util::format_to(body_buffer,
+                          "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
+                          var_tmp,
+                          val.str(true));
+        }
+        return none;
     }
   }
 
@@ -691,14 +656,10 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        {
-          return util::format("{}->deref()", var);
-        }
+        return util::format("{}->deref()", var);
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return {}->deref();", var);
-          return none;
-        }
+        util::format_to(body_buffer, "return {}->deref();", var);
+        return none;
     }
   }
 
@@ -710,14 +671,10 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        {
-          return var;
-        }
+        return var;
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return {};", var);
-          return none;
-        }
+        util::format_to(body_buffer, "return {};", var);
+        return none;
     }
   }
 
@@ -789,14 +746,10 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        {
-          return ret;
-        }
+        return ret;
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
-          return none;
-        }
+        util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
+        return none;
     }
   }
 
@@ -997,14 +950,10 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        {
-          return ret;
-        }
+        return ret;
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return {};", ret);
-          return none;
-        }
+        util::format_to(body_buffer, "return {};", ret);
+        return none;
     }
   }
 
@@ -1023,15 +972,10 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        /* TODO: Return a handle. */
-        {
-          return prc.expression_str();
-        }
+        return prc.expression_str();
       case analyze::expression_position::tail:
-        {
-          util::format_to(body_buffer, "return {};", prc.expression_str());
-          return none;
-        }
+        util::format_to(body_buffer, "return {};", prc.expression_str());
+        return none;
     }
   }
 
@@ -1347,21 +1291,17 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
-        {
-          return last;
-        }
+        return last;
       case analyze::expression_position::tail:
+        if(last.is_none())
         {
-          if(last.is_none())
-          {
-            util::format_to(body_buffer, "return jank::runtime::jank_nil;");
-          }
-          else
-          {
-            util::format_to(body_buffer, "return {};", last.unwrap().str(expr->needs_box));
-          }
-          return none;
+          util::format_to(body_buffer, "return jank::runtime::jank_nil;");
         }
+        else
+        {
+          util::format_to(body_buffer, "return {};", last.unwrap().str(expr->needs_box));
+        }
+        return none;
     }
   }
 
@@ -2110,6 +2050,9 @@ namespace jank::codegen
     if(!generated_declaration)
     {
       profile::timer const timer{ util::format("cpp gen {}", root_fn->name) };
+
+      /* We generate the body first so that we know what we need for the header. This is
+       * necessary since we end up lifting vars and constants while building the body. */
       build_body();
       build_header();
       build_footer();
@@ -2124,9 +2067,6 @@ namespace jank::codegen
     ret += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
     ret += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
 
-    //ret = util::format_cpp_source(ret).expect_ok();
-
-    //util::println("codegen declaration {}", ret);
     return ret;
   }
 
