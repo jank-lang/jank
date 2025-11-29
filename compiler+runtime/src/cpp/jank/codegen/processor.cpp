@@ -471,11 +471,6 @@ namespace jank::codegen
         },
         o);
     }
-
-    static jtl::immutable_string boxed_local_name(jtl::immutable_string const &local_name)
-    {
-      return local_name; // + "__boxed";
-    }
   }
 
   handle::handle(jtl::immutable_string const &name, bool const boxed)
@@ -518,7 +513,7 @@ namespace jank::codegen
     else if(binding->has_boxed_usage)
     {
       unboxed_name = runtime::munge(binding->native_name);
-      boxed_name = detail::boxed_local_name(unboxed_name);
+      boxed_name = unboxed_name;
     }
     else
     {
@@ -996,17 +991,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::local_reference_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto const munged_name(runtime::munge(expr->binding->native_name));
-
-    handle ret;
-    if(expr->binding->needs_box)
-    {
-      ret = munged_name;
-    }
-    else
-    {
-      ret = handle{ detail::boxed_local_name(munged_name), munged_name };
-    }
+    auto const ret(runtime::munge(expr->binding->native_name));
 
     switch(expr->position)
     {
@@ -1017,7 +1002,7 @@ namespace jank::codegen
         }
       case analyze::expression_position::tail:
         {
-          util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
+          util::format_to(body_buffer, "return {};", ret);
           return none;
         }
     }
