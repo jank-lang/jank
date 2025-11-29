@@ -23,8 +23,8 @@
  * jank fn has a nested fn, it becomes a nested struct, since this whole
  * generation works recursively.
  *
- * Analysis lifts constants and vars, so those just become members which are
- * initialized in the ctor.
+ * During codegen, we lift constants and vars, so those just become members which
+ * are initialized in the ctor.
  *
  * The most interesting part is the translation of expressions into statements,
  * so that something like `(println (if foo bar spam))` can become sane C++.
@@ -563,20 +563,21 @@ namespace jank::codegen
   }
 
   static jtl::immutable_string
-  lift_var(native_unordered_map<jtl::immutable_string, jtl::immutable_string> &lifted_vars,
-           jtl::immutable_string const &qualified_name)
+  lift_var(native_unordered_map<jtl::immutable_string, processor::lifted_var> &lifted_vars,
+           jtl::immutable_string const &qualified_name,
+           bool const owned)
   {
     auto const existing{ lifted_vars.find(qualified_name) };
     if(existing != lifted_vars.end())
     {
-      return existing->second;
+      return existing->second.native_name;
     }
 
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ __rt_ctx->unique_string(qualified_name) };
     auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
     //util::println("lifting var '{}' with '{}' as '{}'", qualified_name, us, native_name);
-    lifted_vars.emplace(qualified_name, native_name);
+    lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned });
     return native_name;
   }
 
@@ -602,7 +603,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::def_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &var(lift_var(lifted_vars, expr->name->to_string()));
+    auto const &var(lift_var(lifted_vars, expr->name->to_string(), true));
     auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(var)));
 
     jtl::option<jtl::immutable_string> meta;
@@ -681,7 +682,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_deref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(lift_var(lifted_vars, expr->var->to_qualified_symbol()->to_string()));
+    auto const &var(lift_var(lifted_vars, expr->var->to_qualified_symbol()->to_string(), false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -700,7 +701,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(lift_var(lifted_vars, expr->qualified_name->to_string()));
+    auto const &var(lift_var(lifted_vars, expr->qualified_name->to_string(), false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -2169,7 +2170,7 @@ namespace jank::codegen
 
       for(auto const &v : lifted_vars)
       {
-        util::format_to(header_buffer, "jank::runtime::var_ref const {};", v.second);
+        util::format_to(header_buffer, "jank::runtime::var_ref const {};", v.second.native_name);
       }
 
 
@@ -2235,10 +2236,20 @@ namespace jank::codegen
 
       for(auto const &v : lifted_vars)
       {
-        util::format_to(header_buffer,
-                        R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
-                        v.second,
-                        v.first);
+        if(v.second.owned)
+        {
+          util::format_to(header_buffer,
+                          R"(, {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() })",
+                          v.second.native_name,
+                          v.first);
+        }
+        else
+        {
+          util::format_to(header_buffer,
+                          R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
+                          v.second.native_name,
+                          v.first);
+        }
       }
 
 
@@ -2362,7 +2373,7 @@ namespace jank::codegen
     if(target == compilation_target::module)
     {
       util::format_to(footer_buffer,
-                      "extern \"C\" void* {}(){",
+                      "void* {}(){",
                       runtime::module::module_to_load_function(module));
 
       /* First thing we do when loading this module is to intern our ns. Everything else will
@@ -2390,6 +2401,7 @@ namespace jank::codegen
                       "return {}::{}{ }.call().erase();",
                       runtime::module::module_to_native_ns(module),
                       runtime::munge(struct_name.name));
+
       util::format_to(footer_buffer, "}");
     }
   }

@@ -64,6 +64,7 @@ namespace jank::runtime
     jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
     jtl::result<var_ref, jtl::immutable_string> intern_owned_var(obj::symbol_ref const &);
+    jtl::result<var_ref, jtl::immutable_string> intern_owned_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
     var_ref find_var(obj::symbol_ref const &);

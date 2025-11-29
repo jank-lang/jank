@@ -992,8 +992,19 @@ namespace jank::runtime::module
       __rt_ctx->jit_prc.load_object(entry.path);
     }
 
-    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
-    reinterpret_cast<object *(*)()>(load)();
+    /* For C++ codegen, we don't use extern "C" for the load fn, since it's UB
+     * to throw exceptions across C boundaries. Instead, we just declare the function
+     * and then try to call it. */
+    auto const load_fn_res{ __rt_ctx->jit_prc.find_symbol(load_function_name) };
+    if(load_fn_res.is_ok())
+    {
+      reinterpret_cast<object *(*)()>(load_fn_res.expect_ok())();
+    }
+    else
+    {
+      __rt_ctx->jit_prc.eval_string(
+        util::format("void* {}(); {}();", load_function_name, load_function_name));
+    }
 
     return ok();
   }

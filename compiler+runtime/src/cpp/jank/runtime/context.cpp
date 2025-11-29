@@ -338,9 +338,13 @@ namespace jank::runtime
     {
       return error::runtime_unable_to_load_module(e.what());
     }
-    catch(object_ref const &e)
+    catch(object_ref const e)
     {
       return error::runtime_unable_to_load_module(runtime::to_code_string(e));
+    }
+    catch(error_ref const e)
+    {
+      return error::runtime_unable_to_load_module(e);
     }
   }
 
@@ -549,6 +553,12 @@ namespace jank::runtime
   context::intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name)
   {
     return intern_owned_var(make_box<obj::symbol>(ns, name));
+  }
+
+  jtl::result<var_ref, jtl::immutable_string>
+  context::intern_owned_var(jtl::immutable_string const &qualified_name)
+  {
+    return intern_owned_var(make_box<obj::symbol>(qualified_name));
   }
 
   jtl::result<var_ref, jtl::immutable_string>

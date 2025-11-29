@@ -170,7 +170,14 @@ namespace jank::codegen
     jtl::string_builder footer_buffer;
     jtl::string_builder expression_buffer;
     jtl::immutable_string expression_fn_name;
-    native_unordered_map<jtl::immutable_string, jtl::immutable_string> lifted_vars;
+
+    struct lifted_var
+    {
+      jtl::immutable_string native_name;
+      bool owned{};
+    };
+
+    native_unordered_map<jtl::immutable_string, lifted_var> lifted_vars;
     native_unordered_map<runtime::object_ref,
                          jtl::immutable_string,
                          std::hash<runtime::object_ref>,

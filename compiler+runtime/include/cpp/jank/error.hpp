@@ -381,6 +381,8 @@ namespace jank::error
    * is because cpptrace doesn't use our GC allocator. */
   struct base : gc_cleanup
   {
+    static constexpr bool is_error{ true };
+
     base() = delete;
     base(base const &) = delete;
     base(base &&) noexcept = default;
@@ -459,5 +461,13 @@ namespace jank
   error_ref make_error(Args &&...args)
   {
     return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
+  }
+
+  namespace error
+  {
+    error_ref internal_failure(jtl::immutable_string const &message);
+    /* This can be used by jtl helpers which can't reach into jank but which fail. */
+    [[noreturn]]
+    void throw_internal_failure(jtl::immutable_string const &message);
   }
 }
