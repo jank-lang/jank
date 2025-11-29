@@ -66,7 +66,6 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
-    /* TODO: Consider making this a on the typed object: the C++ name. */
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
     {
 #pragma clang diagnostic push
@@ -444,18 +443,10 @@ namespace jank::codegen
     }
   }
 
-  handle::handle(jtl::immutable_string const &name, bool const boxed)
+  handle::handle(jtl::immutable_string const &name, bool const)
   {
-    if(boxed)
-    {
-      boxed_name = name;
-      unboxed_name = boxed_name;
-    }
-    else
-    {
-      unboxed_name = name;
-      boxed_name = util::format("jank::runtime::make_box({})", unboxed_name);
-    }
+    boxed_name = name;
+    unboxed_name = boxed_name;
   }
 
   handle::handle(jtl::immutable_string const &boxed_name)
@@ -470,43 +461,19 @@ namespace jank::codegen
   {
     if(this->boxed_name.empty())
     {
-      this->boxed_name = util::format("jank::runtime::make_box({})", unboxed_name);
+      this->boxed_name = unboxed_name;
     }
   }
 
   handle::handle(analyze::local_binding_ptr const binding)
   {
-    if(binding->needs_box)
-    {
-      boxed_name = runtime::munge(binding->native_name);
-      unboxed_name = boxed_name;
-    }
-    else if(binding->has_boxed_usage)
-    {
-      unboxed_name = runtime::munge(binding->native_name);
-      boxed_name = unboxed_name;
-    }
-    else
-    {
-      unboxed_name = runtime::munge(binding->native_name);
-    }
+    boxed_name = runtime::munge(binding->native_name);
+    unboxed_name = boxed_name;
   }
 
-  jtl::immutable_string handle::str([[maybe_unused]] bool const needs_box) const
+  jtl::immutable_string handle::str(bool const) const
   {
     return boxed_name;
-    //if(needs_box)
-    //{
-    //  if(boxed_name.empty())
-    //  {
-    //    throw std::runtime_error{ util::format("Missing boxed name for handle {}", unboxed_name) };
-    //  }
-    //  return boxed_name;
-    //}
-    //else
-    //{
-    //  return unboxed_name;
-    //}
   }
 
   processor::processor(analyze::expr::function_ref const expr,
@@ -542,7 +509,6 @@ namespace jank::codegen
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ __rt_ctx->unique_string(qualified_name) };
     auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
-    //util::println("lifting var '{}' with '{}' as '{}'", qualified_name, us, native_name);
     lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned });
     return native_name;
   }
@@ -561,7 +527,6 @@ namespace jank::codegen
     }
 
     auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
-    //util::println("lifting constant {} as {}", runtime::to_code_string(o), native_name);
     lifted_constants.emplace(o, native_name);
     return native_name;
   }
@@ -624,6 +589,7 @@ namespace jank::codegen
         }
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return ");
+
         [[fallthrough]];
       case analyze::expression_position::statement:
         if(meta.is_some())
@@ -683,13 +649,10 @@ namespace jank::codegen
                                       native_vector<analyze::expression_ref> const &arg_exprs,
                                       analyze::expr::function_arity const &fn_arity)
   {
-    //util::println("format_dynamic_call source {}", source_tmp);
     native_vector<handle> arg_tmps;
     arg_tmps.reserve(arg_exprs.size());
     for(auto const &arg_expr : arg_exprs)
     {
-      //util::println("\tformat_dynamic_call arg {}",
-      //              runtime::to_code_string(arg_expr->to_runtime_data()));
       arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap());
     }
 
