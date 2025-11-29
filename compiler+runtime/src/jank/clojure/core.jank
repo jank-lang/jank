@@ -1126,7 +1126,7 @@
   ([]
    0)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.add l r))
   ([l r & args]
@@ -1156,7 +1156,7 @@
   ([]
    1)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.mul l r))
   ([l r & args]
@@ -4482,8 +4482,7 @@
   "Returns a number one greater than num. Supports arbitrary precision.
   See also: inc"
   [x]
-  ;; (. clojure.lang.Numbers (incP x))
-  (throw "TODO: port inc'"))
+  (cpp/jank.runtime.promoting_inc x))
 
 ;; ;;math stuff
 ;; (defn ^:private nary-inline
@@ -4509,11 +4508,9 @@
   See also: +"
   ([] 0)
   ([x]
-  ;;  (cast Number x)
-   (throw "TODO: port +'"))
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (addP x y))
-   (throw "TODO: port +'"))
+   (cpp/jank.runtime.promoting_add x y))
   ([x y & more]
    (reduce +' (+' x y) more)))
 
@@ -4522,11 +4519,9 @@
   See also: *"
   ([] 1)
   ([x]
-  ;;  (cast Number x)
-   (throw "TODO: port *'"))
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (multiplyP x y))
-  (throw "TODO: port *'"))
+   (cpp/jank.runtime.promoting_mul x y))
   ([x y & more]
    (reduce *' (*' x y) more)))
 
@@ -4535,11 +4530,9 @@
   the ys from x and returns the result. Supports arbitrary precision.
   See also: -"
   ([x]
-  ;;  (. clojure.lang.Numbers (minusP x))
-   (throw "TODO: port -'"))
+   (-' 0 x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (minusP x y))
-   (throw "TODO: port -'"))
+   (cpp/jank.runtime.promoting_sub x y))
   ([x y & more]
    (reduce -' (-' x y) more)))
 
@@ -4556,8 +4549,7 @@
   "Returns a number one less than num. Supports arbitrary precision.
   See also: dec"
   [x]
-  ;; (. clojure.lang.Numbers (decP x))
-  (throw "TODO: port dec'"))
+  (cpp/jank.runtime.promoting_dec x))
 
 (defn unchecked-inc-int
   "Returns a number one greater than x, an int.
@@ -5340,8 +5332,7 @@
 (defn num
   "Coerce to Number"
   [x]
-  ;; (. clojure.lang.Numbers (num x))
-  (throw "TODO: port num"))
+  (cpp/jank.runtime.number x))
 
 (defn long
   "Coerce to long"
