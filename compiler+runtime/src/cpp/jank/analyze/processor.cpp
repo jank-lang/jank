@@ -2782,8 +2782,9 @@ namespace jank::analyze
               }
             }
 
-            /* Check for duplicate catch types - C++ does not allow multiple catch clauses
-             * for the same type as the first one would always match. */
+            /* Check for duplicate catch types. */
+            /*TODO Add full error handling for duplicated catch types:
+             * Add a new error kind and notes pointing to the duplicated types*/
             for(auto const &existing_catch : ret->catch_bodies)
             {
               if(existing_catch.type.data == catch_type_ref->type.data)
