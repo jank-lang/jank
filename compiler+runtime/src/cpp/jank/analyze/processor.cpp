@@ -2910,12 +2910,12 @@ namespace jank::analyze
       /* Eval the literal to resolve exprs such as quotes. */
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
-      auto const o(evaluate::eval(pre_eval_expr));
+      auto const oref(evaluate::eval(pre_eval_expr));
 
       /* TODO: Order lifted constants. Use sub constants during codegen. */
-      current_frame->lift_constant(o);
+      current_frame->lift_constant(oref);
 
-      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, oref);
     }
 
     return jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
