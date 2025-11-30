@@ -540,7 +540,8 @@ namespace jank::codegen
       return arg;
     }
 
-    if(llvm::isa<llvm::AllocaInst>(arg) && cpp_util::is_any_object(type))
+    if(llvm::isa<llvm::AllocaInst>(arg)
+       && (cpp_util::is_any_object(type) || Cpp::IsPointerType(type) || Cpp::IsReferenceType(type)))
     {
       arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
     }
@@ -1793,22 +1794,37 @@ namespace jank::codegen
     };
     auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { current_ex_ptr }) };
     auto const ex_val_type{ llvm_type(*ctx, llvm_ctx, catch_type).type.data };
-    llvm::Value *raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
-
-    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
-    llvm::AllocaInst *ex_val_slot{};
+    /* For pointer types (e.g., void*, int*), the exception system stores the pointer VALUE
+     * itself at caught_ptr, so we use it directly. For non-pointer types (e.g., int, double),
+     * the value is stored AT the caught_ptr address, so we must dereference with CreateLoad. */
+    if(Cpp::IsPointerType(catch_type) || Cpp::IsReferenceType(catch_type)
+       || (!Cpp::IsBuiltin(catch_type) && !Cpp::IsEnumType(catch_type)
+           && !cpp_util::is_any_object(catch_type)))
     {
-      llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
-      llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
-                                            current_fn->getEntryBlock().getFirstInsertionPt());
-      ex_val_slot
-        = entry_builder_local.CreateAlloca(ex_val_type,
-                                           nullptr,
-                                           util::format("{}.slot", catch_sym->name).data());
+      /* Pointer exception: caught_ptr IS the value we want */
+      locals[catch_sym] = caught_ptr;
     }
-    ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
+    else
+    {
+      llvm::Value *raw_ex_val{};
+      /* Non-pointer exception: must dereference to get the value */
+      raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
+      auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
+      llvm::AllocaInst *ex_val_slot{};
+      {
+        llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
+        llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
+                                              current_fn->getEntryBlock().getFirstInsertionPt());
+        ex_val_slot
+          = entry_builder_local.CreateAlloca(ex_val_type,
+                                             nullptr,
+                                             util::format("{}.slot", catch_sym->name).data());
+      }
+      ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
 
-    locals[catch_sym] = ex_val_slot;
+      locals[catch_sym] = ex_val_slot;
+    }
+
 
     auto const original_catch_pos{ catch_body->position };
     catch_body->propagate_position(expression_position::value);
