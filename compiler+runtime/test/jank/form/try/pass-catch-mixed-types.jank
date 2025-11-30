@@ -1,4 +1,4 @@
-;; Test mixing jank and C++ exception types in multiple catch
+;; Test mixing Jank and C++ exception types in multiple catch
 (cpp/raw "namespace pass_multiple_catch_mixed_types
           {
             void throw_cpp_int() { throw 123; }
@@ -15,7 +15,7 @@
       (catch cpp/jank.runtime.object_ref e
         :jank-caught))))
 
-;; Test C++ exception followed by jank catch
+;; Test C++ exception followed by Jank catch
 (assert
  (= 123
     (try

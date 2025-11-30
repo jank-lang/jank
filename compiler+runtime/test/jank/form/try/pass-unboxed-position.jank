@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ;; Regression test: Verify that unboxed values from try expressions
 ;; are correctly boxed when assigned to bindings and used in boxed contexts
 (def a
@@ -12,15 +11,5 @@
 
 ;; Execute the test function
 (a)
-=======
-; A box will be required.
-(def a (fn* []
-         (let* [a 5
-                b (try
-                    7
-                    (catch cpp/jank.runtime.object_ref _
-                      ))]
-           [])))
->>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
 
 :success
