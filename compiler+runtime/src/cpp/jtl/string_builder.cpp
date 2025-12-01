@@ -392,6 +392,11 @@ namespace jtl
     return pos;
   }
 
+  bool string_builder::empty() const
+  {
+    return pos == 0;
+  }
+
   jtl::immutable_string string_builder::release()
   {
     jank_debug_assert(pos < capacity);

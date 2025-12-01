@@ -923,11 +923,21 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::function_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const compiling(truthy(__rt_ctx->compile_files_var->deref()));
+    auto const fn_target((target == compilation_target::eval) ? compilation_target::eval
+                                                              : compilation_target::function);
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
-    processor prc{ expr,
-                   module,
-                   compiling ? compilation_target::function : compilation_target::eval };
+    processor prc{ expr, module, fn_target };
+
+    /* TODO: Share a context instead. */
+    prc.lifted_vars = lifted_vars;
+    prc.lifted_constants = lifted_constants;
+
+    prc.build_body();
+
+    lifted_vars = jtl::move(prc.lifted_vars);
+    lifted_constants = jtl::move(prc.lifted_constants);
+    prc.lifted_vars.clear();
+    prc.lifted_constants.clear();
 
     util::format_to(deps_buffer, "{}", prc.declaration_str());
 
@@ -2035,7 +2045,12 @@ namespace jank::codegen
 
   void processor::build_header()
   {
-    util::format_to(header_buffer, "namespace {} {", runtime::module::module_to_native_ns(module));
+    if(target != compilation_target::function)
+    {
+      util::format_to(header_buffer,
+                      "namespace {} {",
+                      runtime::module::module_to_native_ns(module));
+    }
 
     util::format_to(header_buffer,
                     R"(
@@ -2163,6 +2178,11 @@ namespace jank::codegen
 
   void processor::build_body()
   {
+    if(!body_buffer.empty())
+    {
+      return;
+    }
+
     analyze::expr::function_arity const *variadic_arity{};
     analyze::expr::function_arity const *highest_fixed_arity{};
     for(auto const &arity : root_fn->arities)
@@ -2265,7 +2285,10 @@ namespace jank::codegen
     util::format_to(footer_buffer, "};");
 
     /* Namespace. */
-    util::format_to(footer_buffer, "}");
+    if(target != compilation_target::function)
+    {
+      util::format_to(footer_buffer, "}");
+    }
 
     if(target == compilation_target::module)
     {
