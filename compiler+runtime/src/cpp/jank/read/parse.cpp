@@ -512,6 +512,13 @@ namespace jank::read::parse
                                    start_token,
                                    start_token };
       }
+      else if(sv[0] == '\\' && sv.size() >= 3 && sv.size() <= 5)
+      {
+        auto const str(sv.substr(1));
+        return object_source_info{ make_box<obj::character>(str),
+                                   start_token,
+                                   start_token };
+      }
 
       return error::parse_invalid_character(start_token);
     }
