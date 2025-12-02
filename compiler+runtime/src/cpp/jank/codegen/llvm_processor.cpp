@@ -1761,7 +1761,7 @@ namespace jank::codegen
         rtti_syms.emplace(exception_rtti);
       }
       auto const callable{
-        Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
+        Cpp::MakeRTTICallable(catch_type, exception_rtti, unique_munged_string())
       };
       global_rtti.emplace(exception_rtti, callable);
     }

@@ -77,24 +77,6 @@ namespace jank::codegen
 
     /* TODO: Consider making this a on the typed object: the C++ name. */
     [[maybe_unused]]
-    static jtl::immutable_string
-    lift_constant(native_unordered_map<runtime::object_ref,
-                                       jtl::immutable_string,
-                                       std::hash<runtime::object_ref>,
-                                       runtime::very_equal_to> &lifted_constants,
-                  object_ref const &o)
-    {
-      auto const existing{ lifted_constants.find(o) };
-      if(existing != lifted_constants.end())
-      {
-        return existing->second;
-      }
-
-      auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
-      lifted_constants.emplace(o, native_name);
-      return native_name;
-    }
-
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
     {
 #pragma clang diagnostic push
@@ -494,6 +476,22 @@ namespace jank::codegen
   }
 
   jtl::immutable_string handle::str(bool const) const
+  {
+    if(needs_box)
+    {
+      if(boxed_name.empty())
+      {
+        throw std::runtime_error{ util::format("Missing boxed name for handle {}", unboxed_name) };
+      }
+      return boxed_name;
+    }
+    else
+    {
+      return unboxed_name;
+    }
+  }
+
+  jtl::immutable_string handle::str([[maybe_unused]] bool const needs_box) const
   {
     if(needs_box)
     {
@@ -1419,23 +1417,7 @@ namespace jank::codegen
       }
       util::format_to(body_buffer, "}");
 
-<<<<<<< HEAD
       for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
-=======
-      /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ref, which
-       * means we need to be throwing an object_ref. Since we're not using inheritance, we can't
-       * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
-       * throw a persistent_string_ref, for example, it will not be caught as an object_ref.
-       *
-       * We mitigate this by ensuring during the codegen for throw that we type-erase to
-       * an object_ref.
-       */
-      util::format_to(body_buffer,
-                      "catch(jank::runtime::object_ref const {}) {",
-                      runtime::munge(expr->catch_bodies[0].sym->name));
-      auto const &catch_tmp(gen(expr->catch_bodies[0].body, fn_arity, box_needed));
-      if(catch_tmp.is_some())
->>>>>>> 12ca6b5f9 (Implement support for typed catch clauses)
       {
         auto const &catch_body = expr->catch_bodies[i];
         util::format_to(body_buffer,
