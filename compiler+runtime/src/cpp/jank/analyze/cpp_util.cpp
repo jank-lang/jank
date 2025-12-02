@@ -338,6 +338,10 @@ namespace jank::analyze::cpp_util
       {
         name = name + "*";
       }
+      else if(Cpp::IsReferenceType(type))
+      {
+        name = name + "&";
+      }
       return name;
     }
     return Cpp::GetTypeAsString(type);

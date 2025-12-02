@@ -1,8 +1,12 @@
 ;; Test multiple catch with C++ exceptions and finally blocks
 (cpp/raw "namespace pass_multiple_catch_cpp_with_finally
           {
-            void throw_cpp_double() { throw 5.5; }
             void throw_uncaught_type() { throw 'x'; }
+          }")
+
+(cpp/raw "namespace pass_multiple_catch_cpp_with_finally
+          {
+            void throw_cpp_double() { throw 5.5; }
           }")
 
 (let [cleanup (atom false)]

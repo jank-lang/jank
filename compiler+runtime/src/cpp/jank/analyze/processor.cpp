@@ -2787,7 +2787,7 @@ namespace jank::analyze
                                                   latest_expansion(macro_expansions));
               }
             }
-
+            bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
             catch_frame->locals.emplace(catch_sym,
@@ -2795,7 +2795,7 @@ namespace jank::analyze
                                                        catch_sym->name,
                                                        none,
                                                        catch_frame,
-                                                       true,
+                                                       is_object,
                                                        false,
                                                        false,
                                                        catch_type_ref->type });
@@ -2902,7 +2902,7 @@ namespace jank::analyze
       /* Eval the literal to resolve exprs such as quotes. */
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
-      auto const oref(evaluate::eval(pre_eval_expr));
+      auto const o(evaluate::eval(pre_eval_expr));
 
       return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
     }
