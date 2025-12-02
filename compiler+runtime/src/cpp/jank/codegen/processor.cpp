@@ -1754,13 +1754,19 @@ namespace jank::codegen
       util::format_to(body_buffer, "{}(", source_tmp.str(false));
 
       bool need_comma{};
-      for(auto const &arg_tmp : arg_tmps)
+      auto const source_type{ cpp_util::expression_type(expr->source_expr) };
+      for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
       {
+        auto const &arg_tmp{ arg_tmps[arg_idx] };
+        auto const param_type{ source_type ? Cpp::GetFunctionArgType(source_type, arg_idx) : nullptr };
+
         if(need_comma)
         {
           util::format_to(body_buffer, ", ");
         }
-        util::format_to(body_buffer, "{}", arg_tmp.str(true));
+        util::format_to(body_buffer,
+                        "{}",
+                        arg_tmp.str(param_type && cpp_util::is_any_object(param_type)));
         need_comma = true;
       }
 
