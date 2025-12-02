@@ -96,7 +96,7 @@
     ;clojure.core-test.quot ; Failed tests. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rand ; unloadable, In clojure.core-test.rand$fn_2-71, duplicate definition of symbol '_jank_global_init_70', unloadable
     ;clojure.core-test.rand-int ; unloadable, In clojure.core-test.rand-int$fn_2-56, duplicate definition of symbol '_fn_2_0', unloadable
-    ;clojure.core-test.ratio-qmark ; `jank.runtime.div` seems to be incorrect.
+    clojure.core-test.ratio-qmark
     ;clojure.core-test.rational-qmark ; (= true (rational? 0N))
     ;clojure.core-test.rationalize ; TODO: port rationalize, Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rem ; Fails the test cases.
