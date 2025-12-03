@@ -1574,6 +1574,8 @@ namespace jank::analyze
       auto &unwrapped_named_recursion(found_named_recursion.unwrap());
       local_frame::register_captures(current_frame, unwrapped_named_recursion);
 
+      unwrapped_named_recursion.fn_frame->fn_ctx->is_named_recursive = true;
+
       return jtl::make_ref<expr::recursion_reference>(
         position,
         current_frame,
@@ -1724,7 +1726,7 @@ namespace jank::analyze
     /* If it turns out this function uses recur, we need to ensure that its tail expression
      * is boxed. This is because unboxed values may use IIFE for initialization, which will
      * not work with the generated while/continue we use for recursion. */
-    if(fn_ctx->is_tail_recursive)
+    if(fn_ctx->is_recur_recursive)
     {
       step::force_boxed(body_do);
     }
@@ -2026,7 +2028,7 @@ namespace jank::analyze
     }
     else
     {
-      fn_ctx.unwrap()->is_tail_recursive = true;
+      fn_ctx.unwrap()->is_recur_recursive = true;
     }
 
     return jtl::make_ref<expr::recur>(position,

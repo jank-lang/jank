@@ -2238,7 +2238,7 @@ namespace jank::codegen
       }
 
       jtl::immutable_string recur_suffix;
-      if(arity.fn_ctx->is_tail_recursive)
+      if(arity.fn_ctx->is_recur_recursive)
       {
         recur_suffix = detail::recur_suffix;
       }
@@ -2261,14 +2261,14 @@ namespace jank::codegen
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
-      if(!param_shadows_fn)
+      if(!param_shadows_fn && arity.fn_ctx->is_named_recursive)
       {
         util::format_to(body_buffer,
                         "jank::runtime::object_ref const {}{ this };",
                         runtime::munge(root_fn->name));
       }
 
-      if(arity.fn_ctx->is_tail_recursive)
+      if(arity.fn_ctx->is_recur_recursive)
       {
         util::format_to(body_buffer, "{");
 
@@ -2295,7 +2295,7 @@ namespace jank::codegen
         util::format_to(body_buffer, "return jank::runtime::jank_nil;");
       }
 
-      if(arity.fn_ctx->is_tail_recursive)
+      if(arity.fn_ctx->is_recur_recursive)
       {
         util::format_to(body_buffer, "} }");
       }
@@ -2311,8 +2311,8 @@ namespace jank::codegen
 
       util::format_to(body_buffer,
                       R"(
-          jank::runtime::behavior::callable::arity_flag_t get_arity_flags() const final
-          { return jank::runtime::behavior::callable::build_arity_flags({}, true, {}); }
+          callable::arity_flag_t get_arity_flags() const final
+          { return callable::build_arity_flags({}, true, {}); }
         )",
                       variadic_arity->fn_ctx->param_count - 1,
                       variadic_ambiguous);

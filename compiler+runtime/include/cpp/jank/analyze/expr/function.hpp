@@ -27,7 +27,11 @@ namespace jank::analyze::expr
     jtl::immutable_string unique_name;
     usize param_count{};
     bool is_variadic{};
-    bool is_tail_recursive{};
+    /* Is recur used within this function? */
+    bool is_recur_recursive{};
+    /* Is there any named recrusion within this function (tail or otherwise)?
+     * This counts any named recursion reference, not just calls. */
+    bool is_named_recursive{};
     /* TODO: is_pure */
   };
 
