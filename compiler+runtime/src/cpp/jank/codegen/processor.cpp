@@ -48,10 +48,11 @@
  * This is optimized by knowing what position every expression in, so trivial expressions used
  * as arguments, for example, don't need to be first stored in temporaries.
  *
- * Lastly, this is complicated by tracking boxing requirements so that not everything is an
- * `object_ref`. Judicious use of `auto` and semantic analysis alows us to track when unboxing
- * is supported, although we very rarely know for certain if something is unboxed. We usually
- * only know if it _could_ be.
+ * Code generation has a target, which is either for eval or for a module.
+ * When the target is for eval, each generated function is standalone. This
+ * is the normal operation. However, when doing AOT compilation, our target
+ * will be a module and we'll do some code size optimizations to group all
+ * of the functions within a module into one namespace, dedupe constants, etc.
  */
 
 namespace jank::codegen
@@ -928,16 +929,19 @@ namespace jank::codegen
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ expr, module, fn_target };
 
-    /* TODO: Share a context instead. */
-    prc.lifted_vars = lifted_vars;
-    prc.lifted_constants = lifted_constants;
+    if(fn_target == compilation_target::function)
+    {
+      /* TODO: Share a context instead. */
+      prc.lifted_vars = lifted_vars;
+      prc.lifted_constants = lifted_constants;
 
-    prc.build_body();
+      prc.build_body();
 
-    lifted_vars = jtl::move(prc.lifted_vars);
-    lifted_constants = jtl::move(prc.lifted_constants);
-    prc.lifted_vars.clear();
-    prc.lifted_constants.clear();
+      lifted_vars = jtl::move(prc.lifted_vars);
+      lifted_constants = jtl::move(prc.lifted_constants);
+      prc.lifted_vars.clear();
+      prc.lifted_constants.clear();
+    }
 
     util::format_to(deps_buffer, "{}", prc.declaration_str());
 
@@ -2024,18 +2028,42 @@ namespace jank::codegen
     {
       profile::timer const timer{ util::format("cpp gen {}", root_fn->name) };
 
+      /* Module targeting works in a special way, with the goal of
+       * cutting down the generated code size. Instead of each function
+       * having its own lifted vars/constants, we have one namespace for
+       * the module with the lifted globals there, at namespace level.
+       * Then every function within that module can share the same globals.
+       * This also makes creating functions cheaper. However, it requires
+       * some special tracking. */
+      if(target == compilation_target::module)
+      {
+        util::format_to(module_header_buffer,
+                        "namespace {} {",
+                        runtime::module::module_to_native_ns(module));
+      }
+
+
       /* We generate the body first so that we know what we need for the header. This is
        * necessary since we end up lifting vars and constants while building the body. */
       build_body();
       build_header();
       build_footer();
+
+      if(target == compilation_target::module)
+      {
+        /* Namespace. */
+        util::format_to(module_footer_buffer, "}");
+      }
+
       generated_declaration = true;
     }
 
     native_transient_string ret;
-    ret.reserve(deps_buffer.size() + header_buffer.size() + body_buffer.size()
-                + footer_buffer.size());
+    ret.reserve(module_header_buffer.size() + module_footer_buffer.size() + deps_buffer.size()
+                + header_buffer.size() + body_buffer.size() + footer_buffer.size());
+    ret += jtl::immutable_string_view{ module_header_buffer.data(), module_header_buffer.size() };
     ret += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
+    ret += jtl::immutable_string_view{ module_footer_buffer.data(), module_footer_buffer.size() };
     ret += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
     ret += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
     ret += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
@@ -2080,18 +2108,26 @@ namespace jank::codegen
         }
       }
 
+      auto &lifted_buffer{ (target == compilation_target::module) ? module_header_buffer
+                                                                  : header_buffer };
+      auto const lifted_const{ (target == compilation_target::module) ? "" : "const" };
+
       for(auto const &v : lifted_vars)
       {
-        util::format_to(header_buffer, "jank::runtime::var_ref const {};", v.second.native_name);
+        util::format_to(lifted_buffer,
+                        "jank::runtime::var_ref {} {};",
+                        lifted_const,
+                        v.second.native_name);
       }
 
 
       for(auto const &v : lifted_constants)
       {
         /* TODO: Typed lifted constants (in analysis). */
-        util::format_to(header_buffer,
-                        "{} const {};",
+        util::format_to(lifted_buffer,
+                        "{} {} {};",
                         detail::gen_constant_type(v.first, true),
+                        lifted_const,
                         v.second);
       }
     }
@@ -2146,30 +2182,34 @@ namespace jank::codegen
         }
       }
 
-      for(auto const &v : lifted_vars)
+      if(target == compilation_target::eval)
       {
-        if(v.second.owned)
+        for(auto const &v : lifted_vars)
         {
-          util::format_to(header_buffer,
-                          R"(, {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() })",
-                          v.second.native_name,
-                          v.first);
+          if(v.second.owned)
+          {
+            util::format_to(
+              header_buffer,
+              R"(, {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() })",
+              v.second.native_name,
+              v.first);
+          }
+          else
+          {
+            util::format_to(header_buffer,
+                            R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
+                            v.second.native_name,
+                            v.first);
+          }
         }
-        else
-        {
-          util::format_to(header_buffer,
-                          R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
-                          v.second.native_name,
-                          v.first);
-        }
-      }
 
 
-      for(auto const &v : lifted_constants)
-      {
-        util::format_to(header_buffer, ", {}{", v.second);
-        detail::gen_constant(v.first, header_buffer, true);
-        util::format_to(header_buffer, "}");
+        for(auto const &v : lifted_constants)
+        {
+          util::format_to(header_buffer, ", {}{", v.second);
+          detail::gen_constant(v.first, header_buffer, true);
+          util::format_to(header_buffer, "}");
+        }
       }
     }
 
@@ -2296,6 +2336,8 @@ namespace jank::codegen
                       "void* {}(){",
                       runtime::module::module_to_load_function(module));
 
+      auto const ns{ runtime::module::module_to_native_ns(module) };
+
       /* First thing we do when loading this module is to intern our ns. Everything else will
        * build on that. */
       util::format_to(footer_buffer, "jank_ns_intern_c(\"{}\");", module);
@@ -2317,9 +2359,38 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
+      for(auto const &v : lifted_vars)
+      {
+        if(v.second.owned)
+        {
+          util::format_to(
+            footer_buffer,
+            R"({}::{} = jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok();)",
+            ns,
+            v.second.native_name,
+            v.first);
+        }
+        else
+        {
+          util::format_to(footer_buffer,
+                          R"({}::{} = jank::runtime::__rt_ctx->intern_var("{}").expect_ok();)",
+                          ns,
+                          v.second.native_name,
+                          v.first);
+        }
+      }
+
+
+      for(auto const &v : lifted_constants)
+      {
+        util::format_to(footer_buffer, "{}::{} = ", ns, v.second);
+        detail::gen_constant(v.first, footer_buffer, true);
+        util::format_to(footer_buffer, ";");
+      }
+
       util::format_to(footer_buffer,
                       "return {}::{}{ }.call().erase();",
-                      runtime::module::module_to_native_ns(module),
+                      ns,
                       runtime::munge(struct_name.name));
 
       util::format_to(footer_buffer, "}");
