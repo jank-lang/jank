@@ -57,6 +57,7 @@
 
 /* TODO: Size optimizations:
  *  - Remove extra object->object conversions
+ *    - Typed object to object
  *  - Add inlining back
  *  - Remove object requirement for if condition
  *  - Remove extra if_n = jank_nil on empty branches
@@ -500,8 +501,8 @@ namespace jank::codegen
                        compilation_target const target)
     : root_fn{ expr }
     , module{ module }
-    , target{ target }
-    , struct_name{ root_fn->unique_name }
+    , target{ target } /* The normal unique name is fully namespaced, which we don't need. */
+    , struct_name{ runtime::__rt_ctx->unique_string(root_fn->name) }
   {
     assert(root_fn->frame.data);
   }
@@ -1466,7 +1467,7 @@ namespace jank::codegen
 
   jtl::option<handle> processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
   {
-    util::format_to(deps_buffer, "\n{}\n", expr->code);
+    util::format_to(cpp_raw_buffer, "\n{}\n", expr->code);
 
     if(expr->position == analyze::expression_position::tail)
     {
@@ -2058,8 +2059,10 @@ namespace jank::codegen
     }
 
     native_transient_string ret;
-    ret.reserve(module_header_buffer.size() + module_footer_buffer.size() + deps_buffer.size()
-                + header_buffer.size() + body_buffer.size() + footer_buffer.size());
+    ret.reserve(cpp_raw_buffer.size() + module_header_buffer.size() + module_footer_buffer.size()
+                + deps_buffer.size() + header_buffer.size() + body_buffer.size()
+                + footer_buffer.size());
+    ret += jtl::immutable_string_view{ cpp_raw_buffer.data(), cpp_raw_buffer.size() };
     ret += jtl::immutable_string_view{ module_header_buffer.data(), module_header_buffer.size() };
     ret += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
     ret += jtl::immutable_string_view{ module_footer_buffer.data(), module_footer_buffer.size() };
