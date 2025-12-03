@@ -55,6 +55,13 @@
  * of the functions within a module into one namespace, dedupe constants, etc.
  */
 
+/* TODO: Size optimizations:
+ *  - Remove extra object->object conversions
+ *  - Add inlining back
+ *  - Remove object requirement for if condition
+ *  - Remove extra if_n = jank_nil on empty branches
+ */
+
 namespace jank::codegen
 {
   using namespace jank::analyze;
@@ -66,6 +73,24 @@ namespace jank::codegen
      * them. So, for tail recursive fns, we name the params with this suffix and then define
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
+
+    static jtl::immutable_string
+    lift_constant(native_unordered_map<runtime::object_ref,
+                                       jtl::immutable_string,
+                                       std::hash<runtime::object_ref>,
+                                       runtime::very_equal_to> &lifted_constants,
+                  object_ref const &o)
+    {
+      auto const existing{ lifted_constants.find(o) };
+      if(existing != lifted_constants.end())
+      {
+        return existing->second;
+      }
+
+      auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
+      lifted_constants.emplace(o, native_name);
+      return native_name;
+    }
 
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
     {
@@ -115,6 +140,11 @@ namespace jank::codegen
           return "jank::runtime::object_ref";
       }
 #pragma clang diagnostic pop
+    }
+
+    static bool should_gen_meta(jtl::option<object_ref> const &meta)
+    {
+      return meta.is_some() && !runtime::is_empty(meta.unwrap());
     }
 
     static void
@@ -254,24 +284,21 @@ namespace jank::codegen
             if(typed_o->data.empty())
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_vector::empty()");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, "->with_meta(");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ")");
               }
             }
             else
             {
               util::format_to(buffer,
                               "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
               for(auto const &form : typed_o->data)
@@ -287,23 +314,21 @@ namespace jank::codegen
             if(typed_o->data.empty())
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_list::empty()");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, "->with_meta(");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ")");
               }
             }
             else
             {
               util::format_to(buffer,
                               "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                util::format_to(buffer,
-                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
               for(auto const &form : typed_o->data)
@@ -319,23 +344,21 @@ namespace jank::codegen
             if(typed_o->data.empty())
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_hash_set::empty()");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, "->with_meta(");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ")");
               }
             }
             else
             {
               util::format_to(buffer,
                               "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                util::format_to(buffer,
-                                "jank::runtime::__rt_ctx->read_string(\"{}\"), ",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
               for(auto const &form : typed_o->data)
@@ -351,25 +374,22 @@ namespace jank::codegen
             if(typed_o->data.empty())
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_array_map::empty()");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, "->with_meta(");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ")");
               }
             }
             else
             {
               bool need_comma{};
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(
                   buffer,
                   "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
-                util::format_to(buffer,
-                                "jank::runtime::__rt_ctx->read_string(\"{}\")",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
                 need_comma = true;
               }
               else
@@ -395,17 +415,16 @@ namespace jank::codegen
             if(typed_o->data.empty())
             {
               util::format_to(buffer, "jank::runtime::obj::persistent_hash_map::empty()");
-              if(typed_o->meta.is_some())
+              if(should_gen_meta(typed_o->meta))
               {
-                /* TODO: If meta is empty, use empty() fn. We'll need a gen helper for this. */
-                util::format_to(buffer,
-                                "->with_meta(jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, "->with_meta(");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                util::format_to(buffer, ")");
               }
             }
             else
             {
-              auto const has_meta{ typed_o->meta.is_some() };
+              auto const has_meta{ should_gen_meta(typed_o->meta) };
               if(has_meta)
               {
                 util::format_to(buffer, "jank::runtime::with_meta(");
@@ -415,9 +434,8 @@ namespace jank::codegen
                               util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
-                util::format_to(buffer,
-                                ", jank::runtime::__rt_ctx->read_string(\"{}\"))",
-                                util::escape(runtime::to_code_string(typed_o->meta.unwrap())));
+                util::format_to(buffer, ",");
+                gen_constant(typed_o->meta.unwrap(), buffer, true);
               }
             }
           }
@@ -514,24 +532,6 @@ namespace jank::codegen
     return native_name;
   }
 
-  static jtl::immutable_string
-  lift_constant(native_unordered_map<runtime::object_ref,
-                                     jtl::immutable_string,
-                                     std::hash<runtime::object_ref>,
-                                     runtime::very_equal_to> &lifted_constants,
-                object_ref const &o)
-  {
-    auto const existing{ lifted_constants.find(o) };
-    if(existing != lifted_constants.end())
-    {
-      return existing->second;
-    }
-
-    auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
-    lifted_constants.emplace(o, native_name);
-    return native_name;
-  }
-
   jtl::option<handle>
   processor::gen(analyze::expr::def_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
@@ -550,7 +550,7 @@ namespace jank::codegen
     jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
     {
-      meta = lift_constant(lifted_constants, expr->name->meta.unwrap());
+      meta = detail::lift_constant(lifted_constants, expr->name->meta.unwrap());
     }
 
     /* Forward declarations just intern the var and evaluate to it. */
@@ -703,7 +703,7 @@ namespace jank::codegen
     }
     else
     {
-      ret = lift_constant(lifted_constants, expr->data);
+      ret = detail::lift_constant(lifted_constants, expr->data);
     }
 
     switch(expr->position)
@@ -1930,18 +1930,17 @@ namespace jank::codegen
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
-    auto const meta{ runtime::source_to_meta(expr->source) };
+    auto const meta{ detail::lift_constant(lifted_constants,
+                                           runtime::source_to_meta(expr->source)) };
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.data, "
-                    "jank::runtime::__rt_ctx->read_string(\"{}\").data)"
-                    ") };",
+                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.data, {}.data)) };",
                     ret_tmp,
                     type_name,
                     type_name,
                     value_tmp.unwrap().str(false),
-                    util::escape(runtime::to_code_string(meta)));
+                    meta);
 
     if(expr->position == expression_position::tail)
     {
