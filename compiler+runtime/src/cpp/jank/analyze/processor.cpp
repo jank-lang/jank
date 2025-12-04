@@ -3394,9 +3394,13 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
-      if(!Cpp::IsPointerType(type))
+      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
       {
         type = Cpp::GetLValueReferenceType(type);
+      }
+      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
+      {
+        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
       }
     }
     else if(Cpp::IsEnumConstant(scope))
