@@ -84,7 +84,7 @@ namespace jank::codegen
       analyze::expr::try_ref expr;
     };
 
-    std::vector<exception_handler_info>      exception_handlers;
+    std::vector<exception_handler_info> exception_handlers;
 
     // Map from closure context field name to its LLVM type
     // Used to correctly load captured variables with their actual types
@@ -489,10 +489,21 @@ namespace jank::codegen
             && !Cpp::IsReferenceType(input_type) && !Cpp::IsVoid(input_type)
             && !llvm::isa<llvm::AllocaInst>(arg))
     {
-      auto const arg_type{ llvm_type(ctx, llvm_ctx, Cpp::GetNonReferenceType(input_type)) };
-      arg_alloc = ctx.builder->CreateAlloca(arg_type.type.data,
-                                            llvm::ConstantInt::get(ctx.builder->getInt64Ty(), arg_type.size));
-      ctx.builder->CreateStore(arg, arg_alloc);
+      /* If the value is already a pointer, we assume it's the address of the value.
+       * This happens with PHI nodes for if/loop expressions which return addresses
+       * to locals. */
+      if(arg->getType()->isPointerTy())
+      {
+        arg_alloc = arg;
+      }
+      else
+      {
+        auto const arg_type{ llvm_type(ctx, llvm_ctx, Cpp::GetNonReferenceType(input_type)) };
+        arg_alloc = ctx.builder->CreateAlloca(
+          arg_type.type.data,
+          llvm::ConstantInt::get(ctx.builder->getInt64Ty(), arg_type.size));
+        ctx.builder->CreateStore(arg, arg_alloc);
+      }
     }
 
     auto const fn(llvm_module->getFunction(fn_callable.getName()));
@@ -821,9 +832,8 @@ namespace jank::codegen
         // If it's an alloca, it loads from it.
         // If it's a value, it returns it.
         // So here we should load the value from the field and store it in locals.
-        locals[capture.first] = ctx->builder->CreateLoad(load_type,
-                                                         field_ptr,
-                                                         capture.first->name.c_str());
+        locals[capture.first]
+          = ctx->builder->CreateLoad(load_type, field_ptr, capture.first->name.c_str());
       }
     }
   }
@@ -1068,11 +1078,11 @@ namespace jank::codegen
           }
           else if(llvm::isa<llvm::AllocaInst>(arg_handle))
           {
-             // If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive
-             if(!llvm::cast<llvm::AllocaInst>(arg_handle)->getAllocatedType()->isPointerTy())
-             {
-               should_box = true;
-             }
+            // If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive
+            if(!llvm::cast<llvm::AllocaInst>(arg_handle)->getAllocatedType()->isPointerTy())
+            {
+              should_box = true;
+            }
           }
         }
 
@@ -1305,7 +1315,7 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::impl::gen(expr::local_reference_ref const expr,
-                                          [[maybe_unused]] expr::function_arity const &arity)
+                                         [[maybe_unused]] expr::function_arity const &arity)
   {
     auto ret(locals[expr->binding->name]);
     jank_debug_assert_fmt(ret,
@@ -3981,7 +3991,9 @@ namespace jank::codegen
         llvm::Type *field_type{};
         if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
         {
-          auto const alloca_type{ llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType() };
+          auto const alloca_type{
+            llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType()
+          };
           field_type = alloca_type;
           capture_types.push_back(alloca_type);
         }

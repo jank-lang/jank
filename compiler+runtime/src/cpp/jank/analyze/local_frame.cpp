@@ -95,12 +95,6 @@ namespace jank::analyze
       /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
 
-      /* Native values which are captured get auto-boxed, so we need to adjust the type
-       * of the binding. */
-      if(!cpp_util::is_any_object(res.first->second.type))
-      {
-        res.first->second.type = cpp_util::untyped_object_ptr_type();
-      }
     }
   }
 
