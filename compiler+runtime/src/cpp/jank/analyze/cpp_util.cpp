@@ -354,7 +354,7 @@ namespace jank::analyze::cpp_util
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
-    auto const code{ util::format("&typeid({})", Cpp::GetTypeAsString(type)) };
+    auto const code{ util::format("&typeid({})", get_qualified_type_name(type)) };
     clang::Value value;
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())

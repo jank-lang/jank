@@ -1614,6 +1614,17 @@ namespace jank::codegen
 
     auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
 
+    /* Arrays need to decay to pointers. If the scope is a variable and the actual
+     * C++ type is an array, we force decay by adding +0. */
+    if(expr->val_kind == expr::cpp_value::value_kind::variable && Cpp::IsVariable(expr->scope))
+    {
+      auto const actual_cpp_type{ Cpp::GetTypeFromScope(expr->scope) };
+      if(Cpp::IsArrayType(actual_cpp_type))
+      {
+        tmp = util::format("({} + 0)", tmp);
+      }
+    }
+
     if(expr->position == expression_position::tail)
     {
       util::format_to(body_buffer, "return {};", tmp);

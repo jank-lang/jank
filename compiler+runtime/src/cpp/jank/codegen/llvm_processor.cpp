@@ -84,7 +84,11 @@ namespace jank::codegen
       analyze::expr::try_ref expr;
     };
 
-    std::vector<exception_handler_info> exception_handlers;
+    std::vector<exception_handler_info>      exception_handlers;
+
+    // Map from closure context field name to its LLVM type
+    // Used to correctly load captured variables with their actual types
+    native_unordered_map<obj::symbol_ref, llvm::Type *> capture_field_types;
   };
 
   struct llvm_processor::impl
@@ -478,6 +482,18 @@ namespace jank::codegen
     {
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
     }
+    /* For non-object types (primitives, structs), if arg is a value (not an AllocaInst),
+     * we need to allocate storage for it so that arg_alloc is a pointer.
+     * The AOT callable expects ptr* for all argument arrays. */
+    else if(!cpp_util::is_any_object(input_type) && !Cpp::IsPointerType(input_type)
+            && !Cpp::IsReferenceType(input_type) && !Cpp::IsVoid(input_type)
+            && !llvm::isa<llvm::AllocaInst>(arg))
+    {
+      auto const arg_type{ llvm_type(ctx, llvm_ctx, Cpp::GetNonReferenceType(input_type)) };
+      arg_alloc = ctx.builder->CreateAlloca(arg_type.type.data,
+                                            llvm::ConstantInt::get(ctx.builder->getInt64Ty(), arg_type.size));
+      ctx.builder->CreateStore(arg, arg_alloc);
+    }
 
     auto const fn(llvm_module->getFunction(fn_callable.getName()));
     auto const args_array_type{ llvm::ArrayType::get(ctx.builder->getPtrTy(), 1) };
@@ -766,8 +782,21 @@ namespace jank::codegen
         ctx->builder->CreateLoad(ctx->builder->getPtrTy(), context_ptr, "this.context")
       };
       auto const capture_list(root_fn->captures());
-      std::vector<llvm::Type *> const capture_types{ capture_list.size(),
-                                                     ctx->builder->getPtrTy() };
+      std::vector<llvm::Type *> capture_types;
+      capture_types.reserve(capture_list.size());
+      for(auto const &capture : capture_list)
+      {
+        auto const type_it{ ctx->capture_field_types.find(capture.first) };
+        if(type_it != ctx->capture_field_types.end())
+        {
+          capture_types.push_back(type_it->second);
+        }
+        else
+        {
+          capture_types.push_back(ctx->builder->getPtrTy());
+        }
+      }
+
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
@@ -775,7 +804,24 @@ namespace jank::codegen
       for(auto const &capture : capture_list)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
-        locals[capture.first] = ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
+        auto const type_it{ ctx->capture_field_types.find(capture.first) };
+        llvm::Type *load_type{ ctx->builder->getPtrTy() };
+        if(type_it != ctx->capture_field_types.end())
+        {
+          load_type = type_it->second;
+        }
+
+        // For captures, we put the VALUE into locals, not the pointer to the field
+        // This matches how arguments are handled (value is in locals)
+        // Wait, arguments are values?
+        // In create_function: locals[param] = arg; (arg is Value*)
+        // If arg is a pointer (boxed object), locals has pointer.
+        // If capture is i32, locals should have i32 value?
+        // But gen(local_reference_ref) expects locals to contain the "source" (alloca or value).
+        // If it's an alloca, it loads from it.
+        // If it's a value, it returns it.
+        // So here we should load the value from the field and store it in locals.
+        locals[capture.first] = ctx->builder->CreateLoad(load_type,
                                                          field_ptr,
                                                          capture.first->name.c_str());
       }
@@ -1009,9 +1055,58 @@ namespace jank::codegen
       for(auto const &arg_expr : expr->arg_exprs)
       {
         auto arg_handle{ gen(arg_expr, arity) };
-        if(llvm::isa<llvm::AllocaInst>(arg_handle))
+        auto const arg_type{ cpp_util::expression_type(arg_expr) };
+
+        bool should_box{ !cpp_util::is_any_object(arg_type) };
+
+        // Robustness check: if LLVM type suggests primitive, force boxing
+        if(!should_box)
         {
-          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+          if(!arg_handle->getType()->isPointerTy())
+          {
+            should_box = true;
+          }
+          else if(llvm::isa<llvm::AllocaInst>(arg_handle))
+          {
+             // If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive
+             if(!llvm::cast<llvm::AllocaInst>(arg_handle)->getAllocatedType()->isPointerTy())
+             {
+               should_box = true;
+             }
+          }
+        }
+
+        if(should_box)
+        {
+          // Argument is a C++ value/primitive, need to box it for Jank function call
+          llvm::Value *val_ptr{ arg_handle };
+          if(!llvm::isa<llvm::AllocaInst>(arg_handle) && !arg_handle->getType()->isPointerTy())
+          {
+            // If it's a direct value (e.g. from capture load), store it in a temp alloca
+            auto const alloc{ ctx->builder->CreateAlloca(arg_handle->getType()) };
+            ctx->builder->CreateStore(arg_handle, alloc);
+            val_ptr = alloc;
+          }
+          // If it's already a pointer (alloca or pointer value), use it as is
+
+          auto const fn_type(
+            llvm::FunctionType::get(ctx->builder->getPtrTy(),
+                                    { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                                    false));
+          auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
+
+          auto const type_str{ gen_c_string(
+            Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetNonReferenceType(arg_type)))) };
+          llvm::SmallVector<llvm::Value *, 2> const args{ type_str, val_ptr };
+          arg_handle = ctx->builder->CreateCall(fn, args);
+        }
+        else
+        {
+          // Argument is already a Jank object
+          if(llvm::isa<llvm::AllocaInst>(arg_handle))
+          {
+            arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
+          }
         }
 
         arg_handles.emplace_back(arg_handle);
@@ -1210,7 +1305,7 @@ namespace jank::codegen
   }
 
   llvm::Value *llvm_processor::impl::gen(expr::local_reference_ref const expr,
-                                         [[maybe_unused]] expr::function_arity const &arity)
+                                          [[maybe_unused]] expr::function_arity const &arity)
   {
     auto ret(locals[expr->binding->name]);
     jank_debug_assert_fmt(ret,
@@ -1231,6 +1326,21 @@ namespace jank::codegen
   {
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+
+      for(auto const &capture : expr->captures())
+      {
+        auto const name{ capture.first };
+        llvm::Type *field_type{};
+        if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
+        {
+          field_type = llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType();
+        }
+        else
+        {
+          field_type = ctx->builder->getPtrTy();
+        }
+        ctx->capture_field_types[name] = field_type;
+      }
 
       llvm_processor const nested{ expr, ctx };
       auto const res{ nested.gen() };
@@ -3860,7 +3970,31 @@ namespace jank::codegen
     }
     else
     {
-      std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
+      // Build context with correct types for each capture
+      std::vector<llvm::Type *> capture_types;
+      capture_types.reserve(captures.size());
+      for(auto const &capture : captures)
+      {
+        auto const name{ capture.first };
+        // If the variable is in locals and it's an alloca, use its actual type
+        // Otherwise use ptr (for deferred inits, global values, etc.)
+        llvm::Type *field_type{};
+        if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
+        {
+          auto const alloca_type{ llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType() };
+          field_type = alloca_type;
+          capture_types.push_back(alloca_type);
+        }
+        else
+        {
+          field_type = ctx->builder->getPtrTy();
+          capture_types.push_back(ctx->builder->getPtrTy());
+        }
+
+        // Store the field type so nested function can load with correct type
+        ctx->capture_field_types[name] = field_type;
+      }
+
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(expr->unique_name)),
                                   capture_types));
@@ -3888,9 +4022,13 @@ namespace jank::codegen
                                                  name,
                                                  capture.second };
           auto local{ gen(expr::local_reference_ref{ &local_ref }, fn_arity) };
-          if(llvm::isa<llvm::AllocaInst>(local) && cpp_util::is_any_object(capture.second->type))
+
+          // Load the value if it's an alloca
+          // Use the actual LLVM type of the alloca, not the jank binding type
+          if(llvm::isa<llvm::AllocaInst>(local))
           {
-            local = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), local);
+            auto const alloca_type{ llvm::cast<llvm::AllocaInst>(local)->getAllocatedType() };
+            local = ctx->builder->CreateLoad(alloca_type, local);
           }
 
           ctx->builder->CreateStore(local, field_ptr);
