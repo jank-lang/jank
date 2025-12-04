@@ -154,10 +154,20 @@ namespace jank::codegen
     void build_footer();
     jtl::immutable_string expression_str();
 
+    void format_elided_var(jtl::immutable_string const &start,
+                           jtl::immutable_string const &end,
+                           jtl::immutable_string const &ret_tmp,
+                           native_vector<analyze::expression_ref> const &arg_exprs,
+                           analyze::expr::function_arity const &fn_arity,
+                           bool ret_box_needed);
     void format_dynamic_call(jtl::immutable_string const &source_tmp,
                              jtl::immutable_string const &ret_tmp,
                              native_vector<analyze::expression_ref> const &arg_exprs,
                              analyze::expr::function_arity const &fn_arity);
+    void format_direct_call(jtl::immutable_string const &source_tmp,
+                            jtl::immutable_string const &ret_tmp,
+                            native_vector<analyze::expression_ref> const &arg_exprs,
+                            analyze::expr::function_arity const &fn_arity);
 
     analyze::expr::function_ref root_fn;
     jtl::immutable_string module;

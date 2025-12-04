@@ -58,7 +58,6 @@
 /* TODO: Size optimizations:
  *  - Remove extra object->object conversions
  *    - Typed object to object
- *  - Add inlining back
  *  - Remove object requirement for if condition
  *  - Remove extra if_n = jank_nil on empty branches
  */
@@ -670,15 +669,376 @@ namespace jank::codegen
     util::format_to(body_buffer, "));");
   }
 
+  void processor::format_elided_var(jtl::immutable_string const &start,
+                                    jtl::immutable_string const &end,
+                                    jtl::immutable_string const &ret_tmp,
+                                    native_vector<analyze::expression_ref> const &arg_exprs,
+                                    analyze::expr::function_arity const &fn_arity,
+                                    bool ret_box_needed)
+  {
+    /* TODO: Assert arg count when we know it. */
+    native_vector<handle> arg_tmps;
+    arg_tmps.reserve(arg_exprs.size());
+    for(auto const &arg_expr : arg_exprs)
+    {
+      arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap());
+    }
+
+    jtl::immutable_string ret_box;
+    if(ret_box_needed)
+    {
+      ret_box = "jank::runtime::make_box(";
+    }
+    util::format_to(body_buffer, "auto const {}({}{}", ret_tmp, ret_box, start);
+    bool need_comma{};
+    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    {
+      if(need_comma)
+      {
+        util::format_to(body_buffer, ", ");
+      }
+      util::format_to(body_buffer, "{}", arg_tmps[i].str(false));
+      need_comma = true;
+    }
+    util::format_to(body_buffer, "{}{});", end, (ret_box_needed ? ")" : ""));
+  }
+
+  void processor::format_direct_call(jtl::immutable_string const &source_tmp,
+                                     jtl::immutable_string const &ret_tmp,
+                                     native_vector<analyze::expression_ref> const &arg_exprs,
+                                     analyze::expr::function_arity const &fn_arity)
+  {
+    native_vector<handle> arg_tmps;
+    arg_tmps.reserve(arg_exprs.size());
+    for(auto const &arg_expr : arg_exprs)
+    {
+      arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap());
+    }
+
+    util::format_to(body_buffer, "auto const {}({}->call(", ret_tmp, source_tmp);
+
+    bool need_comma{};
+    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    {
+      if(need_comma)
+      {
+        util::format_to(body_buffer, ", ");
+      }
+      util::format_to(body_buffer, "{}", arg_tmps[i].str(true));
+      need_comma = true;
+    }
+    util::format_to(body_buffer, "));");
+  }
+
   jtl::option<handle>
   processor::gen(analyze::expr::call_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
     handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("call")) };
-    auto const &source_tmp(gen(expr->source_expr, fn_arity));
-    format_dynamic_call(source_tmp.unwrap().str(true),
-                        ret_tmp.str(true),
-                        expr->arg_exprs,
-                        fn_arity);
+
+    /* Clojure's codegen actually skips vars for certain calls to clojure.core
+     * fns; this is not the same as direct linking, which uses `invokeStatic`
+     * instead. Rather, this makes calls to `get` become `RT.get`, calls to `+` become
+     * `Numbers.add`, and so on. We do the same thing here. */
+    bool elided{};
+    /* TODO: Use the actual var meta to do this, not a hard-coded set of if checks. */
+    if(auto const ref{ dynamic_cast<analyze::expr::var_deref *>(expr->source_expr.data) }; ref)
+    {
+      auto const &sym{ ref->var->name->name };
+      if(ref->var->n->name->name != "clojure.core")
+      {
+      }
+      else if(sym == "get")
+      {
+        format_elided_var("jank::runtime::get(",
+                          ")",
+                          ret_tmp.str(false),
+                          expr->arg_exprs,
+                          fn_arity,
+                          false);
+        elided = true;
+      }
+      else if(expr->arg_exprs.empty())
+      {
+        if(sym == "rand")
+        {
+          format_elided_var("jank::runtime::rand(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+      }
+      else if(expr->arg_exprs.size() == 1)
+      {
+        if(sym == "abs")
+        {
+          format_elided_var("jank::runtime::abs(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "sqrt")
+        {
+          format_elided_var("jank::runtime::sqrt(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "int")
+        {
+          format_elided_var("jank::runtime::to_int(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "seq")
+        {
+          format_elided_var("jank::runtime::seq(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+        else if(sym == "fresh_seq")
+        {
+          format_elided_var("jank::runtime::fresh_seq(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+        else if(sym == "first")
+        {
+          format_elided_var("jank::runtime::first(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+        else if(sym == "next")
+        {
+          format_elided_var("jank::runtime::next(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+        else if(sym == "next_in_place")
+        {
+          format_elided_var("jank::runtime::next_in_place(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+        else if(sym == "nil?")
+        {
+          format_elided_var("jank::runtime::is_nil(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "some?")
+        {
+          format_elided_var("jank::runtime::is_some(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+      }
+      else if(expr->arg_exprs.size() == 2)
+      {
+        if(sym == "+")
+        {
+          format_elided_var("jank::runtime::add(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "-")
+        {
+          format_elided_var("jank::runtime::sub(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "*")
+        {
+          format_elided_var("jank::runtime::mul(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "/")
+        {
+          format_elided_var("jank::runtime::div(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "<")
+        {
+          format_elided_var("jank::runtime::lt(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "<=")
+        {
+          format_elided_var("jank::runtime::lte(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == ">")
+        {
+          format_elided_var("jank::runtime::lt(",
+                            ")",
+                            ret_tmp.str(false),
+                            { expr->arg_exprs.rbegin(), expr->arg_exprs.rend() },
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == ">=")
+        {
+          format_elided_var("jank::runtime::lte(",
+                            ")",
+                            ret_tmp.str(false),
+                            { expr->arg_exprs.rbegin(), expr->arg_exprs.rend() },
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "min")
+        {
+          format_elided_var("jank::runtime::min(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "max")
+        {
+          format_elided_var("jank::runtime::max(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "pow")
+        {
+          format_elided_var("jank::runtime::pow(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            true);
+          elided = true;
+        }
+        else if(sym == "conj")
+        {
+          format_elided_var("jank::runtime::conj(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+      }
+      else if(expr->arg_exprs.size() == 3)
+      {
+        if(sym == "assoc")
+        {
+          format_elided_var("jank::runtime::assoc(",
+                            ")",
+                            ret_tmp.str(false),
+                            expr->arg_exprs,
+                            fn_arity,
+                            false);
+          elided = true;
+        }
+      }
+    }
+    else if(auto const * const fn = dynamic_cast<analyze::expr::function *>(expr->source_expr.data))
+    {
+      bool variadic{};
+      for(auto const &arity : fn->arities)
+      {
+        if(arity.fn_ctx->is_variadic)
+        {
+          variadic = true;
+        }
+      }
+      if(!variadic)
+      {
+        auto const &source_tmp(gen(expr->source_expr, fn_arity));
+        format_direct_call(source_tmp.unwrap().str(false),
+                           ret_tmp.str(true),
+                           expr->arg_exprs,
+                           fn_arity);
+        elided = true;
+      }
+    }
+
+    if(!elided)
+    {
+      auto const &source_tmp(gen(expr->source_expr, fn_arity));
+      format_dynamic_call(source_tmp.unwrap().str(true),
+                          ret_tmp.str(true),
+                          expr->arg_exprs,
+                          fn_arity);
+    }
 
     if(expr->position == analyze::expression_position::tail)
     {
