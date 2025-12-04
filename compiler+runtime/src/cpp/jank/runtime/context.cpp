@@ -745,13 +745,12 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
+    auto const &thread_id(std::this_thread::get_id());
+    auto &tbfs(thread_binding_frames[thread_id]);
     if(!tbfs.empty())
     {
       frame.bindings = tbfs.front().bindings;
     }
-
-    auto const thread_id(std::this_thread::get_id());
 
     for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
     {

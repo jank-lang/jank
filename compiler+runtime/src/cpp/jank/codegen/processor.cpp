@@ -56,8 +56,6 @@
  */
 
 /* TODO: Size optimizations:
- *  - Remove extra object->object conversions
- *    - Typed object to object
  *  - Remove object requirement for if condition
  *  - Remove extra if_n = jank_nil on empty branches
  */
