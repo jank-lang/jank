@@ -1884,6 +1884,9 @@ namespace jank::codegen
     auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_cast")));
     auto const value_tmp{ gen(expr->value_expr, arity) };
 
+    /* There's no need to do a conversion for void, since we always just
+     * want nil. There's no need for generating a tmp for it either, since
+     * we have a global nil constant. */
     if(Cpp::IsVoid(expr->conversion_type))
     {
       if(expr->position == expression_position::tail)
@@ -1892,6 +1895,18 @@ namespace jank::codegen
         return none;
       }
       return "jank::runtime::jank_nil";
+    }
+
+    /* We can rely on the C++ type system to handle conversion from typed objects
+     * to untype objects. */
+    if(cpp_util::is_untyped_object(expr->type) && cpp_util::is_any_object(expr->conversion_type))
+    {
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", value_tmp.unwrap().str(true));
+        return none;
+      }
+      return value_tmp.unwrap().str(true);
     }
 
     util::format_to(
