@@ -722,7 +722,7 @@ namespace jtl
       /* NOTE: No performance difference between if/switch here. */
       if(get_category() == category::large_owned)
       {
-        GC_free(store.large.data);
+        free(store.large.data);
       }
     }
 
@@ -836,8 +836,8 @@ namespace jtl
     {
       jank_debug_assert(max_small_size < size);
       /* TODO: Apply gnu::malloc to this fn. */
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(
-        static_cast<char *>(GC_malloc_atomic(size + 1)));
+      store.large.data
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::copy(store.large.data, data, size);
       store.large.data[size] = 0;
       store.large.size = size;
@@ -848,8 +848,8 @@ namespace jtl
     constexpr void init_large_fill(value_type const fill, u8 const size) noexcept
     {
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(
-        static_cast<char *>(GC_malloc_atomic(size + 1)));
+      store.large.data
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::assign(store.large.data, size, fill);
       store.large.data[size] = 0;
       store.large.size = size;
@@ -864,8 +864,8 @@ namespace jtl
     {
       auto const size(lhs_size + rhs_size);
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(
-        static_cast<char *>(GC_malloc_atomic(size + 1)));
+      store.large.data
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
       store.large.data[size] = 0;
@@ -879,8 +879,8 @@ namespace jtl
     {
       auto const size(std::distance(begin, end));
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(
-        static_cast<char *>(GC_malloc_atomic(size + 1)));
+      store.large.data
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       std::copy(begin, end, store.large.data);
       store.large.data[size] = 0;
       store.large.size = size;
