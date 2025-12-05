@@ -321,15 +321,16 @@ namespace jank::analyze::cpp_util
     {
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
-        auto alias_name{ alias_decl->getQualifiedNameAsString() };
-        if(!alias_name.empty())
-        {
-          if(Cpp::IsPointerType(type))
-          {
-            alias_name += "*";
-          }
-          return alias_name;
-        }
+        /* Type aliases already include pointer/reference semantics in their definition.
+         * Don't add extra `*` for pointer type aliases like `using void_ptr = void*;`
+         * as that would make it `void_ptr*` (void**) instead of `void_ptr` (void*).
+         *
+         * Use printQualifiedName with the default policy to get the fully qualified name. */
+        std::string qualified_name;
+        llvm::raw_string_ostream os(qualified_name);
+        alias_decl->printQualifiedName(os);
+        os.flush();
+        return qualified_name;
       }
     }
 

@@ -1693,7 +1693,8 @@ namespace jank::codegen
       for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
       {
         auto const &arg_tmp{ arg_tmps[arg_idx] };
-        auto const param_type{ source_type ? Cpp::GetFunctionArgType(source_type, arg_idx) : nullptr };
+        auto const param_type{ source_type ? Cpp::GetFunctionArgType(source_type, arg_idx)
+                                           : nullptr };
 
         if(need_comma)
         {

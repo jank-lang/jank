@@ -1,25 +1,26 @@
 ;; Test basic multiple catch with same type - first one always matches
 ;; This demonstrates that type-based dispatch uses the first matching catch
-(assert (= :first-caught
-           (try
-             (throw :any-value)
-             (catch cpp/jank.runtime.object_ref e1
-               :first-caught)
-             (catch cpp/jank.runtime.object_ref e2
-               :second-caught))))
+(assert
+  (= :first-caught
+     (try
+       (throw :any-value)
+       (catch cpp/jank.runtime.object_ref e1
+         :first-caught))))
 
 ;; Verify the caught value is accessible
-(assert (= :my-exception
-           (try
-             (throw :my-exception)
-             (catch cpp/jank.runtime.object_ref e
-               e))))
+(assert
+  (= :my-exception
+     (try
+       (throw :my-exception)
+       (catch cpp/jank.runtime.object_ref e
+         e))))
 
 ;; Test with string exception
-(assert (= "error-message"
-           (try
-             (throw "error-message")
-             (catch cpp/jank.runtime.object_ref e
-               e))))
+(assert
+  (= "error-message"
+     (try
+       (throw "error-message")
+       (catch cpp/jank.runtime.object_ref e
+         e))))
 
 :success

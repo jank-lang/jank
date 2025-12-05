@@ -436,6 +436,11 @@ namespace jank::runtime
     return unique_string("G_");
   }
 
+  jtl::immutable_string context::unique_munged_string() const
+  {
+    return munge(unique_namespaced_string());
+  }
+
   jtl::immutable_string context::unique_string(jtl::immutable_string const &prefix) const
   {
     auto const ns{ current_ns() };

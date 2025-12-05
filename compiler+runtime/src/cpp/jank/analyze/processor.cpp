@@ -2917,9 +2917,9 @@ namespace jank::analyze
       /* Eval the literal to resolve exprs such as quotes. */
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
-      auto const o(evaluate::eval(pre_eval_expr));
+      auto const oref(evaluate::eval(pre_eval_expr));
 
-      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, oref);
     }
 
     return jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
@@ -2937,12 +2937,26 @@ namespace jank::analyze
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
       [&](auto const typed_o) -> processor::expression_result {
+        using T = typename decltype(typed_o)::value_type;
         native_vector<std::pair<expression_ref, expression_ref>> exprs;
         exprs.reserve(typed_o->data.size());
 
         for(auto const &kv : typed_o->data)
         {
-          object_ref const first{ kv.first }, second{ kv.second };
+          /* The two maps (hash and sorted) have slightly different iterators, so we need to
+           * pull out the entries differently. */
+          object_ref first{}, second{};
+          if constexpr(std::same_as<T, obj::persistent_sorted_map>)
+          {
+            // auto const &entry(kv.get());
+            first = kv.first;
+            second = kv.second;
+          }
+          else
+          {
+            first = kv.first;
+            second = kv.second;
+          }
 
           auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
           if(k_expr.is_err())

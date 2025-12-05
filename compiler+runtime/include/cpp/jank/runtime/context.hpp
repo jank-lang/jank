@@ -114,6 +114,7 @@ namespace jank::runtime
     jtl::immutable_string unique_namespaced_string() const;
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string const &prefix) const;
     jtl::immutable_string unique_string() const;
+    jtl::immutable_string unique_munged_string() const;
     jtl::immutable_string unique_string(jtl::immutable_string const &prefix) const;
     obj::symbol unique_symbol() const;
     obj::symbol unique_symbol(jtl::immutable_string const &prefix) const;

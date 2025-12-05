@@ -597,7 +597,7 @@ namespace jank::codegen
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
-    , ctor_name{ unique_munged_string("jank_global_init") }
+    , ctor_name{ __rt_ctx->unique_munged_string() }
     //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
     //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
     //              reinterpret_cast<void *>(
@@ -609,7 +609,8 @@ namespace jank::codegen
     , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
     , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
-    auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
+    auto m{ std::make_unique<llvm::Module>(__rt_ctx->unique_munged_string().c_str(),
+                                           *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
 
     auto const raw_ctx{ extract_context(module) };
@@ -1915,13 +1916,30 @@ namespace jank::codegen
       llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
     };
     auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { current_ex_ptr }) };
-    auto const ex_val_type{ llvm_type(*ctx, llvm_ctx, catch_type).type.data };
-    /* For pointer types (e.g., void*, int*), the exception system stores the pointer VALUE
-     * itself at caught_ptr, so we use it directly. For non-pointer types (e.g., int, double),
-     * the value is stored AT the caught_ptr address, so we must dereference with CreateLoad. */
-    if(Cpp::IsPointerType(catch_type) || Cpp::IsReferenceType(catch_type)
-       || (!Cpp::IsBuiltin(catch_type) && !Cpp::IsEnumType(catch_type)
-           && !cpp_util::is_any_object(catch_type)))
+
+    /* The analyzer promotes object types to lvalue references to avoid slicing.
+     * For reference types, __cxa_begin_catch returns a pointer to the exception object,
+     * which is exactly what we need - we don't load anything, just use the pointer.
+     * For value types (primitives, pointers), we need to load the actual value. */
+    llvm::Value *raw_ex_val;
+    llvm::Type *ex_val_type;
+
+    if(Cpp::IsReferenceType(catch_type))
+    {
+      // For references, use the pointer directly - no load needed
+      raw_ex_val = caught_ptr;
+      ex_val_type = ptr_ty;
+    }
+    else
+    {
+      // For values, load from the pointer
+      auto const load_type_result{ llvm_type(*ctx, llvm_ctx, catch_type) };
+      ex_val_type = load_type_result.type.data;
+      raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
+    }
+
+    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
+    llvm::AllocaInst *ex_val_slot{};
     {
       /* Pointer exception: caught_ptr IS the value we want */
       locals[catch_sym] = caught_ptr;
