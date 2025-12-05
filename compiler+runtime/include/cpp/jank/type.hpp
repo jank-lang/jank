@@ -22,12 +22,8 @@
 namespace jank
 {
   template <typename T>
-  using native_allocator = gc_allocator<T>;
-  using memory_policy = immer::memory_policy<immer::heap_policy<immer::gc_heap>,
-                                             immer::no_refcount_policy,
-                                             immer::default_lock_policy,
-                                             immer::gc_transience_policy,
-                                             false>;
+  using native_allocator = std::allocator<T>;
+  using memory_policy = immer::default_memory_policy;
 
   using native_persistent_string_view = std::string_view;
   using native_big_integer
