@@ -4,11 +4,11 @@
           {
             struct Base {};
             struct Derived : Base {};
-
-            void throw_derived() { throw Derived(); }
-            void throw_base() { throw Base(); }
-            void throw_int() { throw 123; }
           }")
+
+(cpp/raw "namespace pass_catch_ordering { void throw_derived() { throw Derived(); }}")
+(cpp/raw "namespace pass_catch_ordering { void throw_base() { throw Base(); }}")
+(cpp/raw "namespace pass_catch_ordering { void throw_int() { throw 123; }}")
 
 ;; 1. Specific before general (correct order)
 (assert
@@ -19,28 +19,28 @@
       (catch cpp/pass_catch_ordering.Base _ :base))))
 
 ;; 2. General before specific (first match wins)
-;; (assert
-;;  (= :base
-;;     (try
-;;       (cpp/pass_catch_ordering.throw_derived)
-;;       (catch cpp/pass_catch_ordering.Base _ :base)
-;;       (catch cpp/pass_catch_ordering.Derived _ :derived))))
+(assert
+ (= :base
+    (try
+      (cpp/pass_catch_ordering.throw_derived)
+      (catch cpp/pass_catch_ordering.Base _ :base)
+      (catch cpp/pass_catch_ordering.Derived _ :derived))))
 
 ;; 3. Fallthrough to general
-;; (assert
-;;  (= :base
-;;     (try
-;;       (cpp/pass_catch_ordering.throw_base)
-;;       (catch cpp/pass_catch_ordering.Derived _ :derived)
-;;       (catch cpp/pass_catch_ordering.Base _ :base))))
+(assert
+ (= :base
+    (try
+      (cpp/pass_catch_ordering.throw_base)
+      (catch cpp/pass_catch_ordering.Derived _ :derived)
+      (catch cpp/pass_catch_ordering.Base _ :base))))
 
 ;; 4. Unrelated types
-;; (assert
-;;  (= :int
-;;     (try
-;;       (cpp/pass_catch_ordering.throw_int)
-;;       (catch cpp/pass_catch_ordering.Derived _ :derived)
-;;       (catch cpp/pass_catch_ordering.Base _ :base)
-;;       (catch cpp/int _ :int))))
+(assert
+ (= :int
+    (try
+      (cpp/pass_catch_ordering.throw_int)
+      (catch cpp/pass_catch_ordering.Derived _ :derived)
+      (catch cpp/pass_catch_ordering.Base _ :base)
+      (catch cpp/int _ :int))))
 
 :success
