@@ -2132,9 +2132,17 @@ namespace jank::codegen
       /* Handles the normal completion of the 'try' block.
        * If code generation for the 'try' body produces a value (try_val is not null)
        */
-      if(try_val && !ctx->builder->GetInsertBlock()->getTerminator())
+      if(!ctx->builder->GetInsertBlock()->getTerminator())
       {
-        ctx->builder->CreateStore(try_val, result_slot);
+        if(try_val)
+        {
+          ctx->builder->CreateStore(try_val, result_slot);
+        }
+        else
+        {
+          ctx->builder->CreateStore(gen_global(jank_nil), result_slot);
+        }
+
         if(has_finally)
         {
           ctx->builder->CreateStore(ctx->builder->getFalse(), unwind_flag_slot);
