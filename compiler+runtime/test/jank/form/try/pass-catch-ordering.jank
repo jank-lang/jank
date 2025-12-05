@@ -1,0 +1,46 @@
+;; Test catch clause ordering
+
+(cpp/raw "namespace pass_catch_ordering
+          {
+            struct Base {};
+            struct Derived : Base {};
+
+            void throw_derived() { throw Derived(); }
+            void throw_base() { throw Base(); }
+            void throw_int() { throw 123; }
+          }")
+
+;; 1. Specific before general (correct order)
+(assert
+ (= :derived
+    (try
+      (cpp/pass_catch_ordering.throw_derived)
+      (catch cpp/pass_catch_ordering.Derived _ :derived)
+      (catch cpp/pass_catch_ordering.Base _ :base))))
+
+;; 2. General before specific (first match wins)
+;; (assert
+;;  (= :base
+;;     (try
+;;       (cpp/pass_catch_ordering.throw_derived)
+;;       (catch cpp/pass_catch_ordering.Base _ :base)
+;;       (catch cpp/pass_catch_ordering.Derived _ :derived))))
+
+;; 3. Fallthrough to general
+;; (assert
+;;  (= :base
+;;     (try
+;;       (cpp/pass_catch_ordering.throw_base)
+;;       (catch cpp/pass_catch_ordering.Derived _ :derived)
+;;       (catch cpp/pass_catch_ordering.Base _ :base))))
+
+;; 4. Unrelated types
+;; (assert
+;;  (= :int
+;;     (try
+;;       (cpp/pass_catch_ordering.throw_int)
+;;       (catch cpp/pass_catch_ordering.Derived _ :derived)
+;;       (catch cpp/pass_catch_ordering.Base _ :base)
+;;       (catch cpp/int _ :int))))
+
+:success
