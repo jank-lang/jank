@@ -15,7 +15,7 @@ namespace jank::runtime
 
   using ns_ref = oref<struct ns>;
 
-  struct ns : gc
+  struct ns
   {
     static constexpr object_type obj_type{ object_type::ns };
     static constexpr bool pointer_free{ false };

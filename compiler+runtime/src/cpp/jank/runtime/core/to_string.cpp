@@ -3,7 +3,7 @@
 
 namespace jank::runtime
 {
-  jtl::immutable_string to_string(object_ref const o)
+  jtl::immutable_string to_string(weak_object_ref const o)
   {
     return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
   }

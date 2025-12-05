@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using iterator_ref = oref<struct iterator>;
 
   /* TODO: Rename to iterator_sequence. */
-  struct iterator : gc
+  struct iterator
   {
     static constexpr object_type obj_type{ object_type::iterator };
     static constexpr bool pointer_free{ false };

@@ -212,12 +212,14 @@ namespace jank::runtime
   static obj::boolean_ref true_const()
   {
     static obj::boolean r{ true };
+    r.base.retain();
     return &r;
   }
 
   static obj::boolean_ref false_const()
   {
     static obj::boolean r{ false };
+    r.base.retain();
     return &r;
   }
 

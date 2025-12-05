@@ -451,11 +451,11 @@ namespace jank::error
    * begin with. In that case, we update the existing note rather than adding a new one. */
   jtl::ref<base> base::add_usage(read::source const &usage_source)
   {
-    if(usage_source == read::source::unknown || usage_source.overlaps(source))
+    if(usage_source == read::source::unknown() || usage_source.overlaps(source))
     {
       return this;
     }
-    else if(source == read::source::unknown)
+    else if(source == read::source::unknown())
     {
       source = usage_source;
       notes[0].source = usage_source;
@@ -474,7 +474,7 @@ namespace jank::error
 
   error_ref internal_failure(jtl::immutable_string const &message)
   {
-    auto const e{ make_error(kind::internal_failure, message, read::source::unknown) };
+    auto const e{ make_error(kind::internal_failure, message, read::source::unknown()) };
     e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
     return e;
   }

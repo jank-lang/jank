@@ -13,7 +13,7 @@ namespace jank::runtime::obj
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
    * For integer values, use integer_range. This is not countable in constant time, due
    * to floating point shenanigans. */
-  struct range : gc
+  struct range
   {
     static constexpr object_type obj_type{ object_type::range };
     static constexpr bool pointer_free{ false };

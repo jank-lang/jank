@@ -8,7 +8,7 @@ namespace jank::runtime::obj
 {
   using opaque_box_ref = oref<struct opaque_box>;
 
-  struct opaque_box : gc
+  struct opaque_box
   {
     static constexpr object_type obj_type{ object_type::opaque_box };
     static constexpr bool pointer_free{ false };

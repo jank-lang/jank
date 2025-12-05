@@ -499,7 +499,7 @@ namespace jank::codegen
     : root_fn{ expr }
     , module{ module }
     , target{ target } /* The normal unique name is fully namespaced, which we don't need. */
-    , struct_name{ runtime::__rt_ctx->unique_string(root_fn->name) }
+    , struct_name{ runtime::munge(runtime::__rt_ctx->unique_string(root_fn->name)) }
   {
     assert(root_fn->frame.data);
   }
@@ -2349,10 +2349,9 @@ namespace jank::codegen
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "new (GC{}) {}{ {} }"
+                    "new {}{ {} }"
                     " };",
                     ret_tmp,
-                    (needs_finalizer ? ", " + finalizer_tmp : ""),
                     type_name,
                     value_tmp.unwrap().str(false));
 
@@ -2371,20 +2370,20 @@ namespace jank::codegen
     auto value_tmp{ gen(expr->value_expr, arity).unwrap() };
     auto const value_type{ Cpp::GetPointeeType(cpp_util::expression_type(expr->value_expr)) };
     auto const type_name{ cpp_util::get_qualified_type_name(value_type) };
-    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
+    //auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
 
     /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly
      * documented in bdwgc. So, we'll invoke it manually if needed, prior to GC_free. */
-    if(needs_finalizer)
-    {
-      util::format_to(body_buffer,
-                      "using T = {};\n"
-                      "{}->~T();",
-                      type_name,
-                      value_tmp.str(false));
-    }
+    //if(needs_finalizer)
+    //{
+    //  util::format_to(body_buffer,
+    //                  "using T = {};\n"
+    //                  "{}->~T();",
+    //                  type_name,
+    //                  value_tmp.str(false));
+    //}
 
-    util::format_to(body_buffer, "GC_free({});", value_tmp.str(false));
+    util::format_to(body_buffer, "delete {};", value_tmp.str(false));
 
     if(expr->position == expression_position::tail)
     {
@@ -2460,7 +2459,7 @@ namespace jank::codegen
         struct {} : jank::runtime::obj::jit_function
         {
       )",
-                    runtime::munge(struct_name.name));
+                    struct_name);
 
     {
       native_set<uhash> used_captures;
@@ -2509,7 +2508,7 @@ namespace jank::codegen
 
     {
       native_set<uhash> used_captures;
-      util::format_to(header_buffer, "{}(", runtime::munge(struct_name.name));
+      util::format_to(header_buffer, "{}(", struct_name);
 
       bool need_comma{};
       for(auto const &arity : root_fn->arities)
@@ -2763,10 +2762,7 @@ namespace jank::codegen
         util::format_to(footer_buffer, ";");
       }
 
-      util::format_to(footer_buffer,
-                      "return {}::{}{ }.call().erase();",
-                      ns,
-                      runtime::munge(struct_name.name));
+      util::format_to(footer_buffer, "return {}::{}{ }.call().erase();", ns, struct_name);
 
       util::format_to(footer_buffer, "}");
     }
@@ -2780,7 +2776,7 @@ namespace jank::codegen
     {
       util::format_to(expression_buffer,
                       "jank::runtime::make_box<{}>(",
-                      runtime::module::nest_native_ns(module_ns, runtime::munge(struct_name.name)));
+                      runtime::module::nest_native_ns(module_ns, struct_name));
 
       native_set<uhash> used_captures;
       bool need_comma{};

@@ -7,11 +7,6 @@
 #include <deque>
 #include <list>
 
-#include <gc/gc_cpp.h>
-#include <gc/gc_allocator.h>
-
-#include <immer/heap/gc_heap.hpp>
-#include <immer/heap/heap_policy.hpp>
 #include <immer/memory_policy.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>

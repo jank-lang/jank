@@ -6,7 +6,7 @@ namespace jank::runtime::obj
 {
   using reduced_ref = oref<struct reduced>;
 
-  struct reduced : gc
+  struct reduced
   {
     static constexpr object_type obj_type{ object_type::reduced };
     static constexpr bool pointer_free{ false };

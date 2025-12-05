@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_vector_ref = oref<struct transient_vector>;
 
-  struct transient_vector : gc
+  struct transient_vector
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
     static constexpr bool pointer_free{ false };

@@ -49,13 +49,13 @@ namespace jank::runtime::obj
     }
 
     return visit_set_like(
-      [&](auto const typed_o) -> bool {
+      [&](auto const &typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
         }
 
-        for(auto const entry : data)
+        for(auto const &entry : data)
         {
           if(!typed_o->contains(entry))
           {

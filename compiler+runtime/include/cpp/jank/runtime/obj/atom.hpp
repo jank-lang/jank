@@ -3,14 +3,14 @@
 #include <folly/Synchronized.h>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
+#include <jank/runtime/obj/persistent_vector.hpp>
 
 namespace jank::runtime::obj
 {
   using atom_ref = oref<struct atom>;
-  using persistent_vector_ref = oref<struct persistent_vector>;
-  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
 
-  struct atom : gc
+  struct atom
   {
     static constexpr object_type obj_type{ object_type::atom };
     static constexpr bool pointer_free{ false };

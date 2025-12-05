@@ -1,11 +1,7 @@
 #pragma once
 
+#include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/expression.hpp>
-
-namespace jank::runtime::obj
-{
-  using symbol_ref = oref<struct symbol>;
-}
 
 namespace jank::analyze
 {

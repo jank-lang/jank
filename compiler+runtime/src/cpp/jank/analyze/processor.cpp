@@ -98,7 +98,7 @@ namespace jank::analyze
 
     /* Try to find an expansion which specifically has the `jank/macro-expansion` key
      * set in the meta. This is the root of our most recent expansion. */
-    for(auto const latest : std::ranges::reverse_view(expansions))
+    for(auto const &latest : std::ranges::reverse_view(expansions))
     {
       auto const latest_meta{ meta(latest) };
       auto const expansion(

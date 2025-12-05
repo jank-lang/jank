@@ -380,7 +380,7 @@ namespace jank::runtime
 
   object_ref gensym(object_ref const o)
   {
-    return make_box<obj::symbol>(__rt_ctx->unique_symbol(to_string(o)));
+    return __rt_ctx->unique_symbol(to_string(o));
   }
 
   object_ref atom(object_ref const o)

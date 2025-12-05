@@ -46,7 +46,7 @@ namespace jank
 
     {
       profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      //__rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
 
     {
@@ -288,7 +288,7 @@ int main(int const argc, char const **argv)
 
     if(jank::util::cli::opts.gc_incremental)
     {
-      GC_enable_incremental();
+      //GC_enable_incremental();
     }
 
     profile::configure();
@@ -299,7 +299,7 @@ int main(int const argc, char const **argv)
       return jank::environment::check_health() ? 0 : 1;
     }
 
-    __rt_ctx = new(GC) runtime::context{};
+    __rt_ctx = new runtime::context{};
 
     jank_load_clojure_core_native();
     jank_load_jank_compiler_native();

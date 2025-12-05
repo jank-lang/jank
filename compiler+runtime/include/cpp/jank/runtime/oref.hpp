@@ -43,10 +43,26 @@ namespace jank::runtime
     constexpr oref()
       : data{ std::bit_cast<object *>(detail::jank_nil_ptr) }
     {
+      jank_debug_assert(data);
     }
 
-    constexpr oref(oref const &) = default;
-    constexpr oref(oref &&) noexcept = default;
+    constexpr oref(oref const &rhs)
+      : data{ rhs.data }
+    {
+      if(!data)
+      {
+        __builtin_debugtrap();
+      }
+      jank_assert_throw(data);
+      retain();
+    }
+
+    constexpr oref(oref &&rhs) noexcept
+      : data{ jtl::move(rhs.data) }
+    {
+      jank_assert_throw(data);
+      retain();
+    }
 
     constexpr oref(nullptr_t) noexcept = delete;
 
@@ -54,12 +70,14 @@ namespace jank::runtime
       : data{ data }
     {
       jank_assert_throw(data);
+      retain();
     }
 
     constexpr oref(value_type const * const data)
       : data{ const_cast<value_type *>(data) }
     {
       jank_assert_throw(data);
+      retain();
     }
 
     template <typename T>
@@ -68,6 +86,7 @@ namespace jank::runtime
       : data{ &typed_data->base }
     {
       jank_assert_throw(this->data);
+      retain();
     }
 
     template <typename T>
@@ -76,13 +95,36 @@ namespace jank::runtime
       : data{ const_cast<object *>(&typed_data->base) }
     {
       jank_assert_throw(this->data);
+      retain();
     }
 
     template <typename T>
     requires behavior::object_like<T>
-    constexpr oref(oref<T> const typed_data) noexcept
+    constexpr oref(oref<T> const &typed_data) noexcept
       : data{ typed_data.erase() }
     {
+      retain();
+    }
+
+    constexpr ~oref()
+    {
+      release();
+    }
+
+    constexpr void retain()
+    {
+      if(is_some())
+      {
+        data->retain();
+      }
+    }
+
+    constexpr void release()
+    {
+      if(is_some())
+      {
+        data->release();
+      }
     }
 
     constexpr value_type *operator->() const
@@ -97,14 +139,39 @@ namespace jank::runtime
       return *data;
     }
 
-    constexpr oref &operator=(oref const &rhs) noexcept = default;
-    constexpr oref &operator=(oref &&rhs) noexcept = default;
+    constexpr oref &operator=(oref const &rhs) noexcept
+    {
+      if(this == &rhs)
+      {
+        return *this;
+      }
+
+      release();
+      data = rhs.data;
+      retain();
+      return *this;
+    }
+
+    constexpr oref &operator=(oref &&rhs) noexcept
+    {
+      if(this == &rhs)
+      {
+        return *this;
+      }
+
+      release();
+      data = rhs.data;
+      retain();
+      return *this;
+    }
 
     template <typename T>
     requires behavior::object_like<T>
     constexpr oref &operator=(oref<T> const &rhs) noexcept
     {
+      release();
       data = &rhs->base;
+      retain();
       return *this;
     }
 
@@ -173,32 +240,68 @@ namespace jank::runtime
     {
     }
 
+    constexpr oref(oref const &rhs) noexcept
+      : data{ rhs.data }
+    {
+      retain();
+    }
+
+    constexpr oref(oref &&rhs) noexcept
+      : data{ rhs.data }
+    {
+      retain();
+    }
+
     constexpr oref(nullptr_t) = delete;
 
     constexpr oref(jtl::remove_const_t<T> * const data)
       : data{ data }
     {
       jank_assert_throw(this->data);
+      retain();
     }
 
     constexpr oref(T const * const data)
       : data{ const_cast<T *>(data) }
     {
       jank_assert_throw(this->data);
+      retain();
     }
 
     template <typename C>
     requires jtl::is_convertible<C *, T *>
-    constexpr oref(oref<C> const data) noexcept
+    constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
     }
 
     template <typename C>
     requires(C::obj_type == object_type::nil)
-    constexpr oref(oref<C> const data) noexcept
+    constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
+      retain();
+    }
+
+    constexpr ~oref()
+    {
+      release();
+    }
+
+    constexpr void retain()
+    {
+      if(is_some())
+      {
+        (*this)->base.retain();
+      }
+    }
+
+    constexpr void release()
+    {
+      if(is_some())
+      {
+        (*this)->base.release();
+      }
     }
 
     constexpr T *operator->() const
@@ -240,17 +343,47 @@ namespace jank::runtime
       return data != rhs.data;
     }
 
+    constexpr oref &operator=(oref const &rhs) noexcept
+    {
+      if(this == &rhs)
+      {
+        return *this;
+      }
+
+      release();
+      data = rhs.data;
+      retain();
+      return *this;
+    }
+
+    constexpr oref &operator=(oref &&rhs) noexcept
+    {
+      if(this == &rhs)
+      {
+        return *this;
+      }
+
+      release();
+      data = rhs.data;
+      retain();
+      return *this;
+    }
+
     constexpr oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs)
     {
+      release();
       data = rhs;
       jank_assert_throw(data);
+      retain();
       return *this;
     }
 
     constexpr oref &operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs)
     {
+      release();
       data = const_cast<T *>(rhs);
       jank_assert_throw(data);
+      retain();
       return *this;
     }
 
@@ -258,7 +391,9 @@ namespace jank::runtime
     requires(C::obj_type == object_type::nil)
     constexpr oref &operator=(oref<C> const &) noexcept
     {
+      release();
       data = std::bit_cast<void *>(detail::jank_nil_ptr);
+      retain();
       return *this;
     }
 
@@ -319,14 +454,14 @@ namespace jank::runtime
 
     template <typename C>
     requires jtl::is_convertible<C *, value_type *>
-    constexpr oref(oref<C> const data) noexcept
+    constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
     }
 
     template <typename C>
     requires(C::obj_type == object_type::nil)
-    constexpr oref(oref<C> const data) noexcept
+    constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
     }
@@ -411,26 +546,9 @@ namespace jank::runtime
   jtl::ref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
-    T *ret{};
-    if constexpr(requires { T::pointer_free; })
-    {
-      if constexpr(T::pointer_free)
-      {
-        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
-      }
-      else
-      {
-        ret = new(GC) T{ std::forward<Args>(args)... };
-      }
-    }
-    else
-    {
-      ret = new(GC) T{ std::forward<Args>(args)... };
-    }
-
+    T *ret{ new T{ std::forward<Args>(args)... } };
     if(!ret)
     {
-      /* TODO: Panic. */
       throw std::runtime_error{ "unable to allocate box" };
     }
     return ret;
@@ -448,30 +566,14 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    oref<T> ret;
-    if constexpr(requires { T::pointer_free; })
-    {
-      if constexpr(T::pointer_free)
-      {
-        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
-      }
-      else
-      {
-        ret = new(GC) T{ std::forward<Args>(args)... };
-      }
-    }
-    else
-    {
-      ret = new(GC) T{ std::forward<Args>(args)... };
-    }
-
+    oref<T> ret{ new T{ std::forward<Args>(args)... } };
     return ret;
   }
 
   template <typename T, usize N>
   constexpr jtl::ref<T> make_array_box()
   {
-    auto const ret(new(GC) T[N]{});
+    auto const ret(new T[N]{});
     if(!ret)
     {
       throw std::runtime_error{ "unable to allocate array box" };
@@ -482,7 +584,7 @@ namespace jank::runtime
   template <typename T>
   constexpr jtl::ref<T> make_array_box(usize const length)
   {
-    auto const ret(new(GC) T[length]{});
+    auto const ret(new T[length]{});
     if(!ret)
     {
       throw std::runtime_error{ "Unable to allocate array box" };
@@ -494,7 +596,7 @@ namespace jank::runtime
   jtl::ref<T> make_array_box(Args &&...args)
   {
     /* TODO: pointer_free? */
-    auto const ret(new(GC) T[sizeof...(Args)]{ std::forward<Args>(args)... });
+    auto const ret(new T[sizeof...(Args)]{ std::forward<Args>(args)... });
     if(!ret)
     {
       throw std::runtime_error{ "Unable to allocate array box" };

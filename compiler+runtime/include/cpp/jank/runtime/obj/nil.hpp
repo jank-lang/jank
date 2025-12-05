@@ -7,8 +7,9 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using cons_ref = oref<struct cons>;
   using nil_ref = oref<struct nil>;
+  using weak_nil_ref = weak_oref<struct nil>;
 
-  struct nil : gc
+  struct nil
   {
     static constexpr object_type obj_type{ object_type::nil };
     static constexpr bool pointer_free{ true };
@@ -59,7 +60,7 @@ namespace jank::runtime
   bool operator!=(object *, obj::nil_ref);
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  extern obj::nil_ref jank_nil;
+  extern obj::weak_nil_ref jank_nil;
 
   namespace detail
   {

@@ -1034,8 +1034,8 @@ extern "C"
 
       /* The GC needs to enabled even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */
-      GC_set_all_interior_pointers(1);
-      GC_init();
+      //GC_set_all_interior_pointers(1);
+      //GC_init();
 
       llvm::llvm_shutdown_obj const Y{};
 
@@ -1049,7 +1049,7 @@ extern "C"
       }
       if(init_default_ctx)
       {
-        runtime::__rt_ctx = new(GC) runtime::context{};
+        runtime::__rt_ctx = new runtime::context{};
       }
 
       return fn(argc, argv);

@@ -8,7 +8,7 @@ namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
 
-  struct cons : gc
+  struct cons
   {
     static constexpr object_type obj_type{ object_type::cons };
     static constexpr bool pointer_free{ false };

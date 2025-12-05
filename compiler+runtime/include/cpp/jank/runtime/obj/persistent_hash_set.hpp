@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_hash_set_ref = oref<struct persistent_hash_set>;
   using persistent_hash_set_sequence_ref = oref<struct persistent_hash_set_sequence>;
 
-  struct persistent_hash_set : gc
+  struct persistent_hash_set
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_set };
     static constexpr bool pointer_free{ false };

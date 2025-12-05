@@ -6,7 +6,7 @@ namespace jank::runtime::obj
 {
   using volatile_ref = oref<struct volatile_>;
 
-  struct volatile_ : gc
+  struct volatile_
   {
     static constexpr object_type obj_type{ object_type::volatile_ };
     static constexpr bool pointer_free{ false };

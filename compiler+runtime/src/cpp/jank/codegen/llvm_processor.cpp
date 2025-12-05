@@ -135,6 +135,7 @@ namespace jank::codegen
     void create_global_ctor() const;
     llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
+    llvm::Value *gen_global(runtime::obj::weak_nil_ref) const;
     llvm::Value *gen_global(runtime::obj::nil_ref) const;
     llvm::Value *gen_global(runtime::obj::boolean_ref b) const;
     llvm::Value *gen_global(runtime::obj::integer_ref i) const;
@@ -2951,6 +2952,11 @@ namespace jank::codegen
       return found->second;
     }
     return ctx->c_string_globals[s] = ctx->builder->CreateGlobalString(s.c_str());
+  }
+
+  llvm::Value *llvm_processor::impl::gen_global(obj::weak_nil_ref const nil) const
+  {
+    return gen_global(obj::nil_ref{ nil });
   }
 
   llvm::Value *llvm_processor::impl::gen_global(obj::nil_ref const nil) const

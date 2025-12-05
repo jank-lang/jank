@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_sorted_set_ref = oref<struct transient_sorted_set>;
 
-  struct transient_sorted_set : gc
+  struct transient_sorted_set
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_set };
     static constexpr bool pointer_free{ false };

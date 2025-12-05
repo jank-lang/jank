@@ -269,6 +269,6 @@ namespace jank::error
 
   error_ref internal_parse_failure(jtl::immutable_string const &message)
   {
-    return make_error(kind::internal_parse_failure, message, read::source::unknown);
+    return make_error(kind::internal_parse_failure, message, read::source::unknown());
   }
 }

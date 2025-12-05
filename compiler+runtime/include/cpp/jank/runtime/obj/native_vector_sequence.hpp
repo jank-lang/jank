@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using native_vector_sequence_ref = oref<struct native_vector_sequence>;
 
-  struct native_vector_sequence : gc
+  struct native_vector_sequence
   {
     static constexpr object_type obj_type{ object_type::native_vector_sequence };
     static constexpr bool pointer_free{ false };

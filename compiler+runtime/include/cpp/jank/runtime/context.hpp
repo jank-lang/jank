@@ -115,8 +115,8 @@ namespace jank::runtime
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string const &prefix) const;
     jtl::immutable_string unique_string() const;
     jtl::immutable_string unique_string(jtl::immutable_string const &prefix) const;
-    obj::symbol unique_symbol() const;
-    obj::symbol unique_symbol(jtl::immutable_string const &prefix) const;
+    obj::symbol_ref unique_symbol() const;
+    obj::symbol_ref unique_symbol(jtl::immutable_string const &prefix) const;
 
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;

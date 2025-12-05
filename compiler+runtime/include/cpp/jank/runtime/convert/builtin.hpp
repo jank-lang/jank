@@ -26,6 +26,20 @@ namespace jank::runtime
     }
   };
 
+  template <>
+  struct convert<weak_object_ref>
+  {
+    static constexpr weak_object_ref into_object(weak_object_ref const t)
+    {
+      return t;
+    }
+
+    static constexpr weak_object_ref from_object(weak_object_ref const t)
+    {
+      return t;
+    }
+  };
+
   template <typename T>
   requires(jtl::is_any_same<T, object *, object const *>)
   struct convert<T>
@@ -306,7 +320,7 @@ namespace jank::runtime
     static constexpr V<T> from_object(obj::persistent_vector_ref const o)
     {
       V<T> ret;
-      for(auto const e : o->data)
+      for(auto const &e : o->data)
       {
         ret.push_back(e);
       }

@@ -109,13 +109,13 @@ namespace jank::runtime
     auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
     if(source == jank_nil)
     {
-      return read::source::unknown;
+      return read::source::unknown();
     }
 
     auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
     if(file == jank_nil)
     {
-      return read::source::unknown;
+      return read::source::unknown();
     }
 
     auto const module(get(source, __rt_ctx->intern_keyword("module").expect_ok()));
@@ -152,7 +152,7 @@ namespace jank::runtime
     auto const meta(runtime::meta(o));
     if(meta == jank_nil)
     {
-      return read::source::unknown;
+      return read::source::unknown();
     }
     return meta_source(meta);
   }

@@ -243,7 +243,12 @@ namespace jank::runtime
 
   struct object
   {
+    void retain();
+    void release();
+
     object_type type{};
+    /* TODO: Atomic. */
+    i16 ref_count{};
   };
 
   namespace obj
@@ -291,10 +296,12 @@ namespace jank::runtime::behavior
 }
 
 #include <jank/runtime/oref.hpp>
+#include <jank/runtime/weak_oref.hpp>
 
 namespace jank::runtime
 {
   using object_ref = oref<object>;
+  using weak_object_ref = weak_oref<object>;
 
   /* This isn't a great name, but it represents more than just value equality, since it
    * also includes type equality. Otherwise, [] equals '(). This is important when deduping

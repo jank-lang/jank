@@ -7,7 +7,7 @@ namespace jank::runtime::obj
   using array_chunk_ref = oref<struct array_chunk>;
   using chunk_buffer_ref = oref<struct chunk_buffer>;
 
-  struct chunk_buffer : gc
+  struct chunk_buffer
   {
     static constexpr object_type obj_type{ object_type::chunk_buffer };
     static constexpr bool pointer_free{ false };

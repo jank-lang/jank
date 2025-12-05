@@ -6,7 +6,7 @@ namespace jank::runtime::obj
 {
   using boolean_ref = oref<struct boolean>;
 
-  struct boolean : gc
+  struct boolean
   {
     static constexpr object_type obj_type{ object_type::boolean };
     static constexpr bool pointer_free{ true };
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
 
   using integer_ref = oref<struct integer>;
 
-  struct integer : gc
+  struct integer
   {
     static constexpr object_type obj_type{ object_type::integer };
     static constexpr bool pointer_free{ true };
@@ -73,7 +73,7 @@ namespace jank::runtime::obj
 
   using real_ref = oref<struct real>;
 
-  struct real : gc
+  struct real
   {
     static constexpr object_type obj_type{ object_type::real };
     static constexpr bool pointer_free{ true };

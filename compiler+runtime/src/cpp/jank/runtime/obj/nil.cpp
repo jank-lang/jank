@@ -108,18 +108,19 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
-  static obj::nil_ref nil_const()
+  static obj::weak_nil_ref nil_const()
   {
     static obj::nil n;
+    n.base.retain();
     return &n;
   }
-
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::nil_ref jank_nil{ nil_const() };
 
   namespace detail
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     obj::nil *jank_nil_ptr{ nil_const().data };
   }
+
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::weak_nil_ref jank_nil{ nil_const() };
 }

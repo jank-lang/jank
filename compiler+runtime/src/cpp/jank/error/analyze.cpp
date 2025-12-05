@@ -224,7 +224,7 @@ namespace jank::error
 
   error_ref analyze_invalid_conversion(jtl::immutable_string const &message)
   {
-    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown);
+    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown());
   }
 
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
@@ -374,7 +374,7 @@ namespace jank::error
   error_ref internal_analyze_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, read::source::unknown, expansion);
+    return make_error(kind::internal_analyze_failure, message, read::source::unknown(), expansion);
   }
 
   error_ref internal_analyze_failure(jtl::immutable_string const &message,

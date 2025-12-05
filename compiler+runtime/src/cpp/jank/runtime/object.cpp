@@ -2,9 +2,30 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/hash.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
+  void object::retain()
+  {
+    ++ref_count;
+  }
+
+  void object::release()
+  {
+    --ref_count;
+    if(ref_count == 0)
+    {
+      visit_object(
+        [](auto const &typed_this) {
+          using T = typename jtl::decay_t<decltype(typed_this)>::value_type;
+
+          delete static_cast<T *>(typed_this.data);
+        },
+        this);
+    }
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs->type != rhs->type)

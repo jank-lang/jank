@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
-  struct persistent_vector : gc
+  struct persistent_vector
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
     static constexpr bool pointer_free{ false };

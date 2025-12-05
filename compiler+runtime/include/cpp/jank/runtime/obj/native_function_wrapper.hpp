@@ -64,9 +64,7 @@ namespace jank::runtime
   {
     using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
-    struct native_function_wrapper
-      : gc
-      , behavior::callable
+    struct native_function_wrapper : behavior::callable
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
       static constexpr bool pointer_free{ false };

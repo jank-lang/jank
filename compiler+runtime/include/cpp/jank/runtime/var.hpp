@@ -5,30 +5,27 @@
 #include <folly/Synchronized.h>
 
 #include <jtl/result.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 
 namespace jank::runtime
 {
-  using ns_ref = oref<struct ns>;
+  using weak_ns_ref = weak_oref<struct ns>;
   using var_ref = oref<struct var>;
   using var_thread_binding_ref = oref<struct var_thread_binding>;
   using var_unbound_root_ref = oref<struct var_unbound_root>;
 
-  namespace obj
-  {
-    using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-  }
-
-  struct var : gc
+  struct var
   {
     static constexpr object_type obj_type{ object_type::var };
     static constexpr bool pointer_free{ false };
 
     var() = delete;
-    var(ns_ref const &n, obj::symbol_ref const &name);
-    var(ns_ref const &n, obj::symbol_ref const &name, object_ref root);
-    var(ns_ref const &n,
+    var(weak_ns_ref const &n, obj::symbol_ref const &name);
+    var(weak_ns_ref const &n, obj::symbol_ref const &name, object_ref root);
+    var(weak_ns_ref const &n,
         obj::symbol_ref const &name,
         object_ref const root,
         bool dynamic,
@@ -69,7 +66,7 @@ namespace jank::runtime
     var_ref clone() const;
 
     object base{ obj_type };
-    ns_ref n;
+    weak_ns_ref n;
     /* Unqualified. */
     obj::symbol_ref name{};
     jtl::option<object_ref> meta;
@@ -83,7 +80,7 @@ namespace jank::runtime
     std::atomic_bool thread_bound{ false };
   };
 
-  struct var_thread_binding : gc
+  struct var_thread_binding
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
     static constexpr bool pointer_free{ false };
@@ -107,7 +104,7 @@ namespace jank::runtime
     obj::persistent_hash_map_ref bindings{};
   };
 
-  struct var_unbound_root : gc
+  struct var_unbound_root
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
     static constexpr bool pointer_free{ true };

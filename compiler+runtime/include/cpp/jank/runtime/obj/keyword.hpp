@@ -1,16 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = oref<struct persistent_array_map>;
-  using symbol_ref = oref<struct symbol>;
-  using keyword_ref = oref<struct keyword>;
-
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
-  struct keyword : gc
+  struct keyword
   {
     static constexpr object_type obj_type{ object_type::keyword };
     static constexpr bool pointer_free{ false };
@@ -51,6 +48,8 @@ namespace jank::runtime::obj
     object base{ obj_type };
     symbol_ref sym;
   };
+
+  using keyword_ref = oref<keyword>;
 }
 
 /* TODO: Move to .cpp */

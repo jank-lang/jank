@@ -11,7 +11,7 @@ namespace jank::runtime::obj
   using lazy_sequence_ref = oref<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
-  struct lazy_sequence : gc
+  struct lazy_sequence
   {
     static constexpr object_type obj_type{ object_type::lazy_sequence };
     static constexpr bool pointer_free{ false };

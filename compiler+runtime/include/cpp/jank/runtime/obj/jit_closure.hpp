@@ -7,9 +7,7 @@ namespace jank::runtime::obj
 {
   using jit_closure_ref = oref<struct jit_closure>;
 
-  struct jit_closure
-    : gc
-    , behavior::callable
+  struct jit_closure : behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_closure };
     static constexpr bool pointer_free{ false };

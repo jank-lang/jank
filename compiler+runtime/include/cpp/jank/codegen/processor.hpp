@@ -173,7 +173,7 @@ namespace jank::codegen
     jtl::immutable_string module;
 
     compilation_target target{};
-    runtime::obj::symbol struct_name;
+    jtl::immutable_string struct_name;
     jtl::string_builder cpp_raw_buffer;
     jtl::string_builder module_header_buffer;
     jtl::string_builder module_footer_buffer;

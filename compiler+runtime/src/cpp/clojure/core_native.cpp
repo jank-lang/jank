@@ -355,7 +355,6 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
   intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object_ref)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);
-  intern_fn("to-string", static_cast<jtl::immutable_string (*)(object_ref)>(&to_string));
   intern_fn("str", static_cast<jtl::immutable_string (*)(object_ref, object_ref)>(&str));
   intern_fn("symbol?", &is_symbol);
   intern_fn("true?", &is_true);

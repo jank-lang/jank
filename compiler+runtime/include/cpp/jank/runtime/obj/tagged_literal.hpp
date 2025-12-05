@@ -6,7 +6,7 @@ namespace jank::runtime::obj
 {
   using tagged_literal_ref = oref<struct tagged_literal>;
 
-  struct tagged_literal : gc
+  struct tagged_literal
   {
     static constexpr object_type obj_type{ object_type::tagged_literal };
     static constexpr bool pointer_free{ false };

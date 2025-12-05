@@ -24,7 +24,7 @@ namespace jank::runtime::obj
   using real_ref = oref<struct real>;
   using ratio_ref = oref<struct ratio>;
 
-  struct ratio : gc
+  struct ratio
   {
     static constexpr object_type obj_type{ object_type::ratio };
     static constexpr bool pointer_free{ true };

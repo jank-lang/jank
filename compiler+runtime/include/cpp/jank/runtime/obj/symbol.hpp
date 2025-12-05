@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using symbol_ref = oref<struct symbol>;
 
-  struct symbol : gc
+  struct symbol
   {
     static constexpr object_type obj_type{ object_type::symbol };
     static constexpr bool pointer_free{ false };

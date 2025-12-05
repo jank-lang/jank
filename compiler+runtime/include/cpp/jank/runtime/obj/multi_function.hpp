@@ -11,9 +11,7 @@ namespace jank::runtime::obj
   using persistent_hash_map_ref = oref<struct persistent_hash_map>;
   using multi_function_ref = oref<struct multi_function>;
 
-  struct multi_function
-    : gc
-    , behavior::callable
+  struct multi_function : behavior::callable
   {
     static constexpr object_type obj_type{ object_type::multi_function };
     static constexpr bool pointer_free{ false };

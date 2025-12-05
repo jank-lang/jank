@@ -22,7 +22,7 @@ namespace jank::runtime::obj::detail
   /* Array maps and hash maps share a lot of common code, so we have a common base.
    * No virtual fns are used, so this structure won't survive release optimizations. */
   template <typename PT, typename ST, typename V>
-  struct base_persistent_map : gc
+  struct base_persistent_map
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_map_like{ true };

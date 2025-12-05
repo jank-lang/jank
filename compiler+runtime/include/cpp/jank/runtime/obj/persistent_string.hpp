@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_string_ref = oref<struct persistent_string>;
   using persistent_string_sequence_ref = oref<struct persistent_string_sequence>;
 
-  struct persistent_string : gc
+  struct persistent_string
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
     static constexpr bool pointer_free{ false };

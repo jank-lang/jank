@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_sorted_map_ref = oref<struct transient_sorted_map>;
 
-  struct transient_sorted_map : gc
+  struct transient_sorted_map
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_map };
     static constexpr bool pointer_free{ false };

@@ -13,21 +13,21 @@
 
 namespace jank::runtime
 {
-  var::var(ns_ref const &n, obj::symbol_ref const &name)
+  var::var(weak_ns_ref const &n, obj::symbol_ref const &name)
     : n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
-  var::var(ns_ref const &n, obj::symbol_ref const &name, object_ref const root)
+  var::var(weak_ns_ref const &n, obj::symbol_ref const &name, object_ref const root)
     : n{ n }
     , name{ name }
     , root{ root }
   {
   }
 
-  var::var(ns_ref const &n,
+  var::var(weak_ns_ref const &n,
            obj::symbol_ref const &name,
            object_ref const root,
            bool const dynamic,
@@ -55,7 +55,8 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  static void to_string_impl(ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
+  static void
+  to_string_impl(weak_ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
   {
     buff("#'")(n->name->name)('/')(name->name);
   }

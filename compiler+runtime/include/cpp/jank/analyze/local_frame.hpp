@@ -48,7 +48,7 @@ namespace jank::analyze
 
   using local_binding_ptr = jtl::ptr<local_binding>;
 
-  struct local_frame : gc
+  struct local_frame
   {
     enum class frame_type : u8
     {

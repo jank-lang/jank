@@ -7,9 +7,7 @@ namespace jank::runtime::obj
 {
   using jit_function_ref = oref<struct jit_function>;
 
-  struct jit_function
-    : gc
-    , behavior::callable
+  struct jit_function : behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_function };
     static constexpr bool pointer_free{ false };

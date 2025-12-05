@@ -17,7 +17,7 @@ namespace jank::runtime
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename IT>
-  struct base_persistent_map_sequence : gc
+  struct base_persistent_map_sequence
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };

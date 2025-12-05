@@ -442,14 +442,14 @@ namespace jank::runtime
     return util::format("{}-{}", prefix.c_str(), ++ns->symbol_counter);
   }
 
-  obj::symbol context::unique_symbol() const
+  obj::symbol_ref context::unique_symbol() const
   {
     return unique_symbol("G-");
   }
 
-  obj::symbol context::unique_symbol(jtl::immutable_string const &prefix) const
+  obj::symbol_ref context::unique_symbol(jtl::immutable_string const &prefix) const
   {
-    return { "", unique_namespaced_string(prefix) };
+    return make_box<obj::symbol>("", unique_namespaced_string(prefix));
   }
 
   ns_ref context::intern_ns(jtl::immutable_string const &name)
@@ -539,7 +539,8 @@ namespace jank::runtime
     }
 
     auto locked_namespaces(namespaces.wlock());
-    obj::symbol const ns_sym{ qualified_sym->ns };
+    obj::symbol ns_sym{ qualified_sym->ns };
+    ns_sym.base.retain();
     auto const found_ns(locked_namespaces->find(&ns_sym));
     if(found_ns == locked_namespaces->end())
     {
@@ -677,7 +678,7 @@ namespace jank::runtime
       /* If we've actually expanded `o` into something else, it's helpful to update the meta
        * on the expanded data to tie it back to the original form. */
       auto const source{ object_source(o) };
-      if(source != read::source::unknown)
+      if(source != read::source::unknown())
       {
         auto meta{ runtime::meta(expanded) };
         auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };

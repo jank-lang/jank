@@ -1,13 +1,8 @@
 #pragma once
 
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/analyze/expr/do.hpp>
-
-namespace jank::runtime::obj
-{
-  using symbol_ref = oref<struct symbol>;
-  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-}
 
 namespace jank::analyze
 {
@@ -18,7 +13,7 @@ namespace jank::analyze::expr
 {
   using function_ref = jtl::ref<struct function>;
 
-  struct function_context : gc
+  struct function_context
   {
     static constexpr bool pointer_free{ false };
 

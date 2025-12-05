@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using repeat_ref = oref<struct repeat>;
 
-  struct repeat : gc
+  struct repeat
   {
     static constexpr object_type obj_type{ object_type::repeat };
     static constexpr bool pointer_free{ false };

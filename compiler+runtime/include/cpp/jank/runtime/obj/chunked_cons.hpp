@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using chunked_cons_ref = oref<struct chunked_cons>;
 
-  struct chunked_cons : gc
+  struct chunked_cons
   {
     static constexpr object_type obj_type{ object_type::chunked_cons };
     static constexpr bool pointer_free{ false };

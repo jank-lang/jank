@@ -8,7 +8,7 @@ namespace jank::runtime
   object_ref first(object_ref s);
   object_ref next(object_ref s);
 
-  jtl::immutable_string to_string(object_ref const o);
+  jtl::immutable_string to_string(weak_object_ref const o);
   void to_string(char ch, jtl::string_builder &buff);
   void to_string(object_ref o, jtl::string_builder &buff);
 
