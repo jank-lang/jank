@@ -2927,7 +2927,20 @@ namespace jank::analyze
 
         for(auto const &kv : typed_o->data)
         {
-          object_ref const first{ kv.first }, second{ kv.second };
+          /* The two maps (hash and sorted) have slightly different iterators, so we need to
+           * pull out the entries differently. */
+          object_ref first{}, second{};
+          if constexpr(std::same_as<T, obj::persistent_sorted_map>)
+          {
+            auto const &entry(kv.get());
+            first = entry.first;
+            second = entry.second;
+          }
+          else
+          {
+            first = kv.first;
+            second = kv.second;
+          }
 
           auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
           if(k_expr.is_err())
@@ -4403,7 +4416,7 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
+      val->type = Cpp::GetTypeFromScope(member_scope);
       val->scope = member_scope;
       return val;
     }

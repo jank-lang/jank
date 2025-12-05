@@ -85,10 +85,6 @@ namespace jank::codegen
     };
 
     std::vector<exception_handler_info> exception_handlers;
-
-    // Map from closure context field name to its LLVM type
-    // Used to correctly load captured variables with their actual types
-    native_unordered_map<obj::symbol_ref, llvm::Type *> capture_field_types;
   };
 
   struct llvm_processor::impl
@@ -98,7 +94,7 @@ namespace jank::codegen
          compilation_target target);
     /* For this ctor, we're inheriting the context from another function, which means
      * we're building a nested function. */
-    impl(analyze::expr::function_ref expr, jtl::ref<reusable_context> ctx);
+    impl(analyze::expr::function_ref expr, std::unique_ptr<reusable_context> ctx);
 
     jtl::string_result<void> gen();
     llvm::Value *gen(analyze::expression_ref, analyze::expr::function_arity const &);
@@ -221,17 +217,13 @@ namespace jank::codegen
     llvm::StructType *get_or_insert_struct_type(std::string const &name,
                                                 std::vector<llvm::Type *> const &fields) const;
 
-    util::scope_exit gen_stack_save();
-    void gen_stack_restore();
-    jtl::ptr<llvm::Value> gen_ret(jtl::ptr<llvm::Value> const value);
-    jtl::ptr<llvm::Value> gen_ret();
-
     compilation_target target{};
     analyze::expr::function_ref root_fn;
     jtl::ptr<llvm::Function> llvm_fn{};
-    jtl::ref<reusable_context> ctx;
+    std::unique_ptr<reusable_context> ctx;
     native_unordered_map<obj::symbol_ref, jtl::ptr<llvm::Value>> locals;
-    native_list<deferred_init> deferred_inits{};
+    /* TODO: Use gc allocator to avoid leaks. */
+    std::list<deferred_init> deferred_inits{};
     jtl::ref<llvm::LLVMContext> llvm_ctx;
     jtl::ref<llvm::Module> llvm_module;
     jtl::ptr<llvm::BasicBlock> current_loop;
@@ -248,7 +240,6 @@ namespace jank::codegen
      * We don't use this within the current fn, but it's passed upward to
      * the fn gen which is above us, all the way up to the module level. */
     native_unordered_map<jtl::immutable_string, Cpp::AotCall> global_rtti;
-    native_vector<jtl::ptr<llvm::Value>> stack_saves;
   };
 
   struct llvm_type_info
@@ -257,16 +248,6 @@ namespace jank::codegen
     usize size{};
     usize alignment{};
   };
-
-  static jtl::immutable_string unique_munged_string()
-  {
-    return runtime::munge(__rt_ctx->unique_namespaced_string());
-  }
-
-  static jtl::immutable_string unique_munged_string(jtl::immutable_string const &prefix)
-  {
-    return runtime::munge(__rt_ctx->unique_namespaced_string(prefix));
-  }
 
   static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
                                        jtl::ref<llvm::LLVMContext> const llvm_ctx,
@@ -467,7 +448,7 @@ namespace jank::codegen
                                       || Cpp::IsPointerType(param_type)
                                       /*|| Cpp::IsArrayType(param_type)*/) };
 
-    auto const fn_callable{ Cpp::MakeAotCallable(match, unique_munged_string()) };
+    auto const fn_callable{ Cpp::MakeAotCallable(match, __rt_ctx->unique_munged_string()) };
     link_module(ctx, reinterpret_cast<llvm::Module *>(fn_callable.getModule()));
 
     llvm::Value *arg_alloc{ arg };
@@ -481,29 +462,6 @@ namespace jank::codegen
             || (is_arg_ptr && !is_param_indirect && llvm::isa<llvm::AllocaInst>(arg)))
     {
       arg_alloc = ctx.builder->CreateLoad(ctx.builder->getPtrTy(), arg_alloc);
-    }
-    /* For non-object types (primitives, structs), if arg is a value (not an AllocaInst),
-     * we need to allocate storage for it so that arg_alloc is a pointer.
-     * The AOT callable expects ptr* for all argument arrays. */
-    else if(!cpp_util::is_any_object(input_type) && !Cpp::IsPointerType(input_type)
-            && !Cpp::IsReferenceType(input_type) && !Cpp::IsVoid(input_type)
-            && !llvm::isa<llvm::AllocaInst>(arg))
-    {
-      /* If the value is already a pointer, we assume it's the address of the value.
-       * This happens with PHI nodes for if/loop expressions which return addresses
-       * to locals. */
-      if(arg->getType()->isPointerTy())
-      {
-        arg_alloc = arg;
-      }
-      else
-      {
-        auto const arg_type{ llvm_type(ctx, llvm_ctx, Cpp::GetNonReferenceType(input_type)) };
-        arg_alloc = ctx.builder->CreateAlloca(
-          arg_type.type.data,
-          llvm::ConstantInt::get(ctx.builder->getInt64Ty(), arg_type.size));
-        ctx.builder->CreateStore(arg, arg_alloc);
-      }
     }
 
     auto const fn(llvm_module->getFunction(fn_callable.getName()));
@@ -573,23 +531,24 @@ namespace jank::codegen
 
   /* Whenever we have an object in an `alloca`, we need to load it before using. This fn only
    * makes sense to use with jank objects, as opposed to native values. */
-  static llvm::Value *
-  load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value *arg, jtl::ptr<void> const type)
+  static llvm::Value *load_if_needed(std::unique_ptr<reusable_context> const &ctx,
+                                     llvm::Value *arg,
+                                     jtl::ptr<void> const type)
   {
     if(!arg)
     {
       return arg;
     }
 
-    if(llvm::isa<llvm::AllocaInst>(arg)
-       && (cpp_util::is_any_object(type) || Cpp::IsPointerType(type) || Cpp::IsReferenceType(type)))
+    if(llvm::isa<llvm::AllocaInst>(arg) && cpp_util::is_any_object(type))
     {
       arg = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg);
     }
     return arg;
   }
 
-  static llvm::Value *load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value * const arg)
+  static llvm::Value *
+  load_if_needed(std::unique_ptr<reusable_context> const &ctx, llvm::Value * const arg)
   {
     return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
   }
@@ -597,7 +556,7 @@ namespace jank::codegen
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
-    , ctor_name{ unique_munged_string("jank_global_init") }
+    , ctor_name{ __rt_ctx->unique_munged_string("jank_global_init") }
     //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
     //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
     //              reinterpret_cast<void *>(
@@ -609,7 +568,8 @@ namespace jank::codegen
     , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
     , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
-    auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
+    auto m{ std::make_unique<llvm::Module>(__rt_ctx->unique_munged_string(module_name).c_str(),
+                                           *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
 
     auto const raw_ctx{ extract_context(module) };
@@ -668,8 +628,8 @@ namespace jank::codegen
   }
 
   llvm_processor::llvm_processor(expr::function_ref const expr,
-                                 jtl::ref<reusable_context> const ctx)
-    : _impl{ make_ref<impl>(expr, ctx) }
+                                 std::unique_ptr<reusable_context> ctx)
+    : _impl{ make_ref<impl>(expr, jtl::move(ctx)) }
   {
   }
 
@@ -678,13 +638,13 @@ namespace jank::codegen
                              compilation_target const target)
     : target{ target }
     , root_fn{ expr }
-    , ctx{ make_ref<reusable_context>(module_name, std::make_unique<llvm::LLVMContext>()) }
+    , ctx{ std::make_unique<reusable_context>(module_name, std::make_unique<llvm::LLVMContext>()) }
     , llvm_ctx{ extract_context(ctx->module) }
     , llvm_module{ ctx->module.getModuleUnlocked() }
   {
   }
 
-  llvm_processor::impl::impl(expr::function_ref const expr, jtl::ref<reusable_context> ctx)
+  llvm_processor::impl::impl(expr::function_ref const expr, std::unique_ptr<reusable_context> ctx)
     : target{ compilation_target::function }
     , root_fn{ expr }
     , ctx{ std::move(ctx) }
@@ -793,21 +753,8 @@ namespace jank::codegen
         ctx->builder->CreateLoad(ctx->builder->getPtrTy(), context_ptr, "this.context")
       };
       auto const capture_list(root_fn->captures());
-      std::vector<llvm::Type *> capture_types;
-      capture_types.reserve(capture_list.size());
-      for(auto const &capture : capture_list)
-      {
-        auto const type_it{ ctx->capture_field_types.find(capture.first) };
-        if(type_it != ctx->capture_field_types.end())
-        {
-          capture_types.push_back(type_it->second);
-        }
-        else
-        {
-          capture_types.push_back(ctx->builder->getPtrTy());
-        }
-      }
-
+      std::vector<llvm::Type *> const capture_types{ capture_list.size(),
+                                                     ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(root_fn->unique_name)),
                                   capture_types));
@@ -815,25 +762,9 @@ namespace jank::codegen
       for(auto const &capture : capture_list)
       {
         auto const field_ptr(ctx->builder->CreateStructGEP(closure_ctx_type, context, index++));
-        auto const type_it{ ctx->capture_field_types.find(capture.first) };
-        llvm::Type *load_type{ ctx->builder->getPtrTy() };
-        if(type_it != ctx->capture_field_types.end())
-        {
-          load_type = type_it->second;
-        }
-
-        // For captures, we put the VALUE into locals, not the pointer to the field
-        // This matches how arguments are handled (value is in locals)
-        // Wait, arguments are values?
-        // In create_function: locals[param] = arg; (arg is Value*)
-        // If arg is a pointer (boxed object), locals has pointer.
-        // If capture is i32, locals should have i32 value?
-        // But gen(local_reference_ref) expects locals to contain the "source" (alloca or value).
-        // If it's an alloca, it loads from it.
-        // If it's a value, it returns it.
-        // So here we should load the value from the field and store it in locals.
-        locals[capture.first]
-          = ctx->builder->CreateLoad(load_type, field_ptr, capture.first->name.c_str());
+        locals[capture.first] = ctx->builder->CreateLoad(ctx->builder->getPtrTy(),
+                                                         field_ptr,
+                                                         capture.first->name.c_str());
       }
     }
   }
@@ -845,7 +776,7 @@ namespace jank::codegen
 
   jtl::string_result<void> llvm_processor::impl::gen()
   {
-    profile::timer const timer{ util::format("ir gen {}", root_fn->name) };
+    profile::timer const timer{ "ir gen" };
     if(target != compilation_target::function)
     {
       create_global_ctor();
@@ -872,7 +803,7 @@ namespace jank::codegen
         continue;
       }
 
-      gen_ret(gen_global(jank_nil));
+      ctx->builder->CreateRet(gen_global(jank_nil));
     }
 
     if(target != compilation_target::function)
@@ -890,7 +821,7 @@ namespace jank::codegen
           { gen_c_string(util::format("global ctor for {}", root_fn->name)) });
       }
 
-      gen_ret();
+      ctx->builder->CreateRetVoid();
     }
 
     /* For modules, we need to make sure to define RTTI symbols manually. Since
@@ -972,7 +903,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(ref);
+      return ctx->builder->CreateRet(ref);
     }
 
     return ref;
@@ -1013,7 +944,7 @@ namespace jank::codegen
     }
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1026,7 +957,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(var);
+      return ctx->builder->CreateRet(var);
     }
 
     return var;
@@ -1065,58 +996,9 @@ namespace jank::codegen
       for(auto const &arg_expr : expr->arg_exprs)
       {
         auto arg_handle{ gen(arg_expr, arity) };
-        auto const arg_type{ cpp_util::expression_type(arg_expr) };
-
-        bool should_box{ !cpp_util::is_any_object(arg_type) };
-
-        // Robustness check: if LLVM type suggests primitive, force boxing
-        if(!should_box)
+        if(llvm::isa<llvm::AllocaInst>(arg_handle))
         {
-          if(!arg_handle->getType()->isPointerTy())
-          {
-            should_box = true;
-          }
-          else if(llvm::isa<llvm::AllocaInst>(arg_handle))
-          {
-            // If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive
-            if(!llvm::cast<llvm::AllocaInst>(arg_handle)->getAllocatedType()->isPointerTy())
-            {
-              should_box = true;
-            }
-          }
-        }
-
-        if(should_box)
-        {
-          // Argument is a C++ value/primitive, need to box it for Jank function call
-          llvm::Value *val_ptr{ arg_handle };
-          if(!llvm::isa<llvm::AllocaInst>(arg_handle) && !arg_handle->getType()->isPointerTy())
-          {
-            // If it's a direct value (e.g. from capture load), store it in a temp alloca
-            auto const alloc{ ctx->builder->CreateAlloca(arg_handle->getType()) };
-            ctx->builder->CreateStore(arg_handle, alloc);
-            val_ptr = alloc;
-          }
-          // If it's already a pointer (alloca or pointer value), use it as is
-
-          auto const fn_type(
-            llvm::FunctionType::get(ctx->builder->getPtrTy(),
-                                    { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
-                                    false));
-          auto const fn(llvm_module->getOrInsertFunction("jank_box", fn_type));
-
-          auto const type_str{ gen_c_string(
-            Cpp::GetTypeAsString(Cpp::GetCanonicalType(Cpp::GetNonReferenceType(arg_type)))) };
-          llvm::SmallVector<llvm::Value *, 2> const args{ type_str, val_ptr };
-          arg_handle = ctx->builder->CreateCall(fn, args);
-        }
-        else
-        {
-          // Argument is already a Jank object
-          if(llvm::isa<llvm::AllocaInst>(arg_handle))
-          {
-            arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
-          }
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
 
         arg_handles.emplace_back(arg_handle);
@@ -1152,7 +1034,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1199,7 +1081,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(ret);
+      return ctx->builder->CreateRet(ret);
     }
 
     return ret;
@@ -1226,7 +1108,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1253,7 +1135,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1281,7 +1163,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1308,7 +1190,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1325,7 +1207,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(load_if_needed(ctx, ret));
+      return ctx->builder->CreateRet(load_if_needed(ctx, ret));
     }
 
     return ret;
@@ -1337,28 +1219,27 @@ namespace jank::codegen
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
 
-      for(auto const &capture : expr->captures())
-      {
-        auto const name{ capture.first };
-        llvm::Type *field_type{};
-        if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
-        {
-          field_type = llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType();
-        }
-        else
-        {
-          field_type = ctx->builder->getPtrTy();
-        }
-        ctx->capture_field_types[name] = field_type;
-      }
+      llvm_processor nested{ expr, std::move(ctx) };
 
-      llvm_processor const nested{ expr, ctx };
+      /* We need to make sure to transfer ownership of the context back, even if an exception
+       * is thrown. */
+      util::scope_exit const finally{ [&]() {
+        if(nested._impl->ctx)
+        {
+          ctx = std::move(nested._impl->ctx);
+        }
+      } };
+
       auto const res{ nested.gen() };
       if(res.is_err())
       {
         /* TODO: Return error. */
         res.expect_ok();
       }
+
+      /* This is covered by finally, but clang-tidy can't figure that out, so we have
+       * to make this more clear. */
+      ctx = std::move(nested._impl->ctx);
 
       global_rtti.insert(nested._impl->global_rtti.begin(), nested._impl->global_rtti.end());
     }
@@ -1367,7 +1248,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(fn_obj);
+      return ctx->builder->CreateRet(fn_obj);
     }
 
     return fn_obj;
@@ -1409,7 +1290,6 @@ namespace jank::codegen
         ctx->builder->CreateStore(store.first, store.second);
       }
 
-      gen_stack_restore();
       return ctx->builder->CreateBr(current_loop.data);
     }
     else
@@ -1459,7 +1339,7 @@ namespace jank::codegen
 
       if(expr->position == expression_position::tail)
       {
-        return gen_ret(call);
+        return ctx->builder->CreateRet(call);
       }
 
       return call;
@@ -1479,7 +1359,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(fn_obj);
+      return ctx->builder->CreateRet(fn_obj);
     }
 
     return fn_obj;
@@ -1557,7 +1437,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -1611,8 +1491,6 @@ namespace jank::codegen
       ctx->builder->CreateBr(loop_block);
       ctx->builder->SetInsertPoint(loop_block);
 
-      auto const stack_save{ gen_stack_save() };
-
       auto const ret(gen(expr->body, arity));
       locals = std::move(old_locals);
 
@@ -1622,7 +1500,6 @@ namespace jank::codegen
         auto const postloop_block(llvm::BasicBlock::Create(*llvm_ctx, "postloop", current_fn));
         if(!ctx->builder->GetInsertBlock()->getTerminator())
         {
-          gen_stack_restore();
           ctx->builder->CreateBr(postloop_block);
         }
         ctx->builder->SetInsertPoint(postloop_block);
@@ -1757,7 +1634,7 @@ namespace jank::codegen
       else_ = gen_global(jank_nil);
       if(expr->position == expression_position::tail)
       {
-        else_ = gen_ret(else_);
+        else_ = ctx->builder->CreateRet(else_);
       }
     }
 
@@ -1832,7 +1709,7 @@ namespace jank::codegen
     auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(ret);
+      return ctx->builder->CreateRet(ret);
     }
     return ret;
   }
@@ -1881,7 +1758,7 @@ namespace jank::codegen
         rtti_syms.emplace(exception_rtti);
       }
       auto const callable{
-        Cpp::MakeRTTICallable(catch_type, exception_rtti, unique_munged_string())
+        Cpp::MakeRTTICallable(catch_type, exception_rtti, __rt_ctx->unique_munged_string())
       };
       global_rtti.emplace(exception_rtti, callable);
     }
@@ -1916,37 +1793,22 @@ namespace jank::codegen
     };
     auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { current_ex_ptr }) };
     auto const ex_val_type{ llvm_type(*ctx, llvm_ctx, catch_type).type.data };
-    /* For pointer types (e.g., void*, int*), the exception system stores the pointer VALUE
-     * itself at caught_ptr, so we use it directly. For non-pointer types (e.g., int, double),
-     * the value is stored AT the caught_ptr address, so we must dereference with CreateLoad. */
-    if(Cpp::IsPointerType(catch_type) || Cpp::IsReferenceType(catch_type)
-       || (!Cpp::IsBuiltin(catch_type) && !Cpp::IsEnumType(catch_type)
-           && !cpp_util::is_any_object(catch_type)))
-    {
-      /* Pointer exception: caught_ptr IS the value we want */
-      locals[catch_sym] = caught_ptr;
-    }
-    else
-    {
-      llvm::Value *raw_ex_val{};
-      /* Non-pointer exception: must dereference to get the value */
-      raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
-      auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
-      llvm::AllocaInst *ex_val_slot{};
-      {
-        llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
-        llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
-                                              current_fn->getEntryBlock().getFirstInsertionPt());
-        ex_val_slot
-          = entry_builder_local.CreateAlloca(ex_val_type,
-                                             nullptr,
-                                             util::format("{}.slot", catch_sym->name).data());
-      }
-      ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
+    llvm::Value *raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
 
-      locals[catch_sym] = ex_val_slot;
+    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
+    llvm::AllocaInst *ex_val_slot{};
+    {
+      llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
+      llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
+                                            current_fn->getEntryBlock().getFirstInsertionPt());
+      ex_val_slot
+        = entry_builder_local.CreateAlloca(ex_val_type,
+                                           nullptr,
+                                           util::format("{}.slot", catch_sym->name).data());
     }
+    ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
 
+    locals[catch_sym] = ex_val_slot;
 
     auto const original_catch_pos{ catch_body->position };
     catch_body->propagate_position(expression_position::value);
@@ -2441,7 +2303,7 @@ namespace jank::codegen
 
     if(is_return)
     {
-      gen_ret(final_val);
+      ctx->builder->CreateRet(final_val);
     }
     return final_val;
   }
@@ -2528,7 +2390,7 @@ namespace jank::codegen
     auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(ret);
+      return ctx->builder->CreateRet(ret);
     }
     return ret;
   }
@@ -2552,7 +2414,7 @@ namespace jank::codegen
       ctx->builder->CreateStore(null, alloc);
       if(expr->position == expression_position::tail)
       {
-        return gen_ret(alloc);
+        return ctx->builder->CreateRet(alloc);
       }
       return alloc;
     }
@@ -2567,7 +2429,7 @@ namespace jank::codegen
       ctx->builder->CreateStore(ir_val, alloc);
       if(expr->position == expression_position::tail)
       {
-        return gen_ret(alloc);
+        return ctx->builder->CreateRet(alloc);
       }
       return alloc;
     }
@@ -2585,19 +2447,19 @@ namespace jank::codegen
       ctx->builder->CreateStore(ir_val, alloc);
       if(expr->position == expression_position::tail)
       {
-        return gen_ret(alloc);
+        return ctx->builder->CreateRet(alloc);
       }
       return alloc;
     }
 
-    auto const callable{
-      Cpp::IsFunctionPointerType(expr->type)
-        /* We pass the type and the scope in here so that unresolved template
+    auto const callable{ Cpp::IsFunctionPointerType(expr->type)
+                           /* We pass the type and the scope in here so that unresolved template
                             * scopes can be turned into the correct specialization which matches
                             * the type we have. */
-        ? Cpp::MakeFunctionValueAotCallable(expr->scope, expr->type, unique_munged_string())
-        : Cpp::MakeAotCallable(expr->scope, unique_munged_string())
-    };
+                           ? Cpp::MakeFunctionValueAotCallable(expr->scope,
+                                                               expr->type,
+                                                               __rt_ctx->unique_munged_string())
+                           : Cpp::MakeAotCallable(expr->scope, __rt_ctx->unique_munged_string()) };
     jank_debug_assert(callable);
     link_module(*ctx, reinterpret_cast<llvm::Module *>(callable.getModule()));
 
@@ -2613,7 +2475,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(alloc);
+      return ctx->builder->CreateRet(alloc);
     }
 
     return alloc;
@@ -2634,7 +2496,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(load_if_needed(ctx, converted));
+      return ctx->builder->CreateRet(load_if_needed(ctx, converted));
     }
 
     return converted;
@@ -2825,11 +2687,11 @@ namespace jank::codegen
     {
       if(is_void)
       {
-        return gen_ret(gen_global(jank_nil));
+        return ctx->builder->CreateRet(gen_global(jank_nil));
       }
 
       auto const ret_load{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret_alloc, "ret") };
-      return gen_ret(ret_load);
+      return ctx->builder->CreateRet(ret_load);
     }
 
     if(is_void)
@@ -2863,28 +2725,30 @@ namespace jank::codegen
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ llvm::cast<expr::cpp_value>(expr->source_expr.data) };
-      return gen_aot_call(Cpp::MakeAotCallable(source->scope, arg_types, unique_munged_string()),
-                          source->scope,
-                          expr->type,
-                          Cpp::GetName(source->scope),
-                          expr->arg_exprs,
-                          expr->position,
-                          expr->kind,
-                          arity);
+      return gen_aot_call(
+        Cpp::MakeAotCallable(source->scope, arg_types, __rt_ctx->unique_munged_string()),
+        source->scope,
+        expr->type,
+        Cpp::GetName(source->scope),
+        expr->arg_exprs,
+        expr->position,
+        expr->kind,
+        arity);
     }
     else
     {
       auto const source_type{ cpp_util::expression_type(expr->source_expr) };
       auto arg_exprs{ expr->arg_exprs };
       arg_exprs.insert(arg_exprs.begin(), expr->source_expr);
-      return gen_aot_call(Cpp::MakeApplyCallable(source_type, arg_types, unique_munged_string()),
-                          nullptr,
-                          expr->type,
-                          "call",
-                          jtl::move(arg_exprs),
-                          expr->position,
-                          expr->kind,
-                          arity);
+      return gen_aot_call(
+        Cpp::MakeApplyCallable(source_type, arg_types, __rt_ctx->unique_munged_string()),
+        nullptr,
+        expr->type,
+        "call",
+        jtl::move(arg_exprs),
+        expr->position,
+        expr->kind,
+        arity);
     }
   }
 
@@ -2902,7 +2766,7 @@ namespace jank::codegen
          * We can save ourselves the time of JIT compiling more C++ and make the IR easier
          * to optimize. */
         ctor_fn_callable
-          = Cpp::MakeBuiltinConstructorAotCallable(expr->type, unique_munged_string());
+          = Cpp::MakeBuiltinConstructorAotCallable(expr->type, __rt_ctx->unique_munged_string());
       }
       else
       {
@@ -2913,7 +2777,7 @@ namespace jank::codegen
         ctor_fn_callable
           = Cpp::MakeBuiltinConstructorAotCallable(expr->type,
                                                    needs_conversion ? expr->type : arg_type,
-                                                   unique_munged_string());
+                                                   __rt_ctx->unique_munged_string());
       }
     }
     else if(expr->is_aggregate)
@@ -2923,14 +2787,15 @@ namespace jank::codegen
       {
         arg_types.emplace_back(cpp_util::expression_type(arg_expr));
       }
-      ctor_fn_callable = Cpp::MakeAggregateInitializationAotCallable(expr->type,
-                                                                     arg_types,
-                                                                     unique_munged_string());
+      ctor_fn_callable
+        = Cpp::MakeAggregateInitializationAotCallable(expr->type,
+                                                      arg_types,
+                                                      __rt_ctx->unique_munged_string());
     }
     else
     {
       jank_debug_assert(expr->fn);
-      ctor_fn_callable = Cpp::MakeAotCallable(expr->fn, unique_munged_string());
+      ctor_fn_callable = Cpp::MakeAotCallable(expr->fn, __rt_ctx->unique_munged_string());
     }
     jank_debug_assert(ctor_fn_callable);
 
@@ -2954,7 +2819,7 @@ namespace jank::codegen
   llvm::Value *
   llvm_processor::impl::gen(expr::cpp_member_call_ref const expr, expr::function_arity const &arity)
   {
-    return gen_aot_call(Cpp::MakeAotCallable(expr->fn, unique_munged_string()),
+    return gen_aot_call(Cpp::MakeAotCallable(expr->fn, __rt_ctx->unique_munged_string()),
                         expr->fn,
                         cpp_util::expression_type(expr),
                         Cpp::GetName(expr->fn),
@@ -2967,7 +2832,7 @@ namespace jank::codegen
   llvm::Value *llvm_processor::impl::gen(expr::cpp_member_access_ref const expr,
                                          expr::function_arity const &arity)
   {
-    return gen_aot_call(Cpp::MakeAotCallable(expr->scope, unique_munged_string()),
+    return gen_aot_call(Cpp::MakeAotCallable(expr->scope, __rt_ctx->unique_munged_string()),
                         nullptr,
                         expr->type,
                         Cpp::GetName(expr->scope),
@@ -3043,7 +2908,7 @@ namespace jank::codegen
     return gen_aot_call(Cpp::MakeBuiltinOperatorAotCallable(static_cast<Cpp::Operator>(expr->op),
                                                             expr->type,
                                                             arg_types,
-                                                            unique_munged_string()),
+                                                            __rt_ctx->unique_munged_string()),
                         nullptr,
                         expr->type,
                         name.getAsString(),
@@ -3091,7 +2956,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return call;
@@ -3118,7 +2983,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(call);
+      return ctx->builder->CreateRet(call);
     }
 
     return alloc;
@@ -3144,7 +3009,7 @@ namespace jank::codegen
     if(!Cpp::IsTriviallyDestructible(expr->type))
     {
       auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(expr->type)) };
-      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, unique_munged_string()) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, __rt_ctx->unique_munged_string()) };
       link_module(*ctx, reinterpret_cast<llvm::Module *>(dtor_callable.getModule()));
 
       auto const reg_fn_type(llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -3192,7 +3057,7 @@ namespace jank::codegen
     if(!Cpp::IsTriviallyDestructible(value_type))
     {
       auto const dtor{ Cpp::GetDestructor(Cpp::GetScopeFromType(value_type)) };
-      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, unique_munged_string()) };
+      auto const dtor_callable{ Cpp::MakeAotCallable(dtor, __rt_ctx->unique_munged_string()) };
       link_module(*ctx, reinterpret_cast<llvm::Module *>(dtor_callable.getModule()));
 
       auto const dtor_fn_type(
@@ -3216,7 +3081,7 @@ namespace jank::codegen
     auto const ret{ gen_global(jank_nil) };
     if(expr->position == expression_position::tail)
     {
-      return gen_ret(ret);
+      return ctx->builder->CreateRet(ret);
     }
 
     return ret;
@@ -3980,33 +3845,7 @@ namespace jank::codegen
     }
     else
     {
-      // Build context with correct types for each capture
-      std::vector<llvm::Type *> capture_types;
-      capture_types.reserve(captures.size());
-      for(auto const &capture : captures)
-      {
-        auto const name{ capture.first };
-        // If the variable is in locals and it's an alloca, use its actual type
-        // Otherwise use ptr (for deferred inits, global values, etc.)
-        llvm::Type *field_type{};
-        if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
-        {
-          auto const alloca_type{
-            llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType()
-          };
-          field_type = alloca_type;
-          capture_types.push_back(alloca_type);
-        }
-        else
-        {
-          field_type = ctx->builder->getPtrTy();
-          capture_types.push_back(ctx->builder->getPtrTy());
-        }
-
-        // Store the field type so nested function can load with correct type
-        ctx->capture_field_types[name] = field_type;
-      }
-
+      std::vector<llvm::Type *> const capture_types{ captures.size(), ctx->builder->getPtrTy() };
       auto const closure_ctx_type(
         get_or_insert_struct_type(util::format("{}_context", munge(expr->unique_name)),
                                   capture_types));
@@ -4034,13 +3873,9 @@ namespace jank::codegen
                                                  name,
                                                  capture.second };
           auto local{ gen(expr::local_reference_ref{ &local_ref }, fn_arity) };
-
-          // Load the value if it's an alloca
-          // Use the actual LLVM type of the alloca, not the jank binding type
-          if(llvm::isa<llvm::AllocaInst>(local))
+          if(llvm::isa<llvm::AllocaInst>(local) && cpp_util::is_any_object(capture.second->type))
           {
-            auto const alloca_type{ llvm::cast<llvm::AllocaInst>(local)->getAllocatedType() };
-            local = ctx->builder->CreateLoad(alloca_type, local);
+            local = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), local);
           }
 
           ctx->builder->CreateStore(local, field_ptr);
@@ -4149,63 +3984,6 @@ namespace jank::codegen
     std::vector<llvm::Type *> const field_types{ fields.size(), ctx->builder->getPtrTy() };
     auto const struct_type(llvm::StructType::create(field_types, name));
     return struct_type;
-  }
-
-  util::scope_exit llvm_processor::impl::gen_stack_save()
-  {
-    /* In some cases, such as loops, we use LLVM's stack preservation intrinsics.
-     * These will help us reset the stack on each iteration so that each new alloc
-     * doesn't actually keep grabbing more stack space.
-     *
-     * However, there is some tricky logic in balancing each save/restore, since we
-     * can have multiple terminators in an IR function and we need to make sure that
-     * each of them gets a restore. Also, we can have nested saves and we need to
-     * make sure they get restored in the correct order. */
-    auto const stack_ptr{ ctx->builder->CreateStackSave() };
-    stack_saves.emplace_back(stack_ptr);
-
-    /* The main logic here is to pop the back of the stack, but we add some error handling
-     * as well, to detect cases where we're not restoring in the correct order. */
-    return { [stack_ptr, this]() {
-      ssize found{ -1 };
-      for(ssize i{}; std::cmp_not_equal(i, stack_saves.size()); ++i)
-      {
-        if(stack_saves[i].data == stack_ptr)
-        {
-          found = i;
-        }
-      }
-
-      jank_debug_assert(found == -1 || found == static_cast<ssize>(stack_saves.size()) - 1);
-      if(found != -1)
-      {
-        stack_saves.erase(stack_saves.begin() + found);
-      }
-    } };
-  }
-
-  void llvm_processor::impl::gen_stack_restore()
-  {
-    jank_debug_assert(!stack_saves.empty());
-    ctx->builder->CreateStackRestore(stack_saves.back());
-  }
-
-  jtl::ptr<llvm::Value> llvm_processor::impl::gen_ret(jtl::ptr<llvm::Value> const value)
-  {
-    for(auto it{ stack_saves.rbegin() }; it != stack_saves.rend(); ++it)
-    {
-      ctx->builder->CreateStackRestore(*it);
-    }
-    return ctx->builder->CreateRet(value);
-  }
-
-  jtl::ptr<llvm::Value> llvm_processor::impl::gen_ret()
-  {
-    for(auto it{ stack_saves.rbegin() }; it != stack_saves.rend(); ++it)
-    {
-      ctx->builder->CreateStackRestore(*it);
-    }
-    return ctx->builder->CreateRetVoid();
   }
 
   void llvm_processor::optimize() const
