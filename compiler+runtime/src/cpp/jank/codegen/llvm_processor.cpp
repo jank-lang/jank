@@ -2608,9 +2608,48 @@ namespace jank::codegen
       return alloc;
     }
 
-    auto const callable{
-      Cpp::IsFunctionPointerType(expr->type)
-        /* We pass the type and the scope in here so that unresolved template
+    /* For static variables that are non-copyable, we can't use MakeAotCallable (which copies).
+     * Instead, create a wrapper function that returns a pointer to the variable.
+     * Check if the type is copyable by seeing if it can be constructed from itself.  */
+    bool const is_copyable = Cpp::IsConstructible(expr->type, expr->type);
+    if(expr->val_kind == expr::cpp_value::value_kind::variable
+       && Cpp::IsVariable(expr->scope)
+       && !is_copyable)
+    {
+      // Get the fully qualified variable name
+      auto const var_name{ Cpp::GetQualifiedCompleteName(expr->scope) };
+
+      // Create a wrapper function that returns the address of the variable
+      // Important: Don't use inline/always_inline or the function won't be emitted!
+      auto const wrapper_name{ __rt_ctx->unique_munged_string() };
+      auto const wrapper_code{ util::format(
+        "extern \"C\" auto {}() {{ return &{}; }}",
+        wrapper_name,
+        var_name) };
+
+      // Parse and link the wrapper
+      auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(wrapper_code.c_str()) };
+      if(!parse_res)
+      {
+        throw std::runtime_error{ util::format("Unable to create wrapper for variable: {}", var_name) };
+      }
+      link_module(*ctx, parse_res->TheModule.get());
+
+      // Call the wrapper to get the address
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
+      auto const fn(llvm_module->getFunction(wrapper_name.c_str()));
+      auto const addr{ ctx->builder->CreateCall(fn_type, fn) };
+
+      if(expr->position == expression_position::tail)
+      {
+        return ctx->builder->CreateRet(addr);
+      }
+
+      return addr;
+    }
+
+    auto const callable{ Cpp::IsFunctionPointerType(expr->type)
+                           /* We pass the type and the scope in here so that unresolved template
                             * scopes can be turned into the correct specialization which matches
                             * the type we have. */
         ? Cpp::MakeFunctionValueAotCallable(expr->scope, expr->type, unique_munged_string())

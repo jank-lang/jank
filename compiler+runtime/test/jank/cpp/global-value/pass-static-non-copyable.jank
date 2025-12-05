@@ -20,6 +20,7 @@
           }")
 
 (let* [foo cpp/jank.cpp.global_value.pass_static_non_copyable.bar.boop]
+  (println "result of \"cpp/.-data foo\"" (cpp/.-data foo))
   (if (= 5 (cpp/.-data foo))
     :success
     :failure))
