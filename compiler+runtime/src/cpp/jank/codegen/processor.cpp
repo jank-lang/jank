@@ -1476,15 +1476,15 @@ namespace jank::codegen
     util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
     util::format_to(body_buffer, "{");
-  if(expr->finally_body.is_some())
-  {
-    util::format_to(body_buffer, "auto const finally{ [&](){ ");
-    gen(expr->finally_body.unwrap(), fn_arity);
-    util::format_to(body_buffer, "} };");
-    /* We use a local struct for RAII to ensure the finally block is called even
+    if(expr->finally_body.is_some())
+    {
+      util::format_to(body_buffer, "auto const finally{ [&](){ ");
+      gen(expr->finally_body.unwrap(), fn_arity);
+      util::format_to(body_buffer, "} };");
+      /* We use a local struct for RAII to ensure the finally block is called even
      * if the try block returns. We can't use jank::util::scope_exit because it
      * swallows exceptions. */
-    util::format_to(body_buffer, R"(
+      util::format_to(body_buffer, R"(
       struct guard_t
       {
         decltype(finally) f;
@@ -1495,49 +1495,51 @@ namespace jank::codegen
         }
       } guard{ finally };
     )");
-    util::format_to(body_buffer, "try {");
-  }
-
-  if(has_catch)
-  {
-    util::format_to(body_buffer, "try {");
-    auto const &body_tmp(gen(expr->body, fn_arity));
-    if(body_tmp.is_some())
-    {
-      util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
+      util::format_to(body_buffer, "try {");
     }
-    util::format_to(body_buffer, "}");
-    for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+
+    if(has_catch)
     {
-      auto const &catch_body = expr->catch_bodies[i];
-      util::format_to(body_buffer,
-                      "catch({} & {}) {",
-                      cpp_util::get_qualified_type_name(
-                        Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(catch_body.type))),
-                      runtime::munge(catch_body.sym->name));
-      auto const &catch_tmp(gen(catch_body.body, fn_arity));
-      if(catch_tmp.is_some())
+      util::format_to(body_buffer, "try {");
+      auto const &body_tmp(gen(expr->body, fn_arity));
+      if(body_tmp.is_some())
       {
-        util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(true));
+        util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
       }
       util::format_to(body_buffer, "}");
+      for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+      {
+        auto const &catch_body = expr->catch_bodies[i];
+        util::format_to(body_buffer,
+                        "catch({} & {}) {",
+                        cpp_util::get_qualified_type_name(
+                          Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(catch_body.type))),
+                        runtime::munge(catch_body.sym->name));
+        auto const &catch_tmp(gen(catch_body.body, fn_arity));
+        if(catch_tmp.is_some())
+        {
+          util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(true));
+        }
+        util::format_to(body_buffer, "}");
+      }
     }
-  }
-  else
-  {
-    auto const &body_tmp(gen(expr->body, fn_arity));
-    if(body_tmp.is_some())
+    else
     {
-      util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
+      auto const &body_tmp(gen(expr->body, fn_arity));
+      if(body_tmp.is_some())
+      {
+        util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
+      }
     }
-  }
 
-  if(expr->finally_body.is_some())
-  {
-    util::format_to(body_buffer, "} catch(...) { guard.active = false; finally(); throw; } guard.active = false; finally();");
-  }
+    if(expr->finally_body.is_some())
+    {
+      util::format_to(body_buffer,
+                      "} catch(...) { guard.active = false; finally(); throw; } guard.active = "
+                      "false; finally();");
+    }
 
-  util::format_to(body_buffer, "}");
+    util::format_to(body_buffer, "}");
 
     return ret_tmp;
   }
