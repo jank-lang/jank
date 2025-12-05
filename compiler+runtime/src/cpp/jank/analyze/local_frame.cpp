@@ -94,7 +94,6 @@ namespace jank::analyze
       res.first->second.has_boxed_usage = true;
       /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
-
     }
   }
 
