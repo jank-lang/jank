@@ -2767,7 +2767,8 @@ namespace jank::codegen
                              && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(arg_type))
                                   || Cpp::IsArrayType(Cpp::GetNonReferenceType(arg_type))) };
       auto const is_arg_ptr{ Cpp::IsPointerType(arg_type) || Cpp::IsArrayType(arg_type)
-                             || cpp_util::is_any_object(arg_type) };
+                             || cpp_util::is_any_object(arg_type)
+                             || cpp_util::is_nullptr(arg_type) };
       auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
 
       if(i == 0 && requires_this_obj)
@@ -2802,7 +2803,8 @@ namespace jank::codegen
         }
       }
       auto const is_param_ptr{ Cpp::IsPointerType(param_type) || Cpp::IsArrayType(param_type)
-                               || cpp_util::is_any_object(param_type) };
+                               || cpp_util::is_any_object(param_type)
+                               || cpp_util::is_nullptr(param_type) };
       auto const is_param_indirect{ Cpp::IsReferenceType(param_type) || is_param_ptr };
       //util::println(
       //  "gen_aot_call arg {}, arg type {} {} (indirect {}), param type {} {} (indirect {}), "
