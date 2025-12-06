@@ -992,9 +992,9 @@ namespace jank::runtime::module
       __rt_ctx->jit_prc.load_object(entry.path);
     }
 
-    /* For C++ codegen, we don't use extern "C" for the load fn, since it's UB
-     * to throw exceptions across C boundaries. Instead, we just declare the function
-     * and then try to call it. */
+    /* For C++ codegen, we use extern "C" for the load fn to ensure consistent linkage
+     * across the static/dynamic boundary. While it's technically UB to throw exceptions
+     * across C boundaries, we know that both sides are C++ and the unwinder should handle it. */
     auto const load_fn_res{ __rt_ctx->jit_prc.find_symbol(load_function_name) };
     if(load_fn_res.is_ok())
     {
@@ -1003,7 +1003,7 @@ namespace jank::runtime::module
     else
     {
       __rt_ctx->jit_prc.eval_string(
-        util::format("void* {}(); {}();", load_function_name, load_function_name));
+        util::format("extern \"C\" void* {}(); {}();", load_function_name, load_function_name));
     }
 
     return ok();
