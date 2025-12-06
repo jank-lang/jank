@@ -1920,8 +1920,8 @@ namespace jank::codegen
      * For reference types, __cxa_begin_catch returns a pointer to the exception object,
      * which is exactly what we need - we don't load anything, just use the pointer.
      * For value types (primitives, pointers), we need to load the actual value. */
-    llvm::Value *raw_ex_val;
-    llvm::Type *ex_val_type;
+    llvm::Value *raw_ex_val{};
+    llvm::Type *ex_val_type{};
 
     if(Cpp::IsReferenceType(catch_type))
     {

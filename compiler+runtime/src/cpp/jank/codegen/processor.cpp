@@ -1431,15 +1431,14 @@ namespace jank::codegen
         util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
       }
       util::format_to(body_buffer, "}");
-      for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+      for(auto const &[sym, type, body] : expr->catch_bodies)
       {
-        auto const &catch_body = expr->catch_bodies[i];
-        util::format_to(body_buffer,
-                        "catch({} & {}) {",
-                        cpp_util::get_qualified_type_name(
-                          Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(catch_body.type))),
-                        runtime::munge(catch_body.sym->name));
-        auto const &catch_tmp(gen(catch_body.body, fn_arity));
+        util::format_to(
+          body_buffer,
+          "catch({} & {}) {",
+          cpp_util::get_qualified_type_name(Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))),
+          runtime::munge(sym->name));
+        auto const &catch_tmp(gen(body, fn_arity));
         if(catch_tmp.is_some())
         {
           util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(true));

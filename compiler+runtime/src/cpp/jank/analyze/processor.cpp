@@ -2781,9 +2781,9 @@ namespace jank::analyze
               /* Check if this type is in the jank::runtime namespace */
               auto const type_scope{ Cpp::GetScopeFromType(catch_type_ref->type) };
               auto const type_name{ cpp_util::get_qualified_name(type_scope) };
-              bool const is_jank_runtime_type{ type_name.find("jank::runtime::") == 0 };
 
-              if(!is_jank_runtime_type)
+              if(bool const is_jank_runtime_type{ type_name.starts_with("jank::runtime::") };
+                 !is_jank_runtime_type)
               {
                 catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
               }
@@ -2937,7 +2937,6 @@ namespace jank::analyze
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
       [&](auto const typed_o) -> processor::expression_result {
-        using T = typename decltype(typed_o)::value_type;
         native_vector<std::pair<expression_ref, expression_ref>> exprs;
         exprs.reserve(typed_o->data.size());
 
@@ -2945,18 +2944,8 @@ namespace jank::analyze
         {
           /* The two maps (hash and sorted) have slightly different iterators, so we need to
            * pull out the entries differently. */
-          object_ref first{}, second{};
-          if constexpr(std::same_as<T, obj::persistent_sorted_map>)
-          {
-            // auto const &entry(kv.get());
-            first = kv.first;
-            second = kv.second;
-          }
-          else
-          {
-            first = kv.first;
-            second = kv.second;
-          }
+          object_ref const first{ kv.first };
+          object_ref const second{ kv.second };
 
           auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
           if(k_expr.is_err())
