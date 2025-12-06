@@ -2535,7 +2535,7 @@ namespace jank::codegen
     if(target == compilation_target::module)
     {
       util::format_to(footer_buffer,
-                      "void* {}()",
+                      "extern \"C\" void* {}()",
                       runtime::module::module_to_load_function(module));
       util::format_to(footer_buffer, "{}", "{");
 
