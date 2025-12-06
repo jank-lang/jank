@@ -59,7 +59,7 @@ namespace jank::runtime
     obj::symbol_ref qualify_symbol(obj::symbol_ref const &) const;
     jtl::option<object_ref> find_local(obj::symbol_ref const &);
 
-    jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const &qualified_name);
+    jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const &qualified_sym);
     jtl::result<var_ref, jtl::immutable_string> intern_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
