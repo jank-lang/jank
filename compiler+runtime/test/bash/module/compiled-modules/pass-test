@@ -20,6 +20,29 @@
                          (str ":" extra-module-path)))
             command module-name]))
 
+(defn create-jar-with-a []
+  (let [jar-name "test.jar"
+        [compilation-dir rest-of-module-path] (->> (fs/glob "target" "**/a.o")
+                                                   (first)
+                                                   (fs/components)
+                                                   (split-at 2)
+                                                   (map (partial apply fs/path))
+                                                   (map str))]
+    (proc/sh {:dir compilation-dir} "jar" "cf" jar-name rest-of-module-path)
+    (fs/path compilation-dir jar-name)))
+
+(defmacro with-hidden-file
+  "Temporarily renames `path` to `path.bak`, evaluates body, 
+   and restores the file in a `finally` block."
+  [path & body]
+  `(let [path# ~path
+         bak# (str path# ".bak")]
+     (fs/move path# bak#)
+     (try
+       ~@body
+       (finally
+         (fs/move bak# path#)))))
+
 (use-fixtures
   :each
   (fn [f]
@@ -42,26 +65,21 @@
                    :out
                    (string/includes? ":only-during-read"))))))
 
-(defn create-jar-with-a []
-  (let [jar-name "test.jar"
-        [compilation-dir rest-of-module-path] (->> (fs/glob "target" "**/a.o")
-                                                   (first)
-                                                   (fs/components)
-                                                   (split-at 2)
-                                                   (map (partial apply fs/path))
-                                                   (map str))]
-    (proc/sh {:dir compilation-dir} "jar" "cf" jar-name rest-of-module-path)
-    (fs/path compilation-dir jar-name)))
-
 (deftest compiled-module-loadability
   (testing "Doesn't load a module from archive"
     (fs/with-temp-dir [tmp-dir]
       (let [jar (-> (create-jar-with-a)
                     (fs/move tmp-dir))]
-        (fs/delete-tree "target")
-        (is (true? (-> (jank "run-main" module-a :extra-module-path jar)
-                        :out
-                        (string/includes? ":only-during-read"))))))))
+        (with-hidden-file "target"
+          (is (true? (-> (jank "run-main" module-a :extra-module-path jar)
+                         :out
+                         (string/includes? ":only-during-read"))))))))
+
+  (testing "Doesn't load module if source not found"
+    (with-hidden-file module-a-path
+      (is (true? (-> (jank "run-main" module-a)
+                     :out
+                     (string/includes? "No sources for registered module")))))))
 
 (defn -main []
   (System/exit
