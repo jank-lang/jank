@@ -183,13 +183,17 @@ namespace jank::runtime
   {
     using S = typename decltype(s->seq())::value_type;
 
-    if constexpr(behavior::sequenceable_in_place<S>)
+    if constexpr(jtl::is_same<obj::nil, S>)
     {
-      return sequence_range<S>{ s.is_some() ? s->fresh_seq() : weak_oref<S>{} };
+      return s;
+    }
+    else if constexpr(behavior::sequenceable_in_place<S>)
+    {
+      return sequence_range<S>{ s.is_some() ? weak_oref<S>{ s->fresh_seq() } : weak_oref<S>{} };
     }
     else
     {
-      return sequence_range<S>{ s.is_some() ? s->seq() : s };
+      return sequence_range<S>{ s.is_some() ? weak_oref<S>{ s->seq() } : s };
     }
   }
 }

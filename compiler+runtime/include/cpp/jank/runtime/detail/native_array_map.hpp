@@ -34,7 +34,7 @@ namespace jank::runtime::detail
     {
     }
 
-    ~native_array_map() = default;
+    ~native_array_map();
 
     void insert_unique(object_ref const key, object_ref const val);
 

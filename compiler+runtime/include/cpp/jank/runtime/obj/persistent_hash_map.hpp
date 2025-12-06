@@ -10,6 +10,7 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using transient_hash_map_ref = oref<struct transient_hash_map>;
   using persistent_hash_map_ref = oref<struct persistent_hash_map>;
+  using weak_persistent_hash_map_ref = weak_oref<struct persistent_hash_map>;
 
   struct persistent_hash_map
     : obj::detail::base_persistent_map<persistent_hash_map,

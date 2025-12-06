@@ -49,10 +49,6 @@ namespace jank::runtime
     constexpr oref(oref const &rhs)
       : data{ rhs.data }
     {
-      if(!data)
-      {
-        __builtin_debugtrap();
-      }
       jank_assert_throw(data);
       retain();
     }
@@ -124,7 +120,13 @@ namespace jank::runtime
       if(is_some())
       {
         data->release();
+        reset();
       }
+    }
+
+    constexpr void reset()
+    {
+      data = std::bit_cast<object *>(detail::jank_nil_ptr);
     }
 
     constexpr value_type *operator->() const
@@ -169,6 +171,11 @@ namespace jank::runtime
     requires behavior::object_like<T>
     constexpr oref &operator=(oref<T> const &rhs) noexcept
     {
+      if(data == &rhs->base)
+      {
+        return *this;
+      }
+
       release();
       data = &rhs->base;
       retain();
@@ -273,6 +280,7 @@ namespace jank::runtime
     constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
+      retain();
     }
 
     template <typename C>
@@ -280,7 +288,6 @@ namespace jank::runtime
     constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
-      retain();
     }
 
     constexpr ~oref()
@@ -301,7 +308,13 @@ namespace jank::runtime
       if(is_some())
       {
         (*this)->base.release();
+        reset();
       }
+    }
+
+    constexpr void reset()
+    {
+      data = std::bit_cast<object *>(detail::jank_nil_ptr);
     }
 
     constexpr T *operator->() const
@@ -371,6 +384,11 @@ namespace jank::runtime
 
     constexpr oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs)
     {
+      if(data == rhs)
+      {
+        return *this;
+      }
+
       release();
       data = rhs;
       jank_assert_throw(data);
@@ -380,6 +398,11 @@ namespace jank::runtime
 
     constexpr oref &operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs)
     {
+      if(data == rhs)
+      {
+        return *this;
+      }
+
       release();
       data = const_cast<T *>(rhs);
       jank_assert_throw(data);
@@ -391,6 +414,11 @@ namespace jank::runtime
     requires(C::obj_type == object_type::nil)
     constexpr oref &operator=(oref<C> const &) noexcept
     {
+      if(is_nil())
+      {
+        return *this;
+      }
+
       release();
       data = std::bit_cast<void *>(detail::jank_nil_ptr);
       retain();
@@ -463,6 +491,10 @@ namespace jank::runtime
     requires(C::obj_type == object_type::nil)
     constexpr oref(oref<C> const &data) noexcept
       : data{ data.data }
+    {
+    }
+
+    constexpr void reset()
     {
     }
 
@@ -546,6 +578,7 @@ namespace jank::runtime
   jtl::ref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
+    /* TODO: Figure out cleanup for this. */
     T *ret{ new T{ std::forward<Args>(args)... } };
     if(!ret)
     {
@@ -573,6 +606,7 @@ namespace jank::runtime
   template <typename T, usize N>
   constexpr jtl::ref<T> make_array_box()
   {
+    /* TODO: Figure out cleanup for this. */
     auto const ret(new T[N]{});
     if(!ret)
     {
@@ -584,6 +618,7 @@ namespace jank::runtime
   template <typename T>
   constexpr jtl::ref<T> make_array_box(usize const length)
   {
+    /* TODO: Figure out cleanup for this. */
     auto const ret(new T[length]{});
     if(!ret)
     {
@@ -595,7 +630,7 @@ namespace jank::runtime
   template <typename T, typename... Args>
   jtl::ref<T> make_array_box(Args &&...args)
   {
-    /* TODO: pointer_free? */
+    /* TODO: Figure out cleanup for this. */
     auto const ret(new T[sizeof...(Args)]{ std::forward<Args>(args)... });
     if(!ret)
     {

@@ -8,8 +8,8 @@ namespace jank::runtime::detail
   static object_ref *make_next_array(object_ref * const prev,
                                      u8 const cap,
                                      u8 const length,
-                                     object_ref const key,
-                                     object_ref const value)
+                                     object_ref const &key,
+                                     object_ref const &value)
   {
     if((length + 2) <= cap)
     {
@@ -115,6 +115,12 @@ namespace jank::runtime::detail
           "promote to hash map if needed.",
           (length / 2) + 1) };
     }
+  }
+
+  native_array_map::~native_array_map()
+  {
+    /* TODO: data could still be referenced by iterators. shared ptr? */
+    //delete[] data;
   }
 
   void native_array_map::insert_unique(object_ref const key, object_ref const val)
@@ -304,6 +310,8 @@ namespace jank::runtime::detail
       new_data[i] = data[i];
       new_data[i + 1] = data[i + 1];
     }
+
+    //delete[] data;
 
     data = new_data;
     cap = new_capacity;

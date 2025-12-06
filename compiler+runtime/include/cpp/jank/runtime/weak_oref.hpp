@@ -340,13 +340,6 @@ namespace jank::runtime
 
     template <typename C>
     requires jtl::is_convertible<C *, value_type *>
-    constexpr weak_oref(weak_oref<C> const data) noexcept
-      : data{ data.data }
-    {
-    }
-
-    template <typename C>
-    requires jtl::is_convertible<C *, value_type *>
     constexpr weak_oref(oref<C> const data) noexcept
       : data{ data.data }
     {

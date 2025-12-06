@@ -248,7 +248,7 @@ namespace jank::runtime
 
     object_type type{};
     /* TODO: Atomic. */
-    i16 ref_count{};
+    i32 ref_count{};
   };
 
   namespace obj

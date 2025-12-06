@@ -2331,21 +2331,7 @@ namespace jank::codegen
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_new")) };
     auto finalizer_tmp{ runtime::munge(__rt_ctx->unique_string("finalizer")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
-
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
-    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(expr->type) };
-
-    if(needs_finalizer)
-    {
-      util::format_to(body_buffer,
-                      "using T = {};\n"
-                      "static auto const {}{ "
-                      "[](void * const obj, void *){"
-                      "reinterpret_cast<T*>(obj)->~T();"
-                      "} };",
-                      type_name,
-                      finalizer_tmp);
-    }
 
     util::format_to(body_buffer,
                     "auto {}{ "

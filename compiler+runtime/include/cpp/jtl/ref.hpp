@@ -99,6 +99,7 @@ namespace jtl
   ref<T> make_ref(Args &&...args)
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
+    /* TODO: Figure out cleanup for this. */
     T *ret{ new T{ jtl::forward<Args>(args)... } };
     jank_debug_assert(ret);
     return ret;

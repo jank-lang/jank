@@ -1,9 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
-#include <gc/gc.h>
-#include <gc/gc_cpp.h>
-
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
