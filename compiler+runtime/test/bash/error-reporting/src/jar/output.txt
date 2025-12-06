@@ -1,18 +1,18 @@
 ─ runtime/unable-to-load-module ────────────────────────────────────────────────
-error: Unable to load module.
-
+error: Unable to load module.                                                   
+                                                                                
 
 ─ analyze/invalid-recur-from-try ───────────────────────────────────────────────
-error: It's not permitted to use 'recur' through a 'try'.
-
+error: It's not permitted to use 'recur' through a 'try'.                       
+                                                                                
 ─────┬──────────────────────────────────────────────────────────────────────────
-     │ jar.jar:jar.cljc
+     │ jar.jar:jar.cljc                                                         
 ─────┼──────────────────────────────────────────────────────────────────────────
-  1  │ (ns jar)
-  2  │
-  3  │ (defn boop []
-     │ ^ Expanded from this macro.
-  4  │   (try
-  5  │     (recur)
-     │     ^^^^^^^ Found here.
+  1  │ (ns jar)                                                                 
+  2  │                                                                          
+  3  │ (defn boop []                                                            
+     │ ^ Expanded from this macro.                                              
+  4  │   (try                                                                   
+  5  │     (recur)                                                              
+     │     ^^^^^^^ Found here.                                                  
 ─────┴──────────────────────────────────────────────────────────────────────────
