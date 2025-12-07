@@ -79,7 +79,7 @@ namespace jank::analyze
     auto const expansion(
       runtime::get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-    if(expansion == jank_nil)
+    if(expansion == jank_nil())
     {
       return nullptr;
     }
@@ -93,7 +93,7 @@ namespace jank::analyze
   {
     if(expansions.empty())
     {
-      return jank_nil;
+      return jank_nil();
     }
 
     /* Try to find an expansion which specifically has the `jank/macro-expansion` key
@@ -104,7 +104,7 @@ namespace jank::analyze
       auto const expansion(
         runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-      if(expansion != jank_nil)
+      if(expansion != jank_nil())
       {
         return expansion;
       }
@@ -1332,7 +1332,7 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
-      auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil),
+      auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil()),
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
@@ -2076,7 +2076,7 @@ namespace jank::analyze
     if(ret.values.empty())
     {
       auto const nil{
-        analyze_primitive_literal(jank_nil, current_frame, position, fn_ctx, needs_box)
+        analyze_primitive_literal(jank_nil(), current_frame, position, fn_ctx, needs_box)
       };
       if(nil.is_err())
       {
@@ -2195,7 +2195,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil,
+      auto const nil{ analyze_primitive_literal(jank_nil(),
                                                 ret->frame,
                                                 expression_position::tail,
                                                 fn_ctx,
@@ -2328,7 +2328,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil,
+      auto const nil{ analyze_primitive_literal(jank_nil(),
                                                 ret->frame,
                                                 expression_position::tail,
                                                 fn_ctx,
@@ -3932,7 +3932,7 @@ namespace jank::analyze
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
-      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil)) };
+      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))

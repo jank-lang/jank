@@ -57,7 +57,7 @@
 
 /* TODO: Size optimizations:
  *  - Remove object requirement for if condition
- *  - Remove extra if_n = jank_nil on empty branches
+ *  - Remove extra if_n = jank_nil() on empty branches
  */
 
 namespace jank::codegen
@@ -160,7 +160,7 @@ namespace jank::codegen
 
           if constexpr(std::same_as<T, runtime::obj::nil>)
           {
-            util::format_to(buffer, "jank::runtime::jank_nil");
+            util::format_to(buffer, "jank::runtime::jank_nil()");
           }
           else if constexpr(std::same_as<T, runtime::obj::boolean>)
           {
@@ -571,7 +571,7 @@ namespace jank::codegen
       }
       else
       {
-        auto v{ util::format("{}->with_meta(jank::runtime::jank_nil)", var_tmp) };
+        auto v{ util::format("{}->with_meta(jank::runtime::jank_nil())", var_tmp) };
         if(expr->position == expression_position::tail)
         {
           util::format_to(body_buffer, "return {};", v);
@@ -597,7 +597,7 @@ namespace jank::codegen
         }
         else
         {
-          return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil)",
+          return util::format("{}->bind_root({})->with_meta(jank::runtime::jank_nil())",
                               var_tmp,
                               val.str(true));
         }
@@ -620,7 +620,7 @@ namespace jank::codegen
         else
         {
           util::format_to(body_buffer,
-                          "{}->bind_root({})->with_meta(jank::runtime::jank_nil);",
+                          "{}->bind_root({})->with_meta(jank::runtime::jank_nil());",
                           var_tmp,
                           val.str(true));
         }
@@ -1068,7 +1068,7 @@ namespace jank::codegen
     handle ret;
     if(expr->data->type == runtime::object_type::nil)
     {
-      ret = handle{ "jank::runtime::jank_nil" };
+      ret = handle{ "jank::runtime::jank_nil()" };
     }
     else if(expr->data->type == runtime::object_type::boolean)
     {
@@ -1646,7 +1646,7 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         if(last.is_none())
         {
-          util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+          util::format_to(body_buffer, "return jank::runtime::jank_nil();");
         }
         else
         {
@@ -1715,10 +1715,10 @@ namespace jank::codegen
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
     }
 
-    return "jank::runtime::jank_nil";
+    return "jank::runtime::jank_nil()";
   }
 
   jtl::option<handle>
@@ -1844,7 +1844,7 @@ namespace jank::codegen
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
       return none;
     }
     return none;
@@ -1904,10 +1904,10 @@ namespace jank::codegen
     {
       if(expr->position == expression_position::tail)
       {
-        util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+        util::format_to(body_buffer, "return jank::runtime::jank_nil();");
         return none;
       }
-      return "jank::runtime::jank_nil";
+      return "jank::runtime::jank_nil()";
     }
 
     /* We can rely on the C++ type system to handle conversion from typed objects
@@ -2388,11 +2388,11 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
       return none;
     }
 
-    return "jank::runtime::jank_nil";
+    return "jank::runtime::jank_nil()";
   }
 
   jtl::immutable_string processor::declaration_str()
@@ -2667,7 +2667,7 @@ namespace jank::codegen
 
       if(arity.body->values.empty())
       {
-        util::format_to(body_buffer, "return jank::runtime::jank_nil;");
+        util::format_to(body_buffer, "return jank::runtime::jank_nil();");
       }
 
       if(arity.fn_ctx->is_recur_recursive)

@@ -37,9 +37,9 @@ namespace jank::runtime
       return 0;
     }
 
-    if(l != jank_nil)
+    if(l != jank_nil())
     {
-      if(r == jank_nil)
+      if(r == jank_nil())
       {
         return 1;
       }

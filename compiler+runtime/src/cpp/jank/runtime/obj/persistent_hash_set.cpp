@@ -133,7 +133,7 @@ namespace jank::runtime::obj
     auto const found(data.find(o));
     if(!found)
     {
-      return jank_nil;
+      return jank_nil();
     }
     return *found;
   }

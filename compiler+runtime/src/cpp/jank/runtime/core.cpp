@@ -16,7 +16,7 @@ namespace jank::runtime
 
   bool is_nil(object_ref const o)
   {
-    return o == jank_nil;
+    return o == jank_nil();
   }
 
   bool is_true(object_ref const o)
@@ -31,7 +31,7 @@ namespace jank::runtime
 
   bool is_some(object_ref const o)
   {
-    return o != jank_nil;
+    return o != jank_nil();
   }
 
   bool is_string(object_ref const o)
@@ -119,7 +119,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref println(object_ref const args)
@@ -151,7 +151,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref pr(object_ref const args)
@@ -178,7 +178,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref prn(object_ref const args)
@@ -210,7 +210,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil;
+    return jank_nil();
   }
 
   f64 to_real(object_ref const o)
@@ -302,7 +302,7 @@ namespace jank::runtime
           auto const ns(typed_o->get_namespace());
           if(ns.empty())
           {
-            return jank_nil;
+            return jank_nil();
           }
           return make_box<obj::persistent_string>(ns);
         }
@@ -550,7 +550,7 @@ namespace jank::runtime
     switch(size)
     {
       case 0:
-        return jank_nil;
+        return jank_nil();
       case 1:
         {
           return make_box<obj::persistent_string>(match_results[0].str());
@@ -613,7 +613,7 @@ namespace jank::runtime
 
     if(!match_results.suffix().str().empty())
     {
-      return jank_nil;
+      return jank_nil();
     }
 
     return smatch_to_vector(match_results);
@@ -629,7 +629,7 @@ namespace jank::runtime
       }
       catch(...)
       {
-        return jank_nil;
+        return jank_nil();
       }
     }
     else

@@ -173,7 +173,7 @@ namespace clojure::core_native
   object_ref sleep(object_ref const ms)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref current_time()
@@ -186,7 +186,7 @@ namespace clojure::core_native
   object_ref in_ns(object_ref const sym)
   {
     __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref intern_ns(object_ref const sym)
@@ -241,19 +241,19 @@ namespace clojure::core_native
     try_object<ns>(current_ns)
       ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
       .expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
   {
     try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
   {
     try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var)
@@ -261,19 +261,19 @@ namespace clojure::core_native
     expect_object<runtime::ns>(current_ns)
       ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
       .expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref load_module(object_ref const path)
   {
     __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref compile(object_ref const path)
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref eval(object_ref const expr)
@@ -588,7 +588,7 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
         return jank_false.erase();
       }
 
-      for(auto it(fresh_seq(rest)); it != jank_nil; it = next_in_place(it))
+      for(auto it(fresh_seq(rest)); it != jank_nil(); it = next_in_place(it))
       {
         if(!is_equiv(l, first(it)))
         {
@@ -849,5 +849,5 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
     intern_fn_obj("repeat", fn);
   }
 
-  return jank_nil.erase();
+  return jank_nil().erase();
 }

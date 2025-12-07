@@ -578,7 +578,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -623,7 +623,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -645,7 +645,7 @@ namespace jank::runtime
                 ret = get(ret, e);
               }
 
-              if(ret == jank_nil)
+              if(ret == jank_nil())
               {
                 return fallback;
               }
@@ -655,7 +655,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -678,7 +678,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       s,
@@ -720,7 +720,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
-          using R = decltype(assoc(typed_m, jank_nil, jank_nil));
+          using R = decltype(assoc(typed_m, jank_nil(), jank_nil()));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
@@ -756,7 +756,7 @@ namespace jank::runtime
         using T = typename decltype(typed_m)::value_type;
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
-          using R = decltype(assoc_in_place(typed_m, jank_nil, jank_nil));
+          using R = decltype(assoc_in_place(typed_m, jank_nil(), jank_nil()));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
@@ -809,7 +809,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
-    else if(o == jank_nil)
+    else if(o == jank_nil())
     {
       return o;
     }
@@ -846,7 +846,7 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx, object_ref const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0 || o == jank_nil)
+    if(index < 0 || o == jank_nil())
     {
       return fallback;
     }
@@ -882,7 +882,7 @@ namespace jank::runtime
 
   object_ref peek(object_ref const o)
   {
-    if(o == jank_nil)
+    if(o == jank_nil())
     {
       return o;
     }
@@ -905,7 +905,7 @@ namespace jank::runtime
 
   object_ref pop(object_ref const o)
   {
-    if(o == jank_nil)
+    if(o == jank_nil())
     {
       return o;
     }
@@ -939,7 +939,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       o);
@@ -1107,7 +1107,7 @@ namespace jank::runtime
   {
     auto const buffer(try_object<obj::chunk_buffer>(buff));
     buffer->append(val);
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref chunk(object_ref const buff)

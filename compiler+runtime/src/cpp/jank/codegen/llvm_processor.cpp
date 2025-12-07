@@ -772,7 +772,7 @@ namespace jank::codegen
         continue;
       }
 
-      gen_ret(gen_global(jank_nil));
+      gen_ret(gen_global(jank_nil()));
     }
 
     if(target != compilation_target::function)
@@ -863,8 +863,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       llvm_module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(
-      get(expr->name->meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil()),
+                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -1590,7 +1590,7 @@ namespace jank::codegen
     }
     else
     {
-      else_ = gen_global(jank_nil);
+      else_ = gen_global(jank_nil());
       if(expr->position == expression_position::tail)
       {
         else_ = gen_ret(else_);
@@ -1664,7 +1664,7 @@ namespace jank::codegen
 
     /* Since this code path never completes, it doesn't matter what we return.
      * Using `jank_nil` to satisfy some IR requirements. */
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);
@@ -1730,7 +1730,7 @@ namespace jank::codegen
     llvm::AllocaInst *result_slot{ entry_builder.CreateAlloca(ptr_ty, nullptr, "try.result.slot") };
     llvm::BasicBlock *finally_bb{};
     llvm::BasicBlock *unwind_action_bb{};
-    ctx->builder->CreateStore(gen_global(jank_nil), result_slot);
+    ctx->builder->CreateStore(gen_global(jank_nil()), result_slot);
 
     if(has_finally)
     {
@@ -1923,7 +1923,7 @@ namespace jank::codegen
       {
         if(!catch_val)
         {
-          catch_val = gen_global(jank_nil);
+          catch_val = gen_global(jank_nil());
         }
         ctx->builder->CreateStore(catch_val, result_slot);
         if(has_finally)
@@ -2158,7 +2158,7 @@ namespace jank::codegen
     }
     link_module(*ctx, parse_res->TheModule.get());
 
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);
@@ -2443,7 +2443,7 @@ namespace jank::codegen
     {
       if(is_void)
       {
-        return gen_ret(gen_global(jank_nil));
+        return gen_ret(gen_global(jank_nil()));
       }
 
       auto const ret_load{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret_alloc, "ret") };
@@ -2452,7 +2452,7 @@ namespace jank::codegen
 
     if(is_void)
     {
-      return gen_global(jank_nil);
+      return gen_global(jank_nil());
     }
     return ret_alloc;
   }
@@ -2831,7 +2831,7 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 1> const args{ val };
     ctx->builder->CreateCall(fn, args);
 
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);

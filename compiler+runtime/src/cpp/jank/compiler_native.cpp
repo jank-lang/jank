@@ -46,7 +46,7 @@ namespace jank::compiler_native
       util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
     }
 
-    return jank_nil;
+    return jank_nil();
   }
 }
 
@@ -66,5 +66,5 @@ extern "C" jank_object_ref jank_load_jank_compiler_native()
   });
   intern_fn("native-source", &compiler_native::native_source);
 
-  return jank_nil.erase();
+  return jank_nil().erase();
 }

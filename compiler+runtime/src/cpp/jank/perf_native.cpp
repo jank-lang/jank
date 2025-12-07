@@ -24,5 +24,5 @@ jank_object_ref jank_load_jank_perf_native()
   });
   intern_fn("benchmark", &perf::benchmark);
 
-  return jank_nil.erase();
+  return jank_nil().erase();
 }

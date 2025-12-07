@@ -160,7 +160,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ref ret{ jank_nil };
+    object_ref ret{ jank_nil() };
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
@@ -262,12 +262,12 @@ namespace jank::runtime
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil)) };
+      std::make_pair(current_file_var, jank_nil())) };
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ref ret{ jank_nil };
+    object_ref ret{ jank_nil() };
     for(auto const &form : p_prc)
     {
       ret = form.expect_ok().unwrap().ptr;
@@ -661,7 +661,7 @@ namespace jank::runtime
           }
 
           /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), jank_nil), typed_o));
+          auto const args(cons(cons(rest(typed_o), jank_nil()), typed_o));
           return apply_to(var->deref(), args);
         }
       },

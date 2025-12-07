@@ -59,12 +59,5 @@ namespace jank::runtime
   bool operator==(object *, obj::nil_ref);
   bool operator!=(object *, obj::nil_ref);
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  extern obj::weak_nil_ref jank_nil;
-
-  namespace detail
-  {
-    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-    extern obj::nil *jank_nil_ptr;
-  }
+  obj::weak_nil_ref jank_nil();
 }

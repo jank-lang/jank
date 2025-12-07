@@ -45,6 +45,6 @@ namespace jank::runtime::perf
       },
       f,
       label_str);
-    return jank_nil;
+    return jank_nil();
   }
 }

@@ -23,11 +23,11 @@ namespace jank::runtime
 
         if constexpr(behavior::metadatable<T>)
         {
-          return typed_m->meta.unwrap_or(jank_nil);
+          return typed_m->meta.unwrap_or(jank_nil());
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -105,15 +105,15 @@ namespace jank::runtime
   {
     using namespace jank::runtime;
 
-    auto const meta(o.unwrap_or(jank_nil));
+    auto const meta(o.unwrap_or(jank_nil()));
     auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
-    if(source == jank_nil)
+    if(source == jank_nil())
     {
       return read::source::unknown();
     }
 
     auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
-    if(file == jank_nil)
+    if(file == jank_nil())
     {
       return read::source::unknown();
     }
@@ -150,7 +150,7 @@ namespace jank::runtime
   read::source object_source(object_ref const o)
   {
     auto const meta(runtime::meta(o));
-    if(meta == jank_nil)
+    if(meta == jank_nil())
     {
       return read::source::unknown();
     }

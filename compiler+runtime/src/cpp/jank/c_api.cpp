@@ -365,7 +365,7 @@ extern "C"
 
   jank_object_ref jank_const_nil()
   {
-    return jank_nil.erase();
+    return jank_nil().erase();
   }
 
   jank_object_ref jank_const_true()
