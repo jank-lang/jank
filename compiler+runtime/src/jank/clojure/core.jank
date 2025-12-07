@@ -5225,10 +5225,16 @@
   {:arglists '([name docstring? attr-map? references*])
    :added "1.0"}
   [name & references]
-  (let [process-reference
-        (fn [[kname & args]]
-          `(~(symbol "clojure.core" (clojure.core/name kname))
-            ~@(map #(list 'quote %) args)))
+  (let [process-reference (fn [reference]
+                            (let [kname (first reference)
+                                  args (rest reference)]
+                              (cons (symbol "clojure.core" (clojure.core/name kname))
+                                    (map (fn [a]
+                                           (list 'quote a))
+                                         args))))
+        refer-full-clojure? (not-any? (fn [ref]
+                                        (= :refer-clojure (first ref)))
+                                      references)
         docstring  (when (string? (first references)) (first references))
         references (if docstring (next references) references)
         name (if docstring
@@ -5245,10 +5251,7 @@
         ;;     (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
         references (remove #(= :gen-class (first %)) references)
         ;ns-effect (clojure.core/in-ns name)
-        name-metadata (meta name)
-        refer-full-clojure? (not-any? (fn [ref]
-                                        (= :refer-clojure (first ref)))
-                                      references)]
+        name-metadata (meta name)]
     `(do
        (clojure.core/in-ns '~name)
        ~@(when name-metadata
