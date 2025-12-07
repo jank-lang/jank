@@ -49,6 +49,7 @@ namespace jank::runtime
 
     object base{ obj_type };
     obj::symbol_ref name{};
+    jtl::option<object_ref> meta;
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ref> vars;
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
