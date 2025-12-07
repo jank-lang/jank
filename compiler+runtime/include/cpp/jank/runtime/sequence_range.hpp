@@ -185,7 +185,7 @@ namespace jank::runtime
 
     if constexpr(jtl::is_same<obj::nil, S>)
     {
-      return s;
+      return sequence_range<S>{ s };
     }
     else if constexpr(behavior::sequenceable_in_place<S>)
     {

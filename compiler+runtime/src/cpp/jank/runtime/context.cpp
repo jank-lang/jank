@@ -206,7 +206,7 @@ namespace jank::runtime
       {
         profile::timer const timer{ "rt compile-module parse + write" };
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
-        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+        util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
         auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
         if(!parse_res)
@@ -539,9 +539,8 @@ namespace jank::runtime
     }
 
     auto locked_namespaces(namespaces.wlock());
-    obj::symbol ns_sym{ qualified_sym->ns };
-    ns_sym.base.retain();
-    auto const found_ns(locked_namespaces->find(&ns_sym));
+    obj::symbol_ref ns_sym{ make_box<obj::symbol>(qualified_sym->ns) };
+    auto const found_ns(locked_namespaces->find(ns_sym));
     if(found_ns == locked_namespaces->end())
     {
       return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
@@ -574,8 +573,8 @@ namespace jank::runtime
     }
 
     auto locked_namespaces(namespaces.wlock());
-    obj::symbol const ns_sym{ qualified_sym->ns };
-    auto const found_ns(locked_namespaces->find(&ns_sym));
+    obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_sym->ns) };
+    auto const found_ns(locked_namespaces->find(ns_sym));
     if(found_ns == locked_namespaces->end())
     {
       return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));

@@ -126,7 +126,12 @@ namespace jank::runtime
 
     constexpr operator oref<O>() const noexcept
     {
-      return { data };
+      return data;
+    }
+
+    constexpr oref<O> strong() const noexcept
+    {
+      return data;
     }
 
     constexpr value_type *get() const noexcept
@@ -287,6 +292,11 @@ namespace jank::runtime
       return erase();
     }
 
+    constexpr oref<T> strong() const noexcept
+    {
+      return static_cast<oref<T>>(*this);
+    }
+
     constexpr object *get() const noexcept
     {
       return erase();
@@ -405,6 +415,11 @@ namespace jank::runtime
     }
 
     constexpr operator oref<object>() const noexcept
+    {
+      return {};
+    }
+
+    constexpr oref<object> strong() const noexcept
     {
       return {};
     }

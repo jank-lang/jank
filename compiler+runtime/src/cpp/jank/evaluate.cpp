@@ -604,10 +604,12 @@ namespace jank::evaluate
       }
 
       __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str() + ".erase()" };
+      auto const expr_str{ cg_prc.expression_str() + ".retain().erase()" };
       clang::Value v;
       __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-      return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
+      auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+      ret->base.release();
+      return ret;
     }
   }
 

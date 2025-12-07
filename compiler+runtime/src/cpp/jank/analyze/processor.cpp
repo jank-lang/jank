@@ -1831,7 +1831,7 @@ namespace jank::analyze
 
             if constexpr(runtime::behavior::sequenceable<T>)
             {
-              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list));
+              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list.strong()));
 
               auto result(analyze_fn_arity(arity_list, name, current_frame));
               if(result.is_err())
@@ -2629,7 +2629,8 @@ namespace jank::analyze
       finally_
     };
 
-    static runtime::obj::symbol catch_{ "catch" }, finally_{ "finally" };
+    static runtime::obj::symbol_ref catch_{ make_box<obj::symbol>("catch") },
+      finally_{ make_box<obj::symbol>("finally") };
     bool has_catch{}, has_finally{};
 
     for(auto it(list->fresh_seq()->next_in_place()); it.is_some(); it = it->next_in_place())
@@ -2646,11 +2647,11 @@ namespace jank::analyze
           else
           {
             auto const first(runtime::first(typed_item->seq()));
-            if(runtime::equal(first, &catch_))
+            if(runtime::equal(first, catch_))
             {
               return try_expression_type::catch_;
             }
-            else if(runtime::equal(first, &finally_))
+            else if(runtime::equal(first, finally_))
             {
               return try_expression_type::finally_;
             }

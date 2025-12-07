@@ -107,12 +107,13 @@ namespace jank::runtime
       release();
     }
 
-    constexpr void retain()
+    constexpr oref &retain()
     {
       if(is_some())
       {
         data->retain();
       }
+      return *this;
     }
 
     constexpr void release()
@@ -120,7 +121,6 @@ namespace jank::runtime
       if(is_some())
       {
         data->release();
-        reset();
       }
     }
 
@@ -295,12 +295,13 @@ namespace jank::runtime
       release();
     }
 
-    constexpr void retain()
+    constexpr oref &retain()
     {
       if(is_some())
       {
         (*this)->base.retain();
       }
+      return *this;
     }
 
     constexpr void release()
@@ -308,7 +309,6 @@ namespace jank::runtime
       if(is_some())
       {
         (*this)->base.release();
-        reset();
       }
     }
 

@@ -10,14 +10,14 @@ namespace jank::runtime
   {
     ++ref_count;
     jank_debug_assert(ref_count > 0);
-    util::println("retain {} type {} count {}", this, object_type_str(type), ref_count);
+    //util::println("retain {} type {} count {}", this, object_type_str(type), ref_count);
   }
 
   void object::release()
   {
     jank_debug_assert(ref_count > 0);
     --ref_count;
-    util::println("release {} type {} count {}", this, object_type_str(type), ref_count);
+    //util::println("release {} type {} count {}", this, object_type_str(type), ref_count);
     if(ref_count == 0)
     {
       visit_object(
@@ -25,8 +25,6 @@ namespace jank::runtime
           using T = typename jtl::decay_t<decltype(typed_this)>::value_type;
 
           delete static_cast<T *>(typed_this.data);
-
-          typed_this.reset();
         },
         this);
     }
