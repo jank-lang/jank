@@ -979,7 +979,8 @@ namespace jank::runtime::module
     auto const existing_load{ __rt_ctx->jit_prc.find_symbol(load_function_name) };
     if(existing_load.is_ok())
     {
-      reinterpret_cast<object *(*)()>(existing_load.expect_ok())();
+      /* TODO: Update LLVM IR for this. */
+      reinterpret_cast<void (*)()>(existing_load.expect_ok())();
       return ok();
     }
 
@@ -1003,7 +1004,7 @@ namespace jank::runtime::module
     else
     {
       __rt_ctx->jit_prc.eval_string(
-        util::format("void* {}(); {}();", load_function_name, load_function_name));
+        util::format("void {}(); {}();", load_function_name, load_function_name));
     }
 
     return ok();

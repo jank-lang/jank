@@ -558,11 +558,26 @@ namespace jank::codegen
       {
         auto const dynamic{ truthy(
           get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-        return util::format("{}->with_meta({})->set_dynamic({})", var_tmp, meta.unwrap(), dynamic);
+
+        auto v{
+          util::format("{}->with_meta({})->set_dynamic({})", var_tmp, meta.unwrap(), dynamic)
+        };
+        if(expr->position == expression_position::tail)
+        {
+          util::format_to(body_buffer, "return {};", v);
+          return none;
+        }
+        return v;
       }
       else
       {
-        return util::format("{}->with_meta(jank::runtime::jank_nil)", var_tmp);
+        auto v{ util::format("{}->with_meta(jank::runtime::jank_nil)", var_tmp) };
+        if(expr->position == expression_position::tail)
+        {
+          util::format_to(body_buffer, "return {};", v);
+          return none;
+        }
+        return v;
       }
     }
 
@@ -2693,7 +2708,7 @@ namespace jank::codegen
     if(target == compilation_target::module)
     {
       util::format_to(footer_buffer,
-                      "void* {}(){",
+                      "void {}(){",
                       runtime::module::module_to_load_function(module));
 
       auto const ns{ runtime::module::module_to_native_ns(module) };
@@ -2748,7 +2763,7 @@ namespace jank::codegen
         util::format_to(footer_buffer, ";");
       }
 
-      util::format_to(footer_buffer, "return {}::{}{ }.call().erase();", ns, struct_name);
+      util::format_to(footer_buffer, "{}::{}{ }.call();", ns, struct_name);
 
       util::format_to(footer_buffer, "}");
     }
