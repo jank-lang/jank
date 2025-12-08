@@ -11,6 +11,12 @@ namespace jank::runtime::obj
     : val{ o.data }
     , watches{ persistent_hash_map::empty() }
   {
+    o->retain();
+  }
+
+  atom::~atom()
+  {
+    val.load()->release();
   }
 
   bool atom::equal(object const &o) const
@@ -64,6 +70,8 @@ namespace jank::runtime::obj
     auto const v(val.load());
     val = o.data;
     notify_watches(this, v, o);
+    o->retain();
+    v->release();
     return o;
   }
 
@@ -75,7 +83,10 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, o.data))
       {
         notify_watches(this, v, o);
-        return make_box<persistent_vector>(std::in_place, v, o);
+        auto ret{ make_box<persistent_vector>(std::in_place, v, o) };
+        o->retain();
+        v->release();
+        return ret;
       }
     }
   }
@@ -90,6 +101,8 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
+        next->retain();
+        v->release();
         return next;
       }
     }
@@ -105,6 +118,8 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
+        next->retain();
+        v->release();
         return next;
       }
     }
@@ -120,6 +135,8 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
+        next->retain();
+        v->release();
         return next;
       }
     }
@@ -137,6 +154,8 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
+        next->retain();
+        v->release();
         return next;
       }
     }
@@ -151,7 +170,10 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
-        return make_box<persistent_vector>(std::in_place, v, next);
+        auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
+        next->retain();
+        v->release();
+        return ret;
       }
     }
   }
@@ -165,7 +187,10 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
-        return make_box<persistent_vector>(std::in_place, v, next);
+        auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
+        next->retain();
+        v->release();
+        return ret;
       }
     }
   }
@@ -180,7 +205,10 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
-        return make_box<persistent_vector>(std::in_place, v, next);
+        auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
+        next->retain();
+        v->release();
+        return ret;
       }
     }
   }
@@ -198,7 +226,10 @@ namespace jank::runtime::obj
       if(val.compare_exchange_weak(v, next.data))
       {
         notify_watches(this, v, next);
-        return make_box<persistent_vector>(std::in_place, v, next);
+        auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
+        next->retain();
+        v->release();
+        return ret;
       }
     }
   }
@@ -211,6 +242,8 @@ namespace jank::runtime::obj
     if(ret)
     {
       notify_watches(this, old_val, new_val);
+      new_val->retain();
+      old_val->release();
     }
     return make_box(ret);
   }

@@ -130,6 +130,11 @@ namespace jank::runtime
       data = o;
     }
 
+    void reset(oref<object> const &o)
+    {
+      data = o.data;
+    }
+
     value_type *operator->() const
     {
       jank_assert_throw(data);

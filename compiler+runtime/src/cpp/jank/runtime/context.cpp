@@ -211,7 +211,7 @@ namespace jank::runtime
       {
         profile::timer const timer{ "rt compile-module parse + write" };
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
-        util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
         auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
         if(!parse_res)

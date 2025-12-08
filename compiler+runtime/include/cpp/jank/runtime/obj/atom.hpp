@@ -17,6 +17,7 @@ namespace jank::runtime::obj
 
     atom() = default;
     atom(object_ref o);
+    ~atom();
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -52,6 +53,9 @@ namespace jank::runtime::obj
     void remove_watch(object_ref key);
 
     object base{ obj_type };
+    /* We have to hold only a raw pointer here, since std::atomic doesn't
+     * support more complex types. However, that means we need to manually
+     * handle reference counting for held values when swapping, resetting, etc. */
     std::atomic<object *> val{};
     /* Since watches is a 'persistent_hash_map", there in no guarantee in which
      * order watches are invoked. */

@@ -239,6 +239,7 @@ namespace jank::jit
   {
     profile::timer const timer{ "jit eval_string" };
     auto const &formatted{ s };
+    /* TODO: There is some sort of immutable_string or result bug here. */
     //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
     //util::println("// eval_string:\n{}\n", formatted);
     auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
