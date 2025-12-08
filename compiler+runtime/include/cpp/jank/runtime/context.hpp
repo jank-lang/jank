@@ -162,9 +162,7 @@ namespace jank::runtime
     /* Hold onto the CLI Options for use at runtime */
     util::cli::options opts;
 
-    /* XXX: We can't use thread_local here, due to bdwgc not supporting it. */
-    static native_unordered_map<std::thread::id, native_list<thread_binding_frame>>
-      thread_binding_frames;
+    static thread_local native_list<thread_binding_frame> thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */

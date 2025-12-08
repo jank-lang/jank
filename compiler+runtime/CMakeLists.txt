@@ -92,6 +92,8 @@ set(
 set(
   jank_common_compiler_flags
   -std=gnu++20
+  # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
+  -femulated-tls
   -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
   -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1

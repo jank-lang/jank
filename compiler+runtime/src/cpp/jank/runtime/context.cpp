@@ -35,7 +35,7 @@
 namespace jank::runtime
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  decltype(context::thread_binding_frames) context::thread_binding_frames{};
+  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   context *__rt_ctx{};
@@ -721,7 +721,7 @@ namespace jank::runtime
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
+    auto &tbfs(thread_binding_frames);
     if(!tbfs.empty())
     {
       bindings = tbfs.front().bindings;
@@ -750,8 +750,8 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto const &thread_id(std::this_thread::get_id());
-    auto &tbfs(thread_binding_frames[thread_id]);
+    auto &tbfs(thread_binding_frames);
+    auto const thread_id{ std::this_thread::get_id() };
     if(!tbfs.empty())
     {
       frame.bindings = tbfs.front().bindings;
@@ -792,7 +792,7 @@ namespace jank::runtime
 
   jtl::string_result<void> context::pop_thread_bindings()
   {
-    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
+    auto &tbfs(thread_binding_frames);
     if(tbfs.empty())
     {
       return err("Mismatched thread binding pop");
@@ -805,7 +805,7 @@ namespace jank::runtime
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
-    auto const &tbfs(thread_binding_frames[std::this_thread::get_id()]);
+    auto const &tbfs(thread_binding_frames);
     if(tbfs.empty())
     {
       return obj::persistent_hash_map::empty();
@@ -815,7 +815,7 @@ namespace jank::runtime
 
   jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
-    auto &tbfs(thread_binding_frames[std::this_thread::get_id()]);
+    auto &tbfs(thread_binding_frames);
     if(tbfs.empty())
     {
       return none;

@@ -32,7 +32,7 @@
 #include <clojure/string_native.hpp>
 
 #ifdef JANK_PHASE_2
-extern "C" jank_object_ref jank_load_clojure_core();
+void jank_load_clojure_core();
 #endif
 
 namespace jank
