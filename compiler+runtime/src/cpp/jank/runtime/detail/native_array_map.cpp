@@ -335,7 +335,7 @@ namespace jank::runtime::detail
   native_array_map native_array_map::clone() const
   {
     native_array_map ret{ *this };
-    ret.data = new object_ref[length];
+    ret.data = new object_ref[cap];
     for(usize i{}; i < length; ++i)
     {
       ret.data[i] = data[i];
