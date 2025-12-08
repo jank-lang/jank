@@ -125,6 +125,11 @@ namespace jank::runtime
       data = std::bit_cast<object *>(jank_const_nil());
     }
 
+    void reset(object * const o)
+    {
+      data = o;
+    }
+
     value_type *operator->() const
     {
       jank_assert_throw(data);
@@ -241,6 +246,7 @@ namespace jank::runtime
     oref()
       : data{ std::bit_cast<void *>(jank_const_nil()) }
     {
+      jank_debug_assert(data);
     }
 
     oref(oref const &rhs) noexcept
@@ -311,6 +317,26 @@ namespace jank::runtime
     void reset()
     {
       data = std::bit_cast<object *>(jank_const_nil());
+    }
+
+    void reset(object * const o)
+    {
+      data = o;
+    }
+
+    void reset(oref<object> const &o)
+    {
+      data = o.data;
+    }
+
+    void reset(T * const o)
+    {
+      data = o->base;
+    }
+
+    void reset(oref<T> const &o)
+    {
+      data = o.data;
     }
 
     T *operator->() const
@@ -460,6 +486,7 @@ namespace jank::runtime
     oref()
       : data{ std::bit_cast<value_type *>(jank_const_nil()) }
     {
+      jank_debug_assert(data);
     }
 
     oref(nullptr_t) = delete;

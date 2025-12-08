@@ -185,6 +185,11 @@ namespace jank::runtime
       auto const &module(runtime::to_string(current_module_var->deref()));
       auto const name{ module::module_to_load_function(module) };
 
+      if(forms.empty())
+      {
+        forms.emplace_back(jank_nil());
+      }
+
       auto const form{ runtime::conj(
         runtime::conj(runtime::conj(make_box<obj::native_vector_sequence>(jtl::move(forms)),
                                     obj::persistent_vector::empty()),

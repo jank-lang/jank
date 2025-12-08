@@ -2736,11 +2736,14 @@ namespace jank::codegen
 
       for(auto const &v : lifted_vars)
       {
+        /* Since global ctors don't run when loading object files, we
+         * need to manually initialize these. By using .reset, we ignore
+         * that they contain nullptr and we just imbue the new value. */
         if(v.second.owned)
         {
           util::format_to(
             footer_buffer,
-            R"({}::{} = jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok();)",
+            R"({}::{}.reset(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
             ns,
             v.second.native_name,
             v.first);
@@ -2748,7 +2751,7 @@ namespace jank::codegen
         else
         {
           util::format_to(footer_buffer,
-                          R"({}::{} = jank::runtime::__rt_ctx->intern_var("{}").expect_ok();)",
+                          R"({}::{}.reset(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
                           ns,
                           v.second.native_name,
                           v.first);
@@ -2758,9 +2761,9 @@ namespace jank::codegen
 
       for(auto const &v : lifted_constants)
       {
-        util::format_to(footer_buffer, "{}::{} = ", ns, v.second);
+        util::format_to(footer_buffer, "{}::{}.reset(", ns, v.second);
         detail::gen_constant(v.first, footer_buffer, true);
-        util::format_to(footer_buffer, ";");
+        util::format_to(footer_buffer, ");");
       }
 
       util::format_to(footer_buffer, "{}::{}{ }.call();", ns, struct_name);

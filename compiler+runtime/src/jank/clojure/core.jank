@@ -18,8 +18,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+:ok
 ; Defined in runtime::context ctor.
-(def ^:dynamic *ns*)
+;(def ^:dynamic *ns*)
 ;(def ^:dynamic *assert*)
 ;(def ^:dynamic *compile-files*)
 ;(def ^:dynamic *file*)
