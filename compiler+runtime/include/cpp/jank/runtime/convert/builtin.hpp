@@ -44,22 +44,22 @@ namespace jank::runtime
   requires(jtl::is_any_same<T, object *, object const *>)
   struct convert<T>
   {
-    static object *into_object(T t)
+    static object_ref into_object(T t)
     {
       return const_cast<object *>(t);
     }
 
-    static object *into_object(object_ref const t)
+    static object_ref into_object(object_ref const t)
     {
       return t.erase();
     }
 
-    static object *from_object(T t)
+    static object_ref from_object(T t)
     {
       return const_cast<object *>(t);
     }
 
-    static object *from_object(object_ref const t)
+    static object_ref from_object(object_ref const t)
     {
       return t.erase();
     }

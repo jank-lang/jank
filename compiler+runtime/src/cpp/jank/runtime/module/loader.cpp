@@ -1055,7 +1055,7 @@ namespace jank::runtime::module
      * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
     auto const load_function_name{ module_to_load_function(module) };
     auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
-    reinterpret_cast<object *(*)()>(load)();
+    reinterpret_cast<void (*)()>(load)();
 
     return ok();
   }
