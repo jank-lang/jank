@@ -243,12 +243,19 @@ namespace jank::runtime
 
   struct object
   {
+    object() = default;
+    object(object const &) noexcept;
+    object(object &&) noexcept;
+    object(object_type) noexcept;
+
     void retain();
     void release();
 
+    object &operator=(object const &) noexcept;
+    object &operator=(object &&) noexcept;
+
     object_type type{};
-    /* TODO: Atomic. */
-    i32 ref_count{};
+    std::atomic<i32> ref_count{};
   };
 
   namespace obj

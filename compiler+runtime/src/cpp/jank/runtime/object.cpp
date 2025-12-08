@@ -6,6 +6,21 @@
 
 namespace jank::runtime
 {
+  object::object(object const &rhs) noexcept
+    : type{ rhs.type }
+  {
+  }
+
+  object::object(object &&rhs) noexcept
+    : type{ rhs.type }
+  {
+  }
+
+  object::object(object_type const type) noexcept
+    : type{ type }
+  {
+  }
+
   void object::retain()
   {
     ++ref_count;
@@ -16,9 +31,8 @@ namespace jank::runtime
   void object::release()
   {
     jank_debug_assert(ref_count > 0);
-    --ref_count;
     //util::println("release {} type {} count {}", this, object_type_str(type), ref_count);
-    if(ref_count == 0)
+    if(--ref_count == 0)
     {
       visit_object(
         [](auto const typed_this) {
@@ -28,6 +42,26 @@ namespace jank::runtime
         },
         this);
     }
+  }
+
+  object &object::operator=(object const &rhs) noexcept
+  {
+    if(this == &rhs)
+    {
+      return *this;
+    }
+    type = rhs.type;
+    return *this;
+  }
+
+  object &object::operator=(object &&rhs) noexcept
+  {
+    if(this == &rhs)
+    {
+      return *this;
+    }
+    type = rhs.type;
+    return *this;
   }
 
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
