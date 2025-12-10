@@ -1790,7 +1790,7 @@ namespace jank::analyze
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
-      unique_name = __rt_ctx->unique_namespaced_string(name);
+      unique_name = __rt_ctx->unique_string(name);
       if(length < 3)
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
@@ -1802,7 +1802,7 @@ namespace jank::analyze
     }
     else
     {
-      name = __rt_ctx->unique_namespaced_string("fn");
+      name = __rt_ctx->unique_string("fn");
       unique_name = name;
     }
 

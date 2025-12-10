@@ -498,8 +498,8 @@ namespace jank::codegen
                        compilation_target const target)
     : root_fn{ expr }
     , module{ module }
-    , target{ target } /* The normal unique name is fully namespaced, which we don't need. */
-    , struct_name{ runtime::munge(runtime::__rt_ctx->unique_string(root_fn->name)) }
+    , target{ target }
+    , struct_name{ runtime::munge(root_fn->unique_name) }
   {
     assert(root_fn->frame.data);
   }
