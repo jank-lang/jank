@@ -298,7 +298,7 @@ namespace clojure::core_native
   }
 }
 
-extern "C" jank_object_ref jank_load_clojure_core_native()
+void jank_load_clojure_core_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -848,6 +848,4 @@ extern "C" jank_object_ref jank_load_clojure_core_native()
     };
     intern_fn_obj("repeat", fn);
   }
-
-  return jank_nil().erase();
 }

@@ -42,9 +42,9 @@ extern "C" int jank_init_with_pch(int const argc,
                          char const * const pch_data,
                          jank_usize pch_size,
                          int (*fn)(int const, char const ** const));
-extern "C" jank_object_ref jank_load_clojure_core_native();
-extern "C" jank_object_ref jank_load_clojure_core();
-extern "C" jank_object_ref jank_load_jank_compiler_native();
+void jank_load_clojure_core_native();
+void jank_load_clojure_core();
+void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
@@ -55,9 +55,7 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
     {
-      util::format_to(sb,
-                      R"(extern "C" jank_object_ref {}();)",
-                      module::module_to_load_function(it));
+      util::format_to(sb, R"(void {}();)", module::module_to_load_function(it));
       sb("\n");
     }
 
@@ -126,7 +124,7 @@ int main(int argc, const char** argv)
     if(main_var.is_nil())
     {
       return error::aot_unresolved_main(util::format(
-        "The entrypoint of the program is expected to be #'{}/-main, but this var is missing.",
+        "The entrypoint of the program is expected to be #'{}/-main, but this var was not found.",
         module));
     }
 

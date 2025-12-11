@@ -322,6 +322,8 @@ namespace jank::environment
                         terminal_style::reset);
   }
 
+  /* This is disabled until IR gen supports ref counting OR we switch back to using a GC. */
+  [[maybe_unused]]
   static jtl::immutable_string check_ir_jit()
   {
     bool error{};
@@ -500,7 +502,7 @@ namespace jank::environment
                       terminal_style::reset);
         util::println("{}", pch_location());
         util::println("{}", check_cpp_jit());
-        util::println("{}", check_ir_jit());
+        //util::println("{}", check_ir_jit());
         util::println("{}", check_aot());
         util::println("");
 

@@ -50,7 +50,7 @@ namespace jank::compiler_native
   }
 }
 
-extern "C" jank_object_ref jank_load_jank_compiler_native()
+void jank_load_jank_compiler_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -65,6 +65,4 @@ extern "C" jank_object_ref jank_load_jank_compiler_native()
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
   intern_fn("native-source", &compiler_native::native_source);
-
-  return jank_nil().erase();
 }
