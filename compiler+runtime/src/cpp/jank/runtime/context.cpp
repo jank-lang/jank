@@ -145,7 +145,7 @@ namespace jank::runtime
     return none;
   }
 
-  object_ref context::eval_file(jtl::immutable_string const &path)
+  jtl::option<object_ref> context::eval_file(jtl::immutable_string const &path)
   {
     auto const file(module::loader::read_file(path));
     if(file.is_err())
@@ -159,12 +159,13 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  object_ref context::eval_string(jtl::immutable_string_view const &code)
+  jtl::option<object_ref> context::eval_string(jtl::immutable_string_view const &code)
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
+    bool no_op{ true };
     object_ref ret{ jank_nil };
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
@@ -173,9 +174,20 @@ namespace jank::runtime
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
           .expect_ok()));
+
+      if(no_op)
+      {
+        no_op = form.expect_ok().is_none();
+      }
+
       ret = evaluate::eval(expr);
 
       forms.emplace_back(form.expect_ok().unwrap().ptr);
+    }
+
+    if(no_op)
+    {
+      return jtl::none;
     }
 
     /* When compiling, we analyze twice. This is because eval will modify its expression

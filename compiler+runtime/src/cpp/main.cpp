@@ -208,11 +208,14 @@ namespace jank
 
         auto const res(__rt_ctx->eval_file(path_tmp));
 
-        third_res_var->set(second_res_var->deref()).expect_ok();
-        second_res_var->set(first_res_var->deref()).expect_ok();
-        first_res_var->set(res).expect_ok();
+        if(res.is_some())
+        {
+          third_res_var->set(second_res_var->deref()).expect_ok();
+          second_res_var->set(first_res_var->deref()).expect_ok();
+          first_res_var->set(res.unwrap()).expect_ok();
 
-        util::println("{}", runtime::to_code_string(res));
+          util::println("{}", runtime::to_code_string(res.unwrap()));
+        }
       }
       JANK_CATCH(jank::util::print_exception)
 

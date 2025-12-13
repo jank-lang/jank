@@ -79,8 +79,8 @@ namespace jank::runtime
     object_ref macroexpand1(object_ref o);
     object_ref macroexpand(object_ref o);
 
-    object_ref eval_file(jtl::immutable_string const &path);
-    object_ref eval_string(jtl::immutable_string_view const &code);
+    jtl::option<object_ref> eval_file(jtl::immutable_string const &path);
+    jtl::option<object_ref> eval_string(jtl::immutable_string_view const &code);
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string_view const &code) const;
     object_ref read_string(jtl::immutable_string_view const &code);
     native_vector<analyze::expression_ref>

@@ -19,6 +19,7 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/runtime/obj/nil.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>
@@ -106,7 +107,8 @@ namespace jank::jit
             std::cerr.rdbuf(old_cerr);
           } };
 
-          auto const result(__rt_ctx->eval_file(dir_entry.path().string()));
+          auto const result(
+            __rt_ctx->eval_file(dir_entry.path().string()).unwrap_or(runtime::jank_nil));
           if(!expect_success)
           {
             failures.push_back({ dir_entry.path(),
