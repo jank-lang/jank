@@ -136,6 +136,15 @@ namespace jank::runtime
 
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string binary_version;
+    /* TODO: This needs to be a dynamic var. */
+    native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
+      module_dependencies;
+
+    /* TODO: Remove this in favor of calling module's `jank_load` functions
+     * on demand. At the moment it is being used to load all the compiled modules
+     * in ahead of time compiled binaries at startup (which is not an ideal way to
+     * achieve that). */
+    folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
     jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
