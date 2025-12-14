@@ -1,3 +1,0 @@
-(ns hello)
-
-(println "Hello")
