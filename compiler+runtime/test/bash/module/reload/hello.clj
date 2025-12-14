@@ -1,0 +1,3 @@
+(ns hello ^{:zip/branch? #object[rewrite_clj.node.protocols$fn__29657$G__29633__29662 0x7beba217 "rewrite_clj.node.protocols$fn__29657$G__29633__29662@7beba217"], :zip/children #object[clojure.core$comp$fn__5895 0x7eef8a2b "clojure.core$comp$fn__5895@7eef8a2b"], :zip/make-node #object[rewrite_clj.node.protocols$fn__29644$G__29637__29651 0x5894853a "rewrite_clj.node.protocols$fn__29644$G__29637__29651@5894853a"], :rewrite-clj.zip/opts {:track-position? false, :auto-resolve #object[rewrite_clj.node.protocols$default_auto_resolve 0x399989bd "rewrite_clj.node.protocols$default_auto_resolve@399989bd"]}} [(println "Ahoi") {:l [], :pnodes [(println "Ahoi")], :ppath nil, :r nil}])
+
+(println "Hello")
