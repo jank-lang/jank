@@ -41,7 +41,8 @@
       (f))))
 
 (deftest a-single-module-reload
-  (let [proc (ps/process ["jank" "--module-path" "src" "repl"])]
+  (let [proc (ps/process ["jank" "--module-path" "src" "repl"])
+        original-dependent-content (slurp dependent-module-path)]
     (with-open [repl-writer (io/writer (:in proc))
                 repl-reader (io/reader (:out proc))]
       (doto repl-writer
@@ -76,7 +77,16 @@
              (read-available repl-reader)
              "Hi!")))
 
-      (testing "var removed from the source should still available")
+      (testing "var removed from the source should still available"
+        (spit dependent-module-path original-dependent-content)
+        (doto repl-writer
+          (send-command "(require '[jank-test.dependent :as d] :reload)\n")
+          (send-command "(d/hi)\n"))
+
+        (Thread/sleep 1000)
+        (is (string/includes?
+             (read-available repl-reader)
+             "Hi!")))
       (testing "dependency module should not reload"))
     (ps/destroy proc)))
 
