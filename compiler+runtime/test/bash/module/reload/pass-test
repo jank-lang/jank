@@ -83,11 +83,24 @@
           (send-command "(require '[jank-test.dependent :as d] :reload)\n")
           (send-command "(d/hi)\n"))
 
-        (Thread/sleep 1000)
+        (Thread/sleep 500)
         (is (string/includes?
              (read-available repl-reader)
              "Hi!")))
-      (testing "dependency module should not reload"))
+      (testing "dependency module should not reload"
+        (doto dependency-module-path
+          (spit "\n" :append true)
+          (spit (pr-str '(defn hi [] "Hi in dependency!")) :append true))
+        (doto repl-writer
+          (send-command "(require '[jank-test.dependency :as dep])\n")
+          (send-command "(require '[jank-test.dependent :as d] :reload)\n")
+          (send-command "(dep/hi)\n"))
+
+        (Thread/sleep 500)
+
+        (is (string/includes?
+             (read-available repl-reader)
+             "Unable to resolve symbol 'jank-test.dependency/hi'"))))
     (ps/destroy proc)))
 
 (defn -main []
