@@ -1,0 +1,90 @@
+#!/usr/bin/env bb
+
+^{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns jank.test.module.reload
+  (:require [babashka.fs :as fs]
+            [babashka.process :as ps]
+            [clojure.string :as string]
+            [clojure.java.io :as io]
+            [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def dependent-module-path "src/jank_test/dependent.cljc")
+(def dependency-module-path "src/jank_test/dependency.cljc")
+
+(defn send-command [writer command]
+  (doto writer
+    (.write command)
+    (.flush)))
+
+(defn read-available [reader]
+  (let [sb (StringBuilder.)]
+    (while (.ready reader)
+      (.append sb (char (.read reader))))
+    (str sb)))
+
+(defmacro with-backup [path & body]
+  `(fs/with-temp-dir [dir#]
+     (let [tmp-path# (fs/path dir# ~path)]
+       (fs/copy-tree ~path tmp-path#)
+       (try
+         ~@body
+         (finally
+           (fs/delete-tree ~path)
+           (fs/copy-tree tmp-path# ~path))))))
+
+(use-fixtures
+  :each
+  (fn [f]
+    (with-backup "src/jank_test"
+      (f))))
+
+(deftest a-single-module-reload
+  (let [proc (ps/process ["jank" "--module-path" "src" "repl"])]
+    (with-open [repl-writer (io/writer (:in proc))
+                repl-reader (io/reader (:out proc))]
+      (doto repl-writer
+        (send-command "(require '[jank-test.dependent :as d])\n")
+        (send-command "(d/first-fn)\n"))
+
+      ;; Wait for repl to start
+      (Thread/sleep 2000)
+      (is (string/includes?
+           (read-available repl-reader)
+           "Hello"))
+
+      (send-command repl-writer "(d/hi)\n")
+
+      (Thread/sleep 500)
+      (is (string/includes?
+           (read-available repl-reader)
+           "Unable to resolve symbol 'jank-test.dependent/hi'"))
+
+      (testing "new var should be added to the module"
+        ;; Add a new var
+        (doto dependent-module-path
+          (spit "\n" :append true)
+          (spit (pr-str '(defn hi [] "Hi!")) :append true))
+
+        (doto repl-writer
+          (send-command "(require '[jank-test.dependent :as d] :reload)\n")
+          (send-command "(d/hi)\n"))
+
+        (Thread/sleep 500)
+        (is (string/includes?
+             (read-available repl-reader)
+             "Hi!")))
+
+      (testing "var removed from the source should still available")
+      (testing "dependency module should not reload"))
+    (ps/destroy proc)))
+
+(defn -main []
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
