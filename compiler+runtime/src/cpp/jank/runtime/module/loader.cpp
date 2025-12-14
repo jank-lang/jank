@@ -919,11 +919,6 @@ namespace jank::runtime::module
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
-    if(ori != origin::source && loader::is_loaded(module))
-    {
-      return ok();
-    }
-
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -961,11 +956,11 @@ namespace jank::runtime::module
       return res;
     }
 
-    loader::set_is_loaded(module);
     {
       auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
       locked_ordered_modules->push_back(module);
     }
+
     return ok();
   }
 
