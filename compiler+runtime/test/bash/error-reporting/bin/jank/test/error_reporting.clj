@@ -63,7 +63,7 @@
     (doseq [test tests]
       (print "testing dir" (b.f/file-name (:dir test)) "=> ")
       (let [expected (try
-                       (slurp (:output-file test))
+                       (strip-ansi-codes (string/trim (slurp (:output-file test))))
                        (catch Exception _
                          ""))]
         (if (= (:output test) expected)
