@@ -28,7 +28,7 @@
   [s]
   (-> (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" "")
       (clojure.string/replace #"\r\n" "\n")
-      (clojure.string/replace #"\0" "")))
+      (clojure.string/replace (str (char 0)) "")))
 
 (defn find-tests! []
   (let [inputs (b.f/glob src-dir "**/input.jank")]
