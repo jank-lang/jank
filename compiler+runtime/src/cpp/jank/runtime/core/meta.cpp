@@ -21,7 +21,7 @@ namespace jank::runtime
       [](auto const typed_m) -> object_ref {
         using T = typename decltype(typed_m)::value_type;
 
-        if constexpr(behavior::metable<T>)
+        if constexpr(behavior::metadatable<T>)
         {
           return typed_m->meta.unwrap_or(jank_nil);
         }
@@ -84,7 +84,7 @@ namespace jank::runtime
       [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename decltype(typed_o)::value_type;
 
-        if constexpr(behavior::metable<T>)
+        if constexpr(behavior::metadatable<T>)
         {
           auto const meta(behavior::detail::validate_meta(m));
           typed_o->meta = meta;

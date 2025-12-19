@@ -45,6 +45,9 @@ namespace jank::runtime
     void to_string(jtl::string_builder &buff) const;
     uhash to_hash() const;
 
+    /* behavior::metadatable */
+    object_ref with_meta(object_ref m);
+
     bool operator==(ns const &rhs) const;
 
     object base{ obj_type };
