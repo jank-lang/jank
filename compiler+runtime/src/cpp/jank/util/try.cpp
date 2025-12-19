@@ -88,7 +88,7 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(runtime::object_ref const e)
+  void print_exception(runtime::object_ref const &e)
   {
     if(e->type == runtime::object_type::persistent_string)
     {

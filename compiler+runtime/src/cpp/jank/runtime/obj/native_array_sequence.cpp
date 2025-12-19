@@ -102,7 +102,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref native_array_sequence::conj(object_ref const head)
+  cons_ref native_array_sequence::conj(object_ref const &head)
   {
     return make_box<cons>(head, this);
   }

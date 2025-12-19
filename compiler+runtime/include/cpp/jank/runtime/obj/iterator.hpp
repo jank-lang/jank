@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     iterator() = default;
     iterator(iterator &&) noexcept = default;
     iterator(iterator const &) = default;
-    iterator(object_ref const fn, object_ref const start);
+    iterator(object_ref const &fn, object_ref const &start);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable */
     object_ref first() const;
     iterator_ref next() const;
-    obj::cons_ref conj(object_ref head) const;
+    obj::cons_ref conj(object_ref const &head) const;
 
     /* behavior::sequenceable_in_place */
     iterator_ref next_in_place();

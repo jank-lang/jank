@@ -10,7 +10,7 @@
 
 namespace jank::runtime
 {
-  object_ref meta(object_ref const m)
+  object_ref meta(object_ref const &m)
   {
     if(m.is_nil())
     {
@@ -18,8 +18,8 @@ namespace jank::runtime
     }
 
     return visit_object(
-      [](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+      [](auto const &typed_m) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::metadatable<T>)
         {
@@ -33,11 +33,11 @@ namespace jank::runtime
       m);
   }
 
-  object_ref with_meta(object_ref const o, object_ref const m)
+  object_ref with_meta(object_ref const &o, object_ref const &m)
   {
     return visit_object(
-      [&o](auto const typed_o, object_ref const m) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [&o](auto const &typed_o, object_ref const &m) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::metadatable<T>)
         {
@@ -59,11 +59,11 @@ namespace jank::runtime
   /* This is the same as with_meta, but it gracefully handles the target
    * not supporting metadata. In that case, the target is returned and nothing
    * is done with the meta. */
-  object_ref with_meta_graceful(object_ref const o, object_ref const m)
+  object_ref with_meta_graceful(object_ref const &o, object_ref const &m)
   {
     return visit_object(
-      [](auto const typed_o, object_ref const m) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o, object_ref const &m) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::metadatable<T>)
         {
@@ -78,11 +78,11 @@ namespace jank::runtime
       m);
   }
 
-  object_ref reset_meta(object_ref const o, object_ref const m)
+  object_ref reset_meta(object_ref const &o, object_ref const &m)
   {
     return visit_object(
-      [](auto const typed_o, object_ref const m) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o, object_ref const &m) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::metadatable<T>)
         {
@@ -147,7 +147,7 @@ namespace jank::runtime
     };
   }
 
-  read::source object_source(object_ref const o)
+  read::source object_source(object_ref const &o)
   {
     auto const meta(runtime::meta(o));
     if(meta == jank_nil())
@@ -212,7 +212,7 @@ namespace jank::runtime
     return source_to_meta(source);
   }
 
-  object_ref strip_source_from_meta(object_ref const meta)
+  object_ref strip_source_from_meta(object_ref const &meta)
   {
     auto const kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
     return dissoc(meta, kw);
@@ -225,7 +225,7 @@ namespace jank::runtime
       return meta;
     }
 
-    auto const stripped{ strip_source_from_meta(meta.unwrap()) };
+    auto stripped{ strip_source_from_meta(meta.unwrap()) };
     if(is_empty(stripped))
     {
       return none;

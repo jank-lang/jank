@@ -315,11 +315,11 @@ namespace jank::runtime
    * constants during codegen, since we don't want to be lossy in how we generate values. */
   struct very_equal_to
   {
-    bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
+    bool operator()(object_ref const &lhs, object_ref const &rhs) const noexcept;
   };
 
-  bool operator==(object const *, object_ref);
-  bool operator!=(object const *, object_ref);
+  bool operator==(object const *, object_ref const &);
+  bool operator!=(object const *, object_ref const &);
 }
 
 namespace std
@@ -327,7 +327,7 @@ namespace std
   template <>
   struct hash<jank::runtime::object_ref>
   {
-    size_t operator()(jank::runtime::object_ref const o) const noexcept;
+    size_t operator()(jank::runtime::object_ref const &o) const noexcept;
   };
 
   template <>
@@ -339,7 +339,7 @@ namespace std
   template <>
   struct equal_to<jank::runtime::object_ref>
   {
-    bool operator()(jank::runtime::object_ref const lhs,
-                    jank::runtime::object_ref const rhs) const noexcept;
+    bool operator()(jank::runtime::object_ref const &lhs,
+                    jank::runtime::object_ref const &rhs) const noexcept;
   };
 }

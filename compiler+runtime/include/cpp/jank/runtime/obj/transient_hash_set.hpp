@@ -35,22 +35,22 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable_in_place */
-    transient_hash_set_ref conj_in_place(object_ref elem);
+    transient_hash_set_ref conj_in_place(object_ref const &elem);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const fallback) const;
+    object_ref call(object_ref const &) const;
+    object_ref call(object_ref const &, object_ref const &fallback) const;
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref const elem) const;
-    object_ref get(object_ref const elem, object_ref const fallback) const;
-    object_ref get_entry(object_ref const elem) const;
-    bool contains(object_ref const elem) const;
+    object_ref get(object_ref const &elem) const;
+    object_ref get(object_ref const &elem, object_ref const &fallback) const;
+    object_ref get_entry(object_ref const &elem) const;
+    bool contains(object_ref const &elem) const;
 
-    transient_hash_set_ref disjoin_in_place(object_ref const elem);
+    transient_hash_set_ref disjoin_in_place(object_ref const &elem);
 
     void assert_active() const;
 

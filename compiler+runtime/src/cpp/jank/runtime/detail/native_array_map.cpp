@@ -1,5 +1,6 @@
 #include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/obj/nil.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::detail
@@ -119,11 +120,12 @@ namespace jank::runtime::detail
 
   native_array_map::~native_array_map()
   {
+    data = nullptr;
     /* TODO: data could still be referenced by iterators. shared ptr? */
     //delete[] data;
   }
 
-  void native_array_map::insert_unique(object_ref const key, object_ref const val)
+  void native_array_map::insert_unique(object_ref const &key, object_ref const &val)
   {
     data = make_next_array(data, cap, length, key, val);
     length += 2;
@@ -131,7 +133,7 @@ namespace jank::runtime::detail
     hash = 0;
   }
 
-  void native_array_map::insert_or_assign(object_ref const key, object_ref const val)
+  void native_array_map::insert_or_assign(object_ref const &key, object_ref const &val)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -160,7 +162,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  jtl::option<object_ref> native_array_map::find(object_ref const key) const
+  jtl::option<object_ref> native_array_map::find(object_ref const &key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -185,7 +187,7 @@ namespace jank::runtime::detail
     return {};
   }
 
-  void native_array_map::erase(object_ref const key)
+  void native_array_map::erase(object_ref const &key)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -298,7 +300,7 @@ namespace jank::runtime::detail
 
     auto const new_capacity{ static_cast<u8>(size * 2) };
 
-    if(new_capacity < cap)
+    if(new_capacity <= cap)
     {
       return;
     }
@@ -336,7 +338,7 @@ namespace jank::runtime::detail
   {
     native_array_map ret{ *this };
     ret.data = new object_ref[cap];
-    for(usize i{}; i < length; ++i)
+    for(u8 i{}; i < length; ++i)
     {
       ret.data[i] = data[i];
     }

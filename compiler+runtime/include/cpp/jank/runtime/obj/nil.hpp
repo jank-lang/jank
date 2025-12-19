@@ -30,14 +30,14 @@ namespace jank::runtime::obj
     i64 compare(nil const &) const;
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref const key);
-    object_ref get(object_ref const key, object_ref const fallback);
-    object_ref get_entry(object_ref key);
-    bool contains(object_ref key) const;
+    object_ref get(object_ref const &key);
+    object_ref get(object_ref const &key, object_ref const &fallback);
+    object_ref get_entry(object_ref const &key);
+    bool contains(object_ref const &key) const;
 
     /* behavior::associatively_writable */
-    obj::persistent_array_map_ref assoc(object_ref key, object_ref val) const;
-    nil_ref dissoc(object_ref key) const;
+    obj::persistent_array_map_ref assoc(object_ref const &key, object_ref const &val) const;
+    nil_ref dissoc(object_ref const &key) const;
 
     /* behavior::seqable */
     nil_ref seq();

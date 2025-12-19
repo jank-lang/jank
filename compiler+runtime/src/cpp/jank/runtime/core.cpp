@@ -9,61 +9,61 @@
 
 namespace jank::runtime
 {
-  jtl::immutable_string type(object_ref const o)
+  jtl::immutable_string type(object_ref const &o)
   {
     return object_type_str(o->type);
   }
 
-  bool is_nil(object_ref const o)
+  bool is_nil(object_ref const &o)
   {
     return o == jank_nil();
   }
 
-  bool is_true(object_ref const o)
+  bool is_true(object_ref const &o)
   {
     return o == jank_true;
   }
 
-  bool is_false(object_ref const o)
+  bool is_false(object_ref const &o)
   {
     return o == jank_false;
   }
 
-  bool is_some(object_ref const o)
+  bool is_some(object_ref const &o)
   {
     return o != jank_nil();
   }
 
-  bool is_string(object_ref const o)
+  bool is_string(object_ref const &o)
   {
     return o->type == object_type::persistent_string;
   }
 
-  bool is_char(object_ref const o)
+  bool is_char(object_ref const &o)
   {
     return o->type == object_type::character;
   }
 
-  bool is_symbol(object_ref const o)
+  bool is_symbol(object_ref const &o)
   {
     return o->type == object_type::symbol;
   }
 
-  bool is_simple_symbol(object_ref const o)
+  bool is_simple_symbol(object_ref const &o)
   {
     return o->type == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  bool is_qualified_symbol(object_ref const o)
+  bool is_qualified_symbol(object_ref const &o)
   {
     return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  object_ref to_unqualified_symbol(object_ref const o)
+  object_ref to_unqualified_symbol(object_ref const &o)
   {
     return runtime::visit_object(
-      [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [&](auto const &typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::symbol>)
         {
@@ -90,16 +90,16 @@ namespace jank::runtime
       o);
   }
 
-  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  object_ref to_qualified_symbol(object_ref const &ns, object_ref const &name)
   {
     return make_box<obj::symbol>(ns, name);
   }
 
-  object_ref print(object_ref const args)
+  object_ref print(object_ref const &args)
   {
     visit_object(
-      [](auto const typed_args) {
-        using T = typename decltype(typed_args)::value_type;
+      [](auto const &typed_args) {
+        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
@@ -122,11 +122,11 @@ namespace jank::runtime
     return jank_nil();
   }
 
-  object_ref println(object_ref const args)
+  object_ref println(object_ref const &args)
   {
     visit_object(
-      [](auto const typed_more) {
-        using T = typename decltype(typed_more)::value_type;
+      [](auto const &typed_more) {
+        using T = typename jtl::decay_t<decltype(typed_more)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -154,11 +154,11 @@ namespace jank::runtime
     return jank_nil();
   }
 
-  object_ref pr(object_ref const args)
+  object_ref pr(object_ref const &args)
   {
     visit_object(
-      [](auto const typed_args) {
-        using T = typename decltype(typed_args)::value_type;
+      [](auto const &typed_args) {
+        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
         {
@@ -181,11 +181,11 @@ namespace jank::runtime
     return jank_nil();
   }
 
-  object_ref prn(object_ref const args)
+  object_ref prn(object_ref const &args)
   {
     visit_object(
-      [](auto const typed_args) {
-        using T = typename decltype(typed_args)::value_type;
+      [](auto const &typed_args) {
+        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -213,28 +213,21 @@ namespace jank::runtime
     return jank_nil();
   }
 
-  f64 to_real(object_ref const o)
-  {
-    return visit_number_like(
-      [](auto const typed_o) -> f64 { return typed_o->to_real(); },
-      [=]() -> f64 { throw std::runtime_error{ util::format("not a number: {}", to_string(o)) }; },
-      o);
-  }
-
-  obj::persistent_string_ref subs(object_ref const s, object_ref const start)
+  obj::persistent_string_ref subs(object_ref const &s, object_ref const &start)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start) -> obj::persistent_string_ref {
+      [](auto const &typed_s, i64 const start) -> obj::persistent_string_ref {
         return typed_s->substring(start).expect_ok();
       },
       s,
       to_int(start));
   }
 
-  obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
+  obj::persistent_string_ref
+  subs(object_ref const &s, object_ref const &start, object_ref const &end)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
+      [](auto const &typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
         return typed_s->substring(start, end).expect_ok();
       },
       s,
@@ -242,38 +235,38 @@ namespace jank::runtime
       to_int(end));
   }
 
-  i64 first_index_of(object_ref const s, object_ref const m)
+  i64 first_index_of(object_ref const &s, object_ref const &m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->first_index_of(m); },
+      [](auto const &typed_s, object_ref const &m) -> i64 { return typed_s->first_index_of(m); },
       s,
       m);
   }
 
-  i64 last_index_of(object_ref const s, object_ref const m)
+  i64 last_index_of(object_ref const &s, object_ref const &m)
   {
     return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->last_index_of(m); },
+      [](auto const &typed_s, object_ref const &m) -> i64 { return typed_s->last_index_of(m); },
       s,
       m);
   }
 
-  bool is_named(object_ref const o)
+  bool is_named(object_ref const &o)
   {
     return visit_object(
-      [](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o) {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::nameable<T>;
       },
       o);
   }
 
-  jtl::immutable_string name(object_ref const o)
+  jtl::immutable_string name(object_ref const &o)
   {
     return visit_object(
-      [](auto const typed_o) -> jtl::immutable_string {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o) -> jtl::immutable_string {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_string>)
         {
@@ -291,11 +284,11 @@ namespace jank::runtime
       o);
   }
 
-  object_ref namespace_(object_ref const o)
+  object_ref namespace_(object_ref const &o)
   {
     return visit_object(
-      [](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::nameable<T>)
         {
@@ -314,7 +307,7 @@ namespace jank::runtime
       o);
   }
 
-  object_ref keyword(object_ref const ns, object_ref const name)
+  object_ref keyword(object_ref const &ns, object_ref const &name)
   {
     if(!ns.is_nil() && ns->type != object_type::persistent_string)
     {
@@ -337,128 +330,132 @@ namespace jank::runtime
     return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
   }
 
-  bool is_keyword(object_ref const o)
+  bool is_keyword(object_ref const &o)
   {
     return o->type == object_type::keyword;
   }
 
-  bool is_simple_keyword(object_ref const o)
+  bool is_simple_keyword(object_ref const &o)
   {
     return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  bool is_qualified_keyword(object_ref const o)
+  bool is_qualified_keyword(object_ref const &o)
   {
     return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
-  bool is_callable(object_ref const o)
+  bool is_callable(object_ref const &o)
   {
     return visit_object(
-      [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+      [=](auto const &typed_o) -> bool {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return std::is_base_of_v<behavior::callable, T>;
       },
       o);
   }
 
-  uhash to_hash(object_ref const o)
+  uhash to_hash(object_ref const &o)
   {
-    return visit_object([=](auto const typed_o) -> uhash { return typed_o->to_hash(); }, o);
+    return visit_object([=](auto const &typed_o) -> uhash { return typed_o->to_hash(); }, o);
   }
 
-  object_ref macroexpand1(object_ref const o)
+  object_ref macroexpand1(object_ref const &o)
   {
     return __rt_ctx->macroexpand1(o);
   }
 
-  object_ref macroexpand(object_ref const o)
+  object_ref macroexpand(object_ref const &o)
   {
     return __rt_ctx->macroexpand(o);
   }
 
-  object_ref gensym(object_ref const o)
+  object_ref gensym(object_ref const &o)
   {
     return __rt_ctx->unique_symbol(to_string(o));
   }
 
-  object_ref atom(object_ref const o)
+  object_ref atom(object_ref const &o)
   {
     return make_box<obj::atom>(o);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn)
+  object_ref swap_atom(object_ref const &atom, object_ref const &fn)
   {
     return try_object<obj::atom>(atom)->swap(fn);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_atom(object_ref const &atom, object_ref const &fn, object_ref const &a1)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1);
   }
 
-  object_ref
-  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  object_ref swap_atom(object_ref const &atom,
+                       object_ref const &fn,
+                       object_ref const &a1,
+                       object_ref const &a2)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2);
   }
 
-  object_ref swap_atom(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2,
-                       object_ref const rest)
+  object_ref swap_atom(object_ref const &atom,
+                       object_ref const &fn,
+                       object_ref const &a1,
+                       object_ref const &a2,
+                       object_ref const &rest)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn)
+  object_ref swap_vals(object_ref const &atom, object_ref const &fn)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_vals(object_ref const &atom, object_ref const &fn, object_ref const &a1)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1);
   }
 
-  object_ref
-  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  object_ref swap_vals(object_ref const &atom,
+                       object_ref const &fn,
+                       object_ref const &a1,
+                       object_ref const &a2)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
   }
 
-  object_ref swap_vals(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2,
-                       object_ref const rest)
+  object_ref swap_vals(object_ref const &atom,
+                       object_ref const &fn,
+                       object_ref const &a1,
+                       object_ref const &a2,
+                       object_ref const &rest)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
   }
 
   object_ref
-  compare_and_set(object_ref const atom, object_ref const old_val, object_ref const new_val)
+  compare_and_set(object_ref const &atom, object_ref const &old_val, object_ref const &new_val)
   {
     return try_object<obj::atom>(atom)->compare_and_set(old_val, new_val);
   }
 
-  object_ref reset(object_ref const atom, object_ref const new_val)
+  object_ref reset(object_ref const &atom, object_ref const &new_val)
   {
     return try_object<obj::atom>(atom)->reset(new_val);
   }
 
-  object_ref reset_vals(object_ref const atom, object_ref const new_val)
+  object_ref reset_vals(object_ref const &atom, object_ref const &new_val)
   {
     return try_object<obj::atom>(atom)->reset_vals(new_val);
   }
 
-  object_ref deref(object_ref const o)
+  object_ref deref(object_ref const &o)
   {
     return visit_object(
-      [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [=](auto const &typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::derefable<T>)
         {
@@ -472,34 +469,34 @@ namespace jank::runtime
       o);
   }
 
-  object_ref volatile_(object_ref const o)
+  object_ref volatile_(object_ref const &o)
   {
     return make_box<obj::volatile_>(o);
   }
 
-  bool is_volatile(object_ref const o)
+  bool is_volatile(object_ref const &o)
   {
     return o->type == object_type::volatile_;
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn)
+  object_ref vswap(object_ref const &v, object_ref const &fn)
   {
     auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(dynamic_call(fn, v_obj->deref()));
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn, object_ref const args)
+  object_ref vswap(object_ref const &v, object_ref const &fn, object_ref const &args)
   {
     auto const v_obj(try_object<obj::volatile_>(v));
     return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
   }
 
-  object_ref vreset(object_ref const v, object_ref const new_val)
+  object_ref vreset(object_ref const &v, object_ref const &new_val)
   {
     return try_object<obj::volatile_>(v)->reset(new_val);
   }
 
-  void push_thread_bindings(object_ref const o)
+  void push_thread_bindings(object_ref const &o)
   {
     __rt_ctx->push_thread_bindings(o).expect_ok();
   }
@@ -514,7 +511,7 @@ namespace jank::runtime
     return __rt_ctx->get_thread_bindings();
   }
 
-  object_ref force(object_ref const o)
+  object_ref force(object_ref const &o)
   {
     if(o->type == object_type::delay)
     {
@@ -523,22 +520,22 @@ namespace jank::runtime
     return o;
   }
 
-  object_ref tagged_literal(object_ref const tag, object_ref const form)
+  object_ref tagged_literal(object_ref const &tag, object_ref const &form)
   {
     return make_box<obj::tagged_literal>(tag, form);
   }
 
-  bool is_tagged_literal(object_ref const o)
+  bool is_tagged_literal(object_ref const &o)
   {
     return o->type == object_type::tagged_literal;
   }
 
-  object_ref re_pattern(object_ref const o)
+  object_ref re_pattern(object_ref const &o)
   {
     return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
   }
 
-  object_ref re_matcher(object_ref const re, object_ref const s)
+  object_ref re_matcher(object_ref const &re, object_ref const &s)
   {
     return make_box<obj::re_matcher>(try_object<obj::re_pattern>(re),
                                      try_object<obj::persistent_string>(s)->data);
@@ -571,7 +568,7 @@ namespace jank::runtime
     }
   }
 
-  object_ref re_find(object_ref const m)
+  object_ref re_find(object_ref const &m)
   {
     std::smatch match_results{};
     auto const matcher(try_object<obj::re_matcher>(m));
@@ -589,7 +586,7 @@ namespace jank::runtime
     return matcher->groups;
   }
 
-  object_ref re_groups(object_ref const m)
+  object_ref re_groups(object_ref const &m)
   {
     auto const matcher(try_object<obj::re_matcher>(m));
 
@@ -601,7 +598,7 @@ namespace jank::runtime
     return matcher->groups;
   }
 
-  object_ref re_matches(object_ref const re, object_ref const s)
+  object_ref re_matches(object_ref const &re, object_ref const &s)
   {
     std::smatch match_results{};
     std::string const search_str{ try_object<obj::persistent_string>(s)->data.c_str() };
@@ -619,7 +616,7 @@ namespace jank::runtime
     return smatch_to_vector(match_results);
   }
 
-  object_ref parse_uuid(object_ref const o)
+  object_ref parse_uuid(object_ref const &o)
   {
     if(o->type == object_type::persistent_string)
     {
@@ -638,7 +635,7 @@ namespace jank::runtime
     }
   }
 
-  bool is_uuid(object_ref const o)
+  bool is_uuid(object_ref const &o)
   {
     return o->type == object_type::uuid;
   }
@@ -648,12 +645,12 @@ namespace jank::runtime
     return make_box<obj::uuid>();
   }
 
-  bool is_inst(object_ref const o)
+  bool is_inst(object_ref const &o)
   {
     return o->type == object_type::inst;
   }
 
-  i64 inst_ms(object_ref const o)
+  i64 inst_ms(object_ref const &o)
   {
     if(o->type != object_type::inst)
     {
@@ -666,11 +663,11 @@ namespace jank::runtime
       .count();
   }
 
-  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  object_ref add_watch(object_ref const &reference, object_ref const &key, object_ref const &fn)
   {
     visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename decltype(typed_reference)::value_type;
+      [=](auto const &typed_reference) -> void {
+        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
 
         if constexpr(behavior::ref_like<T>)
         {
@@ -688,11 +685,11 @@ namespace jank::runtime
     return reference;
   }
 
-  object_ref remove_watch(object_ref const reference, object_ref const key)
+  object_ref remove_watch(object_ref const &reference, object_ref const &key)
   {
     visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename decltype(typed_reference)::value_type;
+      [=](auto const &typed_reference) -> void {
+        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
 
         if constexpr(behavior::ref_like<T>)
         {

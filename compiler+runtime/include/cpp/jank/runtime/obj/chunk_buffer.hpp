@@ -14,7 +14,7 @@ namespace jank::runtime::obj
 
     chunk_buffer() = default;
     chunk_buffer(usize capacity);
-    chunk_buffer(object_ref capacity);
+    chunk_buffer(object_ref const &capacity);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
-    void append(object_ref o);
+    void append(object_ref const &o);
     obj::array_chunk_ref chunk();
 
     object base{ obj_type };

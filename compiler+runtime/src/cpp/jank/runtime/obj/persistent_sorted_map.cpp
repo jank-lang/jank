@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_map::persistent_sorted_map(object_ref const meta, value_type &&d)
+  persistent_sorted_map::persistent_sorted_map(object_ref const &meta, value_type &&d)
     : data{ std::move(d) }
   {
     this->meta = meta;
@@ -36,11 +36,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ref const seq)
+  persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ref const &seq)
   {
     return make_box<persistent_sorted_map>(visit_object(
-      [](auto const typed_seq) -> persistent_sorted_map::value_type {
-        using T = typename decltype(typed_seq)::value_type;
+      [](auto const &typed_seq) -> persistent_sorted_map::value_type {
+        using T = typename jtl::decay_t<decltype(typed_seq)>::value_type;
 
         if constexpr(behavior::seqable<T>)
         {
@@ -68,7 +68,7 @@ namespace jank::runtime::obj
       seq));
   }
 
-  object_ref persistent_sorted_map::get(object_ref const key) const
+  object_ref persistent_sorted_map::get(object_ref const &key) const
   {
     auto const res(data.find(key));
     if(res != data.end())
@@ -78,7 +78,7 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  object_ref persistent_sorted_map::get(object_ref const key, object_ref const fallback) const
+  object_ref persistent_sorted_map::get(object_ref const &key, object_ref const &fallback) const
   {
     auto const res(data.find(key));
     if(res != data.end())
@@ -88,7 +88,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref persistent_sorted_map::get_entry(object_ref const key) const
+  object_ref persistent_sorted_map::get_entry(object_ref const &key) const
   {
     auto const res(data.find(key));
     if(res != data.end())
@@ -98,32 +98,32 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  bool persistent_sorted_map::contains(object_ref const key) const
+  bool persistent_sorted_map::contains(object_ref const &key) const
   {
     return data.contains(key);
   }
 
   persistent_sorted_map_ref
-  persistent_sorted_map::assoc(object_ref const key, object_ref const val) const
+  persistent_sorted_map::assoc(object_ref const &key, object_ref const &val) const
   {
     auto copy(data);
     copy[key] = val;
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
-  persistent_sorted_map_ref persistent_sorted_map::dissoc(object_ref const key) const
+  persistent_sorted_map_ref persistent_sorted_map::dissoc(object_ref const &key) const
   {
     auto copy(data);
     copy.erase(key);
     return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
-  object_ref persistent_sorted_map::call(object_ref const o) const
+  object_ref persistent_sorted_map::call(object_ref const &o) const
   {
     return get(o);
   }
 
-  object_ref persistent_sorted_map::call(object_ref const o, object_ref const fallback) const
+  object_ref persistent_sorted_map::call(object_ref const &o, object_ref const &fallback) const
   {
     return get(o, fallback);
   }

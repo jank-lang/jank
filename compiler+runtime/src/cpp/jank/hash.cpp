@@ -153,14 +153,14 @@ namespace jank::hash
     return static_cast<u32>(ch);
   }
 
-  u32 visit(runtime::object_ref const o)
+  u32 visit(runtime::object_ref const &o)
   {
     return runtime::visit_object([](auto const typed_o) -> u32 { return typed_o->to_hash(); }, o);
   }
 
   template <typename T>
   requires runtime::behavior::object_like<T>
-  static u32 visit(runtime::oref<T> const o)
+  static u32 visit(runtime::oref<T> const &o)
   {
     return o->to_hash();
   }

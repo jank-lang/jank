@@ -37,13 +37,13 @@ namespace jank::runtime::detail
 
     ~native_array_map();
 
-    void insert_unique(object_ref const key, object_ref const val);
+    void insert_unique(object_ref const &key, object_ref const &val);
 
-    void insert_or_assign(object_ref const key, object_ref const val);
+    void insert_or_assign(object_ref const &key, object_ref const &val);
 
-    void erase(object_ref const key);
+    void erase(object_ref const &key);
 
-    jtl::option<object_ref> find(object_ref const key) const;
+    jtl::option<object_ref> find(object_ref const &key) const;
 
     uhash to_hash() const;
 

@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  delay::delay(object_ref const fn)
+  delay::delay(object_ref const &fn)
     : fn{ fn }
   {
   }

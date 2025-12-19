@@ -17,7 +17,7 @@ namespace jank::analyze::expr
                      jtl::immutable_string const &name,
                      jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
-                     runtime::obj::persistent_hash_map_ref const meta)
+                     runtime::obj::persistent_hash_map_ref const &meta)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }
     , unique_name{ unique_name }

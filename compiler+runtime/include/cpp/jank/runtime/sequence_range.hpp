@@ -21,7 +21,7 @@ namespace jank::runtime
       iterator(iterator const &) noexcept = default;
       iterator(iterator &&) noexcept = default;
 
-      iterator(object_ref const data)
+      iterator(object_ref const &data)
         : data{ data }
       {
       }
@@ -99,7 +99,7 @@ namespace jank::runtime
       iterator(iterator const &) noexcept = default;
       iterator(iterator &&) noexcept = default;
 
-      iterator(oref<T> const data)
+      iterator(oref<T> const &data)
         : data{ data }
       {
       }
@@ -163,7 +163,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::seqable<T>
-  auto make_sequence_range(oref<T> const s)
+  auto make_sequence_range(oref<T> const &s)
   {
     using S = typename decltype(s->seq())::value_type;
 

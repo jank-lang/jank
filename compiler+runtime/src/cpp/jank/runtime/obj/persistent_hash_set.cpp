@@ -27,10 +27,10 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ref const seq)
+  persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ref const &seq)
   {
     return make_box<persistent_hash_set>(visit_seqable(
-      [](auto const typed_seq) -> persistent_hash_set::value_type {
+      [](auto const &typed_seq) -> persistent_hash_set::value_type {
         runtime::detail::native_transient_hash_set transient;
         for(auto const e : make_sequence_range(typed_seq))
         {
@@ -113,7 +113,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_hash_set_ref persistent_hash_set::with_meta(object_ref const m) const
+  persistent_hash_set_ref persistent_hash_set::with_meta(object_ref const &m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_hash_set>(data));
@@ -121,14 +121,14 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_hash_set_ref persistent_hash_set::conj(object_ref const head) const
+  persistent_hash_set_ref persistent_hash_set::conj(object_ref const &head) const
   {
     auto set(data.insert(head));
     auto ret(make_box<persistent_hash_set>(meta, std::move(set)));
     return ret;
   }
 
-  object_ref persistent_hash_set::call(object_ref const o) const
+  object_ref persistent_hash_set::call(object_ref const &o) const
   {
     auto const found(data.find(o));
     if(!found)
@@ -143,12 +143,12 @@ namespace jank::runtime::obj
     return make_box<transient_hash_set>(data);
   }
 
-  bool persistent_hash_set::contains(object_ref const o) const
+  bool persistent_hash_set::contains(object_ref const &o) const
   {
     return data.find(o);
   }
 
-  persistent_hash_set_ref persistent_hash_set::disj(object_ref const o) const
+  persistent_hash_set_ref persistent_hash_set::disj(object_ref const &o) const
   {
     auto set(data.erase(o));
     auto ret(make_box<persistent_hash_set>(meta, std::move(set)));

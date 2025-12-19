@@ -4,7 +4,6 @@
 
 namespace jank::runtime
 {
-
   native_big_decimal operator+(native_big_decimal const &l, native_big_integer const &r)
   {
     return l + native_big_decimal(r.str());
@@ -137,7 +136,7 @@ namespace jank::runtime::obj
   bool big_decimal::equal(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> bool {
+      [this](auto const &typed_o) -> bool {
         return abs(data - typed_o->data) < std::numeric_limits<f64>::epsilon();
       },
       [&]() -> bool { return false; },
@@ -167,7 +166,9 @@ namespace jank::runtime::obj
   i64 big_decimal::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const &typed_o) -> i64 {
+        return (data > typed_o->data) - (data < typed_o->data);
+      },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },

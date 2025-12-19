@@ -45,7 +45,7 @@ namespace jank::read
                  jtl::immutable_string const &module,
                  source_position const &start,
                  source_position const &end,
-                 runtime::object_ref const macro_expansion)
+                 runtime::object_ref const &macro_expansion)
     : file{ file }
     , module{ module }
     , start{ start }

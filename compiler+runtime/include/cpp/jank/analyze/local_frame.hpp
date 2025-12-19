@@ -104,16 +104,17 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref const &sym);
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
-    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref const &sym);
 
-    jtl::option<named_recursion_find_result> find_named_recursion(runtime::obj::symbol_ref sym);
+    jtl::option<named_recursion_find_result>
+    find_named_recursion(runtime::obj::symbol_ref const &sym);
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 

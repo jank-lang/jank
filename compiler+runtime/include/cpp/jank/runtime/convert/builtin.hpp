@@ -15,12 +15,12 @@ namespace jank::runtime
   template <>
   struct convert<object_ref>
   {
-    static object_ref into_object(object_ref const t)
+    static object_ref into_object(object_ref const &t)
     {
       return t;
     }
 
-    static object_ref from_object(object_ref const t)
+    static object_ref from_object(object_ref const &t)
     {
       return t;
     }
@@ -49,7 +49,7 @@ namespace jank::runtime
       return const_cast<object *>(t);
     }
 
-    static object_ref into_object(object_ref const t)
+    static object_ref into_object(object_ref const &t)
     {
       return t.erase();
     }
@@ -59,7 +59,7 @@ namespace jank::runtime
       return const_cast<object *>(t);
     }
 
-    static object_ref from_object(object_ref const t)
+    static object_ref from_object(object_ref const &t)
     {
       return t.erase();
     }
@@ -70,7 +70,7 @@ namespace jank::runtime
   requires typed_object_ref<T>
   struct convert<T>
   {
-    static T into_object(T const t)
+    static T into_object(T const &t)
     {
       return t;
     }
@@ -110,7 +110,7 @@ namespace jank::runtime
       return jank_nil();
     }
 
-    static void from_object(object_ref)
+    static void from_object(object_ref const &)
     {
     }
   };
@@ -123,7 +123,7 @@ namespace jank::runtime
       return jank_nil();
     }
 
-    static jtl::nullptr_t from_object(object_ref)
+    static jtl::nullptr_t from_object(object_ref const &)
     {
       return nullptr;
     }
@@ -137,12 +137,12 @@ namespace jank::runtime
       return make_box(o);
     }
 
-    static bool from_object(object_ref const o)
+    static bool from_object(object_ref const &o)
     {
       return try_object<obj::boolean>(o)->data;
     }
 
-    static bool from_object(obj::boolean_ref const o)
+    static bool from_object(obj::boolean_ref const &o)
     {
       return o->data;
     }
@@ -156,12 +156,12 @@ namespace jank::runtime
       return make_box(o);
     }
 
-    static char from_object(object_ref const o)
+    static char from_object(object_ref const &o)
     {
       return try_object<obj::character>(o)->data[0];
     }
 
-    static char from_object(obj::character_ref const o)
+    static char from_object(obj::character_ref const &o)
     {
       return o->data[0];
     }
@@ -176,12 +176,12 @@ namespace jank::runtime
       return make_box(static_cast<i64>(o));
     }
 
-    static T from_object(object_ref const o)
+    static T from_object(object_ref const &o)
     {
       return try_object<obj::integer>(o);
     }
 
-    static T from_object(obj::integer_ref const o)
+    static T from_object(obj::integer_ref const &o)
     {
       return o->data;
     }
@@ -198,12 +198,12 @@ namespace jank::runtime
       return make_box(static_cast<i64>(o));
     }
 
-    static T from_object(object_ref const o)
+    static T from_object(object_ref const &o)
     {
       return static_cast<T>(try_object<obj::integer>(o)->data);
     }
 
-    static T from_object(obj::integer_ref const o)
+    static T from_object(obj::integer_ref const &o)
     {
       return static_cast<T>(o->data);
     }
@@ -218,12 +218,12 @@ namespace jank::runtime
       return make_box(o);
     }
 
-    static native_big_integer from_object(object_ref const o)
+    static native_big_integer from_object(object_ref const &o)
     {
       return try_object<obj::big_integer>(o)->data;
     }
 
-    static native_big_integer from_object(obj::big_integer_ref const o)
+    static native_big_integer from_object(obj::big_integer_ref const &o)
     {
       return o->data;
     }
@@ -239,12 +239,12 @@ namespace jank::runtime
       return make_box(static_cast<f64>(o));
     }
 
-    static T from_object(object_ref const o)
+    static T from_object(object_ref const &o)
     {
       return static_cast<T>(try_object<obj::real>(o)->data);
     }
 
-    static T from_object(obj::real_ref const o)
+    static T from_object(obj::real_ref const &o)
     {
       return static_cast<T>(o->data);
     }
@@ -264,12 +264,12 @@ namespace jank::runtime
       return make_box(o);
     }
 
-    static char const *from_object(object_ref const o)
+    static char const *from_object(object_ref const &o)
     {
       return try_object<obj::persistent_string>(o)->data.c_str();
     }
 
-    static char const *from_object(obj::persistent_string_ref const o)
+    static char const *from_object(obj::persistent_string_ref const &o)
     {
       return o->data.c_str();
     }
@@ -285,12 +285,12 @@ namespace jank::runtime
       return make_box(o);
     }
 
-    static T from_object(object_ref const o)
+    static T from_object(object_ref const &o)
     {
       return try_object<obj::persistent_string>(o)->data;
     }
 
-    static T from_object(obj::persistent_string_ref const o)
+    static T from_object(obj::persistent_string_ref const &o)
     {
       return o->data;
     }
@@ -312,12 +312,12 @@ namespace jank::runtime
       return make_box<obj::persistent_vector>(trans);
     }
 
-    static V<T> from_object(object_ref const o)
+    static V<T> from_object(object_ref const &o)
     {
       return from_object(try_object<obj::persistent_string>(o));
     }
 
-    static V<T> from_object(obj::persistent_vector_ref const o)
+    static V<T> from_object(obj::persistent_vector_ref const &o)
     {
       V<T> ret;
       for(auto const &e : o->data)

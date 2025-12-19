@@ -38,7 +38,7 @@ namespace jank::hash
 
   u32 string(jtl::immutable_string_view const &input);
 
-  u32 visit(runtime::oref<runtime::object> const o);
+  u32 visit(runtime::oref<runtime::object> const &o);
   u32 visit(char const ch);
 
   u32 ordered(runtime::object const * const sequence);

@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_array_map(object_ref const meta, runtime::detail::in_place_unique, Args &&...args)
+    persistent_array_map(object_ref const &meta, runtime::detail::in_place_unique, Args &&...args)
       : data{ runtime::detail::in_place_unique{}, std::forward<Args>(args)... }
     {
       this->meta = meta;
@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    static persistent_array_map_ref create_unique_with_meta(object_ref const meta, Args &&...args)
+    static persistent_array_map_ref create_unique_with_meta(object_ref const &meta, Args &&...args)
     {
       return make_box<persistent_array_map>(meta,
                                             runtime::detail::in_place_unique{},
@@ -68,18 +68,18 @@ namespace jank::runtime::obj
     }
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get(object_ref const &key) const;
+    object_ref get(object_ref const &key, object_ref const &fallback) const;
+    object_ref get_entry(object_ref const &key) const;
+    bool contains(object_ref const &key) const;
 
     /* behavior::associatively_writable */
-    object_ref assoc(object_ref key, object_ref val) const;
-    persistent_array_map_ref dissoc(object_ref key) const;
+    object_ref assoc(object_ref const &key, object_ref const &val) const;
+    persistent_array_map_ref dissoc(object_ref const &key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
-    object_ref call(object_ref, object_ref) const;
+    object_ref call(object_ref const &) const;
+    object_ref call(object_ref const &, object_ref const &) const;
 
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;

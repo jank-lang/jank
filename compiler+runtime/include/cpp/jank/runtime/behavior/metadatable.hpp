@@ -14,6 +14,6 @@ namespace jank::runtime::behavior
 
   namespace detail
   {
-    object_ref validate_meta(object_ref const m);
+    object_ref validate_meta(object_ref const &m);
   }
 }

@@ -536,8 +536,8 @@ namespace jank::read::parse
     }
 
     auto meta_result(visit_object(
-      [&](auto const typed_val) -> processor::object_result {
-        using T = typename decltype(typed_val)::value_type;
+      [&](auto const &typed_val) -> processor::object_result {
+        using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(jtl::is_same<T, obj::keyword>)
         {
           return object_source_info{ obj::persistent_array_map::create_unique(typed_val, jank_true),
@@ -571,8 +571,8 @@ namespace jank::read::parse
     }
 
     return visit_object(
-      [&](auto const typed_val) -> processor::object_result {
-        using T = typename decltype(typed_val)::value_type;
+      [&](auto const &typed_val) -> processor::object_result {
+        using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
           if(typed_val->meta.is_none())
@@ -1082,7 +1082,7 @@ namespace jank::read::parse
 
           auto const s(*(++it));
           return visit_seqable(
-            [&](auto const typed_s) -> processor::object_result {
+            [&](auto const &typed_s) -> processor::object_result {
               auto const r{ make_sequence_range(typed_s) };
               if(r.begin() == r.end())
               {
@@ -1115,7 +1115,7 @@ namespace jank::read::parse
     return ok(none);
   }
 
-  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const &seq)
   {
     if(seq.is_nil())
     {
@@ -1123,7 +1123,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
+      [this](auto const &typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto const item : make_sequence_range(typed_seq))
         {
@@ -1151,7 +1151,7 @@ namespace jank::read::parse
                                              quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1160,7 +1160,7 @@ namespace jank::read::parse
       seq);
   }
 
-  jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const &seq)
   {
     if(seq.is_nil())
     {
@@ -1168,14 +1168,14 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
+      [](auto const &typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto const item : make_sequence_range(typed_seq))
         {
           ret.push_back(first(item));
           ret.push_back(second(item));
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1184,7 +1184,7 @@ namespace jank::read::parse
       seq);
   }
 
-  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const seq)
+  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const &seq)
   {
     if(seq.is_nil())
     {
@@ -1192,7 +1192,7 @@ namespace jank::read::parse
     }
 
     return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
+      [this](auto const &typed_seq) -> jtl::result<object_ref, error_ref> {
         runtime::detail::native_transient_vector ret;
         for(auto const item : make_sequence_range(typed_seq))
         {
@@ -1220,7 +1220,7 @@ namespace jank::read::parse
                                              quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1229,10 +1229,10 @@ namespace jank::read::parse
       seq);
   }
 
-  bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
+  bool processor::syntax_quote_is_unquote(object_ref const &form, bool const splice)
   {
     return visit_seqable(
-      [splice](auto const typed_form) {
+      [splice](auto const &typed_form) {
         auto const s(typed_form->seq());
         object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
 
@@ -1243,7 +1243,7 @@ namespace jank::read::parse
       form);
   }
 
-  jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const form)
+  jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const &form)
   {
     object_ref ret{};
 
@@ -1311,8 +1311,8 @@ namespace jank::read::parse
        * flattening them, qualifying the symbols, and then building up code which will
        * reassemble them. */
       auto const res{ visit_seqable(
-        [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
-          using T = typename decltype(typed_form)::value_type;
+        [&](auto const &typed_form) -> jtl::result<object_ref, error_ref> {
+          using T = typename jtl::decay_t<decltype(typed_form)>::value_type;
 
           if constexpr(jtl::is_same<T, obj::persistent_vector>)
           {

@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    opaque_box_ref with_meta(object_ref m);
+    opaque_box_ref with_meta(object_ref const &m);
 
     object base{ obj_type };
     jtl::ptr<void> data{};

@@ -8,7 +8,7 @@
 
 namespace jank::runtime
 {
-  ns::ns(obj::symbol_ref const name)
+  ns::ns(obj::symbol_ref const &name)
     : name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
@@ -20,7 +20,7 @@ namespace jank::runtime
     return intern_var(make_box<obj::symbol>(name));
   }
 
-  var_ref ns::intern_var(obj::symbol_ref const sym)
+  var_ref ns::intern_var(obj::symbol_ref const &sym)
   {
     obj::symbol_ref unqualified_sym{ sym };
     if(!unqualified_sym->ns.empty())
@@ -59,7 +59,7 @@ namespace jank::runtime
    * WARNING 'println' already referred to #'clojure.core/println in namespace 'foo' but has been replaced by #'foo/println
    * ```
    */
-  var_ref ns::intern_owned_var(obj::symbol_ref const sym)
+  var_ref ns::intern_owned_var(obj::symbol_ref const &sym)
   {
     obj::symbol_ref unqualified_sym{ sym };
     if(!unqualified_sym->ns.empty())
@@ -98,7 +98,7 @@ namespace jank::runtime
     return new_var;
   }
 
-  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ref const sym)
+  jtl::result<void, jtl::immutable_string> ns::unmap(obj::symbol_ref const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -110,7 +110,7 @@ namespace jank::runtime
     return ok();
   }
 
-  var_ref ns::find_var(obj::symbol_ref const sym)
+  var_ref ns::find_var(obj::symbol_ref const &sym)
   {
     if(!sym->ns.empty())
     {
@@ -128,7 +128,7 @@ namespace jank::runtime
   }
 
   jtl::result<void, jtl::immutable_string>
-  ns::add_alias(obj::symbol_ref const sym, ns_ref const nsp)
+  ns::add_alias(obj::symbol_ref const &sym, ns_ref const &nsp)
   {
     auto locked_aliases(aliases.wlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -149,13 +149,13 @@ namespace jank::runtime
     return ok();
   }
 
-  void ns::remove_alias(obj::symbol_ref const sym)
+  void ns::remove_alias(obj::symbol_ref const &sym)
   {
     auto locked_aliases(aliases.wlock());
     *locked_aliases = make_box<obj::persistent_hash_map>((*locked_aliases)->data.erase(sym));
   }
 
-  ns_ref ns::find_alias(obj::symbol_ref const sym) const
+  ns_ref ns::find_alias(obj::symbol_ref const &sym) const
   {
     auto locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));
@@ -166,7 +166,7 @@ namespace jank::runtime
     return {};
   }
 
-  jtl::result<void, jtl::immutable_string> ns::refer(obj::symbol_ref const sym, var_ref const var)
+  jtl::result<void, jtl::immutable_string> ns::refer(obj::symbol_ref const &sym, var_ref const &var)
   {
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))

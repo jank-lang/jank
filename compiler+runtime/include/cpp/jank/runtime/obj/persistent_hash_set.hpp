@@ -31,7 +31,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_hash_set(object_ref const meta, std::in_place_t, Args &&...args)
+    persistent_hash_set(object_ref const &meta, std::in_place_t, Args &&...args)
       : data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
 
     static persistent_hash_set_ref empty();
 
-    static persistent_hash_set_ref create_from_seq(object_ref const seq);
+    static persistent_hash_set_ref create_from_seq(object_ref const &seq);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    persistent_hash_set_ref with_meta(object_ref m) const;
+    persistent_hash_set_ref with_meta(object_ref const &m) const;
 
     /* behavior::seqable */
     obj::persistent_hash_set_sequence_ref seq() const;
@@ -59,16 +59,16 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable */
-    persistent_hash_set_ref conj(object_ref head) const;
+    persistent_hash_set_ref conj(object_ref const &head) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
+    object_ref call(object_ref const &) const;
 
     /* behavior::transientable */
     obj::transient_hash_set_ref to_transient() const;
 
-    bool contains(object_ref o) const;
-    persistent_hash_set_ref disj(object_ref o) const;
+    bool contains(object_ref const &o) const;
+    persistent_hash_set_ref disj(object_ref const &o) const;
 
     object base{ obj_type };
     value_type data;

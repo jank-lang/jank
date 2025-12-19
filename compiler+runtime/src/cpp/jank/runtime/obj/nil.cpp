@@ -40,32 +40,32 @@ namespace jank::runtime::obj
     return 0;
   }
 
-  object_ref nil::get(object_ref const)
+  object_ref nil::get(object_ref const &)
   {
     return &base;
   }
 
-  object_ref nil::get(object_ref const, object_ref const fallback)
+  object_ref nil::get(object_ref const &, object_ref const &fallback)
   {
     return fallback;
   }
 
-  object_ref nil::get_entry(object_ref)
+  object_ref nil::get_entry(object_ref const &)
   {
     return &base;
   }
 
-  bool nil::contains(object_ref) const
+  bool nil::contains(object_ref const &) const
   {
     return false;
   }
 
-  persistent_array_map_ref nil::assoc(object_ref const key, object_ref const val) const
+  persistent_array_map_ref nil::assoc(object_ref const &key, object_ref const &val) const
   {
     return persistent_array_map::create_unique(key, val);
   }
 
-  nil_ref nil::dissoc(object_ref const) const
+  nil_ref nil::dissoc(object_ref const &) const
   {
     return this;
   }

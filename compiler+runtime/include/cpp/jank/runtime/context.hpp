@@ -77,8 +77,8 @@ namespace jank::runtime
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &s);
 
-    object_ref macroexpand1(object_ref o);
-    object_ref macroexpand(object_ref o);
+    object_ref macroexpand1(object_ref const &o);
+    object_ref macroexpand(object_ref const &o);
 
     object_ref eval_file(jtl::immutable_string const &path);
     object_ref eval_string(jtl::immutable_string const &code);
@@ -104,7 +104,7 @@ namespace jank::runtime
     /* Does all the same work as load_module, but also writes compiled files to the file system. */
     jtl::result<void, error_ref> compile_module(jtl::immutable_string const &module);
 
-    object_ref eval(object_ref const o);
+    object_ref eval(object_ref const &o);
 
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
                                           jtl::ref<llvm::Module> const &module) const;
@@ -124,13 +124,13 @@ namespace jank::runtime
     struct binding_scope
     {
       binding_scope();
-      binding_scope(obj::persistent_hash_map_ref const bindings);
+      binding_scope(obj::persistent_hash_map_ref const &bindings);
       ~binding_scope();
     };
 
     jtl::string_result<void> push_thread_bindings();
-    jtl::string_result<void> push_thread_bindings(object_ref const bindings);
-    jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
+    jtl::string_result<void> push_thread_bindings(object_ref const &bindings);
+    jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const &bindings);
     jtl::string_result<void> pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();

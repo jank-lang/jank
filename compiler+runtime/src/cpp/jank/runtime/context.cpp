@@ -1,5 +1,3 @@
-#include <exception>
-
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
@@ -363,7 +361,7 @@ namespace jank::runtime
     return load_module(util::format("/{}", module), module::origin::latest);
   }
 
-  object_ref context::eval(object_ref const o)
+  object_ref context::eval(object_ref const &o)
   {
     auto const expr(
       analyze::pass::optimize(an_prc.analyze(o, analyze::expression_position::value).expect_ok()));
@@ -507,7 +505,7 @@ namespace jank::runtime
   ns_ref context::resolve_ns(obj::symbol_ref const &target)
   {
     auto const ns(current_ns());
-    auto const alias(ns->find_alias(target));
+    auto alias(ns->find_alias(target));
     if(alias.is_some())
     {
       return alias;
@@ -534,24 +532,24 @@ namespace jank::runtime
   }
 
   jtl::result<var_ref, jtl::immutable_string>
-  context::intern_var(obj::symbol_ref const &qualified_sym)
+  context::intern_var(obj::symbol_ref const &qualified_name)
   {
     profile::timer const timer{ "intern_var" };
-    if(qualified_sym->ns.empty())
+    if(qualified_name->ns.empty())
     {
       return err(
-        util::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
+        util::format("Can't intern var. Sym isn't qualified: {}", qualified_name->to_string()));
     }
 
     auto locked_namespaces(namespaces.wlock());
-    obj::symbol_ref ns_sym{ make_box<obj::symbol>(qualified_sym->ns) };
+    obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_name->ns) };
     auto const found_ns(locked_namespaces->find(ns_sym));
     if(found_ns == locked_namespaces->end())
     {
-      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
+      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_name->ns));
     }
 
-    return ok(found_ns->second->intern_var(qualified_sym));
+    return ok(found_ns->second->intern_var(qualified_name));
   }
 
   jtl::result<var_ref, jtl::immutable_string>
@@ -632,12 +630,12 @@ namespace jank::runtime
     return res.first->second;
   }
 
-  object_ref context::macroexpand1(object_ref const o)
+  object_ref context::macroexpand1(object_ref const &o)
   {
     profile::timer const timer{ "rt macroexpand1" };
     return visit_seqable(
-      [this](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [this](auto const &typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(!behavior::sequenceable<T>)
         {
@@ -674,7 +672,7 @@ namespace jank::runtime
       o);
   }
 
-  object_ref context::macroexpand(object_ref const o)
+  object_ref context::macroexpand(object_ref const &o)
   {
     auto expanded(macroexpand1(o));
     if(expanded != o)
@@ -701,7 +699,7 @@ namespace jank::runtime
     __rt_ctx->push_thread_bindings().expect_ok();
   }
 
-  context::binding_scope::binding_scope(obj::persistent_hash_map_ref const bindings)
+  context::binding_scope::binding_scope(obj::persistent_hash_map_ref const &bindings)
   {
     __rt_ctx->push_thread_bindings(bindings).expect_ok();
   }
@@ -735,7 +733,7 @@ namespace jank::runtime
     return push_thread_bindings(bindings);
   }
 
-  jtl::string_result<void> context::push_thread_bindings(object_ref const bindings)
+  jtl::string_result<void> context::push_thread_bindings(object_ref const &bindings)
   {
     if(bindings->type != object_type::persistent_hash_map)
     {
@@ -747,7 +745,7 @@ namespace jank::runtime
   }
 
   jtl::string_result<void>
-  context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
+  context::push_thread_bindings(obj::persistent_hash_map_ref const &bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
     auto &tbfs(thread_binding_frames);

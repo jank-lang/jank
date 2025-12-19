@@ -68,7 +68,7 @@ namespace jank::runtime
 
     template <typename T>
     requires behavior::object_like<T>
-    weak_oref(oref<T> const typed_data) noexcept
+    weak_oref(oref<T> const &typed_data) noexcept
       : data{ typed_data.erase() }
     {
     }
@@ -194,7 +194,7 @@ namespace jank::runtime
 
     template <typename C>
     requires jtl::is_convertible<C *, T *>
-    weak_oref(oref<C> const data) noexcept
+    weak_oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
     }

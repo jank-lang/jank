@@ -7,7 +7,6 @@
 
 namespace jank::runtime
 {
-
   f64 operator+(native_big_integer const &l, f64 const &r)
   {
     return obj::big_integer::to_f64(l) + r;
@@ -280,7 +279,9 @@ namespace jank::runtime::obj
   i64 big_integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const &typed_o) -> i64 {
+        return (data > typed_o->data) - (data < typed_o->data);
+      },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },

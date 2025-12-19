@@ -9,10 +9,10 @@
 
 namespace jank::runtime::obj
 {
-  multi_function::multi_function(object_ref const name,
-                                 object_ref const dispatch,
-                                 object_ref const default_,
-                                 object_ref const hierarchy)
+  multi_function::multi_function(object_ref const &name,
+                                 object_ref const &dispatch,
+                                 object_ref const &default_,
+                                 object_ref const &hierarchy)
     : dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
@@ -59,44 +59,44 @@ namespace jank::runtime::obj
     return dynamic_call(get_fn(dynamic_call(dispatch)));
   }
 
-  object_ref multi_function::call(object_ref const a1)
+  object_ref multi_function::call(object_ref const &a1)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1)), a1);
   }
 
-  object_ref multi_function::call(object_ref const a1, object_ref const a2)
+  object_ref multi_function::call(object_ref const &a1, object_ref const &a2)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2)), a1, a2);
   }
 
-  object_ref multi_function::call(object_ref const a1, object_ref const a2, object_ref const a3)
+  object_ref multi_function::call(object_ref const &a1, object_ref const &a2, object_ref const &a3)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3)), a1, a2, a3);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4)), a1, a2, a3, a4);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5,
-                                  object_ref const a6)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5,
+                                  object_ref const &a6)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6)),
                         a1,
@@ -107,13 +107,13 @@ namespace jank::runtime::obj
                         a6);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5,
-                                  object_ref const a6,
-                                  object_ref const a7)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5,
+                                  object_ref const &a6,
+                                  object_ref const &a7)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7)),
                         a1,
@@ -125,14 +125,14 @@ namespace jank::runtime::obj
                         a7);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5,
-                                  object_ref const a6,
-                                  object_ref const a7,
-                                  object_ref const a8)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5,
+                                  object_ref const &a6,
+                                  object_ref const &a7,
+                                  object_ref const &a8)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8)),
                         a1,
@@ -145,15 +145,15 @@ namespace jank::runtime::obj
                         a8);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5,
-                                  object_ref const a6,
-                                  object_ref const a7,
-                                  object_ref const a8,
-                                  object_ref const a9)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5,
+                                  object_ref const &a6,
+                                  object_ref const &a7,
+                                  object_ref const &a8,
+                                  object_ref const &a9)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9)),
                         a1,
@@ -167,16 +167,16 @@ namespace jank::runtime::obj
                         a9);
   }
 
-  object_ref multi_function::call(object_ref const a1,
-                                  object_ref const a2,
-                                  object_ref const a3,
-                                  object_ref const a4,
-                                  object_ref const a5,
-                                  object_ref const a6,
-                                  object_ref const a7,
-                                  object_ref const a8,
-                                  object_ref const a9,
-                                  object_ref const a10)
+  object_ref multi_function::call(object_ref const &a1,
+                                  object_ref const &a2,
+                                  object_ref const &a3,
+                                  object_ref const &a4,
+                                  object_ref const &a5,
+                                  object_ref const &a6,
+                                  object_ref const &a7,
+                                  object_ref const &a8,
+                                  object_ref const &a9,
+                                  object_ref const &a10)
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
                         a1,
@@ -213,7 +213,7 @@ namespace jank::runtime::obj
   }
 
   multi_function_ref
-  multi_function::add_method(object_ref const dispatch_val, object_ref const method)
+  multi_function::add_method(object_ref const &dispatch_val, object_ref const &method)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
 
@@ -222,7 +222,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  multi_function_ref multi_function::remove_method(object_ref const dispatch_val)
+  multi_function_ref multi_function::remove_method(object_ref const &dispatch_val)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
     method_table = method_table->dissoc(dispatch_val);
@@ -230,7 +230,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  multi_function_ref multi_function::prefer_method(object_ref const x, object_ref const y)
+  multi_function_ref multi_function::prefer_method(object_ref const &x, object_ref const &y)
   {
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };
 
@@ -250,9 +250,9 @@ namespace jank::runtime::obj
     return this;
   }
 
-  bool multi_function::is_preferred(object_ref const hierarchy,
-                                    object_ref const x,
-                                    object_ref const y) const
+  bool multi_function::is_preferred(object_ref const &hierarchy,
+                                    object_ref const &x,
+                                    object_ref const &y) const
   {
     auto const x_prefs(prefer_table->get(x));
     if(x_prefs != jank_nil() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
@@ -285,7 +285,7 @@ namespace jank::runtime::obj
     return false;
   }
 
-  bool multi_function::is_a(object_ref const hierarchy, object_ref const x, object_ref const y)
+  bool multi_function::is_a(object_ref const &hierarchy, object_ref const &x, object_ref const &y)
   {
     static object_ref const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
@@ -293,14 +293,14 @@ namespace jank::runtime::obj
     return truthy(dynamic_call(isa, deref(hierarchy), x, y));
   }
 
-  bool multi_function::is_dominant(object_ref const hierarchy,
-                                   object_ref const x,
-                                   object_ref const y) const
+  bool multi_function::is_dominant(object_ref const &hierarchy,
+                                   object_ref const &x,
+                                   object_ref const &y) const
   {
     return is_preferred(hierarchy, x, y) || is_a(hierarchy, x, y);
   }
 
-  object_ref multi_function::get_fn(object_ref const dispatch_val)
+  object_ref multi_function::get_fn(object_ref const &dispatch_val)
   {
     auto const target(get_method(dispatch_val));
     if(target == jank_nil())
@@ -312,14 +312,14 @@ namespace jank::runtime::obj
     return target;
   }
 
-  object_ref multi_function::get_method(object_ref const dispatch_val)
+  object_ref multi_function::get_method(object_ref const &dispatch_val)
   {
     if(cached_hierarchy != deref(hierarchy))
     {
       reset_cache();
     }
 
-    auto const target(method_cache->get(dispatch_val));
+    auto target(method_cache->get(dispatch_val));
     if(target != jank_nil())
     {
       return target;
@@ -328,7 +328,7 @@ namespace jank::runtime::obj
     return find_and_cache_best_method(dispatch_val);
   }
 
-  object_ref multi_function::find_and_cache_best_method(object_ref const dispatch_val)
+  object_ref multi_function::find_and_cache_best_method(object_ref const &dispatch_val)
   {
     /* TODO: Clojure uses a RW lock here for better parallelism. */
     std::lock_guard<std::recursive_mutex> const locked{ data_lock };

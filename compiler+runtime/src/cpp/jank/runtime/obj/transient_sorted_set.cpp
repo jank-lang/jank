@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  transient_sorted_set_ref transient_sorted_set::conj_in_place(object_ref const elem)
+  transient_sorted_set_ref transient_sorted_set::conj_in_place(object_ref const &elem)
   {
     assert_active();
     data.insert(elem);
@@ -70,7 +70,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set>(data);
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem)
+  object_ref transient_sorted_set::call(object_ref const &elem)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::call(object_ref const &elem, object_ref const &fallback)
   {
     assert_active();
     auto const found(data.find(elem));
@@ -92,19 +92,19 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem)
+  object_ref transient_sorted_set::get(object_ref const &elem)
   {
     return call(elem);
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::get(object_ref const &elem, object_ref const &fallback)
   {
     return call(elem, fallback);
   }
 
-  object_ref transient_sorted_set::get_entry(object_ref const elem)
+  object_ref transient_sorted_set::get_entry(object_ref const &elem)
   {
-    auto const found{ call(elem) };
+    auto found{ call(elem) };
     if(found == jank_nil())
     {
       return found;
@@ -113,13 +113,13 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(std::in_place, found, found);
   }
 
-  bool transient_sorted_set::contains(object_ref const elem) const
+  bool transient_sorted_set::contains(object_ref const &elem) const
   {
     assert_active();
     return data.contains(elem);
   }
 
-  transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ref const elem)
+  transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ref const &elem)
   {
     assert_active();
     data.erase(elem);

@@ -5,6 +5,7 @@
 
 namespace jtl::detail
 {
+  [[noreturn]]
   void panic(char const * const msg)
   {
     jank::util::println(stderr, "Panic encountered: {}", msg);

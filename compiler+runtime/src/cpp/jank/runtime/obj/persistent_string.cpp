@@ -60,12 +60,12 @@ namespace jank::runtime::obj
     return data.compare(s.data);
   }
 
-  object_ref persistent_string::get(object_ref const key) const
+  object_ref persistent_string::get(object_ref const &key) const
   {
     return get(key, jank_nil());
   }
 
-  object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
+  object_ref persistent_string::get(object_ref const &key, object_ref const &fallback) const
   {
     if(key->type == object_type::integer)
     {
@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     }
   }
 
-  bool persistent_string::contains(object_ref const key) const
+  bool persistent_string::contains(object_ref const &key) const
   {
     if(key->type == object_type::integer)
     {
@@ -92,12 +92,12 @@ namespace jank::runtime::obj
     return false;
   }
 
-  object_ref persistent_string::get_entry(object_ref const) const
+  object_ref persistent_string::get_entry(object_ref const &) const
   {
     throw std::runtime_error{ util::format("get_entry not supported on string") };
   }
 
-  object_ref persistent_string::nth(object_ref const index) const
+  object_ref persistent_string::nth(object_ref const &index) const
   {
     if(index->type == object_type::integer)
     {
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref persistent_string::nth(object_ref const index, object_ref const fallback) const
+  object_ref persistent_string::nth(object_ref const &index, object_ref const &fallback) const
   {
     return get(index, fallback);
   }
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
     return ok(make_box(data.substr(start, end - start)));
   }
 
-  i64 persistent_string::first_index_of(object_ref const m) const
+  i64 persistent_string::first_index_of(object_ref const &m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.find(s));
@@ -157,7 +157,7 @@ namespace jank::runtime::obj
     return static_cast<i64>(found);
   }
 
-  i64 persistent_string::last_index_of(object_ref const m) const
+  i64 persistent_string::last_index_of(object_ref const &m) const
   {
     auto const s(runtime::to_string(m));
     auto const found(data.rfind(s));

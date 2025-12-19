@@ -36,11 +36,7 @@ namespace jank::runtime
   {
     using value_type = object;
 
-    oref()
-      : data{ std::bit_cast<object *>(jank_const_nil()) }
-    {
-      jank_debug_assert(data);
-    }
+    oref() = default;
 
     oref(oref const &rhs)
       : data{ rhs.data }
@@ -228,6 +224,7 @@ namespace jank::runtime
 
     bool is_some() const noexcept
     {
+      /* NOLINTNEXTLINE(clang-analyzer-core.NullDereference): I cannot see how this can happen. We initialize to non-null and always ensure non-null on mutation. That's the whole point of this type. */
       return data->type != object_type::nil;
     }
 
@@ -236,7 +233,7 @@ namespace jank::runtime
       return data->type == object_type::nil;
     }
 
-    value_type *data{};
+    value_type *data{ std::bit_cast<object *>(jank_const_nil()) };
   };
 
   /* This specialization of oref is for fully-typed objects like nil,
@@ -248,11 +245,7 @@ namespace jank::runtime
   {
     using value_type = T;
 
-    oref()
-      : data{ std::bit_cast<void *>(jank_const_nil()) }
-    {
-      jank_debug_assert(data);
-    }
+    oref() = default;
 
     oref(oref const &rhs) noexcept
       : data{ rhs.data }
@@ -480,7 +473,7 @@ namespace jank::runtime
       return data == std::bit_cast<void *>(jank_const_nil());
     }
 
-    void *data{};
+    void *data{ std::bit_cast<void *>(jank_const_nil()) };
   };
 
   template <>
@@ -488,11 +481,7 @@ namespace jank::runtime
   {
     using value_type = obj::nil;
 
-    oref()
-      : data{ std::bit_cast<value_type *>(jank_const_nil()) }
-    {
-      jank_debug_assert(data);
-    }
+    oref() = default;
 
     oref(nullptr_t) = delete;
 
@@ -584,7 +573,7 @@ namespace jank::runtime
       return true;
     }
 
-    value_type *data{};
+    value_type *data{ std::bit_cast<value_type *>(jank_const_nil()) };
   };
 
   template <typename T>

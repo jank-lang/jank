@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  cons::cons(object_ref const head, object_ref const tail)
+  cons::cons(object_ref const &head, object_ref const &tail)
     : head{ head }
     , tail{ tail }
   {
@@ -66,12 +66,12 @@ namespace jank::runtime::obj
     return hash = hash::ordered(&base);
   }
 
-  cons_ref cons::conj(object_ref const head) const
+  cons_ref cons::conj(object_ref const &head) const
   {
     return make_box<cons>(head, this);
   }
 
-  cons_ref cons::with_meta(object_ref const m) const
+  cons_ref cons::with_meta(object_ref const &m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

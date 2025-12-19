@@ -15,7 +15,7 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::re_matcher };
     static constexpr bool pointer_free{ false };
 
-    re_matcher(re_pattern_ref re, jtl::immutable_string const &s);
+    re_matcher(re_pattern_ref const &re, jtl::immutable_string const &s);
 
     /* behavior::object_like */
     bool equal(object const &) const;

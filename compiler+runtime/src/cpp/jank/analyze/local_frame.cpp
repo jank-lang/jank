@@ -37,8 +37,9 @@ namespace jank::analyze
   {
   }
 
-  static jtl::option<local_frame::binding_find_result>
-  find_local_impl(local_frame_ptr const start, obj::symbol_ref sym, bool const allow_captures)
+  static jtl::option<local_frame::binding_find_result> find_local_impl(local_frame_ptr const start,
+                                                                       obj::symbol_ref const &sym,
+                                                                       bool const allow_captures)
   {
     decltype(local_frame::binding_find_result::crossed_fns) crossed_fns;
 
@@ -78,7 +79,7 @@ namespace jank::analyze
   }
 
   jtl::option<local_frame::binding_find_result>
-  local_frame::find_local_or_capture(obj::symbol_ref const sym)
+  local_frame::find_local_or_capture(obj::symbol_ref const &sym)
   {
     return find_local_impl(this, sym, true);
   }
@@ -119,13 +120,13 @@ namespace jank::analyze
   }
 
   jtl::option<local_frame::binding_find_result>
-  local_frame::find_originating_local(obj::symbol_ref const sym)
+  local_frame::find_originating_local(obj::symbol_ref const &sym)
   {
     return find_local_impl(this, sym, false);
   }
 
   jtl::option<local_frame::named_recursion_find_result>
-  local_frame::find_named_recursion(obj::symbol_ref const sym)
+  local_frame::find_named_recursion(obj::symbol_ref const &sym)
   {
     decltype(local_frame::named_recursion_find_result::crossed_fns) crossed_fns;
 

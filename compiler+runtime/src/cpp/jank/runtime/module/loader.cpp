@@ -828,13 +828,13 @@ namespace jank::runtime::module
     auto const loaded_libs_atom{ runtime::try_object<runtime::obj::atom>(
       __rt_ctx->loaded_libs_var->deref()) };
 
-    auto const swap_fn{ [&](object_ref const curr_val) {
+    auto const swap_fn{ [&](object_ref const &curr_val) {
       return runtime::try_object<runtime::obj::persistent_sorted_set>(curr_val)->conj(
         make_box<obj::symbol>(module));
     } };
 
     auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
-      std::function<object_ref(object_ref)>{ swap_fn }) };
+      std::function<object_ref(object_ref const &)>{ swap_fn }) };
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 

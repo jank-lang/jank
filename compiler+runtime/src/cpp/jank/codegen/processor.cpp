@@ -90,7 +90,7 @@ namespace jank::codegen
       return native_name;
     }
 
-    static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
+    static jtl::immutable_string gen_constant_type(runtime::object_ref const &o, bool const boxed)
     {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -146,7 +146,7 @@ namespace jank::codegen
     }
 
     static void
-    gen_constant(runtime::object_ref const o, jtl::string_builder &buffer, bool const boxed)
+    gen_constant(runtime::object_ref const &o, jtl::string_builder &buffer, bool const boxed)
     {
       if(!boxed)
       {
@@ -461,9 +461,9 @@ namespace jank::codegen
   }
 
   handle::handle(jtl::immutable_string const &name, bool const)
+    : boxed_name{ name }
+    , unboxed_name{ boxed_name }
   {
-    boxed_name = name;
-    unboxed_name = boxed_name;
   }
 
   handle::handle(jtl::immutable_string const &boxed_name)
@@ -483,9 +483,9 @@ namespace jank::codegen
   }
 
   handle::handle(analyze::local_binding_ptr const binding)
+    : boxed_name{ runtime::munge(binding->native_name) }
+    , unboxed_name{ boxed_name }
   {
-    boxed_name = runtime::munge(binding->native_name);
-    unboxed_name = boxed_name;
   }
 
   jtl::immutable_string handle::str(bool const) const
@@ -1282,7 +1282,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::local_reference_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto const ret(runtime::munge(expr->binding->native_name));
+    auto ret(runtime::munge(expr->binding->native_name));
 
     switch(expr->position)
     {
@@ -2624,7 +2624,7 @@ namespace jank::codegen
       for(auto const &param : arity.params)
       {
         util::format_to(body_buffer,
-                        "{} jank::runtime::object_ref const {}{}",
+                        "{} jank::runtime::object_ref const &{}{}",
                         (param_comma ? ", " : ""),
                         runtime::munge(param->name),
                         recur_suffix);

@@ -23,7 +23,7 @@ namespace jank::runtime::obj::detail
     }
 
     return visit_map_like(
-      [&](auto const typed_o) -> bool {
+      [&](auto const &typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
@@ -55,7 +55,7 @@ namespace jank::runtime::obj::detail
     inserter = '{';
     for(auto i(begin); i != end; ++i)
     {
-      auto const pair(*i);
+      auto const &pair(*i);
       if(to_code)
       {
         runtime::to_code_string(pair.first, buff);
@@ -158,7 +158,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  object_ref base_persistent_map<PT, ST, V>::conj(object_ref const head) const
+  object_ref base_persistent_map<PT, ST, V>::conj(object_ref const &head) const
   {
     auto const ret(static_cast<PT const *>(this));
     if(head.is_nil())
@@ -188,7 +188,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ref const m) const
+  oref<PT> base_persistent_map<PT, ST, V>::with_meta(object_ref const &m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));

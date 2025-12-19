@@ -20,8 +20,8 @@ namespace jank::runtime::obj
     lazy_sequence() = default;
     lazy_sequence(lazy_sequence &&) noexcept = default;
     lazy_sequence(lazy_sequence const &) = default;
-    lazy_sequence(object_ref fn);
-    lazy_sequence(object_ref fn, object_ref sequence);
+    lazy_sequence(object_ref const &fn);
+    lazy_sequence(object_ref const &fn, object_ref const &sequence);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -37,13 +37,13 @@ namespace jank::runtime::obj
     /* behavior::sequenceable */
     object_ref first() const;
     object_ref next() const;
-    obj::cons_ref conj(object_ref head) const;
+    obj::cons_ref conj(object_ref const &head) const;
 
     /* behavior::sequenceable_in_place */
     //lazy_sequence_ref next_in_place();
 
     /* behavior::metadatable */
-    lazy_sequence_ref with_meta(object_ref m) const;
+    lazy_sequence_ref with_meta(object_ref const &m) const;
 
   private:
     object_ref resolve_fn() const;

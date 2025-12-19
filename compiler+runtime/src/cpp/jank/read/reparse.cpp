@@ -16,7 +16,7 @@ namespace jank::read::parse
                                                     jtl::immutable_string const &module,
                                                     usize const offset,
                                                     usize const n,
-                                                    object_ref const macro_expansion)
+                                                    object_ref const &macro_expansion)
   {
     if(module == no_source_path)
     {
@@ -62,7 +62,7 @@ namespace jank::read::parse
     return source{ file, module, res.start.start, res.end.end, macro_expansion };
   }
 
-  source reparse_nth(obj::persistent_list_ref const o, usize const n)
+  source reparse_nth(obj::persistent_list_ref const &o, usize const n)
   {
     auto source(object_source(o));
     if(source == source::unknown())
@@ -81,7 +81,7 @@ namespace jank::read::parse
     return res.expect_ok();
   }
 
-  source reparse_nth(runtime::obj::persistent_vector_ref const o, usize const n)
+  source reparse_nth(runtime::obj::persistent_vector_ref const &o, usize const n)
   {
     auto source(object_source(o));
     if(source == source::unknown())
@@ -100,15 +100,15 @@ namespace jank::read::parse
     return res.expect_ok();
   }
 
-  source reparse_nth(runtime::object_ref const o, usize const n)
+  source reparse_nth(runtime::object_ref const &o, usize const n)
   {
     /* When we have an object, but we're not sure of the type, let's just
      * see if it's one of the types we support. If not, we'll error out.
      * We can do more here, going forward, by supporting various sequences and such,
      * but this will be fine for now. */
     return visit_seqable(
-      [](auto const typed_o, usize const n) -> source {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const &typed_o, usize const n) -> source {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_list>
                      || std::same_as<T, obj::persistent_vector>)

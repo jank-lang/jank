@@ -7,7 +7,7 @@
 
 namespace jank::runtime::obj
 {
-  atom::atom(object_ref const o)
+  atom::atom(object_ref const &o)
     : val{ o.data }
     , watches{ persistent_hash_map::empty() }
   {
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
     return val.load();
   }
 
-  static void notify_watches(atom_ref const a, object_ref const old_val, object_ref const new_val)
+  static void notify_watches(atom_ref const &a, object_ref const &old_val, object_ref const &new_val)
   {
     auto const locked_watches(a->watches.rlock());
     for(auto const &entry : (*locked_watches)->data)
@@ -64,7 +64,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref atom::reset(object_ref const o)
+  object_ref atom::reset(object_ref const &o)
   {
     jank_debug_assert(o.is_some());
     auto const v(val.load());
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     return o;
   }
 
-  persistent_vector_ref atom::reset_vals(object_ref const o)
+  persistent_vector_ref atom::reset_vals(object_ref const &o)
   {
     while(true)
     {
@@ -92,7 +92,7 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
-  object_ref atom::swap(object_ref const fn)
+  object_ref atom::swap(object_ref const &fn)
   {
     while(true)
     {
@@ -109,7 +109,7 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
-  object_ref atom::swap(object_ref const fn, object_ref const a1)
+  object_ref atom::swap(object_ref const &fn, object_ref const &a1)
   {
     while(true)
     {
@@ -126,7 +126,7 @@ namespace jank::runtime::obj
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
-  object_ref atom::swap(object_ref const fn, object_ref const a1, object_ref const a2)
+  object_ref atom::swap(object_ref const &fn, object_ref const &a1, object_ref const &a2)
   {
     while(true)
     {
@@ -144,7 +144,7 @@ namespace jank::runtime::obj
 
   object_ref
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
-  atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
+  atom::swap(object_ref const &fn, object_ref const &a1, object_ref const &a2, object_ref const &rest)
   {
     while(true)
     {
@@ -161,7 +161,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ref atom::swap_vals(object_ref const fn)
+  persistent_vector_ref atom::swap_vals(object_ref const &fn)
   {
     while(true)
     {
@@ -178,7 +178,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ref atom::swap_vals(object_ref const fn, object_ref const a1)
+  persistent_vector_ref atom::swap_vals(object_ref const &fn, object_ref const &a1)
   {
     while(true)
     {
@@ -196,7 +196,7 @@ namespace jank::runtime::obj
   }
 
   persistent_vector_ref
-  atom::swap_vals(object_ref const fn, object_ref const a1, object_ref const a2)
+  atom::swap_vals(object_ref const &fn, object_ref const &a1, object_ref const &a2)
   {
     while(true)
     {
@@ -213,10 +213,10 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ref atom::swap_vals(object_ref const fn,
-                                        object_ref const a1,
-                                        object_ref const a2,
-                                        object_ref const rest)
+  persistent_vector_ref atom::swap_vals(object_ref const &fn,
+                                        object_ref const &a1,
+                                        object_ref const &a2,
+                                        object_ref const &rest)
   {
     while(true)
     {
@@ -234,7 +234,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref atom::compare_and_set(object_ref const old_val, object_ref const new_val)
+  object_ref atom::compare_and_set(object_ref const &old_val, object_ref const &new_val)
   {
     /* NOLINTNEXTLINE(misc-const-correctness): Can't actually be const. */
     object *old{ old_val.data };
@@ -248,13 +248,13 @@ namespace jank::runtime::obj
     return make_box(ret);
   }
 
-  void atom::add_watch(object_ref const key, object_ref const fn)
+  void atom::add_watch(object_ref const &key, object_ref const &fn)
   {
     auto locked_watches(this->watches.wlock());
     *locked_watches = (*locked_watches)->assoc(key, fn);
   }
 
-  void atom::remove_watch(object_ref const key)
+  void atom::remove_watch(object_ref const &key)
   {
     auto locked_watches(this->watches.wlock());
     *locked_watches = (*locked_watches)->dissoc(key);

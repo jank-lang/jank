@@ -14,12 +14,12 @@ namespace clojure::core_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ref subvec(object_ref const o, object_ref const start, object_ref const end)
+  static object_ref subvec(object_ref const &o, object_ref const &start, object_ref const &end)
   {
     return runtime::subvec(o, runtime::to_int(start), runtime::to_int(end));
   }
 
-  object_ref not_(object_ref const o)
+  object_ref not_(object_ref const &o)
   {
     if(runtime::is_nil(o))
     {
@@ -28,11 +28,11 @@ namespace clojure::core_native
     return make_box(runtime::is_false(o));
   }
 
-  static object_ref to_unqualified_symbol(object_ref const o)
+  static object_ref to_unqualified_symbol(object_ref const &o)
   {
     return runtime::visit_object(
-      [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+      [&](auto const &typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::symbol>)
         {
@@ -59,118 +59,119 @@ namespace clojure::core_native
       o);
   }
 
-  static object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  static object_ref to_qualified_symbol(object_ref const &ns, object_ref const &name)
   {
     return make_box<obj::symbol>(ns, name);
   }
 
-  object_ref lazy_seq(object_ref const o)
+  object_ref lazy_seq(object_ref const &o)
   {
     return make_box<obj::lazy_sequence>(o);
   }
 
-  object_ref is_var(object_ref const o)
+  object_ref is_var(object_ref const &o)
   {
     return make_box(o->type == object_type::var);
   }
 
-  object_ref var_get(object_ref const o)
+  object_ref var_get(object_ref const &o)
   {
     return try_object<var>(o)->deref();
   }
 
-  object_ref intern_var(object_ref const sym)
+  object_ref intern_var(object_ref const &sym)
   {
     return __rt_ctx->intern_var(try_object<obj::symbol>(sym)).expect_ok();
   }
 
-  object_ref var_get_root(object_ref const o)
+  object_ref var_get_root(object_ref const &o)
   {
     return try_object<var>(o)->get_root();
   }
 
-  object_ref var_bind_root(object_ref const v, object_ref const o)
+  object_ref var_bind_root(object_ref const &v, object_ref const &o)
   {
     return try_object<var>(v)->bind_root(o);
   }
 
-  object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args)
+  object_ref alter_var_root(object_ref const &o, object_ref const &fn, object_ref const &args)
   {
     return try_object<var>(o)->alter_root(fn, args);
   }
 
-  object_ref is_var_bound(object_ref const o)
+  object_ref is_var_bound(object_ref const &o)
   {
     return make_box(try_object<runtime::var>(o)->is_bound());
   }
 
-  object_ref is_var_thread_bound(object_ref const o)
+  object_ref is_var_thread_bound(object_ref const &o)
   {
     return make_box(try_object<runtime::var>(o)->get_thread_binding().is_some());
   }
 
-  object_ref delay(object_ref const fn)
+  object_ref delay(object_ref const &fn)
   {
     return make_box<obj::delay>(fn);
   }
 
-  object_ref is_fn(object_ref const o)
+  object_ref is_fn(object_ref const &o)
   {
     return make_box(o->type == object_type::native_function_wrapper
                     || o->type == object_type::jit_function);
   }
 
-  object_ref is_multi_fn(object_ref const o)
+  object_ref is_multi_fn(object_ref const &o)
   {
     return make_box(o->type == object_type::multi_function);
   }
 
-  object_ref multi_fn(object_ref const name,
-                      object_ref const dispatch_fn,
-                      object_ref const default_,
-                      object_ref const hierarchy)
+  object_ref multi_fn(object_ref const &name,
+                      object_ref const &dispatch_fn,
+                      object_ref const &default_,
+                      object_ref const &hierarchy)
   {
     return make_box<obj::multi_function>(name, dispatch_fn, default_, hierarchy);
   }
 
-  object_ref defmethod(object_ref const multifn, object_ref const dispatch_val, object_ref const fn)
+  object_ref
+  defmethod(object_ref const &multifn, object_ref const &dispatch_val, object_ref const &fn)
   {
     return try_object<obj::multi_function>(multifn)->add_method(dispatch_val, fn);
   }
 
-  object_ref remove_all_methods(object_ref const multifn)
+  object_ref remove_all_methods(object_ref const &multifn)
   {
     return try_object<obj::multi_function>(multifn)->reset();
   }
 
-  object_ref remove_method(object_ref const multifn, object_ref const dispatch_val)
+  object_ref remove_method(object_ref const &multifn, object_ref const &dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->remove_method(dispatch_val);
   }
 
-  object_ref prefer_method(object_ref const multifn,
-                           object_ref const dispatch_val_x,
-                           object_ref const dispatch_val_y)
+  object_ref prefer_method(object_ref const &multifn,
+                           object_ref const &dispatch_val_x,
+                           object_ref const &dispatch_val_y)
   {
     return try_object<obj::multi_function>(multifn)->prefer_method(dispatch_val_x, dispatch_val_y);
   }
 
-  object_ref methods(object_ref const multifn)
+  object_ref methods(object_ref const &multifn)
   {
     return try_object<obj::multi_function>(multifn)->method_table;
   }
 
-  object_ref get_method(object_ref const multifn, object_ref const dispatch_val)
+  object_ref get_method(object_ref const &multifn, object_ref const &dispatch_val)
   {
     return try_object<obj::multi_function>(multifn)->get_fn(dispatch_val);
   }
 
-  object_ref prefers(object_ref const multifn)
+  object_ref prefers(object_ref const &multifn)
   {
     return try_object<obj::multi_function>(multifn)->prefer_table;
   }
 
-  object_ref sleep(object_ref const ms)
+  object_ref sleep(object_ref const &ms)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
     return jank_nil();
@@ -183,60 +184,61 @@ namespace clojure::core_native
     return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
   }
 
-  object_ref in_ns(object_ref const sym)
+  object_ref in_ns(object_ref const &sym)
   {
     __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
     return jank_nil();
   }
 
-  object_ref intern_ns(object_ref const sym)
+  object_ref intern_ns(object_ref const &sym)
   {
     return __rt_ctx->intern_ns(try_object<obj::symbol>(sym));
   }
 
-  object_ref find_ns(object_ref const sym)
+  object_ref find_ns(object_ref const &sym)
   {
     return __rt_ctx->find_ns(try_object<obj::symbol>(sym));
   }
 
-  object_ref find_var(object_ref const sym)
+  object_ref find_var(object_ref const &sym)
   {
     return __rt_ctx->find_var(try_object<obj::symbol>(sym));
   }
 
-  object_ref remove_ns(object_ref const sym)
+  object_ref remove_ns(object_ref const &sym)
   {
     return __rt_ctx->remove_ns(try_object<obj::symbol>(sym));
   }
 
-  object_ref is_ns(object_ref const ns_or_sym)
+  object_ref is_ns(object_ref const &ns_or_sym)
   {
     return make_box(ns_or_sym->type == object_type::ns);
   }
 
-  object_ref ns_name(object_ref const ns)
+  object_ref ns_name(object_ref const &ns)
   {
     return try_object<runtime::ns>(ns)->name;
   }
 
-  object_ref ns_map(object_ref const ns)
+  object_ref ns_map(object_ref const &ns)
   {
     return try_object<runtime::ns>(ns)->get_mappings();
   }
 
-  object_ref var_ns(object_ref const v)
+  object_ref var_ns(object_ref const &v)
   {
     return try_object<runtime::var>(v)->n;
   }
 
-  object_ref ns_resolve(object_ref const ns, object_ref const sym)
+  object_ref ns_resolve(object_ref const &ns, object_ref const &sym)
   {
     auto const n(try_object<runtime::ns>(ns));
     auto const found(n->find_var(try_object<obj::symbol>(sym)));
     return found;
   }
 
-  object_ref alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias)
+  object_ref
+  alias(object_ref const &current_ns, object_ref const &remote_ns, object_ref const &alias)
   {
     try_object<ns>(current_ns)
       ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
@@ -244,19 +246,19 @@ namespace clojure::core_native
     return jank_nil();
   }
 
-  object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
+  object_ref ns_unalias(object_ref const &current_ns, object_ref const &alias)
   {
     try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
     return jank_nil();
   }
 
-  object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
+  object_ref ns_unmap(object_ref const &current_ns, object_ref const &sym)
   {
     try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
     return jank_nil();
   }
 
-  object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var)
+  object_ref refer(object_ref const &current_ns, object_ref const &sym, object_ref const &var)
   {
     expect_object<runtime::ns>(current_ns)
       ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
@@ -264,30 +266,30 @@ namespace clojure::core_native
     return jank_nil();
   }
 
-  object_ref load_module(object_ref const path)
+  object_ref load_module(object_ref const &path)
   {
     __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
     return jank_nil();
   }
 
-  object_ref compile(object_ref const path)
+  object_ref compile(object_ref const &path)
   {
     __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
     return jank_nil();
   }
 
-  object_ref eval(object_ref const expr)
+  object_ref eval(object_ref const &expr)
   {
     return __rt_ctx->eval(expr);
   }
 
-  object_ref hash_unordered(object_ref const coll)
+  object_ref hash_unordered(object_ref const &coll)
   {
     return make_box(hash::unordered(coll.data)).erase();
   }
 
   /* TODO: implement opts for `read-string` */
-  object_ref read_string(object_ref const /* opts */, object_ref const str)
+  object_ref read_string(object_ref const & /* opts */, object_ref const &str)
   {
     return __rt_ctx->read_string(runtime::to_string(str));
   }
@@ -316,7 +318,7 @@ void jank_load_clojure_core_native()
           __rt_ctx->intern_keyword("name").expect_ok(),
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
-  auto const intern_fn_obj([=](jtl::immutable_string const &name, object_ref const fn) {
+  auto const intern_fn_obj([=](jtl::immutable_string const &name, object_ref const &fn) {
     ns->intern_var(name)->bind_root(with_meta(
       fn,
       obj::persistent_hash_map::create_unique(std::make_pair(
@@ -329,17 +331,17 @@ void jank_load_clojure_core_native()
   intern_fn("identical?", &is_identical);
   intern_fn("empty?", &is_empty);
   intern_fn("empty", &empty);
-  intern_fn("count", static_cast<usize (*)(object_ref)>(&sequence_length));
-  intern_fn("boolean", static_cast<bool (*)(object_ref)>(&truthy));
-  intern_fn("integer", static_cast<i64 (*)(object_ref)>(&to_int));
-  intern_fn("real", static_cast<f64 (*)(object_ref)>(&to_real));
-  intern_fn("seq", static_cast<object_ref (*)(object_ref)>(&seq));
-  intern_fn("fresh-seq", static_cast<object_ref (*)(object_ref)>(&fresh_seq));
-  intern_fn("first", static_cast<object_ref (*)(object_ref)>(&first));
-  intern_fn("second", static_cast<object_ref (*)(object_ref)>(&second));
-  intern_fn("next", static_cast<object_ref (*)(object_ref)>(&next));
-  intern_fn("next-in-place", static_cast<object_ref (*)(object_ref)>(&next_in_place));
-  intern_fn("rest", static_cast<object_ref (*)(object_ref)>(&rest));
+  intern_fn("count", static_cast<usize (*)(object_ref const &)>(&sequence_length));
+  intern_fn("boolean", static_cast<bool (*)(object_ref const &)>(&truthy));
+  intern_fn("integer", static_cast<i64 (*)(object_ref const &)>(&to_int));
+  intern_fn("real", static_cast<f64 (*)(object_ref const &)>(&to_real));
+  intern_fn("seq", static_cast<object_ref (*)(object_ref const &)>(&seq));
+  intern_fn("fresh-seq", static_cast<object_ref (*)(object_ref const &)>(&fresh_seq));
+  intern_fn("first", static_cast<object_ref (*)(object_ref const &)>(&first));
+  intern_fn("second", static_cast<object_ref (*)(object_ref const &)>(&second));
+  intern_fn("next", static_cast<object_ref (*)(object_ref const &)>(&next));
+  intern_fn("next-in-place", static_cast<object_ref (*)(object_ref const &)>(&next_in_place));
+  intern_fn("rest", static_cast<object_ref (*)(object_ref const &)>(&rest));
   intern_fn("cons", &cons);
   intern_fn("coll?", &is_collection);
   intern_fn("seq?", &is_seq);
@@ -351,11 +353,14 @@ void jank_load_clojure_core_native()
   intern_fn("conj", &conj);
   intern_fn("map?", &is_map);
   intern_fn("associative?", &is_associative);
-  intern_fn("assoc", static_cast<object_ref (*)(object_ref, object_ref, object_ref)>(&assoc));
-  intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object_ref)>(&to_code_string));
+  intern_fn("assoc",
+            static_cast<object_ref (*)(object_ref const &, object_ref const &, object_ref const &)>(
+              &assoc));
+  intern_fn("pr-str", static_cast<jtl::immutable_string (*)(object_ref const &)>(&to_code_string));
   intern_fn("string?", &is_string);
   intern_fn("char?", &is_char);
-  intern_fn("str", static_cast<jtl::immutable_string (*)(object_ref, object_ref)>(&str));
+  intern_fn("str",
+            static_cast<jtl::immutable_string (*)(object_ref const &, object_ref const &)>(&str));
   intern_fn("symbol?", &is_symbol);
   intern_fn("true?", &is_true);
   intern_fn("false?", &is_false);
@@ -375,7 +380,8 @@ void jank_load_clojure_core_native()
   intern_fn("persistent!", &persistent);
   intern_fn("conj-in-place!", &conj_in_place);
   intern_fn("assoc-in-place!",
-            static_cast<object_ref (*)(object_ref, object_ref, object_ref)>(&assoc_in_place));
+            static_cast<object_ref (*)(object_ref const &, object_ref const &, object_ref const &)>(
+              &assoc_in_place));
   intern_fn("dissoc-in-place!", &dissoc_in_place);
   intern_fn("pop-in-place!", &pop_in_place);
   intern_fn("disj-in-place!", &disj_in_place);
@@ -392,10 +398,10 @@ void jank_load_clojure_core_native()
   intern_fn("volatile!", &volatile_);
   intern_fn("volatile?", &is_volatile);
   intern_fn("vreset!", &vreset);
-  intern_fn("+", static_cast<object_ref (*)(object_ref, object_ref)>(&add));
-  intern_fn("-", static_cast<object_ref (*)(object_ref, object_ref)>(&sub));
-  intern_fn("/", static_cast<object_ref (*)(object_ref, object_ref)>(&div));
-  intern_fn("*", static_cast<object_ref (*)(object_ref, object_ref)>(&mul));
+  intern_fn("+", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&add));
+  intern_fn("-", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&sub));
+  intern_fn("/", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&div));
+  intern_fn("*", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&mul));
   intern_fn("bit-not", &bit_not);
   intern_fn("bit-and", &bit_and);
   intern_fn("bit-or", &bit_or);
@@ -408,20 +414,20 @@ void jank_load_clojure_core_native()
   intern_fn("bit-shift-left", &bit_shift_left);
   intern_fn("bit-shift-right", &bit_shift_right);
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
-  intern_fn("<", static_cast<bool (*)(object_ref, object_ref)>(&lt));
-  intern_fn("<=", static_cast<bool (*)(object_ref, object_ref)>(&lte));
+  intern_fn("<", static_cast<bool (*)(object_ref const &, object_ref const &)>(&lt));
+  intern_fn("<=", static_cast<bool (*)(object_ref const &, object_ref const &)>(&lte));
   intern_fn("compare", &runtime::compare);
-  intern_fn("min", static_cast<object_ref (*)(object_ref, object_ref)>(&min));
-  intern_fn("max", static_cast<object_ref (*)(object_ref, object_ref)>(&max));
-  intern_fn("inc", static_cast<object_ref (*)(object_ref)>(&inc));
-  intern_fn("dec", static_cast<object_ref (*)(object_ref)>(&dec));
+  intern_fn("min", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&min));
+  intern_fn("max", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&max));
+  intern_fn("inc", static_cast<object_ref (*)(object_ref const &)>(&inc));
+  intern_fn("dec", static_cast<object_ref (*)(object_ref const &)>(&dec));
   intern_fn("numerator", &numerator);
   intern_fn("denominator", &denominator);
   intern_fn("pos?", &is_pos);
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
-  intern_fn("rem", static_cast<object_ref (*)(object_ref, object_ref)>(&rem));
-  intern_fn("quot", static_cast<object_ref (*)(object_ref, object_ref)>(&quot));
+  intern_fn("rem", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&rem));
+  intern_fn("quot", static_cast<object_ref (*)(object_ref const &, object_ref const &)>(&quot));
   intern_fn("integer?", &is_integer);
   intern_fn("real?", &is_real);
   intern_fn("ratio?", &is_ratio);
@@ -530,10 +536,10 @@ void jank_load_clojure_core_native()
   intern_fn("re-matches", &re_matches);
 
   /* TODO: jank.math? */
-  intern_fn("sqrt", static_cast<f64 (*)(object_ref)>(&runtime::sqrt));
-  intern_fn("tan", static_cast<f64 (*)(object_ref)>(&runtime::tan));
-  intern_fn("abs", static_cast<object_ref (*)(object_ref)>(&runtime::abs));
-  intern_fn("pow", static_cast<f64 (*)(object_ref, object_ref)>(&runtime::pow));
+  intern_fn("sqrt", static_cast<f64 (*)(object_ref const &)>(&runtime::sqrt));
+  intern_fn("tan", static_cast<f64 (*)(object_ref const &)>(&runtime::tan));
+  intern_fn("abs", static_cast<object_ref (*)(object_ref const &)>(&runtime::abs));
+  intern_fn("pow", static_cast<f64 (*)(object_ref const &, object_ref const &)>(&runtime::pow));
 
   {
     auto const fn(
@@ -557,7 +563,7 @@ void jank_load_clojure_core_native()
       }
 
       return visit_seqable(
-        [](auto const typed_rest, object_ref const l) {
+        [](auto const &typed_rest, object_ref const &l) {
           for(auto const e : make_sequence_range(typed_rest))
           {
             if(!equal(l, e))

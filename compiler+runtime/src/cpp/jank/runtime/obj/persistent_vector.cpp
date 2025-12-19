@@ -25,7 +25,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_vector_ref persistent_vector::create(object_ref const s)
+  persistent_vector_ref persistent_vector::create(object_ref const &s)
   {
     if(s.is_nil())
     {
@@ -120,7 +120,7 @@ namespace jank::runtime::obj
 
   i64 persistent_vector::compare(object const &o) const
   {
-    return visit_type<persistent_vector>([this](auto const typed_o) { return compare(*typed_o); },
+    return visit_type<persistent_vector>([this](auto const &typed_o) { return compare(*typed_o); },
                                          &o);
   }
 
@@ -169,14 +169,14 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_vector_ref persistent_vector::conj(object_ref head) const
+  persistent_vector_ref persistent_vector::conj(object_ref const &head) const
   {
     auto vec(data.push_back(head));
     auto ret(make_box<persistent_vector>(meta, std::move(vec)));
     return ret;
   }
 
-  object_ref persistent_vector::call(object_ref const o) const
+  object_ref persistent_vector::call(object_ref const &o) const
   {
     return get(o);
   }
@@ -186,7 +186,7 @@ namespace jank::runtime::obj
     return make_box<transient_vector>(data);
   }
 
-  persistent_vector_ref persistent_vector::with_meta(object_ref const m) const
+  persistent_vector_ref persistent_vector::with_meta(object_ref const &m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_vector>(data));
@@ -194,12 +194,12 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  object_ref persistent_vector::get(object_ref const key) const
+  object_ref persistent_vector::get(object_ref const &key) const
   {
     return get(key, jank_nil());
   }
 
-  object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
+  object_ref persistent_vector::get(object_ref const &key, object_ref const &fallback) const
   {
     if(key->type == object_type::integer)
     {
@@ -216,7 +216,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref persistent_vector::get_entry(object_ref const key) const
+  object_ref persistent_vector::get_entry(object_ref const &key) const
   {
     if(key->type == object_type::integer)
     {
@@ -234,7 +234,7 @@ namespace jank::runtime::obj
     }
   }
 
-  bool persistent_vector::contains(object_ref const key) const
+  bool persistent_vector::contains(object_ref const &key) const
   {
     if(key->type == object_type::integer)
     {
@@ -247,7 +247,7 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_vector_ref persistent_vector::assoc(object_ref const key, object_ref const val) const
+  persistent_vector_ref persistent_vector::assoc(object_ref const &key, object_ref const &val) const
   {
     if(key->type != object_type::integer)
     {
@@ -272,7 +272,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(meta, std::move(vec));
   }
 
-  persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
+  persistent_vector_ref persistent_vector::dissoc(object_ref const & /*key*/) const
   {
     throw std::runtime_error{ "Type 'persistent_vector' does not support 'dissoc'." };
   }
@@ -297,7 +297,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(meta, data.take(data.size() - 1));
   }
 
-  object_ref persistent_vector::nth(object_ref const index) const
+  object_ref persistent_vector::nth(object_ref const &index) const
   {
     if(index->type == object_type::integer)
     {
@@ -317,7 +317,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref persistent_vector::nth(object_ref const index, object_ref const fallback) const
+  object_ref persistent_vector::nth(object_ref const &index, object_ref const &fallback) const
   {
     return get(index, fallback);
   }

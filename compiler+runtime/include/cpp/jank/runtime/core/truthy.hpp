@@ -6,9 +6,9 @@
 namespace jank::runtime
 {
   bool truthy(object const *o);
-  bool truthy(object_ref o);
-  bool truthy(obj::nil_ref);
-  bool truthy(obj::boolean_ref const o);
+  bool truthy(object_ref const &o);
+  bool truthy(obj::nil_ref const &);
+  bool truthy(obj::boolean_ref const &o);
   bool truthy(bool const o);
 
   template <typename T>

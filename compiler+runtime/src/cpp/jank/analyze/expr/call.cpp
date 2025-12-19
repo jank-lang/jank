@@ -10,7 +10,7 @@ namespace jank::analyze::expr
              bool const needs_box,
              expression_ref const source,
              native_vector<expression_ref> &&arg_exprs,
-             runtime::obj::persistent_list_ref const form)
+             runtime::obj::persistent_list_ref const &form)
     : expression{ expr_kind, position, frame, needs_box }
     , source_expr{ source }
     , arg_exprs{ std::move(arg_exprs) }

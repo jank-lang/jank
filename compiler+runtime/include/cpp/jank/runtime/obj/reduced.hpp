@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     reduced() = default;
-    reduced(object_ref o);
+    reduced(object_ref const &o);
 
     /* behavior::object_like */
     bool equal(object const &) const;

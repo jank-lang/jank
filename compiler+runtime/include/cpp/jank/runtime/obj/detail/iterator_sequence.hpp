@@ -41,7 +41,7 @@ namespace jank::runtime::obj::detail
     oref<Derived> next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ref const head);
+    obj::cons_ref conj(object_ref const &head);
 
     object_ref coll{};
     /* Not default constructible. */

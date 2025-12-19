@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     volatile_() = default;
-    volatile_(object_ref o);
+    volatile_(object_ref const &o);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -24,7 +24,7 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ref deref() const;
 
-    object_ref reset(object_ref o);
+    object_ref reset(object_ref const &o);
 
     object base{ obj_type };
     object_ref val{};
