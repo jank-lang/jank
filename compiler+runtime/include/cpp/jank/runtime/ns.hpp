@@ -45,10 +45,14 @@ namespace jank::runtime
     void to_string(jtl::string_builder &buff) const;
     uhash to_hash() const;
 
+    /* behavior::metadatable */
+    object_ref with_meta(object_ref m);
+
     bool operator==(ns const &rhs) const;
 
     object base{ obj_type };
     obj::symbol_ref name{};
+    jtl::option<object_ref> meta;
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ref> vars;
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
