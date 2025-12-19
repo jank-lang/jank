@@ -44,7 +44,6 @@ namespace jank::runtime
     /* We want to initialize __rt_ctx ASAP so other code can start using it. */
     : binary_version{ (__rt_ctx = this, util::binary_version()) }
     , binary_cache_dir{ util::binary_cache_dir(binary_version) }
-    , opts{ util::cli::opts }
     , jit_prc{ binary_version }
   {
     intern_ns(make_box<obj::symbol>("cpp"));
