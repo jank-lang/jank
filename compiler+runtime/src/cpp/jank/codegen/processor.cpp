@@ -1801,7 +1801,7 @@ namespace jank::codegen
     auto const &value_tmp{ gen(expr->value_expr, fn_arity) };
 
     util::format_to(body_buffer,
-                    "switch(jank_shift_mask_case_integer({}.erase(), {}, {})) {",
+                    "switch(jank_shift_mask_case_integer({}.erase().data, {}, {})) {",
                     value_tmp.unwrap().str(true),
                     expr->shift,
                     expr->mask);
@@ -1983,7 +1983,7 @@ namespace jank::codegen
         util::format_to(body_buffer, "{}", arg_tmp.str(true));
         if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
-          util::format_to(body_buffer, ".erase()");
+          util::format_to(body_buffer, ".erase().data");
         }
         need_comma = true;
       }
