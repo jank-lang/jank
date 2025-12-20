@@ -54,29 +54,29 @@ extern "C"
   jank_object_ref jank_eval(jank_object_ref const s)
   {
     auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
-    return __rt_ctx->eval_string(s_obj->data).retain().erase();
+    return __rt_ctx->eval_string(s_obj->data).retain().erase().data;
   }
 
   jank_object_ref jank_read_string(jank_object_ref const s)
   {
     auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
-    return __rt_ctx->read_string(s_obj->data).retain().erase();
+    return __rt_ctx->read_string(s_obj->data).retain().erase().data;
   }
 
   jank_object_ref jank_read_string_c(char const * const s)
   {
-    return __rt_ctx->read_string(s).retain().erase();
+    return __rt_ctx->read_string(s).retain().erase().data;
   }
 
   jank_object_ref jank_ns_intern(jank_object_ref const sym)
   {
     auto const sym_obj(try_object<obj::symbol>(reinterpret_cast<object *>(sym)));
-    return __rt_ctx->intern_ns(sym_obj).erase();
+    return __rt_ctx->intern_ns(sym_obj).erase().data;
   }
 
   jank_object_ref jank_ns_intern_c(char const * const sym)
   {
-    return __rt_ctx->intern_ns(sym).erase();
+    return __rt_ctx->intern_ns(sym).erase().data;
   }
 
   void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count)
@@ -91,27 +91,27 @@ extern "C"
     __rt_ctx->intern_ns(ns_obj->data);
 
     auto const name_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(name)));
-    return __rt_ctx->intern_var(ns_obj->data, name_obj->data).expect_ok().retain().erase();
+    return __rt_ctx->intern_var(ns_obj->data, name_obj->data).expect_ok().retain().erase().data;
   }
 
   jank_object_ref jank_var_intern_c(char const * const ns, char const * const name)
   {
     __rt_ctx->intern_ns(ns);
-    return __rt_ctx->intern_var(ns, name).expect_ok().retain().erase();
+    return __rt_ctx->intern_var(ns, name).expect_ok().retain().erase().data;
   }
 
   jank_object_ref jank_var_bind_root(jank_object_ref const var, jank_object_ref const val)
   {
     auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
     auto const val_obj(reinterpret_cast<object *>(val));
-    return var_obj->bind_root(val_obj).retain().erase();
+    return var_obj->bind_root(val_obj).retain().erase().data;
   }
 
   jank_object_ref jank_var_set_dynamic(jank_object_ref const var, jank_object_ref const dynamic)
   {
     auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
     auto const dynamic_obj(reinterpret_cast<object *>(dynamic));
-    return var_obj->set_dynamic(truthy(dynamic_obj)).retain().erase();
+    return var_obj->set_dynamic(truthy(dynamic_obj)).retain().erase().data;
   }
 
   jank_object_ref jank_keyword_intern(jank_object_ref const ns, jank_object_ref const name)
@@ -121,26 +121,26 @@ extern "C"
     return __rt_ctx->intern_keyword(to_string(ns_obj), to_string(name_obj))
       .expect_ok()
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_deref(jank_object_ref const o)
   {
     auto const o_obj(reinterpret_cast<object *>(o));
-    return deref(o_obj).retain().erase();
+    return deref(o_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call0(jank_object_ref const f)
   {
     auto const f_obj(reinterpret_cast<object *>(f));
-    return dynamic_call(f_obj).retain().erase();
+    return dynamic_call(f_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call1(jank_object_ref const f, jank_object_ref const a1)
   {
     auto const f_obj(reinterpret_cast<object *>(f));
     auto const a1_obj(reinterpret_cast<object *>(a1));
-    return dynamic_call(f_obj, a1_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj).retain().erase().data;
   }
 
   jank_object_ref
@@ -149,7 +149,7 @@ extern "C"
     auto const f_obj(reinterpret_cast<object *>(f));
     auto const a1_obj(reinterpret_cast<object *>(a1));
     auto const a2_obj(reinterpret_cast<object *>(a2));
-    return dynamic_call(f_obj, a1_obj, a2_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj, a2_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call3(jank_object_ref const f,
@@ -161,7 +161,7 @@ extern "C"
     auto const a1_obj(reinterpret_cast<object *>(a1));
     auto const a2_obj(reinterpret_cast<object *>(a2));
     auto const a3_obj(reinterpret_cast<object *>(a3));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call4(jank_object_ref const f,
@@ -175,7 +175,7 @@ extern "C"
     auto const a2_obj(reinterpret_cast<object *>(a2));
     auto const a3_obj(reinterpret_cast<object *>(a3));
     auto const a4_obj(reinterpret_cast<object *>(a4));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call5(jank_object_ref const f,
@@ -191,7 +191,7 @@ extern "C"
     auto const a3_obj(reinterpret_cast<object *>(a3));
     auto const a4_obj(reinterpret_cast<object *>(a4));
     auto const a5_obj(reinterpret_cast<object *>(a5));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call6(jank_object_ref const f,
@@ -209,7 +209,7 @@ extern "C"
     auto const a4_obj(reinterpret_cast<object *>(a4));
     auto const a5_obj(reinterpret_cast<object *>(a5));
     auto const a6_obj(reinterpret_cast<object *>(a6));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).retain().erase();
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).retain().erase().data;
   }
 
   jank_object_ref jank_call7(jank_object_ref const f,
@@ -231,7 +231,7 @@ extern "C"
     auto const a7_obj(reinterpret_cast<object *>(a7));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj)
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_call8(jank_object_ref const f,
@@ -255,7 +255,7 @@ extern "C"
     auto const a8_obj(reinterpret_cast<object *>(a8));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj)
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_call9(jank_object_ref const f,
@@ -290,7 +290,7 @@ extern "C"
                         a8_obj,
                         a9_obj)
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_call10(jank_object_ref const f,
@@ -328,7 +328,7 @@ extern "C"
                         a9_obj,
                         a10_obj)
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_call11(jank_object_ref const f,
@@ -369,44 +369,44 @@ extern "C"
                         a10_obj,
                         try_object<obj::persistent_list>(rest_obj))
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_const_nil()
   {
-    return jank_nil().erase();
+    return jank_nil().erase().data;
   }
 
   jank_object_ref jank_const_true()
   {
-    return jank_true.retain().erase();
+    return jank_true.retain().erase().data;
   }
 
   jank_object_ref jank_const_false()
   {
-    return jank_false.retain().erase();
+    return jank_false.retain().erase().data;
   }
 
   jank_object_ref jank_integer_create(jank_i64 const i)
   {
-    return make_box(i).retain().erase();
+    return make_box(i).retain().erase().data;
   }
 
   jank_object_ref jank_big_integer_create(char const * const s)
   {
     jank_assert(s);
-    return make_box<runtime::obj::big_integer>(s).retain().erase();
+    return make_box<runtime::obj::big_integer>(s).retain().erase().data;
   }
 
   jank_object_ref jank_big_decimal_create(char const * const s)
   {
     jank_assert(s);
-    return make_box<runtime::obj::big_decimal>(s).retain().erase();
+    return make_box<runtime::obj::big_decimal>(s).retain().erase().data;
   }
 
   jank_object_ref jank_real_create(jank_f64 const r)
   {
-    return make_box(r).retain().erase();
+    return make_box(r).retain().erase().data;
   }
 
   jank_object_ref
@@ -415,20 +415,20 @@ extern "C"
     return make_box(runtime::obj::ratio_data(reinterpret_cast<object *>(numerator),
                                              reinterpret_cast<object *>(denominator)))
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_string_create(char const *s)
   {
     jank_debug_assert(s);
-    return make_box(s).retain().erase();
+    return make_box(s).retain().erase().data;
   }
 
   jank_object_ref jank_symbol_create(jank_object_ref const ns, jank_object_ref const name)
   {
     auto const ns_obj(reinterpret_cast<object *>(ns));
     auto const name_obj(reinterpret_cast<object *>(name));
-    return make_box<obj::symbol>(ns_obj, name_obj).retain().erase();
+    return make_box<obj::symbol>(ns_obj, name_obj).retain().erase().data;
   }
 
   jank_object_ref jank_character_create(char const *s)
@@ -436,25 +436,25 @@ extern "C"
     jank_debug_assert(s);
     return make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap())
       .retain()
-      .erase();
+      .erase().data;
   }
 
   jank_object_ref jank_regex_create(char const *s)
   {
     jank_debug_assert(s);
-    return make_box<obj::re_pattern>(s).retain().erase();
+    return make_box<obj::re_pattern>(s).retain().erase().data;
   }
 
   jank_object_ref jank_uuid_create(char const *s)
   {
     jank_debug_assert(s);
-    return make_box<obj::uuid>(s).retain().erase();
+    return make_box<obj::uuid>(s).retain().erase().data;
   }
 
   jank_object_ref jank_inst_create(char const *s)
   {
     jank_debug_assert(s);
-    return make_box<obj::inst>(s).retain().erase();
+    return make_box<obj::inst>(s).retain().erase().data;
   }
 
   jank_object_ref jank_list_create(jank_u64 const size, ...)
@@ -474,7 +474,7 @@ extern "C"
     va_end(args);
 
     runtime::detail::native_persistent_list const npl{ v.rbegin(), v.rend() };
-    return make_box<obj::persistent_list>(std::move(npl)).retain().erase();
+    return make_box<obj::persistent_list>(std::move(npl)).retain().erase().data;
   }
 
   jank_object_ref jank_vector_create(jank_u64 const size, ...)
@@ -492,7 +492,7 @@ extern "C"
     }
 
     va_end(args);
-    return trans.to_persistent().retain().erase();
+    return trans.to_persistent().retain().erase().data;
   }
 
   /* TODO: Meta for maps, vectors, sets, symbols, and fns. */
@@ -514,7 +514,7 @@ extern "C"
     }
 
     va_end(args);
-    return trans.to_persistent().retain().erase();
+    return trans.to_persistent().retain().erase().data;
   }
 
   jank_object_ref jank_set_create(u64 const size, ...)
@@ -532,12 +532,12 @@ extern "C"
     }
 
     va_end(args);
-    return trans.to_persistent().retain().erase();
+    return trans.to_persistent().retain().erase().data;
   }
 
   jank_object_ref jank_box(char const * const type, void const * const o)
   {
-    return make_box<obj::opaque_box>(o, type).erase();
+    return make_box<obj::opaque_box>(o, type).erase().data;
   }
 
   void *jank_unbox(char const * const type, jank_object_ref const o)
@@ -587,7 +587,7 @@ extern "C"
 
   jank_object_ref jank_function_create(jank_arity_flags const arity_flags)
   {
-    return make_box<obj::jit_function>(arity_flags).erase();
+    return make_box<obj::jit_function>(arity_flags).erase().data;
   }
 
   void
@@ -754,7 +754,7 @@ extern "C"
 
   jank_object_ref jank_closure_create(jank_arity_flags const arity_flags, void * const context)
   {
-    return make_box<obj::jit_closure>(arity_flags, context).erase();
+    return make_box<obj::jit_closure>(arity_flags, context).erase().data;
   }
 
   void
@@ -1081,6 +1081,6 @@ extern "C"
       trans.conj_in_place(make_box(arg));
     }
 
-    return trans.to_persistent().retain().erase();
+    return trans.to_persistent().retain().erase().data;
   }
 }

@@ -1926,8 +1926,8 @@ namespace jank::codegen
       body_buffer,
       "auto const {}{ jank::runtime::convert<{}>::{}({}) };",
       ret_tmp,
-      cpp_util::get_qualified_type_name(
-        Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(expr->conversion_type))),
+      cpp_util::get_qualified_type_name(Cpp::GetCanonicalType(
+        Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(expr->conversion_type)))),
       (expr->policy == conversion_policy::into_object ? "into_object" : "from_object"),
       value_tmp.unwrap().str(true));
 
@@ -2843,5 +2843,18 @@ namespace jank::codegen
       generated_expression = true;
     }
     return { expression_buffer.data(), expression_buffer.size() };
+  }
+
+  jtl::immutable_string processor::expression_fn_str()
+  {
+    auto const &expr_str{ expression_str() };
+    auto const &fn_name{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string("expr_fn")) };
+    jtl::string_builder fn_buffer;
+    util::format_to(fn_buffer,
+                    "auto {}(){ return {}.retain().erase().data; } {}()",
+                    fn_name,
+                    expr_str,
+                    fn_name);
+    return fn_buffer.release();
   }
 }

@@ -402,7 +402,9 @@ namespace jank::runtime
                                                            "generic",
                                                            "",
                                                            opt,
-                                                           llvm::Reloc::PIC_) };
+                                                           llvm::Reloc::PIC_,
+                                                           llvm::CodeModel::Large,
+                                                           llvm::CodeGenOptLevel::Default) };
     if(!target_machine)
     {
       return err(util::format("failed to create target machine for {}", target_triple));

@@ -74,7 +74,7 @@ set(
   jank_aot_compiler_flags
   -Wall -Wextra -Wpedantic
   -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
-  -Wold-style-cast -Wno-gnu-case-range -Wno-c99-designator
+  -Wold-style-cast -Wno-gnu-case-range -Wno-c99-designator -Wno-c2y-extensions
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
   -Wno-covered-switch-default

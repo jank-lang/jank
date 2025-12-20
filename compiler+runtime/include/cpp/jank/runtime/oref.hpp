@@ -89,7 +89,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     oref(oref<T> const &typed_data) noexcept
-      : data{ typed_data.erase() }
+      : data{ typed_data.erase().data }
     {
       retain();
     }
@@ -193,7 +193,7 @@ namespace jank::runtime
     requires behavior::object_like<T>
     bool operator==(oref<T> const &rhs) const noexcept
     {
-      return data == rhs.erase();
+      return data == rhs.erase().data;
     }
 
     bool operator!=(oref const &rhs) const noexcept
@@ -205,7 +205,7 @@ namespace jank::runtime
     requires behavior::object_like<T>
     bool operator!=(oref<T> const &rhs) const noexcept
     {
-      return data != rhs.erase();
+      return data != rhs.erase().data;
     }
 
     oref &operator=(jtl::nullptr_t) noexcept = delete;
@@ -217,7 +217,7 @@ namespace jank::runtime
       return data;
     }
 
-    value_type *erase() const noexcept
+    oref<object> erase() const noexcept
     {
       return data;
     }
@@ -236,7 +236,7 @@ namespace jank::runtime
     value_type *data{ std::bit_cast<object *>(jank_const_nil()) };
   };
 
-  /* This specialization of oref is for fully-typed objects like nil,
+  /* This specialization of oref is for fully-typed objects like
    * persistent_list, persistent_array_map, etc.
    *
    * It cannot be null, but it can be nil. */
@@ -354,12 +354,12 @@ namespace jank::runtime
 
     bool operator==(oref<object> const &rhs) const
     {
-      return erase() == rhs;
+      return erase().data == rhs;
     }
 
     bool operator!=(oref<object> const &rhs) const
     {
-      return erase() != rhs;
+      return erase().data != rhs;
     }
 
     template <typename C>
@@ -451,14 +451,14 @@ namespace jank::runtime
 
     object *get() const noexcept
     {
-      return erase();
+      return &reinterpret_cast<T *>(data)->base;
     }
 
-    object *erase() const noexcept
+    oref<object> erase() const noexcept
     {
       if(is_nil())
       {
-        return std::bit_cast<object *>(jank_const_nil());
+        return {};
       }
       return &reinterpret_cast<T *>(data)->base;
     }
@@ -555,12 +555,12 @@ namespace jank::runtime
 
     object *get() const noexcept
     {
-      return erase();
+      return std::bit_cast<object *>(data);
     }
 
-    object *erase() const noexcept
+    oref<object> erase() const noexcept
     {
-      return std::bit_cast<object *>(data);
+      return {};
     }
 
     bool is_some() const noexcept

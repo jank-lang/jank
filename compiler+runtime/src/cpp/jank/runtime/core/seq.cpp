@@ -1158,7 +1158,12 @@ namespace jank::runtime
 
         if constexpr(behavior::chunkable<T>)
         {
-          return typed_o->chunked_next().erase() ?: obj::persistent_list::empty().erase();
+          auto ret{ typed_o->chunked_next() };
+          if(ret.is_nil())
+          {
+            return obj::persistent_list::empty();
+          }
+          return ret;
         }
         {
           throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };

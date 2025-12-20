@@ -110,8 +110,11 @@ namespace jank::runtime
 
   obj::weak_nil_ref jank_nil()
   {
-    static obj::nil n;
-    n.base.retain();
+    static auto n{ []() {
+      obj::nil n;
+      n.base.retain();
+      return n;
+    }() };
     return &n;
   }
 }

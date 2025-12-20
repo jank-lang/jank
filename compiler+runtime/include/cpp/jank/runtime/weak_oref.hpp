@@ -62,14 +62,14 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     weak_oref(weak_oref<T> const typed_data) noexcept
-      : data{ typed_data.erase() }
+      : data{ typed_data.erase().data }
     {
     }
 
     template <typename T>
     requires behavior::object_like<T>
     weak_oref(oref<T> const &typed_data) noexcept
-      : data{ typed_data.erase() }
+      : data{ typed_data.erase().data }
     {
     }
 
@@ -105,7 +105,7 @@ namespace jank::runtime
     requires behavior::object_like<T>
     bool operator==(weak_oref<T> const &rhs) const noexcept
     {
-      return data == rhs.erase();
+      return data == rhs.erase().data;
     }
 
     bool operator!=(weak_oref const &rhs) const noexcept
@@ -117,7 +117,7 @@ namespace jank::runtime
     requires behavior::object_like<T>
     bool operator!=(weak_oref<T> const &rhs) const noexcept
     {
-      return data != rhs.erase();
+      return data != rhs.erase().data;
     }
 
     weak_oref &operator=(jtl::nullptr_t) noexcept = delete;
@@ -139,7 +139,7 @@ namespace jank::runtime
       return data;
     }
 
-    value_type *erase() const noexcept
+    weak_oref<O> erase() const noexcept
     {
       return data;
     }
@@ -230,12 +230,12 @@ namespace jank::runtime
 
     bool operator==(weak_oref<object> const &rhs) const
     {
-      return erase() == rhs.erase();
+      return erase().data == rhs.erase().data;
     }
 
     bool operator!=(weak_oref<object> const &rhs) const
     {
-      return erase() != rhs.erase();
+      return erase().data != rhs.erase().data;
     }
 
     template <typename C>
@@ -302,11 +302,11 @@ namespace jank::runtime
       return erase();
     }
 
-    object *erase() const noexcept
+    weak_oref<object> erase() const noexcept
     {
       if(is_nil())
       {
-        return std::bit_cast<object *>(jank_const_nil());
+        return {};
       }
       return &reinterpret_cast<T *>(data)->base;
     }
@@ -426,10 +426,10 @@ namespace jank::runtime
 
     object *get() const noexcept
     {
-      return erase();
+      return std::bit_cast<object *>(data);
     }
 
-    object *erase() const noexcept
+    weak_oref<object> erase() const noexcept
     {
       return std::bit_cast<object *>(data);
     }

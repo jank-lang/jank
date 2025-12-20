@@ -153,6 +153,7 @@ namespace jank::codegen
     void build_body();
     void build_footer();
     jtl::immutable_string expression_str();
+    jtl::immutable_string expression_fn_str();
 
     void format_elided_var(jtl::immutable_string const &start,
                            jtl::immutable_string const &end,

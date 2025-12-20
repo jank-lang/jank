@@ -493,7 +493,7 @@
        false))))
 
 (def ^:private sigs
-  (fn* [fdecl]
+  (fn* sigs [fdecl]
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
                          ;elide implicit macro args
