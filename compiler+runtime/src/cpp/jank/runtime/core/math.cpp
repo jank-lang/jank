@@ -710,16 +710,34 @@ namespace jank::runtime
 
   bool is_even(object_ref const l)
   {
-    return visit_type<obj::integer>(
-      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 0; },
-      l);
+    if(l->type == object_type::integer)
+    {
+      return expect_object<obj::integer>(l)->data % 2 == 0;
+    }
+
+    if(l->type == object_type::big_integer)
+    {
+      return expect_object<obj::big_integer>(l)->data % 2 == 0;
+    }
+
+    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
+      .erase();
   }
 
   bool is_odd(object_ref const l)
   {
-    return visit_type<obj::integer>(
-      [=](auto const typed_l) -> bool { return typed_l->data % 2 == 1; },
-      l);
+    if(l->type == object_type::integer)
+    {
+      return expect_object<obj::integer>(l)->data % 2 != 0;
+    }
+
+    if(l->type == object_type::big_integer)
+    {
+      return expect_object<obj::big_integer>(l)->data % 2 != 0;
+    }
+
+    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
+      .erase();
   }
 
   bool is_equiv(object_ref const l, object_ref const r)
@@ -1773,6 +1791,34 @@ namespace jank::runtime
     {
       throw make_box(util::format("Expected string, got {}", object_type_str(o->type))).erase();
     }
+  }
+
+  obj::big_integer_ref to_big_integer(object_ref const o)
+  {
+    return visit_number_like(
+      [&](auto const typed_o) -> obj::big_integer_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::big_integer>)
+        {
+          return typed_o;
+        }
+        else if constexpr(std::same_as<T, obj::integer>)
+        {
+          return make_box<obj::big_integer>(typed_o->data);
+        }
+        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::ratio>
+                          || std::same_as<T, obj::big_decimal>)
+        {
+          return make_box<obj::big_integer>(typed_o->to_integer());
+        }
+        else
+        {
+          throw make_box(util::format("Expected a numeric value, got {}", object_type_str(o->type)))
+            .erase();
+        }
+      },
+      o);
   }
 
   bool is_big_decimal(object_ref const o)

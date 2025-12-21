@@ -3652,10 +3652,22 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    return jtl::make_ref<expr::cpp_raw>(position,
-                                        current_frame,
-                                        needs_box,
-                                        expect_object<runtime::obj::persistent_string>(obj)->data);
+    auto const raw_string{ expect_object<runtime::obj::persistent_string>(obj)->data };
+
+    /* We wrap all cpp/raw strings in unique preprocessor guards because jank currently does
+       codegen twice when compiling and this can lead to ODR violations. */
+    auto const content_hash{ std::hash<jtl::immutable_string>{}(raw_string) };
+    auto const guard_name{ util::format("JANK_CPP_RAW_{}", content_hash) };
+    auto const guarded_code{ util::format("#ifndef {}\n"
+                                          "#define {}\n"
+                                          "\n"
+                                          "{}\n"
+                                          "#endif\n",
+                                          guard_name,
+                                          guard_name,
+                                          raw_string) };
+
+    return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, guarded_code);
   }
 
   enum class literal_kind : u8
