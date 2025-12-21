@@ -1126,7 +1126,7 @@
   ([]
    0)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.add l r))
   ([l r & args]
@@ -1156,7 +1156,7 @@
   ([]
    1)
   ([x]
-   x)
+   (cpp/jank.runtime.number x))
   ([l r]
    (cpp/jank.runtime.mul l r))
   ([l r & args]
@@ -4345,33 +4345,6 @@
   [& args]
   (apply load-libs :require :use args))
 
-(defmacro ns
-  "Sets *ns* to the namespace named by name (unevaluated), creating it
-   if needed. References can be zero or more of: (:refer-clojure ...)
-   (:require ...) (:use ...) (:load ...)
-   with the syntax of refer-clojure/require/use/load respectively."
-  [name & references]
-  (let [process-reference (fn [reference]
-                            (let [kname (first reference)
-                                  args (rest reference)]
-                              (cons (symbol "clojure.core" (clojure.core/name kname))
-                                    (map (fn [a]
-                                           (list 'quote a))
-                                         args))))
-        refer-full-clojure? (not-any? (fn [ref]
-                                        (= :refer-clojure (first ref)))
-                                      references)]
-    `(do
-       (clojure.core/in-ns '~name)
-       ; TODO: with-loading-context
-       (do ; with-loading-context
-         ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
-             `((clojure.core/refer '~'clojure.core)))
-         ~@(map process-reference references))
-       (if (= '~name '~'clojure.core)
-          nil
-          (do (swap! @#'*loaded-libs* conj '~name) nil)))))
-
 (defmacro refer-clojure
   "Same as (refer 'clojure.core <filters>)"
   [& filters]
@@ -4482,8 +4455,7 @@
   "Returns a number one greater than num. Supports arbitrary precision.
   See also: inc"
   [x]
-  ;; (. clojure.lang.Numbers (incP x))
-  (throw "TODO: port inc'"))
+  (cpp/jank.runtime.promoting_inc x))
 
 ;; ;;math stuff
 ;; (defn ^:private nary-inline
@@ -4509,11 +4481,9 @@
   See also: +"
   ([] 0)
   ([x]
-  ;;  (cast Number x)
-   (throw "TODO: port +'"))
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (addP x y))
-   (throw "TODO: port +'"))
+   (cpp/jank.runtime.promoting_add x y))
   ([x y & more]
    (reduce +' (+' x y) more)))
 
@@ -4522,11 +4492,9 @@
   See also: *"
   ([] 1)
   ([x]
-  ;;  (cast Number x)
-   (throw "TODO: port *'"))
+   (cpp/jank.runtime.number x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (multiplyP x y))
-  (throw "TODO: port *'"))
+   (cpp/jank.runtime.promoting_mul x y))
   ([x y & more]
    (reduce *' (*' x y) more)))
 
@@ -4535,11 +4503,9 @@
   the ys from x and returns the result. Supports arbitrary precision.
   See also: -"
   ([x]
-  ;;  (. clojure.lang.Numbers (minusP x))
-   (throw "TODO: port -'"))
+   (-' 0 x))
   ([x y]
-  ;;  (. clojure.lang.Numbers (minusP x y))
-   (throw "TODO: port -'"))
+   (cpp/jank.runtime.promoting_sub x y))
   ([x y & more]
    (reduce -' (-' x y) more)))
 
@@ -4556,8 +4522,7 @@
   "Returns a number one less than num. Supports arbitrary precision.
   See also: dec"
   [x]
-  ;; (. clojure.lang.Numbers (decP x))
-  (throw "TODO: port dec'"))
+  (cpp/jank.runtime.promoting_dec x))
 
 (defn unchecked-inc-int
   "Returns a number one greater than x, an int.
@@ -5228,6 +5193,70 @@
 		   (reduce merge-entry (or m1 {}) (seq m2)))]
       (reduce merge2 maps))))
 
+(defmacro ns
+  "Sets *ns* to the namespace named by name (unevaluated), creating it
+  if needed.  references can be zero or more of: (:refer-clojure ...)
+  (:require ...) (:use ...) (:import ...) (:load ...) (:gen-class)
+  with the syntax of refer-clojure/require/use/import/load/gen-class
+  respectively, except the arguments are unevaluated and need not be
+  quoted. (:gen-class ...), when supplied, defaults to :name
+  corresponding to the ns name, :main true, :impl-ns same as ns, and
+  :init-impl-ns true. All options of gen-class are
+  supported. The :gen-class directive is ignored when not
+  compiling. If :gen-class is not supplied, when compiled only an
+  nsname__init.class will be generated. If :refer-clojure is not used, a
+  default (refer 'clojure.core) is used.  Use of ns is preferred to
+  individual calls to in-ns/require/use/import:
+
+  (ns foo.bar
+    (:refer-clojure :exclude [ancestors printf])
+    (:require (clojure.contrib sql combinatorics))
+    (:use (my.lib this that))
+    (:import (java.util Date Timer Random)
+             (java.sql Connection Statement)))"
+  {:arglists '([name docstring? attr-map? references*])
+   :added "1.0"}
+  [name & references]
+  (let [process-reference (fn [reference]
+                            (let [kname (first reference)
+                                  args (rest reference)]
+                              (cons (symbol "clojure.core" (clojure.core/name kname))
+                                    (map (fn [a]
+                                           (list 'quote a))
+                                         args))))
+        refer-full-clojure? (not-any? (fn [ref]
+                                        (= :refer-clojure (first ref)))
+                                      references)
+        docstring  (when (string? (first references)) (first references))
+        references (if docstring (next references) references)
+        name (if docstring
+               (vary-meta name assoc :doc docstring)
+               name)
+        metadata   (when (map? (first references)) (first references))
+        references (if metadata (next references) references)
+        name (if metadata
+               (vary-meta name merge metadata)
+               name)
+        ;; gen-class-clause (first (filter #(= :gen-class (first %)) references))
+        ;; gen-class-call
+        ;;   (when gen-class-clause
+        ;;     (list* `gen-class :name (.replace (str name) \- \_) :impl-ns name :main true (next gen-class-clause)))
+        references (remove #(= :gen-class (first %)) references)
+        ;ns-effect (clojure.core/in-ns name)
+        name-metadata (meta name)]
+    `(do
+       (clojure.core/in-ns '~name)
+       ~@(when name-metadata
+           `((clojure.core/reset-meta! (clojure.core/find-ns '~name) ~name-metadata)))
+       ; TODO: with-loading-context
+       (do ; with-loading-context
+         ~@(when (and (not= name 'clojure.core) refer-full-clojure?)
+             `((clojure.core/refer '~'clojure.core)))
+         ~@(map process-reference references))
+       (if (= '~name '~'clojure.core)
+          nil
+          (do (swap! @#'*loaded-libs* conj '~name) nil)))))
+
 (defn line-seq
   "Returns the lines of text from rdr as a lazy sequence of strings.
   rdr must implement java.io.BufferedReader."
@@ -5340,8 +5369,7 @@
 (defn num
   "Coerce to Number"
   [x]
-  ;; (. clojure.lang.Numbers (num x))
-  (throw "TODO: port num"))
+  (cpp/jank.runtime.number x))
 
 (defn long
   "Coerce to long"
