@@ -6,14 +6,14 @@
 
 namespace jank::runtime
 {
-  bool is_map(object_ref const &o);
-  bool equal(object_ref const &l, object_ref const &r);
-  void to_string(object_ref const &o, jtl::string_builder &buff);
-  void to_code_string(object_ref const &o, jtl::string_builder &buff);
+  bool is_map(object_ref const o);
+  bool equal(object_ref const l, object_ref const r);
+  void to_string(object_ref const o, jtl::string_builder &buff);
+  void to_code_string(object_ref const o, jtl::string_builder &buff);
 
   namespace behavior::detail
   {
-    object_ref validate_meta(object_ref const &m);
+    object_ref validate_meta(object_ref const m);
   }
 }
 
@@ -52,10 +52,10 @@ namespace jank::runtime::obj::detail
     usize count() const;
 
     /* behavior::metadatable */
-    oref<PT> with_meta(object_ref const &m) const;
+    oref<PT> with_meta(object_ref const m) const;
 
     /* behavior::conjable */
-    object_ref conj(object_ref const &head) const;
+    object_ref conj(object_ref const head) const;
 
     object base{ PT::obj_type };
     jtl::option<object_ref> meta;

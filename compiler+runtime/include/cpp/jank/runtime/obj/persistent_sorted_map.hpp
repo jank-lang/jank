@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     persistent_sorted_map(persistent_sorted_map const &) = default;
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
-    persistent_sorted_map(object_ref const &meta, value_type &&d);
+    persistent_sorted_map(object_ref const meta, value_type &&d);
     persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    persistent_sorted_map(object_ref const &meta, runtime::detail::in_place_unique, Args &&...args)
+    persistent_sorted_map(object_ref const meta, runtime::detail::in_place_unique, Args &&...args)
       : data{ std::forward<Args>(args)... }
     {
       this->meta = meta;
@@ -57,28 +57,28 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     static persistent_sorted_map_ref
-    create_unique_with_meta(object_ref const &meta, Args &&...pairs)
+    create_unique_with_meta(object_ref const meta, Args &&...pairs)
     {
       return make_box<persistent_sorted_map>(meta,
                                              runtime::detail::in_place_unique{},
                                              std::forward<Args>(pairs)...);
     }
 
-    static persistent_sorted_map_ref create_from_seq(object_ref const &seq);
+    static persistent_sorted_map_ref create_from_seq(object_ref const seq);
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref const &key) const;
-    object_ref get(object_ref const &key, object_ref const &fallback) const;
-    object_ref get_entry(object_ref const &key) const;
-    bool contains(object_ref const &key) const;
+    object_ref get(object_ref const key) const;
+    object_ref get(object_ref const key, object_ref const fallback) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    persistent_sorted_map_ref assoc(object_ref const &key, object_ref const &val) const;
-    persistent_sorted_map_ref dissoc(object_ref const &key) const;
+    persistent_sorted_map_ref assoc(object_ref const key, object_ref const val) const;
+    persistent_sorted_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const &) const;
-    object_ref call(object_ref const &, object_ref const &) const;
+    object_ref call(object_ref const ) const;
+    object_ref call(object_ref const , object_ref const ) const;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

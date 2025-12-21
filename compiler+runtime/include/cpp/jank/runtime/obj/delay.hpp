@@ -12,7 +12,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     delay() = default;
-    delay(object_ref const &fn);
+    delay(object_ref const fn);
 
     /* behavior::object_like */
     bool equal(object const &) const;

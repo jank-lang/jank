@@ -5,16 +5,16 @@
 
 namespace jank::runtime
 {
-  object_ref first(object_ref const &s);
-  object_ref next(object_ref const &s);
+  object_ref first(object_ref const s);
+  object_ref next(object_ref const s);
 
-  jtl::immutable_string to_string(weak_object_ref const o);
+  jtl::immutable_string to_string(object_ref const o);
   void to_string(char ch, jtl::string_builder &buff);
-  void to_string(object_ref const &o, jtl::string_builder &buff);
+  void to_string(object_ref const o, jtl::string_builder &buff);
 
-  jtl::immutable_string to_code_string(object_ref const &o);
+  jtl::immutable_string to_code_string(object_ref const o);
   void to_code_string(char ch, jtl::string_builder &buff);
-  void to_code_string(object_ref const &o, jtl::string_builder &buff);
+  void to_code_string(object_ref const o, jtl::string_builder &buff);
 
   template <typename T>
   requires(behavior::object_like<T> && !behavior::sequenceable<T>)

@@ -248,9 +248,6 @@ namespace jank::runtime
     object(object &&) noexcept;
     object(object_type) noexcept;
 
-    void retain();
-    void release();
-
     object &operator=(object const &) noexcept;
     object &operator=(object &&) noexcept;
 
@@ -303,23 +300,21 @@ namespace jank::runtime::behavior
 }
 
 #include <jank/runtime/oref.hpp>
-#include <jank/runtime/weak_oref.hpp>
 
 namespace jank::runtime
 {
   using object_ref = oref<object>;
-  using weak_object_ref = weak_oref<object>;
 
   /* This isn't a great name, but it represents more than just value equality, since it
    * also includes type equality. Otherwise, [] equals '(). This is important when deduping
    * constants during codegen, since we don't want to be lossy in how we generate values. */
   struct very_equal_to
   {
-    bool operator()(object_ref const &lhs, object_ref const &rhs) const noexcept;
+    bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
 
-  bool operator==(object const *, object_ref const &);
-  bool operator!=(object const *, object_ref const &);
+  bool operator==(object const *, object_ref const);
+  bool operator!=(object const *, object_ref const);
 }
 
 namespace std
@@ -327,7 +322,7 @@ namespace std
   template <>
   struct hash<jank::runtime::object_ref>
   {
-    size_t operator()(jank::runtime::object_ref const &o) const noexcept;
+    size_t operator()(jank::runtime::object_ref const o) const noexcept;
   };
 
   template <>
@@ -339,7 +334,7 @@ namespace std
   template <>
   struct equal_to<jank::runtime::object_ref>
   {
-    bool operator()(jank::runtime::object_ref const &lhs,
-                    jank::runtime::object_ref const &rhs) const noexcept;
+    bool operator()(jank::runtime::object_ref const lhs,
+                    jank::runtime::object_ref const rhs) const noexcept;
   };
 }

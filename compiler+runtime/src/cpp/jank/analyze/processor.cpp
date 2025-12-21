@@ -72,7 +72,7 @@ namespace jank::analyze
    * a scope_exit which will do so. Since we don't always push something, we lift this
    * up into a nullable pointer. */
   static std::unique_ptr<util::scope_exit>
-  push_macro_expansions(processor &proc, object_ref const &o)
+  push_macro_expansions(processor &proc, object_ref const o)
   {
     auto const meta(runtime::meta(o));
     auto const expansion(
@@ -980,7 +980,7 @@ namespace jank::analyze
    * function pointers and custom functor objects. Function pointers have no
    * overloads and no Clang decl/scope. Custom functors use the call operator. */
   static processor::expression_result
-  build_indirect_cpp_call(obj::persistent_list_ref const &o,
+  build_indirect_cpp_call(obj::persistent_list_ref const o,
                           expression_ref const source,
                           native_vector<expression_ref> arg_exprs,
                           std::vector<Cpp::TemplateArgInfo> arg_types,
@@ -1243,7 +1243,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_def(runtime::obj::persistent_list_ref const &l,
+  processor::analyze_def(runtime::obj::persistent_list_ref const l,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1341,7 +1341,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_case(obj::persistent_list_ref const &o,
+  processor::analyze_case(obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -1441,7 +1441,7 @@ namespace jank::analyze
     };
 
     auto keys_exprs{ visit_map_like(
-      [&](auto const &typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
+      [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
         for(auto seq{ typed_imap_obj->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
         {
@@ -1489,7 +1489,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_symbol(runtime::obj::symbol_ref const &sym,
+  processor::analyze_symbol(runtime::obj::symbol_ref const sym,
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &fc,
@@ -1596,7 +1596,7 @@ namespace jank::analyze
   }
 
   jtl::result<expr::function_arity, error_ref>
-  processor::analyze_fn_arity(runtime::obj::persistent_list_ref const &list,
+  processor::analyze_fn_arity(runtime::obj::persistent_list_ref const list,
                               jtl::immutable_string const &name,
                               local_frame_ptr const current_frame)
   {
@@ -1766,7 +1766,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_fn(runtime::obj::persistent_list_ref const &full_list,
+  processor::analyze_fn(runtime::obj::persistent_list_ref const full_list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &,
@@ -1830,7 +1830,7 @@ namespace jank::analyze
 
             if constexpr(runtime::behavior::sequenceable<T>)
             {
-              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list.strong()));
+              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list));
 
               auto result(analyze_fn_arity(arity_list, name, current_frame));
               if(result.is_err())
@@ -1939,7 +1939,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_recur(runtime::obj::persistent_list_ref const &list,
+  processor::analyze_recur(runtime::obj::persistent_list_ref const list,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2039,7 +2039,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_do(runtime::obj::persistent_list_ref const &list,
+  processor::analyze_do(runtime::obj::persistent_list_ref const list,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2088,7 +2088,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_let(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_let(runtime::obj::persistent_list_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2210,7 +2210,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_letfn(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_letfn(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2343,7 +2343,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_loop(runtime::obj::persistent_list_ref const &list,
+  processor::analyze_loop(runtime::obj::persistent_list_ref const list,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2371,7 +2371,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_if(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_if(runtime::obj::persistent_list_ref const o,
                         local_frame_ptr const current_frame,
                         expression_position const position,
                         jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2486,7 +2486,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_quote(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_quote(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2509,7 +2509,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_var_call(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_var_call(runtime::obj::persistent_list_ref const o,
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               jtl::option<expr::function_context_ref> const &,
@@ -2553,7 +2553,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_var_val(runtime::var_ref const &o,
+  processor::analyze_var_val(runtime::var_ref const o,
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &,
@@ -2566,7 +2566,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_throw(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_throw(runtime::obj::persistent_list_ref const o,
                            local_frame_ptr const current_frame,
                            expression_position const position,
                            jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2599,7 +2599,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_try(runtime::obj::persistent_list_ref const &list,
+  processor::analyze_try(runtime::obj::persistent_list_ref const list,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2636,7 +2636,7 @@ namespace jank::analyze
     {
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
-        [](auto const &typed_item) {
+        [](auto const typed_item) {
           using T = typename jtl::decay_t<decltype(typed_item)>::value_type;
 
           if constexpr(std::same_as<T, obj::nil>)
@@ -2805,7 +2805,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_primitive_literal(runtime::object_ref const &o,
+  processor::analyze_primitive_literal(runtime::object_ref const o,
                                        local_frame_ptr const current_frame,
                                        expression_position const position,
                                        jtl::option<expr::function_context_ref> const &,
@@ -2817,7 +2817,7 @@ namespace jank::analyze
 
   /* TODO: Test for this. */
   processor::expression_result
-  processor::analyze_vector(runtime::obj::persistent_vector_ref const &o,
+  processor::analyze_vector(runtime::obj::persistent_vector_ref const o,
                             local_frame_ptr const current_frame,
                             expression_position const position,
                             jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2863,7 +2863,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_map(object_ref const &o,
+  processor::analyze_map(object_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2873,7 +2873,7 @@ namespace jank::analyze
 
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
-      [&](auto const &typed_o) -> processor::expression_result {
+      [&](auto const typed_o) -> processor::expression_result {
         native_vector<std::pair<expression_ref, expression_ref>> exprs;
         exprs.reserve(typed_o->data.size());
 
@@ -2920,7 +2920,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_set(object_ref const &o,
+  processor::analyze_set(object_ref const o,
                          local_frame_ptr const current_frame,
                          expression_position const position,
                          jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -2929,7 +2929,7 @@ namespace jank::analyze
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     return visit_set_like(
-      [&](auto const &typed_o) -> processor::expression_result {
+      [&](auto const typed_o) -> processor::expression_result {
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
         bool literal{ true };
@@ -2977,7 +2977,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_call(runtime::obj::persistent_list_ref const &o,
+  processor::analyze_call(runtime::obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
                           expression_position const position,
                           jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3215,7 +3215,7 @@ namespace jank::analyze
   }
 
   static processor::expression_result
-  build_cpp_value(runtime::obj::symbol_ref const &sym,
+  build_cpp_value(runtime::obj::symbol_ref const sym,
                   jtl::ptr<void> const scope,
                   bool const is_ctor,
                   u8 const ptr_count,
@@ -3372,7 +3372,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_symbol(obj::symbol_ref const &sym,
+  processor::analyze_cpp_symbol(obj::symbol_ref const sym,
                                 local_frame_ptr const current_frame,
                                 expression_position const position,
                                 jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3537,7 +3537,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_call(obj::persistent_list_ref const &o,
+  processor::analyze_cpp_call(obj::persistent_list_ref const o,
                               expression_ref const source,
                               local_frame_ptr const current_frame,
                               expression_position const position,
@@ -3601,7 +3601,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_raw(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_raw(obj::persistent_list_ref const l,
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3665,7 +3665,7 @@ namespace jank::analyze
   };
 
   processor::expression_result
-  processor::analyze_cpp_literal(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_literal(obj::persistent_list_ref const l,
                                  local_frame_ptr const current_frame,
                                  expression_position const position,
                                  jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3834,7 +3834,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_type(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_type(obj::persistent_list_ref const l,
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3844,7 +3844,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_value(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_value(obj::persistent_list_ref const l,
                                local_frame_ptr const current_frame,
                                expression_position const position,
                                jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3854,7 +3854,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_cast(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_cast(obj::persistent_list_ref const l,
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -3967,7 +3967,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_box(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_box(obj::persistent_list_ref const l,
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -4034,7 +4034,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_unbox(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_unbox(obj::persistent_list_ref const l,
                                local_frame_ptr const current_frame,
                                expression_position const position,
                                jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -4129,7 +4129,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_new(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_new(obj::persistent_list_ref const l,
                              local_frame_ptr const current_frame,
                              expression_position const position,
                              jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -4193,7 +4193,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_delete(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_delete(obj::persistent_list_ref const l,
                                 local_frame_ptr const current_frame,
                                 expression_position const position,
                                 jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -4241,7 +4241,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_member_access(obj::persistent_list_ref const &l,
+  processor::analyze_cpp_member_access(obj::persistent_list_ref const l,
                                        expr::cpp_value_ref const val,
                                        local_frame_ptr const current_frame,
                                        expression_position const position,
@@ -4355,13 +4355,13 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze(object_ref const &o, expression_position const position)
+  processor::analyze(object_ref const o, expression_position const position)
   {
     return analyze(o, root_frame, position, none, true);
   }
 
   processor::expression_result
-  processor::analyze(object_ref const &o,
+  processor::analyze(object_ref const o,
                      local_frame_ptr const current_frame,
                      expression_position const position,
                      jtl::option<expr::function_context_ref> const &fn_ctx,
@@ -4429,7 +4429,7 @@ namespace jank::analyze
       o);
   }
 
-  bool processor::is_special(runtime::object_ref const &form)
+  bool processor::is_special(runtime::object_ref const form)
   {
     if(form->type != runtime::object_type::symbol)
     {

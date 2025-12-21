@@ -8,7 +8,7 @@ namespace jank::analyze::expr
   primitive_literal::primitive_literal(expression_position const position,
                                        local_frame_ptr const frame,
                                        bool const needs_box,
-                                       runtime::object_ref const &data)
+                                       runtime::object_ref const data)
     : expression{ expr_kind, position, frame, needs_box }
     , data{ data }
   {

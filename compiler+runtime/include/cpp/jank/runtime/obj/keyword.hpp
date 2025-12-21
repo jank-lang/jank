@@ -40,8 +40,8 @@ namespace jank::runtime::obj
     jtl::immutable_string const &get_namespace() const;
 
     /* behavior::callable */
-    object_ref call(object_ref const &);
-    object_ref call(object_ref const &, object_ref const &);
+    object_ref call(object_ref const );
+    object_ref call(object_ref const , object_ref const );
 
     bool operator==(keyword const &rhs) const;
 
@@ -58,7 +58,7 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::keyword_ref>
   {
-    size_t operator()(jank::runtime::obj::keyword_ref const &o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword_ref const o) const noexcept
     {
       return o->to_hash();
     }
@@ -77,8 +77,8 @@ namespace std
   template <>
   struct equal_to<jank::runtime::obj::keyword_ref>
   {
-    bool operator()(jank::runtime::obj::keyword_ref const &lhs,
-                    jank::runtime::obj::keyword_ref const &rhs) const noexcept
+    bool operator()(jank::runtime::obj::keyword_ref const lhs,
+                    jank::runtime::obj::keyword_ref const rhs) const noexcept
     {
       return lhs == rhs;
     }

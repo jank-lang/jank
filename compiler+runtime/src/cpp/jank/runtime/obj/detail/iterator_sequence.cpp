@@ -5,13 +5,13 @@
 
 namespace jank::runtime
 {
-  bool equal(object_ref const &lhs, object_ref const &rhs);
+  bool equal(object_ref const lhs, object_ref const rhs);
 }
 
 namespace jank::runtime::obj::detail
 {
   template <typename Derived, typename It>
-  iterator_sequence<Derived, It>::iterator_sequence(object_ref const &c,
+  iterator_sequence<Derived, It>::iterator_sequence(object_ref const c,
                                                     It const &b,
                                                     It const &e,
                                                     usize const s)
@@ -112,7 +112,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename Derived, typename It>
-  obj::cons_ref iterator_sequence<Derived, It>::conj(object_ref const &head)
+  obj::cons_ref iterator_sequence<Derived, It>::conj(object_ref const head)
   {
     return make_box<obj::cons>(head, static_cast<Derived *>(this));
   }

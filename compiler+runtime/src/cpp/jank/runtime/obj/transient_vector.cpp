@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  transient_vector_ref transient_vector::conj_in_place(object_ref const &head)
+  transient_vector_ref transient_vector::conj_in_place(object_ref const head)
   {
     assert_active();
     data.push_back(head);
@@ -77,7 +77,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(data.persistent());
   }
 
-  object_ref transient_vector::call(object_ref const &idx) const
+  object_ref transient_vector::call(object_ref const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -99,7 +99,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref transient_vector::get(object_ref const &idx) const
+  object_ref transient_vector::get(object_ref const idx) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref transient_vector::get(object_ref const &idx, object_ref const &fallback) const
+  object_ref transient_vector::get(object_ref const idx, object_ref const fallback) const
   {
     assert_active();
     if(idx->type == object_type::integer)
@@ -139,7 +139,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref transient_vector::get_entry(object_ref const &idx) const
+  object_ref transient_vector::get_entry(object_ref const idx) const
   {
     if(idx->type == object_type::integer)
     {
@@ -158,7 +158,7 @@ namespace jank::runtime::obj
     }
   }
 
-  bool transient_vector::contains(object_ref const &elem) const
+  bool transient_vector::contains(object_ref const elem) const
   {
     if(elem->type == object_type::integer)
     {

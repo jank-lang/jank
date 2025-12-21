@@ -17,10 +17,10 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     multi_function() = delete;
-    multi_function(object_ref const &name,
-                   object_ref const &dispatch,
-                   object_ref const &default_,
-                   object_ref const &hierarchy);
+    multi_function(object_ref const name,
+                   object_ref const dispatch,
+                   object_ref const default_,
+                   object_ref const hierarchy);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -31,71 +31,71 @@ namespace jank::runtime::obj
 
     /* behavior::callable */
     object_ref call() override;
-    object_ref call(object_ref const &) override;
-    object_ref call(object_ref const &, object_ref const &) override;
-    object_ref call(object_ref const &, object_ref const &, object_ref const &) override;
+    object_ref call(object_ref const ) override;
+    object_ref call(object_ref const , object_ref const ) override;
+    object_ref call(object_ref const , object_ref const , object_ref const ) override;
     object_ref
-    call(object_ref const &, object_ref const &, object_ref const &, object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
-    object_ref call(object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &,
-                    object_ref const &) override;
+    call(object_ref const , object_ref const , object_ref const , object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
+    object_ref call(object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ,
+                    object_ref const ) override;
     object_ref this_object_ref() final;
 
     multi_function_ref reset();
     persistent_hash_map_ref reset_cache();
-    multi_function_ref add_method(object_ref const &dispatch_val, object_ref const &method);
-    multi_function_ref remove_method(object_ref const &dispatch_val);
-    multi_function_ref prefer_method(object_ref const &x, object_ref const &y);
-    bool is_preferred(object_ref const &hierarchy, object_ref const &x, object_ref const &y) const;
+    multi_function_ref add_method(object_ref const dispatch_val, object_ref const method);
+    multi_function_ref remove_method(object_ref const dispatch_val);
+    multi_function_ref prefer_method(object_ref const x, object_ref const y);
+    bool is_preferred(object_ref const hierarchy, object_ref const x, object_ref const y) const;
 
-    static bool is_a(object_ref const &hierarchy, object_ref const &x, object_ref const &y);
-    bool is_dominant(object_ref const &hierarchy, object_ref const &x, object_ref const &y) const;
+    static bool is_a(object_ref const hierarchy, object_ref const x, object_ref const y);
+    bool is_dominant(object_ref const hierarchy, object_ref const x, object_ref const y) const;
 
-    object_ref get_fn(object_ref const &dispatch_val);
-    object_ref get_method(object_ref const &dispatch_val);
-    object_ref find_and_cache_best_method(object_ref const &dispatch_val);
+    object_ref get_fn(object_ref const dispatch_val);
+    object_ref get_method(object_ref const dispatch_val);
+    object_ref find_and_cache_best_method(object_ref const dispatch_val);
 
     object base{ obj_type };
     object_ref dispatch{};

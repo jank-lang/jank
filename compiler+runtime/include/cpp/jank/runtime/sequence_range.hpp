@@ -21,7 +21,7 @@ namespace jank::runtime
       iterator(iterator const &) noexcept = default;
       iterator(iterator &&) noexcept = default;
 
-      iterator(object_ref const &data)
+      iterator(object_ref const data)
         : data{ data }
       {
       }
@@ -174,26 +174,6 @@ namespace jank::runtime
     else
     {
       return sequence_range<S>{ s.is_some() ? s->seq() : s };
-    }
-  }
-
-  template <typename T>
-  requires behavior::seqable<T>
-  auto make_sequence_range(weak_oref<T> const s)
-  {
-    using S = typename decltype(s->seq())::value_type;
-
-    if constexpr(jtl::is_same<obj::nil, S>)
-    {
-      return sequence_range<S>{ s };
-    }
-    else if constexpr(behavior::sequenceable_in_place<S>)
-    {
-      return sequence_range<S>{ s.is_some() ? weak_oref<S>{ s->fresh_seq() } : weak_oref<S>{} };
-    }
-    else
-    {
-      return sequence_range<S>{ s.is_some() ? weak_oref<S>{ s->seq() } : s };
     }
   }
 }

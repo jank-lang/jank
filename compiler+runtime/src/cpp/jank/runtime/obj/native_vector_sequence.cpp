@@ -111,12 +111,12 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref native_vector_sequence::conj(object_ref const &head)
+  cons_ref native_vector_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, data.empty() ? nullptr : this);
   }
 
-  native_vector_sequence_ref native_vector_sequence::with_meta(object_ref const &m) const
+  native_vector_sequence_ref native_vector_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

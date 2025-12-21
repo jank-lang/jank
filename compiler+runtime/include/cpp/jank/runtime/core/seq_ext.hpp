@@ -13,7 +13,7 @@ namespace jank::runtime
   bool equal(object const &o, It const &begin, It const &end)
   {
     return visit_seqable(
-      [](auto const &typed_o, auto const &begin, auto const &end) -> bool {
+      [](auto const typed_o, auto const &begin, auto const &end) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         /* nil is seqable, but we don't want it to be equal to an empty collection.

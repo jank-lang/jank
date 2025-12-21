@@ -7,17 +7,17 @@
 
 namespace jank::runtime::obj
 {
-  static bool positive_step_bounds_check(integer_ref const &val, integer_ref const &end)
+  static bool positive_step_bounds_check(integer_ref const val, integer_ref const end)
   {
     return lte(end, val);
   }
 
-  static bool negative_step_bounds_check(integer_ref const &val, integer_ref const &end)
+  static bool negative_step_bounds_check(integer_ref const val, integer_ref const end)
   {
     return lte(val, end);
   }
 
-  integer_range::integer_range(integer_ref const &end)
+  integer_range::integer_range(integer_ref const end)
     : start{ make_box<integer>(0) }
     , end{ end }
     , step{ make_box<integer>(1) }
@@ -25,7 +25,7 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const &start, integer_ref const &end)
+  integer_range::integer_range(integer_ref const start, integer_ref const end)
     : start{ start }
     , end{ end }
     , step{ make_box<integer>(1) }
@@ -33,9 +33,9 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const &start,
-                               integer_ref const &end,
-                               integer_ref const &step)
+  integer_range::integer_range(integer_ref const start,
+                               integer_ref const end,
+                               integer_ref const step)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -45,9 +45,9 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const &start,
-                               integer_ref const &end,
-                               integer_ref const &step,
+  integer_range::integer_range(integer_ref const start,
+                               integer_ref const end,
+                               integer_ref const step,
                                integer_range::bounds_check_t const bounds_check)
     : start{ start }
     , end{ end }
@@ -56,7 +56,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref integer_range::create(integer_ref const &end)
+  object_ref integer_range::create(integer_ref const end)
   {
     if(is_pos(end))
     {
@@ -68,13 +68,13 @@ namespace jank::runtime::obj
     return persistent_list::empty();
   }
 
-  object_ref integer_range::create(integer_ref const &start, integer_ref const &end)
+  object_ref integer_range::create(integer_ref const start, integer_ref const end)
   {
     return create(start, end, make_box<integer>(1));
   }
 
   object_ref
-  integer_range::create(integer_ref const &start, integer_ref const &end, integer_ref const &step)
+  integer_range::create(integer_ref const start, integer_ref const end, integer_ref const step)
   {
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
@@ -126,7 +126,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref integer_range::conj(object_ref const &head) const
+  cons_ref integer_range::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -156,7 +156,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  integer_range_ref integer_range::with_meta(object_ref const &m) const
+  integer_range_ref integer_range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto const ret(fresh_seq());

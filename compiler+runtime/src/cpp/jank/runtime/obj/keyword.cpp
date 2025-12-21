@@ -71,12 +71,12 @@ namespace jank::runtime::obj
     return sym->ns;
   }
 
-  object_ref keyword::call(object_ref const &m)
+  object_ref keyword::call(object_ref const m)
   {
     return runtime::get(m, this);
   }
 
-  object_ref keyword::call(object_ref const &m, object_ref const &fallback)
+  object_ref keyword::call(object_ref const m, object_ref const fallback)
   {
     return runtime::get(m, this, fallback);
   }

@@ -16,7 +16,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set::persistent_sorted_set(object_ref const &meta, value_type &&d)
+  persistent_sorted_set::persistent_sorted_set(object_ref const meta, value_type &&d)
     : data{ std::move(d) }
     , meta{ meta }
   {
@@ -34,10 +34,10 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ref const &seq)
+  persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ref const seq)
   {
     return make_box<persistent_sorted_set>(visit_seqable(
-      [](auto const &typed_seq) -> persistent_sorted_set::value_type {
+      [](auto const typed_seq) -> persistent_sorted_set::value_type {
         runtime::detail::native_transient_sorted_set transient;
         for(auto const e : make_sequence_range(typed_seq))
         {
@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     }
 
     return visit_set_like(
-      [&](auto const &typed_o) -> bool {
+      [&](auto const typed_o) -> bool {
         if(typed_o->count() != count())
         {
           return false;
@@ -120,7 +120,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_sorted_set_ref persistent_sorted_set::with_meta(object_ref const &m) const
+  persistent_sorted_set_ref persistent_sorted_set::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_sorted_set>(data));
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const &head) const
+  persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const
   {
     auto copy(data);
     copy.insert(head);
@@ -136,7 +136,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  object_ref persistent_sorted_set::call(object_ref const &o)
+  object_ref persistent_sorted_set::call(object_ref const o)
   {
     auto const found(data.find(o));
     if(found != data.end())
@@ -151,12 +151,12 @@ namespace jank::runtime::obj
     return make_box<transient_sorted_set>(data);
   }
 
-  bool persistent_sorted_set::contains(object_ref const &o) const
+  bool persistent_sorted_set::contains(object_ref const o) const
   {
     return data.contains(o);
   }
 
-  persistent_sorted_set_ref persistent_sorted_set::disj(object_ref const &o) const
+  persistent_sorted_set_ref persistent_sorted_set::disj(object_ref const o) const
   {
     auto copy(data);
     copy.erase(o);

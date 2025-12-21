@@ -7,14 +7,14 @@
 
 namespace jank::runtime::obj
 {
-  chunked_cons::chunked_cons(object_ref const &head, object_ref const &tail)
+  chunked_cons::chunked_cons(object_ref const head, object_ref const tail)
     : head{ head }
     , tail{ tail }
   {
     jank_debug_assert(head.is_some());
   }
 
-  chunked_cons::chunked_cons(object_ref const &meta, object_ref const &head, object_ref const &tail)
+  chunked_cons::chunked_cons(object_ref const meta, object_ref const head, object_ref const tail)
     : head{ head }
     , tail{ tail }
     , meta{ meta }
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
       head);
   }
 
-  static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const &o)
+  static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
     if(o->tail.is_nil())
     {
@@ -83,7 +83,7 @@ namespace jank::runtime::obj
     }
 
     return visit_object(
-      [&](auto const &typed_tail) -> chunked_cons_ref {
+      [&](auto const typed_tail) -> chunked_cons_ref {
         using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -177,12 +177,12 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  cons_ref chunked_cons::conj(object_ref const &head) const
+  cons_ref chunked_cons::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
 
-  chunked_cons_ref chunked_cons::with_meta(object_ref const &m) const
+  chunked_cons_ref chunked_cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

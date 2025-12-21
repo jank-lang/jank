@@ -9,7 +9,7 @@ namespace jank::analyze::expr
   local_reference::local_reference(expression_position const position,
                                    local_frame_ptr const frame,
                                    bool const needs_box,
-                                   runtime::obj::symbol_ref const &name,
+                                   runtime::obj::symbol_ref const name,
                                    local_binding_ptr const binding)
     : expression{ expr_kind, position, frame, needs_box }
     , name{ name }

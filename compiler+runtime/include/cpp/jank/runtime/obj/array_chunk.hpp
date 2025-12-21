@@ -27,8 +27,8 @@ namespace jank::runtime::obj
     array_chunk_ref chunk_next() const;
     array_chunk_ref chunk_next_in_place();
     usize count() const;
-    object_ref nth(object_ref const &index) const;
-    object_ref nth(object_ref const &index, object_ref const &fallback) const;
+    object_ref nth(object_ref const index) const;
+    object_ref nth(object_ref const index, object_ref const fallback) const;
 
     object base{ obj_type };
     native_vector<object_ref> buffer;

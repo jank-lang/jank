@@ -61,18 +61,18 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  object_ref transient_array_map::get(object_ref const &key) const
+  object_ref transient_array_map::get(object_ref const key) const
   {
     assert_active();
     return data.find(key).unwrap_or(jank_nil());
   }
 
-  object_ref transient_array_map::get(object_ref const &key, object_ref const &fallback) const
+  object_ref transient_array_map::get(object_ref const key, object_ref const fallback) const
   {
     return data.find(key).unwrap_or(fallback);
   }
 
-  object_ref transient_array_map::get_entry(object_ref const &key) const
+  object_ref transient_array_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res.is_some())
@@ -82,12 +82,12 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  bool transient_array_map::contains(object_ref const &key) const
+  bool transient_array_map::contains(object_ref const key) const
   {
     return data.find(key).is_some();
   }
 
-  object_ref transient_array_map::assoc_in_place(object_ref const &key, object_ref const &value)
+  object_ref transient_array_map::assoc_in_place(object_ref const key, object_ref const value)
   {
     assert_active();
     /* If we've hit the max array map size, it's time to promote to a hash map.
@@ -111,14 +111,14 @@ namespace jank::runtime::obj
     }
   }
 
-  transient_array_map_ref transient_array_map::dissoc_in_place(object_ref const &key)
+  transient_array_map_ref transient_array_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
     data.erase(key);
     return this;
   }
 
-  object_ref transient_array_map::conj_in_place(object_ref const &head)
+  object_ref transient_array_map::conj_in_place(object_ref const head)
   {
     assert_active();
 
@@ -155,12 +155,12 @@ namespace jank::runtime::obj
     return make_box<persistent_array_map>(std::move(data));
   }
 
-  object_ref transient_array_map::call(object_ref const &o) const
+  object_ref transient_array_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ref transient_array_map::call(object_ref const &o, object_ref const &fallback) const
+  object_ref transient_array_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

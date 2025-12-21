@@ -27,17 +27,17 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref persistent_array_map::get(object_ref const &key) const
+  object_ref persistent_array_map::get(object_ref const key) const
   {
     return data.find(key).unwrap_or(jank_nil());
   }
 
-  object_ref persistent_array_map::get(object_ref const &key, object_ref const &fallback) const
+  object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
   {
     return data.find(key).unwrap_or(fallback);
   }
 
-  object_ref persistent_array_map::get_entry(object_ref const &key) const
+  object_ref persistent_array_map::get_entry(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res.is_some())
@@ -47,12 +47,12 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  bool persistent_array_map::contains(object_ref const &key) const
+  bool persistent_array_map::contains(object_ref const key) const
   {
     return data.find(key).is_some();
   }
 
-  object_ref persistent_array_map::assoc(object_ref const &key, object_ref const &val) const
+  object_ref persistent_array_map::assoc(object_ref const key, object_ref const val) const
   {
     /* If we've hit the max array map size, it's time to promote to a hash map.
      *
@@ -73,19 +73,19 @@ namespace jank::runtime::obj
     }
   }
 
-  persistent_array_map_ref persistent_array_map::dissoc(object_ref const &key) const
+  persistent_array_map_ref persistent_array_map::dissoc(object_ref const key) const
   {
     auto copy(data.clone());
     copy.erase(key);
     return make_box<persistent_array_map>(meta, std::move(copy));
   }
 
-  object_ref persistent_array_map::call(object_ref const &o) const
+  object_ref persistent_array_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ref persistent_array_map::call(object_ref const &o, object_ref const &fallback) const
+  object_ref persistent_array_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

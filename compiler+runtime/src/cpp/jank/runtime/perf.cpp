@@ -8,12 +8,12 @@
 
 namespace jank::runtime::perf
 {
-  object_ref benchmark(object_ref const &opts, object_ref const &f)
+  object_ref benchmark(object_ref const opts, object_ref const f)
   {
     auto const label(get(opts, __rt_ctx->intern_keyword("label").expect_ok()));
     auto const label_str(to_string(label));
     visit_object(
-      [](auto const &typed_f, jtl::immutable_string const &label) {
+      [](auto const typed_f, jtl::immutable_string const &label) {
         using T = typename jtl::decay_t<decltype(typed_f)>::value_type;
 
         if constexpr(std::is_base_of_v<behavior::callable, T>)

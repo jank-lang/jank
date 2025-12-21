@@ -24,17 +24,17 @@ namespace jank::runtime
     return true;
   }
 
-  bool truthy(object_ref const &o)
+  bool truthy(object_ref const o)
   {
     return truthy(o.data);
   }
 
-  bool truthy(obj::nil_ref const &)
+  bool truthy(obj::nil_ref const )
   {
     return false;
   }
 
-  bool truthy(obj::boolean_ref const &o)
+  bool truthy(obj::boolean_ref const o)
   {
     return o.is_some() && o->data;
   }

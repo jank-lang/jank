@@ -42,14 +42,12 @@ namespace jank::runtime
       : data{ rhs.data }
     {
       jank_assert_throw(data);
-      retain();
     }
 
     oref(oref &&rhs) noexcept
       : data{ jtl::move(rhs.data) }
     {
       jank_assert_throw(data);
-      retain();
     }
 
     oref(nullptr_t) noexcept = delete;
@@ -58,14 +56,12 @@ namespace jank::runtime
       : data{ data }
     {
       jank_assert_throw(data);
-      retain();
     }
 
     oref(value_type const * const data)
       : data{ const_cast<value_type *>(data) }
     {
       jank_assert_throw(data);
-      retain();
     }
 
     template <typename T>
@@ -74,7 +70,6 @@ namespace jank::runtime
       : data{ &typed_data->base }
     {
       jank_assert_throw(this->data);
-      retain();
     }
 
     template <typename T>
@@ -83,7 +78,6 @@ namespace jank::runtime
       : data{ const_cast<object *>(&typed_data->base) }
     {
       jank_assert_throw(this->data);
-      retain();
     }
 
     template <typename T>
@@ -91,30 +85,9 @@ namespace jank::runtime
     oref(oref<T> const &typed_data) noexcept
       : data{ typed_data.erase().data }
     {
-      retain();
     }
 
-    ~oref()
-    {
-      release();
-    }
-
-    oref<object> const &retain() const
-    {
-      if(is_some())
-      {
-        data->retain();
-      }
-      return *this;
-    }
-
-    void release() const
-    {
-      if(is_some())
-      {
-        data->release();
-      }
-    }
+    ~oref() = default;
 
     void reset()
     {
@@ -143,31 +116,8 @@ namespace jank::runtime
       return *data;
     }
 
-    oref &operator=(oref const &rhs) noexcept
-    {
-      if(this == &rhs)
-      {
-        return *this;
-      }
-
-      release();
-      data = rhs.data;
-      retain();
-      return *this;
-    }
-
-    oref &operator=(oref &&rhs) noexcept
-    {
-      if(this == &rhs)
-      {
-        return *this;
-      }
-
-      release();
-      data = rhs.data;
-      retain();
-      return *this;
-    }
+    oref &operator=(oref const &rhs) noexcept = default;
+    oref &operator=(oref &&rhs) noexcept = default;
 
     template <typename T>
     requires behavior::object_like<T>
@@ -178,9 +128,7 @@ namespace jank::runtime
         return *this;
       }
 
-      release();
       data = &rhs->base;
-      retain();
       return *this;
     }
 
@@ -250,13 +198,11 @@ namespace jank::runtime
     oref(oref const &rhs) noexcept
       : data{ rhs.data }
     {
-      retain();
     }
 
     oref(oref &&rhs) noexcept
       : data{ rhs.data }
     {
-      retain();
     }
 
     oref(nullptr_t) = delete;
@@ -265,14 +211,12 @@ namespace jank::runtime
       : data{ data }
     {
       jank_assert_throw(this->data);
-      retain();
     }
 
     oref(T const * const data)
       : data{ const_cast<T *>(data) }
     {
       jank_assert_throw(this->data);
-      retain();
     }
 
     template <typename C>
@@ -280,7 +224,6 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.data }
     {
-      retain();
     }
 
     template <typename C>
@@ -290,27 +233,7 @@ namespace jank::runtime
     {
     }
 
-    ~oref()
-    {
-      release();
-    }
-
-    oref<T> const &retain() const
-    {
-      if(is_some())
-      {
-        (*this)->base.retain();
-      }
-      return *this;
-    }
-
-    void release() const
-    {
-      if(is_some())
-      {
-        (*this)->base.release();
-      }
-    }
+    ~oref() = default;
 
     void reset()
     {
@@ -376,31 +299,8 @@ namespace jank::runtime
       return data != rhs.data;
     }
 
-    oref &operator=(oref const &rhs) noexcept
-    {
-      if(this == &rhs)
-      {
-        return *this;
-      }
-
-      release();
-      data = rhs.data;
-      retain();
-      return *this;
-    }
-
-    oref &operator=(oref &&rhs) noexcept
-    {
-      if(this == &rhs)
-      {
-        return *this;
-      }
-
-      release();
-      data = rhs.data;
-      retain();
-      return *this;
-    }
+    oref &operator=(oref const &rhs) noexcept = default;
+    oref &operator=(oref &&rhs) noexcept = default;
 
     oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs)
     {
@@ -409,10 +309,8 @@ namespace jank::runtime
         return *this;
       }
 
-      release();
       data = rhs;
       jank_assert_throw(data);
-      retain();
       return *this;
     }
 
@@ -423,10 +321,8 @@ namespace jank::runtime
         return *this;
       }
 
-      release();
       data = const_cast<T *>(rhs);
       jank_assert_throw(data);
-      retain();
       return *this;
     }
 
@@ -439,9 +335,7 @@ namespace jank::runtime
         return *this;
       }
 
-      release();
       data = std::bit_cast<void *>(jank_const_nil());
-      retain();
       return *this;
     }
 
@@ -511,15 +405,6 @@ namespace jank::runtime
     {
     }
 
-    oref<obj::nil> const &retain() const
-    {
-      return *this;
-    }
-
-    void release() const
-    {
-    }
-
     void reset()
     {
     }
@@ -569,7 +454,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return {};
+      return { std::bit_cast<object *>(jank_const_nil()) };
     }
 
     bool is_some() const noexcept

@@ -48,7 +48,7 @@ namespace jank::runtime::obj
   i64 boolean::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const &typed_o) -> i64 {
+      [this](auto const typed_o) -> i64 {
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> i64 {
@@ -103,7 +103,7 @@ namespace jank::runtime::obj
   i64 integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const &typed_o) -> i64 {
+      [this](auto const typed_o) -> i64 {
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> i64 {
@@ -188,7 +188,7 @@ namespace jank::runtime::obj
   i64 real::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const &typed_o) -> i64 {
+      [this](auto const typed_o) -> i64 {
         return (data > typed_o->data) - (data < typed_o->data);
       },
       [&]() -> i64 {
@@ -218,14 +218,12 @@ namespace jank::runtime
   static obj::boolean_ref true_const()
   {
     static obj::boolean r{ true };
-    r.base.retain();
     return &r;
   }
 
   static obj::boolean_ref false_const()
   {
     static obj::boolean r{ false };
-    r.base.retain();
     return &r;
   }
 

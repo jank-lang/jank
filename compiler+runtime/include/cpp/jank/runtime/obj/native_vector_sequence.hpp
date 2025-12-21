@@ -40,13 +40,13 @@ namespace jank::runtime::obj
     /* behavior::sequence */
     object_ref first() const;
     native_vector_sequence_ref next() const;
-    obj::cons_ref conj(object_ref const &head);
+    obj::cons_ref conj(object_ref const head);
 
     /* behavior::sequenceable_in_place */
     native_vector_sequence_ref next_in_place();
 
     /* behavior::metadatable */
-    native_vector_sequence_ref with_meta(object_ref const &m) const;
+    native_vector_sequence_ref with_meta(object_ref const m) const;
 
     object base{ obj_type };
     native_vector<object_ref> data{};

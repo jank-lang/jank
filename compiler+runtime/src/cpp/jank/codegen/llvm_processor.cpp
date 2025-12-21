@@ -126,8 +126,8 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_new_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_delete_ref, analyze::expr::function_arity const &);
 
-    llvm::Value *gen_var(obj::symbol_ref const &qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref const &qualified_name, var_root_kind kind) const;
+    llvm::Value *gen_var(obj::symbol_ref const qualified_name) const;
+    llvm::Value *gen_var_root(obj::symbol_ref const qualified_name, var_root_kind kind) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     void create_function();
@@ -135,22 +135,21 @@ namespace jank::codegen
     void create_global_ctor() const;
     llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
-    llvm::Value *gen_global(runtime::obj::weak_nil_ref) const;
-    llvm::Value *gen_global(runtime::obj::nil_ref const &) const;
-    llvm::Value *gen_global(runtime::obj::boolean_ref const &b) const;
-    llvm::Value *gen_global(runtime::obj::integer_ref const &i) const;
-    llvm::Value *gen_global(runtime::obj::big_integer_ref const &i) const;
-    llvm::Value *gen_global(runtime::obj::big_decimal_ref const &i) const;
-    llvm::Value *gen_global(runtime::obj::real_ref const &r) const;
-    llvm::Value *gen_global(runtime::obj::ratio_ref const &r) const;
-    llvm::Value *gen_global(runtime::obj::persistent_string_ref const &s) const;
-    llvm::Value *gen_global(runtime::obj::symbol_ref const &s) const;
-    llvm::Value *gen_global(runtime::obj::keyword_ref const &k) const;
-    llvm::Value *gen_global(runtime::obj::character_ref const &c) const;
-    llvm::Value *gen_global(runtime::obj::re_pattern_ref const &re) const;
-    llvm::Value *gen_global(runtime::obj::uuid_ref const &u) const;
-    llvm::Value *gen_global(runtime::obj::inst_ref const &i) const;
-    llvm::Value *gen_global_from_read_string(runtime::object_ref const &o) const;
+    llvm::Value *gen_global(runtime::obj::nil_ref const ) const;
+    llvm::Value *gen_global(runtime::obj::boolean_ref const b) const;
+    llvm::Value *gen_global(runtime::obj::integer_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::big_integer_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::big_decimal_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::real_ref const r) const;
+    llvm::Value *gen_global(runtime::obj::ratio_ref const r) const;
+    llvm::Value *gen_global(runtime::obj::persistent_string_ref const s) const;
+    llvm::Value *gen_global(runtime::obj::symbol_ref const s) const;
+    llvm::Value *gen_global(runtime::obj::keyword_ref const k) const;
+    llvm::Value *gen_global(runtime::obj::character_ref const c) const;
+    llvm::Value *gen_global(runtime::obj::re_pattern_ref const re) const;
+    llvm::Value *gen_global(runtime::obj::uuid_ref const u) const;
+    llvm::Value *gen_global(runtime::obj::inst_ref const i) const;
+    llvm::Value *gen_global_from_read_string(runtime::object_ref const o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
     llvm::Value *gen_aot_call(Cpp::AotCall const &call,
@@ -2840,7 +2839,7 @@ namespace jank::codegen
     return ret;
   }
 
-  llvm::Value *llvm_processor::impl::gen_var(obj::symbol_ref const &qualified_name) const
+  llvm::Value *llvm_processor::impl::gen_var(obj::symbol_ref const qualified_name) const
   {
     auto const found(ctx->var_globals.find(qualified_name));
     if(found != ctx->var_globals.end())
@@ -2878,7 +2877,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_var_root(obj::symbol_ref const &qualified_name,
+  llvm::Value *llvm_processor::impl::gen_var_root(obj::symbol_ref const qualified_name,
                                                   var_root_kind const kind) const
   {
     auto it(ctx->var_root_globals.find(qualified_name));
@@ -2954,12 +2953,7 @@ namespace jank::codegen
     return ctx->c_string_globals[s] = ctx->builder->CreateGlobalString(s.c_str());
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::weak_nil_ref const nil) const
-  {
-    return gen_global(obj::nil_ref{ nil });
-  }
-
-  llvm::Value *llvm_processor::impl::gen_global(obj::nil_ref const &nil) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::nil_ref const nil) const
   {
     auto const found(ctx->literal_globals.find(nil));
     if(found != ctx->literal_globals.end())
@@ -2992,7 +2986,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::boolean_ref const &b) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::boolean_ref const b) const
   {
     auto const found(ctx->literal_globals.find(b));
     if(found != ctx->literal_globals.end())
@@ -3027,7 +3021,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::integer_ref const &i) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::integer_ref const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())
@@ -3062,7 +3056,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::big_integer_ref const &i) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::big_integer_ref const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())
@@ -3102,7 +3096,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::big_decimal_ref const &i) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::big_decimal_ref const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())
@@ -3139,7 +3133,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::real_ref const &r) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::real_ref const r) const
   {
     auto const found(ctx->literal_globals.find(r));
     if(found != ctx->literal_globals.end())
@@ -3174,7 +3168,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::ratio_ref const &r) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::ratio_ref const r) const
   {
     if(auto const found(ctx->literal_globals.find(r)); found != ctx->literal_globals.end())
     {
@@ -3211,7 +3205,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::persistent_string_ref const &s) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::persistent_string_ref const s) const
   {
     auto const found(ctx->literal_globals.find(s));
     if(found != ctx->literal_globals.end())
@@ -3247,7 +3241,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::re_pattern_ref const &re) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::re_pattern_ref const re) const
   {
     auto const found(ctx->literal_globals.find(re));
     if(found != ctx->literal_globals.end())
@@ -3283,7 +3277,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::uuid_ref const &u) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::uuid_ref const u) const
   {
     auto const found(ctx->literal_globals.find(u));
     if(found != ctx->literal_globals.end())
@@ -3319,7 +3313,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::inst_ref const &i) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::inst_ref const i) const
   {
     auto const found(ctx->literal_globals.find(i));
     if(found != ctx->literal_globals.end())
@@ -3355,7 +3349,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::symbol_ref const &s) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::symbol_ref const s) const
   {
     auto const found(ctx->literal_globals.find(s));
     if(found != ctx->literal_globals.end())
@@ -3408,7 +3402,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::keyword_ref const &k) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::keyword_ref const k) const
   {
     auto const found(ctx->literal_globals.find(k));
     if(found != ctx->literal_globals.end())
@@ -3447,7 +3441,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global(obj::character_ref const &c) const
+  llvm::Value *llvm_processor::impl::gen_global(obj::character_ref const c) const
   {
     auto const found(ctx->literal_globals.find(c));
     if(found != ctx->literal_globals.end())
@@ -3484,7 +3478,7 @@ namespace jank::codegen
     return ctx->builder->CreateLoad(ctx->builder->getPtrTy(), global);
   }
 
-  llvm::Value *llvm_processor::impl::gen_global_from_read_string(object_ref const &o) const
+  llvm::Value *llvm_processor::impl::gen_global_from_read_string(object_ref const o) const
   {
     auto const found(ctx->literal_globals.find(o));
     if(found != ctx->literal_globals.end())

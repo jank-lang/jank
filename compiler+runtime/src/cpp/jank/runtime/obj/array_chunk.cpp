@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     return buffer.size() - offset;
   }
 
-  object_ref array_chunk::nth(object_ref const &index) const
+  object_ref array_chunk::nth(object_ref const index) const
   {
     if(index->type == object_type::integer)
     {
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref array_chunk::nth(object_ref const &index, object_ref const &fallback) const
+  object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
     if(index->type == object_type::integer)
     {

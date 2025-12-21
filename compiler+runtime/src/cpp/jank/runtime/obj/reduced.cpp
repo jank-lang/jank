@@ -3,7 +3,7 @@
 
 namespace jank::runtime::obj
 {
-  reduced::reduced(object_ref const &o)
+  reduced::reduced(object_ref const o)
     : val{ o }
   {
     jank_debug_assert(val.is_some());

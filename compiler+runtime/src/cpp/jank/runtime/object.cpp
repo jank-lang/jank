@@ -21,29 +21,6 @@ namespace jank::runtime
   {
   }
 
-  void object::retain()
-  {
-    ++ref_count;
-    jank_debug_assert(ref_count > 0);
-    //util::println("retain {} type {} count {}", this, object_type_str(type), ref_count);
-  }
-
-  void object::release()
-  {
-    jank_debug_assert(ref_count > 0);
-    //util::println("release {} type {} count {}", this, object_type_str(type), ref_count);
-    if(--ref_count == 0)
-    {
-      visit_object(
-        [](auto const typed_this) {
-          using T = typename decltype(typed_this)::value_type;
-          //util::println("\tfreeing {}", typed_this.data);
-          delete static_cast<T *>(typed_this.data);
-        },
-        this);
-    }
-  }
-
   object &object::operator=(object const &rhs) noexcept
   {
     if(this == &rhs)
@@ -64,7 +41,7 @@ namespace jank::runtime
     return *this;
   }
 
-  bool very_equal_to::operator()(object_ref const &lhs, object_ref const &rhs) const noexcept
+  bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs->type != rhs->type)
     {
@@ -73,12 +50,12 @@ namespace jank::runtime
     return equal(lhs, rhs);
   }
 
-  bool operator==(object const * const lhs, object_ref const &rhs)
+  bool operator==(object const * const lhs, object_ref const rhs)
   {
     return lhs == rhs.data;
   }
 
-  bool operator!=(object const * const lhs, object_ref const &rhs)
+  bool operator!=(object const * const lhs, object_ref const rhs)
   {
     return lhs != rhs.data;
   }
@@ -89,7 +66,7 @@ namespace std
   using namespace jank;
   using namespace jank::runtime;
 
-  size_t hash<object_ref>::operator()(object_ref const &o) const noexcept
+  size_t hash<object_ref>::operator()(object_ref const o) const noexcept
   {
     return jank::hash::visit(o.data);
   }
@@ -101,7 +78,7 @@ namespace std
 
   bool
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
-  equal_to<object_ref>::operator()(object_ref const &lhs, object_ref const &rhs) const noexcept
+  equal_to<object_ref>::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     return equal(lhs, rhs);
   }

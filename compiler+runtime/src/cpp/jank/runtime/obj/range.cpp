@@ -8,17 +8,17 @@
 
 namespace jank::runtime::obj
 {
-  static bool positive_step_bounds_check(object_ref const &val, object_ref const &end)
+  static bool positive_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(end, val);
   }
 
-  static bool negative_step_bounds_check(object_ref const &val, object_ref const &end)
+  static bool negative_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(val, end);
   }
 
-  range::range(object_ref const &end)
+  range::range(object_ref const end)
     : start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ref const &start, object_ref const &end)
+  range::range(object_ref const start, object_ref const end)
     : start{ start }
     , end{ end }
     , step{ make_box(1) }
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ref const &start, object_ref const &end, object_ref const &step)
+  range::range(object_ref const start, object_ref const end, object_ref const step)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -43,9 +43,9 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ref const &start,
-               object_ref const &end,
-               object_ref const &step,
+  range::range(object_ref const start,
+               object_ref const end,
+               object_ref const step,
                range::bounds_check_t const bounds_check)
     : start{ start }
     , end{ end }
@@ -54,12 +54,12 @@ namespace jank::runtime::obj
   {
   }
 
-  range::range(object_ref const &start,
-               object_ref const &end,
-               object_ref const &step,
+  range::range(object_ref const start,
+               object_ref const end,
+               object_ref const step,
                range::bounds_check_t const bounds_check,
-               array_chunk_ref const &chunk,
-               range_ref const &chunk_next)
+               array_chunk_ref const chunk,
+               range_ref const chunk_next)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -69,7 +69,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref range::create(object_ref const &end)
+  object_ref range::create(object_ref const end)
   {
     if(is_pos(end))
     {
@@ -81,12 +81,12 @@ namespace jank::runtime::obj
     return persistent_list::empty();
   }
 
-  object_ref range::create(object_ref const &start, object_ref const &end)
+  object_ref range::create(object_ref const start, object_ref const end)
   {
     return create(start, end, make_box(1));
   }
 
-  object_ref range::create(object_ref const &start, object_ref const &end, object_ref const &step)
+  object_ref range::create(object_ref const start, object_ref const end, object_ref const step)
   {
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
@@ -200,7 +200,7 @@ namespace jank::runtime::obj
     return chunk_next;
   }
 
-  cons_ref range::conj(object_ref const &head) const
+  cons_ref range::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }
@@ -230,7 +230,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  range_ref range::with_meta(object_ref const &m) const
+  range_ref range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

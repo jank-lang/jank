@@ -61,7 +61,7 @@ namespace jank::analyze::expr
              jtl::immutable_string const &name,
              jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,
-             runtime::obj::persistent_hash_map_ref const &meta);
+             runtime::obj::persistent_hash_map_ref const meta);
 
     /* Aggregates all `frame->captures` from each arity so that we can know the overall
      * captures for all arities of this fn. This is necessary for codegen to IR, since we

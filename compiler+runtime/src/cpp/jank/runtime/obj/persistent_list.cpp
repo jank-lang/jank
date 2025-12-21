@@ -18,7 +18,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_list_ref persistent_list::create(object_ref const &meta, object_ref const &s)
+  persistent_list_ref persistent_list::create(object_ref const meta, object_ref const s)
   {
     auto const ret{ create(s) };
     auto const m{ behavior::detail::validate_meta(meta) };
@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  persistent_list_ref persistent_list::create(object_ref const &s)
+  persistent_list_ref persistent_list::create(object_ref const s)
   {
     if(s.is_nil())
     {
@@ -55,12 +55,12 @@ namespace jank::runtime::obj
       s);
   }
 
-  persistent_list_ref persistent_list::create(persistent_list_ref const &s)
+  persistent_list_ref persistent_list::create(persistent_list_ref const s)
   {
     return s;
   }
 
-  persistent_list_ref persistent_list::create(nil_ref const &)
+  persistent_list_ref persistent_list::create(nil_ref const )
   {
     return empty();
   }
@@ -114,7 +114,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_list_ref persistent_list::conj(object_ref const &head) const
+  persistent_list_ref persistent_list::conj(object_ref const head) const
   {
     auto l(data.conj(head));
     auto ret(make_box<persistent_list>(meta, std::move(l)));
@@ -151,7 +151,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  persistent_list_ref persistent_list::with_meta(object_ref const &m) const
+  persistent_list_ref persistent_list::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(make_box<persistent_list>(data));

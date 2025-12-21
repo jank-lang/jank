@@ -19,7 +19,7 @@ namespace jank::compiler_native
   using namespace jank;
   using namespace jank::runtime;
 
-  static object_ref native_source(object_ref const &form)
+  static object_ref native_source(object_ref const form)
   {
     /* We use a clean analyze::processor so we don't share lifted items from other REPL
      * evaluations. */

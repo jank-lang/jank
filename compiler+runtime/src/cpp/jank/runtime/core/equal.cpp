@@ -5,7 +5,7 @@
 
 namespace jank::runtime
 {
-  bool equal(char const lhs, object_ref const &rhs)
+  bool equal(char const lhs, object_ref const rhs)
   {
     if(rhs.is_nil() || rhs->type != object_type::character)
     {
@@ -16,7 +16,7 @@ namespace jank::runtime
     return typed_rhs->to_hash() == static_cast<uhash>(lhs);
   }
 
-  bool equal(object_ref const &lhs, object_ref const &rhs)
+  bool equal(object_ref const lhs, object_ref const rhs)
   {
     if(lhs.is_nil())
     {
@@ -27,10 +27,10 @@ namespace jank::runtime
       return false;
     }
 
-    return visit_object([&](auto const &typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
+    return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
   }
 
-  i64 compare(object_ref const &l, object_ref const &r)
+  i64 compare(object_ref const l, object_ref const r)
   {
     if(l == r)
     {
@@ -45,7 +45,7 @@ namespace jank::runtime
       }
 
       return visit_object(
-        [](auto const &typed_l, auto const &r) -> i64 {
+        [](auto const typed_l, auto const &r) -> i64 {
           using L = typename jtl::decay_t<decltype(typed_l)>::value_type;
           if constexpr(behavior::comparable<L>)
           {
@@ -63,7 +63,7 @@ namespace jank::runtime
     return -1;
   }
 
-  bool is_identical(object_ref const &lhs, object_ref const &rhs)
+  bool is_identical(object_ref const lhs, object_ref const rhs)
   {
     return lhs == rhs;
   }

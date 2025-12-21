@@ -20,30 +20,30 @@ namespace jank::runtime::obj
     static constexpr bool is_sequential{ true };
     static constexpr i64 chunk_size{ 32 };
 
-    using bounds_check_t = bool (*)(object_ref const &, object_ref const &);
+    using bounds_check_t = bool (*)(object_ref const , object_ref const );
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
     range(range &&) noexcept = default;
     range(range const &) = default;
-    range(object_ref const &end);
-    range(object_ref const &start, object_ref const &end);
-    range(object_ref const &start, object_ref const &end, object_ref const &step);
-    range(object_ref const &start,
-          object_ref const &end,
-          object_ref const &step,
+    range(object_ref const end);
+    range(object_ref const start, object_ref const end);
+    range(object_ref const start, object_ref const end, object_ref const step);
+    range(object_ref const start,
+          object_ref const end,
+          object_ref const step,
           bounds_check_t bounds_check);
-    range(object_ref const &start,
-          object_ref const &end,
-          object_ref const &step,
+    range(object_ref const start,
+          object_ref const end,
+          object_ref const step,
           bounds_check_t bounds_check,
-          obj::array_chunk_ref const &chunk,
-          range_ref const &chunk_next);
+          obj::array_chunk_ref const chunk,
+          range_ref const chunk_next);
 
-    static object_ref create(object_ref const &end);
-    static object_ref create(object_ref const &start, object_ref const &end);
+    static object_ref create(object_ref const end);
+    static object_ref create(object_ref const start, object_ref const end);
     static object_ref
-    create(object_ref const &start, object_ref const &end, object_ref const &step);
+    create(object_ref const start, object_ref const end, object_ref const step);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -69,10 +69,10 @@ namespace jank::runtime::obj
     void force_chunk() const;
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ref const &head) const;
+    obj::cons_ref conj(object_ref const head) const;
 
     /* behavior::metadatable */
-    range_ref with_meta(object_ref const &m) const;
+    range_ref with_meta(object_ref const m) const;
 
     object base{ obj_type };
     object_ref start{};

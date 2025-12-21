@@ -8,7 +8,7 @@ namespace jank::analyze::expr
   cpp_value::cpp_value(expression_position const position,
                        local_frame_ptr const frame,
                        bool const needs_box,
-                       obj::symbol_ref const &sym,
+                       obj::symbol_ref const sym,
                        jtl::ptr<void> const type,
                        jtl::ptr<void> const scope,
                        value_kind const val_kind)

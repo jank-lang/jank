@@ -84,61 +84,61 @@ namespace jank::runtime
 
       /* behavior::callable */
       object_ref call() final;
-      object_ref call(object_ref const &) final;
-      object_ref call(object_ref const &, object_ref const &) final;
-      object_ref call(object_ref const &, object_ref const &, object_ref const &) final;
+      object_ref call(object_ref const ) final;
+      object_ref call(object_ref const , object_ref const ) final;
+      object_ref call(object_ref const , object_ref const , object_ref const ) final;
       object_ref
-      call(object_ref const &, object_ref const &, object_ref const &, object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
-      object_ref call(object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &,
-                      object_ref const &) final;
+      call(object_ref const , object_ref const , object_ref const , object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
+      object_ref call(object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ,
+                      object_ref const ) final;
 
       object_ref this_object_ref() final;
 
       /* behavior::metadatable */
-      native_function_wrapper_ref with_meta(object_ref const &m) const;
+      native_function_wrapper_ref with_meta(object_ref const m) const;
 
       object base{ obj_type };
       obj::detail::function_type data{};

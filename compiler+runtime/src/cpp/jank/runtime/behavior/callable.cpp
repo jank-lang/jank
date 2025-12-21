@@ -19,11 +19,11 @@ namespace jank::runtime
     return source;
   }
 
-  object_ref dynamic_call(object_ref const &source)
+  object_ref dynamic_call(object_ref const source)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -47,11 +47,11 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source, object_ref const &a1)
+  object_ref dynamic_call(object_ref const source, object_ref const a1)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -91,11 +91,11 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source, object_ref const &a1, object_ref const &a2)
+  object_ref dynamic_call(object_ref const source, object_ref const a1, object_ref const a2)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -134,14 +134,14 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -175,15 +175,15 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -219,16 +219,16 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -266,17 +266,17 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -328,18 +328,18 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6,
-                          object_ref const &a7)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -395,19 +395,19 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6,
-                          object_ref const &a7,
-                          object_ref const &a8)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -467,20 +467,20 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6,
-                          object_ref const &a7,
-                          object_ref const &a8,
-                          object_ref const &a9)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -541,21 +541,21 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6,
-                          object_ref const &a7,
-                          object_ref const &a8,
-                          object_ref const &a9,
-                          object_ref const &a10)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9,
+                          object_ref const a10)
   {
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -662,23 +662,23 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref dynamic_call(object_ref const &source,
-                          object_ref const &a1,
-                          object_ref const &a2,
-                          object_ref const &a3,
-                          object_ref const &a4,
-                          object_ref const &a5,
-                          object_ref const &a6,
-                          object_ref const &a7,
-                          object_ref const &a8,
-                          object_ref const &a9,
-                          object_ref const &a10,
-                          obj::persistent_list_ref const &rest)
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const a1,
+                          object_ref const a2,
+                          object_ref const a3,
+                          object_ref const a4,
+                          object_ref const a5,
+                          object_ref const a6,
+                          object_ref const a7,
+                          object_ref const a8,
+                          object_ref const a9,
+                          object_ref const a10,
+                          obj::persistent_list_ref const rest)
   {
     /* TODO: Move call fns into var so we can remove these checks. */
     auto const processed_source(pass_through_vars(source));
     return visit_object(
-      [=](auto const &typed_source) -> object_ref {
+      [=](auto const typed_source) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
@@ -827,10 +827,10 @@ namespace jank::runtime
       processed_source);
   }
 
-  object_ref apply_to(object_ref const &source, object_ref const &args)
+  object_ref apply_to(object_ref const source, object_ref const args)
   {
     return visit_seqable(
-      [=](auto const &typed_args) -> object_ref {
+      [=](auto const typed_args) -> object_ref {
         auto const s(typed_args->fresh_seq());
         auto const length(sequence_length(s, max_params + 1));
         auto const r{ make_sequence_range(s) };
@@ -975,92 +975,92 @@ namespace jank::runtime
       throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &)
+    object_ref callable::call(object_ref const )
     {
       throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &, object_ref const &)
+    object_ref callable::call(object_ref const , object_ref const )
     {
       throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &, object_ref const &, object_ref const &)
+    object_ref callable::call(object_ref const , object_ref const , object_ref const )
     {
       throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref
-    callable::call(object_ref const &, object_ref const &, object_ref const &, object_ref const &)
+    callable::call(object_ref const , object_ref const , object_ref const , object_ref const )
     {
       throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &,
-                              object_ref const &)
+    object_ref callable::call(object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const ,
+                              object_ref const )
     {
       throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }

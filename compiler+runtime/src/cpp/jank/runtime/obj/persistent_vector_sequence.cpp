@@ -5,13 +5,13 @@
 
 namespace jank::runtime::obj
 {
-  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const &v)
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v)
     : vec{ v }
   {
     jank_debug_assert(!v->data.empty());
   }
 
-  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const &v,
+  persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v,
                                                          usize const i)
     : vec{ v }
     , index{ i }
@@ -118,7 +118,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref persistent_vector_sequence::conj(object_ref const &head)
+  cons_ref persistent_vector_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, this);
   }

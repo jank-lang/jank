@@ -6,7 +6,7 @@
 
 namespace jank::runtime::behavior::detail
 {
-  object_ref validate_meta(object_ref const &m)
+  object_ref validate_meta(object_ref const m)
   {
     if(!is_map(m) && m.is_some())
     {

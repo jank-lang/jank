@@ -5,13 +5,13 @@
 
 namespace jank::runtime::obj
 {
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const &s)
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s)
     : str{ s }
   {
     jank_debug_assert(!s->data.empty());
   }
 
-  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const &s,
+  persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
                                                          usize const i)
     : str{ s }
     , index{ i }
@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     return this;
   }
 
-  cons_ref persistent_string_sequence::conj(object_ref const &head)
+  cons_ref persistent_string_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, this);
   }

@@ -5,7 +5,7 @@
 
 namespace jank::runtime::obj
 {
-  iterator::iterator(object_ref const &fn, object_ref const &start)
+  iterator::iterator(object_ref const fn, object_ref const start)
     : fn{ fn }
     , current{ start }
   {
@@ -81,7 +81,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  cons_ref iterator::conj(object_ref const &head) const
+  cons_ref iterator::conj(object_ref const head) const
   {
     return make_box<cons>(head, this);
   }

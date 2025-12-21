@@ -16,7 +16,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr oref<T> dyn_cast(object_ref const &o)
+  constexpr oref<T> dyn_cast(object_ref const o)
   {
     if(o->type != T::obj_type)
     {
@@ -28,7 +28,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  oref<T> try_object(object_ref const &o)
+  oref<T> try_object(object_ref const o)
   {
     if(o->type != T::obj_type)
     {
@@ -49,20 +49,7 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr oref<T> expect_object(object_ref const &o)
-  {
-    if constexpr(T::obj_type != object_type::nil)
-    {
-      jank_debug_assert(o.is_some());
-    }
-    jank_debug_assert(o->type == T::obj_type);
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(o.data) - offsetof(T, base));
-  }
-
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr weak_oref<T> expect_object(weak_object_ref const &o)
+  constexpr oref<T> expect_object(object_ref const o)
   {
     if constexpr(T::obj_type != object_type::nil)
     {

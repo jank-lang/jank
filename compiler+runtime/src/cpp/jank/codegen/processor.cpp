@@ -77,7 +77,7 @@ namespace jank::codegen
                                        jtl::immutable_string,
                                        std::hash<runtime::object_ref>,
                                        runtime::very_equal_to> &lifted_constants,
-                  object_ref const &o)
+                  object_ref const o)
     {
       auto const existing{ lifted_constants.find(o) };
       if(existing != lifted_constants.end())
@@ -90,7 +90,7 @@ namespace jank::codegen
       return native_name;
     }
 
-    static jtl::immutable_string gen_constant_type(runtime::object_ref const &o, bool const boxed)
+    static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
     {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -146,7 +146,7 @@ namespace jank::codegen
     }
 
     static void
-    gen_constant(runtime::object_ref const &o, jtl::string_builder &buffer, bool const boxed)
+    gen_constant(runtime::object_ref const o, jtl::string_builder &buffer, bool const boxed)
     {
       if(!boxed)
       {
@@ -1801,7 +1801,7 @@ namespace jank::codegen
     auto const &value_tmp{ gen(expr->value_expr, fn_arity) };
 
     util::format_to(body_buffer,
-                    "switch(jank_shift_mask_case_integer({}.retain().get(), {}, {})) {",
+                    "switch(jank_shift_mask_case_integer({}.get(), {}, {})) {",
                     value_tmp.unwrap().str(true),
                     expr->shift,
                     expr->mask);
@@ -1983,7 +1983,7 @@ namespace jank::codegen
         util::format_to(body_buffer, "{}", arg_tmp.str(true));
         if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
-          util::format_to(body_buffer, ".retain().get()");
+          util::format_to(body_buffer, ".get()");
         }
         need_comma = true;
       }
@@ -2624,7 +2624,7 @@ namespace jank::codegen
       for(auto const &param : arity.params)
       {
         util::format_to(body_buffer,
-                        "{} jank::runtime::object_ref const &{}{}",
+                        "{} jank::runtime::object_ref const {}{}",
                         (param_comma ? ", " : ""),
                         runtime::munge(param->name),
                         recur_suffix);
@@ -2843,18 +2843,5 @@ namespace jank::codegen
       generated_expression = true;
     }
     return { expression_buffer.data(), expression_buffer.size() };
-  }
-
-  jtl::immutable_string processor::expression_fn_str()
-  {
-    auto const &expr_str{ expression_str() };
-    auto const &fn_name{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string("expr_fn")) };
-    jtl::string_builder fn_buffer;
-    util::format_to(fn_buffer,
-                    "auto {}(){ return {}.retain().get(); } {}()",
-                    fn_name,
-                    expr_str,
-                    fn_name);
-    return fn_buffer.release();
   }
 }

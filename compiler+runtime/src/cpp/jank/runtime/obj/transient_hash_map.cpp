@@ -73,7 +73,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  object_ref transient_hash_map::get(object_ref const &key) const
+  object_ref transient_hash_map::get(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -84,7 +84,7 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  object_ref transient_hash_map::get(object_ref const &key, object_ref const &fallback) const
+  object_ref transient_hash_map::get(object_ref const key, object_ref const fallback) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_hash_map::get_entry(object_ref const &key) const
+  object_ref transient_hash_map::get_entry(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -106,28 +106,28 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  bool transient_hash_map::contains(object_ref const &key) const
+  bool transient_hash_map::contains(object_ref const key) const
   {
     assert_active();
     return data.find(key);
   }
 
   transient_hash_map_ref
-  transient_hash_map::assoc_in_place(object_ref const &key, object_ref const &val)
+  transient_hash_map::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
     data.set(key, val);
     return this;
   }
 
-  transient_hash_map_ref transient_hash_map::dissoc_in_place(object_ref const &key)
+  transient_hash_map_ref transient_hash_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
     data.erase(key);
     return this;
   }
 
-  transient_hash_map_ref transient_hash_map::conj_in_place(object_ref const &head)
+  transient_hash_map_ref transient_hash_map::conj_in_place(object_ref const head)
   {
     assert_active();
 
@@ -163,12 +163,12 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_map>(std::move(data).persistent());
   }
 
-  object_ref transient_hash_map::call(object_ref const &o) const
+  object_ref transient_hash_map::call(object_ref const o) const
   {
     return get(o);
   }
 
-  object_ref transient_hash_map::call(object_ref const &o, object_ref const &fallback) const
+  object_ref transient_hash_map::call(object_ref const o, object_ref const fallback) const
   {
     return get(o, fallback);
   }

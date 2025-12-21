@@ -69,7 +69,7 @@ namespace jank::runtime
   template <typename T, typename F, typename... Args>
   requires behavior::object_like<T>
   [[gnu::hot]]
-  auto visit_object(F const &fn, weak_oref<T const> const not_erased, Args &&...args)
+  auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
     return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
   }
@@ -80,7 +80,7 @@ namespace jank::runtime
   template <typename F, typename... Args>
   requires visitable<F, Args...>
   [[gnu::hot]]
-  auto visit_object(F const &fn, weak_object_ref const erased, Args &&...args)
+  auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
     switch(erased->type)
     {
@@ -223,7 +223,7 @@ namespace jank::runtime
   /* Allows the visiting of a single type. */
   template <typename T, typename F, typename... Args>
   [[gnu::hot]]
-  auto visit_type(F const &fn, object_ref const &erased, Args &&...args)
+  auto visit_type(F const &fn, object_ref const erased, Args &&...args)
   {
     if(erased->type == T::obj_type)
     {
@@ -240,7 +240,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  auto visit_seqable(F1 const &fn, F2 const &else_fn, object_ref const &erased, Args &&...args)
+  auto visit_seqable(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -314,7 +314,7 @@ namespace jank::runtime
   /* Throws if the object isn't seqable. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  auto visit_seqable(F1 const &fn, object_ref const &erased, Args &&...args)
+  auto visit_seqable(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_seqable(
       fn,
@@ -332,7 +332,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(map_visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  auto visit_map_like(F1 const &fn, F2 const &else_fn, object_ref const &erased, Args &&...args)
+  auto visit_map_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -354,7 +354,7 @@ namespace jank::runtime
   /* Throws if the object isn't map-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  auto visit_map_like(F1 const &fn, object_ref const &erased, Args &&...args)
+  auto visit_map_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_map_like(
       fn,
@@ -368,7 +368,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  auto visit_set_like(F1 const &fn, F2 const &else_fn, object_ref const &erased, Args &&...args)
+  auto visit_set_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -388,7 +388,7 @@ namespace jank::runtime
   /* Throws if the object isn't set-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  auto visit_set_like(F1 const &fn, object_ref const &erased, Args &&...args)
+  auto visit_set_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_set_like(
       fn,
@@ -402,7 +402,7 @@ namespace jank::runtime
   template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object_ref>)
   [[gnu::hot]]
-  auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const &erased, Args &&...args)
+  auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -427,7 +427,7 @@ namespace jank::runtime
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
   [[gnu::hot]]
-  auto visit_number_like(F1 const &fn, object_ref const &erased, Args &&...args)
+  auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_number_like(
       fn,

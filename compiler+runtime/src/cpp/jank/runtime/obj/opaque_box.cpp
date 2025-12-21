@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(data.data));
   }
 
-  opaque_box_ref opaque_box::with_meta(object_ref const &m)
+  opaque_box_ref opaque_box::with_meta(object_ref const m)
   {
     meta = behavior::detail::validate_meta(m);
     return this;

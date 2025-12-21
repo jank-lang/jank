@@ -15,7 +15,7 @@ namespace jank::runtime::detail
 {
   struct object_ref_compare
   {
-    bool operator()(object_ref const &l, object_ref const &r) const;
+    bool operator()(object_ref const l, object_ref const r) const;
   };
 }
 

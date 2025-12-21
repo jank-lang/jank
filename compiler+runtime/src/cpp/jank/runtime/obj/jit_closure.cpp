@@ -17,7 +17,7 @@ namespace jank::runtime::obj
   {
   }
 
-  jit_closure::jit_closure(object_ref const &meta)
+  jit_closure::jit_closure(object_ref const meta)
     : meta{ meta }
   {
   }
@@ -55,7 +55,7 @@ namespace jank::runtime::obj
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  jit_closure_ref jit_closure::with_meta(object_ref const &m)
+  jit_closure_ref jit_closure::with_meta(object_ref const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
     meta = new_meta;
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
     return arity_0(&base);
   }
 
-  object_ref jit_closure::call(object_ref const &a1)
+  object_ref jit_closure::call(object_ref const a1)
   {
     if(!arity_1)
     {
@@ -80,7 +80,7 @@ namespace jank::runtime::obj
     return arity_1(&base, a1.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1, object_ref const &a2)
+  object_ref jit_closure::call(object_ref const a1, object_ref const a2)
   {
     if(!arity_2)
     {
@@ -89,7 +89,7 @@ namespace jank::runtime::obj
     return arity_2(&base, a1.data, a2.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1, object_ref const &a2, object_ref const &a3)
+  object_ref jit_closure::call(object_ref const a1, object_ref const a2, object_ref const a3)
   {
     if(!arity_3)
     {
@@ -98,10 +98,10 @@ namespace jank::runtime::obj
     return arity_3(&base, a1.data, a2.data, a3.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4)
   {
     if(!arity_4)
     {
@@ -110,11 +110,11 @@ namespace jank::runtime::obj
     return arity_4(&base, a1.data, a2.data, a3.data, a4.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5)
   {
     if(!arity_5)
     {
@@ -123,12 +123,12 @@ namespace jank::runtime::obj
     return arity_5(&base, a1.data, a2.data, a3.data, a4.data, a5.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5,
-                               object_ref const &a6)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6)
   {
     if(!arity_6)
     {
@@ -137,13 +137,13 @@ namespace jank::runtime::obj
     return arity_6(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5,
-                               object_ref const &a6,
-                               object_ref const &a7)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7)
   {
     if(!arity_7)
     {
@@ -152,14 +152,14 @@ namespace jank::runtime::obj
     return arity_7(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5,
-                               object_ref const &a6,
-                               object_ref const &a7,
-                               object_ref const &a8)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8)
   {
     if(!arity_8)
     {
@@ -168,15 +168,15 @@ namespace jank::runtime::obj
     return arity_8(&base, a1.data, a2.data, a3.data, a4.data, a5.data, a6.data, a7.data, a8.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5,
-                               object_ref const &a6,
-                               object_ref const &a7,
-                               object_ref const &a8,
-                               object_ref const &a9)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8,
+                               object_ref const a9)
   {
     if(!arity_9)
     {
@@ -194,16 +194,16 @@ namespace jank::runtime::obj
                    a9.data);
   }
 
-  object_ref jit_closure::call(object_ref const &a1,
-                               object_ref const &a2,
-                               object_ref const &a3,
-                               object_ref const &a4,
-                               object_ref const &a5,
-                               object_ref const &a6,
-                               object_ref const &a7,
-                               object_ref const &a8,
-                               object_ref const &a9,
-                               object_ref const &a10)
+  object_ref jit_closure::call(object_ref const a1,
+                               object_ref const a2,
+                               object_ref const a3,
+                               object_ref const a4,
+                               object_ref const a5,
+                               object_ref const a6,
+                               object_ref const a7,
+                               object_ref const a8,
+                               object_ref const a9,
+                               object_ref const a10)
   {
     if(!arity_10)
     {

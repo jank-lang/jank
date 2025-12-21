@@ -9,8 +9,8 @@ namespace jank::runtime::detail
   static object_ref *make_next_array(object_ref * const prev,
                                      u8 const cap,
                                      u8 const length,
-                                     object_ref const &key,
-                                     object_ref const &value)
+                                     object_ref const key,
+                                     object_ref const value)
   {
     if((length + 2) <= cap)
     {
@@ -125,7 +125,7 @@ namespace jank::runtime::detail
     //delete[] data;
   }
 
-  void native_array_map::insert_unique(object_ref const &key, object_ref const &val)
+  void native_array_map::insert_unique(object_ref const key, object_ref const val)
   {
     data = make_next_array(data, cap, length, key, val);
     length += 2;
@@ -133,7 +133,7 @@ namespace jank::runtime::detail
     hash = 0;
   }
 
-  void native_array_map::insert_or_assign(object_ref const &key, object_ref const &val)
+  void native_array_map::insert_or_assign(object_ref const key, object_ref const val)
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -162,7 +162,7 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  jtl::option<object_ref> native_array_map::find(object_ref const &key) const
+  jtl::option<object_ref> native_array_map::find(object_ref const key) const
   {
     if(key->type == runtime::object_type::keyword)
     {
@@ -187,7 +187,7 @@ namespace jank::runtime::detail
     return {};
   }
 
-  void native_array_map::erase(object_ref const &key)
+  void native_array_map::erase(object_ref const key)
   {
     if(key->type == runtime::object_type::keyword)
     {
