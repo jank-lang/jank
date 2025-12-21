@@ -298,19 +298,21 @@ namespace jank::analyze::cpp_util
     {
       return "jank::runtime::object_ref";
     }
-    util::println("get_qualified_type_name {}", Cpp::GetTypeAsString(type));
     /* TODO: Handle typed object refs, too. */
 
     /* TODO: We probably want a recursive approach to this, for types and scopes. */
     auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
+    if(qual_type->isNullPtrType())
+    {
+      return "std::nullptr_t";
+    }
+
     if(auto const *alias{
          llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()) };
        alias)
     {
-      util::println("\t is alias");
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
-        util::println("\t getting decl name: {}", get_qualified_name(alias_decl));
         return get_qualified_name(alias_decl);
       }
     }
@@ -318,7 +320,6 @@ namespace jank::analyze::cpp_util
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {
       auto name{ get_qualified_name(scope) };
-      util::println("\t found scope: {}", name);
       if(Cpp::IsPointerType(type))
       {
         name = name + "*";
