@@ -167,13 +167,11 @@ namespace jank
     auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
     auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(first_res_var, jank_nil),
-                                                std::make_pair(second_res_var, jank_nil),
-                                                std::make_pair(third_res_var, jank_nil),
-                                                std::make_pair(error_var, jank_nil)))
-      .expect_ok();
+    context::binding_scope scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(first_res_var, jank_nil),
+      std::make_pair(second_res_var, jank_nil),
+      std::make_pair(third_res_var, jank_nil),
+      std::make_pair(error_var, jank_nil)) };
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
@@ -223,8 +221,6 @@ namespace jank
       util::println("");
       le.setPrompt(get_prompt("=> "));
     }
-
-    __rt_ctx->pop_thread_bindings().expect_ok();
   }
 
   static void cpp_repl()
