@@ -51,7 +51,7 @@ namespace jank
 
     {
       profile::timer const timer{ "eval user code" };
-      util::println("{}", to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file)));
+      __rt_ctx->eval_file(util::cli::opts.target_file);
     }
 
     //ankerl::nanobench::Config config;
