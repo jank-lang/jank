@@ -180,7 +180,6 @@ namespace jank::runtime
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form.expect_ok().unwrap().ptr, analyze::expression_position::statement)
           .expect_ok()));
-
       ret = evaluate::eval(expr);
 
       forms.emplace_back(form.expect_ok().unwrap().ptr);
