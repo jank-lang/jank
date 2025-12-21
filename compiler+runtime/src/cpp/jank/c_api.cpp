@@ -121,7 +121,8 @@ extern "C"
     return __rt_ctx->intern_keyword(to_string(ns_obj), to_string(name_obj))
       .expect_ok()
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_deref(jank_object_ref const o)
@@ -209,7 +210,10 @@ extern "C"
     auto const a4_obj(reinterpret_cast<object *>(a4));
     auto const a5_obj(reinterpret_cast<object *>(a5));
     auto const a6_obj(reinterpret_cast<object *>(a6));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).retain().erase().data;
+    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj)
+      .retain()
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_call7(jank_object_ref const f,
@@ -231,7 +235,8 @@ extern "C"
     auto const a7_obj(reinterpret_cast<object *>(a7));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj)
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_call8(jank_object_ref const f,
@@ -255,7 +260,8 @@ extern "C"
     auto const a8_obj(reinterpret_cast<object *>(a8));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj)
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_call9(jank_object_ref const f,
@@ -290,7 +296,8 @@ extern "C"
                         a8_obj,
                         a9_obj)
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_call10(jank_object_ref const f,
@@ -328,7 +335,8 @@ extern "C"
                         a9_obj,
                         a10_obj)
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_call11(jank_object_ref const f,
@@ -369,7 +377,8 @@ extern "C"
                         a10_obj,
                         try_object<obj::persistent_list>(rest_obj))
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_const_nil()
@@ -415,7 +424,8 @@ extern "C"
     return make_box(runtime::obj::ratio_data(reinterpret_cast<object *>(numerator),
                                              reinterpret_cast<object *>(denominator)))
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_string_create(char const *s)
@@ -436,7 +446,8 @@ extern "C"
     jank_debug_assert(s);
     return make_box<obj::character>(read::parse::get_char_from_literal(s).unwrap())
       .retain()
-      .erase().data;
+      .erase()
+      .data;
   }
 
   jank_object_ref jank_regex_create(char const *s)

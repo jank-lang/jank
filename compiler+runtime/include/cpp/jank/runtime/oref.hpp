@@ -99,7 +99,7 @@ namespace jank::runtime
       release();
     }
 
-    oref &retain()
+    oref<object> const &retain() const
     {
       if(is_some())
       {
@@ -108,7 +108,7 @@ namespace jank::runtime
       return *this;
     }
 
-    void release()
+    void release() const
     {
       if(is_some())
       {
@@ -217,9 +217,9 @@ namespace jank::runtime
       return data;
     }
 
-    oref<object> erase() const noexcept
+    oref<object> const &erase() const noexcept
     {
-      return data;
+      return *this;
     }
 
     bool is_some() const noexcept
@@ -295,7 +295,7 @@ namespace jank::runtime
       release();
     }
 
-    oref &retain()
+    oref<T> const &retain() const
     {
       if(is_some())
       {
@@ -304,7 +304,7 @@ namespace jank::runtime
       return *this;
     }
 
-    void release()
+    void release() const
     {
       if(is_some())
       {
@@ -508,6 +508,15 @@ namespace jank::runtime
     requires(C::obj_type == object_type::nil)
     oref(oref<C> const &data) noexcept
       : data{ data.data }
+    {
+    }
+
+    oref<obj::nil> const &retain() const
+    {
+      return *this;
+    }
+
+    void release() const
     {
     }
 
