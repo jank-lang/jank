@@ -14,12 +14,12 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
-#include <jank/runtime/obj/nil.hpp>
 
 /* This must go last; doctest and glog both define CHECK and family. */
 #include <doctest/doctest.h>

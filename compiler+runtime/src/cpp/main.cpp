@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <llvm/LineEditor/LineEditor.h>
 
 #include <Interpreter/Compatibility.h>
@@ -12,6 +11,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/detail/type.hpp>
