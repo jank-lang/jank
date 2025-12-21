@@ -2347,12 +2347,26 @@ namespace jank::codegen
     auto finalizer_tmp{ runtime::munge(__rt_ctx->unique_string("finalizer")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
+    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(expr->type) };
+
+    if(needs_finalizer)
+    {
+      util::format_to(body_buffer,
+                      "using T = {};\n"
+                      "static auto const {}{ "
+                      "[](void * const obj, void *){"
+                      "reinterpret_cast<T*>(obj)->~T();"
+                      "} };",
+                      type_name,
+                      finalizer_tmp);
+    }
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "new {}{ {} }"
+                    "new (GC{}) {}{ {} }"
                     " };",
                     ret_tmp,
+                    (needs_finalizer ? ", " + finalizer_tmp : ""),
                     type_name,
                     value_tmp.unwrap().str(false));
 
@@ -2371,20 +2385,20 @@ namespace jank::codegen
     auto value_tmp{ gen(expr->value_expr, arity).unwrap() };
     auto const value_type{ Cpp::GetPointeeType(cpp_util::expression_type(expr->value_expr)) };
     auto const type_name{ cpp_util::get_qualified_type_name(value_type) };
-    //auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
+    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
 
     /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly
      * documented in bdwgc. So, we'll invoke it manually if needed, prior to GC_free. */
-    //if(needs_finalizer)
-    //{
-    //  util::format_to(body_buffer,
-    //                  "using T = {};\n"
-    //                  "{}->~T();",
-    //                  type_name,
-    //                  value_tmp.str(false));
-    //}
+    if(needs_finalizer)
+    {
+      util::format_to(body_buffer,
+                      "using T = {};\n"
+                      "{}->~T();",
+                      type_name,
+                      value_tmp.str(false));
+    }
 
-    util::format_to(body_buffer, "delete {};", value_tmp.str(false));
+    util::format_to(body_buffer, "GC_free({});", value_tmp.str(false));
 
     if(expr->position == expression_position::tail)
     {
@@ -2743,7 +2757,7 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+            R"(new  (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
             ns,
             v.second.native_name,
             v.first);
@@ -2752,7 +2766,7 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+            R"(new  (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
             ns,
             v.second.native_name,
             v.first);

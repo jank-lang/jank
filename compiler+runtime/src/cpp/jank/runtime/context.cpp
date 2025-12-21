@@ -133,7 +133,7 @@ namespace jank::runtime
     return find_var(make_box<obj::symbol>(ns, name));
   }
 
-  jtl::option<object_ref> context::find_local(obj::symbol_ref const )
+  jtl::option<object_ref> context::find_local(obj::symbol_ref const)
   {
     return none;
   }

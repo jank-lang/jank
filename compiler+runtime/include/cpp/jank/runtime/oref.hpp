@@ -490,7 +490,7 @@ namespace jank::runtime
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
     /* TODO: Figure out cleanup for this. */
-    T *ret{ new T{ std::forward<Args>(args)... } };
+    T *ret{ new(GC) T{ std::forward<Args>(args)... } };
     if(!ret)
     {
       throw std::runtime_error{ "unable to allocate box" };
@@ -510,7 +510,7 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    oref<T> ret{ new T{ std::forward<Args>(args)... } };
+    oref<T> ret{ new(GC) T{ std::forward<Args>(args)... } };
     return ret;
   }
 
@@ -518,7 +518,7 @@ namespace jank::runtime
   jtl::ref<T> make_array_box()
   {
     /* TODO: Figure out cleanup for this. */
-    auto const ret(new T[N]{});
+    auto const ret(new(GC) T[N]{});
     if(!ret)
     {
       throw std::runtime_error{ "unable to allocate array box" };
@@ -530,7 +530,7 @@ namespace jank::runtime
   jtl::ref<T> make_array_box(usize const length)
   {
     /* TODO: Figure out cleanup for this. */
-    auto const ret(new T[length]{});
+    auto const ret(new(GC) T[length]{});
     if(!ret)
     {
       throw std::runtime_error{ "Unable to allocate array box" };
@@ -542,7 +542,7 @@ namespace jank::runtime
   jtl::ref<T> make_array_box(Args &&...args)
   {
     /* TODO: Figure out cleanup for this. */
-    auto const ret(new T[sizeof...(Args)]{ std::forward<Args>(args)... });
+    auto const ret(new(GC) T[sizeof...(Args)]{ std::forward<Args>(args)... });
     if(!ret)
     {
       throw std::runtime_error{ "Unable to allocate array box" };

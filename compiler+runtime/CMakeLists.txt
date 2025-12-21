@@ -28,6 +28,13 @@ project(
     LANGUAGES C CXX
 )
 
+# BDWGC redefines BUILD_SHARED_LIBS as an option. The old policy behavior here
+# is to reset the value to the new default defined, which is ON. However, we
+# want it to keep the value we've already specified, to force BDWGC to build
+# as a static lib, so we choose the new behavior.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+cmake_policy(SET CMP0077 NEW)
+
 # All options are available here.
 option(jank_local_clang "Whether or not to use a local Clang/LLVM source build" OFF)
 option(jank_install_local_clang "Whether or not to install the local Clang/LLVM alongside jank" ON)
@@ -94,7 +101,7 @@ set(
   -std=gnu++20
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
-  -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
+  -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
   -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
   #-DLIBASSERT_STATIC_DEFINE=1
@@ -324,6 +331,7 @@ set(jank_lib_standalone_deps
   Boost::multiprecision
   nanobench_lib
   jankzip_lib
+  bdwgc::gc bdwgc::gctba
   folly_lib
   clangCppInterOp
 )
@@ -359,6 +367,7 @@ add_custom_target(
 set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
+include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
@@ -546,6 +555,7 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
@@ -566,6 +576,7 @@ target_link_libraries(
   ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
+  bdwgc::gc bdwgc::gctba
 )
 
 if(APPLE)

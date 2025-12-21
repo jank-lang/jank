@@ -100,7 +100,7 @@ namespace jtl
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
     /* TODO: Figure out cleanup for this. */
-    T *ret{ new T{ jtl::forward<Args>(args)... } };
+    T *ret{ new(GC) T{ jtl::forward<Args>(args)... } };
     jank_debug_assert(ret);
     return ret;
   }
