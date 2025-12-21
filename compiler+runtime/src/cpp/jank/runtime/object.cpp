@@ -37,6 +37,7 @@ namespace jank::runtime
       visit_object(
         [](auto const typed_this) {
           using T = typename decltype(typed_this)::value_type;
+          //util::println("\tfreeing {}", typed_this.data);
           delete static_cast<T *>(typed_this.data);
         },
         this);

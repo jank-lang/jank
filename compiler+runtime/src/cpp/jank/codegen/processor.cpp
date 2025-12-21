@@ -1801,7 +1801,7 @@ namespace jank::codegen
     auto const &value_tmp{ gen(expr->value_expr, fn_arity) };
 
     util::format_to(body_buffer,
-                    "switch(jank_shift_mask_case_integer({}.erase().data, {}, {})) {",
+                    "switch(jank_shift_mask_case_integer({}.retain().get(), {}, {})) {",
                     value_tmp.unwrap().str(true),
                     expr->shift,
                     expr->mask);
@@ -1983,7 +1983,7 @@ namespace jank::codegen
         util::format_to(body_buffer, "{}", arg_tmp.str(true));
         if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
-          util::format_to(body_buffer, ".erase().data");
+          util::format_to(body_buffer, ".retain().get()");
         }
         need_comma = true;
       }
@@ -2851,7 +2851,7 @@ namespace jank::codegen
     auto const &fn_name{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string("expr_fn")) };
     jtl::string_builder fn_buffer;
     util::format_to(fn_buffer,
-                    "auto {}(){ return {}.retain().erase().data; } {}()",
+                    "auto {}(){ return {}.retain().get(); } {}()",
                     fn_name,
                     expr_str,
                     fn_name);
