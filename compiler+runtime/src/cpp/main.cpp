@@ -223,6 +223,8 @@ namespace jank
       util::println("");
       le.setPrompt(get_prompt("=> "));
     }
+
+    __rt_ctx->pop_thread_bindings().expect_ok();
   }
 
   static void cpp_repl()
