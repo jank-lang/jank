@@ -1040,9 +1040,23 @@ extern "C"
        * Notably, this might make text encoding become more platform dependent. */
       std::locale::global(std::locale(""));
 
-      /* The GC needs to enabled even before arg parsing, since our native types,
+      /* The GC needs to initialized even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
+
+      /* Collection is disabled on macOS, due to a combination of two issues. Firstly,
+       * bdwgc will prematurely collect if we don't use malloc redirection. My research
+       * indicates that this is due to (at least) bdwgc not knowing about globals within
+       * JIT compiled C++. Secondly, we can't use malloc redirection on macOS due to an
+       * issue which leads to a crash in LLVM code.
+       *
+       * https://github.com/bdwgc/bdwgc/issues/829 */
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        /* Although this is called enable, by calling it right here, we actually disable the GC. */
+        GC_enable();
+      }
+
       GC_init();
 
       llvm::llvm_shutdown_obj const Y{};
