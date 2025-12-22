@@ -263,8 +263,6 @@ namespace jank::codegen
     return runtime::munge(__rt_ctx->unique_namespaced_string());
   }
 
-
-
   static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
                                        jtl::ref<llvm::LLVMContext> const llvm_ctx,
                                        jtl::ptr<void> const type)
@@ -2639,8 +2637,9 @@ namespace jank::codegen
       return addr;
     }
 
-    auto const callable{ Cpp::IsFunctionPointerType(expr->type)
-                           /* We pass the type and the scope in here so that unresolved template
+    auto const callable{
+      Cpp::IsFunctionPointerType(expr->type)
+        /* We pass the type and the scope in here so that unresolved template
                             * scopes can be turned into the correct specialization which matches
                             * the type we have. */
         ? Cpp::MakeFunctionValueAotCallable(expr->scope, expr->type, unique_munged_string())

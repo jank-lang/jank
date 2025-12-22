@@ -503,8 +503,6 @@ namespace jank::codegen
     }
   }
 
-
-
   jtl::immutable_string handle::str([[maybe_unused]] bool const needs_box) const
   {
     if(needs_box)
@@ -2025,8 +2023,7 @@ namespace jank::codegen
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
-    auto const meta{ lift_constant(lifted_constants,
-                                           runtime::source_to_meta(expr->source)) };
+    auto const meta{ lift_constant(lifted_constants, runtime::source_to_meta(expr->source)) };
 
     util::format_to(body_buffer,
                     "auto {}{ "
