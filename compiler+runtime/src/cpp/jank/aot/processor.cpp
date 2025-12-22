@@ -226,7 +226,6 @@ int main(int argc, const char** argv)
     for(auto const &lib : { "-ljank-standalone",
                             /* Default libraries that jank depends on. */
                             "-lm",
-                            "-lstdc++",
                             "-lLLVM",
                             "-lclang-cpp",
                             "-lcrypto",
@@ -234,6 +233,13 @@ int main(int argc, const char** argv)
                             "-lzstd" })
     {
       compiler_args.push_back(strdup(lib));
+    }
+
+    /* On non-macOS platforms, explicitly link libstdc++.
+     * macOS uses libc++ implicitly via Clang. */
+    if constexpr(jtl::current_platform != jtl::platform::macos_like)
+    {
+      compiler_args.push_back(strdup("-lstdc++"));
     }
 
     for(auto const &define : util::cli::opts.define_macros)

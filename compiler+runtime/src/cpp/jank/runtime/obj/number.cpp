@@ -70,6 +70,12 @@ namespace jank::runtime::obj
 
   bool integer::equal(object const &o) const
   {
+    if(o.type == object_type::big_integer)
+    {
+      auto const i(expect_object<big_integer>(&o));
+      return data == i->data;
+    }
+
     if(o.type != object_type::integer)
     {
       return false;

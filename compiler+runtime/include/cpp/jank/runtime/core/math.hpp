@@ -9,6 +9,7 @@ namespace jank::runtime
     using integer_ref = oref<struct integer>;
     using real_ref = oref<struct real>;
     using ratio_ref = oref<struct ratio>;
+    using big_integer_ref = oref<struct big_integer>;
     using big_decimal_ref = oref<struct big_decimal>;
   }
 
@@ -277,6 +278,8 @@ namespace jank::runtime
 
   i64 parse_long(object_ref const o);
   f64 parse_double(object_ref const o);
+
+  obj::big_integer_ref to_big_integer(object_ref const o);
 
   bool is_big_decimal(object_ref const o);
   obj::big_decimal_ref to_big_decimal(object_ref const o);
