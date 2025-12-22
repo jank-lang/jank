@@ -4421,7 +4421,7 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
+      val->type = Cpp::GetTypeFromScope(member_scope);
       val->scope = member_scope;
       return val;
     }
