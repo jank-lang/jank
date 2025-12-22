@@ -335,7 +335,7 @@ namespace jank::environment
 
     JANK_TRY
     {
-      auto const res{ runtime::__rt_ctx->eval_string("((fn* [] \"healthy\"))") };
+      auto const res{ runtime::__rt_ctx->eval_string("((fn* [] \"healthy\"))").unwrap() };
       if(!runtime::equal(res, runtime::make_box("healthy")))
       {
         error = true;

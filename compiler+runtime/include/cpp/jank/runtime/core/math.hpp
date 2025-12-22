@@ -41,6 +41,8 @@ namespace jank::runtime
   object_ref add(obj::ratio_ref const l, obj::integer_ref const r);
   obj::ratio_ref add(obj::integer_ref const l, obj::ratio_ref const r);
 
+  object_ref promoting_add(object_ref const l, object_ref const r);
+
   object_ref sub(object_ref const l, object_ref const r);
   object_ref sub(obj::integer_ref const l, object_ref const r);
   object_ref sub(object_ref const l, obj::integer_ref const r);
@@ -63,6 +65,8 @@ namespace jank::runtime
   object_ref sub(object_ref const l, i64 r);
   object_ref sub(i64 l, object_ref const r);
   i64 sub(i64 l, i64 r);
+
+  object_ref promoting_sub(object_ref const l, object_ref const r);
 
   object_ref div(object_ref const l, object_ref const r);
   object_ref div(obj::integer_ref const l, object_ref const r);
@@ -109,6 +113,8 @@ namespace jank::runtime
   object_ref mul(object_ref const l, i64 r);
   object_ref mul(i64 l, object_ref const r);
   i64 mul(i64 l, i64 r);
+
+  object_ref promoting_mul(object_ref const l, object_ref const r);
 
   bool lt(object_ref const l, object_ref const r);
   bool lt(obj::integer_ref const l, object_ref const r);
@@ -232,7 +238,9 @@ namespace jank::runtime
   object_ref rem(object_ref const l, object_ref const r);
   object_ref quot(object_ref const l, object_ref const r);
   object_ref inc(object_ref const l);
+  object_ref promoting_inc(object_ref const l);
   object_ref dec(object_ref const l);
+  object_ref promoting_dec(object_ref const l);
 
   bool is_zero(object_ref const l);
   bool is_pos(object_ref const l);
@@ -269,6 +277,8 @@ namespace jank::runtime
   f64 to_real(object_ref const o);
 
   bool is_number(object_ref const o);
+  object_ref number(object_ref const o);
+
   bool is_integer(object_ref const o);
   bool is_real(object_ref const o);
   bool is_ratio(object_ref const o);
@@ -279,6 +289,7 @@ namespace jank::runtime
   i64 parse_long(object_ref const o);
   f64 parse_double(object_ref const o);
 
+  bool is_big_integer(object_ref const o);
   obj::big_integer_ref to_big_integer(object_ref const o);
 
   bool is_big_decimal(object_ref const o);

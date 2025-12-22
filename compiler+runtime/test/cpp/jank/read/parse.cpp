@@ -985,6 +985,24 @@ namespace jank::read::parse
         CHECK(r1.is_err());
       }
 
+      SUBCASE("Symbol meta for a metadatable target")
+      {
+        lex::processor lp{ "^foo {}" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_array_map::empty()));
+        auto const m{ meta(r.expect_ok().unwrap().ptr) };
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_nil));
+      }
+
+      SUBCASE("Symbol meta for a non-metadatable target")
+      {
+        lex::processor lp{ "^foo nil" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Map meta for a metadatable target")
       {
         lex::processor lp{ "^{:foo :bar} []" };

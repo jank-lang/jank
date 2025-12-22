@@ -816,6 +816,8 @@ if(jank_test)
     test/cpp/jank/runtime/obj/persistent_list.cpp
     test/cpp/jank/runtime/obj/persistent_string.cpp
     test/cpp/jank/runtime/obj/persistent_vector.cpp
+    test/cpp/jank/runtime/obj/persistent_array_map.cpp
+    test/cpp/jank/runtime/obj/transient_array_map.cpp
     test/cpp/jank/runtime/obj/range.cpp
     test/cpp/jank/runtime/obj/integer_range.cpp
     test/cpp/jank/runtime/obj/repeat.cpp

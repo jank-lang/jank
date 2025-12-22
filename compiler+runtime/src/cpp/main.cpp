@@ -11,6 +11,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/detail/type.hpp>
@@ -51,7 +52,7 @@ namespace jank
 
     {
       profile::timer const timer{ "eval user code" };
-      util::println("{}", to_code_string(__rt_ctx->eval_file(util::cli::opts.target_file)));
+      __rt_ctx->eval_file(util::cli::opts.target_file);
     }
 
     //ankerl::nanobench::Config config;
@@ -161,6 +162,17 @@ namespace jank
     std::string path_tmp{ tmp / "jank-repl-XXXXXX" };
     mkstemp(path_tmp.data());
 
+    auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
+    auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };
+    auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
+    auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
+
+    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(first_res_var, jank_nil()),
+      std::make_pair(second_res_var, jank_nil()),
+      std::make_pair(third_res_var, jank_nil()),
+      std::make_pair(error_var, jank_nil())) };
+
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
     while(auto buf = le.readLine())
@@ -193,7 +205,15 @@ namespace jank
         }
 
         auto const res(__rt_ctx->eval_file(path_tmp));
-        util::println("{}", runtime::to_code_string(res));
+
+        if(res.is_some())
+        {
+          third_res_var->set(second_res_var->deref()).expect_ok();
+          second_res_var->set(first_res_var->deref()).expect_ok();
+          first_res_var->set(res.unwrap()).expect_ok();
+
+          util::println("{}", runtime::to_code_string(res.unwrap()));
+        }
       }
       JANK_CATCH(jank::util::print_exception)
 
