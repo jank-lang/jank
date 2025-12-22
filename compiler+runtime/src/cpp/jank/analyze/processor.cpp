@@ -2791,14 +2791,16 @@ namespace jank::analyze
 
 
             /* Check for duplicate catch types. */
-            /*TODO Add full error handling for duplicated catch types:
-             * Add a new error kind and notes pointing to the duplicated types*/
             for(auto const &existing_catch : ret->catch_bodies)
             {
               if(existing_catch.type.data == catch_type_ref->type.data)
               {
                 return error::analyze_invalid_try("Each catch form must specify a unique type.",
                                                   object_source(item),
+                                                  error::note{
+                                                    "Type previously caught here.",
+                                                    object_source(existing_catch.sym),
+                                                  },
                                                   latest_expansion(macro_expansions));
               }
             }

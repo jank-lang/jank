@@ -89,6 +89,10 @@ namespace jank::codegen
     // Map from closure context field name to its LLVM type
     // Used to correctly load captured variables with their actual types
     native_unordered_map<obj::symbol_ref, llvm::Type *> capture_field_types;
+
+    /* Cache for generated static member wrapper functions to avoid re-compilation.
+     * Key is the fully qualified variable name. */
+    native_unordered_map<std::string, llvm::Function *> static_wrapper_cache;
   };
 
   struct llvm_processor::impl
@@ -2608,25 +2612,36 @@ namespace jank::codegen
       // Get the fully qualified variable name
       auto const var_name{ Cpp::GetQualifiedCompleteName(expr->scope) };
 
-      // Create a wrapper function that returns the address of the variable
-      // Important: Don't use inline/always_inline or the function won't be emitted!
-      auto const wrapper_name{ __rt_ctx->unique_munged_string() };
-      auto const wrapper_code{
-        util::format("extern \"C\" auto {}() {{ return &{}; }}", wrapper_name, var_name)
-      };
+      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
+      llvm::Function *fn{};
 
-      // Parse and link the wrapper
-      auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(wrapper_code.c_str()) };
-      if(!parse_res)
+      if(auto const it{ ctx->static_wrapper_cache.find(var_name) };
+         it != ctx->static_wrapper_cache.end())
       {
-        throw std::runtime_error{ util::format("Unable to create wrapper for variable: {}",
-                                               var_name) };
+        fn = it->second;
       }
-      link_module(*ctx, parse_res->TheModule.get());
+      else
+      {
+        // Create a wrapper function that returns the address of the variable
+        // Important: Don't use inline/always_inline or the function won't be emitted!
+        auto const wrapper_name{ __rt_ctx->unique_munged_string() };
+        auto const wrapper_code{
+          util::format("extern \"C\" auto {}() {{ return &{}; }}", wrapper_name, var_name)
+        };
+
+        // Parse and link the wrapper
+        auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(wrapper_code.c_str()) };
+        if(!parse_res)
+        {
+          throw std::runtime_error{ util::format("Unable to create wrapper for variable: {}",
+                                                 var_name) };
+        }
+        link_module(*ctx, parse_res->TheModule.get());
+        fn = llvm_module->getFunction(wrapper_name.c_str());
+        ctx->static_wrapper_cache.emplace(var_name, fn);
+      }
 
       // Call the wrapper to get the address
-      auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      auto const fn(llvm_module->getFunction(wrapper_name.c_str()));
       auto const addr{ ctx->builder->CreateCall(fn_type, fn) };
 
       if(expr->position == expression_position::tail)
