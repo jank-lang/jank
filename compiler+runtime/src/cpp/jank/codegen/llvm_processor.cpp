@@ -86,8 +86,8 @@ namespace jank::codegen
 
     std::vector<exception_handler_info> exception_handlers;
 
-    // Map from closure context field name to its LLVM type
-    // Used to correctly load captured variables with their actual types
+    /* Map from closure context field name to its LLVM type
+     * Used to correctly load captured variables with their actual types */
     native_unordered_map<obj::symbol_ref, llvm::Type *> capture_field_types;
 
     /* Cache for generated static member wrapper functions to avoid re-compilation.
@@ -177,6 +177,8 @@ namespace jank::codegen
                                  expr::function_arity const &arity);
     void register_parent_catch_clauses(llvm::LandingPadInst *landing_pad,
                                        native_set<llvm::Value *> &registered_rtti);
+
+    llvm::Function *ensure_static_wrapper(jtl::ptr<void> scope);
 
     llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
     llvm::Value *gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const;
@@ -305,7 +307,6 @@ namespace jank::codegen
   {
     jank_debug_assert(type);
     usize size{ 1 };
-    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
@@ -363,8 +364,6 @@ namespace jank::codegen
   static void link_module(reusable_context &ctx, jtl::ref<llvm::Module> const raw_module)
   {
     auto const tsc{ ctx.module.getContext() };
-    //std::unique_ptr<llvm::Module> module{ raw_module };
-    //llvm::orc::ThreadSafeModule tsm{ jtl::move(module), tsc };
     auto cloned_cpp_module{ llvm::orc::cloneExternalModuleToContext(*raw_module, tsc) };
     cloned_cpp_module.consumingModuleDo([&](std::unique_ptr<llvm::Module> module) {
       llvm::Linker::linkModules(*ctx.module.getModuleUnlocked(), jtl::move(module));
@@ -431,12 +430,7 @@ namespace jank::codegen
                            && !(Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
     auto const is_arg_ptr{ Cpp::IsPointerType(input_type)
                            || (Cpp::IsArrayType(Cpp::GetNonReferenceType(input_type))) };
-    //util::println(
-    //  "convert_object input_type = {}, output_type = {}, conversion_type = {}, policy = {}",
-    //  Cpp::GetTypeAsString(input_type),
-    //  Cpp::GetTypeAsString(output_type),
-    //  Cpp::GetTypeAsString(conversion_type),
-    //  conversion_policy_str(policy));
+
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
     Cpp::TemplateArgInfo const template_arg{ Cpp::GetTypeWithoutCv(conversion_type) };
     auto const instantiation{ Cpp::InstantiateTemplate(convert_template, &template_arg, 1) };
@@ -547,9 +541,6 @@ namespace jank::codegen
     /* No need to call a function to erase a typed object. Just find the
      * offset to its base member and shift our pointer accordingly. */
     auto const base_offset{ cpp_util::offset_to_typed_object_base(ret_type) };
-    //util::println("convert_object ret_type = {}, needs base adjustment by {} bytes",
-    //              Cpp::GetTypeAsString(ret_type),
-    //              base_offset);
     if(0 < base_offset)
     {
       auto const ret_base{ ctx.builder->CreateInBoundsGEP(
@@ -597,11 +588,6 @@ namespace jank::codegen
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
     , ctor_name{ __rt_ctx->unique_munged_string() }
-    //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
-    //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
-    //              reinterpret_cast<void *>(
-    //                &static_cast<clang::Interpreter &>(*__rt_ctx->jit_prc.interpreter)))
-    //              ->getContext() }
     , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
     , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
     , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
@@ -821,16 +807,8 @@ namespace jank::codegen
           load_type = type_it->second;
         }
 
-        // For captures, we put the VALUE into locals, not the pointer to the field
-        // This matches how arguments are handled (value is in locals)
-        // Wait, arguments are values?
-        // In create_function: locals[param] = arg; (arg is Value*)
-        // If arg is a pointer (boxed object), locals has pointer.
-        // If capture is i32, locals should have i32 value?
-        // But gen(local_reference_ref) expects locals to contain the "source" (alloca or value).
-        // If it's an alloca, it loads from it.
-        // If it's a value, it returns it.
-        // So here we should load the value from the field and store it in locals.
+        /* For captures, we put the VALUE into locals, not the pointer to the field.
+         * This matches how arguments are handled (value is in locals). */
         locals[capture.first]
           = ctx->builder->CreateLoad(load_type, field_ptr, capture.first->name.c_str());
       }
@@ -1068,7 +1046,7 @@ namespace jank::codegen
 
         bool should_box{ !cpp_util::is_any_object(arg_type) };
 
-        // Robustness check: if LLVM type suggests primitive, force boxing
+        /* Robustness check: if LLVM type suggests primitive, force boxing */
         if(!should_box)
         {
           if(!arg_handle->getType()->isPointerTy())
@@ -1077,7 +1055,7 @@ namespace jank::codegen
           }
           else if(llvm::isa<llvm::AllocaInst>(arg_handle))
           {
-            // If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive
+            /* If it's an alloca of a non-pointer (e.g. alloca i32), it's a primitive. */
             if(!llvm::cast<llvm::AllocaInst>(arg_handle)->getAllocatedType()->isPointerTy())
             {
               should_box = true;
@@ -1091,12 +1069,12 @@ namespace jank::codegen
           llvm::Value *val_ptr{ arg_handle };
           if(!llvm::isa<llvm::AllocaInst>(arg_handle) && !arg_handle->getType()->isPointerTy())
           {
-            // If it's a direct value (e.g. from capture load), store it in a temp alloca
+            /* If it's a direct value (e.g. from capture load), store it in a temp alloca. */
             auto const alloc{ ctx->builder->CreateAlloca(arg_handle->getType()) };
             ctx->builder->CreateStore(arg_handle, alloc);
             val_ptr = alloc;
           }
-          // If it's already a pointer (alloca or pointer value), use it as is
+          /* If it's already a pointer (alloca or pointer value), use it as is. */
 
           auto const fn_type(
             llvm::FunctionType::get(ctx->builder->getPtrTy(),
@@ -1111,7 +1089,7 @@ namespace jank::codegen
         }
         else
         {
-          // Argument is already a Jank object
+          /* Argument is already a Jank object. */
           if(llvm::isa<llvm::AllocaInst>(arg_handle))
           {
             arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
@@ -2609,39 +2587,9 @@ namespace jank::codegen
     if(expr->val_kind == expr::cpp_value::value_kind::variable && Cpp::IsVariable(expr->scope)
        && !is_copyable)
     {
-      // Get the fully qualified variable name
       auto const var_name{ Cpp::GetQualifiedCompleteName(expr->scope) };
-
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
-      llvm::Function *fn{};
-
-      if(auto const it{ ctx->static_wrapper_cache.find(var_name) };
-         it != ctx->static_wrapper_cache.end())
-      {
-        fn = it->second;
-      }
-      else
-      {
-        // Create a wrapper function that returns the address of the variable
-        // Important: Don't use inline/always_inline or the function won't be emitted!
-        auto const wrapper_name{ __rt_ctx->unique_munged_string() };
-        auto const wrapper_code{
-          util::format("extern \"C\" auto {}() {{ return &{}; }}", wrapper_name, var_name)
-        };
-
-        // Parse and link the wrapper
-        auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(wrapper_code.c_str()) };
-        if(!parse_res)
-        {
-          throw std::runtime_error{ util::format("Unable to create wrapper for variable: {}",
-                                                 var_name) };
-        }
-        link_module(*ctx, parse_res->TheModule.get());
-        fn = llvm_module->getFunction(wrapper_name.c_str());
-        ctx->static_wrapper_cache.emplace(var_name, fn);
-      }
-
-      // Call the wrapper to get the address
+      auto const fn{ ensure_static_wrapper(expr->scope) };
       auto const addr{ ctx->builder->CreateCall(fn_type, fn) };
 
       if(expr->position == expression_position::tail)
@@ -2805,18 +2753,6 @@ namespace jank::codegen
                                || cpp_util::is_any_object(param_type)
                                || cpp_util::is_nullptr(param_type) };
       auto const is_param_indirect{ Cpp::IsReferenceType(param_type) || is_param_ptr };
-      //util::println(
-      //  "gen_aot_call arg {}, arg type {} {} (indirect {}), param type {} {} (indirect {}), "
-      //  "implicitly convertible {}",
-      //  i,
-      //  arg_type,
-      //  Cpp::GetTypeAsString(arg_type),
-      //  is_arg_indirect,
-      //  param_type,
-      //  Cpp::GetTypeAsString(param_type),
-      //  is_param_indirect,
-      //  Cpp::IsImplicitlyConvertible(arg_type, param_type));
-
       /* TODO: Is this needed? I thought our casts were explicit in the AST. */
       if(is_arg_untyped_obj
          && (cpp_util::is_primitive(param_type)
@@ -2845,11 +2781,6 @@ namespace jank::codegen
         ctx->builder->CreateStore(arg_handle, alloc);
         arg_handle = alloc;
       }
-      //else if(!is_arg_ref && is_param_indirect)
-      //{
-      //  /* TODO: Nothing to do here? */
-      //}
-
       auto const arg_ptr{ ctx->builder->CreateInBoundsGEP(
         args_array_type,
         args_array,
@@ -3284,6 +3215,35 @@ namespace jank::codegen
     }
 
     return ret;
+  }
+
+  llvm::Function *llvm_processor::impl::ensure_static_wrapper(jtl::ptr<void> scope)
+  {
+    auto const var_name{ Cpp::GetQualifiedCompleteName(scope) };
+    if(auto const it{ ctx->static_wrapper_cache.find(var_name) };
+       it != ctx->static_wrapper_cache.end())
+    {
+      return it->second;
+    }
+
+    /* Create a wrapper function that returns the address of the variable.
+     * Important: Don't use inline/always_inline or the function won't be emitted! */
+    auto const wrapper_name{ __rt_ctx->unique_munged_string() };
+    auto const wrapper_code{
+      util::format("extern \"C\" auto {}() {{ return &{}; }}", wrapper_name, var_name)
+    };
+
+    auto parse_res{ __rt_ctx->jit_prc.interpreter->Parse(wrapper_code.c_str()) };
+    if(!parse_res)
+    {
+      throw std::runtime_error{ util::format("Unable to create wrapper for variable: {}",
+                                             var_name) };
+    }
+    link_module(*ctx, parse_res->TheModule.get());
+    auto const fn{ llvm_module->getFunction(wrapper_name.c_str()) };
+    ctx->static_wrapper_cache.emplace(var_name, fn);
+
+    return fn;
   }
 
   llvm::Value *llvm_processor::impl::gen_var(obj::symbol_ref const qualified_name) const
@@ -4044,14 +4004,14 @@ namespace jank::codegen
     }
     else
     {
-      // Build context with correct types for each capture
+      /* Build context with correct types for each capture. */
       std::vector<llvm::Type *> capture_types;
       capture_types.reserve(captures.size());
       for(auto const &capture : captures)
       {
         auto const name{ capture.first };
-        // If the variable is in locals and it's an alloca, use its actual type
-        // Otherwise use ptr (for deferred inits, global values, etc.)
+        /* If the variable is in locals and it's an alloca, use its actual type.
+         * Otherwise use ptr (for deferred inits, global values, etc.). */
         llvm::Type *field_type{};
         if(locals.contains(name) && llvm::isa<llvm::AllocaInst>(locals[name].data))
         {
@@ -4067,7 +4027,7 @@ namespace jank::codegen
           capture_types.push_back(ctx->builder->getPtrTy());
         }
 
-        // Store the field type so nested function can load with correct type
+        /* Store the field type so nested function can load with correct type. */
         ctx->capture_field_types[name] = field_type;
       }
 
@@ -4099,8 +4059,8 @@ namespace jank::codegen
                                                  capture.second };
           auto local{ gen(expr::local_reference_ref{ &local_ref }, fn_arity) };
 
-          // Load the value if it's an alloca
-          // Use the actual LLVM type of the alloca, not the jank binding type
+          /* Load the value if it's an alloca.
+           * Use the actual LLVM type of the alloca, not the jank binding type. */
           if(llvm::isa<llvm::AllocaInst>(local))
           {
             auto const alloca_type{ llvm::cast<llvm::AllocaInst>(local)->getAllocatedType() };
