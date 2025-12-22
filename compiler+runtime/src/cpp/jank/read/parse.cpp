@@ -544,6 +544,12 @@ namespace jank::read::parse
                                      start_token,
                                      latest_token };
         }
+        if constexpr(std::same_as<T, obj::symbol>)
+        {
+          return object_source_info{ obj::persistent_array_map::create_unique(),
+                                     start_token,
+                                     latest_token };
+        }
         if constexpr(behavior::map_like<T>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
