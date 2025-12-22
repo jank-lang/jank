@@ -447,10 +447,26 @@ namespace jank::codegen
     }
   }
 
-  handle::handle(jtl::immutable_string const &name, bool const)
+  namespace detail
   {
-    boxed_name = name;
-    unboxed_name = boxed_name;
+    static jtl::immutable_string boxed_local_name(jtl::immutable_string const &local_name)
+    {
+      return local_name; // + "__boxed";
+    }
+  }
+
+  handle::handle(jtl::immutable_string const &name, bool const boxed)
+  {
+    if(boxed)
+    {
+      boxed_name = name;
+      unboxed_name = boxed_name;
+    }
+    else
+    {
+      unboxed_name = name;
+      boxed_name = util::format("jank::runtime::make_box({})", unboxed_name);
+    }
   }
 
   handle::handle(jtl::immutable_string const &boxed_name)
@@ -465,31 +481,29 @@ namespace jank::codegen
   {
     if(this->boxed_name.empty())
     {
-      this->boxed_name = unboxed_name;
+      this->boxed_name = util::format("jank::runtime::make_box({})", unboxed_name);
     }
   }
 
   handle::handle(analyze::local_binding_ptr const binding)
   {
-    boxed_name = runtime::munge(binding->native_name);
-    unboxed_name = boxed_name;
-  }
-
-  jtl::immutable_string handle::str(bool const) const
-  {
-    if(needs_box)
+    if(binding->needs_box)
     {
-      if(boxed_name.empty())
-      {
-        throw std::runtime_error{ util::format("Missing boxed name for handle {}", unboxed_name) };
-      }
-      return boxed_name;
+      boxed_name = runtime::munge(binding->native_name);
+      unboxed_name = boxed_name;
+    }
+    else if(binding->has_boxed_usage)
+    {
+      unboxed_name = runtime::munge(binding->native_name);
+      boxed_name = detail::boxed_local_name(unboxed_name);
     }
     else
     {
-      return unboxed_name;
+      unboxed_name = runtime::munge(binding->native_name);
     }
   }
+
+
 
   jtl::immutable_string handle::str([[maybe_unused]] bool const needs_box) const
   {
@@ -512,8 +526,8 @@ namespace jank::codegen
                        compilation_target const target)
     : root_fn{ expr }
     , module{ module }
-    , target{ target } /* The normal unique name is fully namespaced, which we don't need. */
-    , struct_name{ runtime::__rt_ctx->unique_string(root_fn->name) }
+    , target{ target }
+    , struct_name{ root_fn->unique_name }
   {
     assert(root_fn->frame.data);
   }
@@ -544,6 +558,25 @@ namespace jank::codegen
     return native_name;
   }
 
+  static jtl::immutable_string
+  lift_constant(native_unordered_map<runtime::object_ref,
+                                     jtl::immutable_string,
+                                     std::hash<runtime::object_ref>,
+                                     runtime::very_equal_to> &lifted_constants,
+                object_ref const &o)
+  {
+    auto const existing{ lifted_constants.find(o) };
+    if(existing != lifted_constants.end())
+    {
+      return existing->second;
+    }
+
+    auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
+    //util::println("lifting constant {} as {}", runtime::to_code_string(o), native_name);
+    lifted_constants.emplace(o, native_name);
+    return native_name;
+  }
+
   jtl::option<handle>
   processor::gen(analyze::expr::def_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
@@ -552,7 +585,7 @@ namespace jank::codegen
      * of the def, rather than prior (i.e. due to lifting), since there could be
      * some other var-related effects such as refer which need to happen before
      * def. */
-    auto var_tmp(runtime::munge(__rt_ctx->unique_string("var")));
+    auto var_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("var")));
     util::format_to(
       body_buffer,
       R"(auto const {}(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
@@ -562,7 +595,7 @@ namespace jank::codegen
     jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
     {
-      meta = detail::lift_constant(lifted_constants, expr->name->meta.unwrap());
+      meta = lift_constant(lifted_constants, expr->name->meta.unwrap());
     }
 
     /* Forward declarations just intern the var and evaluate to it. */
@@ -684,7 +717,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::call_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("call")) };
+    handle ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("call")) };
     auto const &source_tmp(gen(expr->source_expr, fn_arity));
     format_dynamic_call(source_tmp.unwrap().str(true),
                         ret_tmp.str(true),
@@ -715,7 +748,7 @@ namespace jank::codegen
     }
     else
     {
-      ret = detail::lift_constant(lifted_constants, expr->data);
+      ret = lift_constant(lifted_constants, expr->data);
     }
 
     switch(expr->position)
@@ -739,7 +772,7 @@ namespace jank::codegen
       data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap());
     }
 
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("list")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("list")));
     util::format_to(body_buffer,
                     "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_list>(",
                     ret_tmp);
@@ -775,7 +808,7 @@ namespace jank::codegen
       data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap());
     }
 
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("vec")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("vec")));
     util::format_to(body_buffer,
                     "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_vector>(",
                     ret_tmp);
@@ -812,7 +845,7 @@ namespace jank::codegen
                              gen(data_expr.second, fn_arity).unwrap());
     }
 
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("map")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("map")));
 
     /* Jump right to a hash map, if we have enough values. */
     if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
@@ -890,7 +923,7 @@ namespace jank::codegen
       data_tmps.emplace_back(gen(data_expr, fn_arity).unwrap());
     }
 
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("set")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("set")));
     util::format_to(
       body_buffer,
       "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(",
@@ -920,7 +953,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::local_reference_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto const ret(runtime::munge(expr->binding->native_name));
+    auto const munged_name(runtime::munge(expr->binding->native_name));
 
     // For captures, we need to check the originating binding's type, not the capture's type
     // This matches the logic in build_header()
@@ -958,7 +991,7 @@ namespace jank::codegen
       case analyze::expression_position::value:
         return ret;
       case analyze::expression_position::tail:
-        util::format_to(body_buffer, "return {};", ret);
+        util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
         return none;
     }
   }
@@ -966,24 +999,11 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::function_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const fn_target((target == compilation_target::eval) ? compilation_target::eval
-                                                              : compilation_target::function);
+    auto const compiling(truthy(__rt_ctx->compile_files_var->deref()));
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
-    processor prc{ expr, module, fn_target };
-
-    if(fn_target == compilation_target::function)
-    {
-      /* TODO: Share a context instead. */
-      prc.lifted_vars = lifted_vars;
-      prc.lifted_constants = lifted_constants;
-
-      prc.build_body();
-
-      lifted_vars = jtl::move(prc.lifted_vars);
-      lifted_constants = jtl::move(prc.lifted_constants);
-      prc.lifted_vars.clear();
-      prc.lifted_constants.clear();
-    }
+    processor prc{ expr,
+                   module,
+                   compiling ? compilation_target::function : compilation_target::eval };
 
     util::format_to(deps_buffer, "{}", prc.declaration_str());
 
@@ -1059,7 +1079,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::named_recursion_ref const expr,
                                      analyze::expr::function_arity const &fn_arity)
   {
-    handle ret_tmp{ runtime::munge(__rt_ctx->unique_string("named_recursion")) };
+    handle ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("named_recursion")) };
 
     auto const &source_tmp(
       gen(jtl::ref<analyze::expr::recursion_reference>{ &expr->recursion_ref }, fn_arity));
@@ -1080,7 +1100,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::let_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_string("let")) };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("let")) };
     bool used_option{};
 
     auto const last_expr_type{ cpp_util::expression_type(
@@ -1196,7 +1216,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::letfn_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_string("letfn")) };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("letfn")) };
     bool used_option{};
 
     auto const last_expr_type{ cpp_util::expression_type(
@@ -1329,7 +1349,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::if_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("if")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("if")));
     auto const expr_type{ cpp_util::expression_type(expr->then) };
     util::format_to(body_buffer,
                     "{} {}{ };",
@@ -1471,7 +1491,7 @@ namespace jank::codegen
   processor::gen(analyze::expr::case_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
     auto const is_tail{ expr->position == analyze::expression_position::tail };
-    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_string("case")) };
+    auto const &ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("case")) };
 
     util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
@@ -1517,7 +1537,7 @@ namespace jank::codegen
 
   jtl::option<handle> processor::gen(expr::cpp_raw_ref const expr, expr::function_arity const &)
   {
-    util::format_to(cpp_raw_buffer, "\n{}\n", expr->code);
+    util::format_to(deps_buffer, "\n{}\n", expr->code);
 
     if(expr->position == analyze::expression_position::tail)
     {
@@ -1582,7 +1602,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_cast_ref const expr, analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_cast")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("cpp_cast")));
     auto const value_tmp{ gen(expr->value_expr, arity) };
 
     if(Cpp::IsVoid(expr->conversion_type))
@@ -1619,7 +1639,7 @@ namespace jank::codegen
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ static_cast<expr::cpp_value *>(expr->source_expr.data) };
-      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("cpp_call")));
 
       native_vector<handle> arg_tmps;
       arg_tmps.reserve(expr->arg_exprs.size());
@@ -1685,7 +1705,7 @@ namespace jank::codegen
     }
     else
     {
-      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("cpp_call")));
 
       auto const source_tmp{ gen(expr->source_expr, arity).unwrap() };
 
@@ -1751,7 +1771,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::cpp_constructor_call_ref const expr,
                                      analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_ctor")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("cpp_ctor")));
 
     native_vector<handle> arg_tmps;
     arg_tmps.reserve(expr->arg_exprs.size());
@@ -1837,7 +1857,7 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &arity)
   {
     auto const fn_name{ Cpp::GetName(expr->fn) };
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string(fn_name)));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(fn_name)));
 
     native_vector<handle> arg_tmps;
     arg_tmps.reserve(expr->arg_exprs.size());
@@ -1903,7 +1923,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::cpp_member_access_ref const expr,
                                      analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string(expr->name)));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string(expr->name)));
     auto obj_tmp(gen(expr->obj_expr, arity));
 
     util::format_to(body_buffer,
@@ -1926,7 +1946,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::cpp_builtin_operator_call_ref const expr,
                                      analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_operator")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("cpp_operator")));
 
     native_vector<handle> arg_tmps;
     arg_tmps.reserve(expr->arg_exprs.size());
@@ -1971,7 +1991,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_box_ref const expr, analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_box")) };
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_box")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const value_expr_type{ cpp_util::expression_type(expr->value_expr) };
     auto const type_str{ Cpp::GetTypeAsString(
@@ -2002,10 +2022,10 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::cpp_unbox_ref const expr,
                                      analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_unbox")) };
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
-    auto const meta{ detail::lift_constant(lifted_constants,
+    auto const meta{ lift_constant(lifted_constants,
                                            runtime::source_to_meta(expr->source)) };
 
     util::format_to(body_buffer,
@@ -2029,8 +2049,8 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_new_ref const expr, analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_new")) };
-    auto finalizer_tmp{ runtime::munge(__rt_ctx->unique_string("finalizer")) };
+    auto ret_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("cpp_new")) };
+    auto finalizer_tmp{ runtime::munge(__rt_ctx->unique_namespaced_string("finalizer")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
 
     auto const type_name{ cpp_util::get_qualified_type_name(expr->type) };
@@ -2102,47 +2122,24 @@ namespace jank::codegen
     {
       profile::timer const timer{ util::format("cpp gen {}", root_fn->name) };
 
-      /* Module targeting works in a special way, with the goal of
-       * cutting down the generated code size. Instead of each function
-       * having its own lifted vars/constants, we have one namespace for
-       * the module with the lifted globals there, at namespace level.
-       * Then every function within that module can share the same globals.
-       * This also makes creating functions cheaper. However, it requires
-       * some special tracking. */
-      if(target == compilation_target::module)
-      {
-        util::format_to(module_header_buffer,
-                        "namespace {} {",
-                        runtime::module::module_to_native_ns(module));
-      }
-
-
       /* We generate the body first so that we know what we need for the header. This is
        * necessary since we end up lifting vars and constants while building the body. */
       build_body();
       build_header();
       build_footer();
 
-      if(target == compilation_target::module)
-      {
-        /* Namespace. */
-        util::format_to(module_footer_buffer, "}");
-      }
-
       generated_declaration = true;
     }
 
     native_transient_string ret;
-    ret.reserve(cpp_raw_buffer.size() + module_header_buffer.size() + module_footer_buffer.size()
-                + deps_buffer.size() + header_buffer.size() + body_buffer.size()
+    ret.reserve(deps_buffer.size() + header_buffer.size() + body_buffer.size()
                 + footer_buffer.size());
-    ret += jtl::immutable_string_view{ cpp_raw_buffer.data(), cpp_raw_buffer.size() };
-    ret += jtl::immutable_string_view{ module_header_buffer.data(), module_header_buffer.size() };
     ret += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
-    ret += jtl::immutable_string_view{ module_footer_buffer.data(), module_footer_buffer.size() };
     ret += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
     ret += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
     ret += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
+
+    //util::println("codegen declaration:\n{}\n", ret);
 
     return ret;
   }
@@ -2507,34 +2504,6 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
-      for(auto const &v : lifted_vars)
-      {
-        if(v.second.owned)
-        {
-          util::format_to(
-            footer_buffer,
-            R"({}::{} = jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok();)",
-            ns,
-            v.second.native_name,
-            v.first);
-        }
-        else
-        {
-          util::format_to(footer_buffer,
-                          R"({}::{} = jank::runtime::__rt_ctx->intern_var("{}").expect_ok();)",
-                          ns,
-                          v.second.native_name,
-                          v.first);
-        }
-      }
-
-
-      for(auto const &v : lifted_constants)
-      {
-        util::format_to(footer_buffer, "{}::{} = ", ns, v.second);
-        detail::gen_constant(v.first, footer_buffer, true);
-        util::format_to(footer_buffer, ";");
-      }
 
       util::format_to(footer_buffer,
                       "return {}::{}{ }.call().erase();\n",

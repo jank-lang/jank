@@ -263,10 +263,7 @@ namespace jank::codegen
     return runtime::munge(__rt_ctx->unique_namespaced_string());
   }
 
-  static jtl::immutable_string unique_munged_string(jtl::immutable_string const &prefix)
-  {
-    return runtime::munge(__rt_ctx->unique_namespaced_string(prefix));
-  }
+
 
   static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
                                        jtl::ref<llvm::LLVMContext> const llvm_ctx,
@@ -1940,29 +1937,17 @@ namespace jank::codegen
     auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
     llvm::AllocaInst *ex_val_slot{};
     {
-      /* Pointer exception: caught_ptr IS the value we want */
-      locals[catch_sym] = caught_ptr;
+      llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
+      llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
+                                            current_fn->getEntryBlock().getFirstInsertionPt());
+      ex_val_slot
+        = entry_builder_local.CreateAlloca(ex_val_type,
+                                           nullptr,
+                                           util::format("{}.slot", catch_sym->name).data());
     }
-    else
-    {
-      llvm::Value *raw_ex_val{};
-      /* Non-pointer exception: must dereference to get the value */
-      raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
-      auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
-      llvm::AllocaInst *ex_val_slot{};
-      {
-        llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
-        llvm::IRBuilder<> entry_builder_local(&current_fn->getEntryBlock(),
-                                              current_fn->getEntryBlock().getFirstInsertionPt());
-        ex_val_slot
-          = entry_builder_local.CreateAlloca(ex_val_type,
-                                             nullptr,
-                                             util::format("{}.slot", catch_sym->name).data());
-      }
-      ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
+    ctx->builder->CreateStore(raw_ex_val, ex_val_slot);
 
-      locals[catch_sym] = ex_val_slot;
-    }
+    locals[catch_sym] = ex_val_slot;
 
 
     auto const original_catch_pos{ catch_body->position };
