@@ -14,6 +14,7 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/equal.hpp>
@@ -106,7 +107,8 @@ namespace jank::jit
             std::cerr.rdbuf(old_cerr);
           } };
 
-          auto const result(__rt_ctx->eval_file(dir_entry.path().string()));
+          auto const result(
+            __rt_ctx->eval_file(dir_entry.path().string()).unwrap_or(runtime::jank_nil));
           if(!expect_success)
           {
             failures.push_back({ dir_entry.path(),
