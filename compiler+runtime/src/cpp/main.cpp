@@ -167,7 +167,7 @@ namespace jank
     auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
     auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
 
-    context::binding_scope scope{ obj::persistent_hash_map::create_unique(
+    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
       std::make_pair(first_res_var, jank_nil),
       std::make_pair(second_res_var, jank_nil),
       std::make_pair(third_res_var, jank_nil),
