@@ -1852,6 +1852,10 @@ namespace jank::codegen
   {
     auto const catch_type{ catch_clause.type };
     auto const exception_rtti{ Cpp::MangleRTTI(catch_type) };
+    /* On macOS (and likely other platforms using libc++abi), we need to explicitly
+     * register RTTI for local types to ensure the unwinder can find them.
+     * Without this, `dynamic_cast` or exception matching might fail for types
+     * defined in the JIT module. */
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
       static native_set<jtl::immutable_string> rtti_syms;
@@ -1915,7 +1919,7 @@ namespace jank::codegen
     }
 
 
-    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
+    auto const current_fn{ ctx->builder->GetInsertBlock()->getParent() };
     llvm::AllocaInst *ex_val_slot{};
     {
       llvm::IRBuilder<>::InsertPointGuard const guard(*ctx->builder);
@@ -1990,6 +1994,28 @@ namespace jank::codegen
     }
   }
 
+  /* Generates the dispatch logic for a try-catch block.
+   *
+   * The dispatch block acts as a router for exceptions caught by the landing pad.
+   * Since LLVM's `landingpad` instruction aggregates all possible exception types
+   * for the current function, we need to manually check the exception type against
+   * our registered catch clauses to decide which block to execute.
+   *
+   * We use `llvm.eh.typeid.for` to compare the selector returned by the personality
+   * function against the RTTI of our catch types. If a match is found, we branch
+   * to the corresponding catch block. If no match is found, we either branch to
+   * the `finally` block (if present) or resume unwinding (if no parent handler exists).
+   *
+   * STRUCTURE:
+   *   dispatch_block:
+   *     - Check typeid(ex) == typeid(catch[0]) -> branch catch[0] : check[1]
+   *   check[1]:
+   *     - Check typeid(ex) == typeid(catch[1]) -> branch catch[1] : ...
+   *   ...
+   *   fallback_block:
+   *     - If finally exists -> branch finally (with unwind_flag=true)
+   *     - Else -> branch parent_handler OR resume unwinding
+   */
   void llvm_processor::impl::generate_catch_dispatch(expr::try_ref const expr,
                                                      llvm::PHINode *exception_phi,
                                                      llvm::PHINode *selector_phi,
@@ -2002,8 +2028,8 @@ namespace jank::codegen
                                                      llvm::BasicBlock *catch_cleanup_block,
                                                      expr::function_arity const &arity)
   {
-    auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
-    auto const has_finally = (finally_block != nullptr);
+    auto const current_fn{ ctx->builder->GetInsertBlock()->getParent() };
+    auto const has_finally{ finally_block != nullptr };
 
     ctx->builder->SetInsertPoint(dispatch_block);
 
@@ -2017,15 +2043,16 @@ namespace jank::codegen
     auto const typeid_fn{ llvm_module->getOrInsertFunction("llvm.eh.typeid.for.p0",
                                                            typeid_fn_type) };
 
-    std::vector<llvm::BasicBlock *> catch_blocks;
+    native_vector<llvm::BasicBlock *> catch_blocks;
     for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
     {
-      auto catch_block
-        = llvm::BasicBlock::Create(*llvm_ctx, util::format("catch.{}", i).data(), current_fn);
+      auto const catch_block{
+        llvm::BasicBlock::Create(*llvm_ctx, util::format("catch.{}", i).data(), current_fn)
+      };
       catch_blocks.push_back(catch_block);
     }
 
-    auto const fallback_block = llvm::BasicBlock::Create(*llvm_ctx, "catch.fallback", current_fn);
+    auto const fallback_block{ llvm::BasicBlock::Create(*llvm_ctx, "catch.fallback", current_fn) };
 
     /* Generate type matching and conditional branches */
     for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
@@ -2036,12 +2063,13 @@ namespace jank::codegen
       auto const exception_rtti_global{ llvm_module->getOrInsertGlobal(exception_rtti,
                                                                        ctx->builder->getPtrTy()) };
 
-      auto const type_id = ctx->builder->CreateCall(typeid_fn,
-                                                    { exception_rtti_global },
-                                                    util::format("typeid.{}", i).data());
+      auto const type_id{ ctx->builder->CreateCall(typeid_fn,
+                                                   { exception_rtti_global },
+                                                   util::format("typeid.{}", i).data()) };
 
-      auto const matches
-        = ctx->builder->CreateICmpEQ(current_sel, type_id, util::format("matches.{}", i).data());
+      auto const matches{
+        ctx->builder->CreateICmpEQ(current_sel, type_id, util::format("matches.{}", i).data())
+      };
 
       llvm::BasicBlock *no_match_target{};
       if(i + 1 < expr->catch_bodies.size())
@@ -2097,8 +2125,13 @@ namespace jank::codegen
     }
   }
 
+  /* We register parent catch clauses to ensure that the personality function
+   * knows about handlers further up the stack. This is crucial for nested try-catch
+   * blocks where an inner try might not handle an exception but an outer one does.
+   * Without this registration, the unwinder might skip the current frame entirely
+   * if it doesn't see a matching handler, potentially missing the outer catch. */
   void
-  llvm_processor::impl::register_parent_catch_clauses(llvm::LandingPadInst *landing_pad,
+  llvm_processor::impl::register_parent_catch_clauses(llvm::LandingPadInst * const landing_pad,
                                                       native_set<llvm::Value *> &registered_rtti)
   {
     for(size_t i = 0; i < ctx->exception_handlers.size() - 1; ++i)
