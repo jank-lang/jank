@@ -1,30 +1,20 @@
 ;; Test re-throwing exceptions
-(cpp/raw "
-namespace jank::cpp::try_::pass_rethrow {
-  void throw_int() {
-    throw 100;
-  }
+(cpp/raw "namespace jank::cpp::try_::pass_rethrow {
+  void throw_runtime_error() { throw std::runtime_error(\"inner error\"); }
+  void throw_current() { throw; }
+}")
 
-  void rethrow() {
-    try {
-      throw_int();
-    } catch (...) {
-      throw;
-    }
-  }
-}
-")
-
-;; Test 1: Simple rethrow from C++ side caught by Jank
-(assert
- (= 100
+(let [a (atom [])]
+  (try
     (try
-      (cpp/jank.cpp.try_.pass_rethrow.rethrow)
-      (catch cpp/int i i))))
+      (cpp/jank.cpp.try_.pass_rethrow.throw_runtime_error)
+      (catch cpp/std.runtime_error e
+        (swap! a conj :caught-inner)
+        (cpp/jank.cpp.try_.pass_rethrow.throw_current)))
+    ;; Rethrow using helper function
+    (catch cpp/std.runtime_error e
+      (swap! a conj :caught-outer)))
 
-;; Test 2: Rethrowing via `throw` form inside catch without arguments?
-;; Jank doesn't strictly support `(throw)` for rethrow in the same way C++ `throw;` does efficiently exposed yet,
-;; but we can verify that if we catch and re-throw, it works.
-;; This test specifically verifies C++ side rethrow mechanics which are crucial for our generated code.
+  (assert (= [:caught-inner :caught-outer] @a) (pr-str @a)))
 
 :success

@@ -1,0 +1,70 @@
+;; Test mixing jank and C++ exception types in multiple catch
+(cpp/raw "namespace jank::cpp::try_::pass_catch_mixed
+          {
+            void throw_cpp_int() { throw 123; }
+            void throw_runtime_error() { throw std::runtime_error(\"mixed\"); }
+
+            void throw_based_on_value(int v) {
+              if (v == 1) throw 1;
+              if (v == 2) throw 2.0;
+              throw std::runtime_error(\"error\");
+            }
+          }")
+
+;; Test jank exception followed by C++ catches
+(assert
+ (= :jank-caught
+    (try
+      (throw :jank-exception)
+      (catch cpp/int i
+        :cpp-int-caught)
+      (catch cpp/jank.runtime.object_ref e
+        :jank-caught))))
+
+;; Test C++ exception followed by jank catch
+(assert
+ (= 123
+    (try
+      (cpp/jank.cpp.try_.pass_catch_mixed.throw_cpp_int)
+      (catch cpp/int i
+        i)
+      (catch cpp/jank.runtime.object_ref e
+        :jank-caught))))
+
+;; Test that C++ std exception is caught correctly (not by jank catch)
+(let [msg (atom nil)]
+  (try
+    (cpp/jank.cpp.try_.pass_catch_mixed.throw_runtime_error)
+    (catch cpp/std.runtime_error ex
+      (reset! msg (cpp/.what ex)))
+    (catch cpp/jank.runtime.object_ref e
+      (assert false "Should not reach jank catch for C++ exception")))
+  (assert (not (nil? @msg)) "Should have caught C++ exception")
+  (assert (= "mixed" @msg) "Error message should be 'mixed'"))
+
+
+;; Test multiple C++ types in one try
+(assert (= 1
+           (try
+             (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 1)
+             (catch cpp/double d 0.0)
+             (catch cpp/int i i)
+             (catch cpp/std.runtime_error e -1))))
+
+(assert (= 2.0
+           (try
+             (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 2)
+             (catch cpp/int i 0)
+             (catch cpp/double d d)
+             (catch cpp/std.runtime_error e -1))))
+
+(try
+  (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 3)
+  (catch cpp/int i
+    (assert false "Should not catch int"))
+  (catch cpp/double d
+    (assert false "Should not catch double"))
+  (catch cpp/std.runtime_error e
+    :caught-runtime-error))
+
+:success
