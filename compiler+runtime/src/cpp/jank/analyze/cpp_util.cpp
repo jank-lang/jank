@@ -69,8 +69,6 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
-  jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
-
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception

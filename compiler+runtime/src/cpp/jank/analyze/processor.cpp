@@ -2736,18 +2736,6 @@ namespace jank::analyze
                 ->add_usage(read::parse::reparse_nth(item, 1));
             }
 
-            if(catch_type.expect_ok()->kind != expression_kind::cpp_type)
-            {
-              return error::analyze_invalid_try("Exception is not a type.",
-                                                object_source(item),
-                                                error::note{
-                                                  "An exception type is required before this form.",
-                                                  object_source(catch_sym_form),
-                                                },
-                                                latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
-            }
-
             if(catch_sym_form->type != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(

@@ -106,12 +106,11 @@ namespace jank::detail
   template <typename T>
   object_ref to_runtime_data(native_vector<T> const &m)
   {
-    /* NOLINTNEXTLINE(misc-const-correctness): Can't be const. */
-    runtime::detail::native_persistent_vector ret;
+    runtime::detail::native_transient_vector ret;
     for(auto const &e : m)
     {
-      (void)ret.push_back(to_runtime_data(e));
+      ret.push_back(to_runtime_data(e));
     }
-    return make_box<obj::persistent_vector>(ret);
+    return make_box<obj::persistent_vector>(ret.persistent());
   }
 }

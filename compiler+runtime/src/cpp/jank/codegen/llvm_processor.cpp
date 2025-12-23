@@ -478,14 +478,16 @@ namespace jank::codegen
     /* For non-object types (primitives, structs), if arg is a value (not an AllocaInst),
      * we need to allocate storage for it so that arg_alloc is a pointer.
      * The AOT callable expects ptr* for all argument arrays. */
-    else if(!cpp_util::is_any_object(input_type) && !Cpp::IsPointerType(input_type)
-            && !Cpp::IsReferenceType(input_type) && !Cpp::IsVoid(input_type)
+    else if(!cpp_util::is_any_object(input_type) && !Cpp::IsVoid(input_type)
             && !llvm::isa<llvm::AllocaInst>(arg))
     {
       /* If the value is already a pointer, we assume it's the address of the value.
        * This happens with PHI nodes for if/loop expressions which return addresses
-       * to locals. */
-      if(arg->getType()->isPointerTy())
+       * to locals.
+       *
+       * However, if the C++ type is actually a pointer, then the LLVM IR pointer
+       * IS the value, not the address, so we must spill it. */
+      if(arg->getType()->isPointerTy() && !Cpp::IsPointerType(input_type))
       {
         arg_alloc = arg;
       }

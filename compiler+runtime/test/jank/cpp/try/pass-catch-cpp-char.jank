@@ -1,12 +1,14 @@
 ;; Test catching C++ char exception
-(cpp/raw "void throw_char_z() { throw 'z'; }")
+(cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_char {
+void throw_char_z() { throw 'z'; }
+}")
 
 (assert
  (= \z
     (try
-      (cpp/throw_char_z)
+      (cpp/jank.cpp.try_.pass_catch_cpp_char.throw_char_z)
       (catch cpp/int i
-        (println "Wrong: caught int")
+
         \0)
       (catch cpp/char c c))))
 

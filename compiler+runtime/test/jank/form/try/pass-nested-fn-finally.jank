@@ -12,4 +12,4 @@
   (a)
   (if (= [:b-catch :b-finally :a-catch :a-finally] @steps)
     :success
-    (do (println "Failed:" @steps) :failure)))
+    :failure))

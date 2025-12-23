@@ -1,12 +1,14 @@
 ;; Test multiple catch with C++ exceptions and finally blocks
-(cpp/raw "void throw_cpp_double() { throw 5.5; }")
+(cpp/raw "namespace jank::cpp::try_::pass_multiple_catch_cpp_with_finally {
+void throw_cpp_double() { throw 5.5; }
+}")
 
 (let [cleanup (atom false)]
   (assert (= 5.5
              (try
-               (cpp/throw_cpp_double)
+               (cpp/jank.cpp.try_.pass_multiple_catch_cpp_with_finally.throw_cpp_double)
                (catch cpp/int i
-                 (println "Wrong type"))
+                 )
                (catch cpp/double d
                  d)
                (catch cpp/std.runtime_error e
@@ -16,13 +18,15 @@
   (assert (true? @cleanup) "Finally should execute"))
 
 ;; Test finally executes even when exception is not caught
-(cpp/raw "void throw_uncaught_type() { throw 'x'; }")
+(cpp/raw "namespace jank::cpp::try_::pass_multiple_catch_cpp_with_finally {
+void throw_uncaught_type() { throw 'x'; }
+}")
 
 (let [cleanup (atom false)
       caught (atom false)]
   (try
     (try
-      (cpp/throw_uncaught_type)
+      (cpp/jank.cpp.try_.pass_multiple_catch_cpp_with_finally.throw_uncaught_type)
       (catch cpp/int i
         (reset! caught true))
       (catch cpp/double d

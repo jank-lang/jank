@@ -1,13 +1,14 @@
 ;; Test catching std::logic_error
-(cpp/raw "void throw_logic_error() { throw std::logic_error(\"logic error\"); }")
+(cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_std_logic_error {
+void throw_logic_error() { throw std::logic_error(\"logic error\"); }
+}")
 
 (let [caught (atom false)]
   (try
-    (cpp/throw_logic_error)
-    (catch cpp/std.runtime_error e
-      (println "Wrong: caught runtime_error"))
+    (cpp/jank.cpp.try_.pass_catch_cpp_std_logic_error.throw_logic_error)
+    (catch cpp/std.runtime_error e)
     (catch cpp/std.logic_error e
-      (reset! caught true)))
-  (assert @caught "Should have caught std::logic_error"))
+      (reset! caught (if (= "logic error" (cpp/.what e)) true false))))
+  (assert @caught "Should have caught std::logic_error with correct message"))
 
 :success
