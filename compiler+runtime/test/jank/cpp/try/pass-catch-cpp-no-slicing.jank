@@ -4,29 +4,30 @@
 (cpp/raw "
 #include <string>
 
-namespace pass_catch_no_slicing
-{
-  struct Base
-  {
-    virtual std::string name() const { return \"Base\"; }
-    virtual ~Base() = default;
-  };
 
-  struct Derived : Base
+  namespace jank::cpp::try_::pass_catch_no_slicing
   {
-    std::string name() const override { return \"Derived\"; }
-  };
+    struct Base
+    {
+      virtual std::string name() const { return \"Base\"; }
+      virtual ~Base() = default;
+    };
 
-  void throw_derived()
-  {
-    throw Derived();
-  }
-}")
+    struct Derived : Base
+    {
+      std::string name() const override { return \"Derived\"; }
+    };
+
+    void throw_derived()
+    {
+      throw Derived();
+    }
+  }")
 
 (let [result (atom nil)]
   (try
-    (cpp/pass_catch_no_slicing.throw_derived)
-    (catch cpp/pass_catch_no_slicing.Base e
+    (cpp/jank.cpp.try_.pass_catch_no_slicing.throw_derived)
+    (catch cpp/jank.cpp.try_.pass_catch_no_slicing.Base e
       ;; If slicing occurred, e would be a Base object and name() would return "Base"
       ;; Since we catch by reference (implicitly), it should remain Derived
       (reset! result (cpp/.name e))))

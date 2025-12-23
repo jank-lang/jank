@@ -1,7 +1,7 @@
 ;; Test catching std::bad_cast
 (cpp/raw "
 #include <typeinfo>
-namespace catch_cpp_bad_cast
+namespace jank::cpp::try_::catch_cpp_bad_cast
 {
   void throw_bad_cast()
   {
@@ -11,7 +11,7 @@ namespace catch_cpp_bad_cast
 
 (let [caught (atom nil)]
   (try
-    (cpp/catch_cpp_bad_cast.throw_bad_cast)
+    (cpp/jank.cpp.try_.catch_cpp_bad_cast.throw_bad_cast)
     (catch cpp/std.runtime_error e)
     (catch cpp/std.bad_cast e
       (reset! caught (cpp/.what e))))

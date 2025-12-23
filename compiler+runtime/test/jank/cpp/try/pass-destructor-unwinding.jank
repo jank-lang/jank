@@ -1,0 +1,41 @@
+;; Test that destructors are called during stack unwinding
+(cpp/raw "
+#include <iostream>
+
+namespace jank::cpp::try_::pass_destructor_unwinding {
+  static int destructor_count = 0;
+
+  struct DestructorTracker {
+    DestructorTracker() {}
+    ~DestructorTracker() {
+      destructor_count++;
+    }
+  };
+
+  void throw_with_unwinding() {
+    DestructorTracker tracker;
+    throw 42;
+  }
+
+  int get_destructor_count() {
+    return destructor_count;
+  }
+
+  void reset_count() {
+    destructor_count = 0;
+  }
+}
+")
+
+(cpp/jank.cpp.try_.pass_destructor_unwinding.reset_count)
+
+(try
+  (cpp/jank.cpp.try_.pass_destructor_unwinding.throw_with_unwinding)
+  (catch cpp/int i
+    ;; Exception caught
+    ))
+
+(assert (= 1 (cpp/jank.cpp.try_.pass_destructor_unwinding.get_destructor_count))
+        "Destructor should have been called once")
+
+:success

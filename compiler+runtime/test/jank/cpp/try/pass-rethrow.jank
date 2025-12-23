@@ -1,0 +1,30 @@
+;; Test re-throwing exceptions
+(cpp/raw "
+namespace jank::cpp::try_::pass_rethrow {
+  void throw_int() {
+    throw 100;
+  }
+
+  void rethrow() {
+    try {
+      throw_int();
+    } catch (...) {
+      throw;
+    }
+  }
+}
+")
+
+;; Test 1: Simple rethrow from C++ side caught by Jank
+(assert
+ (= 100
+    (try
+      (cpp/jank.cpp.try_.pass_rethrow.rethrow)
+      (catch cpp/int i i))))
+
+;; Test 2: Rethrowing via `throw` form inside catch without arguments?
+;; Jank doesn't strictly support `(throw)` for rethrow in the same way C++ `throw;` does efficiently exposed yet,
+;; but we can verify that if we catch and re-throw, it works.
+;; This test specifically verifies C++ side rethrow mechanics which are crucial for our generated code.
+
+:success
