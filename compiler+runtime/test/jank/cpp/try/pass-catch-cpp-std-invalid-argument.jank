@@ -1,6 +1,6 @@
 ;; Test catching std::invalid_argument
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_std_invalid_argument {
-void throw_invalid_argument() { throw std::invalid_argument(\"invalid argument\"); }
+  void throw_invalid_argument() { throw std::invalid_argument(\"invalid argument\"); }
 }")
 
 (let [caught (atom false)]

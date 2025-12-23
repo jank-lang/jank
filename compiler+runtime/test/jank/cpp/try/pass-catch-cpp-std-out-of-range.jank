@@ -1,6 +1,6 @@
 ;; Test catching std::out_of_range
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_std_out_of_range {
-void throw_out_of_range() { throw std::out_of_range(\"out of range\"); }
+  void throw_out_of_range() { throw std::out_of_range(\"out of range\"); }
 }")
 
 (let [caught (atom false)]

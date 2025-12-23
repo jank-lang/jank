@@ -1,6 +1,6 @@
 ;; Test catching std::logic_error
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_std_logic_error {
-void throw_logic_error() { throw std::logic_error(\"logic error\"); }
+  void throw_logic_error() { throw std::logic_error(\"logic error\"); }
 }")
 
 (let [caught (atom false)]

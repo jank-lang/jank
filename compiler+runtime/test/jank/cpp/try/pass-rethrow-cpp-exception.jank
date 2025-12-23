@@ -2,10 +2,10 @@
 ; throw_runtime_error2, and throw_runtime_error3 defined in other files and different files are
 ; not run independently.
 (cpp/raw "namespace jank::cpp::try_::pass_rethrow_cpp_exception {
-void throw_runtime_error4() { throw std::runtime_error(\"inner error\"); }
+  void throw_runtime_error4() { throw std::runtime_error(\"inner error\"); }
 }")
 (cpp/raw "namespace jank::cpp::try_::pass_rethrow_cpp_exception {
-void throw_current() { throw; }
+  void throw_current() { throw; }
 }")
 
 (let [a (atom [])]

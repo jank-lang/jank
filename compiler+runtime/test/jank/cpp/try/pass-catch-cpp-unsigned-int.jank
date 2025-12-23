@@ -1,17 +1,16 @@
 ;; Test catching C++ unsigned int exception
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_unsigned_int {
-using my_uint = unsigned int;
+  using my_uint = unsigned int;
 }")
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_unsigned_int {
-void throw_uint_42() { throw (my_uint)42; }
+  void throw_uint_42() { throw (my_uint)42; }
 }")
 
 (assert
  (= 42
     (try
       (cpp/jank.cpp.try_.pass_catch_cpp_unsigned_int.throw_uint_42)
-      (catch cpp/int i
-        -1)
+      (catch cpp/int i -1)
       (catch cpp/jank.cpp.try_.pass_catch_cpp_unsigned_int.my_uint u u))))
 
 :success

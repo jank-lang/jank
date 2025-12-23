@@ -1,9 +1,9 @@
 ;; Test multiple catch with C++ class types
 (cpp/raw "namespace jank::cpp::try_::pass_multiple_catch_cpp_classes {
-void throw_runtime_error() { throw std::runtime_error(\"test error\"); }
+  void throw_runtime_error() { throw std::runtime_error(\"test error\"); }
 }")
 (cpp/raw "namespace jank::cpp::try_::pass_multiple_catch_cpp_classes {
-void throw_logic_error() { throw std::logic_error(\"logic error\"); }
+  void throw_logic_error() { throw std::logic_error(\"logic error\"); }
 }")
 
 ;; Test catching runtime_error
