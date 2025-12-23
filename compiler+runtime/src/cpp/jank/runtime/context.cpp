@@ -26,6 +26,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/aot/processor.hpp>
 #include <jank/error/codegen.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
@@ -223,17 +224,24 @@ namespace jank::runtime
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
-        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
-        if(!parse_res)
-        {
-          /* TODO: Helper to turn an llvm::Error into a string. */
-          jtl::immutable_string const res{ "Unable to compile generated C++ source." };
-          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-          throw error::internal_codegen_failure(res);
-        }
-        auto &partial_tu{ parse_res.get() };
         auto module_name{ runtime::to_string(current_module_var->deref()) };
-        write_module(module_name, partial_tu.TheModule.get()).expect_ok();
+        aot::processor aot_prc;
+        auto const res{ aot_prc.compile_object(module_name, code) };
+        if(res.is_err())
+        {
+          throw res.expect_err();
+        }
+        //auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+        //if(!parse_res)
+        //{
+        //  /* TODO: Helper to turn an llvm::Error into a string. */
+        //  jtl::immutable_string const res{ "Unable to compile generated C++ source." };
+        //  llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+        //  throw error::internal_codegen_failure(res);
+        //}
+        //auto &partial_tu{ parse_res.get() };
+        ////auto module_name{ runtime::to_string(current_module_var->deref()) };
+        //write_module(module_name, partial_tu.TheModule.get()).expect_ok();
       }
     }
 

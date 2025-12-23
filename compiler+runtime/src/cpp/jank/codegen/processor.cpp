@@ -1943,6 +1943,12 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_call_ref const expr, analyze::expr::function_arity const &arity)
   {
+    if((target == compilation_target::module || target == compilation_target::function)
+       && !expr->function_code.empty())
+    {
+      util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
+    }
+
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ static_cast<expr::cpp_value *>(expr->source_expr.data) };

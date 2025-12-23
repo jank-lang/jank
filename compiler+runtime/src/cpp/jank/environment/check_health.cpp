@@ -402,7 +402,7 @@ namespace jank::environment
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
       jank::aot::processor const aot_prc{};
-      aot_prc.compile(util::cli::opts.target_module).expect_ok();
+      aot_prc.build_executable(util::cli::opts.target_module).expect_ok();
 
       auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
       auto const proc_code{ llvm::sys::ExecuteAndWait(

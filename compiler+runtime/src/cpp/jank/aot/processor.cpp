@@ -15,6 +15,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/clang.hpp>
+#include <jank/util/clang_format.hpp>
 #include <jank/util/environment.hpp>
 
 namespace jank::aot
@@ -118,7 +119,105 @@ int main(int argc, const char** argv)
     return main_file_path;
   }
 
-  jtl::result<void, error_ref> processor::compile(jtl::immutable_string const &module) const
+  static jtl::result<std::vector<char const *>, error_ref> build_compiler_args()
+  {
+    std::vector<char const *> compiler_args{};
+
+    auto const clang_path_str{ util::find_clang() };
+    if(clang_path_str.is_none())
+    {
+      return error::system_failure(
+        util::format("Unable to find Clang {}.", JANK_CLANG_MAJOR_VERSION));
+    }
+    auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
+    compiler_args.emplace_back(strdup("-I"));
+    compiler_args.emplace_back(strdup((clang_dir / "../include").c_str()));
+    compiler_args.emplace_back(
+      strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib")).c_str()));
+
+    std::filesystem::path const jank_path{ util::process_dir().c_str() };
+    compiler_args.emplace_back(strdup("-L"));
+    compiler_args.emplace_back(strdup(jank_path.c_str()));
+
+    std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
+    compiler_args.emplace_back(strdup("-I"));
+    compiler_args.emplace_back(strdup(util::format("{}/include", jank_resource_dir).c_str()));
+    compiler_args.emplace_back(strdup("-L"));
+    compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
+
+    std::stringstream flags{ JANK_JIT_FLAGS };
+    std::string flag;
+    while(std::getline(flags, flag, ' '))
+    {
+      compiler_args.emplace_back(strdup(flag.c_str()));
+    }
+
+    {
+      std::string_view const flags{ JANK_AOT_FLAGS };
+      size_t start{};
+      while(start < flags.size())
+      {
+        auto end{ flags.find(' ', start) };
+        if(end == std::string_view::npos)
+        {
+          end = flags.size();
+        }
+
+        auto const token{ flags.substr(start, end - start) };
+        if(!token.empty())
+        {
+          compiler_args.push_back(strdup(std::string{ token }.c_str()));
+        }
+
+        start = end + 1;
+      }
+    }
+
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        compiler_args.emplace_back(strdup(flag.c_str()));
+      }
+    }
+
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
+    }
+
+    for(auto const &library_dir : util::cli::opts.library_dirs)
+    {
+      compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
+    }
+
+    for(auto const &include_dir : util::cli::opts.include_dirs)
+    {
+      compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
+    }
+
+    for(auto const &define : util::cli::opts.define_macros)
+    {
+      compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
+    }
+
+    compiler_args.push_back(strdup("-std=c++20"));
+    compiler_args.push_back(strdup("-Wno-c23-extensions"));
+    if constexpr(jtl::current_platform == jtl::platform::linux_like)
+    {
+      compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+    }
+    compiler_args.push_back(strdup("-rdynamic"));
+    /* TODO: Change this based on the CLI optimization level. */
+    compiler_args.push_back(strdup("-O2"));
+
+    return compiler_args;
+  }
+
+  jtl::result<void, error_ref>
+  processor::build_executable(jtl::immutable_string const &module) const
   {
     auto const main_var(__rt_ctx->find_var(module, "-main"));
     if(main_var.is_nil())
@@ -128,7 +227,12 @@ int main(int argc, const char** argv)
         module));
     }
 
-    std::vector<char const *> compiler_args{};
+    auto const compiler_args_res{ build_compiler_args() };
+    if(compiler_args_res.is_err())
+    {
+      return compiler_args_res.expect_err();
+    }
+    std::vector<char const *> compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
 
     auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
     for(auto const &it : *modules_rlocked)
@@ -165,64 +269,6 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    for(auto const &include_dir : util::cli::opts.include_dirs)
-    {
-      compiler_args.push_back(strdup(util::format("-I{}", include_dir).c_str()));
-    }
-
-    auto const clang_path_str{ util::find_clang() };
-    if(clang_path_str.is_none())
-    {
-      return error::system_failure(
-        util::format("Unable to find Clang {}.", JANK_CLANG_MAJOR_VERSION));
-    }
-    auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
-    compiler_args.emplace_back(strdup("-I"));
-    compiler_args.emplace_back(strdup((clang_dir / "../include").c_str()));
-    compiler_args.emplace_back(
-      strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib")).c_str()));
-
-    std::filesystem::path const jank_path{ util::process_dir().c_str() };
-    compiler_args.emplace_back(strdup("-L"));
-    compiler_args.emplace_back(strdup(jank_path.c_str()));
-
-    std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
-    compiler_args.emplace_back(strdup("-I"));
-    compiler_args.emplace_back(strdup(util::format("{}/include", jank_resource_dir).c_str()));
-    compiler_args.emplace_back(strdup("-L"));
-    compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
-
-    {
-      std::string_view const flags{ JANK_AOT_FLAGS };
-      size_t start{};
-      while(start < flags.size())
-      {
-        auto end{ flags.find(' ', start) };
-        if(end == std::string_view::npos)
-        {
-          end = flags.size();
-        }
-
-        auto const token{ flags.substr(start, end - start) };
-        if(!token.empty())
-        {
-          compiler_args.push_back(strdup(std::string{ token }.c_str()));
-        }
-
-        start = end + 1;
-      }
-    }
-
-    if constexpr(jtl::current_platform == jtl::platform::macos_like)
-    {
-      compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
-    }
-
-    for(auto const &library_dir : util::cli::opts.library_dirs)
-    {
-      compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
-    }
-
     for(auto const &lib : { "-ljank-standalone",
                             /* Default libraries that jank depends on. */
                             "-lm",
@@ -242,20 +288,6 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup("-lstdc++"));
     }
 
-    for(auto const &define : util::cli::opts.define_macros)
-    {
-      compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
-    }
-
-    compiler_args.push_back(strdup("-std=c++20"));
-    compiler_args.push_back(strdup("-Wno-c23-extensions"));
-    if constexpr(jtl::current_platform == jtl::platform::linux_like)
-    {
-      compiler_args.push_back(strdup("-Wl,--export-dynamic"));
-    }
-    compiler_args.push_back(strdup("-rdynamic"));
-    compiler_args.push_back(strdup("-O2"));
-
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */
     /* TODO: I doubt this is really needed. These strings aren't captured by Clang. */
@@ -270,7 +302,62 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-o"));
     compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
 
-    //util::println("compilation command: {} ", compiler_args);
+    util::println("compilation command: {} ", compiler_args);
+
+    auto const res{ util::invoke_clang(compiler_args) };
+    if(res.is_err())
+    {
+      return res.expect_err();
+    }
+
+    return ok();
+  }
+
+  jtl::result<void, error_ref>
+  processor::compile_object(jtl::immutable_string const &module_name,
+                            jtl::immutable_string const &cpp_source) const
+  {
+    auto const compiler_args_res{ build_compiler_args() };
+    if(compiler_args_res.is_err())
+    {
+      return compiler_args_res.expect_err();
+    }
+    std::vector<char const *> compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
+
+    std::filesystem::path const module_path{
+      util::cli::opts.output_object_filename.empty()
+        ? util::format("{}/{}.o", __rt_ctx->binary_cache_dir, module::module_to_path(module_name))
+        : jtl::immutable_string{ util::cli::opts.output_object_filename }
+    };
+    std::filesystem::create_directories(module_path.parent_path());
+
+    auto const tmp{ std::filesystem::temp_directory_path() };
+    std::string path_tmp{ tmp / "jank-compile-XXXXXX" };
+    mkstemp(path_tmp.data());
+
+    {
+      std::ofstream ofs{ path_tmp };
+      ofs << cpp_source;
+      //ofs << util::format_cpp_source(cpp_source).expect_ok();
+    }
+
+    std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
+    compiler_args.push_back("-include");
+    auto const prelude_path{ jank_resource_dir / "include/cpp/jank/prelude.hpp" };
+    compiler_args.push_back(prelude_path.c_str());
+
+    compiler_args.push_back("-c");
+    compiler_args.push_back("-o");
+    compiler_args.push_back(module_path.c_str());
+
+    compiler_args.push_back("-x");
+    compiler_args.push_back("c++");
+    compiler_args.push_back(path_tmp.c_str());
+
+    compiler_args.push_back("-w");
+    compiler_args.push_back("-Wno-c++11-narrowing");
+
+    util::println("compilation command: {} ", compiler_args);
 
     auto const res{ util::invoke_clang(compiler_args) };
     if(res.is_err())

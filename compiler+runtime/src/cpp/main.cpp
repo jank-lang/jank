@@ -286,7 +286,7 @@ namespace jank
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
     jank::aot::processor const aot_prc{};
-    aot_prc.compile(opts.target_module).expect_ok();
+    aot_prc.build_executable(opts.target_module).expect_ok();
   }
 }
 
