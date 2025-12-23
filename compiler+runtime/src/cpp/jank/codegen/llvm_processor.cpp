@@ -84,7 +84,7 @@ namespace jank::codegen
       analyze::expr::try_ref expr;
     };
 
-    std::vector<exception_handler_info> exception_handlers;
+    native_vector<exception_handler_info> exception_handlers;
 
     /* Map from closure context field name to its LLVM type
      * Used to correctly load captured variables with their actual types */
@@ -154,26 +154,26 @@ namespace jank::codegen
                                     llvm::LandingPadInst *landing_pad,
                                     native_set<llvm::Value *> &registered_rtti);
 
-    void generate_catch_block(size_t catch_index,
+    void generate_catch_block(usize catch_index,
                               expr::try_ref const expr,
-                              llvm::BasicBlock *catch_block,
-                              llvm::Value *current_ex_ptr,
-                              llvm::AllocaInst *result_slot,
-                              llvm::BasicBlock *finally_block,
-                              llvm::AllocaInst *unwind_flag_slot,
-                              llvm::BasicBlock *continue_block,
+                              llvm::BasicBlock * const catch_block,
+                              llvm::Value * const current_ex_ptr,
+                              llvm::AllocaInst * const result_slot,
+                              llvm::BasicBlock * const finally_block,
+                              llvm::AllocaInst * const unwind_flag_slot,
+                              llvm::BasicBlock * const continue_block,
                               expr::function_arity const &arity);
 
     void generate_catch_dispatch(expr::try_ref const expr,
-                                 llvm::PHINode *exception_phi,
-                                 llvm::PHINode *selector_phi,
-                                 llvm::BasicBlock *dispatch_block,
-                                 llvm::BasicBlock *continue_block,
-                                 llvm::AllocaInst *result_slot,
-                                 llvm::BasicBlock *finally_block,
-                                 llvm::AllocaInst *unwind_flag_slot,
-                                 llvm::AllocaInst *exception_slot,
-                                 llvm::BasicBlock *catch_cleanup_block,
+                                 llvm::PHINode * const exception_phi,
+                                 llvm::PHINode * const selector_phi,
+                                 llvm::BasicBlock * const dispatch_block,
+                                 llvm::BasicBlock * const continue_block,
+                                 llvm::AllocaInst * const result_slot,
+                                 llvm::BasicBlock * const finally_block,
+                                 llvm::AllocaInst * const unwind_flag_slot,
+                                 llvm::AllocaInst * const exception_slot,
+                                 llvm::BasicBlock * const catch_cleanup_block,
                                  expr::function_arity const &arity);
     void register_parent_catch_clauses(llvm::LandingPadInst *landing_pad,
                                        native_set<llvm::Value *> &registered_rtti);
@@ -1878,14 +1878,14 @@ namespace jank::codegen
     }
   }
 
-  void llvm_processor::impl::generate_catch_block(size_t catch_index,
+  void llvm_processor::impl::generate_catch_block(usize catch_index,
                                                   expr::try_ref const expr,
-                                                  llvm::BasicBlock *catch_block,
-                                                  llvm::Value *current_ex_ptr,
-                                                  llvm::AllocaInst *result_slot,
-                                                  llvm::BasicBlock *finally_block,
-                                                  llvm::AllocaInst *unwind_flag_slot,
-                                                  llvm::BasicBlock *continue_block,
+                                                  llvm::BasicBlock * const catch_block,
+                                                  llvm::Value * const current_ex_ptr,
+                                                  llvm::AllocaInst * const result_slot,
+                                                  llvm::BasicBlock * const finally_block,
+                                                  llvm::AllocaInst * const unwind_flag_slot,
+                                                  llvm::BasicBlock * const continue_block,
                                                   expr::function_arity const &arity)
   {
     auto const ptr_ty{ ctx->builder->getPtrTy() };
@@ -1997,35 +1997,26 @@ namespace jank::codegen
   /* Generates the dispatch logic for a try-catch block.
    *
    * The dispatch block acts as a router for exceptions caught by the landing pad.
-   * Since LLVM's `landingpad` instruction aggregates all possible exception types
-   * for the current function, we need to manually check the exception type against
-   * our registered catch clauses to decide which block to execute.
+   * We compare the exception's RTTI against each catch clause's type using `llvm.eh.typeid.for`.
    *
-   * We use `llvm.eh.typeid.for` to compare the selector returned by the personality
-   * function against the RTTI of our catch types. If a match is found, we branch
-   * to the corresponding catch block. If no match is found, we either branch to
-   * the `finally` block (if present) or resume unwinding (if no parent handler exists).
-   *
-   * STRUCTURE:
-   *   dispatch_block:
-   *     - Check typeid(ex) == typeid(catch[0]) -> branch catch[0] : check[1]
-   *   check[1]:
-   *     - Check typeid(ex) == typeid(catch[1]) -> branch catch[1] : ...
-   *   ...
-   *   fallback_block:
-   *     - If finally exists -> branch finally (with unwind_flag=true)
-   *     - Else -> branch parent_handler OR resume unwinding
+   * Why manual dispatch?
+   * LLVM's `landingpad` instruction provides the exception pointer and a "selector" value.
+   * The selector value actually corresponds to the clause that matched. However, simply using
+   * the selector isn't enough for complex logic or when we need to strictly enforce type
+   * matching semantics that might differ slightly or when we need flexible control flow
+   * (like 'finally' blocks). By dispatching manually, we ensure we have full control over
+   * which catch block opens for which exception type.
    */
   void llvm_processor::impl::generate_catch_dispatch(expr::try_ref const expr,
-                                                     llvm::PHINode *exception_phi,
-                                                     llvm::PHINode *selector_phi,
-                                                     llvm::BasicBlock *dispatch_block,
-                                                     llvm::BasicBlock *continue_block,
-                                                     llvm::AllocaInst *result_slot,
-                                                     llvm::BasicBlock *finally_block,
-                                                     llvm::AllocaInst *unwind_flag_slot,
-                                                     llvm::AllocaInst *exception_slot,
-                                                     llvm::BasicBlock *catch_cleanup_block,
+                                                     llvm::PHINode * const exception_phi,
+                                                     llvm::PHINode * const selector_phi,
+                                                     llvm::BasicBlock * const dispatch_block,
+                                                     llvm::BasicBlock * const continue_block,
+                                                     llvm::AllocaInst * const result_slot,
+                                                     llvm::BasicBlock * const finally_block,
+                                                     llvm::AllocaInst * const unwind_flag_slot,
+                                                     llvm::AllocaInst * const exception_slot,
+                                                     llvm::BasicBlock * const catch_cleanup_block,
                                                      expr::function_arity const &arity)
   {
     auto const current_fn{ ctx->builder->GetInsertBlock()->getParent() };
@@ -2044,7 +2035,7 @@ namespace jank::codegen
                                                            typeid_fn_type) };
 
     native_vector<llvm::BasicBlock *> catch_blocks;
-    for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+    for(usize i{ 0 }; i < expr->catch_bodies.size(); ++i)
     {
       auto const catch_block{
         llvm::BasicBlock::Create(*llvm_ctx, util::format("catch.{}", i).data(), current_fn)
@@ -2055,7 +2046,8 @@ namespace jank::codegen
     auto const fallback_block{ llvm::BasicBlock::Create(*llvm_ctx, "catch.fallback", current_fn) };
 
     /* Generate type matching and conditional branches */
-    for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+
+    for(usize i{ 0 }; i < expr->catch_bodies.size(); ++i)
     {
       auto const &catch_clause{ expr->catch_bodies[i] };
       auto const catch_type{ catch_clause.type };
@@ -2097,7 +2089,7 @@ namespace jank::codegen
     util::scope_exit const pop_catch_lpad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
 
     /* Generate catch block bodies */
-    for(size_t i = 0; i < expr->catch_bodies.size(); ++i)
+    for(usize i{ 0 }; i < expr->catch_bodies.size(); ++i)
     {
       generate_catch_block(i,
                            expr,
@@ -2134,7 +2126,7 @@ namespace jank::codegen
   llvm_processor::impl::register_parent_catch_clauses(llvm::LandingPadInst * const landing_pad,
                                                       native_set<llvm::Value *> &registered_rtti)
   {
-    for(size_t i = 0; i < ctx->exception_handlers.size() - 1; ++i)
+    for(usize i{ 0 }; i + 1 < ctx->exception_handlers.size(); ++i)
     {
       for(auto const &parent_expr = ctx->exception_handlers[i].expr;
           auto const &catch_clause : parent_expr->catch_bodies)

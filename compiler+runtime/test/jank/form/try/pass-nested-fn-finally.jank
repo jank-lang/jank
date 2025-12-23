@@ -1,3 +1,6 @@
+;; Test nested functions with finally
+;; This is distinct from nested try/catch within the same function because it verifies
+;; that exception unwinding and finally execution works correctly across function boundaries.
 (let* [steps (atom [])
        b     (fn* b []
                (try

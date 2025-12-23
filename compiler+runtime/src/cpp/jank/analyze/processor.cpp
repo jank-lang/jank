@@ -2753,9 +2753,10 @@ namespace jank::analyze
             if(!catch_sym->get_namespace().empty())
             {
               return error::analyze_invalid_try(
-                "The binding symbol in 'catch' must be unqualified.",
-                object_source(item),
-                latest_expansion(macro_expansions));
+                       "The binding symbol in 'catch' must be unqualified.",
+                       object_source(item),
+                       latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 2));
             }
             auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
