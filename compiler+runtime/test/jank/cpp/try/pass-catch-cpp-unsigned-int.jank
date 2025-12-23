@@ -11,7 +11,6 @@ void throw_uint_42() { throw (my_uint)42; }
     (try
       (cpp/jank.cpp.try_.pass_catch_cpp_unsigned_int.throw_uint_42)
       (catch cpp/int i
-
         -1)
       (catch cpp/jank.cpp.try_.pass_catch_cpp_unsigned_int.my_uint u u))))
 

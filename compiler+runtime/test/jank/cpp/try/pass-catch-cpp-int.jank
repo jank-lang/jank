@@ -8,7 +8,6 @@ void throw_int_42() { throw 42; }
     (try
       (cpp/jank.cpp.try_.pass_catch_cpp_int.throw_int_42)
       (catch cpp/double d
-
         -1)
       (catch cpp/int i i))))
 

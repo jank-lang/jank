@@ -8,7 +8,6 @@ void throw_char_z() { throw 'z'; }
     (try
       (cpp/jank.cpp.try_.pass_catch_cpp_char.throw_char_z)
       (catch cpp/int i
-
         \0)
       (catch cpp/char c c))))
 

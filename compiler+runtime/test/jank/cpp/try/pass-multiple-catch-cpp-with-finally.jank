@@ -7,8 +7,7 @@ void throw_cpp_double() { throw 5.5; }
   (assert (= 5.5
              (try
                (cpp/jank.cpp.try_.pass_multiple_catch_cpp_with_finally.throw_cpp_double)
-               (catch cpp/int i
-                 )
+               (catch cpp/int i)
                (catch cpp/double d
                  d)
                (catch cpp/std.runtime_error e
