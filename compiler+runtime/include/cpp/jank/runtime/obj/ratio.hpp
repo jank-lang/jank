@@ -10,7 +10,7 @@ namespace jank::runtime::obj
     ratio_data(i64 const, i64 const);
     ratio_data(native_big_integer const &, native_big_integer const &);
     ratio_data(big_integer const &, big_integer const &);
-    ratio_data(object_ref const , object_ref const );
+    ratio_data(object_ref const, object_ref const);
     ratio_data(ratio_data const &) = default;
 
     f64 to_real() const;

@@ -223,8 +223,7 @@ namespace jank::runtime
       to_int(start));
   }
 
-  obj::persistent_string_ref
-  subs(object_ref const s, object_ref const start, object_ref const end)
+  obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
     return visit_type<obj::persistent_string>(
       [](auto const typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
@@ -391,10 +390,8 @@ namespace jank::runtime
     return try_object<obj::atom>(atom)->swap(fn, a1);
   }
 
-  object_ref swap_atom(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2)
+  object_ref
+  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
     return try_object<obj::atom>(atom)->swap(fn, a1, a2);
   }
@@ -418,10 +415,8 @@ namespace jank::runtime
     return try_object<obj::atom>(atom)->swap_vals(fn, a1);
   }
 
-  object_ref swap_vals(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2)
+  object_ref
+  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
     return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
   }

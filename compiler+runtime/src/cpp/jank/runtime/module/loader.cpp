@@ -834,7 +834,7 @@ namespace jank::runtime::module
     } };
 
     auto const swap_fn_wrapper{ make_box<runtime::obj::native_function_wrapper>(
-      std::function<object_ref(object_ref const )>{ swap_fn }) };
+      std::function<object_ref(object_ref const)>{ swap_fn }) };
     loaded_libs_atom->swap(swap_fn_wrapper);
   }
 

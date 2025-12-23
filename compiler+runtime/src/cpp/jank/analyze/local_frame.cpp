@@ -37,9 +37,8 @@ namespace jank::analyze
   {
   }
 
-  static jtl::option<local_frame::binding_find_result> find_local_impl(local_frame_ptr const start,
-                                                                       obj::symbol_ref const sym,
-                                                                       bool const allow_captures)
+  static jtl::option<local_frame::binding_find_result>
+  find_local_impl(local_frame_ptr const start, obj::symbol_ref const sym, bool const allow_captures)
   {
     decltype(local_frame::binding_find_result::crossed_fns) crossed_fns;
 

@@ -45,8 +45,7 @@ namespace jank::runtime::obj
     return val.load();
   }
 
-  static void
-  notify_watches(atom_ref const a, object_ref const old_val, object_ref const new_val)
+  static void notify_watches(atom_ref const a, object_ref const old_val, object_ref const new_val)
   {
     auto const locked_watches(a->watches.rlock());
     for(auto const &entry : (*locked_watches)->data)
@@ -129,10 +128,7 @@ namespace jank::runtime::obj
 
   object_ref
   /* NOLINTNEXTLINE(cppcoreguidelines-noexcept-swap,bugprone-exception-escape) */
-  atom::swap(object_ref const fn,
-             object_ref const a1,
-             object_ref const a2,
-             object_ref const rest)
+  atom::swap(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest)
   {
     while(true)
     {

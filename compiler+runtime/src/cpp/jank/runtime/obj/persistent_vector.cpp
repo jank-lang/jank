@@ -272,7 +272,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(meta, std::move(vec));
   }
 
-  persistent_vector_ref persistent_vector::dissoc(object_ref const  /*key*/) const
+  persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
   {
     throw std::runtime_error{ "Type 'persistent_vector' does not support 'dissoc'." };
   }

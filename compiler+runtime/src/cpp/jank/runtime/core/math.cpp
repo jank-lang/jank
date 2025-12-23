@@ -41,7 +41,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return make_box(typed_l + typed_r->data).erase();
           },
           r,
@@ -210,7 +210,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return make_box(typed_l - typed_r->data).erase();
           },
           r,
@@ -379,7 +379,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return make_box(typed_l / typed_r->data).erase();
           },
           r,
@@ -514,7 +514,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return make_box(typed_l * typed_r->data).erase();
           },
           r,
@@ -728,7 +728,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             auto const typed_l_data{ to_real(typed_l) };
             auto const typed_r_data{ to_real(typed_r->data) };
 #pragma clang diagnostic push
@@ -899,7 +899,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, object_ref const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> bool {
+          [](auto const typed_r, auto const &typed_l) -> bool {
             auto const data_l{ to_real(typed_l) };
             auto const data_r{ to_real(typed_r->data) };
 
@@ -1088,7 +1088,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> bool { return typed_l < typed_r->data; },
+          [](auto const typed_r, auto const &typed_l) -> bool { return typed_l < typed_r->data; },
           r,
           typed_l->data);
       },
@@ -1205,7 +1205,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> bool {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> bool { return typed_l <= typed_r->data; },
+          [](auto const typed_r, auto const &typed_l) -> bool { return typed_l <= typed_r->data; },
           r,
           typed_l->data);
       },
@@ -1322,7 +1322,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return typed_l < typed_r->data ? make_box(typed_l).erase()
                                            : make_box(typed_r->data).erase();
           },
@@ -1470,7 +1470,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> object_ref {
+          [](auto const typed_r, auto const &typed_l) -> object_ref {
             return typed_r->data > typed_l ? make_box(typed_r).erase() : make_box(typed_l).erase();
           },
           r,
@@ -1675,7 +1675,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const r) -> f64 {
         return visit_number_like(
-          [](auto const typed_r, auto const typed_l) -> f64 {
+          [](auto const typed_r, auto const &typed_l) -> f64 {
             auto const typed_r_data{ to_real(typed_r->data) };
             auto const typed_l_data{ to_real(typed_l) };
             using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r_data)>;

@@ -55,7 +55,7 @@ namespace jank::runtime::obj
   template <usize N, typename... Args>
   struct build_arity
   {
-    using type = typename build_arity<N - 1, Args..., object_ref const >::type;
+    using type = typename build_arity<N - 1, Args..., object_ref const>::type;
   };
 
   template <typename... Args>
@@ -105,9 +105,8 @@ namespace jank::runtime::obj
     return apply_function(*this, arg1, arg2);
   }
 
-  object_ref native_function_wrapper::call(object_ref const arg1,
-                                           object_ref const arg2,
-                                           object_ref const arg3)
+  object_ref
+  native_function_wrapper::call(object_ref const arg1, object_ref const arg2, object_ref const arg3)
   {
     return apply_function(*this, arg1, arg2, arg3);
   }

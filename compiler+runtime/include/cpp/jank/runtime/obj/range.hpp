@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     static constexpr bool is_sequential{ true };
     static constexpr i64 chunk_size{ 32 };
 
-    using bounds_check_t = bool (*)(object_ref const , object_ref const );
+    using bounds_check_t = bool (*)(object_ref const, object_ref const);
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
@@ -42,8 +42,7 @@ namespace jank::runtime::obj
 
     static object_ref create(object_ref const end);
     static object_ref create(object_ref const start, object_ref const end);
-    static object_ref
-    create(object_ref const start, object_ref const end, object_ref const step);
+    static object_ref create(object_ref const start, object_ref const end, object_ref const step);
 
     /* behavior::object_like */
     bool equal(object const &) const;

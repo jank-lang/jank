@@ -84,56 +84,55 @@ namespace jank::runtime
 
       /* behavior::callable */
       object_ref call() final;
-      object_ref call(object_ref const ) final;
-      object_ref call(object_ref const , object_ref const ) final;
-      object_ref call(object_ref const , object_ref const , object_ref const ) final;
-      object_ref
-      call(object_ref const , object_ref const , object_ref const , object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
-      object_ref call(object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ,
-                      object_ref const ) final;
+      object_ref call(object_ref const) final;
+      object_ref call(object_ref const, object_ref const) final;
+      object_ref call(object_ref const, object_ref const, object_ref const) final;
+      object_ref call(object_ref const, object_ref const, object_ref const, object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
 
       object_ref this_object_ref() final;
 

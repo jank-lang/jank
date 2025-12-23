@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    using bounds_check_t = bool (*)(integer_ref const , integer_ref const );
+    using bounds_check_t = bool (*)(integer_ref const, integer_ref const);
 
     /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
     integer_range() = default;
@@ -26,9 +26,7 @@ namespace jank::runtime::obj
     integer_range(integer_range const &) = default;
     integer_range(integer_ref const end);
     integer_range(integer_ref const start, obj::integer_ref const end);
-    integer_range(integer_ref const start,
-                  obj::integer_ref const end,
-                  obj::integer_ref const step);
+    integer_range(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
     integer_range(integer_ref const start,
                   integer_ref const end,
                   integer_ref const step,

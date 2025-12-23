@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     persistent_hash_set_ref conj(object_ref const head) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const ) const;
+    object_ref call(object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_hash_set_ref to_transient() const;

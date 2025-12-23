@@ -78,8 +78,8 @@ namespace jank::runtime::obj
     persistent_array_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const ) const;
-    object_ref call(object_ref const , object_ref const ) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;

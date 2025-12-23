@@ -30,8 +30,7 @@ namespace clojure::core_native
   object_ref ns_map(object_ref const ns);
   object_ref var_ns(object_ref const v);
   object_ref ns_resolve(object_ref const ns, object_ref const sym);
-  object_ref
-  alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias);
+  object_ref alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias);
   object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var);
   object_ref load_module(object_ref const path);
   object_ref compile(object_ref const path);
@@ -59,7 +58,7 @@ namespace clojure::core_native
   object_ref current_time();
 
   object_ref eval(object_ref const expr);
-  object_ref read_string(object_ref const  /* opts */, object_ref const str);
+  object_ref read_string(object_ref const /* opts */, object_ref const str);
 
   object_ref lazy_seq(object_ref const o);
 

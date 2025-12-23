@@ -41,8 +41,8 @@ namespace jank::runtime::obj
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const ) const;
-    object_ref call(object_ref const , object_ref const fallback) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const fallback) const;
 
     /* behavior::associatively_readable */
     object_ref get(object_ref const elem) const;

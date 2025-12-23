@@ -37,18 +37,8 @@ namespace jank::runtime
     using value_type = object;
 
     oref() = default;
-
-    oref(oref const &rhs)
-      : data{ rhs.data }
-    {
-      jank_assert_throw(data);
-    }
-
-    oref(oref &&rhs) noexcept
-      : data{ jtl::move(rhs.data) }
-    {
-      jank_assert_throw(data);
-    }
+    oref(oref const &rhs) = default;
+    oref(oref &&rhs) noexcept = default;
 
     oref(nullptr_t) noexcept = delete;
 
@@ -194,16 +184,8 @@ namespace jank::runtime
     using value_type = T;
 
     oref() = default;
-
-    oref(oref const &rhs) noexcept
-      : data{ rhs.data }
-    {
-    }
-
-    oref(oref &&rhs) noexcept
-      : data{ rhs.data }
-    {
-    }
+    oref(oref const &rhs) noexcept = default;
+    oref(oref &&rhs) noexcept = default;
 
     oref(nullptr_t) = delete;
 
@@ -376,6 +358,8 @@ namespace jank::runtime
     using value_type = obj::nil;
 
     oref() = default;
+    oref(oref const &) = default;
+    oref(oref &&) noexcept = default;
 
     oref(nullptr_t) = delete;
 
@@ -442,6 +426,9 @@ namespace jank::runtime
     {
       return rhs.is_some();
     }
+
+    oref &operator=(oref const &rhs) noexcept = default;
+    oref &operator=(oref &&rhs) noexcept = default;
 
     oref &operator=(jtl::nullptr_t) noexcept = delete;
     bool operator==(jtl::nullptr_t) noexcept = delete;

@@ -225,7 +225,7 @@ namespace jank::runtime
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
         auto module_name{ runtime::to_string(current_module_var->deref()) };
-        aot::processor aot_prc;
+        aot::processor const aot_prc;
         auto const res{ aot_prc.compile_object(module_name, code) };
         if(res.is_err())
         {

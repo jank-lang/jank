@@ -56,8 +56,7 @@ namespace jank::runtime::obj
     }
 
     template <typename... Args>
-    static persistent_sorted_map_ref
-    create_unique_with_meta(object_ref const meta, Args &&...pairs)
+    static persistent_sorted_map_ref create_unique_with_meta(object_ref const meta, Args &&...pairs)
     {
       return make_box<persistent_sorted_map>(meta,
                                              runtime::detail::in_place_unique{},
@@ -77,8 +76,8 @@ namespace jank::runtime::obj
     persistent_sorted_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const ) const;
-    object_ref call(object_ref const , object_ref const ) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

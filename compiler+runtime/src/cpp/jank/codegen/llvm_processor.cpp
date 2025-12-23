@@ -135,7 +135,7 @@ namespace jank::codegen
     void create_global_ctor() const;
     llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
-    llvm::Value *gen_global(runtime::obj::nil_ref const ) const;
+    llvm::Value *gen_global(runtime::obj::nil_ref const) const;
     llvm::Value *gen_global(runtime::obj::boolean_ref const b) const;
     llvm::Value *gen_global(runtime::obj::integer_ref const i) const;
     llvm::Value *gen_global(runtime::obj::big_integer_ref const i) const;

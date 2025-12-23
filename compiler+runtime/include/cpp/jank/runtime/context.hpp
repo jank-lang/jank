@@ -45,29 +45,29 @@ namespace jank::runtime
     context(context &&) noexcept = delete;
 
     ns_ref intern_ns(jtl::immutable_string const &);
-    ns_ref intern_ns(obj::symbol_ref const );
-    ns_ref remove_ns(obj::symbol_ref const );
+    ns_ref intern_ns(obj::symbol_ref const);
+    ns_ref remove_ns(obj::symbol_ref const);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
-    ns_ref find_ns(obj::symbol_ref const );
+    ns_ref find_ns(obj::symbol_ref const);
     /* Resolves a symbol which could be an alias to its ns, based on the aliases
      * in the current ns. Does not intern. */
-    ns_ref resolve_ns(obj::symbol_ref const );
+    ns_ref resolve_ns(obj::symbol_ref const);
     ns_ref current_ns() const;
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
-    obj::symbol_ref qualify_symbol(obj::symbol_ref const ) const;
-    jtl::option<object_ref> find_local(obj::symbol_ref const );
+    obj::symbol_ref qualify_symbol(obj::symbol_ref const) const;
+    jtl::option<object_ref> find_local(obj::symbol_ref const);
 
     jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const qualified_name);
     jtl::result<var_ref, jtl::immutable_string> intern_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
-    jtl::result<var_ref, jtl::immutable_string> intern_owned_var(obj::symbol_ref const );
+    jtl::result<var_ref, jtl::immutable_string> intern_owned_var(obj::symbol_ref const);
     jtl::result<var_ref, jtl::immutable_string> intern_owned_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
-    var_ref find_var(obj::symbol_ref const );
+    var_ref find_var(obj::symbol_ref const);
     var_ref find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
 
     jtl::result<obj::keyword_ref, jtl::immutable_string>

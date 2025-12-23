@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     persistent_sorted_set_ref conj(object_ref const head) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const );
+    object_ref call(object_ref const);
 
     /* behavior::transientable */
     obj::transient_sorted_set_ref to_transient() const;

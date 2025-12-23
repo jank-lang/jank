@@ -975,92 +975,92 @@ namespace jank::runtime
       throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const )
+    object_ref callable::call(object_ref const)
     {
       throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const , object_ref const )
+    object_ref callable::call(object_ref const, object_ref const)
     {
       throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const , object_ref const , object_ref const )
+    object_ref callable::call(object_ref const, object_ref const, object_ref const)
     {
       throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
 
     object_ref
-    callable::call(object_ref const , object_ref const , object_ref const , object_ref const )
+    callable::call(object_ref const, object_ref const, object_ref const, object_ref const)
     {
       throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const ,
-                              object_ref const )
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }

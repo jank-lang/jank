@@ -26,8 +26,7 @@ namespace jank::runtime::obj
     return runtime::equal(tag, s->tag) && runtime::equal(form, s->form);
   }
 
-  static void
-  to_string_impl(object_ref const tag, object_ref const form, jtl::string_builder &buff)
+  static void to_string_impl(object_ref const tag, object_ref const form, jtl::string_builder &buff)
   {
     buff('#');
     runtime::to_string(tag, buff);

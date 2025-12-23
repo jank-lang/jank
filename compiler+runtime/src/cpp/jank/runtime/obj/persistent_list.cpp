@@ -60,7 +60,7 @@ namespace jank::runtime::obj
     return s;
   }
 
-  persistent_list_ref persistent_list::create(nil_ref const )
+  persistent_list_ref persistent_list::create(nil_ref const)
   {
     return empty();
   }

@@ -33,8 +33,7 @@ namespace jank::runtime
   object_ref prn(object_ref const args);
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start);
-  obj::persistent_string_ref
-  subs(object_ref const s, object_ref const start, object_ref const end);
+  obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end);
   i64 first_index_of(object_ref const s, object_ref const m);
   i64 last_index_of(object_ref const s, object_ref const m);
 
@@ -60,10 +59,8 @@ namespace jank::runtime
   object_ref deref(object_ref const o);
   object_ref swap_atom(object_ref const atom, object_ref const fn);
   object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1);
-  object_ref swap_atom(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2);
+  object_ref
+  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2);
   object_ref swap_atom(object_ref const atom,
                        object_ref const fn,
                        object_ref const a1,
@@ -71,10 +68,8 @@ namespace jank::runtime
                        object_ref const rest);
   object_ref swap_vals(object_ref const atom, object_ref const fn);
   object_ref swap_vals(object_ref const atom, object_ref const fn, object_ref const a1);
-  object_ref swap_vals(object_ref const atom,
-                       object_ref const fn,
-                       object_ref const a1,
-                       object_ref const a2);
+  object_ref
+  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2);
   object_ref swap_vals(object_ref const atom,
                        object_ref const fn,
                        object_ref const a1,

@@ -31,56 +31,56 @@ namespace jank::runtime::obj
 
     /* behavior::callable */
     object_ref call() override;
-    object_ref call(object_ref const ) override;
-    object_ref call(object_ref const , object_ref const ) override;
-    object_ref call(object_ref const , object_ref const , object_ref const ) override;
+    object_ref call(object_ref const) override;
+    object_ref call(object_ref const, object_ref const) override;
+    object_ref call(object_ref const, object_ref const, object_ref const) override;
     object_ref
-    call(object_ref const , object_ref const , object_ref const , object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
-    object_ref call(object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ,
-                    object_ref const ) override;
+    call(object_ref const, object_ref const, object_ref const, object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
     object_ref this_object_ref() final;
 
     multi_function_ref reset();

@@ -43,12 +43,9 @@ namespace jank::runtime::obj
     /* Same as swap, but returns a vector of the old value and the new value. */
     persistent_vector_ref swap_vals(object_ref const fn);
     persistent_vector_ref swap_vals(object_ref const fn, object_ref const a1);
+    persistent_vector_ref swap_vals(object_ref const fn, object_ref const a1, object_ref const a2);
     persistent_vector_ref
-    swap_vals(object_ref const fn, object_ref const a1, object_ref const a2);
-    persistent_vector_ref swap_vals(object_ref const fn,
-                                    object_ref const a1,
-                                    object_ref const a2,
-                                    object_ref const rest);
+    swap_vals(object_ref const fn, object_ref const a1, object_ref const a2, object_ref const rest);
 
     object_ref compare_and_set(object_ref const old_val, object_ref const new_val);
 

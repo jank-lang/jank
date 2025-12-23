@@ -92,7 +92,7 @@ namespace jank::runtime::obj
     return false;
   }
 
-  object_ref persistent_string::get_entry(object_ref const ) const
+  object_ref persistent_string::get_entry(object_ref const) const
   {
     throw std::runtime_error{ util::format("get_entry not supported on string") };
   }
