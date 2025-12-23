@@ -758,10 +758,10 @@ namespace jank::codegen
     locals[make_box<obj::symbol>("virtual/this")] = this_arg;
     locals[make_box<obj::symbol>(root_fn->name)] = this_arg;
 
-    for(usize i{}; i < arity.params.size(); ++i)
+    usize i{};
+    for(auto const &param : arity.params)
     {
-      auto &param(arity.params[i]);
-      auto arg(llvm_fn->getArg(i + 1));
+      auto arg(llvm_fn->getArg(++i));
       arg->setName(param->get_name().c_str());
       locals[param] = arg;
     }
@@ -3243,6 +3243,9 @@ namespace jank::codegen
     return ret;
   }
 
+  /* We generate a static wrapper function to return the address of the static member variable.
+   * This allows us to access the variable from the JIT, as we cannot take the address of
+   * a static member directly if it is not defined in the current module. */
   llvm::Function *llvm_processor::impl::ensure_static_wrapper(jtl::ptr<void> scope)
   {
     auto const var_name{ Cpp::GetQualifiedCompleteName(scope) };
