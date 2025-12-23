@@ -42,6 +42,8 @@
             "-L${lib.getLib pkgs.openssl}/lib"
             "-L${lib.getLib pkgs.zlib}/lib"
             "-L${lib.getLib pkgs.zstd}/lib"
+            "-L${lib.getLib pkgs.libedit}/lib"
+            "-L${lib.getLib pkgs.libxml2}/lib"
           ];
       in {
         legacyPackages = pkgs;
@@ -81,6 +83,8 @@
                 bzip2
                 openssl
                 zstd
+                libedit
+                libxml2
               ]);
 
             checkInputs = with pkgs; [
@@ -171,6 +175,7 @@
           shellHook = ''
             export CC=${llvm.clang}/bin/clang
             export CXX=${llvm.clang}/bin/clang++
+            export CMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
 
