@@ -315,6 +315,7 @@ namespace jank::codegen
     if(Cpp::IsPointerType(type) || Cpp::IsReferenceType(type) || Cpp::IsArrayType(type))
     {
       ir_type = ctx.builder->getPtrTy();
+      size = Cpp::GetSizeOfType(type);
     }
     else if(Cpp::IsBuiltin(type))
     {
@@ -1895,16 +1896,13 @@ namespace jank::codegen
     };
     auto const caught_ptr{ ctx->builder->CreateCall(begin_catch_fn, { current_ex_ptr }) };
 
-    /* The analyzer promotes object types to lvalue references to avoid slicing.
-     * For reference types, __cxa_begin_catch returns a pointer to the exception object,
-     * which is exactly what we need - we don't load anything, just use the pointer.
-     * For value types (primitives, pointers), we need to load the actual value. */
     llvm::Value *raw_ex_val{};
     llvm::Type *ex_val_type{};
-
-    if(Cpp::IsReferenceType(catch_type))
+    if(Cpp::IsReferenceType(catch_type) || Cpp::IsPointerType(catch_type))
     {
-      // For references, use the pointer directly - no load needed
+      /* For references and pointers, use the value directly - no load needed.
+       * For pointers, experimental evidence shows __cxa_begin_catch returns the pointer value
+       * directly, not a pointer to the storage location. */
       raw_ex_val = caught_ptr;
       ex_val_type = ptr_ty;
     }
@@ -1915,6 +1913,7 @@ namespace jank::codegen
       ex_val_type = load_type_result.type.data;
       raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
     }
+
 
     auto const current_fn = ctx->builder->GetInsertBlock()->getParent();
     llvm::AllocaInst *ex_val_slot{};
