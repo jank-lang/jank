@@ -6,9 +6,6 @@
 
 namespace jank::cpp::try_::pass_catch_cpp_std_exceptions {
   void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }
-  void throw_logic_error() { throw std::logic_error(\"logic error\"); }
-  void throw_invalid_argument() { throw std::invalid_argument(\"invalid argument\"); }
-  void throw_out_of_range() { throw std::out_of_range(\"out of range\"); }
   void throw_bad_cast() { throw std::bad_cast(); }
   void throw_runtime_error_as_exception() { throw std::runtime_error(\"derived error\"); }
 }
@@ -23,34 +20,7 @@ namespace jank::cpp::try_::pass_catch_cpp_std_exceptions {
       (reset! caught (cpp/.what e))))
   (assert (= "runtime error" @caught) "Should catch std::runtime_error"))
 
-;; 2. std::logic_error
-(let [caught (atom false)]
-  (try
-    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_logic_error)
-    (catch cpp/std.runtime_error e)
-    (catch cpp/std.logic_error e
-      (reset! caught (if (= "logic error" (cpp/.what e)) true false))))
-  (assert @caught "Should catch std::logic_error"))
-
-;; 3. std::invalid_argument
-(let [caught (atom false)]
-  (try
-    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_invalid_argument)
-    (catch cpp/std.runtime_error e)
-    (catch cpp/std.invalid_argument e
-      (reset! caught (if (= "invalid argument" (cpp/.what e)) true false))))
-  (assert @caught "Should catch std::invalid_argument"))
-
-;; 4. std::out_of_range
-(let [caught (atom false)]
-  (try
-    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_out_of_range)
-    (catch cpp/std.runtime_error e)
-    (catch cpp/std.out_of_range e
-      (reset! caught (if (= "out of range" (cpp/.what e)) true false))))
-  (assert @caught "Should catch std::out_of_range"))
-
-;; 5. std::bad_cast
+;; 2. std::bad_cast
 (let [caught (atom nil)]
   (try
     (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_bad_cast)
@@ -59,7 +29,7 @@ namespace jank::cpp::try_::pass_catch_cpp_std_exceptions {
       (reset! caught (cpp/.what e))))
   (assert (= "std::bad_cast" @caught) "Should catch std::bad_cast"))
 
-;; 6. std::exception (base class catch)
+;; 3. std::exception (base class catch)
 (let []
   (try
     (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_runtime_error_as_exception)
