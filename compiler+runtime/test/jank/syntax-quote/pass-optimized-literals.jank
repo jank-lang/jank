@@ -1,0 +1,22 @@
+; Test that syntax quote optimization produces correct results for literals
+; The optimized code should be simpler but produce the same values
+
+(assert (= [1 2 3] `[1 2 3]) `[1 2 3])
+(assert (= {:a 1 :b 2} `{:a 1 :b 2}) `{:a 1 :b 2})
+(assert (= #{1 2 3} `#{1 2 3}) `#{1 2 3})
+(assert (= '(1 2 3) `(1 2 3)) `(1 2 3))
+
+; Test nested literals
+(assert (= [[1 2] [3 4]] `[[1 2] [3 4]]) `[[1 2] [3 4]])
+(assert (= {:a [1 2] :b [3 4]} `{:a [1 2] :b [3 4]}) `{:a [1 2] :b [3 4]})
+
+; Test with symbols (should still be qualified)
+(assert (= '[clojure.core/foo] `[foo]) `[foo])
+(assert (= '{clojure.core/a clojure.core/b} `{a b}) `{a b})
+
+; Test that unquotes still work (no optimization should be applied here)
+(def x 42)
+(assert (= [42] `[~x]) `[~x])
+(assert (= [[42]] `[[~x]]) `[[~x]])
+
+:success
