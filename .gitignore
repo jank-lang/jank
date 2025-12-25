@@ -63,3 +63,6 @@ node_modules
 
 # Nix (outcome of `nix build`)
 /result
+
+# CodeQL
+_codeql_detected_source_root
