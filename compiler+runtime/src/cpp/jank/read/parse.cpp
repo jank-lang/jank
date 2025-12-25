@@ -1265,7 +1265,7 @@ namespace jank::read::parse
             return true;
           }
           /* Recursively check nested collections */
-          if(visit_seqable([this](auto const) { return syntax_quote_contains_unquote(item); },
+          if(visit_seqable([this](auto const /* typed_nested */) { return syntax_quote_contains_unquote(item); },
                            [] { return false; },
                            item))
           {
