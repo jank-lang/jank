@@ -357,6 +357,9 @@ int main(int argc, const char** argv)
     compiler_args.push_back("-w");
     compiler_args.push_back("-Wno-c++11-narrowing");
 
+    /* TODO: This has an unwind issue which prevents exceptions thrown from these compiled
+     * objects from being caught in jank itself. */
+
     //util::println("compilation command: {} ", compiler_args);
 
     auto const res{ util::invoke_clang(compiler_args) };
