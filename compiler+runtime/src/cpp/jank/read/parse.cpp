@@ -1249,6 +1249,28 @@ namespace jank::read::parse
       form);
   }
 
+  bool processor::syntax_quote_contains_unquote(object_ref const seq)
+  {
+    if(seq.is_nil())
+    {
+      return false;
+    }
+
+    return visit_seqable(
+      [this](auto const typed_seq) {
+        for(auto const item : make_sequence_range(typed_seq))
+        {
+          if(syntax_quote_is_unquote(item, false) || syntax_quote_is_unquote(item, true))
+          {
+            return true;
+          }
+        }
+        return false;
+      },
+      [] { return false; },
+      seq);
+  }
+
   jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const form)
   {
     object_ref ret{};
@@ -1330,6 +1352,24 @@ namespace jank::read::parse
                 make_box<obj::symbol>("clojure.core", "vector"));
             }
 
+            /* Optimization: if the vector contains no unquotes, we can directly construct
+             * the literal vector instead of using apply/concat. */
+            if(!syntax_quote_contains_unquote(seq))
+            {
+              runtime::detail::native_transient_vector ret;
+              for(auto const item : make_sequence_range(seq))
+              {
+                auto quoted_item(syntax_quote(item));
+                if(quoted_item.is_err())
+                {
+                  return quoted_item;
+                }
+                ret.push_back(quoted_item.expect_ok());
+              }
+              return cons(make_box<obj::symbol>("clojure.core", "vector"),
+                          make_box<obj::persistent_vector>(ret.persistent())->seq());
+            }
+
             auto expanded(syntax_quote_expand_seq(seq));
             if(expanded.is_err())
             {
@@ -1347,10 +1387,36 @@ namespace jank::read::parse
           }
           if constexpr(behavior::map_like<T>)
           {
-            auto flattened(syntax_quote_flatten_map(typed_form->seq()));
+            auto const seq(typed_form->seq());
+            if(seq.is_nil())
+            {
+              return make_box<obj::persistent_list>(
+                std::in_place,
+                make_box<obj::symbol>("clojure.core", "hash-map"));
+            }
+
+            auto flattened(syntax_quote_flatten_map(seq));
             if(flattened.is_err())
             {
               return flattened;
+            }
+
+            /* Optimization: if the map contains no unquotes, we can directly construct
+             * the literal map instead of using apply/concat. */
+            if(!syntax_quote_contains_unquote(flattened.expect_ok()))
+            {
+              runtime::detail::native_transient_vector ret;
+              for(auto const item : make_sequence_range(flattened.expect_ok()))
+              {
+                auto quoted_item(syntax_quote(item));
+                if(quoted_item.is_err())
+                {
+                  return quoted_item;
+                }
+                ret.push_back(quoted_item.expect_ok());
+              }
+              return cons(make_box<obj::symbol>("clojure.core", "hash-map"),
+                          make_box<obj::persistent_vector>(ret.persistent())->seq());
             }
 
             auto expanded(syntax_quote_expand_seq(flattened.expect_ok()));
@@ -1377,6 +1443,25 @@ namespace jank::read::parse
                 std::in_place,
                 make_box<obj::symbol>("clojure.core", "hash-set"));
             }
+
+            /* Optimization: if the set contains no unquotes, we can directly construct
+             * the literal set instead of using apply/concat. */
+            if(!syntax_quote_contains_unquote(seq))
+            {
+              runtime::detail::native_transient_vector ret;
+              for(auto const item : make_sequence_range(seq))
+              {
+                auto quoted_item(syntax_quote(item));
+                if(quoted_item.is_err())
+                {
+                  return quoted_item;
+                }
+                ret.push_back(quoted_item.expect_ok());
+              }
+              return cons(make_box<obj::symbol>("clojure.core", "hash-set"),
+                          make_box<obj::persistent_vector>(ret.persistent())->seq());
+            }
+
             auto expanded(syntax_quote_expand_seq(seq));
             if(expanded.is_err())
             {
@@ -1400,6 +1485,25 @@ namespace jank::read::parse
               return make_box<obj::persistent_list>(std::in_place,
                                                     make_box<obj::symbol>("clojure.core", "list"));
             }
+
+            /* Optimization: if the list contains no unquotes, we can directly construct
+             * the literal list instead of using seq/concat. */
+            if(!syntax_quote_contains_unquote(seq))
+            {
+              runtime::detail::native_transient_vector ret;
+              for(auto const item : make_sequence_range(seq))
+              {
+                auto quoted_item(syntax_quote(item));
+                if(quoted_item.is_err())
+                {
+                  return quoted_item;
+                }
+                ret.push_back(quoted_item.expect_ok());
+              }
+              return cons(make_box<obj::symbol>("clojure.core", "list"),
+                          make_box<obj::persistent_vector>(ret.persistent())->seq());
+            }
+
             auto expanded(syntax_quote_expand_seq(seq));
             if(expanded.is_err())
             {
