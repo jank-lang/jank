@@ -106,6 +106,7 @@ namespace jank::read::parse
     static jtl::result<runtime::object_ref, error_ref>
     syntax_quote_flatten_map(runtime::object_ref seq);
     static bool syntax_quote_is_unquote(runtime::object_ref form, bool splice);
+    bool syntax_quote_contains_unquote(runtime::object_ref seq);
 
   public:
     lex::processor::iterator token_current, token_end;
