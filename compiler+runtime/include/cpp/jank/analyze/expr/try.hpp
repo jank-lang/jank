@@ -3,7 +3,6 @@
 
 #include <jtl/option.hpp>
 
-#include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expression.hpp>
 
 namespace jank::runtime::obj

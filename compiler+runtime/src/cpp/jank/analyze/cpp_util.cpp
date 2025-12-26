@@ -73,10 +73,7 @@ namespace jank::analyze::cpp_util
   {
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
      * handling since they are distinct types. We use resolve_literal_type to get the
-     * exact type for "char".
-     *
-     * We verified this by attempting to use Cpp::GetType("char") and observing that
-     * catching a `char` exception failed with "terminating due to uncaught exception of type char". */
+     * exact type for "char". */
     if(sym == "char")
     {
       if(auto const res{ resolve_literal_type("char").expect_ok() })

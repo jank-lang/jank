@@ -78,9 +78,9 @@ namespace jank::codegen
 
     struct exception_handler_info
     {
-      llvm::BasicBlock *dispatch_block;
-      llvm::PHINode *ex_phi;
-      llvm::PHINode *sel_phi;
+      llvm::BasicBlock *dispatch_block{};
+      llvm::PHINode *ex_phi{};
+      llvm::PHINode *sel_phi{};
       analyze::expr::try_ref expr;
     };
 
@@ -1068,7 +1068,7 @@ namespace jank::codegen
 
         if(should_box)
         {
-          // Argument is a C++ value/primitive, need to box it for Jank function call
+          // Argument is a C++ value/primitive, need to box it for jank function call
           llvm::Value *val_ptr{ arg_handle };
           if(!llvm::isa<llvm::AllocaInst>(arg_handle) && !arg_handle->getType()->isPointerTy())
           {
@@ -1092,7 +1092,7 @@ namespace jank::codegen
         }
         else
         {
-          /* Argument is already a Jank object. */
+          /* Argument is already a jank object. */
           if(llvm::isa<llvm::AllocaInst>(arg_handle))
           {
             arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
@@ -1817,6 +1817,17 @@ namespace jank::codegen
     return ret;
   }
 
+  /* Handles the case where an exception was caught by the current landing pad
+   * but did not match any of the registered catch clauses in the current try block.
+   *
+   * This function allows for proper nesting of try/catch blocks by:
+   * 1. Checking if there is an enclosing (parent) exception handler.
+   * 2. If yes, transferring control to that parent's dispatch block so it can attempt to match the exception.
+   * 3. If no, calling `_Unwind_Resume` to continue propagating the exception up the call stack
+   *    (to the caller of the current function).
+   *
+   * Crucially, this maintains the chain of exception handling, ensuring that an exception
+   * is only "swallowed" if it is actually matched by a catch clause. */
   void llvm_processor::impl::route_unhandled_exception(llvm::Value *ex_ptr,
                                                        llvm::Value *selector,
                                                        llvm::BasicBlock *current_block) const
@@ -1825,19 +1836,21 @@ namespace jank::codegen
     reusable_context::exception_handler_info const *parent_handler{};
     if(ctx->exception_handlers.size() > 1)
     {
+      /* The current handler is at the back, so the parent is at size() - 2. */
       parent_handler = &ctx->exception_handlers[ctx->exception_handlers.size() - 2];
     }
 
     if(parent_handler)
     {
-      /* Branch to parent handler */
+      /* Branch to the parent handler to give it a chance to catch this exception.
+       * We must update the parent's PHI nodes since we are arriving from a new block. */
       ctx->builder->CreateBr(parent_handler->dispatch_block);
       parent_handler->ex_phi->addIncoming(ex_ptr, current_block);
       parent_handler->sel_phi->addIncoming(selector, current_block);
     }
     else
     {
-      /* No parent handler - resume unwinding */
+      /* No parent handler in this function scope - resume unwinding to the caller. */
       auto const resume_fn{ llvm_module->getOrInsertFunction("_Unwind_Resume",
                                                              ctx->builder->getVoidTy(),
                                                              ctx->builder->getPtrTy()) };
@@ -1878,6 +1891,17 @@ namespace jank::codegen
     }
   }
 
+  /* Generates the code for a single `catch` block body.
+   *
+   * This function is responsible for the entire lifecycle of handling a caught exception:
+   * 1. CALL `__cxa_begin_catch`: Marks the exception as caught and retrieves the exception object.
+   * 2. BIND PARAMETER: Extracts the exception value (handling by-value vs by-reference) and
+   *    binds it to the user's catch variable name.
+   * 3. GENERATE BODY: Compiles the user's code inside the catch block.
+   * 4. CALL `__cxa_end_catch`: Signals the end of the catch handler, allowing the C++ runtime
+   *    to cleanup the exception storage.
+   * 5. ROUTE RESULT: Stores the result of the body and jumps to `finally` (if present) or `continue`.
+   */
   void llvm_processor::impl::generate_catch_block(usize catch_index,
                                                   expr::try_ref const expr,
                                                   llvm::BasicBlock * const catch_block,
@@ -1895,6 +1919,9 @@ namespace jank::codegen
     ctx->builder->SetInsertPoint(catch_block);
 
     auto old_locals(locals);
+
+    /* Step 1: Tell C++ runtime we are starting to handle this exception.
+     * Returns the adjusted pointer to the exception object. */
     auto const begin_catch_fn{
       llvm_module->getOrInsertFunction("__cxa_begin_catch", ptr_ty, ptr_ty)
     };
@@ -1902,9 +1929,11 @@ namespace jank::codegen
 
     llvm::Value *raw_ex_val{};
     llvm::Type *ex_val_type{};
+
+    /* Step 2: Extract the actual value to bind to the variable. */
     if(Cpp::IsReferenceType(catch_type) || Cpp::IsPointerType(catch_type))
     {
-      /* For references and pointers, use the value directly - no load needed.
+      /* OPTIMIZATION: For references and pointers, use the value directly - no load needed.
        * For pointers, experimental evidence shows __cxa_begin_catch returns the pointer value
        * directly, not a pointer to the storage location. */
       raw_ex_val = caught_ptr;
@@ -1912,13 +1941,15 @@ namespace jank::codegen
     }
     else
     {
-      // For values, load from the pointer
+      /* For by-value catches, we must LOAD the data from the exception storage. */
       auto const load_type_result{ llvm_type(*ctx, llvm_ctx, catch_type) };
       ex_val_type = load_type_result.type.data;
       raw_ex_val = ctx->builder->CreateLoad(ex_val_type, caught_ptr, "ex.val");
     }
 
 
+    /* Create a local stack slot for the caught variable and store the value.
+     * We create allocas in the entry block to avoid stack growth in loops. */
     auto const current_fn{ ctx->builder->GetInsertBlock()->getParent() };
     llvm::AllocaInst *ex_val_slot{};
     {
@@ -1935,6 +1966,7 @@ namespace jank::codegen
     locals[catch_sym] = ex_val_slot;
 
 
+    /* Step 3: Generate the user's catch body code. */
     auto const original_catch_pos{ catch_body->position };
     catch_body->propagate_position(expression_position::value);
     util::scope_exit const restore_catch_pos{ [&]() {
@@ -1942,9 +1974,13 @@ namespace jank::codegen
     } };
     auto catch_val{ gen(catch_body, arity) };
 
+    /* Step 4: Tell C++ runtime we are done with the exception object.
+     * MUST be called before leaving the catch block logic to prevent leaks. */
     auto const end_catch_fn{ llvm_module->getOrInsertFunction("__cxa_end_catch",
                                                               ctx->builder->getVoidTy()) };
     ctx->builder->CreateCall(end_catch_fn, {});
+
+    /* Convert the result to a jank object if needed */
     auto body_type{ cpp_util::expression_type(catch_body) };
     if(!body_type)
     {
@@ -1958,6 +1994,9 @@ namespace jank::codegen
     }
     if(!object_ref_type)
     {
+      /* Fallback for bootstrapping or isolated testing where the full jank runtime
+       * headers might not be loaded. A 64-bit integer matches the size of a
+       * pointer/object_ref on 64-bit systems, allowing codegen to proceed without crashing. */
       object_ref_type = Cpp::GetType("long long");
     }
 
@@ -1971,8 +2010,10 @@ namespace jank::codegen
                                              loaded_val) };
     locals = std::move(old_locals);
 
+    /* Step 5: Route control flow. */
     if(!ctx->builder->GetInsertBlock()->getTerminator())
     {
+      /* Store the result */
       if(!catch_val)
       {
         catch_val = gen_global(jank_nil);
@@ -1982,6 +2023,9 @@ namespace jank::codegen
       {
         ctx->builder->CreateStore(converted_val, result_slot);
       }
+
+      /* If there is a finally block, go there. Markers:
+       * unwind_flag = false means "normal execution, not unwinding". */
       if(finally_block)
       {
         ctx->builder->CreateStore(ctx->builder->getFalse(), unwind_flag_slot);
@@ -2126,12 +2170,12 @@ namespace jank::codegen
   llvm_processor::impl::register_parent_catch_clauses(llvm::LandingPadInst * const landing_pad,
                                                       native_set<llvm::Value *> &registered_rtti)
   {
-    for(usize i{ 0 }; i + 1 < ctx->exception_handlers.size(); ++i)
+    for(auto const &parent_handler : ctx->exception_handlers)
     {
-      for(auto const &parent_expr = ctx->exception_handlers[i].expr;
-          auto const &catch_clause : parent_expr->catch_bodies)
+      for(auto const &parent_expr{ parent_handler.expr };
+          auto const &parent_catch_clause : parent_expr->catch_bodies)
       {
-        register_catch_clause_rtti(catch_clause, landing_pad, registered_rtti);
+        register_catch_clause_rtti(parent_catch_clause, landing_pad, registered_rtti);
       }
     }
   }
@@ -2827,10 +2871,10 @@ namespace jank::codegen
     };
     if(!lpad_and_catch_body_stack.empty())
     {
-      llvm::BasicBlock *normal_dest
-        = llvm::BasicBlock::Create(*llvm_ctx,
-                                   "invoke.cxx.normal",
-                                   ctx->builder->GetInsertBlock()->getParent());
+      llvm::BasicBlock *normal_dest{ llvm::BasicBlock::Create(
+        *llvm_ctx,
+        "invoke.cxx.normal",
+        ctx->builder->GetInsertBlock()->getParent()) };
       ctx->builder->CreateInvoke(target_fn,
                                  normal_dest,
                                  lpad_and_catch_body_stack.back().lpad_bb,

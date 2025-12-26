@@ -3,17 +3,14 @@
 
 (cpp/raw "
 #include <string>
+namespace jank::cpp::try_::pass_catch_no_slicing
+{
+  struct Base {
+    virtual std::string name() const { return \"Base\"; }
+    virtual ~Base() = default;
+  };
 
-
-  namespace jank::cpp::try_::pass_catch_no_slicing
-  {
-    struct Base
-    {
-      virtual std::string name() const { return \"Base\"; }
-      virtual ~Base() = default;
-    };
-
-    struct Derived : Base
+  struct Derived : Base
     {
       std::string name() const override { return \"Derived\"; }
     };
@@ -22,7 +19,7 @@
     {
       throw Derived();
     }
-  }")
+}")
 
 (let [result (atom nil)]
   (try

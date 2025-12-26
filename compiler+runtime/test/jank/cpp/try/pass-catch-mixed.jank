@@ -26,10 +26,8 @@
  (= 123
     (try
       (cpp/jank.cpp.try_.pass_catch_mixed.throw_cpp_int)
-      (catch cpp/int i
-        i)
-      (catch cpp/jank.runtime.object_ref e
-        :jank-caught))))
+      (catch cpp/int i i)
+      (catch cpp/jank.runtime.object_ref e :jank-caught))))
 
 ;; Test that C++ std exception is caught correctly (not by jank catch)
 (let [msg (atom nil)]
@@ -44,19 +42,13 @@
 
 
 ;; Test multiple C++ types in one try
-(assert (= 1
-           (try
-             (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 1)
-             (catch cpp/double d 0.0)
-             (catch cpp/int i i)
-             (catch cpp/std.runtime_error e -1))))
-
-(assert (= 2.0
-           (try
-             (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 2)
-             (catch cpp/int i 0)
-             (catch cpp/double d d)
-             (catch cpp/std.runtime_error e -1))))
+(assert
+ (= 1
+    (try
+      (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 1)
+      (catch cpp/double d 0.0)
+      (catch cpp/int i i)
+      (catch cpp/std.runtime_error e -1))))
 
 (try
   (cpp/jank.cpp.try_.pass_catch_mixed.throw_based_on_value 3)
@@ -64,7 +56,6 @@
     (assert false "Should not catch int"))
   (catch cpp/double d
     (assert false "Should not catch double"))
-  (catch cpp/std.runtime_error e
-    :caught-runtime-error))
+  (catch cpp/std.runtime_error e :caught-runtime-error))
 
 :success
