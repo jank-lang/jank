@@ -1078,7 +1078,8 @@ namespace jank::runtime
 
   f64 rand()
   {
-    static std::mt19937 gen;
+    static std::random_device dev;
+    static std::mt19937 gen{ dev() };
     static std::uniform_real_distribution<f64> dis(0.0, 1.0);
     return dis(gen);
   }

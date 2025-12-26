@@ -92,7 +92,7 @@ namespace jank::util::cli
 
     /* Compile-module command. */
     std::string output_module_filename;
-    compilation_target output_target;
+    compilation_target output_target{ compilation_target::unspecified };
 
     /* REPL command. */
     bool repl_server{};

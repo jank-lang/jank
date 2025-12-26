@@ -746,7 +746,7 @@ namespace jtl
       jank_debug_assert(s <= max_small_size);
       /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index) */
       store.small[s] = 0;
-      store.small[max_small_size] = value_type((max_small_size - s) << small_shift);
+      store.small[max_small_size] = static_cast<value_type>((max_small_size - s) << small_shift);
       jank_debug_assert(get_category() == category::small && size() == s);
     }
 

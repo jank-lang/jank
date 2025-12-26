@@ -417,8 +417,8 @@ void jank_load_clojure_core_native()
   intern_fn("pos?", &is_pos);
   intern_fn("neg?", &is_neg);
   intern_fn("zero?", &is_zero);
-  intern_fn("rem", static_cast<object_ref (*)(object_ref const, object_ref const)>(&rem));
-  intern_fn("quot", static_cast<object_ref (*)(object_ref const, object_ref const)>(&quot));
+  intern_fn("rem", &rem);
+  intern_fn("quot", &quot);
   intern_fn("integer?", &is_integer);
   intern_fn("real?", &is_real);
   intern_fn("ratio?", &is_ratio);

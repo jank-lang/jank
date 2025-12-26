@@ -63,23 +63,23 @@ namespace jank::runtime
 
 namespace std
 {
-  using namespace jank;
-  using namespace jank::runtime;
-
-  size_t hash<object_ref>::operator()(object_ref const o) const noexcept
+  size_t
+  hash<jank::runtime::object_ref>::operator()(jank::runtime::object_ref const o) const noexcept
   {
     return jank::hash::visit(o.data);
   }
 
-  size_t hash<object>::operator()(object const &o) const noexcept
+  size_t hash<jank::runtime::object>::operator()(jank::runtime::object const &o) const noexcept
   {
-    return jank::hash::visit(const_cast<runtime::object *>(&o));
+    return jank::hash::visit(const_cast<jank::runtime::object *>(&o));
   }
 
   bool
   // NOLINTNEXTLINE(bugprone-exception-escape): TODO: Sort this out.
-  equal_to<object_ref>::operator()(object_ref const lhs, object_ref const rhs) const noexcept
+  equal_to<jank::runtime::object_ref>::operator()(
+    jank::runtime::object_ref const lhs,
+    jank::runtime::object_ref const rhs) const noexcept
   {
-    return equal(lhs, rhs);
+    return jank::runtime::equal(lhs, rhs);
   }
 }
