@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
@@ -216,7 +218,8 @@ namespace jank::runtime
         codegen::llvm_processor const cg_prc{ fn, module, codegen::compilation_target::module };
         cg_prc.gen().expect_ok();
         cg_prc.optimize();
-        write_module(cg_prc.get_module_name(), cg_prc.get_module().getModuleUnlocked()).expect_ok();
+        write_module(cg_prc.get_module_name(), "", cg_prc.get_module().getModuleUnlocked())
+          .expect_ok();
       }
       else
       {
@@ -225,23 +228,23 @@ namespace jank::runtime
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
         auto module_name{ runtime::to_string(current_module_var->deref()) };
-        aot::processor const aot_prc;
-        auto const res{ aot_prc.compile_object(module_name, code) };
-        if(res.is_err())
-        {
-          throw res.expect_err();
-        }
-        //auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
-        //if(!parse_res)
+        //aot::processor const aot_prc;
+        //auto const res{ aot_prc.compile_object(module_name, code) };
+        //if(res.is_err())
         //{
-        //  /* TODO: Helper to turn an llvm::Error into a string. */
-        //  jtl::immutable_string const res{ "Unable to compile generated C++ source." };
-        //  llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-        //  throw error::internal_codegen_failure(res);
+        //  throw res.expect_err();
         //}
-        //auto &partial_tu{ parse_res.get() };
-        ////auto module_name{ runtime::to_string(current_module_var->deref()) };
-        //write_module(module_name, partial_tu.TheModule.get()).expect_ok();
+        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+        if(!parse_res)
+        {
+          /* TODO: Helper to turn an llvm::Error into a string. */
+          jtl::immutable_string const res{ "Unable to compile generated C++ source." };
+          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+          throw error::internal_codegen_failure(res);
+        }
+        auto &partial_tu{ parse_res.get() };
+        //auto module_name{ runtime::to_string(current_module_var->deref()) };
+        write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
       }
     }
 
@@ -266,7 +269,7 @@ namespace jank::runtime
     if(truthy(compile_files_var->deref()))
     {
       auto module_name{ runtime::to_string(current_module_var->deref()) };
-      write_module(module_name, partial_tu.TheModule.get()).expect_ok();
+      write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
@@ -388,57 +391,123 @@ namespace jank::runtime
     return evaluate::eval(expr);
   }
 
+  jtl::immutable_string
+  context::get_output_module_name(jtl::immutable_string const &module_name) const
+  {
+    char const *ext{};
+    switch(util::cli::opts.output_target)
+    {
+      case util::cli::compilation_target::llvm_ir:
+        ext = "ll";
+        break;
+      case util::cli::compilation_target::cpp:
+        ext = "cpp";
+        break;
+      case util::cli::compilation_target::object:
+        ext = "o";
+        break;
+      case util::cli::compilation_target::unspecified:
+      default:
+        throw error::internal_runtime_failure(
+          util::format("Unable to determine output module name, given output target '{}'.",
+                       util::cli::compilation_target_str(util::cli::opts.output_target)));
+    }
+
+    return util::cli::opts.output_module_filename.empty()
+      ? util::format("{}/{}.{}", binary_cache_dir, module::module_to_path(module_name), ext)
+      : jtl::immutable_string{ util::cli::opts.output_module_filename };
+  }
+
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
+                                                 jtl::immutable_string const &cpp_code,
                                                  jtl::ref<llvm::Module> const &module) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
-    std::filesystem::path const module_path{
-      util::cli::opts.output_object_filename.empty()
-        ? util::format("{}/{}.o", binary_cache_dir, module::module_to_path(module_name))
-        : jtl::immutable_string{ util::cli::opts.output_object_filename }
-    };
-    std::filesystem::create_directories(module_path.parent_path());
-
-    /* TODO: Is there a better place for this block of code? */
-    std::error_code file_error{};
-    llvm::raw_fd_ostream os(module_path.c_str(), file_error, llvm::sys::fs::OpenFlags::OF_None);
-    if(file_error)
+    std::filesystem::path const module_path{ get_output_module_name(module_name) };
+    auto const &module_dir{ module_path.parent_path() };
+    if(!module_dir.empty())
     {
-      return err(util::format("failed to open module file {} with error {}",
-                              module_path.c_str(),
-                              file_error.message()));
-    }
-    //module->print(llvm::outs(), nullptr);
-
-    auto const target_triple{ util::default_target_triple() };
-    std::string target_error;
-    auto const target{ llvm::TargetRegistry::lookupTarget(target_triple.c_str(), target_error) };
-    if(!target)
-    {
-      return err(target_error);
-    }
-    llvm::TargetOptions const opt;
-    auto const target_machine{ target->createTargetMachine(llvm::Triple{ target_triple.c_str() },
-                                                           "generic",
-                                                           "",
-                                                           opt,
-                                                           llvm::Reloc::PIC_,
-                                                           llvm::CodeModel::Large,
-                                                           llvm::CodeGenOptLevel::Default) };
-    if(!target_machine)
-    {
-      return err(util::format("failed to create target machine for {}", target_triple));
-    }
-    llvm::legacy::PassManager pass;
-
-    if(target_machine->addPassesToEmitFile(pass, os, nullptr, llvm::CodeGenFileType::ObjectFile))
-    {
-      return err(util::format("failed to write module to object file for {}", target_triple));
+      std::filesystem::create_directories(module_dir);
     }
 
-    pass.run(*module);
+    switch(util::cli::opts.output_target)
+    {
+      case util::cli::compilation_target::cpp:
+        {
+          std::ofstream ofs{ module_path.c_str() };
+          ofs << cpp_code;
+          return ok();
+        }
+      case util::cli::compilation_target::llvm_ir:
+        {
+          std::error_code file_error{};
+          llvm::raw_fd_ostream os(module_path.c_str(),
+                                  file_error,
+                                  llvm::sys::fs::OpenFlags::OF_None);
+          if(file_error)
+          {
+            return err(util::format("Failed to open module file '{}' with error '{}'.",
+                                    module_path.c_str(),
+                                    file_error.message()));
+          }
+          module->print(os, nullptr);
+          return ok();
+        }
+      case util::cli::compilation_target::object:
+        {
+          /* TODO: Is there a better place for this block of code? */
+          std::error_code file_error{};
+          llvm::raw_fd_ostream os(module_path.c_str(),
+                                  file_error,
+                                  llvm::sys::fs::OpenFlags::OF_None);
+          if(file_error)
+          {
+            return err(util::format("Failed to open module file '{}' with error '{}'.",
+                                    module_path.c_str(),
+                                    file_error.message()));
+          }
+          //module->print(llvm::outs(), nullptr);
 
-    return ok();
+          auto const target_triple{ util::default_target_triple() };
+          std::string target_error;
+          auto const target{ llvm::TargetRegistry::lookupTarget(target_triple.c_str(),
+                                                                target_error) };
+          if(!target)
+          {
+            return err(target_error);
+          }
+          llvm::TargetOptions const opt;
+          auto const target_machine{ target->createTargetMachine(
+            llvm::Triple{ target_triple.c_str() },
+            "generic",
+            "",
+            opt,
+            llvm::Reloc::PIC_,
+            llvm::CodeModel::Large,
+            llvm::CodeGenOptLevel::Default) };
+          if(!target_machine)
+          {
+            return err(util::format("Failed to create target machine for '{}'.", target_triple));
+          }
+          llvm::legacy::PassManager pass;
+
+          if(target_machine->addPassesToEmitFile(pass,
+                                                 os,
+                                                 nullptr,
+                                                 llvm::CodeGenFileType::ObjectFile))
+          {
+            return err(
+              util::format("Failed to write module to object file for '{}'.", target_triple));
+          }
+
+          pass.run(*module);
+          return ok();
+        }
+      case util::cli::compilation_target::unspecified:
+      default:
+        return err(util::format("Unable to write module, given output target '{}'.",
+                                util::cli::compilation_target_str(util::cli::opts.output_target)));
+    }
   }
 
   jtl::immutable_string context::unique_namespaced_string() const

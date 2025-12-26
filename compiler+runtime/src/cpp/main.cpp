@@ -24,6 +24,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
 
@@ -110,6 +111,63 @@ namespace jank
   {
     using namespace jank;
     using namespace jank::runtime;
+
+    if(opts.output_target == util::cli::compilation_target::unspecified)
+    {
+      if(opts.output_module_filename.empty())
+      {
+        opts.output_target = util::cli::compilation_target::object;
+      }
+      else
+      {
+        auto const ext{ std::filesystem::path{ opts.output_module_filename }.extension() };
+        if(ext == ".ll")
+        {
+          opts.output_target = util::cli::compilation_target::llvm_ir;
+        }
+        else if(ext == ".cpp")
+        {
+          opts.output_target = util::cli::compilation_target::cpp;
+        }
+        else if(ext == ".o")
+        {
+          opts.output_target = util::cli::compilation_target::object;
+        }
+        else
+        {
+          /* TODO: Dedicated error. */
+          throw error::internal_failure(
+            util::format("Unable to determine the output target type, given output file name '{}'. "
+                         "If you provide a '.ll', '.cpp', or '.o' extension, this can be inferred. "
+                         "Otherwise, please provide the --output-type flag to specify.",
+                         opts.output_module_filename));
+        }
+      }
+    }
+    else if(!opts.output_module_filename.empty())
+    {
+      auto const ext{ std::filesystem::path{ opts.output_module_filename }.extension() };
+      if((ext == ".ll" && opts.output_target != util::cli::compilation_target::llvm_ir)
+         || (ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
+         || (ext == ".o" && opts.output_target != util::cli::compilation_target::object))
+      {
+        error::warn(util::format("The output file name '{}' has the extension '{}', but the output "
+                                 "target is '{}'. These appear to be mismatched.",
+                                 opts.output_module_filename,
+                                 ext,
+                                 util::cli::compilation_target_str(opts.output_target)));
+      }
+    }
+
+    if(opts.output_target == util::cli::compilation_target::cpp
+       && opts.codegen != util::cli::codegen_type::cpp)
+    {
+      /* TODO: Dedicated error. */
+      throw error::internal_failure(
+        util::format("Unable to output C++ when the codegen flag is set to '{}'. Please either "
+                     "output a different target or change the codegen to C++.",
+                     util::cli::codegen_type_str(opts.codegen)));
+    }
 
     if(opts.target_module != "clojure.core")
     {

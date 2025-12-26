@@ -34,6 +34,33 @@ namespace jank::util::cli
     }
   }
 
+  enum class compilation_target : u8
+  {
+    /* The target will be determined based on the extension of the output.
+     * If that's not possible, we'll error out. */
+    unspecified,
+    llvm_ir,
+    cpp,
+    object
+  };
+
+  constexpr char const *compilation_target_str(compilation_target const target)
+  {
+    switch(target)
+    {
+      case compilation_target::unspecified:
+        return "unspecified";
+      case compilation_target::llvm_ir:
+        return "llvm-ir";
+      case compilation_target::cpp:
+        return "cpp";
+      case compilation_target::object:
+        return "object";
+      default:
+        return "unknown";
+    }
+  }
+
   struct options
   {
     /* Runtime. */
@@ -62,7 +89,10 @@ namespace jank::util::cli
     std::string target_module;
     std::string target_runtime{ "dynamic" };
     std::string output_filename{ "a.out" };
-    std::string output_object_filename;
+
+    /* Compile-module command. */
+    std::string output_module_filename;
+    compilation_target output_target;
 
     /* REPL command. */
     bool repl_server{};

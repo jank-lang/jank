@@ -106,7 +106,9 @@ namespace jank::runtime
 
     object_ref eval(object_ref const o);
 
+    jtl::immutable_string get_output_module_name(jtl::immutable_string const &module_name) const;
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
+                                          jtl::immutable_string const &cpp_code,
                                           jtl::ref<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,

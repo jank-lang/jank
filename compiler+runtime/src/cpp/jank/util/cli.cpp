@@ -91,7 +91,16 @@ namespace jank::util::cli
     cli_compile_module
       .add_option("module", opts.target_module, "Module to compile (must be on the module path).")
       ->required();
-    cli_compile_module.add_option("-o", opts.output_object_filename, "Output object file name.");
+    cli_compile_module.add_option("-o,--output", opts.output_module_filename, "Output file name.");
+
+    std::map<std::string, compilation_target> const output_targets{
+      { "llvm-ir", compilation_target::llvm_ir },
+      {     "cpp",     compilation_target::cpp },
+      {  "object",  compilation_target::object }
+    };
+    cli_compile_module
+      .add_option("--output-target", opts.output_target, "The type of file to generate.")
+      ->transform(CLI::CheckedTransformer(output_targets).description("{llvm-ir,cpp,object}"));
 
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server."));
