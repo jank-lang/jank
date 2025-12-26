@@ -27,6 +27,7 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/clang.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 
@@ -834,7 +835,7 @@ namespace jank::codegen
 
       /* Here if compiling into a jank module, a var-root can be initialized directly with the parameter
        * being used by the call to "jank_var_bind_root". There is no deref needed. */
-      if(__rt_ctx->opts.direct_call && target == compilation_target::module)
+      if(util::cli::opts.direct_call && target == compilation_target::module)
       {
         auto const global_var_root(gen_var_root(expr->name, var_root_kind::binded_def));
         ctx->builder->CreateStore(var_root, global_var_root);
@@ -889,7 +890,7 @@ namespace jank::codegen
      * When generating the IR for a var-root, if the function is a jank_load function,
      * the var_root is derefed directly in the "jank_load" function.
      * If it is any other function, the var_root is initialized and derefed in the global ctor. */
-    if(__rt_ctx->opts.direct_call && !(expr->var->dynamic))
+    if(util::cli::opts.direct_call && !(expr->var->dynamic))
     {
       if(root_fn->name.starts_with("jank_load"))
       {
