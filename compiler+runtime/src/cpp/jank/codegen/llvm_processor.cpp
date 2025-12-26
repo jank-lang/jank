@@ -325,7 +325,7 @@ namespace jank::codegen
     {
       ir_type = llvm_builtin_type(ctx, llvm_ctx, Cpp::GetIntegerTypeFromEnumType(type));
     }
-    else if(auto scope = Cpp::GetScopeFromType(type); scope && Cpp::IsClass(scope))
+    else if(auto scope{ Cpp::GetScopeFromType(type) }; scope && Cpp::IsClass(scope))
     {
       /* TODO: We need the IR name, not the C++ name. */
       ir_type = llvm::StructType::getTypeByName(*llvm_ctx, Cpp::GetQualifiedName(scope));
@@ -2456,7 +2456,7 @@ namespace jank::codegen
     {
       /* No catch, must have 'finally'. */
       ctx->builder->SetInsertPoint(dispatch_block);
-      auto const current_ex_ptr = exception_phi;
+      auto const current_ex_ptr{ exception_phi };
       ctx->builder->CreateStore(current_ex_ptr, preserved_ex_slot);
       ctx->builder->CreateStore(ctx->builder->getTrue(), unwind_flag_slot);
       ctx->builder->CreateBr(finally_block);
@@ -2472,7 +2472,7 @@ namespace jank::codegen
 
       if(!ctx->builder->GetInsertBlock()->getTerminator())
       {
-        auto unwind_flag = ctx->builder->CreateLoad(ctx->builder->getInt1Ty(), unwind_flag_slot);
+        auto unwind_flag{ ctx->builder->CreateLoad(ctx->builder->getInt1Ty(), unwind_flag_slot) };
         ctx->builder->CreateCondBr(unwind_flag, unwind_action_block, continue_block);
       }
 
@@ -2484,9 +2484,9 @@ namespace jank::codegen
        * propagated was saved in 'preserved_ex_slot'. */
       current_fn->insert(current_fn->end(), unwind_action_block);
       ctx->builder->SetInsertPoint(unwind_action_block);
-      auto current_ex = ctx->builder->CreateLoad(ptr_ty, preserved_ex_slot);
+      auto current_ex{ ctx->builder->CreateLoad(ptr_ty, preserved_ex_slot) };
       /* Load selector for propagation */
-      auto current_sel = ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), selector_slot);
+      auto current_sel{ ctx->builder->CreateLoad(ctx->builder->getInt32Ty(), selector_slot) };
 
       /* Determine how to propagate the exception:
        * - If we have a parent handler (nested try in same function), branch to it.
@@ -2497,7 +2497,7 @@ namespace jank::codegen
     /* --- Continuation block --- */
     current_fn->insert(current_fn->end(), continue_block);
     ctx->builder->SetInsertPoint(continue_block);
-    auto final_val = ctx->builder->CreateLoad(ptr_ty, result_slot);
+    auto final_val{ ctx->builder->CreateLoad(ptr_ty, result_slot) };
 
     if(is_return)
     {
@@ -2653,7 +2653,7 @@ namespace jank::codegen
     /* For static variables that are non-copyable, we can't use MakeAotCallable (which copies).
      * Instead, create a wrapper function that returns a pointer to the variable.
      * Check if the type is copyable by seeing if it can be constructed from itself.  */
-    bool const is_copyable = Cpp::IsConstructible(expr->type, expr->type);
+    bool const is_copyable{ Cpp::IsConstructible(expr->type, expr->type) };
     if(expr->val_kind == expr::cpp_value::value_kind::variable && Cpp::IsVariable(expr->scope)
        && !is_copyable)
     {
