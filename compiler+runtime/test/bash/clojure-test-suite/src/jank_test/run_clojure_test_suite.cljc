@@ -75,7 +75,7 @@
     ;clojure.core-test.nth ; Uncaught exception: index out of bounds: -1, In clojure.core-test.nth$fn_2-64, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
     ;clojure.core-test.nthnext ; Uncaught exception: not a number: nil, In clojure.core-test.nthnext$fn_2-83, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.nthrest ; Uncaught exception: not a number: nil, In clojure.core-test.nthrest$fn_2-85, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
-    clojure.core-test.num
+    ; clojure.core-test.num ; Disabling till we add portability support in the test suite: https://clojurians.slack.com/archives/C0A2CQQQVPB/p1766349976641339.
     clojure.core-test.number-qmark ; Expecting whitespace after the last token. due to M.
     clojure.core-test.number-range
     ;clojure.core-test.numerator ; Failed a test. Expecting whitespace after the last token. due to M.
