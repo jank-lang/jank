@@ -324,6 +324,7 @@ int main(int argc, const char** argv)
     }
     std::vector<char const *> compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
 
+    /* TODO: Use runtime::context::get_output_module_name. */
     std::filesystem::path const module_path{
       util::cli::opts.output_module_filename.empty()
         ? util::format("{}/{}.o", __rt_ctx->binary_cache_dir, module::module_to_path(module_name))
