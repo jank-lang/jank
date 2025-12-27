@@ -138,6 +138,8 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug" OR jank_force_phase_2)
   set(jank_enable_phase_2 ON)
+else()
+  set(jank_enable_phase_2 OFF)
 endif()
 
 if(jank_enable_phase_2)

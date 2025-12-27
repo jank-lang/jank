@@ -179,6 +179,7 @@ namespace jank::util::cli
     else if(cli.got_subcommand(&cli_compile))
     {
       opts.command = command::compile;
+      opts.output_target = compilation_target::object;
     }
     else if(cli.got_subcommand(&cli_check_health))
     {
