@@ -781,7 +781,10 @@ if(jank_enable_phase_2)
   add_executable(jank::exe ALIAS jank_exe_phase_2)
   set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
 
+  # Our generated code is not as precisely written as hand-written C++, so we ignore various
+  # warnings and skip linting.
   set_source_files_properties(${jank_clojure_core_output} PROPERTIES COMPILE_FLAGS "-w -Wno-c++11-narrowing")
+  set_source_files_properties(generatedBindings.cpp PROPERTIES SKIP_LINTING ON)
 
   # Symbol exporting for JIT.
   set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
