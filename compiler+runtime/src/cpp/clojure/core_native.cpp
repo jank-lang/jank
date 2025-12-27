@@ -298,7 +298,7 @@ namespace clojure::core_native
   }
 }
 
-void jank_load_clojure_core_native()
+extern "C" void jank_load_clojure_core_native()
 {
   using namespace jank;
   using namespace jank::runtime;

@@ -370,7 +370,7 @@ namespace jank::runtime
     }
     catch(error_ref const e)
     {
-      return error::runtime_unable_to_load_module(e);
+      return e;
     }
   }
 

@@ -50,7 +50,7 @@ namespace jank::compiler_native
   }
 }
 
-void jank_load_jank_compiler_native()
+extern "C" void jank_load_jank_compiler_native()
 {
   using namespace jank;
   using namespace jank::runtime;

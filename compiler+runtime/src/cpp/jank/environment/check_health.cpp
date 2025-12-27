@@ -386,6 +386,7 @@ namespace jank::environment
 
       auto const saved_opts{ util::cli::opts };
       util::cli::opts.target_module = "health";
+      util::cli::opts.output_target = util::cli::compilation_target::object;
       util::cli::opts.output_filename = exe_output;
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */

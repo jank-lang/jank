@@ -1,3 +1,3 @@
 #pragma once
 
-void jank_load_jank_compiler_native();
+extern "C" void jank_load_jank_compiler_native();

@@ -8,7 +8,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
 
-void jank_load_jank_perf_native()
+extern "C" void jank_load_jank_perf_native()
 {
   using namespace jank;
   using namespace jank::runtime;

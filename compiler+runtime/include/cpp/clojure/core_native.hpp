@@ -3,7 +3,7 @@
 #include <jank/c_api.h>
 #include <jank/runtime/object.hpp>
 
-void jank_load_clojure_core_native();
+extern "C" void jank_load_clojure_core_native();
 
 namespace clojure::core_native
 {
