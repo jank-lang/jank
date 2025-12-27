@@ -2728,7 +2728,7 @@ namespace jank::codegen
     if(target == compilation_target::module)
     {
       util::format_to(footer_buffer,
-                      "void {}(){",
+                      "extern \"C\" void {}(){",
                       runtime::module::module_to_load_function(module));
 
       auto const ns{ runtime::module::module_to_native_ns(module) };

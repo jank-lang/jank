@@ -34,7 +34,7 @@
 #include <clojure/string_native.hpp>
 
 #ifdef JANK_PHASE_2
-void jank_load_clojure_core();
+extern "C" void jank_load_clojure_core();
 #endif
 
 namespace jank

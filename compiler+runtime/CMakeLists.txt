@@ -44,12 +44,12 @@ option(jank_test "Enable jank's test suite" OFF)
 option(jank_unity_build "Optimize translation unit compilation for the number of cores" OFF)
 option(jank_debug_gc "Enable GC debug assertions" OFF)
 option(jank_profile_gc "Enable GC profiling (via massif or heaptrack)" OFF)
+option(jank_force_phase_2 "Force the linking of core libs into the jank binary" OFF)
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
   CACHE STRING
   "Where jank's runtime files are installed. Relative paths are based on the runtime jank binary path")
-set(jank_clojure_core_o "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
 
 find_package(Git REQUIRED)
 execute_process(
@@ -136,8 +136,14 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
 endif()
 
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug" OR jank_force_phase_2)
   set(jank_enable_phase_2 ON)
+endif()
+
+if(jank_enable_phase_2)
+  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
+else()
+  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
 endif()
 
 if(jank_test)
@@ -756,10 +762,12 @@ if(jank_enable_phase_2)
   add_executable(
     jank_exe_phase_2
     "$<TARGET_PROPERTY:jank_exe_phase_1,SOURCES>"
+    ${jank_clojure_core_output}
   )
   add_executable(jank::exe ALIAS jank_exe_phase_2)
-
   set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
+
+  set_source_files_properties(${jank_clojure_core_output} PROPERTIES COMPILE_FLAGS "-w -Wno-c++11-narrowing")
 
   # Symbol exporting for JIT.
   set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
@@ -773,7 +781,6 @@ if(jank_enable_phase_2)
   target_link_libraries(
     jank_exe_phase_2 PUBLIC
     "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
-    ${jank_clojure_core_o}
   )
 
   jank_hook_llvm(jank_exe_phase_2)
@@ -783,7 +790,7 @@ if(jank_enable_phase_2)
   #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
   add_custom_command(
-    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_o} ${jank_incremental_pch_flag}
+    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_output} ${jank_incremental_pch_flag}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT ${CMAKE_BINARY_DIR}/jank
     COMMAND ln -sf jank-phase-1 jank
@@ -827,6 +834,11 @@ if(jank_test)
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
   add_dependencies(jank_test_exe jank_exe_phase_1 jank_core_libraries)
+
+  if(jank_enable_phase_2)
+    target_sources(jank_test_exe PUBLIC ${jank_clojure_core_output})
+    target_compile_options(jank_test_exe PUBLIC -DJANK_PHASE_2)
+  endif()
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
@@ -907,8 +919,8 @@ set(jank_core_libraries_flag "${CMAKE_BINARY_DIR}/classes/core-libraries")
 add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
-  BYPRODUCTS ${jank_clojure_core_o}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 compile-module -O3 -o ${jank_clojure_core_o} clojure.core
+  BYPRODUCTS ${jank_clojure_core_output}
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

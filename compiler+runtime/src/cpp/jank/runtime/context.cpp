@@ -435,6 +435,7 @@ namespace jank::runtime
       case util::cli::compilation_target::cpp:
         {
           std::ofstream ofs{ module_path.c_str() };
+          ofs << "#include <jank/prelude.hpp>\n";
           ofs << cpp_code;
           return ok();
         }
