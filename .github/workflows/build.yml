@@ -273,26 +273,33 @@ jobs:
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
-  build-nix:
-    name: "Nix - release"
-    runs-on: ubuntu-latest
-    steps:
-    - name: "Set up nix"
-      uses: cachix/install-nix-action@v31
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    - name: "Set up cachix"
-      uses: cachix/cachix-action@v16
-      with:
-        name: jank-lang
-        # If you chose API tokens for write access OR if you have a private cache
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-        # Only push to cache on main branch, not PRs
-        skipPush: "${{ github.ref != 'refs/heads/main' }}"
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - name: "Build jank"
-      run: nix build .?submodules=1 -L
-    - name: "Check health"
-      run: nix run .?submodules=1 check-health
+  # TODO: Fix Nix in CI!
+  # We're currently running out of memory in CI, due to Clang's memory usage for
+  # JIT compiled C++ code. Nix, unsurprisingly, uses more RAM than others, so it's
+  # blocked while others are merely hindered. We should be able to fix this by
+  # optimizing Clang's memory usage for JIT compiled code. See this gist for
+  # much more details: https://gist.github.com/jeaye/9adaaa56aee50d5912207907a48d1006
+  #
+  #build-nix:
+  #  name: "Nix - release"
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #  - name: "Set up nix"
+  #    uses: cachix/install-nix-action@v31
+  #    with:
+  #      nix_path: nixpkgs=channel:nixos-unstable
+  #  - name: "Set up cachix"
+  #    uses: cachix/cachix-action@v16
+  #    with:
+  #      name: jank-lang
+  #      # If you chose API tokens for write access OR if you have a private cache
+  #      authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+  #      # Only push to cache on main branch, not PRs
+  #      skipPush: "${{ github.ref != 'refs/heads/main' }}"
+  #  - uses: actions/checkout@v4
+  #    with:
+  #      submodules: 'recursive'
+  #  - name: "Build jank"
+  #    run: nix build .?submodules=1 -L
+  #  - name: "Check health"
+  #    run: nix run .?submodules=1 check-health
