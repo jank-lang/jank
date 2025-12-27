@@ -31,7 +31,10 @@
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
-                           (str "-Djank_coverage=" coverage)]
+                           (str "-Djank_coverage=" coverage)
+                           ; We force phase 2 building to use less memory in CI by
+                           ; compiling to cpp files instead of object files.
+                           "-Djank_force_phase_2=on"]
           configure-flags (cond-> configure-flags
                             (not= "on" analyze)
                             (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"

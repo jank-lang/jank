@@ -142,13 +142,13 @@ else()
   set(jank_enable_phase_2 OFF)
 endif()
 
-# TODO: This breaks AOT (and thus the health check), since we look for core object files.
-#if(jank_enable_phase_2)
-#  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
-#else()
-#  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
-#endif()
-set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+if(jank_enable_phase_2)
+  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
+  set(jank_clojure_core_output_artifact "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp.o")
+else()
+  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+  set(jank_clojure_core_output_artifact "${jank_clojure_core_output}")
+endif()
 
 if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)
@@ -363,6 +363,17 @@ set(jank_lib_standalone_deps
   folly_lib
   clangCppInterOp
 )
+
+# jank compiles in two phases. The first phase builds the compiler+runtime into a binary
+# called jank-phase-1. We then we this compiler to build the core libs (like clojure.core)
+# into cpp files. We then compile those and link them into a new binary which is just
+# called jank. This bakes in the core libraries so they're very fast to load, but of
+# course it means that updating a core library means updating the whole jank binary.
+#
+# For debug builds, we don't bother building the second phase and we just create a symlink
+# called jank which points at jank-phase-1. This makes iteration a little faster, at the
+# cost of jank's startup being a little slower, since it's loading the core libs via their
+# object files, rather than having them baked in.
 add_custom_command(
   DEPENDS ${jank_lib_standalone_deps}
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a
@@ -377,8 +388,7 @@ add_custom_target(
 )
 
 add_custom_command(
-  DEPENDS ${jank_lib_standalone_deps}
-          jank_core_libraries
+  DEPENDS ${jank_lib_standalone_deps} jank_exe_phase_2
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone.a
   COMMAND_EXPAND_LISTS
   VERBATIM
@@ -789,7 +799,7 @@ if(jank_enable_phase_2)
 
   jank_hook_llvm(jank_exe_phase_2)
 
-  add_dependencies(jank_exe_phase_2 jank_lib_standalone_phase_2 jank_core_libraries)
+  add_dependencies(jank_exe_phase_2 jank_core_libraries)
 
   #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
