@@ -142,11 +142,13 @@ else()
   set(jank_enable_phase_2 OFF)
 endif()
 
-if(jank_enable_phase_2)
-  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
-else()
-  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
-endif()
+# TODO: This breaks AOT (and thus the health check), since we look for core object files.
+#if(jank_enable_phase_2)
+#  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
+#else()
+#  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+#endif()
+set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
 
 if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)

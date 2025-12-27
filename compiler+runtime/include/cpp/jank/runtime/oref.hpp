@@ -42,32 +42,32 @@ namespace jank::runtime
 
     oref(nullptr_t) noexcept = delete;
 
-    oref(value_type * const data)
+    oref(value_type * const data) noexcept
       : data{ data }
     {
-      jank_assert_throw(data);
+      jank_assert(data);
     }
 
-    oref(value_type const * const data)
+    oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
-      jank_assert_throw(data);
+      jank_assert(data);
     }
 
     template <typename T>
     requires behavior::object_like<T>
-    oref(T * const typed_data)
+    oref(T * const typed_data) noexcept
       : data{ &typed_data->base }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
     template <typename T>
     requires behavior::object_like<T>
-    oref(T const * const typed_data)
+    oref(T const * const typed_data) noexcept
       : data{ const_cast<object *>(&typed_data->base) }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
     template <typename T>
@@ -79,30 +79,30 @@ namespace jank::runtime
 
     ~oref() = default;
 
-    void reset()
+    void reset() noexcept
     {
       data = std::bit_cast<object *>(jank_const_nil());
     }
 
-    void reset(object * const o)
+    void reset(object * const o) noexcept
     {
       data = o;
     }
 
-    void reset(oref<object> const &o)
+    void reset(oref<object> const &o) noexcept
     {
       data = o.data;
     }
 
-    value_type *operator->() const
+    value_type *operator->() const noexcept
     {
-      jank_assert_throw(data);
+      jank_assert(data);
       return data;
     }
 
-    value_type &operator*() const
+    value_type &operator*() const noexcept
     {
-      jank_assert_throw(data);
+      jank_assert(data);
       return *data;
     }
 
@@ -189,16 +189,16 @@ namespace jank::runtime
 
     oref(nullptr_t) = delete;
 
-    oref(jtl::remove_const_t<T> * const data)
+    oref(jtl::remove_const_t<T> * const data) noexcept
       : data{ data }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
-    oref(T const * const data)
+    oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
     template <typename C>
@@ -217,43 +217,43 @@ namespace jank::runtime
 
     ~oref() = default;
 
-    void reset()
+    void reset() noexcept
     {
       data = std::bit_cast<object *>(jank_const_nil());
     }
 
-    void reset(object * const o)
+    void reset(object * const o) noexcept
     {
       data = o;
     }
 
-    void reset(oref<object> const &o)
+    void reset(oref<object> const &o) noexcept
     {
       data = o.data;
     }
 
-    void reset(T * const o)
+    void reset(T * const o) noexcept
     {
       data = o->base;
     }
 
-    void reset(oref<T> const &o)
+    void reset(oref<T> const &o) noexcept
     {
       data = o.data;
     }
 
-    T *operator->() const
+    T *operator->() const noexcept
     {
       /* TODO: Add type name. */
-      //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert_throw(is_some());
+      //jank_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_assert(is_some());
       return reinterpret_cast<T *>(data);
     }
 
-    T &operator*() const
+    T &operator*() const noexcept
     {
-      //jank_assert_fmt_throw(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert_throw(is_some());
+      //jank_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_assert(is_some());
       return *reinterpret_cast<T *>(data);
     }
 
@@ -284,7 +284,7 @@ namespace jank::runtime
     oref &operator=(oref const &rhs) noexcept = default;
     oref &operator=(oref &&rhs) noexcept = default;
 
-    oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs)
+    oref &operator=(std::remove_cv_t<std::decay_t<T>> * const rhs) noexcept
     {
       if(data == rhs)
       {
@@ -292,11 +292,11 @@ namespace jank::runtime
       }
 
       data = rhs;
-      jank_assert_throw(data);
+      jank_assert(data);
       return *this;
     }
 
-    oref &operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs)
+    oref &operator=(std::remove_cv_t<std::decay_t<T>> const * const rhs) noexcept
     {
       if(data == rhs)
       {
@@ -304,7 +304,7 @@ namespace jank::runtime
       }
 
       data = const_cast<T *>(rhs);
-      jank_assert_throw(data);
+      jank_assert(data);
       return *this;
     }
 
@@ -363,16 +363,16 @@ namespace jank::runtime
 
     oref(nullptr_t) = delete;
 
-    oref(value_type * const data)
+    oref(value_type * const data) noexcept
       : data{ data }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
-    oref(value_type const * const data)
+    oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
-      jank_assert_throw(this->data);
+      jank_assert(this->data);
     }
 
     template <typename C>

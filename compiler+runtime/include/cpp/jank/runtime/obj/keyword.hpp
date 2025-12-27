@@ -58,7 +58,7 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::keyword_ref>
   {
-    size_t operator()(jank::runtime::obj::keyword_ref const o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword_ref const o) const
     {
       return o->to_hash();
     }
@@ -67,7 +67,7 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::keyword>
   {
-    size_t operator()(jank::runtime::obj::keyword const &o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword const &o) const
     {
       static auto hasher(std::hash<jank::runtime::obj::keyword_ref>{});
       return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
