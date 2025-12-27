@@ -21,12 +21,14 @@ namespace jank::analyze::expr
         local_frame_ptr frame,
         bool needs_box,
         runtime::obj::symbol_ref name,
+        jtl::option<expression_ref> const &meta,
         jtl::option<expression_ref> const &value);
 
     runtime::object_ref to_runtime_data() const override;
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     runtime::obj::symbol_ref name{};
+    jtl::option<expression_ref> meta;
     /* TODO: Rename to value_expr. */
     jtl::option<expression_ref> value;
   };

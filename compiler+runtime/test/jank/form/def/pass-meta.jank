@@ -8,4 +8,14 @@
 (assert (= one 'one))
 (assert (= (:doc (meta #'one)) nil))
 
+; Analysis with global variables
+(def foo 42)
+(def ^{:pp #(println foo)} bar 0)
+(assert (= ((-> #'bar meta :pp)) 42))
+
+; Analysis with local variables.
+(let* [foo 42]
+  (def ^{:pp #(println foo)} bar 0)
+  (assert (= ((-> #'bar meta :pp)) 42)))
+
 :success

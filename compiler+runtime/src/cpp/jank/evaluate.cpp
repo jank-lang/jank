@@ -276,7 +276,11 @@ namespace jank::evaluate
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
-    var->meta = expr->name->meta;
+
+    if(expr->meta.is_some())
+    {
+      var->meta = some(eval(expr->meta.unwrap()));
+    }
 
     auto const meta(var->meta.unwrap_or(jank_nil));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
