@@ -280,6 +280,10 @@ jobs:
   # optimizing Clang's memory usage for JIT compiled code. See this gist for
   # much more details: https://gist.github.com/jeaye/9adaaa56aee50d5912207907a48d1006
   #
+  # It's also possible that we can just use IR gen for Nix. That would require
+  # some additional CMake support, but is definitely doable. For the alpha, since
+  # we don't have a finished Nix package anyway, I'm not too concerned about this.
+  #
   #build-nix:
   #  name: "Nix - release"
   #  runs-on: ubuntu-latest
