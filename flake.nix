@@ -118,8 +118,6 @@
               # jank options
               (lib.cmakeBool "jank_unity_build" true)
               (lib.cmakeBool "jank_test" finalAttrs.doCheck)
-              # We run out of memory in CI without this.
-              (lib.cmakeBool "jank_force_phase_2" true)
             ];
 
             # Use a UTF-8 locale or else tests which use UTF-8 characters will
