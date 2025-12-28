@@ -1,2 +1,0 @@
-# Differences from C++
-

@@ -1,21 +1,16 @@
 # Differences from Clojure
 
-## Reader
-
-## Runtime
-* `(fn foo [] foo)` will return a different instance than the invoking
-
 ## clojure.core
 * Baked into the compiler
 * No nested require support
 * No `import`
-* `(hash-map)` returns a hash map
-* `aget` is a special
+* `(hash-map)` returns a hash map, not an array map
+* `aget` is a special form
 * `aset` is a macro
 * `keyword` is more strict about valid inputs
 
 ## Object Model
-* No stable boxes for small integers
+* No stable boxes for small integers (the JVM pre-allocates `1`, `2`, `3`, etc)
 * String is UTF-8
 * No inheritance
 * No records
@@ -24,6 +19,7 @@
   * In-place operations (`fresh-seq`, `next-in-place`)
 
 ## Interop
+See TODO: Interop.
 
 ## Compilation Model
 * Global compilation artifacts

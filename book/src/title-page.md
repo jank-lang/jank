@@ -2,8 +2,8 @@
 *by Jeaye Wilkerson, without LLMs, with feedback from the jank community.*
 
 This book is written for jank's alpha release. It is incomplete, although its
-incompleteness matches jank's. It's still early to jump into jank, but your time
-and patience is welcome.
+incompleteness matches jank's. It's still early to jump into jank, but your
+time and patience is welcome.
 
 > [!IMPORTANT]
 > jank is alpha quality software. It will crash. It will leak. There are huge
@@ -19,6 +19,7 @@ mutations for easy concurrency.
 
 Beyond Clojure, jank is brethren to C++ and it can reach into C++ arbitrarily to
 both access and define new C++ types, functions, and templates, at runtime. This
-is done by JIT (just in time) compiling C++, using Clang and LLVM.
+is done by JIT (just in time) compiling C++, using Clang and LLVM. The result is
+that you can write Clojure code which can access C and C++ libraries trivially.
 
-For a note on jank's status, please read the [foreward](foreward.md).
+For more detail on jank's status, please read the [foreward](foreward.md).

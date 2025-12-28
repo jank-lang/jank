@@ -9,8 +9,16 @@
   * [Hello, world!](ch01/02-hello-world.md)
   * [Hello, Leiningen!](ch01/03-hello-leiningen.md)
 
-* [For Clojure Developers](ch02/00-for-clojure-developers.md)
-  * [Differences from Clojure](ch02/01-differences-from-clojure.md)
+<!--
+TODO:
+  Reading error messages
+-->
 
-* [For C++ Developers](ch03/00-for-c++-developers.md)
-  * [Differences from C++](ch03/01-differences-from-c++.md)
+* [Reaching into C++](cpp-interop.md)
+  * [Embedding raw C++](cpp-interop/cpp-raw.md)
+  * [Using native libraries]()
+  * [Boxing native values]()
+  * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
+
+* [Differences from Clojure](differences-from-clojure.md)
+* [For C++ Developers](for-cpp-developers.md)
