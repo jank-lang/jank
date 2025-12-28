@@ -1,3 +1,0 @@
-(try
-  :success
-  (catch cpp/jank.runtime.object_ref _))

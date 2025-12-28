@@ -31,9 +31,7 @@ namespace jank::cpp::try_::pass_destructor_unwinding {
 
 (try
   (cpp/jank.cpp.try_.pass_destructor_unwinding.throw_with_unwinding)
-  (catch cpp/int i
-    ;; Exception caught
-    ))
+  (catch cpp/int i))
 
 (assert (= 1 (cpp/jank.cpp.try_.pass_destructor_unwinding.get_destructor_count))
         "Destructor should have been called once")
