@@ -7,3 +7,6 @@ title = "The jank Programming Language"
 
 [build]
 create-missing = false
+
+[output.html]
+admonitions = true
