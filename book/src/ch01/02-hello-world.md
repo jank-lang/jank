@@ -1,4 +1,4 @@
-# Hello, World!
+# Hello, world!
 Now that you've installed jank, it's time to write your first jank program.
 Following tradition, we'll write a trivial program which prints `Hello, world!`
 to the screen.

@@ -2,9 +2,11 @@
 
 [The jank Programming Language](title-page.md)
 
+[Foreward](foreward.md)
+
 * [Getting Started](ch01/00-getting-started.md)
   * [Installation](ch01/01-installation.md)
-  * [Hello, World!](ch01/02-hello-world.md)
+  * [Hello, world!](ch01/02-hello-world.md)
   * [Hello, Leiningen!](ch01/03-hello-leiningen.md)
 
 * [For Clojure Developers](ch02/00-for-clojure-developers.md)

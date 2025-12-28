@@ -9,3 +9,16 @@ and patience is welcome.
 > jank is alpha quality software. It will crash. It will leak. There are huge
 > areas of functionality which haven't been implemented. Your help getting us
 > past this stage is greatly appreciated.
+
+## What is jank?
+jank is a general purpose programming language. It's a dialect of Clojure, which
+is itself a dialect of Lisp. jank is functional-first, but it supports adhoc
+mutations and effects. All data structures are persistent and immutable by
+default and jank, following Clojure's design, provides mechanisms for safe
+mutations for easy concurrency.
+
+Beyond Clojure, jank is brethren to C++ and it can reach into C++ arbitrarily to
+both access and define new C++ types, functions, and templates, at runtime. This
+is done by JIT (just in time) compiling C++, using Clang and LLVM.
+
+For a note on jank's status, please read the [foreward](foreward.md).
