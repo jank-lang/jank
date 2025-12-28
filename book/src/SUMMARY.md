@@ -4,19 +4,23 @@
 
 [Foreward](foreward.md)
 
-* [Getting Started](ch01/00-getting-started.md)
-  * [Installation](ch01/01-installation.md)
-  * [Hello, world!](ch01/02-hello-world.md)
-  * [Hello, Leiningen!](ch01/03-hello-leiningen.md)
+* [Getting Started](getting-started/index.md)
+  * [Installation](getting-started/01-installation.md)
+  * [Hello, world!](getting-started/02-hello-world.md)
+  * [Hello, Leiningen!](getting-started/03-hello-leiningen.md)
 
 <!--
 TODO:
   Reading error messages
+  .jank, .cljc, .cpp files
+  Troubleshooting / Getting a stack trace
+  Known issues
 -->
 
-* [Reaching into C++](cpp-interop.md)
+* [Reaching into C++](cpp-interop/index.md)
   * [Embedding raw C++](cpp-interop/cpp-raw.md)
-  * [Using native libraries]()
+  * [Bringing in native libraries](cpp-interop/native-libs.md)
+  * [Working with native values]()
   * [Boxing native values]()
   * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
 
