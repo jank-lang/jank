@@ -30,7 +30,7 @@ namespace jank::jit
   static jtl::immutable_string default_shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
-    return util::format("{}.dylib", lib);
+    return util::format("lib{}.dylib", lib);
   }
 #elif defined(__linux__)
   {
