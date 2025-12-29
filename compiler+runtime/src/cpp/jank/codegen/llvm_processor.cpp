@@ -82,6 +82,7 @@ namespace jank::codegen
       llvm::PHINode *ex_phi{};
       llvm::PHINode *sel_phi{};
       analyze::expr::try_ref expr;
+      llvm::BasicBlock *landing_pad_block{};
     };
 
     native_vector<exception_handler_info> exception_handlers;
@@ -162,6 +163,7 @@ namespace jank::codegen
                               llvm::BasicBlock * const finally_block,
                               llvm::AllocaInst * const unwind_flag_slot,
                               llvm::BasicBlock * const continue_block,
+                              llvm::BasicBlock * const catch_cleanup_block,
                               expr::function_arity const &arity);
 
     void generate_catch_dispatch(expr::try_ref const expr,
@@ -1834,10 +1836,10 @@ namespace jank::codegen
   {
     /* Get parent handler (if exists) */
     reusable_context::exception_handler_info const *parent_handler{};
-    if(ctx->exception_handlers.size() > 1)
+    if(!ctx->exception_handlers.empty())
     {
-      /* The current handler is at the back, so the parent is at size() - 2. */
-      parent_handler = &ctx->exception_handlers[ctx->exception_handlers.size() - 2];
+      /* The current handler has already been popped from the stack, so the back is the parent. */
+      parent_handler = &ctx->exception_handlers.back();
     }
 
     if(parent_handler)
@@ -1851,11 +1853,13 @@ namespace jank::codegen
     else
     {
       /* No parent handler in this function scope - resume unwinding to the caller. */
-      auto const resume_fn{ llvm_module->getOrInsertFunction("_Unwind_Resume",
-                                                             ctx->builder->getVoidTy(),
-                                                             ctx->builder->getPtrTy()) };
-      ctx->builder->CreateCall(resume_fn, { ex_ptr });
-      ctx->builder->CreateUnreachable();
+      auto const lpad_type{ llvm::StructType::get(*llvm_ctx,
+                                                  { ctx->builder->getPtrTy(),
+                                                    ctx->builder->getInt32Ty() }) };
+      auto const undef{ llvm::UndefValue::get(lpad_type) };
+      auto const val0{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
+      auto const val1{ ctx->builder->CreateInsertValue(val0, selector, { 1 }) };
+      ctx->builder->CreateResume(val1);
     }
   }
 
@@ -1910,6 +1914,7 @@ namespace jank::codegen
                                                   llvm::BasicBlock * const finally_block,
                                                   llvm::AllocaInst * const unwind_flag_slot,
                                                   llvm::BasicBlock * const continue_block,
+                                                  llvm::BasicBlock * const catch_cleanup_block,
                                                   expr::function_arity const &arity)
   {
     auto const ptr_ty{ ctx->builder->getPtrTy() };
@@ -1972,6 +1977,25 @@ namespace jank::codegen
     util::scope_exit const restore_catch_pos{ [&]() {
       catch_body->propagate_position(original_catch_pos);
     } };
+
+    /* We push the catch cleanup block as the landing pad for the catch body.
+     * This ensures that if the catch body throws (rethrow or new throw), we catch it
+     * and clean up strictly this catch block (calling __cxa_end_catch) before
+     * propagating it further. */
+    if(ctx->builder->GetInsertBlock()->getParent()->hasPersonalityFn())
+    {
+      if(catch_cleanup_block)
+      {
+         lpad_and_catch_body_stack.emplace_back(catch_cleanup_block, nullptr);
+      }
+    }
+    util::scope_exit const pop_lpad{ [&]() {
+      if(ctx->builder->GetInsertBlock()->getParent()->hasPersonalityFn() && catch_cleanup_block)
+      {
+        lpad_and_catch_body_stack.pop_back();
+      }
+    } };
+
     auto catch_val{ gen(catch_body, arity) };
 
     /* Step 4: Tell C++ runtime we are done with the exception object.
@@ -2143,6 +2167,7 @@ namespace jank::codegen
                            finally_block,
                            unwind_flag_slot,
                            continue_block,
+                           catch_cleanup_block,
                            arity);
     }
 
@@ -2283,12 +2308,12 @@ namespace jank::codegen
       selector_phi = ctx->builder->CreatePHI(ctx->builder->getInt32Ty(), 1, "sel.phi");
     }
 
-    /* Push current handler info for nested tries to use. */
-    ctx->exception_handlers.push_back({ dispatch_block, exception_phi, selector_phi, expr });
-    util::scope_exit const pop_handler{ [this]() { ctx->exception_handlers.pop_back(); } };
-
     /* --- Try block --- */
     {
+      /* Push current handler info for nested tries to use. */
+      ctx->exception_handlers.push_back({ dispatch_block, exception_phi, selector_phi, expr, landing_pad_block });
+      util::scope_exit const pop_handler{ [this]() { ctx->exception_handlers.pop_back(); } };
+
       lpad_and_catch_body_stack.emplace_back(landing_pad_block, catch_body_block);
       util::scope_exit const pop_landing_pad{ [this]() { lpad_and_catch_body_stack.pop_back(); } };
 

@@ -1,0 +1,13 @@
+
+(let* [f (fn* []
+           (try
+             (throw :test-throw)
+             (catch cpp/jank.runtime.object_ref e
+               (println (str "Caught " "inner"))
+               (throw e))
+             (finally (println (str "Finally " "inner")))))]
+  (try
+    (f)
+    (catch cpp/jank.runtime.object_ref e
+      (println "Caught exception in outer")
+      :success)))

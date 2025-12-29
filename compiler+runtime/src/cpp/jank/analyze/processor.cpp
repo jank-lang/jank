@@ -1619,6 +1619,13 @@ namespace jank::analyze
     }
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
+    /* Using recur from this function is fine, even if we're in a try, since the jump target
+     * is this function. */
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
+      .expect_ok();
+    util::scope_exit const finally{ []() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame) };
 
@@ -2350,12 +2357,20 @@ namespace jank::analyze
                           jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const)
   {
-    /* When we analyze a loop, we actually just set a flag and then analyze a let.
-     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
+    /* The flag is setting `loop_details` to `some(nullptr)`, which conveys that
      * we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
-    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+    /* Using recur from this loop is fine, even if we're in a try, since the jump target
+     * is this loop. */
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() {
+      loop_details = old_loop_details;
+      __rt_ctx->pop_thread_bindings().expect_ok();
+    } };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
      * tail position and it can be used within a loop. We then later reset the position
