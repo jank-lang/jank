@@ -281,6 +281,11 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(lib));
     }
 
+    for(auto const &lib : util::cli::opts.libs)
+    {
+      compiler_args.push_back(strdup(util::format("-l{}", lib).c_str()));
+    }
+
     /* On non-macOS platforms, explicitly link libstdc++.
      * macOS uses libc++ implicitly via Clang. */
     if constexpr(jtl::current_platform != jtl::platform::macos_like)
