@@ -13,4 +13,5 @@ pushd "${here}/../build"
     make clean
   fi
   rm -rf ar-cache
+  rm -rf core-libs
 popd

@@ -296,44 +296,10 @@ OPTIONS
         show_help();
       }
 
-      /* CLI SHIT
-         *
-         * Commands
-         *   run
-         *     <path>
-         *   run-main
-         *     <main>
-         *   repl
-         *   cpp-repl
-         *   compile-module
-         *     -o,--output <path>
-         *     --output-target <type>
-         *     <module>
-         *   compile
-         *     --runtime <type>
-         *     -o,--output <path>
-         *     <main>
-         *   check-health
-         *
-         * Options
-         *   --module-path <path>
-         *   --profile
-         *   --profile-output <path>
-         *   --perf
-         *   --direct-call
-         *   -O,--optimization <N>
-         *   --codegen <type>
-         *   -I <path>
-         *   -D <def>
-         *   -L <path>
-         *   -l <lib>
-         */
-
       /* Now process all pending flags, depending on our command. */
       if(command == "run")
       {
         opts.target_file = get_positional_arg(command, "file", pending_positional_args);
-        /* TODO: Handle pending flags. */
       }
       else if(command == "run-main")
       {
@@ -344,7 +310,14 @@ OPTIONS
         opts.target_module = get_positional_arg(command, "module", pending_positional_args);
         if(check_pending_flag("--output", value, pending_flags))
         {
-          opts.target_file = value;
+          if(command == "compile-module")
+          {
+            opts.output_module_filename = value;
+          }
+          else
+          {
+            opts.output_filename = value;
+          }
         }
         if(check_pending_flag("--output-target", value, pending_flags))
         {
