@@ -204,6 +204,20 @@ jobs:
           path: |
             ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+      - name: Setup swap
+        if: runner.os == 'Linux'
+        run: |
+          swap_size_gb=4
+          swap_space_path=/mnt/swapfile
+          echo "Allocating ${swap_size_gb}G to $swap_space_path"
+          sudo fallocate -l ${swap_size_gb}G $swap_space_path
+          sudo chmod 600 $swap_space_path
+          echo
+          echo "Creating swap $swap_space_path"
+          sudo mkswap $swap_space_path
+          echo
+          echo "Enabling swap $swap_space_path"
+          sudo swapon $swap_space_path
       - name: Build and test jank
         id: jank-build-step
         run: |
