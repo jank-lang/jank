@@ -58,6 +58,12 @@
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
+                          "./bin/clean")
+        (util/log-info-with-time duration "Cleaned"))
+
+      (util/with-elapsed-time duration
+        (util/quiet-shell {:dir compiler+runtime-dir
+                           :extra-env exports}
                           (str "./bin/compile -v"
                                ; This uses more memory in CI, so we limit parallelism.
                                (when (= "Release" build-type)
