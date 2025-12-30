@@ -358,7 +358,7 @@ int main(int const argc, char const **argv)
   using namespace jank::runtime;
 
   return jank_init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
-    auto const parse_result(util::cli::parse(argc, argv));
+    auto const parse_result(util::cli::parse_opts(argc, argv));
     if(parse_result.is_err())
     {
       return parse_result.expect_err();

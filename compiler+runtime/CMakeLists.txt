@@ -595,7 +595,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cli11/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"

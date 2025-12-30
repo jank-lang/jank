@@ -64,8 +64,8 @@ namespace jank::util::cli
   struct options
   {
     /* Runtime. */
-    std::string module_path;
-    std::string profiler_file{ "jank.profile" };
+    jtl::immutable_string module_path;
+    jtl::immutable_string profiler_file{ "jank.profile" };
     bool profiler_enabled{};
     bool perf_profiling_enabled{};
     bool gc_incremental{};
@@ -83,24 +83,22 @@ namespace jank::util::cli
     bool direct_call{};
 
     /* Run command. */
-    std::string target_file;
+    jtl::immutable_string target_file;
 
     /* Compile command. */
-    std::string target_module;
-    std::string target_runtime{ "dynamic" };
-    std::string output_filename{ "a.out" };
+    jtl::immutable_string target_module;
+    jtl::immutable_string target_runtime{ "dynamic" };
+    jtl::immutable_string output_filename{ "a.out" };
 
     /* Compile-module command. */
-    std::string output_module_filename;
+    jtl::immutable_string output_module_filename;
     compilation_target output_target{ compilation_target::unspecified };
 
     /* REPL command. */
     bool repl_server{};
 
-    /* Extras.
-     * TODO: Use a native_persistent_vector instead.
-     * */
-    std::vector<std::string> extra_opts;
+    /* Extra flags, which will be passed to main. */
+    native_vector<jtl::immutable_string> extra_opts;
 
     command command{ command::repl };
   };
@@ -108,6 +106,9 @@ namespace jank::util::cli
   /* NOLINTNEXTLINE */
   extern options opts;
 
-  jtl::result<void, int> parse(int const argc, char const **argv);
-  std::vector<std::string> parse_empty(int const argc, char const **argv);
+  /* Affects the global opts. */
+  jtl::result<void, int> parse_opts(int const argc, char const **argv);
+
+  /* Takes the CLI args and puts 'em in a vector. */
+  native_vector<jtl::immutable_string> parse_into_vector(int const argc, char const **argv);
 }

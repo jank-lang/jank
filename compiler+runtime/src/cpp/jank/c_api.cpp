@@ -1084,7 +1084,7 @@ extern "C"
   jank_object_ref jank_parse_command_line_args(int const argc, char const **argv)
   {
     obj::transient_vector trans;
-    auto const args{ util::cli::parse_empty(argc, argv) };
+    auto const args{ util::cli::parse_into_vector(argc, argv) };
 
     for(auto const &arg : args)
     {
