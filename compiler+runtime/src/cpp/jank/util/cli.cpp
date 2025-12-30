@@ -15,12 +15,8 @@ namespace jank::util::cli
     return "default: " + input;
   }
 
-  jtl::result<void, int> parse(int const argc, char const **argv)
+  static void add_global_options(auto &cli)
   {
-    CLI::App cli{ "jank compiler" };
-
-    cli.set_help_flag("-h,--help", "Print this help message and exit.");
-
     /* Runtime. */
     cli.add_option(
       "--module-path",
@@ -71,6 +67,15 @@ namespace jank::util::cli
                    opts.libs,
                    "Library identifiers, absolute or relative paths eg. -lfoo for libfoo.so or "
                    "foo.dylib. Can be specified multiple times.");
+  }
+
+  jtl::result<void, int> parse(int const argc, char const **argv)
+  {
+    CLI::App cli{ "jank compiler" };
+
+    cli.set_help_flag("-h,--help", "Print this help message and exit.");
+
+    add_global_options(cli);
 
     /* Run subcommand. */
     auto &cli_run(*cli.add_subcommand("run", "Load and run a file."));
@@ -78,6 +83,7 @@ namespace jank::util::cli
     cli_run.add_option("file", opts.target_file, "The entrypoint file.")
       ->check(CLI::ExistingFile)
       ->required();
+    add_global_options(cli_run);
 
     /* Compile module subcommand. */
     auto &cli_compile_module(
@@ -101,23 +107,28 @@ namespace jank::util::cli
     cli_compile_module
       .add_option("--output-target", opts.output_target, "The type of file to generate.")
       ->transform(CLI::CheckedTransformer(output_targets).description("{llvm-ir,cpp,object}"));
+    add_global_options(cli_compile_module);
 
     /* REPL subcommand. */
     auto &cli_repl(*cli.add_subcommand("repl", "Start up a terminal REPL and optional server."));
     cli_repl.fallthrough();
     cli_repl.add_option("module", opts.target_module, "The entrypoint module.");
     cli_repl.add_flag("--server", opts.repl_server, "Start an nREPL server.");
+    add_global_options(cli_repl);
 
     /* C++ REPL subcommand. */
     auto &cli_cpp_repl(*cli.add_subcommand("cpp-repl", "Start up a terminal C++ REPL."));
+    cli_cpp_repl.fallthrough();
+    add_global_options(cli_cpp_repl);
 
     /* Run-main subcommand. */
     auto &cli_run_main(*cli.add_subcommand("run-main", "Load and execute -main."));
     cli_run_main.fallthrough();
+    add_global_options(cli_run_main);
     cli_run_main
       .add_option("module",
                   opts.target_module,
-                  "The entrypoint module (must be on the module path.")
+                  "The entrypoint module (must be on the module path).")
       ->required();
 
     /* Compile subcommand. */
@@ -132,11 +143,13 @@ namespace jank::util::cli
     cli_compile.add_option("-o", opts.output_filename, "Output executable name.")
       ->default_str(make_default(opts.output_filename));
     cli_compile.add_option("module", opts.target_module, "The entrypoint module.")->required();
+    add_global_options(cli_compile);
 
     /* Health check subcommand. */
     auto &cli_check_health(
       *cli.add_subcommand("check-health", "Provide a status report on the jank installation."));
     cli_check_health.fallthrough();
+    add_global_options(cli_check_health);
 
     cli.require_subcommand(1);
     cli.failure_message(CLI::FailureMessage::help);

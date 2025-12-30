@@ -4055,7 +4055,7 @@ namespace jank::analyze
     auto const count(l->count());
     if(count < 2)
     {
-      return error::analyze_invalid_cpp_cast(
+      return error::analyze_invalid_cpp_unbox(
                "This call to 'cpp/unbox' is missing a C++ type and a value as arguments.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
@@ -4063,7 +4063,7 @@ namespace jank::analyze
     }
     else if(count < 3)
     {
-      return error::analyze_invalid_cpp_cast(
+      return error::analyze_invalid_cpp_unbox(
                "This call to 'cpp/unbox' is missing a value to unbox as an argument.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
@@ -4071,7 +4071,7 @@ namespace jank::analyze
     }
     else if(3 < count)
     {
-      return error::analyze_invalid_cpp_cast(
+      return error::analyze_invalid_cpp_unbox(
                "A call to 'cpp/unbox' must only have a C++ type and a "
                "value as arguments and nothing else.",
                object_source(l->next()->next()->next()->first()),

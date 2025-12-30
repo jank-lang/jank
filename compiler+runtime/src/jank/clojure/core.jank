@@ -38,6 +38,27 @@
 (def ^:dynamic *print-readably* nil)
 (def ^:dynamic *read-eval* nil)
 
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the most recent value printed"}
+ *1)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the second most recent value printed"}
+ *2)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the third most recent value printed"}
+ *3)
+
+(def ^:dynamic
+ ^{:doc "bound in a repl thread to the most recent exception caught by the repl"}
+ *e)
+
+(def ^:dynamic
+  ^{:doc "Bound to true in a repl thread"}
+  *repl* false)
+
+
 (cpp/raw "#include <fstream>")
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
@@ -6607,26 +6628,6 @@ fails, attempts to require sym's namespace and retries."
   [coll]
   ;; (instance? clojure.lang.Indexed coll)
   (throw "TODO: port indexed?"))
-
-(def ^:dynamic
- ^{:doc "bound in a repl thread to the most recent value printed"}
- *1)
-
-(def ^:dynamic
- ^{:doc "bound in a repl thread to the second most recent value printed"}
- *2)
-
-(def ^:dynamic
- ^{:doc "bound in a repl thread to the third most recent value printed"}
- *3)
-
-(def ^:dynamic
- ^{:doc "bound in a repl thread to the most recent exception caught by the repl"}
- *e)
-
-(def ^:dynamic
-  ^{:doc "Bound to true in a repl thread"}
-  *repl* false)
 
 (defn trampoline
   "trampoline can be used to convert algorithms requiring mutual
