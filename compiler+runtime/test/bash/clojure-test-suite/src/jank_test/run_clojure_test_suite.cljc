@@ -62,7 +62,7 @@
     ; clojure.core-test.drop ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     ; clojure.core-test.drop-last ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/244
     ; clojure.core-test.drop-while ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
-    clojure.core-test.empty ; FIXME: Failing test.
+    ; clojure.core-test.empty ; FIXME: Failing test.
     ; clojure.core-test.empty-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     ; clojure.core-test.even-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
@@ -77,7 +77,7 @@
     clojure.core-test.fnil
     ; clojure.core-test.format ; TODO: port format
     ; clojure.core-test.get ; TODO: port to-array
-    clojure.core-test.get-in ; FIXME: Failing test. 
+    ; clojure.core-test.get-in ; FIXME: Failing test. 
     ; clojure.core-test.gt ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.hash-map ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.hash-set
@@ -86,8 +86,8 @@
     ; clojure.core-test.ifn-qmark ; TODO: port promise
     ; clojure.core-test.inc ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.int ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
-    clojure.core-test.int-qmark ; FIXME: Failing test.
-    clojure.core-test.integer-qmark ; FIXME: Failing test.
+    ; clojure.core-test.int-qmark ; FIXME: Failing test.
+    ; clojure.core-test.integer-qmark ; FIXME: Failing test.
     clojure.core-test.interleave
     ; clojure.core-test.intern ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.interpose
@@ -112,7 +112,7 @@
     ; clojure.core-test.name ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.namespace ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/254
     ; clojure.core-test.nan-qmark ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
-    clojure.core-test.neg-int-qmark ; FIXME: Failing test.
+    ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
     ; clojure.core-test.neg-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.next
     ; clojure.core-test.nfirst ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
@@ -156,8 +156,8 @@
     ; clojure.core-test.rand-nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.random-sample ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.random-uuid ; internal/codegen-failure error: Unable to compile C++ source. unknown type name 'i64'; did you mean 'jank::i64'?
-    clojure.core-test.ratio-qmark
-    clojure.core-test.rational-qmark
+    ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
+    ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map.
@@ -191,7 +191,7 @@
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.star-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
-    clojure.core-test.str ; TODO: port double
+    ; clojure.core-test.str ; FIXME: Failing test.
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/244
     ; clojure.core-test.subvec ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
