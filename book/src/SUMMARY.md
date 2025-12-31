@@ -13,6 +13,8 @@
 TODO:
   Reading error messages
   .jank, .cljc, .cpp files
+  nREPL support
+  AOT compiling programs (and distributing them)
   Troubleshooting / Getting a stack trace
   Known issues
 -->
