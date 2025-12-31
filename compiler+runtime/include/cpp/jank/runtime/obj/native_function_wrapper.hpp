@@ -12,7 +12,7 @@ namespace jank::runtime
   {
     /* This must be constructed with a std::function object, since we need put it into a
      * std::any and pull it out based on how we call it. i.e. if we try to call it with
-     * one param, we try to grab it from the std::any as a std::function<object_ref (object_ref)>.
+     * one param, we try to grab it from the std::any as a std::function<object_ref (object_ref const&)>.
      *
      * This means you can't just dump a lambda into this. Build a std::function from it first. */
     struct function_type
@@ -64,9 +64,7 @@ namespace jank::runtime
   {
     using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
-    struct native_function_wrapper
-      : gc
-      , behavior::callable
+    struct native_function_wrapper : behavior::callable
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
       static constexpr bool pointer_free{ false };
@@ -86,79 +84,64 @@ namespace jank::runtime
 
       /* behavior::callable */
       object_ref call() final;
-      object_ref call(object_ref) final;
-      object_ref call(object_ref, object_ref) final;
-      object_ref call(object_ref, object_ref, object_ref) final;
-      object_ref call(object_ref, object_ref, object_ref, object_ref) final;
-      object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) final;
-      object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) final;
-      object_ref
-        call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
-          final;
-      object_ref call(object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref) final;
-      object_ref call(object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref) final;
-      object_ref call(object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref,
-                      object_ref) final;
+      object_ref call(object_ref const) final;
+      object_ref call(object_ref const, object_ref const) final;
+      object_ref call(object_ref const, object_ref const, object_ref const) final;
+      object_ref call(object_ref const, object_ref const, object_ref const, object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
+      object_ref call(object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) final;
 
       object_ref this_object_ref() final;
 
       /* behavior::metadatable */
-      native_function_wrapper_ref with_meta(object_ref m) const;
+      native_function_wrapper_ref with_meta(object_ref const m) const;
 
       object base{ obj_type };
       obj::detail::function_type data{};
       jtl::option<object_ref> meta;
     };
-  }
-
-  namespace detail
-  {
-    /* TODO: Is this needed, given dynamic_call? */
-    template <typename F, typename... Args>
-    object_ref invoke(F const &f, Args &&...args)
-    {
-      if constexpr(std::is_function_v<std::remove_pointer_t<std::decay_t<decltype(f)>>>)
-      {
-        return f(std::forward<Args>(args)...);
-      }
-      else
-      {
-        auto const * const c((*f)->as_callable());
-
-        if(c)
-        {
-          return c->call(std::forward<Args>(args)...);
-        }
-        else
-        {
-          /* TODO: Better error. */
-          std::cout << "(invoke) object is not callable: " << **f << std::endl;
-          throw std::runtime_error{ "object is not callable" };
-        }
-      }
-    }
   }
 }

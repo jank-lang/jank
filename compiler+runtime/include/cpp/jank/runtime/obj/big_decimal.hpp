@@ -32,7 +32,7 @@ namespace jank::runtime::obj
 
   struct ratio;
 
-  struct big_decimal : gc
+  struct big_decimal
   {
     static constexpr object_type obj_type{ object_type::big_decimal };
     static constexpr bool pointer_free{ true };

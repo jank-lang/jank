@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     persistent_sorted_map(persistent_sorted_map const &) = default;
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
-    persistent_sorted_map(object_ref meta, value_type &&d);
+    persistent_sorted_map(object_ref const meta, value_type &&d);
     persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
@@ -68,16 +68,16 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    persistent_sorted_map_ref assoc(object_ref key, object_ref val) const;
-    persistent_sorted_map_ref dissoc(object_ref key) const;
+    persistent_sorted_map_ref assoc(object_ref const key, object_ref const val) const;
+    persistent_sorted_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
-    object_ref call(object_ref, object_ref) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

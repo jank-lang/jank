@@ -43,7 +43,7 @@ namespace jank
   template <typename T>
   using native_list = std::list<T, native_allocator<T>>;
   template <typename K, typename V>
-  using native_map = std::map<K, V, native_allocator<std::pair<K const, V>>>;
+  using native_map = std::map<K, V, std::less<K>, native_allocator<std::pair<K const, V>>>;
   template <typename T>
   using native_set = std::set<T, std::less<T>, native_allocator<T>>;
 

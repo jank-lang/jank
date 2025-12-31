@@ -24,7 +24,7 @@ namespace jank::analyze::expr
     recur(expression_position position,
           local_frame_ptr frame,
           bool needs_box,
-          runtime::obj::persistent_list_ref args,
+          runtime::obj::persistent_list_ref const args,
           native_vector<expression_ref> &&arg_exprs,
           jtl::option<let_ref> const &loop_target);
 

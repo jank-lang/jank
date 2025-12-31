@@ -7,9 +7,7 @@ namespace jank::runtime::obj
 {
   using jit_function_ref = oref<struct jit_function>;
 
-  struct jit_function
-    : gc
-    , behavior::callable
+  struct jit_function : behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_function };
     static constexpr bool pointer_free{ false };
@@ -18,7 +16,7 @@ namespace jank::runtime::obj
     jit_function(jit_function &&) noexcept = default;
     jit_function(jit_function const &) = default;
     jit_function(arity_flag_t arity_flags);
-    jit_function(object_ref meta);
+    jit_function(object_ref const meta);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -28,47 +26,60 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    jit_function_ref with_meta(object_ref m);
+    jit_function_ref with_meta(object_ref const m);
 
     /* behavior::callable */
     object_ref call() override;
-    object_ref call(object_ref) override;
-    object_ref call(object_ref, object_ref) override;
-    object_ref call(object_ref, object_ref, object_ref) override;
-    object_ref call(object_ref, object_ref, object_ref, object_ref) override;
-    object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref) override;
+    object_ref call(object_ref const) override;
+    object_ref call(object_ref const, object_ref const) override;
+    object_ref call(object_ref const, object_ref const, object_ref const) override;
     object_ref
-      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref) override;
-    object_ref
-      call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
-        override;
-    object_ref call(object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref) override;
-    object_ref call(object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref) override;
-    object_ref call(object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref,
-                    object_ref) override;
+    call(object_ref const, object_ref const, object_ref const, object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) override;
 
     arity_flag_t get_arity_flags() const override;
     object_ref this_object_ref() override;

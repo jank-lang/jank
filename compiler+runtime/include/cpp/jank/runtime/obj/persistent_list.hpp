@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   using nil_ref = oref<struct nil>;
   using persistent_list_ref = oref<struct persistent_list>;
 
-  struct persistent_list : gc
+  struct persistent_list
   {
     using value_type = runtime::detail::native_persistent_list;
 
@@ -17,10 +17,10 @@ namespace jank::runtime::obj
     static constexpr bool is_sequential{ true };
 
     /* Create from a sequence. */
-    static persistent_list_ref create(object_ref meta, object_ref s);
-    static persistent_list_ref create(object_ref s);
-    static persistent_list_ref create(persistent_list_ref s);
-    static persistent_list_ref create(nil_ref s);
+    static persistent_list_ref create(object_ref const meta, object_ref const s);
+    static persistent_list_ref create(object_ref const s);
+    static persistent_list_ref create(persistent_list_ref const s);
+    static persistent_list_ref create(nil_ref const s);
 
     persistent_list() = default;
     persistent_list(persistent_list &&) noexcept = default;
@@ -57,7 +57,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    persistent_list_ref with_meta(object_ref m) const;
+    persistent_list_ref with_meta(object_ref const m) const;
 
     /* behavior::seqable */
     obj::persistent_list_ref seq() const;
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable */
-    persistent_list_ref conj(object_ref head) const;
+    persistent_list_ref conj(object_ref const head) const;
 
     /* behavior::sequenceable */
     object_ref first() const;

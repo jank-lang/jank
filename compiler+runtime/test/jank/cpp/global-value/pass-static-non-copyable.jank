@@ -1,0 +1,24 @@
+(cpp/raw "namespace jank::cpp::global_value::pass_static_non_copyable
+          {
+            struct foo
+            {
+              foo() = delete;
+              foo(foo const&) = delete;
+              foo(foo &&) = delete;
+              foo(int i)
+               : data{ i }
+              { }
+
+              int data{};
+            };
+
+            struct bar
+            {
+              static foo const boop;
+            };
+            foo const bar::boop{ 5 };
+          }")
+(let* [foo cpp/jank.cpp.global_value.pass_static_non_copyable.bar.boop]
+  (if (= 5 (cpp/.-data foo))
+    :success
+    :failure))

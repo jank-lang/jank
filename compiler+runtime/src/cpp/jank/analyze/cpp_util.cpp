@@ -292,6 +292,44 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    if(type == untyped_object_ptr_type())
+    {
+      return "jank::runtime::object_ref";
+    }
+    /* TODO: Handle typed object refs, too. */
+
+    /* TODO: We probably want a recursive approach to this, for types and scopes. */
+    auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
+    if(qual_type->isNullPtrType())
+    {
+      return "std::nullptr_t";
+    }
+
+    if(auto const *alias{
+         llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()) };
+       alias)
+    {
+      if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
+      {
+        return get_qualified_name(alias_decl);
+      }
+    }
+
+    if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
+    {
+      auto name{ get_qualified_name(scope) };
+      if(Cpp::IsPointerType(type))
+      {
+        name = name + "*";
+      }
+      return name;
+    }
+
+    return Cpp::GetTypeAsString(type);
+  }
+
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)

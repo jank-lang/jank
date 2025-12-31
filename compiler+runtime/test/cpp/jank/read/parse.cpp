@@ -39,7 +39,7 @@ namespace jank::read::parse
       lex::processor lp{ "nil" };
       processor p{ lp.begin(), lp.end() };
       auto const r(p.next());
-      CHECK(equal(r.expect_ok().unwrap().ptr, jank_nil));
+      CHECK(equal(r.expect_ok().unwrap().ptr, jank_nil()));
       CHECK(r.expect_ok().unwrap().start == lex::token{ 0, 3, lex::token_kind::nil });
       CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
     }
@@ -992,7 +992,7 @@ namespace jank::read::parse
         auto const r(p.next());
         CHECK(equal(r.expect_ok().unwrap().ptr, obj::persistent_array_map::empty()));
         auto const m{ meta(r.expect_ok().unwrap().ptr) };
-        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_nil));
+        CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_nil()));
       }
 
       SUBCASE("Symbol meta for a non-metadatable target")

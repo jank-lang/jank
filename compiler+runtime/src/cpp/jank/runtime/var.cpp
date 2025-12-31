@@ -13,22 +13,22 @@
 
 namespace jank::runtime
 {
-  var::var(ns_ref const &n, obj::symbol_ref const &name)
+  var::var(ns_ref const n, obj::symbol_ref const name)
     : n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
-  var::var(ns_ref const &n, obj::symbol_ref const &name, object_ref const root)
+  var::var(ns_ref const n, obj::symbol_ref const name, object_ref const root)
     : n{ n }
     , name{ name }
     , root{ root }
   {
   }
 
-  var::var(ns_ref const &n,
-           obj::symbol_ref const &name,
+  var::var(ns_ref const n,
+           obj::symbol_ref const name,
            object_ref const root,
            bool const dynamic,
            bool const thread_bound)
@@ -55,7 +55,7 @@ namespace jank::runtime
     return n == v.n && name == v.name;
   }
 
-  static void to_string_impl(ns_ref const n, obj::symbol_ref const &name, jtl::string_builder &buff)
+  static void to_string_impl(ns_ref const n, obj::symbol_ref const name, jtl::string_builder &buff)
   {
     buff("#'")(n->name->name)('/')(name->name);
   }
@@ -143,6 +143,11 @@ namespace jank::runtime
     return this;
   }
 
+  obj::symbol_ref var::to_qualified_symbol() const
+  {
+    return make_box<runtime::obj::symbol>(n->name->name, name->name);
+  }
+
   var_thread_binding_ref var::get_thread_binding() const
   {
     if(!thread_bound.load())
@@ -150,7 +155,7 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(__rt_ctx->thread_binding_frames[__rt_ctx]);
+    auto &tbfs(runtime::context::thread_binding_frames);
     if(tbfs.empty())
     {
       return {};
@@ -242,5 +247,26 @@ namespace jank::runtime
   uhash var_unbound_root::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+  }
+}
+
+namespace std
+{
+  size_t hash<jank::runtime::var>::operator()(jank::runtime::var const &o) const noexcept
+  {
+    static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+    return hasher(*o.name);
+  }
+
+  size_t hash<jank::runtime::var_ref>::operator()(jank::runtime::var_ref const o) const noexcept
+  {
+    static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+    return hasher(*o->name);
+  }
+
+  bool equal_to<jank::runtime::var_ref>::operator()(jank::runtime::var_ref const lhs,
+                                                    jank::runtime::var_ref const rhs) const noexcept
+  {
+    return lhs->equal(*rhs);
   }
 }

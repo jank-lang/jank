@@ -108,7 +108,7 @@ namespace jank::jit
           } };
 
           auto const result(
-            __rt_ctx->eval_file(dir_entry.path().string()).unwrap_or(runtime::jank_nil));
+            __rt_ctx->eval_file(dir_entry.path().string()).unwrap_or(runtime::jank_nil()));
           if(!expect_success)
           {
             failures.push_back({ dir_entry.path(),

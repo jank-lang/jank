@@ -62,7 +62,7 @@ namespace jank::analyze
 
     virtual result_type visit(expr::def const &expr);
     virtual result_type visit(expr::var_deref const &expr);
-    virtual result_type visit(expr::var_ref const &expr);
+    virtual result_type visit(expr::var_ref const expr);
     virtual result_type visit(expr::call const &expr);
     virtual result_type visit(expr::primitive_literal const &expr);
     virtual result_type visit(expr::list const &expr);

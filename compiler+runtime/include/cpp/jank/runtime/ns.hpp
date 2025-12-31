@@ -15,7 +15,7 @@ namespace jank::runtime
 
   using ns_ref = oref<struct ns>;
 
-  struct ns : gc
+  struct ns
   {
     static constexpr object_type obj_type{ object_type::ns };
     static constexpr bool pointer_free{ false };
@@ -24,17 +24,17 @@ namespace jank::runtime
     ns(obj::symbol_ref const name);
 
     var_ref intern_var(jtl::immutable_string_view const &);
-    var_ref intern_var(obj::symbol_ref);
+    var_ref intern_var(obj::symbol_ref const);
     var_ref intern_owned_var(jtl::immutable_string_view const &);
-    var_ref intern_owned_var(obj::symbol_ref);
-    var_ref find_var(obj::symbol_ref);
-    jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ref sym);
+    var_ref intern_owned_var(obj::symbol_ref const);
+    var_ref find_var(obj::symbol_ref const);
+    jtl::result<void, jtl::immutable_string> unmap(obj::symbol_ref const sym);
 
-    jtl::result<void, jtl::immutable_string> add_alias(obj::symbol_ref sym, ns_ref ns);
-    void remove_alias(obj::symbol_ref sym);
-    ns_ref find_alias(obj::symbol_ref sym) const;
+    jtl::result<void, jtl::immutable_string> add_alias(obj::symbol_ref const sym, ns_ref const ns);
+    void remove_alias(obj::symbol_ref const sym);
+    ns_ref find_alias(obj::symbol_ref const sym) const;
 
-    jtl::result<void, jtl::immutable_string> refer(obj::symbol_ref sym, var_ref var);
+    jtl::result<void, jtl::immutable_string> refer(obj::symbol_ref const sym, var_ref const var);
 
     obj::persistent_hash_map_ref get_mappings() const;
 

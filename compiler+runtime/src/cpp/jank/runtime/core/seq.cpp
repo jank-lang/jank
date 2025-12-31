@@ -28,7 +28,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -55,7 +55,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::sequenceable<T>;
       },
@@ -64,7 +64,7 @@ namespace jank::runtime
 
   bool is_seqable(object_ref const o)
   {
-    return visit_seqable([=](auto const) -> bool { return true; },
+    return visit_seqable([=](auto const &) -> bool { return true; },
                          [=]() -> bool { return false; },
                          o);
   }
@@ -73,7 +73,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::sequential<T>;
       },
@@ -84,7 +84,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::collection_like<T>;
       },
@@ -114,7 +114,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return (behavior::associatively_readable<T> && behavior::associatively_writable<T>);
       },
@@ -131,7 +131,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::countable<T>;
       },
@@ -142,7 +142,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::transientable<T>;
       },
@@ -159,7 +159,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::transientable<T>)
         {
@@ -178,7 +178,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::persistentable<T>)
         {
@@ -196,8 +196,8 @@ namespace jank::runtime
   object_ref conj_in_place(object_ref const coll, object_ref const o)
   {
     return visit_object(
-      [](auto const typed_coll, auto const o) -> object_ref {
-        using T = typename decltype(typed_coll)::value_type;
+      [](auto const typed_coll, auto const &o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
 
         if constexpr(behavior::conjable_in_place<T>)
         {
@@ -236,8 +236,8 @@ namespace jank::runtime
   object_ref assoc_in_place(object_ref const coll, object_ref const k, object_ref const v)
   {
     return visit_object(
-      [](auto const typed_coll, auto const k, auto const v) -> object_ref {
-        using T = typename decltype(typed_coll)::value_type;
+      [](auto const typed_coll, auto const &k, auto const &v) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
 
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
@@ -257,8 +257,8 @@ namespace jank::runtime
   object_ref dissoc_in_place(object_ref const coll, object_ref const k)
   {
     return visit_object(
-      [](auto const typed_coll, auto const k) -> object_ref {
-        using T = typename decltype(typed_coll)::value_type;
+      [](auto const typed_coll, auto const &k) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
 
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
@@ -284,7 +284,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -312,7 +312,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -340,7 +340,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -377,7 +377,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -409,7 +409,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -454,7 +454,7 @@ namespace jank::runtime
         {
           return obj::persistent_list::empty();
         }
-        auto const ret(next(seq));
+        auto ret(next(seq));
         if(ret.is_nil())
         {
           return obj::persistent_list::empty();
@@ -468,7 +468,7 @@ namespace jank::runtime
   {
     return visit_seqable(
       [=](auto const typed_tail) -> object_ref {
-        using T = typename decltype(typed_tail)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
 
         if constexpr(jtl::is_same<T, obj::nil>)
         {
@@ -493,7 +493,7 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_s) -> object_ref {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -532,7 +532,7 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_writable<T>)
         {
@@ -551,7 +551,7 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_writable<T>)
         {
@@ -570,7 +570,7 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_readable<T>)
         {
@@ -578,7 +578,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -588,7 +588,7 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_readable<T>)
         {
@@ -606,14 +606,14 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_readable<T>)
         {
           return visit_seqable(
             [&](auto const typed_keys) -> object_ref {
               object_ref ret{ typed_m };
-              for(auto const e : make_sequence_range(typed_keys))
+              for(auto const &e : make_sequence_range(typed_keys))
               {
                 ret = get(ret, e);
               }
@@ -623,7 +623,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -633,19 +633,19 @@ namespace jank::runtime
   {
     return visit_object(
       [&](auto const typed_m) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(behavior::associatively_readable<T>)
         {
           return visit_seqable(
             [&](auto const typed_keys) -> object_ref {
               object_ref ret{ typed_m };
-              for(auto const e : make_sequence_range(typed_keys))
+              for(auto const &e : make_sequence_range(typed_keys))
               {
                 ret = get(ret, e);
               }
 
-              if(ret == jank_nil)
+              if(ret == jank_nil())
               {
                 return fallback;
               }
@@ -655,7 +655,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       m);
@@ -670,7 +670,7 @@ namespace jank::runtime
 
     return visit_object(
       [](auto const typed_s, object_ref const key) -> object_ref {
-        using S = typename decltype(typed_s)::value_type;
+        using S = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(behavior::associatively_readable<S>)
         {
@@ -678,7 +678,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       s,
@@ -694,7 +694,7 @@ namespace jank::runtime
 
     return visit_object(
       [&](auto const typed_s) -> bool {
-        using S = typename decltype(typed_s)::value_type;
+        using S = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(behavior::associatively_readable<S> || behavior::set_like<S>)
         {
@@ -712,7 +712,7 @@ namespace jank::runtime
   {
     return visit_object(
       [](auto const typed_m, object_ref const other) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
 
         if constexpr(jtl::is_same<T, obj::nil>)
         {
@@ -720,14 +720,14 @@ namespace jank::runtime
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
-          using R = decltype(assoc(typed_m, jank_nil, jank_nil));
+          using R = decltype(assoc(typed_m, jank_nil(), jank_nil()));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
-                auto const e(seq->first());
+                auto const &e(seq->first());
                 ret = assoc(ret, e->data[0], e->data[1]);
               }
               return ret;
@@ -752,18 +752,18 @@ namespace jank::runtime
       return m;
     }
     return visit_object(
-      [](auto const typed_m, auto const other) -> object_ref {
-        using T = typename decltype(typed_m)::value_type;
+      [](auto const typed_m, auto const &other) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
-          using R = decltype(assoc_in_place(typed_m, jank_nil, jank_nil));
+          using R = decltype(assoc_in_place(typed_m, jank_nil(), jank_nil()));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
               {
-                auto const e(seq->first());
+                auto const &e(seq->first());
                 ret = assoc_in_place(ret, e->data[0], e->data[1]);
               }
               return ret;
@@ -788,7 +788,7 @@ namespace jank::runtime
       throw std::runtime_error{ "not a vector" };
     }
 
-    auto const v(expect_object<obj::persistent_vector>(o));
+    auto const &v(expect_object<obj::persistent_vector>(o));
 
     if(end < start || start < 0 || static_cast<size_t>(end) > v->count())
     {
@@ -809,14 +809,14 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
-    else if(o == jank_nil)
+    else if(o == jank_nil())
     {
       return o;
     }
 
     return visit_object(
       [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::indexable<T>)
         {
@@ -825,7 +825,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           i64 i{};
-          for(auto const e : make_sequence_range(typed_o))
+          for(auto const &e : make_sequence_range(typed_o))
           {
             if(i == index)
             {
@@ -846,14 +846,14 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx, object_ref const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0 || o == jank_nil)
+    if(index < 0 || o == jank_nil())
     {
       return fallback;
     }
 
     return visit_object(
       [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::indexable<T>)
         {
@@ -862,7 +862,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
         {
           i64 i{};
-          for(auto const e : make_sequence_range(typed_o))
+          for(auto const &e : make_sequence_range(typed_o))
           {
             if(i == index)
             {
@@ -882,14 +882,14 @@ namespace jank::runtime
 
   object_ref peek(object_ref const o)
   {
-    if(o == jank_nil)
+    if(o == jank_nil())
     {
       return o;
     }
 
     return visit_object(
       [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::stackable<T>)
         {
@@ -905,14 +905,14 @@ namespace jank::runtime
 
   object_ref pop(object_ref const o)
   {
-    if(o == jank_nil)
+    if(o == jank_nil())
     {
       return o;
     }
 
     return visit_object(
       [&](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::stackable<T>)
         {
@@ -930,16 +930,16 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::collection_like<T>)
         {
-          auto const empty{ T::empty() };
+          auto const &empty{ T::empty() };
           return with_meta(empty, meta(typed_o));
         }
         else
         {
-          return jank_nil;
+          return jank_nil();
         }
       },
       o);
@@ -960,7 +960,7 @@ namespace jank::runtime
     }
     return visit_seqable(
       [](auto const typed_args, jtl::string_builder &buff) -> jtl::immutable_string {
-        for(auto const e : make_sequence_range(typed_args))
+        for(auto const &e : make_sequence_range(typed_args))
         {
           if(is_nil(e))
           {
@@ -1006,7 +1006,7 @@ namespace jank::runtime
 
     return visit_object(
       [&](auto const typed_s) -> usize {
-        using T = typename decltype(typed_s)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
@@ -1019,7 +1019,7 @@ namespace jank::runtime
         else if constexpr(behavior::seqable<T>)
         {
           usize length{ 0 };
-          auto const r{ make_sequence_range(typed_s) };
+          auto const &r{ make_sequence_range(typed_s) };
           for(auto i(r.begin()); i != r.end() && length < max; ++i)
           {
             ++length;
@@ -1046,8 +1046,8 @@ namespace jank::runtime
       [](auto const typed_l, object_ref const r) -> bool {
         return visit_seqable(
           [](auto const typed_r, auto const typed_l) -> bool {
-            auto const l_range{ make_sequence_range(typed_l) };
-            auto const r_range{ make_sequence_range(typed_r) };
+            auto const &l_range{ make_sequence_range(typed_l) };
+            auto const &r_range{ make_sequence_range(typed_r) };
             auto r_it(r_range.begin());
             for(auto l_it(l_range.begin()); l_it != l_range.end(); ++l_it, ++r_it)
             {
@@ -1072,7 +1072,7 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll, object_ref const f, object_ref const init) -> object_ref {
         object_ref res{ init };
-        for(auto const e : make_sequence_range(typed_coll))
+        for(auto const &e : make_sequence_range(typed_coll))
         {
           res = dynamic_call(f, res, e);
           if(res->type == object_type::reduced)
@@ -1105,14 +1105,14 @@ namespace jank::runtime
 
   object_ref chunk_append(object_ref const buff, object_ref const val)
   {
-    auto const buffer(try_object<obj::chunk_buffer>(buff));
+    auto const &buffer(try_object<obj::chunk_buffer>(buff));
     buffer->append(val);
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref chunk(object_ref const buff)
   {
-    auto const buffer(try_object<obj::chunk_buffer>(buff));
+    auto const &buffer(try_object<obj::chunk_buffer>(buff));
     return buffer->chunk();
   }
 
@@ -1120,7 +1120,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::chunkable<T>)
         {
@@ -1137,7 +1137,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::chunkable<T>)
         {
@@ -1154,11 +1154,16 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> object_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(behavior::chunkable<T>)
         {
-          return typed_o->chunked_next().erase() ?: obj::persistent_list::empty().erase();
+          auto ret{ typed_o->chunked_next() };
+          if(ret.is_nil())
+          {
+            return obj::persistent_list::empty();
+          }
+          return ret;
         }
         {
           throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
@@ -1176,7 +1181,7 @@ namespace jank::runtime
   {
     return visit_object(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         return behavior::chunkable<T>;
       },
@@ -1203,7 +1208,7 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const e : make_sequence_range(typed_coll))
+        for(auto const &e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }
@@ -1212,7 +1217,7 @@ namespace jank::runtime
           return runtime::compare(a, b) < 0;
         });
 
-        using T = typename decltype(typed_coll)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
 
         if constexpr(behavior::metadatable<T>)
         {
@@ -1231,7 +1236,7 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const e : make_sequence_range(typed_coll))
+        for(auto const &e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }

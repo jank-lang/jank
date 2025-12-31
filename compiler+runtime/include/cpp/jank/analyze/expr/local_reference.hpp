@@ -1,11 +1,7 @@
 #pragma once
 
+#include <jank/runtime/obj/symbol.hpp>
 #include <jank/analyze/expression.hpp>
-
-namespace jank::runtime::obj
-{
-  using symbol_ref = oref<struct symbol>;
-}
 
 namespace jank::analyze
 {
@@ -23,7 +19,7 @@ namespace jank::analyze::expr
     local_reference(expression_position position,
                     local_frame_ptr frame,
                     bool needs_box,
-                    runtime::obj::symbol_ref name,
+                    runtime::obj::symbol_ref const name,
                     local_binding_ptr binding);
 
     runtime::object_ref to_runtime_data() const override;

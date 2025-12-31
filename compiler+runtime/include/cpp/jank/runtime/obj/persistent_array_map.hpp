@@ -70,16 +70,16 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    object_ref assoc(object_ref key, object_ref val) const;
-    persistent_array_map_ref dissoc(object_ref key) const;
+    object_ref assoc(object_ref const key, object_ref const val) const;
+    persistent_array_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
-    object_ref call(object_ref, object_ref) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;

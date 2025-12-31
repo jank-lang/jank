@@ -1081,7 +1081,7 @@ namespace jank::read::lex
               return error::lex_invalid_number(
                 util::format(
                   "Characters '{}' are invalid for a base {} number.",
-                  jtl::immutable_string_view{ invalid_digits.begin(), invalid_digits.end() },
+                  jtl::immutable_string_view{ invalid_digits.data(), invalid_digits.size() },
                   radix),
                 { token_start, pos });
             }
