@@ -305,6 +305,13 @@ OPTIONS
       {
         opts.target_module = get_positional_arg(command, "module", pending_positional_args);
       }
+      else if(command == "repl")
+      {
+        if(!pending_positional_args.empty())
+        {
+          opts.target_module = get_positional_arg(command, "module", pending_positional_args);
+        }
+      }
       else if(command == "compile-module" || command == "compile")
       {
         opts.target_module = get_positional_arg(command, "module", pending_positional_args);
@@ -341,6 +348,11 @@ OPTIONS
         if(check_pending_flag("--runtime", value, pending_flags))
         {
           opts.target_file = value;
+        }
+
+        if(command == "compile" && opts.output_target == compilation_target::unspecified)
+        {
+          opts.output_target = compilation_target::object;
         }
       }
 
