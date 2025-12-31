@@ -22,7 +22,7 @@ brew reinstall jank-lang/jank/jank
 If you'd like to install from source using brew, you can use `jank-lang/jank/jank-git` instead.
 
 ## Ubuntu Linux (24.04, 24.10, 25.04)
-We have a binary jank package in our own PPA, so installation is quick and easy.
+We have a binary jank package in our own repo, so installation is quick and easy.
 
 ```bash
 sudo apt install -y curl gnupg

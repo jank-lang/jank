@@ -1,7 +1,6 @@
 [book]
 authors = ["Jeaye Wilkerson"]
 language = "en"
-multilingual = false
 src = "src"
 title = "The jank Programming Language"
 

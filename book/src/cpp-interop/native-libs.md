@@ -89,9 +89,15 @@ Our source file defines this `compress` function using zlib. We can now compile
 this to a shared library so it can be used in jank.
 
 ```bash
-$ clang++ -shared -o libcompress.so compress.cpp
+# Linux.
+$ clang++ -shared -o libcompress.so -lz compress.cpp
 $ ls
 compress.cpp  compress.hpp  libcompress.so
+
+# macOS.
+$ clang++ -shared -o libcompress.dylib -lz compress.cpp
+$ ls
+compress.cpp  compress.hpp  libcompress.dylib
 ```
 
 ### Linking to our native lib
@@ -257,7 +263,12 @@ Getting around this varies based on situation, but a quick workaround is to
 tell the dynamic linker where else to look, when we run our program.
 
 ```bash
+# Linux.
 $ LD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
+input size 20 output size 12
+
+# macOS.
+$ DYLD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
 input size 20 output size 12
 ```
 
