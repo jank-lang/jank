@@ -208,7 +208,7 @@ jobs:
         if: runner.os == 'Linux'
         with:
           swap-space-path: /swapfile
-          swap-size-gb: 4
+          swap-size-gb: 8
           remove-existing-swap-files: true
       - name: Build and test jank
         id: jank-build-step
