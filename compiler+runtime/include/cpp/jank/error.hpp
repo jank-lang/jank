@@ -204,7 +204,7 @@ namespace jank::error
       case kind::parse_invalid_reader_gensym:
         return "parse/invalid-reader-gensym";
       case kind::parse_invalid_reader_symbolic_value:
-        return "parse_invalid_reader_symbolic-value";
+        return "parse/invalid-reader-symbolic-value";
       case kind::parse_invalid_reader_tag_value:
         return "parse/invalid-reader-tag-value";
       case kind::parse_invalid_regex:
