@@ -57,6 +57,5 @@ jobs:
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           sudo mv mdbook /usr/local/bin/
           pushd ${{ github.workspace }}/book
-            mdbook build || exit 1
             ./bin/publish || exit 1
           popd
