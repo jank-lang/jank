@@ -33,7 +33,7 @@ jobs:
         run: |
           wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
-          export PATH=$PWD:$PATH
+          sudo mv mdbook /usr/local/bin/
           pushd ${{ github.workspace }}/book
             mdbook build || exit 1
           popd
@@ -55,7 +55,7 @@ jobs:
         run: |
           wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
-          export PATH=$PWD:$PATH
+          sudo mv mdbook /usr/local/bin/
           pushd ${{ github.workspace }}/book
             mdbook build || exit 1
             ./bin/publish || exit 1
