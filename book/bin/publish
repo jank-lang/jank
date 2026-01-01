@@ -16,6 +16,8 @@ then
   git config --global user.name "Github Actions"
 fi
 
+# We're currently in book/, so we want to go to the root of the repo.
+cd ..
 for file in $(git ls-files);
 do
   rm -rf "${file}";
