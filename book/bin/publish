@@ -2,8 +2,9 @@
 
 set -xeuo pipefail
 
+tmp="/tmp/jank-book-publish"
 mdbook build
-mv live new-live
+mv live "${tmp}"
 
 git fetch --no-recurse-submodules
 git checkout gh-pages
@@ -15,8 +16,13 @@ then
   git config --global user.name "Github Actions"
 fi
 
-rm -rf live
-mv new-live live
+# We're currently in book/, so we want to go to the root of the repo.
+cd ..
+for file in $(git ls-files);
+do
+  rm -rf "${file}";
+done
+mv "${tmp}"/* "${tmp}"/.* .
 git add .
 git commit -m "Automated publish" --allow-empty
 
