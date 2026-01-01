@@ -13,6 +13,7 @@
 TODO:
   Reading error messages
   .jank, .cljc, .cpp files
+    All modules need to intern the ns
   nREPL support
   AOT compiling programs (and distributing them)
   Troubleshooting / Getting a stack trace
