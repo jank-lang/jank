@@ -47,8 +47,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          sparse-checkout: book
       - name: Publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
