@@ -33,7 +33,7 @@ git commit -m "Automated publish" --allow-empty
 if [[ "${GITHUB_TOKEN}x" != "x" ]];
 then
   git remote remove ci-origin || true
-  git remote add ci-origin "https://${GITHUB_TOKEN}@github.com/jank-lang/jank-lang.org.git"
+  git remote add ci-origin "https://${GITHUB_TOKEN}@github.com/jank-lang/jank.git"
   git push ci-origin gh-pages
 else
   git push origin gh-pages
