@@ -2,7 +2,7 @@
 
 set -xeuo pipefail
 
-git fetch
+git fetch --no-recurse-submodules
 git checkout gh-pages
 git merge origin/gh-pages
 git clean -fd -e /book
