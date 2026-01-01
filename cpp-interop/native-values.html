@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-ba7f154f.js";
+            window.path_to_searchindex_js = "../searchindex-7b58079a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bc6207db.js"></script>
+        <script src="../toc-f7e6357b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -186,8 +186,45 @@ environments where there is a base <code>Object</code> for all class types. This
 we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.</p>
+<h2 id="tagged-literals"><a class="header" href="#tagged-literals">Tagged literals</a></h2>
+<p>jank provides access to literal C++ values through the <code>#cpp</code> reader tag. Using
+this will resolve to a C++ primitive, rather than a jank runtime object. It’s
+supported for the following literals:</p>
+<ol>
+<li>Numbers (integers and floats)</li>
+<li>Bools</li>
+<li>Strings</li>
+</ol>
+<p>For example:</p>
+<pre><code class="language-clojure">(let [i #cpp 0
+      f #cpp 3.14159
+      s #cpp "meow"]
+  )
+</code></pre>
+<h2 id="named-literals"><a class="header" href="#named-literals">Named literals</a></h2>
+<p>jank also has explicit support for <code>cpp/true</code>, <code>cpp/false</code>, and <code>cpp/nullptr</code>,
+which all correspond to the C++ primitive.</p>
+<h2 id="member-values"><a class="header" href="#member-values">Member values</a></h2>
+<p>Member values can be accessed from a native object using the <code>cpp/.-foo</code> syntax.
+For example, let’s create a <code>person</code> and then pull out the name.</p>
+<pre><code class="language-clojure">(cpp/raw "struct person
+          { std::string name; };")
+
+(defn create-person [name]
+  (let [p (cpp/person (cpp/cast cpp/std.string name))
+        n (cpp/.-name p)]
+    ))
+</code></pre>
+<p>Whenever a member is accessed, you will get a reference to it, not a copy. Also,
+note that members can be access through a pointer to the native object, without
+needing an explicit dereference.</p>
+<pre><code class="language-clojure">(defn create-person [name]
+  (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
+        n (cpp/.-name p)]
+    ))
+</code></pre>
 <h2 id="trait-convertible"><a class="header" href="#trait-convertible">Trait-convertible</a></h2>
-<p>Firstly, some C++ types are automatically and implicitly convertible to/from
+<p>Some C++ types are automatically and implicitly convertible to/from
 jank objects. These include all C++ intrinsic intregral types, bools, C strings,
 and even some C++ standard libary types like <code>std::string</code>. For these types,
 the jank compiler will detect if conversion is necessary and will implicitly
@@ -253,7 +290,6 @@ intended for C++ developers who’re using jank.</p>
 (cpp/raw "struct person
           { std::string name; };
 
-
           namespace jank::runtime
           {
             template &lt;&gt;
@@ -274,9 +310,7 @@ intended for C++ developers who’re using jank.</p>
              };
 
              obj::keyword_ref convert&lt;person&gt;::name_kw{ __rt_ctx-&gt;intern_keyword(\"name\").expect_ok() };
-          }
-
-          ")
+          }")
 
 (defn create-person [name]
   (let [p (cpp/person (cpp/cast cpp/std.string name))]
@@ -289,7 +323,76 @@ into a jank hash map.</p>
 <pre><code class="language-bash">$ jank run person.jank
 {:name foo}
 </code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Although this works, consider moving this C++ into a header file and including
+it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale very well.</p>
+</blockquote>
 <h2 id="opaque-boxes"><a class="header" href="#opaque-boxes">Opaque boxes</a></h2>
+<p>There is a performance cost to the convenience of implicit conversions. For pure
+data, and trivial types, this may be preferred. However, if you want to store
+something like a C++ database handle, which is managing network resources, a
+thread pool, and other state, converting this to a jank runtime object is not
+practical. In these cases, you can use an opaque box to pass the data through
+the jank runtime instead.</p>
+<p>Opaque boxes are jank runtime objects which basically store a <code>void*</code>, which is
+an untyped native pointer. The key part here is that the data you store in the
+opaque box must be a pointer. Since the opaque box could be stored in a
+container, captured in a closure, or otherwise kept alive, it’s important that
+the data within is also dynamically allocated. However, opaque boxes track the
+name of the type at compile-time and ensure that unboxing uses the correct type.
+Given a hypothetical <code>my_db</code> C++ database library, boxing is done like this:</p>
+<pre><code class="language-clojure">(defn query! [db-box q]
+  (let [; db-box is an object_ref
+        ; db is a my_db.connection*
+        db (cpp/unbox cpp/my_db.connection* db-box)]
+    (cpp/.query db q)))
+
+(defn -main [&amp; args]
+  (let [; db is a my_db.connection*
+        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        ; db-box is a opaque_box_ref
+        db-box (cpp/box db)]
+    ))
+</code></pre>
+<p>If you unbox the incorrect type, jank will surface a runtime error with helpful
+source information describing the type that was in the opaque box and the type
+you expected. For example, let’s say we box a <code>connection*</code>, but we try to unbox
+it as a <code>secure_connection*</code>.</p>
+<pre><code>❯ jank run test.jank
+─ runtime/invalid-unbox ───────────────────────────────────────────────────────
+error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
+       'my_db::secure_connection*'.
+
+─────┬─────────────────────────────────────────────────────────────────────────
+     │ test.jank
+─────┼─────────────────────────────────────────────────────────────────────────
+ 21  │   (let [; db-box is an object_ref
+ 22  │         ; db is a my_db.connection*
+ 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+     │             ^^^^^^^^^ Unboxed here.
+     │ …
+ 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 29  │         ; db-box is a opaque_box_ref
+ 30  │         db-box (cpp/box db)]
+     │                 ^^^^^^^ Boxed here.
+ 31  │     (query! db-box "meow")))
+ 32  │
+ 33  │ (-main)
+     │ ^^^^^^^ Used here.
+─────┴─────────────────────────────────────────────────────────────────────────
+</code></pre>
+<h2 id="complex-literal-values"><a class="header" href="#complex-literal-values">Complex literal values</a></h2>
+<p>If your C++ value is not representable using jank’s interop syntax, due to
+template arguments or other shenanigans, you can use <code>cpp/value</code> to provide the
+complete value using an inline C++ string. For example, here’s how we grab the
+<code>npos</code> from a template instantiation:</p>
+<pre><code class="language-clojure">(let [m (cpp/value "std::basic_string&lt;char&gt;::npos")]
+  )
+</code></pre>
+<p>No implicit boxing will happen here, unless you use this value in a way which
+requires it. jank will give you a reference to the value you specified. If you
+need a copy, you will need to manually do that.</p>
 
                     </main>
 
@@ -299,7 +402,7 @@ into a jank hash map.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../cpp-interop/native-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -313,7 +416,7 @@ into a jank hash map.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../cpp-interop/native-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

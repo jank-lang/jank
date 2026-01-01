@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-ba7f154f.js";
+            window.path_to_searchindex_js = "searchindex-7b58079a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-bc6207db.js"></script>
+        <script src="toc-f7e6357b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -727,8 +727,45 @@ environments where there is a base <code>Object</code> for all class types. This
 we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.</p>
+<h2 id="tagged-literals"><a class="header" href="#tagged-literals">Tagged literals</a></h2>
+<p>jank provides access to literal C++ values through the <code>#cpp</code> reader tag. Using
+this will resolve to a C++ primitive, rather than a jank runtime object. It’s
+supported for the following literals:</p>
+<ol>
+<li>Numbers (integers and floats)</li>
+<li>Bools</li>
+<li>Strings</li>
+</ol>
+<p>For example:</p>
+<pre><code class="language-clojure">(let [i #cpp 0
+      f #cpp 3.14159
+      s #cpp "meow"]
+  )
+</code></pre>
+<h2 id="named-literals"><a class="header" href="#named-literals">Named literals</a></h2>
+<p>jank also has explicit support for <code>cpp/true</code>, <code>cpp/false</code>, and <code>cpp/nullptr</code>,
+which all correspond to the C++ primitive.</p>
+<h2 id="member-values"><a class="header" href="#member-values">Member values</a></h2>
+<p>Member values can be accessed from a native object using the <code>cpp/.-foo</code> syntax.
+For example, let’s create a <code>person</code> and then pull out the name.</p>
+<pre><code class="language-clojure">(cpp/raw "struct person
+          { std::string name; };")
+
+(defn create-person [name]
+  (let [p (cpp/person (cpp/cast cpp/std.string name))
+        n (cpp/.-name p)]
+    ))
+</code></pre>
+<p>Whenever a member is accessed, you will get a reference to it, not a copy. Also,
+note that members can be access through a pointer to the native object, without
+needing an explicit dereference.</p>
+<pre><code class="language-clojure">(defn create-person [name]
+  (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
+        n (cpp/.-name p)]
+    ))
+</code></pre>
 <h2 id="trait-convertible"><a class="header" href="#trait-convertible">Trait-convertible</a></h2>
-<p>Firstly, some C++ types are automatically and implicitly convertible to/from
+<p>Some C++ types are automatically and implicitly convertible to/from
 jank objects. These include all C++ intrinsic intregral types, bools, C strings,
 and even some C++ standard libary types like <code>std::string</code>. For these types,
 the jank compiler will detect if conversion is necessary and will implicitly
@@ -794,7 +831,6 @@ intended for C++ developers who’re using jank.</p>
 (cpp/raw "struct person
           { std::string name; };
 
-
           namespace jank::runtime
           {
             template &lt;&gt;
@@ -815,9 +851,7 @@ intended for C++ developers who’re using jank.</p>
              };
 
              obj::keyword_ref convert&lt;person&gt;::name_kw{ __rt_ctx-&gt;intern_keyword(\"name\").expect_ok() };
-          }
-
-          ")
+          }")
 
 (defn create-person [name]
   (let [p (cpp/person (cpp/cast cpp/std.string name))]
@@ -830,7 +864,187 @@ into a jank hash map.</p>
 <pre><code class="language-bash">$ jank run person.jank
 {:name foo}
 </code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Although this works, consider moving this C++ into a header file and including
+it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale very well.</p>
+</blockquote>
 <h2 id="opaque-boxes"><a class="header" href="#opaque-boxes">Opaque boxes</a></h2>
+<p>There is a performance cost to the convenience of implicit conversions. For pure
+data, and trivial types, this may be preferred. However, if you want to store
+something like a C++ database handle, which is managing network resources, a
+thread pool, and other state, converting this to a jank runtime object is not
+practical. In these cases, you can use an opaque box to pass the data through
+the jank runtime instead.</p>
+<p>Opaque boxes are jank runtime objects which basically store a <code>void*</code>, which is
+an untyped native pointer. The key part here is that the data you store in the
+opaque box must be a pointer. Since the opaque box could be stored in a
+container, captured in a closure, or otherwise kept alive, it’s important that
+the data within is also dynamically allocated. However, opaque boxes track the
+name of the type at compile-time and ensure that unboxing uses the correct type.
+Given a hypothetical <code>my_db</code> C++ database library, boxing is done like this:</p>
+<pre><code class="language-clojure">(defn query! [db-box q]
+  (let [; db-box is an object_ref
+        ; db is a my_db.connection*
+        db (cpp/unbox cpp/my_db.connection* db-box)]
+    (cpp/.query db q)))
+
+(defn -main [&amp; args]
+  (let [; db is a my_db.connection*
+        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        ; db-box is a opaque_box_ref
+        db-box (cpp/box db)]
+    ))
+</code></pre>
+<p>If you unbox the incorrect type, jank will surface a runtime error with helpful
+source information describing the type that was in the opaque box and the type
+you expected. For example, let’s say we box a <code>connection*</code>, but we try to unbox
+it as a <code>secure_connection*</code>.</p>
+<pre><code>❯ jank run test.jank
+─ runtime/invalid-unbox ───────────────────────────────────────────────────────
+error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
+       'my_db::secure_connection*'.
+
+─────┬─────────────────────────────────────────────────────────────────────────
+     │ test.jank
+─────┼─────────────────────────────────────────────────────────────────────────
+ 21  │   (let [; db-box is an object_ref
+ 22  │         ; db is a my_db.connection*
+ 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+     │             ^^^^^^^^^ Unboxed here.
+     │ …
+ 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 29  │         ; db-box is a opaque_box_ref
+ 30  │         db-box (cpp/box db)]
+     │                 ^^^^^^^ Boxed here.
+ 31  │     (query! db-box "meow")))
+ 32  │
+ 33  │ (-main)
+     │ ^^^^^^^ Used here.
+─────┴─────────────────────────────────────────────────────────────────────────
+</code></pre>
+<h2 id="complex-literal-values"><a class="header" href="#complex-literal-values">Complex literal values</a></h2>
+<p>If your C++ value is not representable using jank’s interop syntax, due to
+template arguments or other shenanigans, you can use <code>cpp/value</code> to provide the
+complete value using an inline C++ string. For example, here’s how we grab the
+<code>npos</code> from a template instantiation:</p>
+<pre><code class="language-clojure">(let [m (cpp/value "std::basic_string&lt;char&gt;::npos")]
+  )
+</code></pre>
+<p>No implicit boxing will happen here, unless you use this value in a way which
+requires it. jank will give you a reference to the value you specified. If you
+need a copy, you will need to manually do that.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="working-with-native-types"><a class="header" href="#working-with-native-types">Working with native types</a></h1>
+<h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
+<p>C++ types are available under the <code>cpp/</code> namespace, if you replace <code>::</code> with
+<code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
+type aliases.</p>
+<h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
+<p>If your C++ type is not representable using jank’s interop syntax, due to
+template arguments or other shenanigans, you can use <code>cpp/type</code> to provide the
+complete type using an inline C++ string. For example, here’s how we both grab
+the type and construct it (call the type), to get a value. In this example, we
+build a C++ ordered map from <code>std::string</code> to pointers to functions which take
+in an <code>int</code> and return an <code>int</code>.</p>
+<pre><code class="language-clojure">(let [m ((cpp/type "std::map&lt;std::string, int (*)(int)&gt;"))]
+  )
+</code></pre>
+<h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
+<p>There isn’t yet a way to define new types using jank’s syntax, but you can
+always drop to <code>cpp/raw</code> to either include headers or define some C++ types
+inline. Improved support for extending jank’s object model with JIT (just in
+time) compiled types will be coming in 2026.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="working-with-native-functions"><a class="header" href="#working-with-native-functions">Working with native functions</a></h1>
+<h2 id="global-functions"><a class="header" href="#global-functions">Global functions</a></h2>
+<p>C++ has a huge range of function scenarios and jank tries to capture them all.
+The simplest case is global functions, as well as static member functions. This
+applies to both C and C++ functions. In order to call these, just take the fully
+qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
+<ul>
+<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
+<li><code>std::this_thread::get_id()</code> becomes <code>cpp/std.this_thread.get_id</code></li>
+</ul>
+<p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
+pseudo-random number generator with the current time and then get a number.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (cpp/srand (cpp/time cpp/nullptr))
+  (println "rand:" (cpp/rand)))
+</code></pre>
+<h2 id="overload-resolution"><a class="header" href="#overload-resolution">Overload resolution</a></h2>
+<p>Once we get out of C land and into C++ territory, the function name alone
+doesn’t necessarily make it unique. C++ functions can be overloaded with
+different arities and different parameter types. jank will resolve each function
+call at compile-time. There is no runtime reflection. If a call can’t be
+resolved to a known overload, or is ambiguous between multiple overloads, jank
+will raise a compiler error.</p>
+<p>For example, the
+<a href="https://en.cppreference.com/w/cpp/string/basic_string/to_string">std::to_string</a>
+function has many different overloads. Here, we specifically create <code>i</code> to be an
+<code>int</code>, so overload resolution can happen.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i #cpp 42
+        s (cpp/std.to_string i)]
+    s))
+</code></pre>
+<p>However, if we try to rely on implicit trait conversions, or we pass an unsupported
+type, we’ll get a compiler error.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i 42
+        s (cpp/std.to_string i)]
+    s))
+</code></pre>
+<pre><code class="language-bash">$ jank run test.jank
+─ analyze/invalid-cpp-function-call ───────────────────────────────────────────
+error: No normal overload match was found. When considering automatic trait
+       conversions, this call is ambiguous.
+
+─────┬─────────────────────────────────────────────────────────────────────────
+     │ test.jank
+─────┼─────────────────────────────────────────────────────────────────────────
+  1  │ (defn -main [&amp; args]
+  2  │   (let [i 42
+     │   ^ Expanded from this macro.
+  3  │         s (cpp/std.to_string i)]
+     │            ^^^^^^^^^^^^^^^^^ Found here.
+─────┴─────────────────────────────────────────────────────────────────────────
+</code></pre>
+<p>We could opt into a specific conversion, and thus a specific overload, by using <code>cpp/cast</code>.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i 42
+        s (cpp/std.to_string (cpp/cast cpp/int i))]
+    s))
+</code></pre>
+<h2 id="member-functions"><a class="header" href="#member-functions">Member functions</a></h2>
+<p>Member functions can be accessed using the <code>cpp/.foo</code> syntax. For example, let’s
+convert a jank object to a <code>std::string</code> and then see if it’s empty.</p>
+<pre><code class="language-clojure">(defn empty? [o]
+  (let [s (str o)
+        native-s (cpp/cast cpp/std.string s)]
+    (cpp/.empty native-s)))
+</code></pre>
+<p>Also note that member functions can be called through a pointer to the native
+object, without the need for an explicit dereference.</p>
+<h2 id="arbitrary-callables"><a class="header" href="#arbitrary-callables">Arbitrary callables</a></h2>
+<p>In C++, we also deal with pointers to functions and custom types which implement
+the call operator. jank supports both of these scenarios using the normal call
+syntax. For example, we can implement our own callable which captures some data
+and then returns it when called.</p>
+<pre><code class="language-clojure">(cpp/raw "struct call_me
+          {
+            jank::runtime::object_ref data;
+
+            jank::runtime::object_ref operator()()
+            { return data; }
+          };")
+
+(defn -main [&amp; args]
+  (let [f (cpp/call_me. "meow")]
+    (f)))
+</code></pre>
+<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
+<p>C++ operators are special language</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="the-reasoning-for-the-cpp-namespace"><a class="header" href="#the-reasoning-for-the-cpp-namespace">The reasoning for the <code>cpp</code> namespace</a></h1>
 <p>All forms related to C++ interop in jank are under the special <code>cpp/</code> namespace.
@@ -840,6 +1054,9 @@ provide some insulation between Clojure and C++.</p>
 special forms, like <code>cpp/raw</code>, I think it makes sense. Although, for typical day
 to day object creation and member access, the <code>cpp/</code> namespace is likely overly
 noisy.</p>
+<p>There are concerns with functions like <code>clojure.core/int</code> being ambiguous with
+<code>cpp/int</code>. It could be that only types are pulled from <code>cpp/</code>, but consistency
+is also sanity.</p>
 <p>However, it’s worth considering that <code>cpp/</code> is useful if jank provides interop
 with other native languages, such as Rust. In which case, we may want to
 disambiguate with <code>cpp/</code> and <code>rs/</code>.</p>
