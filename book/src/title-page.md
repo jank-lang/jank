@@ -1,4 +1,4 @@
-# The jank Programming Language
+# Welcome to the jank alpha!
 *by Jeaye Wilkerson, without LLMs, with feedback from the jank community.*
 
 This book is written for jank's alpha release. It is incomplete, although its

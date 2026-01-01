@@ -1,6 +1,6 @@
 # The jank Programming Language
 
-[The jank Programming Language](title-page.md)
+[Welcome to the jank alpha!](title-page.md)
 
 [Foreward](foreward.md)
 
@@ -22,7 +22,7 @@ TODO:
 * [Reaching into C++](cpp-interop/index.md)
   * [Embedding raw C++](cpp-interop/cpp-raw.md)
   * [Bringing in native libraries](cpp-interop/native-libs.md)
-  * [Working with native values]()
+  * [Working with native values](cpp-interop/native-values.md)
   * [Boxing native values]()
   * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
 
