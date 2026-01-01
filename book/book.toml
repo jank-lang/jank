@@ -8,5 +8,6 @@ title = "The jank Programming Language"
 create-missing = false
 
 [output.html]
+destination = "live"
 admonitions = true
 git-repository-url = "https://github.com/jank-lang/jank"

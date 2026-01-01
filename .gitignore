@@ -62,3 +62,6 @@ node_modules
 
 # Nix (outcome of `nix build`)
 /result
+
+# Book
+/book/live

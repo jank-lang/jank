@@ -2,23 +2,12 @@
 
 set -xeuo pipefail
 
+mdbook build
+mv live new-live
+
 git fetch --no-recurse-submodules
 git checkout gh-pages
 git merge origin/gh-pages
-
-# This is dangerous to run locally, so we only do it in CI.
-if [[ "${GITHUB_TOKEN}x" != "x" ]];
-then
-  git clean -fd -e /book
-fi
-
-# TODO: Remove everything there except book and .git
-for file in book/* book/.*;
-do
-  rm -rf "${file##book/}"
-  mv "${file}" .
-done
-rmdir book
 
 if [[ "${GITHUB_TOKEN}x" != "x" ]];
 then
@@ -26,6 +15,8 @@ then
   git config --global user.name "Github Actions"
 fi
 
+rm -rf live
+mv new-live live
 git add .
 git commit -m "Automated publish" --allow-empty
 
