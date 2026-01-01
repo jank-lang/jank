@@ -5,6 +5,7 @@ set -xeuo pipefail
 git fetch --no-recurse-submodules
 git checkout gh-pages
 git merge origin/gh-pages
+# XXX: This is dangerous to run locally!
 git clean -fd -e /book
 
 # TODO: Remove everything there except book and .git
