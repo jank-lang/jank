@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -xeuo pipefail
+
+git fetch
+git checkout gh-pages
+git merge origin/gh-pages
+git clean -fd -e /book
+
+# TODO: Remove everything there except book and .git
+for file in book/*;
+do
+  rm -rf "${file##book/}"
+  mv "${file}" .
+done
+rmdir book
+
+if [[ "${GITHUB_TOKEN}x" != "x" ]];
+then
+  git config --global user.email "github-actions@notadomain"
+  git config --global user.name "Github Actions"
+fi
+
+git add .
+git commit -m "Automated publish" --allow-empty
+
+# Pushing from CI requires an access token.
+if [[ "${GITHUB_TOKEN}x" != "x" ]];
+then
+  git remote remove ci-origin || true
+  git remote add ci-origin "https://${GITHUB_TOKEN}@github.com/jank-lang/jank-lang.org.git"
+  git push ci-origin gh-pages
+else
+  git push origin gh-pages
+fi
+
+git checkout -
