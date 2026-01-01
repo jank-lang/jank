@@ -184,6 +184,8 @@ namespace jank::error
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
         return "Invalid C++ member access.";
+      case kind::analyze_known_issue:
+        return "Known issue.";
       case kind::internal_analyze_failure:
         return "Internal analysis failure.";
 
@@ -449,11 +451,11 @@ namespace jank::error
    * begin with. In that case, we update the existing note rather than adding a new one. */
   jtl::ref<base> base::add_usage(read::source const &usage_source)
   {
-    if(usage_source == read::source::unknown || usage_source.overlaps(source))
+    if(usage_source == read::source::unknown() || usage_source.overlaps(source))
     {
       return this;
     }
-    else if(source == read::source::unknown)
+    else if(source == read::source::unknown())
     {
       source = usage_source;
       notes[0].source = usage_source;
@@ -468,5 +470,17 @@ namespace jank::error
   std::ostream &operator<<(std::ostream &os, base const &e)
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";
+  }
+
+  error_ref internal_failure(jtl::immutable_string const &message)
+  {
+    auto const e{ make_error(kind::internal_failure, message, read::source::unknown()) };
+    e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
+    return e;
+  }
+
+  void throw_internal_failure(jtl::immutable_string const &message)
+  {
+    throw internal_failure(message);
   }
 }

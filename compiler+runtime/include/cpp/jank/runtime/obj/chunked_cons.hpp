@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using chunked_cons_ref = oref<struct chunked_cons>;
 
-  struct chunked_cons : gc
+  struct chunked_cons
   {
     static constexpr object_type obj_type{ object_type::chunked_cons };
     static constexpr bool pointer_free{ false };
@@ -18,8 +18,8 @@ namespace jank::runtime::obj
     chunked_cons() = default;
     chunked_cons(chunked_cons &&) noexcept = default;
     chunked_cons(chunked_cons const &) = default;
-    chunked_cons(object_ref head, object_ref tail);
-    chunked_cons(object_ref meta, object_ref head, object_ref tail);
+    chunked_cons(object_ref const head, object_ref const tail);
+    chunked_cons(object_ref const meta, object_ref const head, object_ref const tail);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -29,7 +29,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    chunked_cons_ref with_meta(object_ref m) const;
+    chunked_cons_ref with_meta(object_ref const m) const;
 
     /* behavior::seqable */
     chunked_cons_ref seq() const;
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable */
     object_ref first() const;
     object_ref next() const;
-    obj::cons_ref conj(object_ref head) const;
+    obj::cons_ref conj(object_ref const head) const;
 
     /* behavior::sequenceable_in_place */
     chunked_cons_ref next_in_place();

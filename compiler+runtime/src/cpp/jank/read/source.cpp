@@ -4,11 +4,18 @@
 
 namespace jank::read
 {
-  source_position const source_position::unknown{ 0, 0, 0 };
-  source const source::unknown{ no_source_path,
-                                no_source_path,
-                                source_position::unknown,
-                                source_position::unknown };
+  source_position source_position::unknown()
+  {
+    return { 0, 0, 0 };
+  }
+
+  source source::unknown()
+  {
+    return { no_source_path,
+             no_source_path,
+             source_position::unknown(),
+             source_position::unknown() };
+  }
 
   source::source(source_position const &start)
     : source{ start, start }

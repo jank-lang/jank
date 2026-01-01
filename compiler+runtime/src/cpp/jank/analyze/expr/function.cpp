@@ -29,7 +29,7 @@ namespace jank::analyze::expr
   object_ref function_arity::to_runtime_data() const
   {
     object_ref param_maps(make_box<obj::persistent_vector>());
-    for(auto const e : params)
+    for(auto const &e : params)
     {
       param_maps = conj(param_maps, e);
     }

@@ -8,7 +8,7 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
 
-jank_object_ref jank_load_jank_perf_native()
+extern "C" void jank_load_jank_perf_native()
 {
   using namespace jank;
   using namespace jank::runtime;
@@ -23,6 +23,4 @@ jank_object_ref jank_load_jank_perf_native()
           make_box(obj::symbol{ __rt_ctx->current_ns()->to_string(), name }.to_string())))));
   });
   intern_fn("benchmark", &perf::benchmark);
-
-  return jank_nil.erase();
 }

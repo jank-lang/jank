@@ -25,9 +25,9 @@ namespace jank::runtime::obj
       CHECK(equal(s.get(min), min_char));
       CHECK(equal(s.get(mid), mid_char));
       CHECK(equal(s.get(max), max_char));
-      CHECK(equal(s.get(over), jank_nil));
-      CHECK(equal(s.get(under), jank_nil));
-      CHECK(equal(s.get(non_int), jank_nil));
+      CHECK(equal(s.get(over), jank_nil()));
+      CHECK(equal(s.get(under), jank_nil()));
+      CHECK(equal(s.get(non_int), jank_nil()));
     }
     TEST_CASE("get with fallback")
     {

@@ -48,7 +48,7 @@
   (let [res @(b.p/process {:out :string
                            :err :out
                            :dir (:dir test)}
-                          "jank --module-path=.:jar.jar run input.jank")]
+                          "jank --module-path .:jar.jar run input.jank")]
     (assoc test :output (strip-ansi-codes (string/trim (:out res))))))
 
 (defn generate! [tests]

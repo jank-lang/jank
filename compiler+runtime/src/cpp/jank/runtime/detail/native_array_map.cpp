@@ -1,5 +1,6 @@
 #include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/obj/nil.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::detail
@@ -115,6 +116,13 @@ namespace jank::runtime::detail
           "promote to hash map if needed.",
           (length / 2) + 1) };
     }
+  }
+
+  native_array_map::~native_array_map()
+  {
+    data = nullptr;
+    /* TODO: data could still be referenced by iterators. shared ptr? */
+    //delete[] data;
   }
 
   void native_array_map::insert_unique(object_ref const key, object_ref const val)
@@ -292,7 +300,7 @@ namespace jank::runtime::detail
 
     auto const new_capacity{ static_cast<u8>(size * 2) };
 
-    if(new_capacity < cap)
+    if(new_capacity <= cap)
     {
       return;
     }
@@ -304,6 +312,8 @@ namespace jank::runtime::detail
       new_data[i] = data[i];
       new_data[i + 1] = data[i + 1];
     }
+
+    //delete[] data;
 
     data = new_data;
     cap = new_capacity;
@@ -327,8 +337,11 @@ namespace jank::runtime::detail
   native_array_map native_array_map::clone() const
   {
     native_array_map ret{ *this };
-    ret.data = new(GC) object_ref[length];
-    memcpy(ret.data, data, length * sizeof(object_ref));
+    ret.data = new(GC) object_ref[cap];
+    for(u8 i{}; i < length; ++i)
+    {
+      ret.data[i] = data[i];
+    }
     return ret;
   }
 }

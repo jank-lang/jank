@@ -55,7 +55,7 @@ namespace jank::runtime::obj
           return false;
         }
 
-        for(auto const entry : data)
+        for(auto const &entry : data)
         {
           if(!typed_o->contains(entry))
           {
@@ -133,7 +133,7 @@ namespace jank::runtime::obj
     auto const found(data.find(o));
     if(!found)
     {
-      return jank_nil;
+      return jank_nil();
     }
     return *found;
   }

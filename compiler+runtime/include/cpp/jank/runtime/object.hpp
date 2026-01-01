@@ -243,7 +243,16 @@ namespace jank::runtime
 
   struct object
   {
+    object() = default;
+    object(object const &) noexcept;
+    object(object &&) noexcept;
+    object(object_type) noexcept;
+
+    object &operator=(object const &) noexcept;
+    object &operator=(object &&) noexcept;
+
     object_type type{};
+    std::atomic<i32> ref_count{};
   };
 
   namespace obj
@@ -304,8 +313,8 @@ namespace jank::runtime
     bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
 
-  bool operator==(object const *, object_ref);
-  bool operator!=(object const *, object_ref);
+  bool operator==(object const *, object_ref const);
+  bool operator!=(object const *, object_ref const);
 }
 
 namespace std

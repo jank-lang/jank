@@ -1,9 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
-#include <gc/gc.h>
-#include <gc/gc_cpp.h>
-
 #include <llvm-c/Target.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ManagedStatic.h>
@@ -19,6 +16,10 @@
 #include <jank/error/report.hpp>
 #include <clojure/core_native.hpp>
 
+#ifdef JANK_PHASE_2
+extern "C" void jank_load_clojure_core();
+#endif
+
 /* NOLINTNEXTLINE(bugprone-exception-escape): println can throw. */
 int main(int const argc, char const **argv)
 try
@@ -29,10 +30,14 @@ try
     context.setOption("no-breaks", true);
 
     jank_load_clojure_core_native();
-    /* We're loading from source always due to a bug in how we generate symbols which is
-     * leading to duplicate symbols being generated. */
+
+#ifdef JANK_PHASE_2
+    jank_load_clojure_core();
+    jank::runtime::__rt_ctx->module_loader.set_is_loaded("/clojure.core");
+#else
     jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::latest)
       .expect_ok();
+#endif
 
     auto const res(context.run());
     if(context.shouldExit())

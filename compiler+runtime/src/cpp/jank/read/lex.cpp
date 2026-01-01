@@ -1081,7 +1081,7 @@ namespace jank::read::lex
               return error::lex_invalid_number(
                 util::format(
                   "Characters '{}' are invalid for a base {} number.",
-                  jtl::immutable_string_view{ invalid_digits.begin(), invalid_digits.end() },
+                  jtl::immutable_string_view{ invalid_digits.data(), invalid_digits.size() },
                   radix),
                 { token_start, pos });
             }
@@ -1191,8 +1191,9 @@ namespace jank::read::lex
           }
 
           auto const oc(peek());
-          auto const c(oc.expect_ok().character);
-          if(oc.is_err() || std::iswspace(static_cast<wint_t>(c)) || is_special_char(c))
+
+          if(oc.is_err() || std::iswspace(static_cast<wint_t>(oc.expect_ok().character))
+             || is_special_char(oc.expect_ok().character))
           {
             ++pos;
             return error::lex_invalid_keyword(
@@ -1200,14 +1201,31 @@ namespace jank::read::lex
               { token_start, pos });
           }
 
+          auto const c(oc.expect_ok().character);
+
           /* Support auto-resolved qualified keywords. */
           if(c == ':')
           {
             ++pos;
             auto const after_dd_colon(peek());
-            if(after_dd_colon.is_ok() && after_dd_colon.expect_ok().character == '/')
+
+            /* Invalid ":: " source found. */
+            if(after_dd_colon.is_err()
+               || std::iswspace(static_cast<wint_t>(after_dd_colon.expect_ok().character))
+               || is_special_char(after_dd_colon.expect_ok().character))
             {
-              /* Invalid ::/ pattern found. Consume the entire invalid token. */
+              ++pos;
+              return error::lex_invalid_keyword(
+                "An auto-resolved keyword must contain a valid symbol after '::'.",
+                { token_start, pos });
+            }
+
+            auto const ch{ after_dd_colon.expect_ok().character };
+
+            /* Invalid ::/, ::), etc. pattern found. */
+            if(after_dd_colon.is_ok() && ch == '/')
+            {
+              /* Consume the entire invalid token. */
               while(true)
               {
                 auto const result(convert_to_codepoint(file.substr(pos), pos));
@@ -1217,8 +1235,13 @@ namespace jank::read::lex
                 }
                 pos += result.expect_ok().len;
               }
-              return error::lex_invalid_keyword("An auto-resolved keyword may not start with '/'.",
-                                                { token_start, pos });
+
+              return error::lex_invalid_keyword(
+                ch == '/' ? "The namespace symbol before '/' is missing."
+                          : util::format("This keyword unexpectedly ended. A symbol was expected, "
+                                         "here but '{}' was found.",
+                                         ch),
+                { token_start, pos });
             }
           }
           while(true)

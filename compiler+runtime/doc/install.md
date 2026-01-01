@@ -1,6 +1,6 @@
 # Installing jank
 If you're on any of the below systems, you can install jank using your system's
-package manager.
+package manager. If not, you can still [build jank yourself](https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md).
 
 ## Homebrew (macOS or Linux)
 ### Install

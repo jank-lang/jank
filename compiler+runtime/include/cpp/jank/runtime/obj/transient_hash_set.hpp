@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_hash_set_ref = oref<struct transient_hash_set>;
 
-  struct transient_hash_set : gc
+  struct transient_hash_set
   {
     static constexpr object_type obj_type{ object_type::transient_hash_set };
     static constexpr bool pointer_free{ false };
@@ -35,7 +35,7 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable_in_place */
-    transient_hash_set_ref conj_in_place(object_ref elem);
+    transient_hash_set_ref conj_in_place(object_ref const elem);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();

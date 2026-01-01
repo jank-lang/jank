@@ -1,13 +1,8 @@
 #pragma once
 
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/analyze/expr/do.hpp>
-
-namespace jank::runtime::obj
-{
-  using symbol_ref = oref<struct symbol>;
-  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-  using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-}
 
 namespace jank::analyze
 {
@@ -18,7 +13,7 @@ namespace jank::analyze::expr
 {
   using function_ref = jtl::ref<struct function>;
 
-  struct function_context : gc
+  struct function_context
   {
     static constexpr bool pointer_free{ false };
 
@@ -27,7 +22,11 @@ namespace jank::analyze::expr
     jtl::immutable_string unique_name;
     usize param_count{};
     bool is_variadic{};
-    bool is_tail_recursive{};
+    /* Is recur used within this function? */
+    bool is_recur_recursive{};
+    /* Is there any named recrusion within this function (tail or otherwise)?
+     * This counts any named recursion reference, not just calls. */
+    bool is_named_recursive{};
     /* TODO: is_pure */
   };
 
@@ -62,7 +61,7 @@ namespace jank::analyze::expr
              jtl::immutable_string const &name,
              jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,
-             runtime::obj::persistent_hash_map_ref meta);
+             runtime::obj::persistent_hash_map_ref const meta);
 
     /* Aggregates all `frame->captures` from each arity so that we can know the overall
      * captures for all arities of this fn. This is necessary for codegen to IR, since we
