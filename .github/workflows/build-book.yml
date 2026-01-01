@@ -31,7 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          wget "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           ./mdbook build || exit 1
 
@@ -48,7 +48,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          wget "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           export PATH=$PWD:$PATH
           pushd ${{ github.workspace }}/book
