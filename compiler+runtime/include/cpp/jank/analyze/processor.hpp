@@ -49,8 +49,8 @@ namespace jank::analyze
 
     expression_result
     analyze(read::parse::processor::iterator, read::parse::processor::iterator const &);
-    expression_result analyze(runtime::object_ref, expression_position);
-    expression_result analyze(runtime::object_ref,
+    expression_result analyze(runtime::object_ref const, expression_position);
+    expression_result analyze(runtime::object_ref const,
                               local_frame_ptr,
                               expression_position,
                               jtl::option<expr::function_context_ref> const &,
@@ -134,7 +134,7 @@ namespace jank::analyze
                                   expression_position,
                                   jtl::option<expr::function_context_ref> const &,
                                   bool needs_box);
-    expression_result analyze_primitive_literal(runtime::object_ref,
+    expression_result analyze_primitive_literal(runtime::object_ref const,
                                                 local_frame_ptr,
                                                 expression_position,
                                                 jtl::option<expr::function_context_ref> const &,
@@ -225,7 +225,7 @@ namespace jank::analyze
                                                 bool needs_box);
 
     /* Returns whether the form is a special symbol. */
-    bool is_special(runtime::object_ref form);
+    bool is_special(runtime::object_ref const form);
 
     using special_function_type
       = expression_result (processor::*)(runtime::obj::persistent_list_ref const,

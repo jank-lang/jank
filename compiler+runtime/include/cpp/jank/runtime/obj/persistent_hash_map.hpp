@@ -29,8 +29,8 @@ namespace jank::runtime::obj
     persistent_hash_map(persistent_hash_map const &) = default;
     persistent_hash_map(jtl::option<object_ref> const &meta,
                         runtime::detail::native_array_map const &m,
-                        object_ref key,
-                        object_ref val);
+                        object_ref const key,
+                        object_ref const val);
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
     persistent_hash_map(jtl::option<object_ref> const &meta, value_type &&d);
@@ -48,11 +48,7 @@ namespace jank::runtime::obj
       this->meta = meta;
     }
 
-    static persistent_hash_map_ref empty()
-    {
-      static auto const ret(make_box<persistent_hash_map>());
-      return ret;
-    }
+    static persistent_hash_map_ref empty();
 
     using base_persistent_map::base_persistent_map;
 
@@ -76,16 +72,16 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    persistent_hash_map_ref assoc(object_ref key, object_ref val) const;
-    persistent_hash_map_ref dissoc(object_ref key) const;
+    persistent_hash_map_ref assoc(object_ref const key, object_ref const val) const;
+    persistent_hash_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
-    object_ref call(object_ref, object_ref) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_hash_map_ref to_transient() const;

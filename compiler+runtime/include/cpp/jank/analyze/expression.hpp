@@ -150,7 +150,7 @@ namespace jank::analyze
   }
 
   /* Common base class for every expression. */
-  struct expression : gc
+  struct expression
   {
     static constexpr bool pointer_free{ false };
 

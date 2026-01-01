@@ -18,7 +18,7 @@
                                                 :or {optimization-flag "-O0"
                                                      output-file default-output-file}}]
   (str "jank " optimization-flag
-       " --module-path=" module-path
+       " --module-path " module-path
        " compile " main-module
        " -o " output-file))
 
@@ -100,6 +100,19 @@
                       :exit)))
         (is (= expected-output (-> default-output-file (str args)
                                    proc/sh :out))))))
+
+(deftest aot-cpp-raw-inline
+  (let [alias-name "cpp-raw-inline"
+        module-path (module-path alias-name)
+        module "cpp-raw-inline.core"
+        expected-output (slurp (str "expected-output/" alias-name "/core"))
+        compile-command (compile-command module-path module {})]
+    (testing (str alias-name " & core")
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (= expected-output (-> default-output-file proc/sh :out))))))
 
 (defn -main []
   (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))

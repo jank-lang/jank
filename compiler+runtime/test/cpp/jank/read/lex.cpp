@@ -78,7 +78,12 @@ namespace jank::read::lex
 
         auto const &lhs_err(lhs.expect_err());
         auto const &rhs_err(rhs.expect_err());
-        return lhs_err->kind == rhs_err->kind && lhs_err->source == rhs_err->source;
+        auto const is_eq{ lhs_err->kind == rhs_err->kind && lhs_err->source == rhs_err->source };
+
+        if(!is_eq)
+        {
+          return false;
+        }
       }
       else
       {
@@ -89,7 +94,12 @@ namespace jank::read::lex
 
         auto const &lhs_token(lhs.expect_ok());
         auto const &rhs_token(rhs.expect_ok());
-        return lhs_token == rhs_token;
+        auto const is_eq{ lhs_token == rhs_token };
+
+        if(!is_eq)
+        {
+          return false;
+        }
       }
     }
 
@@ -143,7 +153,7 @@ namespace jank::read::lex
         runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()),
         {         offset, 1,         offset + 1 },
         { offset + width, 1, offset + width + 1 },
-        runtime::jank_nil
+        runtime::jank_nil()
     });
   }
 
@@ -559,7 +569,7 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({ { make_error(kind::lex_invalid_ratio, 0, 3) },
-                                { make_error(kind::lex_invalid_symbol, 3, 3) } }));
+                                { make_error(kind::lex_invalid_symbol, 3, 2) } }));
       }
       SUBCASE("Failures - x/x.x")
       {
@@ -573,7 +583,7 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({ make_error(kind::lex_invalid_ratio, 0, 3),
-                                make_error(kind::lex_invalid_symbol, 3, 3) }));
+                                make_error(kind::lex_invalid_symbol, 3, 2) }));
       }
       SUBCASE("Failures - x/xex")
       {
@@ -640,8 +650,8 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 make_error(kind::lex_invalid_number, 0, 2),
-                make_error(kind::lex_invalid_number, 3, 5),
-                make_error(kind::lex_invalid_number, 6, 9),
+                make_error(kind::lex_invalid_number, 3, 2),
+                make_error(kind::lex_invalid_number, 6, 3),
               }));
       }
 
@@ -665,10 +675,10 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 make_error(kind::lex_invalid_number, 0, 6),
-                make_error(kind::lex_invalid_number, 7, 12),
-                make_error(kind::lex_invalid_number, 13, 16),
-                make_error(kind::lex_invalid_number, 17, 21),
-                make_error(kind::lex_expecting_whitespace, 21, 21),
+                make_error(kind::lex_invalid_number, 7, 5),
+                make_error(kind::lex_invalid_number, 13, 3),
+                make_error(kind::lex_invalid_number, 17, 4),
+                make_error(kind::lex_expecting_whitespace, 21, 0),
                 token{ 21, 2, token_kind::symbol, ".2"sv },
         }));
       }
@@ -718,10 +728,10 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 token{  0, 3, token_kind::integer, 123ll },
-                make_error(kind::lex_invalid_number, 4, 8),
+                make_error(kind::lex_invalid_number, 4, 4),
                 token{  9, 3, token_kind::integer,   7ll },
                 token{ 13, 3, token_kind::integer, -12ll },
-                make_error(kind::lex_invalid_number, 17, 22),
+                make_error(kind::lex_invalid_number, 17, 5),
                 token{ 23, 5, token_kind::integer, 255ll }
         }));
       }
@@ -760,11 +770,11 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({ make_error(kind::lex_invalid_number, 0, 3),
-                                make_error(kind::lex_invalid_number, 4, 8),
-                                make_error(kind::lex_invalid_number, 9, 14),
-                                make_error(kind::lex_invalid_number, 15, 21),
-                                make_error(kind::lex_invalid_number, 22, 24),
-                                make_error(kind::lex_invalid_number, 25, 27) }));
+                                make_error(kind::lex_invalid_number, 4, 4),
+                                make_error(kind::lex_invalid_number, 9, 5),
+                                make_error(kind::lex_invalid_number, 15, 6),
+                                make_error(kind::lex_invalid_number, 22, 2),
+                                make_error(kind::lex_invalid_number, 25, 2) }));
       }
 
       SUBCASE("Invalid hex - 1x1")
@@ -784,7 +794,7 @@ namespace jank::read::lex
         CHECK(tokens
               == make_results({
                 token{ 0, 3,   token_kind::real,    2.0 },
-                make_error(kind::lex_invalid_number, 3, 3),
+                make_error(kind::lex_expecting_whitespace, 3, 0),
                 token{ 3, 2, token_kind::symbol, "x1"sv },
         }));
       }
@@ -842,11 +852,11 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_results({ make_error(kind::lex_invalid_number, 0, 3),
-                                make_error(kind::lex_invalid_number, 4, 8),
-                                make_error(kind::lex_invalid_number, 9, 14),
-                                make_error(kind::lex_invalid_number, 15, 22),
-                                make_error(kind::lex_invalid_number, 23, 25),
-                                make_error(kind::lex_invalid_number, 26, 29) }));
+                                make_error(kind::lex_invalid_number, 4, 4),
+                                make_error(kind::lex_invalid_number, 9, 5),
+                                make_error(kind::lex_invalid_number, 15, 7),
+                                make_error(kind::lex_invalid_number, 23, 2),
+                                make_error(kind::lex_invalid_number, 26, 3) }));
       }
 
       SUBCASE("Invalid arbitrary radix - 0r0")
@@ -1045,7 +1055,7 @@ namespace jank::read::lex
                       2, token_kind::big_integer,
                       { .number_literal = "1", .radix = 10, .is_negative = false } },
                 make_error(kind::lex_expecting_whitespace, 2, 0),
-                make_error(kind::lex_invalid_number, 2, 1),
+                make_error(kind::lex_invalid_symbol, 2, 3),
         }));
       }
       SUBCASE("34NN")
@@ -1229,8 +1239,8 @@ namespace jank::read::lex
                 == make_results({
                   make_error(kind::lex_invalid_number, 0, 2),
                   token{ 3, 5, token_kind::real, 2.3 },
-                  make_error(kind::lex_invalid_number, 9, 13),
-                  make_error(kind::lex_invalid_number, 14, 19),
+                  make_error(kind::lex_invalid_number, 9, 4),
+                  make_error(kind::lex_invalid_number, 14, 5),
           }));
         }
 
@@ -1240,11 +1250,11 @@ namespace jank::read::lex
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_results({
-                  token{ 0, 4,   token_kind::real,  12.3 },
-                  make_error(kind::lex_invalid_number, 5, 9),
+                  token{ 0, 4,   token_kind::real,    12.3 },
+                  token{ 5, 4,   token_kind::real, -1000.0 },
                   make_error(kind::lex_expecting_whitespace, 9, 0),
-                  token{ 9, 1, token_kind::symbol, "-"sv },
-                  make_error(kind::lex_invalid_number, 11, 16),
+                  token{ 9, 1, token_kind::symbol,   "-"sv },
+                  make_error(kind::lex_invalid_number, 11, 5),
           }));
         }
 
@@ -1257,7 +1267,7 @@ namespace jank::read::lex
                   make_error(kind::lex_invalid_number, 0, 3),
                   token{  3, 1, token_kind::symbol,  "."sv },
                   token{  5, 4,   token_kind::real,   12.3 },
-                  make_error(kind::lex_invalid_number, 10, 14),
+                  make_error(kind::lex_invalid_number, 10, 4),
                   make_error(kind::lex_expecting_whitespace, 14, 0),
                   token{ 14, 2, token_kind::symbol, ".3"sv },
           }));
@@ -1271,13 +1281,13 @@ namespace jank::read::lex
                 == make_results({
                   make_error(kind::lex_invalid_number, 0, 3),
                   token{  3, 2, token_kind::symbol,  "e4"sv },
-                  make_error(kind::lex_invalid_number, 6, 10),
+                  make_error(kind::lex_invalid_number, 6, 4),
                   make_error(kind::lex_expecting_whitespace, 10, 0),
                   token{ 10, 2, token_kind::symbol,  "E3"sv },
-                  make_error(kind::lex_invalid_number, 13, 16),
+                  make_error(kind::lex_invalid_number, 13, 3),
                   make_error(kind::lex_expecting_whitespace, 16, 0),
                   token{ 16, 3, token_kind::symbol, "Foo"sv },
-                  make_error(kind::lex_invalid_number, 20, 26),
+                  make_error(kind::lex_invalid_number, 20, 6),
           }));
         }
       }
@@ -1377,7 +1387,7 @@ namespace jank::read::lex
               == make_results({
                 token{ 0, 3, token_kind::big_decimal, big_decimal{ "1." } },
                 make_error(kind::lex_expecting_whitespace, 3, 0),
-                token{ 3, 2,     token_kind::integer,              "23"sv },
+                token{ 3, 2,     token_kind::integer,                23ll },
         }));
       }
     }
@@ -1809,6 +1819,46 @@ namespace jank::read::lex
               == make_results({
                 make_error(kind::lex_invalid_keyword, 0, 7),
               }));
+      }
+
+      SUBCASE("Auto-resolved keyword with no symbol")
+      {
+        processor p{ "::" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+              }));
+      }
+
+      SUBCASE("Auto-resolved keyword with empty space")
+      {
+        processor p{ ":: " };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+              }));
+      }
+
+      SUBCASE("Comma after ::")
+      {
+        processor p{ "::," };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens == make_results({ make_error(kind::lex_invalid_keyword, 0, 2) }));
+      }
+
+      SUBCASE("Graceful lexing after invalid ::")
+      {
+        processor p{ "::   42" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+
+        CHECK(tokens
+              == make_results({
+                make_error(kind::lex_invalid_keyword, 0, 2),
+                token{ 5, 2, token_kind::integer, 42ll }
+        }));
       }
     }
 

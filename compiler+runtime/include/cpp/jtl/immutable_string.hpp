@@ -54,12 +54,10 @@ namespace jtl
   struct immutable_string
   {
     using value_type = char;
-    using allocator_type = jank::native_allocator<value_type>;
-    using allocator_traits = std::allocator_traits<allocator_type>;
-    using size_type = allocator_traits::size_type;
     using traits_type = std::char_traits<value_type>;
     using pointer_type = value_type *;
     using const_pointer_type = value_type const *;
+    using size_type = usize;
     using iterator = pointer_type;
     using const_iterator = const_pointer_type;
     using reverse_iterator = std::reverse_iterator<iterator>;
@@ -705,7 +703,7 @@ namespace jtl
      *   3. As a large_storage instance, containing a pointer, size, and capacity
      */
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init) */
-    struct storage : allocator_type
+    struct storage
     {
       /* TODO: What if we store a max of 22 chars and dedicate a byte for flags with no masking? */
       union {
@@ -724,7 +722,8 @@ namespace jtl
       /* NOTE: No performance difference between if/switch here. */
       if(get_category() == category::large_owned)
       {
-        allocator_traits::deallocate(store, store.large.data, store.large.size + 1);
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        free(store.large.data);
       }
     }
 
@@ -747,7 +746,7 @@ namespace jtl
       jank_debug_assert(s <= max_small_size);
       /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index) */
       store.small[s] = 0;
-      store.small[max_small_size] = value_type((max_small_size - s) << small_shift);
+      store.small[max_small_size] = static_cast<value_type>((max_small_size - s) << small_shift);
       jank_debug_assert(get_category() == category::small && size() == s);
     }
 
@@ -838,7 +837,9 @@ namespace jtl
     {
       jank_debug_assert(max_small_size < size);
       /* TODO: Apply gnu::malloc to this fn. */
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      store.large.data
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::copy(store.large.data, data, size);
       store.large.data[size] = 0;
       store.large.size = size;
@@ -849,7 +850,9 @@ namespace jtl
     constexpr void init_large_fill(value_type const fill, u8 const size) noexcept
     {
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      store.large.data
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::assign(store.large.data, size, fill);
       store.large.data[size] = 0;
       store.large.size = size;
@@ -864,7 +867,9 @@ namespace jtl
     {
       auto const size(lhs_size + rhs_size);
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      store.large.data
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       traits_type::copy(store.large.data, lhs, lhs_size);
       traits_type::copy(store.large.data + lhs_size, rhs, rhs_size);
       store.large.data[size] = 0;
@@ -878,7 +883,9 @@ namespace jtl
     {
       auto const size(std::distance(begin, end));
       jank_debug_assert(max_small_size < size);
-      store.large.data = std::assume_aligned<sizeof(pointer_type)>(store.allocate(size + 1));
+      store.large.data
+        /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+        = std::assume_aligned<sizeof(pointer_type)>(static_cast<char *>(malloc(size + 1)));
       std::copy(begin, end, store.large.data);
       store.large.data[size] = 0;
       store.large.size = size;

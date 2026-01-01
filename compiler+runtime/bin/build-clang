@@ -52,6 +52,7 @@ srcdir="${PWD}"
 llvm_url="https://github.com/jank-lang/llvm-project.git"
 llvm_version=22
 llvm_branch="jank-snapshot/llvm${llvm_version}"
+# 4e5928689f23..a8f19259e708  jank-snapshot/llvm22 -> jank-snapshot/llvm22
 
 function prepare()
 {

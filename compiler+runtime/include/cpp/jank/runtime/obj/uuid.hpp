@@ -11,7 +11,7 @@ namespace jank::runtime::obj
 {
   using uuid_ref = oref<struct uuid>;
 
-  struct uuid : gc
+  struct uuid
   {
     static constexpr object_type obj_type{ object_type::uuid };
     static constexpr bool pointer_free{ false };

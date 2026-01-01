@@ -7,7 +7,6 @@
 
 namespace jank::runtime
 {
-
   f64 operator+(native_big_integer const &l, f64 const &r)
   {
     return obj::big_integer::to_f64(l) + r;

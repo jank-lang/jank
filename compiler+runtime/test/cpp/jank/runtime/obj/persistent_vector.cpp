@@ -32,9 +32,9 @@ namespace jank::runtime::obj
       CHECK(equal(v->get(min), min_char));
       CHECK(equal(v->get(mid), mid_char));
       CHECK(equal(v->get(max), max_char));
-      CHECK(equal(v->get(over), jank_nil));
-      CHECK(equal(v->get(under), jank_nil));
-      CHECK(equal(v->get(non_int), jank_nil));
+      CHECK(equal(v->get(over), jank_nil()));
+      CHECK(equal(v->get(under), jank_nil()));
+      CHECK(equal(v->get(non_int), jank_nil()));
     }
     TEST_CASE("get with fallback")
     {
@@ -59,9 +59,9 @@ namespace jank::runtime::obj
       CHECK(equal(v->get_entry(min), make_box<persistent_vector>(std::in_place, min, min_char)));
       CHECK(equal(v->get_entry(mid), make_box<persistent_vector>(std::in_place, mid, mid_char)));
       CHECK(equal(v->get_entry(max), make_box<persistent_vector>(std::in_place, max, max_char)));
-      CHECK(equal(v->get_entry(over), jank_nil));
-      CHECK(equal(v->get_entry(under), jank_nil));
-      CHECK(equal(v->get_entry(non_int), jank_nil));
+      CHECK(equal(v->get_entry(over), jank_nil()));
+      CHECK(equal(v->get_entry(under), jank_nil()));
+      CHECK(equal(v->get_entry(non_int), jank_nil()));
     }
     TEST_CASE("equal")
     {

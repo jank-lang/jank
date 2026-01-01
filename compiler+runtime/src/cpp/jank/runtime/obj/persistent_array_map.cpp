@@ -29,7 +29,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_array_map::get(object_ref const key) const
   {
-    return data.find(key).unwrap_or(jank_nil);
+    return data.find(key).unwrap_or(jank_nil());
   }
 
   object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res.unwrap());
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   bool persistent_array_map::contains(object_ref const key) const

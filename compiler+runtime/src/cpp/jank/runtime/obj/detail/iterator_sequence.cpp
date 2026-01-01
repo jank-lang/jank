@@ -5,13 +5,13 @@
 
 namespace jank::runtime
 {
-  bool equal(object_ref lhs, object_ref rhs);
+  bool equal(object_ref const lhs, object_ref const rhs);
 }
 
 namespace jank::runtime::obj::detail
 {
   template <typename Derived, typename It>
-  iterator_sequence<Derived, It>::iterator_sequence(object_ref const &c,
+  iterator_sequence<Derived, It>::iterator_sequence(object_ref const c,
                                                     It const &b,
                                                     It const &e,
                                                     usize const s)

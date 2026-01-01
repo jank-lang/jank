@@ -1,15 +1,9 @@
 [submodule "compiler+runtime/third-party/folly"]
 	path = compiler+runtime/third-party/folly
 	url = https://github.com/jank-lang/folly.git
-[submodule "compiler+runtime/third-party/bpptree"]
-	path = compiler+runtime/third-party/bpptree
-	url = https://github.com/jank-lang/BppTree.git
 [submodule "compiler+runtime/third-party/immer"]
 	path = compiler+runtime/third-party/immer
 	url = https://github.com/jank-lang/immer.git
-[submodule "compiler+runtime/third-party/cli11"]
-	path = compiler+runtime/third-party/cli11
-	url = https://github.com/jank-lang/CLI11.git
 [submodule "compiler+runtime/third-party/boost-preprocessor"]
 	path = compiler+runtime/third-party/boost-preprocessor
 	url = https://github.com/jank-lang/boost-preprocessor.git

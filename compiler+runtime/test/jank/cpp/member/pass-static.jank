@@ -2,8 +2,9 @@
           {
             struct bar
             {
-              static const int a{ 5 };
+              static int const a;
             };
+            int const bar::a{ 5 };
           }")
 (let* [b (cpp/jank.cpp.member.pass_static.bar.)
        a (cpp/.-a b)]

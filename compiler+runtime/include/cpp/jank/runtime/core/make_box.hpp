@@ -16,7 +16,7 @@ namespace jank::runtime
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
   inline auto make_box(std::nullptr_t const &)
   {
-    return jank_nil;
+    return jank_nil();
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]

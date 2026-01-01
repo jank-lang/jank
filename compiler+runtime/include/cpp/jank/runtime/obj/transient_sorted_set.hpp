@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_sorted_set_ref = oref<struct transient_sorted_set>;
 
-  struct transient_sorted_set : gc
+  struct transient_sorted_set
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_set };
     static constexpr bool pointer_free{ false };
@@ -18,8 +18,7 @@ namespace jank::runtime::obj
     transient_sorted_set() = default;
     transient_sorted_set(transient_sorted_set &&) noexcept = default;
     transient_sorted_set(transient_sorted_set const &) = default;
-    transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d);
-    transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d);
+    transient_sorted_set(value_type const &d);
     transient_sorted_set(value_type &&d);
 
     static transient_sorted_set_ref empty();
@@ -35,7 +34,7 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable_in_place */
-    transient_sorted_set_ref conj_in_place(object_ref elem);
+    transient_sorted_set_ref conj_in_place(object_ref const elem);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
