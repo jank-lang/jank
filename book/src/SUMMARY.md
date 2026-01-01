@@ -23,7 +23,7 @@ TODO:
 * [Reaching into C++](cpp-interop/index.md)
   * [Embedding raw C++](cpp-interop/cpp-raw.md)
   * [Bringing in native libraries](cpp-interop/native-libs.md)
-  * [Working with native values](foo)
+  * [Working with native values]()
   * [Boxing native values]()
   * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
 
