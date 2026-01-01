@@ -27,16 +27,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: book
-      - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
-        with:
-          packages: mdbook
-          # Increment this when the package list changes.
-          version: 1
       - name: Check
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          mdbook build || exit 1
+          wget "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          ./mdbook build || exit 1
 
   publish-book:
     name: Build and publish the book
@@ -47,15 +44,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: book
-      - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
-        with:
-          packages: mdbook
-          # Increment this when the package list changes.
-          version: 1
       - name: Build and publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
+          wget "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          export PATH=$PWD:$PATH
           pushd ${{ github.workspace }}/book
             ./bin/publish
           popd
