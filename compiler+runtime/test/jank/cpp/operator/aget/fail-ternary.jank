@@ -1,6 +1,0 @@
-(cpp/raw "namespace jank::cpp::operator_::aget::fail_ternary
-          {
-            int arr[3]{};
-          }")
-(let* [b (cpp/aget cpp/jank.cpp.operator_.aget.fail_ternary.arr (cpp/int) (cpp/int))]
-  :success)

@@ -1,3 +1,0 @@
-(let* [s (cpp/cast (cpp/type "char const*") "meow")]
-  (if (= 4 (cpp/strlen s))
-    :success))

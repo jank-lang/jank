@@ -1,3 +1,0 @@
-(let* [r (cpp/value "-5")]
-  (if (= r -5)
-    :success))

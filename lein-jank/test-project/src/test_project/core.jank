@@ -1,6 +1,0 @@
-(ns test-project.core)
-
-(defn -main [x]
-  (case x
-    "pass" 0
-    "fail" (throw "failed")))

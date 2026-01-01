@@ -1,5 +1,0 @@
-(def foo :foo)
-
-(assert (= :foo foo))
-
-:success

@@ -1,6 +1,0 @@
-(cpp/raw "namespace jank::cpp::constructor::complex::fail_incomplete
-          {
-            struct foo;
-          }")
-(let* [foo (cpp/jank.cpp.constructor.complex.fail_incomplete.foo.)]
-  :success)

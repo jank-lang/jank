@@ -1,4 +1,0 @@
-(ns input
-  (:require [aot]))
-
-(aot/boop)

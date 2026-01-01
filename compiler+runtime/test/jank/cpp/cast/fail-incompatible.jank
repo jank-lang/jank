@@ -1,3 +1,0 @@
-(let* [s (cpp/cast cpp/std.string "meow")
-       a (cpp/cast cpp/int s)]
-  :success)

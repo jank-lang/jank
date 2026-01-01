@@ -1,3 +1,0 @@
-*.jank linguist-language=clojure
-*.png filter=lfs diff=lfs merge=lfs -text
-output.txt text

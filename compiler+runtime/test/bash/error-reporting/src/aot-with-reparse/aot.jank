@@ -1,4 +1,0 @@
-(ns aot)
-
-(defmacro boop []
-  `(def :bar :foo))

@@ -1,8 +1,0 @@
-(cpp/raw "namespace jank::cpp::auto_box::pass_native_type_to_untyped_object
-          {
-            runtime::object_ref foo(runtime::object_ref const o)
-            { return o; }
-          }")
-(let* [f (cpp/jank.cpp.auto_box.pass_native_type_to_untyped_object.foo (cpp/int 555))]
-  (if (= 555 f)
-    :success))

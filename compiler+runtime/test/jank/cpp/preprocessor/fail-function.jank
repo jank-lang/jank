@@ -1,3 +1,0 @@
-(cpp/raw "#define JANK_FOO(x) (x)")
-(let* [f cpp/JANK_FOO]
-  :success)

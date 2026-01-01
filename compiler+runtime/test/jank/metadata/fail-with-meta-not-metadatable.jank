@@ -1,3 +1,0 @@
-(with-meta 1 {:boop true})
-
-:success

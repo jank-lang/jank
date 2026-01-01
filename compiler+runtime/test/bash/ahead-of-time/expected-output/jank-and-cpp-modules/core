@@ -1,6 +1,0 @@
-Loaded 'my-lib
-Loaded 'lib
-Loaded 'core
-Received args: (foo bar)
-Hello, foo!
-Hello from cpp module, bar!

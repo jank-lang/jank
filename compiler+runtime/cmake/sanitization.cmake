@@ -1,5 +1,0 @@
-if(NOT "${jank_sanitize}" STREQUAL "none")
-  list(APPEND jank_aot_compiler_flags -fsanitize=${jank_sanitize})
-  list(APPEND jank_linker_flags -fsanitize=${jank_sanitize})
-  list(APPEND jank_common_compiler_flags -DJANK_SANITIZE=${jank_sanitize})
-endif()

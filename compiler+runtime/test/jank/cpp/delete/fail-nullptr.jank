@@ -1,2 +1,0 @@
-(let* [_ (cpp/delete cpp/nullptr)]
-  :success)

@@ -1,3 +1,0 @@
-(if (= 5 cpp/jank.cpp.global_value.does.not.exist)
-  :success
-  :failure)

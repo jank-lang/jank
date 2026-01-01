@@ -1,5 +1,0 @@
-(fn* []
-  (try
-    :success
-    (catch _
-      (recur))))

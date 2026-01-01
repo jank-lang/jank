@@ -1,4 +1,0 @@
-(let* [a (cpp/int. -5)
-       b (cpp/int. -10)
-       _ (cpp/! a b)]
-  :success)

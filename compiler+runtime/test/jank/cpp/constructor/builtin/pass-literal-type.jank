@@ -1,8 +1,0 @@
-(let* [a ((cpp/type "int") 500)
-       aa ((cpp/type "int") a)
-       b ((cpp/type "float") -7.0)
-       bb ((cpp/type "float") b)
-       c ((cpp/type "bool") true)
-       cc ((cpp/type "bool") c)]
-  (if (and (= 500 a aa) (= -7.0 b bb) (= true c cc))
-    :success))

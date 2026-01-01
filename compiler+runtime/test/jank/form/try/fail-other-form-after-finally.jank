@@ -1,7 +1,0 @@
-(try
-  (+ 1 2)
-  (catch e
-    )
-  (finally
-    )
-  :success)

@@ -1,3 +1,0 @@
-(assert (NaN? ##NaN))
-
-:success

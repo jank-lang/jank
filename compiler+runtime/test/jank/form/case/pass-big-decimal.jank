@@ -1,4 +1,0 @@
-(case 99999.9M
-  :no-match :no-match
-  99999.9M :success
-  :default)

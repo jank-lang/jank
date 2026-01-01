@@ -1,3 +1,0 @@
-(let* [s "int a;"
-       _ (cpp/raw s)]
-  :success)

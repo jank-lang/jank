@@ -1,2 +1,0 @@
-(let* [_ (cpp/cast (cpp/type " ") 0)]
-  :success)

@@ -1,6 +1,0 @@
-(let* [i (cpp/int 77)
-       r (if true
-           i
-           i)]
-  (if (= 77 r)
-    :success))

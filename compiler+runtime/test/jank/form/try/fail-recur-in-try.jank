@@ -1,5 +1,0 @@
-(fn* []
-  (try
-    (recur)
-    (catch _
-      )))

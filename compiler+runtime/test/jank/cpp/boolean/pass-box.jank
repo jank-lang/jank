@@ -1,7 +1,0 @@
-(let* [t cpp/true
-       f cpp/false]
-  (if (and (boolean (cpp/!= t f))
-           (= t true)
-           (= f false)
-           (not= t f))
-    :success))

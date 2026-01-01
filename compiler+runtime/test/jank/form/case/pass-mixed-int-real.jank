@@ -1,9 +1,0 @@
-(assert
- (=
-  (case 3.4
-    3.4   :three-point-four
-    2     :two
-    :default)
-  :three-point-four))
-
-:success

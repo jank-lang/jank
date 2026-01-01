@@ -1,8 +1,0 @@
-(cpp/raw "namespace jank::cpp::opaque_box::box
-          {
-            int a{ 55 };
-            int* b{ &a };
-          }")
-(let [b (cpp/box (cpp/value "jank::cpp::opaque_box::box::b"))]
-  (if (= 55 (cpp/* (cpp/unbox cpp/int* b)))
-    :success))

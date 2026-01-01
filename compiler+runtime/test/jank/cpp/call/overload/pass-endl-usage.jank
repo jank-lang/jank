@@ -1,8 +1,0 @@
-(let* [ss (cpp/std.stringstream)
-       foo (cpp/cast cpp/std.string "foo")
-       _ (-> ss
-             (cpp/<< foo)
-             (cpp/<< cpp/std.endl))
-       r (cpp/.str ss)]
-  (if (= "foo\n" r)
-    :success))

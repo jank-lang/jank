@@ -1,3 +1,0 @@
-(let* [f (cpp/float.)
-       _ (cpp/& f f)]
-  :success)

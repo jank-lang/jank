@@ -1,6 +1,0 @@
-(assert (= 1 ((fn* [a]
-                (letfn* [a (fn* a []
-                             1)]
-                  (a)))
-              2)))
-:success

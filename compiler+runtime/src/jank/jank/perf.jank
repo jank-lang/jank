@@ -1,5 +1,0 @@
-(ns jank.perf)
-
-; TODO: Options, following what criterium offers.
-(defmacro benchmark [opts & body]
-  `(jank.perf-native/benchmark ~opts (fn [] ~@body)))

@@ -1,2 +1,0 @@
-(let* [_ ((cpp/type "no_way_this_exists") 0)]
-  :success)

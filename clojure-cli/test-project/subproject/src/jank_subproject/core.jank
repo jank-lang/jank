@@ -1,6 +1,0 @@
-(ns jank-subproject.core)
-
-(defn -main [x]
-  (case x
-    "pass" 0
-    "fail" (throw "fail")))

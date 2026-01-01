@@ -1,3 +1,0 @@
-(let* [foo (cpp/int)
-       a0 (cpp/aget foo (cpp/int))]
-  :success)

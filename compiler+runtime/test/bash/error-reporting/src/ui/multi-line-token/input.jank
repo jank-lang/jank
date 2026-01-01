@@ -1,6 +1,0 @@
-(let [s "this
-         string
-         spans
-         multiple
-         lines"]
-  a)

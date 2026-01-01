@@ -1,3 +1,0 @@
-(ns jank.compiler)
-
-(def native-source jank.compiler-native/native-source)

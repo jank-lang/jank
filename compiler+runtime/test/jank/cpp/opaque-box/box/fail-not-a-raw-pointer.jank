@@ -1,3 +1,0 @@
-(let* [i (cpp/int.)
-       b (cpp/box i)]
-  :success)

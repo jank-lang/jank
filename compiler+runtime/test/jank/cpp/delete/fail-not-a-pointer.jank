@@ -1,3 +1,0 @@
-(let* [i (cpp/new cpp/int 1)
-       _ (cpp/delete (cpp/* i))]
-  :success)

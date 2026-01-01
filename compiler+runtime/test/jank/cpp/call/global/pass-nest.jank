@@ -1,2 +1,0 @@
-(cpp/srand (cpp/time cpp/nullptr))
-:success

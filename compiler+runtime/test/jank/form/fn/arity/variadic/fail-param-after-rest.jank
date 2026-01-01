@@ -1,3 +1,0 @@
-(def variadic
-  (fn*
-    ([a & args more] 2)))

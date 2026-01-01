@@ -1,4 +1,0 @@
-(let* [i (cpp/int. 1)
-       s (cpp/std.string)
-       _ (cpp/= i s)]
-  :success)

@@ -1,6 +1,0 @@
-(assert (not= `meow# `meow#))
-
-(let [syms `[meow# meow#]]
-  (assert (= (first syms) (second syms))))
-
-:success

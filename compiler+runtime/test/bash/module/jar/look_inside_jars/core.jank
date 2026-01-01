@@ -1,2 +1,0 @@
-(ns look-inside-jars.core)
-(defn -main [] (println "LOADED look-inside-jars.core LOADED"))

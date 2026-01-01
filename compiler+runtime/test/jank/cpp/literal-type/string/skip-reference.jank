@@ -1,3 +1,0 @@
-(let* [i (cpp/cast (cpp/type "int&") 42)]
-  (if (= 42 i)
-    :success))

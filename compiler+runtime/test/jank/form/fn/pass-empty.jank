@@ -1,3 +1,0 @@
-(assert (= nil ((fn* []))))
-
-:success

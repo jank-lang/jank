@@ -1,3 +1,0 @@
-(assert (= 2 ((fn* [a a] a) 1 2)))
-
-:success

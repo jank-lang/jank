@@ -1,7 +1,0 @@
-(cpp/raw "namespace jank::cpp::operator_::aget::fail_binary_incompatible_index
-          {
-            int arr[3]{};
-          }")
-(let* [s (cpp/std.string)
-       b (cpp/aget cpp/jank.cpp.operator_.aget.fail_binary_incompatible_index.arr s)]
-  :success)

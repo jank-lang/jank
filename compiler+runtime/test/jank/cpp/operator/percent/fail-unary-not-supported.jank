@@ -1,3 +1,0 @@
-(let* [a (cpp/int. 1)
-       b (cpp/% a)]
-  :success)

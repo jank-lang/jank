@@ -1,6 +1,0 @@
-(ns input)
-
-(defn foo [a b]
-  (let [c (+ a b)
-        m {a b c}]
-    m))

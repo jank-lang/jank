@@ -1,8 +1,0 @@
-(cpp/raw "namespace jank::cpp::if_::pass_alloc
-          {
-            runtime::object_ref foo(runtime::object_ref const o)
-            { return o; }
-          }")
-(let* [r (if true
-           (cpp/jank.cpp.if_.pass_alloc.foo :success))]
-  r)

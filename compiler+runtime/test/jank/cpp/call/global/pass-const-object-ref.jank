@@ -1,9 +1,0 @@
-(cpp/raw "namespace jank::cpp::call::global::pass_const_object_ref
-          {
-            runtime::object_ref foo(runtime::object_ref const o)
-            {
-              return o;
-            }
-          }")
-(let* [a (cpp/jank.cpp.call.global.pass_const_object_ref.foo :success)]
-  a)

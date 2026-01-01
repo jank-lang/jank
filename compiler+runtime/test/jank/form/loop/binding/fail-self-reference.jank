@@ -1,2 +1,0 @@
-(loop* [self-reference self-reference])
-self-reference

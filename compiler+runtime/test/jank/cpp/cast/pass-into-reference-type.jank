@@ -1,8 +1,0 @@
-(cpp/raw "namespace jank::cpp::cast::pass_into_reference_type
-          {
-            int count(std::string const &str)
-            { return str.size(); }
-          }")
-(let [i (cpp/jank.cpp.cast.pass_into_reference_type.count "Hello, World!")]
-  (if (= i 13)
-    :success))

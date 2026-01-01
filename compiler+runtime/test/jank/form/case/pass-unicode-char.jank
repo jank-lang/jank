@@ -1,8 +1,0 @@
-(assert
- (=
-  (case "你好" "你好"           :nihao
-    "こんにちは"                :konnichiwa
-    :default)
-  :nihao))
-
-:success

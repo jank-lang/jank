@@ -1,4 +1,0 @@
-(ns input
-  (:require [jar :as j]))
-
-(j/boop)

@@ -1,4 +1,0 @@
-(let* [i (cpp/int. 1)
-       p (cpp/& i)
-       _ (cpp// p i)]
-  :success)

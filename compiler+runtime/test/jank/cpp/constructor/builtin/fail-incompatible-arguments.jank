@@ -1,2 +1,0 @@
-(let* [a (cpp/float. 0)]
-  :success)

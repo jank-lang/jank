@@ -1,4 +1,0 @@
-(ns main-with-args)
-
-(defn -main [& args]
-  (println "Received args:" args))

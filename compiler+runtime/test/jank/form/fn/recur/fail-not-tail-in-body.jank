@@ -1,4 +1,0 @@
-(def not-tail
-  (fn* [n]
-    (recur (+ n -1))
-    n))

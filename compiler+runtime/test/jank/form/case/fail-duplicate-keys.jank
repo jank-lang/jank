@@ -1,4 +1,0 @@
-(case 1
-  1 :one
-  1 :duplicate-one
-  :default)

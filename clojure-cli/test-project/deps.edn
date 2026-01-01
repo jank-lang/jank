@@ -1,6 +1,0 @@
-{:deps {jank-clojure-cli-test/subproject {:local/root "subproject"}}
- :paths ["src"]
- :aliases
- {:delete-clojure {;; an empty project 
-                   org.clojure/clojure {:local/root "delete-clojure-subproject"}}
-  :test {:extra-paths ["test"]}}}

@@ -1,9 +1,0 @@
-(cpp/raw "namespace jank::cpp::operator_::aget::pass_binary_compatible_types
-          {
-            int arr[3]{ 1, 2, 3 };
-          }")
-(let* [i0 (cpp/int. 0)
-       _ (assert (= 1 (cpp/aget cpp/jank.cpp.operator_.aget.pass_binary_compatible_types.arr i0)))
-       l1 (cpp/long 1)
-       _ (assert (= 2 (cpp/aget cpp/jank.cpp.operator_.aget.pass_binary_compatible_types.arr l1)))]
-  :success)

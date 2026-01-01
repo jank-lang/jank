@@ -1,3 +1,0 @@
-(ns input)
-
-(eval (read-string "(def :bar 2)"))

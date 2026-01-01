@@ -1,9 +1,0 @@
-(assert
- (=
-  (case :foo
-    :foo    :bar
-    :baz    :quux
-    :none)
-  :bar))
-
-:success

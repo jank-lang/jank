@@ -1,9 +1,0 @@
-(assert
- (=
-  (case 3/4
-    3/4   :three-fourths
-    2     :two
-    :default)
-  :three-fourths))
-
-:success

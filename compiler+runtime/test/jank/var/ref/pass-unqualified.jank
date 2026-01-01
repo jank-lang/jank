@@ -1,5 +1,0 @@
-(def yes? true)
-
-(var yes?)
-
-:success
