@@ -34,6 +34,7 @@ jobs:
           wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           sudo mv mdbook /usr/local/bin/
+          rm -f mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           pushd ${{ github.workspace }}/book
             mdbook build || exit 1
           popd
