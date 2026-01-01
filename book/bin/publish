@@ -8,7 +8,7 @@ git merge origin/gh-pages
 git clean -fd -e /book
 
 # TODO: Remove everything there except book and .git
-for file in book/*;
+for file in book/* book/.*;
 do
   rm -rf "${file##book/}"
   mv "${file}" .
