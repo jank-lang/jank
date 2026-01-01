@@ -2,9 +2,13 @@ name: Build compiler+runtime
 
 on:
   pull_request:
+    paths:
+      - 'compiler+runtime/**'
   push:
     branches:
       - main
+    paths:
+      - 'compiler+runtime/**'
 
 permissions:
   contents: read
