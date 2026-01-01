@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="light sidebar-visible" dir="ltr">
+<html lang="en" class="rust sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -34,8 +34,8 @@
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "";
-            const default_light_theme = "light";
-            const default_dark_theme = "navy";
+            const default_light_theme = "rust";
+            const default_dark_theme = "ayu";
             window.path_to_searchindex_js = "searchindex-ba7f154f.js";
         </script>
         <!-- Start loading toc.js asap -->
@@ -77,7 +77,7 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             const html = document.documentElement;
-            html.classList.remove('light')
+            html.classList.remove('rust')
             html.classList.add(theme);
             html.classList.add("js");
         </script>
@@ -472,8 +472,7 @@ which will do the trick. For example, let’s say we have the following code.</p
 </code></pre>
 <p>You can work around this issue by defining a helper function which does the C++
 work for you. In this case, we could do the following.</p>
-<pre><code class="language-clojure">
-(cpp/raw "size_t get_string_size(std::string const &amp;s)
+<pre><code class="language-clojure">(cpp/raw "size_t get_string_size(std::string const &amp;s)
           { return s.size(); }")
 
 (let [s (cpp/std.string)
@@ -602,6 +601,7 @@ to fix this issue!</p>
   :plugins [[org.jank-lang/lein-jank "0.2"]]
   :middleware [leiningen.jank/middleware]
   :main native-lib-tutorial.main
+
   ; Look here!
   :jank {:include-dirs ["native-lib"]}
   :profiles {:debug {:jank {:optimization-level 0}}
@@ -1041,7 +1041,7 @@ to get there.</p>
         <script src="searcher-c2a407aa.js"></script>
 
         <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
+        <script src="highlight-14465888.js"></script>
         <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
