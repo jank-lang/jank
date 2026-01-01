@@ -1,0 +1,831 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The jank Programming Language</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-f8853442.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-eb89c902.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The jank Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/jank-lang/jank" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="the-jank-programming-language"><a class="header" href="#the-jank-programming-language">The jank Programming Language</a></h1>
+<p><em>by Jeaye Wilkerson, without LLMs, with feedback from the jank community.</em></p>
+<p>This book is written for jank’s alpha release. It is incomplete, although its
+incompleteness matches jank’s. It’s still early to jump into jank, but your
+time and patience is welcome.</p>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>jank is alpha quality software. It will crash. It will leak. There are huge
+areas of functionality which haven’t been implemented. Your help getting us
+past this stage is greatly appreciated.</p>
+</blockquote>
+<h2 id="what-is-jank"><a class="header" href="#what-is-jank">What is jank?</a></h2>
+<p>jank is a general purpose programming language. It’s a dialect of Clojure, which
+is itself a dialect of Lisp. jank is functional-first, but it supports adhoc
+mutations and effects. All data structures are persistent and immutable by
+default and jank, following Clojure’s design, provides mechanisms for safe
+mutations for easy concurrency.</p>
+<p>Beyond Clojure, jank is brethren to C++ and it can reach into C++ arbitrarily to
+both access and define new C++ types, functions, and templates, at runtime. This
+is done by JIT (just in time) compiling C++, using Clang and LLVM. The result is
+that you can write Clojure code which can access C and C++ libraries trivially.</p>
+<p>For more detail on jank’s status, please read the <a href="#foreward">foreward</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="foreward"><a class="header" href="#foreward">Foreward</a></h1>
+<p>jank is a personal creation made public. It’s a passion project which aspires to
+push the boundaries of two languages very dear to me: C++ and Clojure. These two
+languages could not be further apart, in their syntax, paradigms, culture,
+adoption, and typical use cases. Still, I aim to bind them.</p>
+<p>jank is currently alpha quality software. Most importantly, that means that you
+would be crazy to ship it into production for anything that matters. More
+specifically, it means that jank, and its related programs, will crash, leak
+memory, provide incorrect results, and in general surprise, confound, and
+frustrate until we can implement all remaining pieces and iron out all remaining
+bugs. I need your help with this.</p>
+<p>Before jank, achieving this level of seamless C++ interop, with JIT (just in
+time) compiled C++, and full AOT (ahead of time) compilation support had never
+been done, <strong>from any dynamic language</strong>. Swift has come closest, though it’s
+not dynamically typed and it lacks an official JIT compiler. Cppyy, for Python,
+strives to compete, but it lacks AOT compilation support. Because of this trail
+blazing, we have faced many bugs in Clang. This continues to be a limiter for
+jank’s success, due to the size and complexity of the Clang code base and my
+limited time. To ensure jank’s success, this challenge will need to be tackled
+sincerely, most likely by finding and employing a part-time Clang developer. If
+you are able to help with this, please reach out.</p>
+<p>Moving on.</p>
+<p>The performance of jank, during this alpha stage, will be quite bad. Depending
+on the benchmark, you might find jank to be 2x or even 10x slower than Clojure
+JVM. Maybe more.</p>
+<p><strong>Do not be concerned by this. I am not concerned by this.</strong></p>
+<p>I have not had the luxury to focus on performance much beyond some early design
+decisions. Clojure JVM, aside from leaning on the JVM for much of its
+performance, is doing many more optimizations than jank is currently doing. A
+lot of functionality, such as the GC (BDWGC), sorted containers, and others are
+currently placeholder. What’s most important is that jank works and that it’s
+correct. Once we achieve that, I will endeaver to show that jank can be the
+fastest Clojure dialect around. Right now, that is not a priority, no matter how
+much you may want it to be.</p>
+<p>Lastly, the Clojure community is empowered by backward compatibility. I respect
+and appreciate this goal for both Clojure and jank. I will be codifying stable
+APIs for embedding jank, ensuring the stability of jank’s special forms, and
+pursuing binary compatibility as much as the native world and all of its quirks
+allows. However, during the alpha release stage, anything goes.</p>
+<p>Now, install jank. Build some software. Report all of your bugs on Slack or
+Github! Engage in the community. Work with us as we stabilize and forge this
+language into what others in the future will know it to be.</p>
+<p>Jeaye</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<p>Let’s jump into jank! There’s a lot to learn, but we all have to start
+somewhere. In this chapter, we’ll discuss:</p>
+<ol>
+<li>Installing jank on macOS and Linux</li>
+<li>Writing a program which prints <code>Hello, world!</code></li>
+<li>Using Leiningen to manage jank projects</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>jank has continuous builds for macOS, Ubuntu, and Arch. These builds are
+bleeding edge and you’re encouraged to update regularly. If you’re on any of the
+supported systems, you can install jank using your system’s package manager. If
+not, you can still <a href="https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md">build jank yourself</a>.</p>
+<h2 id="homebrew-macos"><a class="header" href="#homebrew-macos">Homebrew (macOS)</a></h2>
+<p>We have a binary jank package in brew, so installation is quick and easy.</p>
+<pre><code class="language-sh">brew install jank-lang/jank/jank
+</code></pre>
+<p>To update jank, you can run the following.</p>
+<pre><code class="language-bash">brew update
+brew reinstall jank-lang/jank/jank
+</code></pre>
+<p>If you’d like to install from source using brew, you can use <code>jank-lang/jank/jank-git</code> instead.</p>
+<h2 id="ubuntu-linux-2404-2410-2504"><a class="header" href="#ubuntu-linux-2404-2410-2504">Ubuntu Linux (24.04, 24.10, 25.04)</a></h2>
+<p>We have a binary jank package in our own repo, so installation is quick and easy.</p>
+<pre><code class="language-bash">sudo apt install -y curl gnupg
+curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg &gt;/dev/null
+sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+sudo apt update
+sudo apt install -y jank
+</code></pre>
+<p>To update jank, you can run the following.</p>
+<pre><code class="language-bash">sudo apt update
+sudo apt reinstall jank
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Older versions of Ubuntu, like 22.04, will not work with jank. This is because
+jank requires C++20 to work and the libstdc++ on those systems is too old.</p>
+</blockquote>
+<h2 id="arch-linux-aur"><a class="header" href="#arch-linux-aur">Arch Linux (AUR)</a></h2>
+<p>We have a binary jank package in AUR, so installation is quick and easy.</p>
+<pre><code class="language-bash">yay -S jank-bin
+</code></pre>
+<p>To update jank, you can run the following.</p>
+<pre><code class="language-bash">yay -Syy
+yay -S jank-bin
+</code></pre>
+<p>If you’d like to install from source on Arch, you can install <code>jank-git</code> instead.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="hello-world"><a class="header" href="#hello-world">Hello, world!</a></h1>
+<p>Now that you’ve installed jank, it’s time to write your first jank program.
+Following tradition, we’ll write a trivial program which prints <code>Hello, world!</code>
+to the screen.</p>
+<h2 id="project-directory-setup"><a class="header" href="#project-directory-setup">Project directory setup</a></h2>
+<p>jank doesn’t require any particular directory structure. It can work with files
+directly. However, in order to keep our systems clean, we’ll create a new
+project directory for this example. Run these commands in a terminal.</p>
+<pre><code class="language-bash">$ mkdir -p ~/projects/hello_world
+$ cd ~/projects/hello_world
+</code></pre>
+<p>Next, use your text editor to create a file called <code>hello.jank</code> in the
+<code>hello_world</code> directory. The contents should look like this.</p>
+<pre><code class="language-clojure">(println "Hello, world!")
+</code></pre>
+<p>Finally, we can run this file!</p>
+<pre><code class="language-bash">$ jank run hello.jank
+Hello, world!
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="hello-leiningen"><a class="header" href="#hello-leiningen">Hello, Leiningen!</a></h1>
+<p>jank, on its own, is just a compiler and runtime. For non-trivial projects, you
+will want a tool to manage your dependencies, profiles, resources, and
+development workflows. For this, we use <a href="https://leiningen.org/">Leiningen</a> (LINE-ing-en).
+Leiningen is a project management tool for Clojure and jank is a dialect of
+Clojure.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>In the future, jank’s recommended workflow will be to use the default Clojure CLI tool, but
+it’s still being improved and it doesn’t yet offer the excellent
+user experience that Leiningen does. For now, it is not recommended for jank
+projects.</p>
+</blockquote>
+<h2 id="installing-leiningen"><a class="header" href="#installing-leiningen">Installing Leiningen</a></h2>
+<p>Leiningen is available in basically every package manager as <code>leiningen</code>.</p>
+<pre><code class="language-bash"># If you're on macOS.
+$ brew install leiningen
+
+# If you're on Ubuntu (or similar).
+$ sudo apt install -y leiningen
+
+# If you're on Arch (or similar).
+$ yay -S leiningen
+</code></pre>
+<p>For more details, see the <a href="https://leiningen.org/#install">Leiningen docs</a>.</p>
+<h2 id="creating-a-project-with-leiningen"><a class="header" href="#creating-a-project-with-leiningen">Creating a project with Leiningen</a></h2>
+<p>Now that Leiningen is installed, we can use it to create a new jank project.
+Let’s create another hello world style program.</p>
+<pre><code class="language-bash">$ mkdir ~/projects
+$ cd ~/projects
+$ lein new org.jank-lang/jank hello_lein
+$ cd hello_lein
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If you use <code>lein new</code> without specifying <code>org.jank-lang/jank</code>, you will get a
+Clojure JVM project, not a jank project. Make sure you get a jank project.</p>
+</blockquote>
+<h2 id="the-layout-of-a-leiningen-project"><a class="header" href="#the-layout-of-a-leiningen-project">The layout of a Leiningen project</a></h2>
+<p>Inside the <code>hello_lein</code> directory, you will find some files have already been
+created.</p>
+<pre><code class="language-bash">$ ls
+LICENSE  project.clj  src  test
+</code></pre>
+<p>Most importantly, the <code>project.clj</code> is the file which controls Leiningen and
+stores all meta information about your project. To start with, our <code>project.clj</code>
+will look similar to this:</p>
+<pre><code class="language-clojure">(defproject hello_lein "0.1-SNAPSHOT"
+  :license {:name "MPL 2.0"
+            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :dependencies []
+  :plugins [[org.jank-lang/lein-jank "0.2"]]
+  :middleware [leiningen.jank/middleware]
+  :main hello-lein.main
+  :profiles {:debug {:jank {:optimization-level 0}}
+             :release {:jank {:optimization-level 2}}})
+</code></pre>
+<p>Your versions may differ, but the overall structure will remain. Our
+<code>project.clj</code> defines some useful aspects to Leiningen.</p>
+<ol>
+<li>The project name <code>hello_lein</code> and version <code>0.1-SNAPSHOT</code></li>
+<li><code>:license</code>: The license of our project, which defaults to MPL since jank uses
+it. You are free to change this.</li>
+<li><code>:dependencies</code>: Our project dependencies. More on this in another chapter.</li>
+<li><code>:plugins</code>: The <code>lein-jank</code> plugin, and its <code>:middleware</code>, which is used to configure our
+project for jank instead of Clojure JVM.</li>
+<li><code>:main</code>: The entrypoint of our program, which contains our <code>-main</code> function.</li>
+<li><code>:profiles</code>, which allows us to enable different flags and build modes.</li>
+</ol>
+<p>Inside <code>src/hello_lein/main.jank</code>, we will see the code for our project.</p>
+<pre><code class="language-clojure">(ns hello-lein.main)
+
+(defn -main [&amp; args]
+  (println "Hello, world!"))
+</code></pre>
+<h2 id="running-a-leiningen-project"><a class="header" href="#running-a-leiningen-project">Running a Leiningen project</a></h2>
+<p>Running your project involves starting at our <code>:main</code> file, loading all required
+files, and then calling the <code>-main</code> function. Leiningen will help us with
+setting everything up so that jank can do this.</p>
+<pre><code class="language-bash">$ lein run
+Hello, world!
+</code></pre>
+<h2 id="testing-a-leiningen-project"><a class="header" href="#testing-a-leiningen-project">Testing a Leiningen project</a></h2>
+<p>Leiningen has support for easily running all tests for a project. Tests are
+written in the <code>test/</code> directory. The jank template provided us with an example
+test which will fail.</p>
+<pre><code class="language-bash">$ lein test
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>This is not yet supported in jank. Accomplishing this requires finding
+all test namespaces and running them using <code>clojure.test</code>.</p>
+</blockquote>
+<h2 id="compiling-a-leiningen-project"><a class="header" href="#compiling-a-leiningen-project">Compiling a Leiningen project</a></h2>
+<p>It’s possible to AOT (ahead of time) compile our whole Leiningen project to an
+executable. This involves compiling every one of our source files and
+dependencies and then linking them all together. Leiningen makes this easy.</p>
+<pre><code class="language-bash">$ lein compile
+$ ./a.out
+Hello, world!
+</code></pre>
+<p>As with GCC, Clang, etc, the default output name is <code>a.out</code>. When we invoke
+that, we see our printed hello world.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>There is not yet a way to change the output name using Leiningen, but this
+will be implemented.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="reaching-into-c"><a class="header" href="#reaching-into-c">Reaching into C++</a></h1>
+<p>jank is designed to be able to reach right into C++ and access variables, types,
+functions, templates, and even preprocessor values. All interop is done using
+the special <code>cpp/</code> namespace.</p>
+<p>In this chapter, we’ll dive into:</p>
+<ol>
+<li>Embedding raw C++ into your jank programs</li>
+<li>Bringing native C and C++ libraries into your jank programs</li>
+<li>Working with native values</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="embedding-raw-c"><a class="header" href="#embedding-raw-c">Embedding raw C++</a></h1>
+<p>jank has a special <code>cpp/raw</code> form which accepts a single string containing
+literal C++ code. This can be used for bringing in pretty much anything. For
+example, we can use this to include header files.</p>
+<pre><code class="language-clojure">(cpp/raw "#include &lt;fstream&gt;")
+</code></pre>
+<p>jank will always compile the included C++ source in a global scope, even if you
+put the <code>cpp/raw</code> form within a nested scope, such as within a function or a
+<code>let</code>. For example, this code will have the same effect, even if this function
+is never called.</p>
+<pre><code class="language-clojure">(defn foo []
+  (cpp/raw "#include &lt;fstream&gt;"))
+</code></pre>
+<p>The <code>cpp/raw</code> form always evaluates to <code>nil</code>. At runtime, <code>foo</code> will do nothing
+but return <code>nil</code>, since the JIT compilation is where the effect of <code>cpp/raw</code>
+actually happens.</p>
+<h2 id="a-helpful-idiom"><a class="header" href="#a-helpful-idiom">A helpful idiom</a></h2>
+<p>Hopefully this becomes a less common idiom simply by not being needed, but for
+now it’s common enough. If you run into issues trying to access a member, call a
+function, etc using normal C++ interop, you can write a wrapper in <code>cpp/raw</code>
+which will do the trick. For example, let’s say we have the following code.</p>
+<pre><code class="language-clojure">(let [s (cpp/std.string)
+      ; Let's say that this interop call isn't compiling correctly, due to a
+      ; jank bug.
+      size (cpp/.size s)]
+  (println "The size is" size))
+</code></pre>
+<p>You can work around this issue by defining a helper function which does the C++
+work for you. In this case, we could do the following.</p>
+<pre><code class="language-clojure">
+(cpp/raw "size_t get_string_size(std::string const &amp;s)
+          { return s.size(); }")
+
+(let [s (cpp/std.string)
+      size (cpp/get_string_size s)]
+  (println "The size is" size))
+</code></pre>
+<p>Of course, if you need to use this, please also report a bug on jank’s Github
+which describes what you tried to do and why it didn’t work.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="bringing-in-native-libraries"><a class="header" href="#bringing-in-native-libraries">Bringing in native libraries</a></h1>
+<p>Ultimately, jank exists to combine Clojure and C++. Most non-trivial jank
+programs will end up reaching into the C++ world for <em>something</em>. jank embraces
+familiar concepts from the C++ world, since it’s built entirely around Clang.</p>
+<ol>
+<li>Include search paths</li>
+<li>Preprocessor defines</li>
+<li>Linker search paths</li>
+<li>Libaries to link</li>
+</ol>
+<h2 id="using-leiningen"><a class="header" href="#using-leiningen">Using Leiningen</a></h2>
+<p>To bring in a C or C++ library, you will first need to <code>#include</code> the necessary
+header files. In order to be able to include them, you need to tell jank (and
+thus Clang) where to find them. This is done with your include search paths.</p>
+<p>Next, you may need to define some preprocessor macros in order to use or
+customize the library.</p>
+<p>Finally, you may need to link to some libraries involved. This often includes
+library search paths as well as library names, but library names can also be
+absolute paths, if that’s applicable to you.</p>
+<h3 id="creating-a-native-lib-for-testing"><a class="header" href="#creating-a-native-lib-for-testing">Creating a native lib for testing</a></h3>
+<p>Let’s make a new Leiningen project and a small C++ project within it.</p>
+<pre><code class="language-bash">$ lein new org.jank-lang/jank native-lib-tutorial
+$ cd native-lib-tutorial
+$ mkdir native-lib
+$ cd native-lib
+</code></pre>
+<p>In this <code>native-lib</code> directory, let’s make a small C++ library which uses libz
+to compress the contents of a C++ string. Create a <code>compress.hpp</code> file with
+these contents.</p>
+<pre><code class="language-cpp">#pragma once
+
+#include &lt;string&gt;
+
+namespace native_lib
+{
+  std::string compress(std::string const &amp;input);
+}
+</code></pre>
+<p>This is our header file. Now we can create a source file which implements our
+function.</p>
+<pre><code class="language-cpp">#include &lt;zlib.h&gt;
+
+#include &lt;stdexcept&gt;
+
+#include "compress.hpp"
+
+namespace native_lib
+{
+  std::string compress(std::string const &amp;input)
+  {
+    if(input.empty())
+    {
+      return {};
+    }
+
+    auto const input_len{ input.size() };
+    auto output_size{ compressBound(input_len) };
+
+    std::string out;
+    out.resize(output_size);
+
+    auto const res{ ::compress((unsigned char *)out.data(),
+                               &amp;output_size,
+                               (unsigned char *)input.data(),
+                               input_len) };
+    if(res != Z_OK)
+    {
+      throw std::runtime_error{ "compress failed: " + std::to_string(res) };
+    }
+
+    out.resize(output_size);
+    return out;
+  }
+}
+</code></pre>
+<p>Our source file defines this <code>compress</code> function using zlib. We can now compile
+this to a shared library so it can be used in jank.</p>
+<pre><code class="language-bash"># Linux.
+$ clang++ -shared -o libcompress.so -lz compress.cpp
+$ ls
+compress.cpp  compress.hpp  libcompress.so
+
+# macOS.
+$ clang++ -shared -o libcompress.dylib -lz compress.cpp
+$ ls
+compress.cpp  compress.hpp  libcompress.dylib
+</code></pre>
+<h3 id="linking-to-our-native-lib"><a class="header" href="#linking-to-our-native-lib">Linking to our native lib</a></h3>
+<p>Back in our jank project directory, let’s try to use our new library. We’ll
+start by doing everything incorrectly, so we can see the types of errors jank
+will raise and how to fix them.</p>
+<p>To start with, let’s update our <code>main.jank</code> to include our <code>compress.hpp</code> header
+from our native lib.</p>
+<pre><code class="language-clojure">(ns native-lib-tutorial.main)
+
+(cpp/raw "#include &lt;compress.hpp&gt;")
+
+(defn -main [&amp; args]
+  (println "Hello, world!"))
+</code></pre>
+<p>When we try to run this project now, jank will fail to compile the code.</p>
+<pre><code class="language-bash">$ lein run
+In file included from &lt;&lt;&lt; inputs &gt;&gt;&gt;:1:
+input_line_1:4:10: fatal error: 'compress.hpp' file not found
+    4 | #include &lt;compress.hpp&gt;
+      |          ^~~~~~~~~~~~~~
+error: Parsing failed.
+─ internal/codegen-failure ─────────────────────────────────────────────────────────────────────────
+error: Unable to compile C++ source.
+</code></pre>
+<p>This is where include directories come into play. Let’s update our <code>project.clj</code>
+to fix this issue!</p>
+<pre><code class="language-clojure">(defproject native-lib-tutorial "0.1-SNAPSHOT"
+  :license {:name "MPL 2.0"
+            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :dependencies []
+  :plugins [[org.jank-lang/lein-jank "0.2"]]
+  :middleware [leiningen.jank/middleware]
+  :main native-lib-tutorial.main
+  ; Look here!
+  :jank {:include-dirs ["native-lib"]}
+  :profiles {:debug {:jank {:optimization-level 0}}
+             :release {:jank {:optimization-level 2}}})
+</code></pre>
+<p>Now we can run the project again.</p>
+<pre><code class="language-bash">$ lein run
+Hello, world!
+</code></pre>
+<p>So our jank code is including the native lib header, but we’re not yet doing
+anything with it. Let’s call our actual <code>compress</code> function from jank now. Update the <code>-main</code>
+function within <code>main.jank</code> to look like the following.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (if (empty? args)
+    (println "Try passing some data to compress!")
+    (let [input (first args)
+          output (cpp/native_lib.compress input)]
+      (println "input size" (count input) "output size" (count output)))))
+</code></pre>
+<p>Again, we’re intentionally forgetting a step so we can see what happens. Let’s
+try to run this now!</p>
+<pre><code class="language-bash">$ lein run
+Try passing some data to compress!
+
+$ lein run "This is some data to compress!"
+JIT session error: Symbols not found: [ _ZN10native_lib8compressERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE ]
+error: Failed to materialize symbols: { (main, { _ZN3jtl6detail5panicINS_6resultIN4jank7runtime4orefINS4_3varEEENS_16immutable_stringEEEEEvRKT_, __orc_init_func.incr_module_3, DW.ref.__gxx_personality_v0, __clang_call_terminate, _ZZSt26__throw_bad_variant_accessjE9__reasons, _ZTSN19native_lib_tutorial4main7_main_1E, _ZNK19native_lib_tutorial4main7_main_115get_arity_flagsEv, _ZTIN19native_lib_tutorial4main7_main_1E, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA12_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZNSt18bad_variant_accessD0Ev, $.incr_module_3.__inits.0, _ZTVSt18bad_variant_access, _ZSt26__throw_bad_variant_accessj, _ZNK3jtl6resultIN4jank7runtime4orefINS2_3varEEENS_16immutable_stringEE10expect_errEv, _ZN19native_lib_tutorial4main7_main_1C2Ev, _ZTSSt18bad_variant_access, _ZTISt18bad_variant_access, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA37_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA11_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZN4jank7runtime7convertINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEE11from_objectENS0_4orefINS0_6objectEEE, _ZNKSt18bad_variant_access4whatEv, _ZTVN19native_lib_tutorial4main7_main_1E, _ZN19native_lib_tutorial4main7_main_14callEN4jank7runtime4orefINS3_6objectEEE, _ZN4jank7runtime3obj12jit_functionD2Ev, _ZN4jank7runtime8make_boxERKN3jtl21immutable_string_viewE, _ZN19native_lib_tutorial4main7_main_1D0Ev, _ZNK4jank7runtime4orefINS0_3obj17persistent_stringEE5eraseEv }) }
+─ internal/codegen-failure ─────────────────────────────────────────────────────────────────────────
+error: Unable to compile C++ source.
+</code></pre>
+<p>Uh oh! There’s a huge JIT (just in time) linker error. If we focus on the first
+line, we can see <code>Symbols not found</code> and then this:</p>
+<pre><code class="language-cpp">_ZN10native_lib8compressERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+</code></pre>
+<p>This is a C++ mangled symbol, so if you plug it into something like
+<a href="https://www.demangler.com/">demangler</a>, you can see that it demangles to:</p>
+<pre><code class="language-cpp">native_lib::compress(std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt;&gt; const&amp;)
+</code></pre>
+<p>That’s our <code>compress</code> function!</p>
+<p>All this means is that the C++ JIT runtime wasn’t able to find a definition for
+that symbol. The reason is that we didn’t link our shared library in. Let’s do
+that in <code>project.clj</code> now. If we expand on the include directory we added
+already, we can specify a library directory and the name of our library.</p>
+<pre><code class="language-clojure">  :jank {:include-dirs ["native-lib"]
+         :library-dirs ["native-lib"]
+         :linked-libraries ["compress"]}
+</code></pre>
+<p>With this change, we can now run our whole program.</p>
+<pre><code class="language-bash">$ lein run "This is some data to compress! Ideally, the output is smaller than the input."
+input size 77 output size 74
+
+$ lein run "Repeated strings are easier to compress. Repeated strings are easier to compress."
+input size 81 output size 52
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The way native linking works is that you link to <code>compress</code>, but the linker
+will actually look for <code>libcompress.a</code> and <code>libcompress.so</code> (or <code>libcompress.dylib</code>
+on macOS). Do not put the full file name in <code>:linked-libraries</code> unless
+you’re also specifying the absolute path.</p>
+</blockquote>
+<p>Finally, if we AOT (ahead of time) compile this project down to an executable,
+we can run it without Leiningen.</p>
+<pre><code class="language-bash">$ lein compile
+$ ./a.out
+./a.out: error while loading shared libraries: libcompress.so: cannot open shared object file: No such file or directory
+</code></pre>
+<p>Oh no! Our <code>libcompress.so</code> isn’t found, when we try to run our compiled
+executable. If we inspect the binary with <code>ldd</code> (or <code>otool -L</code> on macOS), we can
+see the linked libraries. Note how <code>libcompress.so</code> is <code>not found</code>.</p>
+<pre><code>$ ldd a.out
+	linux-vdso.so.1 (0x00007fa6f0f64000)
+	libm.so.6 =&gt; /usr/lib/libm.so.6 (0x00007fa6ebadd000)
+	libLLVM.so.22.0git =&gt; /home/jeaye/projects/jank/compiler+runtime/build/llvm-install/usr/local/bin/../lib/libLLVM.so.22.0git (0x00007fa6e7000000)
+	libclang-cpp.so.22.0git =&gt; /home/jeaye/projects/jank/compiler+runtime/build/llvm-install/usr/local/bin/../lib/libclang-cpp.so.22.0git (0x00007fa6e2c00000)
+	libcrypto.so.3 =&gt; /usr/lib/libcrypto.so.3 (0x00007fa6e268c000)
+	libz.so.1 =&gt; /usr/lib/libz.so.1 (0x00007fa6ebac4000)
+	libzstd.so.1 =&gt; /usr/lib/libzstd.so.1 (0x00007fa6e25a7000)
+	libcompress.so =&gt; not found
+	libstdc++.so.6 =&gt; /usr/lib/libstdc++.so.6 (0x00007fa6e2313000)
+	libgcc_s.so.1 =&gt; /usr/lib/libgcc_s.so.1 (0x00007fa6eba95000)
+	libc.so.6 =&gt; /usr/lib/libc.so.6 (0x00007fa6e2101000)
+	/lib64/ld-linux-x86-64.so.2 =&gt; /usr/lib64/ld-linux-x86-64.so.2 (0x00007fa6f0f66000)
+	libedit.so.0 =&gt; /usr/lib/libedit.so.0 (0x00007fa6eba59000)
+	libxml2.so.16 =&gt; /usr/lib/libxml2.so.16 (0x00007fa6e1fcc000)
+	libncursesw.so.6 =&gt; /usr/lib/libncursesw.so.6 (0x00007fa6eb9ea000)
+	libicuuc.so.78 =&gt; /usr/lib/libicuuc.so.78 (0x00007fa6e1dbe000)
+	libicudata.so.78 =&gt; /usr/lib/libicudata.so.78 (0x00007fa6dfe29000)
+</code></pre>
+<p>Getting around this varies based on situation, but a quick workaround is to
+tell the dynamic linker where else to look, when we run our program.</p>
+<pre><code class="language-bash"># Linux.
+$ LD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
+input size 20 output size 12
+
+# macOS.
+$ DYLD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
+input size 20 output size 12
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>jank does not support C++20 modules right now. In fact, most C++ compilers
+have very poor support for C++20 modules right now. This may come, in the
+future, but it will only happen once the experience is sane.</p>
+</blockquote>
+<h2 id="using-jank-directly"><a class="header" href="#using-jank-directly">Using jank directly</a></h2>
+<p>jank exposes the same flags as Clang for includes, defines, and linked
+libraries. They work in the same way, too. For all of these, you may add as many
+as you need.</p>
+<ul>
+<li>Specify <code>-I &lt;path&gt;</code> to add a new include path</li>
+<li>Specify <code>-D FOO</code> or <code>-D FOO=bar</code> to add a new preprocessor define</li>
+<li>Specify <code>-L &lt;path&gt;</code> to add a new library path</li>
+<li>Specify <code>-l &lt;lib&gt;</code> to link to a library name</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-reasoning-for-the-cpp-namespace"><a class="header" href="#the-reasoning-for-the-cpp-namespace">The reasoning for the <code>cpp</code> namespace</a></h1>
+<p>All forms related to C++ interop in jank are under the special <code>cpp/</code> namespace.
+This is a departure from normal Clojure interop. It was done for simplicity, to
+provide some insulation between Clojure and C++.</p>
+<p>With that said, it is not yet determined if this namespace will stay. For some
+special forms, like <code>cpp/raw</code>, I think it makes sense. Although, for typical day
+to day object creation and member access, the <code>cpp/</code> namespace is likely overly
+noisy.</p>
+<p>However, it’s worth considering that <code>cpp/</code> is useful if jank provides interop
+with other native languages, such as Rust. In which case, we may want to
+disambiguate with <code>cpp/</code> and <code>rs/</code>.</p>
+<p>As you explore the jank alpha release, please consider this and provide
+feedback.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="differences-from-clojure"><a class="header" href="#differences-from-clojure">Differences from Clojure</a></h1>
+<h2 id="clojurecore"><a class="header" href="#clojurecore">clojure.core</a></h2>
+<ul>
+<li>Baked into the compiler</li>
+<li>No nested require support</li>
+<li>No <code>import</code></li>
+<li><code>(hash-map)</code> returns a hash map, not an array map</li>
+<li><code>aget</code> is a special form</li>
+<li><code>aset</code> is a macro</li>
+<li><code>keyword</code> is more strict about valid inputs</li>
+</ul>
+<h2 id="object-model"><a class="header" href="#object-model">Object Model</a></h2>
+<ul>
+<li>No stable boxes for small integers (the JVM pre-allocates <code>1</code>, <code>2</code>, <code>3</code>, etc)</li>
+<li>String is UTF-8</li>
+<li>No inheritance</li>
+<li>No records</li>
+<li>No protocols</li>
+<li>Sequences
+<ul>
+<li>In-place operations (<code>fresh-seq</code>, <code>next-in-place</code>)</li>
+</ul>
+</li>
+</ul>
+<h2 id="interop"><a class="header" href="#interop">Interop</a></h2>
+<p>See TODO: Interop.</p>
+<h2 id="compilation-model"><a class="header" href="#compilation-model">Compilation Model</a></h2>
+<ul>
+<li>Global compilation artifacts</li>
+<li>Source-only distribution (i.e. class files)
+<ul>
+<li>Git deps are an exception here; if someone commits a .o file into a git dep
+on your module path, jank will load it</li>
+</ul>
+</li>
+<li>Dependencies are AOT compiled by default</li>
+<li>Multi-threaded dependency compilation</li>
+<li>Module path vs class path</li>
+</ul>
+<h2 id="math"><a class="header" href="#math">Math</a></h2>
+<ul>
+<li>Division by integer 0 is UB</li>
+<li>Division by floating point 0 is well defined</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="for-c-developers"><a class="header" href="#for-c-developers">For C++ Developers</a></h1>
+<p>jank is not yet ready for C++ developers. I have not stabilized the API for
+embedding, there are GC concerns within existing C++ applications, the header
+feeding mechanisms within Clang need additional support for multiple PCHs
+(pre-compiled headers), and there is no documentation. Don’t think for a minute
+that this list is exhaustive.</p>
+<p>With that said, some have already embedded jank into existing C++ applications.
+If you’re brave, and impatient, it can work. Otherwise, wait for me to stabilize
+the Clojure side of things first. The timeline for this is more like the end of 2026.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
