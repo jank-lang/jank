@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_aggregate_object
+          {
+            struct foo
+            {
+              jank::runtime::object_ref a;
+            };
+          }")
+(let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_object.foo. 5)]
+  (if (= 5 (cpp/.-a f))
+    :success))

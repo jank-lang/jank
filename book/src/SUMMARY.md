@@ -11,14 +11,14 @@
 
 <!--
 TODO:
+  Samples of jank
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
   nREPL support
+  Casting between types
   AOT compiling programs (and distributing them)
-  Troubleshooting
-    Health check
-    Getting a stack trace
+  Printing codegen
   Known issues
 -->
 
@@ -26,7 +26,8 @@ TODO:
   * [Embedding raw C++](cpp-interop/cpp-raw.md)
   * [Bringing in native libraries](cpp-interop/native-libs.md)
   * [Working with native values](cpp-interop/native-values.md)
-  * [Boxing native values]()
+  * [Working with native types](cpp-interop/native-types.md)
+  * [Working with native functions](cpp-interop/native-functions.md)
   * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
