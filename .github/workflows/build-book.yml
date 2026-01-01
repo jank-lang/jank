@@ -9,9 +9,7 @@ on:
       - main
     paths:
       - 'book/**'
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 # Only allow one build per branch at a time. New builds will cancel existing builds.
 concurrency:
@@ -23,6 +21,8 @@ jobs:
     name: Check the book
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,6 +43,8 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
