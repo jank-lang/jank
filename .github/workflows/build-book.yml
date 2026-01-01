@@ -11,7 +11,7 @@ on:
       - 'book/**'
 
 permissions:
-  contents: read
+  contents: write
 
 # Only allow one build per branch at a time. New builds will cancel existing builds.
 concurrency:
