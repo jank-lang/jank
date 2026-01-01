@@ -39,7 +39,7 @@ jobs:
           popd
 
   publish-book:
-    name: Build and publish the book
+    name: Publish the book
     runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
     timeout-minutes: 5
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: book
-      - name: Build and publish
+      - name: Publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
