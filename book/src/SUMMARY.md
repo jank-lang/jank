@@ -1,6 +1,6 @@
 # The jank Programming Language
 
-[The jank Programming Language](title-page.md)
+[Welcome to the jank alpha!](title-page.md)
 
 [Foreward](foreward.md)
 
@@ -16,16 +16,23 @@ TODO:
     All modules need to intern the ns
   nREPL support
   AOT compiling programs (and distributing them)
-  Troubleshooting / Getting a stack trace
+  Troubleshooting
+    Health check
+    Getting a stack trace
   Known issues
 -->
 
 * [Reaching into C++](cpp-interop/index.md)
   * [Embedding raw C++](cpp-interop/cpp-raw.md)
   * [Bringing in native libraries](cpp-interop/native-libs.md)
-  * [Working with native values]()
+  * [Working with native values](cpp-interop/native-values.md)
   * [Boxing native values]()
   * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
 * [For C++ Developers](for-cpp-developers.md)
+
+* [Troubleshooting](troubleshooting/index.md)
+  * [Checking jank's health](troubleshooting/health-check.md)
+  * [How to get a stack trace](troubleshooting/stack-trace.md)
+  * [Where to get help](troubleshooting/getting-help.md)

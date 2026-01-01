@@ -59,3 +59,8 @@ yay -S jank-bin
 
 
 If you'd like to install from source on Arch, you can install `jank-git` instead.
+
+## Something else?
+Don't see your preferred system here? [Help us with
+packaging](https://github.com/jank-lang/jank)! We want jank to
+be everywhere.
