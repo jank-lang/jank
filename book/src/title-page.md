@@ -6,9 +6,9 @@ incompleteness matches jank's. It's still early to jump into jank, but your
 time and patience is welcome.
 
 > [!IMPORTANT]
-> jank is alpha quality software. It will crash. It will leak. There are huge
-> areas of functionality which haven't been implemented. Your help getting us
-> past this stage is greatly appreciated.
+> jank is alpha quality software. It will crash. It will leak. It is slow.
+> There are huge areas of functionality which haven't been implemented. Your
+> help getting us past this stage is greatly appreciated.
 
 ## What is jank?
 jank is a general purpose programming language. It's a dialect of Clojure, which
@@ -22,4 +22,4 @@ both access and define new C++ types, functions, and templates, at runtime. This
 is done by JIT (just in time) compiling C++, using Clang and LLVM. The result is
 that you can write Clojure code which can access C and C++ libraries trivially.
 
-For more detail on jank's status, please read the [foreward](foreward.md).
+For more details on jank's status, please read the [foreward](foreward.md).

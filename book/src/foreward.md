@@ -19,7 +19,7 @@ strives to compete, but it lacks AOT compilation support. Because of this trail
 blazing, we have faced many bugs in Clang. This continues to be a limiter for
 jank's success, due to the size and complexity of the Clang code base and my
 limited time. To ensure jank's success, this challenge will need to be tackled
-sincerely, most likely by finding and employing a part-time Clang developer. If
+directly, most likely by finding and employing a part-time Clang developer. If
 you are able to help with this, please reach out.
 
 Moving on.
@@ -41,12 +41,16 @@ much you may want it to be.
 
 Lastly, the Clojure community is empowered by backward compatibility. I respect
 and appreciate this goal for both Clojure and jank. I will be codifying stable
-APIs for embedding jank, ensuring the stability of jank's special forms, and
-pursuing binary compatibility as much as the native world and all of its quirks
-allows. However, during the alpha release stage, anything goes.
+APIs for embedding jank, ensuring the stability of jank's special forms,
+developing an integrated build system to improve the longevity of jank libraries
+which wrap native libraries, and pursuing binary compatibility as much as the
+native world and all of its quirks allows. However, during the alpha release
+stage, and until we have our first production release, anything goes.
 
-Now, install jank. Build some software. Report all of your bugs on Slack or
-Github! Engage in the community. Work with us as we stabilize and forge this
-language into what others in the future will know it to be.
+Now, install jank. Build some software. Report all of your bugs on
+[Slack](https://clojurians.slack.com/archives/C03SRH97FDK) or
+[Github](https://github.com/jank-lang/jank)! Engage in the community. Work with
+us as we stabilize and forge this language into what others in the future will
+know it to be.
 
 Jeaye
