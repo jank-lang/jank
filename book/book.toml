@@ -9,5 +9,7 @@ build-dir = "live"
 create-missing = false
 
 [output.html]
+default-theme = "rust"
+preferred-dark-theme = "ayu"
 admonitions = true
 git-repository-url = "https://github.com/jank-lang/jank"
