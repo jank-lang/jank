@@ -39,7 +39,6 @@ You can work around this issue by defining a helper function which does the C++
 work for you. In this case, we could do the following.
 
 ```clojure
-
 (cpp/raw "size_t get_string_size(std::string const &s)
           { return s.size(); }")
 

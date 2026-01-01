@@ -141,6 +141,7 @@ to fix this issue!
   :plugins [[org.jank-lang/lein-jank "0.2"]]
   :middleware [leiningen.jank/middleware]
   :main native-lib-tutorial.main
+
   ; Look here!
   :jank {:include-dirs ["native-lib"]}
   :profiles {:debug {:jank {:optimization-level 0}}
