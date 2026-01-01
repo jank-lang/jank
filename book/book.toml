@@ -5,9 +5,9 @@ src = "src"
 title = "The jank Programming Language"
 
 [build]
+build-dir = "live"
 create-missing = false
 
 [output.html]
-destination = "live"
 admonitions = true
 git-repository-url = "https://github.com/jank-lang/jank"
