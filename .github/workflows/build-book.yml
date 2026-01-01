@@ -55,5 +55,6 @@ jobs:
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           export PATH=$PWD:$PATH
           pushd ${{ github.workspace }}/book
-            ./bin/publish
+            mdbook build || exit 1
+            ./bin/publish || exit 1
           popd
