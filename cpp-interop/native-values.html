@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Foreward - The jank Programming Language</title>
+        <title>Working with native values - The jank Programming Language</title>
 
 
         <!-- Custom HTML head -->
@@ -12,33 +12,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ba7f154f.js";
+            window.path_to_searchindex_js = "../searchindex-ba7f154f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-bc6207db.js"></script>
+        <script src="../toc-bc6207db.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -105,7 +105,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -140,7 +140,7 @@
                     <h1 class="menu-title">The jank Programming Language</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
                         <a href="https://github.com/jank-lang/jank" title="Git repository" aria-label="Git repository">
@@ -177,63 +177,129 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="foreward"><a class="header" href="#foreward">Foreward</a></h1>
-<p>jank is a personal creation made public. It’s a passion project which aspires to
-push the boundaries of two languages very dear to me: C++ and Clojure. These two
-languages could not be further apart, in their syntax, paradigms, culture,
-adoption, and typical use cases. Still, I aim to bind them.</p>
-<p>jank is currently alpha quality software. Most importantly, that means that you
-would be crazy to ship it into production for anything that matters. More
-specifically, it means that jank, and its related programs, will crash, leak
-memory, provide incorrect results, and in general surprise, confound, and
-frustrate until we can implement all remaining pieces and iron out all remaining
-bugs. I need your help with this.</p>
-<p>Before jank, achieving this level of seamless C++ interop, with JIT (just in
-time) compiled C++, and full AOT (ahead of time) compilation support had never
-been done, <strong>from any dynamic language</strong>. Swift has come closest, though it’s
-not dynamically typed and it lacks an official JIT compiler. Cppyy, for Python,
-strives to compete, but it lacks AOT compilation support. Because of this trail
-blazing, we have faced many bugs in Clang. This continues to be a limiter for
-jank’s success, due to the size and complexity of the Clang code base and my
-limited time. To ensure jank’s success, this challenge will need to be tackled
-directly, most likely by finding and employing a part-time Clang developer. If
-you are able to help with this, please reach out.</p>
-<p>Moving on.</p>
-<p>The performance of jank, during this alpha stage, will be quite bad. Depending
-on the benchmark, you might find jank to be 2x or even 10x slower than Clojure
-JVM. Maybe more.</p>
-<p><strong>Do not be concerned by this. I am not concerned by this.</strong></p>
-<p>I have not had the luxury to focus on performance much beyond some early design
-decisions. Clojure JVM, aside from leaning on the JVM for much of its
-performance, is doing many more optimizations than jank is currently doing. A
-lot of functionality, such as the GC (BDWGC), sorted containers, and others are
-currently placeholder. What’s most important is that jank works and that it’s
-correct. Once we achieve that, I will endeaver to show that jank can be the
-fastest Clojure dialect around. Right now, that is not a priority, no matter how
-much you may want it to be.</p>
-<p>Lastly, the Clojure community is empowered by backward compatibility. I respect
-and appreciate this goal for both Clojure and jank. I will be codifying stable
-APIs for embedding jank, ensuring the stability of jank’s special forms,
-developing an integrated build system to improve the longevity of jank libraries
-which wrap native libraries, and pursuing binary compatibility as much as the
-native world and all of its quirks allows. However, during the alpha release
-stage, and until we have our first production release, anything goes.</p>
-<p>Now, install jank. Build some software. Report all of your bugs on
-<a href="https://clojurians.slack.com/archives/C03SRH97FDK">Slack</a> or
-<a href="https://github.com/jank-lang/jank">Github</a>! Engage in the community. Work with
-us as we stabilize and forge this language into what others in the future will
-know it to be.</p>
-<p>Jeaye</p>
+                        <h1 id="working-with-native-values"><a class="header" href="#working-with-native-values">Working with native values</a></h1>
+<p>C++ values, references, and pointers can be used directly within jank. However,
+there are some limitations due to how C++’s object model works. The primary
+factor here is that C++ has no base object type for all classes and structs.
+Each top-level type is standalone. This is different from the JVM, CLR, and JS
+environments where there is a base <code>Object</code> for all class types. This means that
+we need to take some extra steps in order to store arbitrary C++ values within
+the jank runtime. There are a few ways this can be done and jank tries to make
+this as easy as possible.</p>
+<h2 id="trait-convertible"><a class="header" href="#trait-convertible">Trait-convertible</a></h2>
+<p>Firstly, some C++ types are automatically and implicitly convertible to/from
+jank objects. These include all C++ intrinsic intregral types, bools, C strings,
+and even some C++ standard libary types like <code>std::string</code>. For these types,
+the jank compiler will detect if conversion is necessary and will implicitly
+handle conversions as needed. For example, let’s take a look at this jank code
+which calls a C++ function which operates on <code>std::string</code>.</p>
+<pre><code class="language-clojure">(cpp/raw "std::string to_upper(std::string const &amp;s)
+          {
+            std::string ret;
+            for(auto const c : s)
+            { ret += ::toupper(c); }
+            return ret;
+          }")
+
+(defn to-upper [o]
+  (let [upper (cpp/to_upper o)]
+    upper))
+</code></pre>
+<p>In this code, <code>o</code> is a <code>jank::runtime::object_ref</code>. This is basically like
+Clojure’s <code>Object</code> type. It’s a garbage collected, type-erased value. When the
+jank compiler analyzes the call to <code>(cpp/to_upper o)</code>, it resolves that
+<code>to_upper</code> expects a <code>std::string</code> and that there is a conversion trait for it.
+So the jank compiler will automatically handle converting from <code>object_ref</code> into
+a <code>std::string</code>. On the other side, <code>upper</code> is a <code>std::string</code>, which is the
+result of <code>to_upper</code>. However, when we return it from the <code>let</code>, the jank
+compiler sees that it can implicitly create an <code>object_ref</code> for us, so there’s
+nothing we need to do.</p>
+<h2 id="non-trait-convertible"><a class="header" href="#non-trait-convertible">Non-trait-convertible</a></h2>
+<p>Aside from the built-in supported trait conversions, every other C++ type will
+not be convertible. If you try to pass such a value as a jank function argument
+or if you try to return such a value from a jank function, you will get a
+compiler error. For example, given this source:</p>
+<pre><code class="language-clojure">(cpp/raw "struct person
+          { std::string name; };")
+
+(defn create-person [name]
+  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+    p))
+</code></pre>
+<p>If we try to run this file, we’ll get a compiler error telling us that we can’t
+return a value of type <code>person</code> from our function, since it’s not convertible to
+a jank runtime object.</p>
+<pre><code>$ jank run person.jank
+─ analyze/invalid-cpp-conversion ────────────────────────────
+error: This function is returning a native object of type
+       'person', which is not convertible to a jank runtime
+       object.
+
+─────┬───────────────────────────────────────────────────────
+     │ test.jank
+─────┼───────────────────────────────────────────────────────
+  2  │           { std::string name; };")
+  3  │
+  4  │ (defn create-person [name]
+     │ ^ Expanded from this macro.
+─────┴───────────────────────────────────────────────────────
+</code></pre>
+<h2 id="implementing-your-own-trait"><a class="header" href="#implementing-your-own-trait">Implementing your own trait</a></h2>
+<p>To build on the <code>person</code> type defined above, we could extend the conversion
+trait to teach jank how to convert to/from <code>person</code> and jank maps. This does
+require C++ template metaprogramming, which is an advanced concept that’s only
+intended for C++ developers who’re using jank.</p>
+<pre><code class="language-clojure">
+(cpp/raw "struct person
+          { std::string name; };
+
+
+          namespace jank::runtime
+          {
+            template &lt;&gt;
+            struct convert&lt;person&gt;
+            {
+              static obj::keyword_ref name_kw;
+
+              static obj::persistent_hash_map_ref into_object(person const &amp;p)
+              {
+                return obj::persistent_hash_map::create_unique(std::make_pair(name_kw, make_box(p.name)));
+              }
+
+              static person from_object(object_ref const o)
+              {
+                auto const name{ try_object&lt;obj::persistent_string&gt;(get(o, name_kw)) };
+                return person{ name-&gt;data };
+              }
+             };
+
+             obj::keyword_ref convert&lt;person&gt;::name_kw{ __rt_ctx-&gt;intern_keyword(\"name\").expect_ok() };
+          }
+
+          ")
+
+(defn create-person [name]
+  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+    p))
+
+(println (create-person "foo"))
+</code></pre>
+<p>Now, if we’re to run this, we can see that the <code>person</code> was implicitly converted
+into a jank hash map.</p>
+<pre><code class="language-bash">$ jank run person.jank
+{:name foo}
+</code></pre>
+<h2 id="opaque-boxes"><a class="header" href="#opaque-boxes">Opaque boxes</a></h2>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="title-page.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../cpp-interop/native-libs.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="getting-started/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -243,11 +309,11 @@ know it to be.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="title-page.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../cpp-interop/native-libs.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="getting-started/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -267,13 +333,13 @@ know it to be.</p>
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
