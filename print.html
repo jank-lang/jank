@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-7b58079a.js";
+            window.path_to_searchindex_js = "searchindex-354241bb.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f7e6357b.js"></script>
@@ -1044,7 +1044,18 @@ and then returns it when called.</p>
     (f)))
 </code></pre>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<p>C++ operators are special language</p>
+<p>C++ operators are special language features for primitives, but they can also be
+overloaded for custom types. Their semantics are much more complicated than
+Clojure’s function calls, but basically all of them are available under the
+<code>cpp/</code> namespace within jank.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>C++20 does operator rewriting for comparison operators, to use the <code>&lt;=&gt;</code>
+spaceship operator, or perhaps others. jank doesn’t currently support this.
+If you’re porting C++ code to jank which fails to find the appropriate
+operator, chances are that operator never existed and Clang used rewriting to
+use a different operator instead.</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="the-reasoning-for-the-cpp-namespace"><a class="header" href="#the-reasoning-for-the-cpp-namespace">The reasoning for the <code>cpp</code> namespace</a></h1>
 <p>All forms related to C++ interop in jank are under the special <code>cpp/</code> namespace.
