@@ -2,7 +2,7 @@
 
 [Welcome to the jank alpha!](index.md)
 
-[Foreward](foreward.md)
+[Foreword](foreword.md)
 
 * [Getting Started](getting-started/index.md)
   * [Installation](getting-started/01-installation.md)

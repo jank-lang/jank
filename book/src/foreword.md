@@ -1,4 +1,4 @@
-# Foreward
+# Foreword
 jank is a personal creation made public. It's a passion project which aspires to
 push the boundaries of two languages very dear to me: C++ and Clojure. These two
 languages could not be further apart, in their syntax, paradigms, culture,
