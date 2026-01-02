@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-07b0b5af.js";
+            window.path_to_searchindex_js = "searchindex-bf51d024.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-8202078a.js"></script>
@@ -193,11 +193,12 @@ time) compiled C++, and full AOT (ahead of time) compilation support had never
 been done, <strong>from any dynamic language</strong>. Swift has come closest, though it’s
 not dynamically typed and it lacks an official JIT compiler. Cppyy, for Python,
 strives to compete, but it lacks AOT compilation support. Because of this trail
-blazing, we have faced many bugs in Clang. This continues to be a limiter for
-jank’s success, due to the size and complexity of the Clang code base and my
-limited time. To ensure jank’s success, this challenge will need to be tackled
-directly, most likely by finding and employing a part-time Clang developer. If
-you are able to help with this, please reach out.</p>
+blazing, we have faced many bugs in Clang. Clang is the main challenge for both
+compile-time performance and overall memory usage. This continues to be a
+limiter for jank’s success, due to the size and complexity of the Clang code
+base and my limited time. To ensure jank’s success, this challenge will need to
+be tackled directly, most likely by finding and employing a part-time Clang
+developer. If you are able to help with this, please reach out.</p>
 <p>Moving on.</p>
 <p>The performance of jank, during this alpha stage, will be quite bad. Depending
 on the benchmark, you might find jank to be 2x or even 10x slower than Clojure
