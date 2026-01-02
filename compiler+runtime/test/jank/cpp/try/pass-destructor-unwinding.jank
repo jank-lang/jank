@@ -27,13 +27,14 @@ namespace jank::cpp::try_::pass_destructor_unwinding {
 }
 ")
 
-(cpp/jank.cpp.try_.pass_destructor_unwinding.reset_count)
+(do
+  (cpp/jank.cpp.try_.pass_destructor_unwinding.reset_count)
 
-(try
-  (cpp/jank.cpp.try_.pass_destructor_unwinding.throw_with_unwinding)
-  (catch cpp/int i))
+  (try
+    (cpp/jank.cpp.try_.pass_destructor_unwinding.throw_with_unwinding)
+    (catch cpp/int i))
 
-(assert (= 1 (cpp/jank.cpp.try_.pass_destructor_unwinding.get_destructor_count))
-        "Destructor should have been called once")
+  (assert (= 1 (cpp/jank.cpp.try_.pass_destructor_unwinding.get_destructor_count))
+          "Destructor should have been called once"))
 
 :success

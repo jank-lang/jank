@@ -11,8 +11,8 @@
       (catch cpp/std.runtime_error e
         (swap! a conj :caught-inner)
         (cpp/jank.cpp.try_.pass_rethrow.throw_current)))
-    ;; Rethrow using helper function
     (catch cpp/std.runtime_error e
+      (assert (= "inner error" (cpp/.what e)))
       (swap! a conj :caught-outer)))
 
   (assert (= [:caught-inner :caught-outer] @a) (pr-str @a)))
