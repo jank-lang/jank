@@ -109,4 +109,14 @@ and then returns it when called.
 ```
 
 ## Operators
-C++ operators are special language
+C++ operators are special language features for primitives, but they can also be
+overloaded for custom types. Their semantics are much more complicated than
+Clojure's function calls, but basically all of them are available under the
+`cpp/` namespace within jank.
+
+> [!NOTE]
+> C++20 does operator rewriting for comparison operators, to use the `<=>`
+> spaceship operator, or perhaps others. jank doesn't currently support this.
+> If you're porting C++ code to jank which fails to find the appropriate
+> operator, chances are that operator never existed and Clang used rewriting to
+> use a different operator instead.
