@@ -2099,17 +2099,18 @@ namespace jank::codegen
       auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
       bool needs_conversion{};
       jtl::immutable_string conversion_direction, trait_type;
+      /* TODO: For aggregate initialization, consider the member type, not the expr type. */
       if(cpp_util::is_any_object(expr->type) && !cpp_util::is_any_object(arg_type))
       {
         needs_conversion = true;
         conversion_direction = "into_object";
-        trait_type = cpp_util::get_qualified_type_name(expr->type);
+        trait_type = cpp_util::get_qualified_type_name(arg_type);
       }
       else if(!cpp_util::is_any_object(expr->type) && cpp_util::is_any_object(arg_type))
       {
         needs_conversion = true;
         conversion_direction = "from_object";
-        trait_type = cpp_util::get_qualified_type_name(arg_type);
+        trait_type = cpp_util::get_qualified_type_name(expr->type);
       }
 
       if(needs_conversion)
