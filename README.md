@@ -22,13 +22,11 @@ jank's host is LLVM and its interop is with C++.
 
 For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
 
-**jank is expected to have its alpha launch in December 2025!**
+**jank is currently in alpha! Look [here](https://book.jank-lang.org/) for details.**
 
 ## Docs
-* [Installing jank](./compiler+runtime/doc/install.md)
-* [Building jank](./compiler+runtime/doc/build.md)
-* [Using jank with Leiningen](./lein-jank/README.md)
-* [Using jank with Clojure CLI](./clojure-cli/README.md)
+* [The jank book](https://book.jank-lang.org)
+* [Building jank from source](./compiler+runtime/doc/build.md)
 
 ## Appetizer
 ```clojure
