@@ -259,6 +259,8 @@ namespace jank::codegen
   {
     jank_debug_assert(type);
     usize size{ 1 };
+    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
+    jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
     llvm::Type *ir_type{ ctx.builder->getInt8Ty() };
@@ -292,16 +294,6 @@ namespace jank::codegen
       ir_type = ctx.builder->getPtrTy();
       size = 1;
     }
-
-    //std::string ir_type_name;
-    //llvm::raw_string_ostream os{ ir_type_name };
-    //ir_type->print(os);
-    //util::println("alloc_type {}, ir type {}, size {}, alignment {}",
-    //              Cpp::GetTypeAsString(type),
-    //              ir_type_name,
-    //              size,
-    //              alignment);
-    jank_debug_assert(size > 0);
 
     jank_debug_assert_fmt_throw(ir_type,
                                 "Unable to find LLVM IR primitive to use for allocating type '{}'.",
@@ -1225,39 +1217,32 @@ namespace jank::codegen
      * end, since the old values must be used for all calculations of the new values. */
     if(expr->loop_target.is_some())
     {
-      //native_vector<std::pair<llvm::Value *, llvm::Value *>> deferred_stores;
-      //for(usize i{}; i < expr->arg_exprs.size(); ++i)
-      //{
-      //  auto const &arg_expr{ expr->arg_exprs[i] };
-      //  auto arg_handle{ gen(arg_expr, arity) };
-      //  auto const binding_type{ cpp_util::expression_type(
-      //    expr->loop_target.unwrap()->pairs[i].second) };
-      //  auto const is_arg_ref{ Cpp::IsReferenceType(binding_type)
-      //                         && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(binding_type))
-      //                              || Cpp::IsArrayType(Cpp::GetNonReferenceType(binding_type))) };
-      //  auto const is_arg_ptr{ Cpp::IsPointerType(binding_type) || Cpp::IsArrayType(binding_type)
-      //                         || cpp_util::is_any_object(binding_type) };
-      //  auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
-
-      //  if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
-      //  {
-      //    arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
-      //  }
-
-      //  deferred_stores.emplace_back(arg_handle, arg_alloc);
-      //}
-
-      for(usize i{}; i != expr->op_equal_exprs.size(); ++i)
+      native_vector<std::pair<llvm::Value *, llvm::Value *>> deferred_stores;
+      for(usize i{}; i < expr->arg_exprs.size(); ++i)
       {
-        auto const &op_equal_expr{ expr->op_equal_exprs[i] };
-        //auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
-        //jank_debug_assert(arg_alloc);
-        //auto const &store{ deferred_stores[i] };
-        //if(store.first != store.second)
+        auto const &arg_expr{ expr->arg_exprs[i] };
+        auto arg_handle{ gen(arg_expr, arity) };
+        auto const expr_type{ cpp_util::expression_type(arg_expr) };
+        auto const is_arg_ref{ Cpp::IsReferenceType(expr_type)
+                               && !(Cpp::IsPointerType(Cpp::GetNonReferenceType(expr_type))
+                                    || Cpp::IsArrayType(Cpp::GetNonReferenceType(expr_type))) };
+        auto const is_arg_ptr{ Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type)
+                               || cpp_util::is_any_object(expr_type) };
+        auto const is_arg_indirect{ is_arg_ref || is_arg_ptr };
+
+        if(is_arg_indirect && llvm::isa<llvm::AllocaInst>(arg_handle))
         {
-          /* TODO: Handle primitives. */
-          gen(op_equal_expr, arity);
+          arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
+
+        auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
+        jank_debug_assert(arg_alloc);
+        deferred_stores.emplace_back(arg_handle, arg_alloc);
+      }
+
+      for(auto const &store : deferred_stores)
+      {
+        ctx->builder->CreateStore(store.first, store.second);
       }
 
       gen_stack_restore();
@@ -1431,7 +1416,7 @@ namespace jank::codegen
       locals[pair.first] = value;
       if(value->getName().empty())
       {
-        value->setName(pair.first->to_string().c_str());
+        value->setName(util::format("{}_init", pair.first->to_string()).c_str());
       }
     }
 
@@ -1443,17 +1428,15 @@ namespace jank::codegen
      * corresponding `alloca` before jumping back to the start of the loop block. */
     if(expr->is_loop)
     {
-      //for(auto const &pair : expr->pairs)
-      //{
-      //  auto const type{ cpp_util::expression_type(pair.second) };
-      //  auto const type_info{ llvm_type(*ctx, llvm_ctx, type) };
-      //  auto const alloc{ ctx->builder->CreateAlloca(
-      //    type_info.type.data,
-      //    llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-      //  alloc->setName(pair.first->to_string().c_str());
-      //  ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
-      //  locals[pair.first] = alloc;
-      //}
+      for(auto const &pair : expr->pairs)
+      {
+        auto const alloc{ ctx->builder->CreateAlloca(
+          ctx->builder->getPtrTy(),
+          llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
+        alloc->setName(pair.first->to_string().c_str());
+        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
+        locals[pair.first] = alloc;
+      }
 
       auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
       auto const loop_block(llvm::BasicBlock::Create(*llvm_ctx, "loop", current_fn));

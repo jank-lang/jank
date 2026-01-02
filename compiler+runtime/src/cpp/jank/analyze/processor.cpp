@@ -666,12 +666,6 @@ namespace jank::analyze
       }
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
-      util::println("call arg types");
-      for(auto &arg_type : arg_types)
-      {
-        arg_type.m_Type = Cpp::GetLValueReferenceType(arg_type.m_Type);
-        util::println("\ttype {}", cpp_util::get_qualified_type_name(arg_type.m_Type));
-      }
       Cpp::GetOperator(op, arg_types, fns, arity);
 
       if(fns.empty())
