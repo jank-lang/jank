@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-83501320.js";
+            window.path_to_searchindex_js = "../searchindex-07b0b5af.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-cded1158.js"></script>
+        <script src="../toc-8202078a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,7 +182,7 @@
 bleeding edge and you’re encouraged to update regularly. If you’re on any of the
 supported systems, you can install jank using your system’s package manager. If
 not, you can still <a href="https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md">build jank yourself</a>.</p>
-<h2 id="homebrew-macos"><a class="header" href="#homebrew-macos">Homebrew (macOS)</a></h2>
+<h2 id="homebrew-macos-aarch64"><a class="header" href="#homebrew-macos-aarch64">Homebrew (macOS, aarch64)</a></h2>
 <p>We have a binary jank package in brew, so installation is quick and easy.</p>
 <pre><code class="language-sh">brew install jank-lang/jank/jank
 </code></pre>
@@ -191,6 +191,11 @@ not, you can still <a href="https://github.com/jank-lang/jank/blob/main/compiler
 brew reinstall jank-lang/jank/jank
 </code></pre>
 <p>If you’d like to install from source using brew, you can use <code>jank-lang/jank/jank-git</code> instead.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>We don’t yet have x86 binaries in the Homebrew package. If you’d like to help
+with this, please reach out.</p>
+</blockquote>
 <h2 id="ubuntu-linux-2404-2410-2504"><a class="header" href="#ubuntu-linux-2404-2410-2504">Ubuntu Linux (24.04, 24.10, 25.04)</a></h2>
 <p>We have a binary jank package in our own repo, so installation is quick and easy.</p>
 <pre><code class="language-bash">sudo apt install -y curl gnupg
