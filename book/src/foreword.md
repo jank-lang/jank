@@ -16,11 +16,12 @@ time) compiled C++, and full AOT (ahead of time) compilation support had never
 been done, **from any dynamic language**. Swift has come closest, though it's
 not dynamically typed and it lacks an official JIT compiler. Cppyy, for Python,
 strives to compete, but it lacks AOT compilation support. Because of this trail
-blazing, we have faced many bugs in Clang. This continues to be a limiter for
-jank's success, due to the size and complexity of the Clang code base and my
-limited time. To ensure jank's success, this challenge will need to be tackled
-directly, most likely by finding and employing a part-time Clang developer. If
-you are able to help with this, please reach out.
+blazing, we have faced many bugs in Clang. Clang is the main challenge for both
+compile-time performance and overall memory usage. This continues to be a
+limiter for jank's success, due to the size and complexity of the Clang code
+base and my limited time. To ensure jank's success, this challenge will need to
+be tackled directly, most likely by finding and employing a part-time Clang
+developer. If you are able to help with this, please reach out.
 
 Moving on.
 
