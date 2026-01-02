@@ -4,7 +4,7 @@ bleeding edge and you're encouraged to update regularly. If you're on any of the
 supported systems, you can install jank using your system's package manager. If
 not, you can still [build jank yourself](https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md).
 
-## Homebrew (macOS)
+## Homebrew (macOS, aarch64)
 We have a binary jank package in brew, so installation is quick and easy.
 
 ```sh
@@ -20,6 +20,10 @@ brew reinstall jank-lang/jank/jank
 ```
 
 If you'd like to install from source using brew, you can use `jank-lang/jank/jank-git` instead.
+
+> [!NOTE]
+> We don't yet have x86 binaries in the Homebrew package. If you'd like to help
+> with this, please reach out.
 
 ## Ubuntu Linux (24.04, 24.10, 25.04)
 We have a binary jank package in our own repo, so installation is quick and easy.
