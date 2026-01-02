@@ -3,12 +3,13 @@ name: Build compiler+runtime
 on:
   pull_request:
     paths:
-      - 'compiler+runtime/**'
+      - 'compiler\+runtime/**'
   push:
     branches:
       - main
     paths:
-      - 'compiler+runtime/**'
+      - 'compiler\+runtime/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
