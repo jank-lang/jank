@@ -1040,6 +1040,48 @@ namespace jank::read::parse
     auto const sym_result(next());
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
+    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
+    auto const data_reader{ visit_map_like([](auto const typed_o, oref<obj::symbol> const sym)
+                                             -> object_ref { return typed_o->get(sym); },
+                                           data_readers,
+                                           sym) };
+
+    if(data_reader.is_some())
+    {
+      auto const form_token(token_current.latest.unwrap().expect_ok());
+      auto form_result(next());
+
+      if(form_result.is_err())
+      {
+        return form_result;
+      }
+      else if(form_result.expect_ok().is_none())
+      {
+        return error::parse_invalid_reader_tag_value(
+          util::format("There must be a form after the tagged literal '#{}'.", sym->name),
+          { form_token.start, latest_token.end });
+      }
+
+      auto const form_end(form_result.expect_ok().unwrap().end);
+      auto const form(form_result.expect_ok().unwrap().ptr);
+      auto const data{ visit_object(
+        [](auto const typed_o, object_ref const form) -> object_ref {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
+          {
+            return typed_o->call(form);
+          }
+          else
+          {
+            throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
+          }
+        },
+        data_reader,
+        form) };
+
+      return object_source_info{ data, form_token, form_end };
+    }
 
     if(sym->name == "uuid")
     {
@@ -1056,8 +1098,8 @@ namespace jank::read::parse
     else
     {
       return error::parse_invalid_reader_symbolic_value(
-        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently "
-        "supported.",
+        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
+        "currently supported.",
         { start_token.start, latest_token.end });
     }
   }
