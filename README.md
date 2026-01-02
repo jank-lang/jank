@@ -20,13 +20,10 @@ runtime and performance of C++. jank aims to be strongly compatible with
 Clojure. While Clojure's default host is the JVM and its interop is with Java,
 jank's host is LLVM and its interop is with C++.
 
-For the current progress of jank and its usability, see the tables here: https://jank-lang.org/progress/
-
 **jank is currently in alpha! Look [here](https://book.jank-lang.org/) for details.**
 
 ## Docs
-* [The jank book](https://book.jank-lang.org)
-* [Building jank from source](./compiler+runtime/doc/build.md)
+Read the [jank book](https://book.jank-lang.org).
 
 ## Appetizer
 ```clojure
