@@ -1,6 +1,6 @@
 # The jank Programming Language
 
-[Welcome to the jank alpha!](title-page.md)
+[Welcome to the jank alpha!](index.md)
 
 [Foreward](foreward.md)
 

@@ -6,7 +6,7 @@ incompleteness matches jank's. It's still early to jump into jank, but your
 time and patience is welcome.
 
 > [!IMPORTANT]
-> jank is alpha quality software. It will crash. It will leak. It is slow.
+> jank is alpha quality software. It will crash. It will leak. It will be slow.
 > There are huge areas of functionality which haven't been implemented. Your
 > help getting us past this stage is greatly appreciated.
 
