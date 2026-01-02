@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-2a9be287.js";
+            window.path_to_searchindex_js = "searchindex-83501320.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-cded1158.js"></script>
@@ -178,48 +178,56 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="differences-from-clojure"><a class="header" href="#differences-from-clojure">Differences from Clojure</a></h1>
+<p>jank is meant to be Clojure, but Clojure itself has no specification. There are
+differences between Clojure JVM, ClojureScript, Clojure CLR, ClojureDart, and
+others. Part of being a Clojure is embracing one’s host and being transparent
+about it. This is where most of the differences come into play.</p>
+<p>jank does not try to hide its C++ host. That would defeat the point of being
+Clojure.</p>
 <h2 id="clojurecore"><a class="header" href="#clojurecore">clojure.core</a></h2>
 <ul>
-<li>Baked into the compiler</li>
-<li>No nested require support</li>
+<li>Baked into the <code>jank</code> binary, not shipped separately</li>
+<li>No nested <code>require</code> support (same as ClojureScript)</li>
 <li>No <code>import</code></li>
 <li><code>(hash-map)</code> returns a hash map, not an array map</li>
 <li><code>aget</code> is a special form</li>
 <li><code>aset</code> is a macro</li>
 <li><code>keyword</code> is more strict about valid inputs</li>
 </ul>
-<h2 id="object-model"><a class="header" href="#object-model">Object Model</a></h2>
+<h2 id="object-model"><a class="header" href="#object-model">Object model</a></h2>
 <ul>
 <li>No stable boxes for small integers (the JVM pre-allocates <code>1</code>, <code>2</code>, <code>3</code>, etc)</li>
-<li>String is UTF-8</li>
-<li>No inheritance</li>
-<li>No records</li>
-<li>No protocols</li>
+<li><code>persistent_string</code> is expected to be UTF-8</li>
+<li>No inheritance (currently)</li>
+<li>No records (yet)</li>
+<li>No protocols (yet)</li>
 <li>Sequences
 <ul>
-<li>In-place operations (<code>fresh-seq</code>, <code>next-in-place</code>)</li>
+<li>Support for in-place operations (<code>fresh-seq</code>, <code>next-in-place</code>)</li>
 </ul>
 </li>
 </ul>
-<h2 id="interop"><a class="header" href="#interop">Interop</a></h2>
-<p>See TODO: Interop.</p>
-<h2 id="compilation-model"><a class="header" href="#compilation-model">Compilation Model</a></h2>
+<h2 id="compilation-model"><a class="header" href="#compilation-model">Compilation model</a></h2>
 <ul>
-<li>Global compilation artifacts</li>
-<li>Source-only distribution (i.e. class files)
+<li>Source-only distribution
 <ul>
+<li><code>.o</code> files found in JARs will not be used</li>
 <li>Git deps are an exception here; if someone commits a .o file into a git dep
 on your module path, jank will load it</li>
 </ul>
 </li>
-<li>Dependencies are AOT compiled by default</li>
-<li>Multi-threaded dependency compilation</li>
-<li>Module path vs class path</li>
+<li>jank uses the term “module path” instead of “class path”
+<ul>
+<li>We don’t have <code>.class</code> files</li>
+<li>A module is backed by either a <code>.jank</code>, <code>.cljc</code> or <code>.cpp</code> source file,
+optionally with a <code>.o</code> file cached for quick loading</li>
+</ul>
+</li>
 </ul>
 <h2 id="math"><a class="header" href="#math">Math</a></h2>
 <ul>
-<li>Division by integer 0 is UB</li>
-<li>Division by floating point 0 is well defined</li>
+<li>Division by integer <code>0</code> is undefined behavior</li>
+<li>Division by floating point <code>0.0</code> is well defined</li>
 </ul>
 
                     </main>
