@@ -22,11 +22,3 @@ namespace immer
                             std::equal_to<jank::runtime::object_ref>,
                             jank::memory_policy>;
 }
-
-namespace bpptree::detail
-{
-  template struct BppTreeSet<jank::runtime::object_ref, jank::runtime::detail::object_ref_compare>;
-  template struct BppTreeMap<jank::runtime::object_ref,
-                             jank::runtime::object_ref,
-                             jank::runtime::detail::object_ref_compare>;
-}

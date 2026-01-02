@@ -8,6 +8,7 @@ namespace jtl
 {
   namespace detail
   {
+    [[noreturn]]
     void panic(char const *msg);
   }
 

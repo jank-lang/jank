@@ -19,7 +19,7 @@ namespace jank::analyze::expr
                     local_frame_ptr frame,
                     bool needs_box,
                     recursion_reference &&recursion_ref,
-                    runtime::obj::persistent_list_ref args,
+                    runtime::obj::persistent_list_ref const args,
                     native_vector<expression_ref> &&arg_exprs);
 
     runtime::object_ref to_runtime_data() const override;

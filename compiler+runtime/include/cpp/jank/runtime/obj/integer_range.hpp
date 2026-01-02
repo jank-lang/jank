@@ -18,18 +18,18 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    using bounds_check_t = bool (*)(integer_ref, integer_ref);
+    using bounds_check_t = bool (*)(integer_ref const, integer_ref const);
 
     /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
     integer_range() = default;
     integer_range(integer_range &&) noexcept = default;
     integer_range(integer_range const &) = default;
-    integer_range(integer_ref end);
-    integer_range(integer_ref start, obj::integer_ref end);
-    integer_range(integer_ref start, obj::integer_ref end, obj::integer_ref step);
-    integer_range(integer_ref start,
-                  integer_ref end,
-                  integer_ref step,
+    integer_range(integer_ref const end);
+    integer_range(integer_ref const start, obj::integer_ref const end);
+    integer_range(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
+    integer_range(integer_ref const start,
+                  integer_ref const end,
+                  integer_ref const step,
                   bounds_check_t bounds_check);
     //integer_range(integer_ptr start,
     //              integer_ptr end,
@@ -38,9 +38,10 @@ namespace jank::runtime::obj
     //              array_chunk_ptr chunk,
     //              integer_range_ptr chunk_next);
 
-    static object_ref create(integer_ref end);
-    static object_ref create(integer_ref start, obj::integer_ref end);
-    static object_ref create(integer_ref start, obj::integer_ref end, obj::integer_ref step);
+    static object_ref create(integer_ref const end);
+    static object_ref create(integer_ref const start, obj::integer_ref const end);
+    static object_ref
+    create(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -66,10 +67,10 @@ namespace jank::runtime::obj
     /* void force_chunk() const; */
 
     /* behavior::conjable */
-    cons_ref conj(object_ref head) const;
+    cons_ref conj(object_ref const head) const;
 
     /* behavior::metadatable */
-    integer_range_ref with_meta(object_ref m) const;
+    integer_range_ref with_meta(object_ref const m) const;
 
     /* behavior::countable */
     usize count() const;

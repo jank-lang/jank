@@ -6,7 +6,7 @@ namespace jank::runtime::obj
 {
   using character_ref = oref<struct character>;
 
-  struct character : gc
+  struct character
   {
     static constexpr object_type obj_type{ object_type::character };
     static constexpr bool pointer_free{ false };

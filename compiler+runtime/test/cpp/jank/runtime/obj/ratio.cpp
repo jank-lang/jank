@@ -25,8 +25,8 @@ namespace jank::runtime
         }
         SUBCASE("Valid ratio object_ref ctor")
         {
-          auto const num_ptr{ make_box<obj::integer>(4).erase() };
-          auto const denom_ptr{ make_box<obj::integer>(6).erase() };
+          auto const num_ptr{ make_box<obj::integer>(4) };
+          auto const denom_ptr{ make_box<obj::integer>(6) };
           obj::ratio_data const ratio{ num_ptr, denom_ptr };
           CHECK_EQ(ratio.numerator, 2);
           CHECK_EQ(ratio.denominator, 3);

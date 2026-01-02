@@ -153,7 +153,7 @@ namespace jank::error
                                 note &&extra,
                                 runtime::object_ref const expansion)
   {
-    return make_error(kind::analyze_invalid_try, message, source, std::move(extra), expansion);
+    return make_error(kind::analyze_invalid_try, message, source, jtl::move(extra), expansion);
   }
 
   error_ref analyze_unresolved_var(jtl::immutable_string const &message,
@@ -224,33 +224,33 @@ namespace jank::error
 
   error_ref analyze_invalid_conversion(jtl::immutable_string const &message)
   {
-    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown);
+    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown());
   }
 
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
                                               read::source const &source,
-                                              runtime::object_ref expansion)
+                                              runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_operator_call, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_constructor_call(jtl::immutable_string const &message,
                                                  read::source const &source,
-                                                 runtime::object_ref expansion)
+                                                 runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_constructor_call, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_member_call(jtl::immutable_string const &message,
                                             read::source const &source,
-                                            runtime::object_ref expansion)
+                                            runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_member_call, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_capture(jtl::immutable_string const &message,
                                         read::source const &source,
-                                        runtime::object_ref expansion)
+                                        runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_capture,
                       message,
@@ -261,113 +261,120 @@ namespace jank::error
 
   error_ref analyze_mismatched_if_types(jtl::immutable_string const &message,
                                         read::source const &source,
-                                        runtime::object_ref expansion)
+                                        runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_mismatched_if_types, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_function_call(jtl::immutable_string const &message,
                                               read::source const &source,
-                                              runtime::object_ref expansion)
+                                              runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_function_call, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
                                      read::source const &source,
-                                     runtime::object_ref expansion)
+                                     runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_call, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,
                                            read::source const &source,
-                                           runtime::object_ref expansion)
+                                           runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_conversion, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_symbol(jtl::immutable_string const &message,
                                        read::source const &source,
-                                       runtime::object_ref expansion)
+                                       runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_symbol, message, source, expansion);
   }
 
   error_ref analyze_unresolved_cpp_symbol(jtl::immutable_string const &message,
                                           read::source const &source,
-                                          runtime::object_ref expansion)
+                                          runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_unresolved_cpp_symbol, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_raw(jtl::immutable_string const &message,
                                     read::source const &source,
-                                    runtime::object_ref expansion)
+                                    runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_raw, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_type(jtl::immutable_string const &message,
                                      read::source const &source,
-                                     runtime::object_ref expansion)
+                                     runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_type, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
                                       read::source const &source,
-                                      runtime::object_ref expansion)
+                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_value, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_cast(jtl::immutable_string const &message,
                                      read::source const &source,
-                                     runtime::object_ref expansion)
+                                     runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_cast, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_box(jtl::immutable_string const &message,
                                     read::source const &source,
-                                    runtime::object_ref expansion)
+                                    runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_box, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_unbox(jtl::immutable_string const &message,
                                       read::source const &source,
-                                      runtime::object_ref expansion)
+                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_unbox, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_new(jtl::immutable_string const &message,
                                     read::source const &source,
-                                    runtime::object_ref expansion)
+                                    runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_new, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_delete(jtl::immutable_string const &message,
                                        read::source const &source,
-                                       runtime::object_ref expansion)
+                                       runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_delete, message, source, expansion);
   }
 
   error_ref analyze_invalid_cpp_member_access(jtl::immutable_string const &message,
                                               read::source const &source,
-                                              runtime::object_ref expansion)
+                                              runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_member_access, message, source, expansion);
+  }
+
+  error_ref analyze_known_issue(jtl::immutable_string const &message,
+                                read::source const &source,
+                                runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_known_issue, message, source, expansion);
   }
 
   error_ref internal_analyze_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, read::source::unknown, expansion);
+    return make_error(kind::internal_analyze_failure, message, read::source::unknown(), expansion);
   }
 
   error_ref internal_analyze_failure(jtl::immutable_string const &message,

@@ -8,7 +8,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using nil_ref = oref<struct nil>;
 
-  struct nil : gc
+  struct nil
   {
     static constexpr object_type obj_type{ object_type::nil };
     static constexpr bool pointer_free{ true };
@@ -31,12 +31,12 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key);
     object_ref get(object_ref const key, object_ref const fallback);
-    object_ref get_entry(object_ref key);
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key);
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    obj::persistent_array_map_ref assoc(object_ref key, object_ref val) const;
-    nil_ref dissoc(object_ref key) const;
+    obj::persistent_array_map_ref assoc(object_ref const key, object_ref const val) const;
+    nil_ref dissoc(object_ref const key) const;
 
     /* behavior::seqable */
     nil_ref seq();
@@ -58,12 +58,5 @@ namespace jank::runtime
   bool operator==(object *, obj::nil_ref);
   bool operator!=(object *, obj::nil_ref);
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  extern obj::nil_ref jank_nil;
-
-  namespace detail
-  {
-    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-    extern obj::nil *jank_nil_ptr;
-  }
+  obj::nil_ref jank_nil();
 }

@@ -6,13 +6,13 @@ namespace jank::runtime::obj
 {
   using delay_ref = oref<struct delay>;
 
-  struct delay : gc
+  struct delay
   {
     static constexpr object_type obj_type{ object_type::delay };
     static constexpr bool pointer_free{ false };
 
     delay() = default;
-    delay(object_ref fn);
+    delay(object_ref const fn);
 
     /* behavior::object_like */
     bool equal(object const &) const;

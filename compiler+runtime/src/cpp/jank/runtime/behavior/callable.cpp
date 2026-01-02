@@ -24,7 +24,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -33,7 +33,7 @@ namespace jank::runtime
           switch(arity_flags)
           {
             case callable::mask_variadic_arity(0):
-              return typed_source->call(jank_nil);
+              return typed_source->call(jank_nil());
             default:
               return typed_source->call();
           }
@@ -52,7 +52,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -66,7 +66,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(1):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, jank_nil);
+                return typed_source->call(a1, jank_nil());
               }
             default:
               return typed_source->call(a1);
@@ -96,7 +96,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -112,7 +112,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(2):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, jank_nil);
+                return typed_source->call(a1, a2, jank_nil());
               }
             default:
               return typed_source->call(a1, a2);
@@ -142,7 +142,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -160,7 +160,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(3):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, jank_nil);
+                return typed_source->call(a1, a2, a3, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3);
@@ -184,7 +184,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -204,7 +204,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(4):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4);
@@ -229,7 +229,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -251,7 +251,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(5):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, a5, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5);
@@ -277,7 +277,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -313,7 +313,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(6):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, a5, a6, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6);
@@ -340,7 +340,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -380,7 +380,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(7):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7);
@@ -408,7 +408,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -452,7 +452,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(8):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8);
@@ -481,7 +481,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -526,7 +526,7 @@ namespace jank::runtime
             case callable::mask_variadic_arity(9):
               if(!callable::is_variadic_ambiguous(arity_flags))
               {
-                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank_nil);
+                return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank_nil());
               }
             default:
               return typed_source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
@@ -556,7 +556,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -679,7 +679,7 @@ namespace jank::runtime
     auto const processed_source(pass_through_vars(source));
     return visit_object(
       [=](auto const typed_source) -> object_ref {
-        using T = typename decltype(typed_source)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_source)>::value_type;
 
         if constexpr(function_like<T> || std::is_base_of_v<callable, T>)
         {
@@ -975,83 +975,92 @@ namespace jank::runtime
       throw invalid_arity<0>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref)
+    object_ref callable::call(object_ref const)
     {
       throw invalid_arity<1>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref, object_ref)
+    object_ref callable::call(object_ref const, object_ref const)
     {
       throw invalid_arity<2>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref, object_ref, object_ref)
+    object_ref callable::call(object_ref const, object_ref const, object_ref const)
     {
       throw invalid_arity<3>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref, object_ref, object_ref, object_ref)
+    object_ref
+    callable::call(object_ref const, object_ref const, object_ref const, object_ref const)
     {
       throw invalid_arity<4>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref, object_ref, object_ref, object_ref, object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<5>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref
-    callable::call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<6>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<7>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<8>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<9>{ runtime::to_code_string(this_object_ref()) };
     }
 
-    object_ref callable::call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref)
+    object_ref callable::call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const)
     {
       throw invalid_arity<10>{ runtime::to_code_string(this_object_ref()) };
     }

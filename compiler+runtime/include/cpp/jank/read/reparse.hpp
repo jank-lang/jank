@@ -20,7 +20,7 @@ namespace jank::runtime::obj
  * to parse the nth form inside that list. That gives us the source for `:foo`. */
 namespace jank::read::parse
 {
-  source reparse_nth(runtime::obj::persistent_list_ref o, usize n);
-  source reparse_nth(runtime::obj::persistent_vector_ref o, usize n);
-  source reparse_nth(runtime::object_ref o, usize n);
+  source reparse_nth(runtime::obj::persistent_list_ref const o, usize n);
+  source reparse_nth(runtime::obj::persistent_vector_ref const o, usize n);
+  source reparse_nth(runtime::object_ref const o, usize n);
 }

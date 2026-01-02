@@ -89,6 +89,24 @@ namespace jtl
       CHECK_EQ("3.140000", sb.view());
     }
 
+    TEST_CASE("infinity")
+    {
+      string_builder sb;
+      sb(INFINITY);
+      CHECK_EQ(3, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("inf", sb.view());
+    }
+
+    TEST_CASE("nan")
+    {
+      string_builder sb;
+      sb(NAN);
+      CHECK_EQ(3, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("nan", sb.view());
+    }
+
     TEST_CASE("char32_t")
     {
       string_builder sb;

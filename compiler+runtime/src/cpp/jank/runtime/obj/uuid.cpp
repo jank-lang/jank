@@ -17,7 +17,7 @@ namespace jank::runtime::obj
 
   static jtl::ref<uuids::uuid> from_string(jtl::immutable_string const &s)
   {
-    auto const result = uuids::uuid::from_string(s.c_str());
+    auto const result{ uuids::uuid::from_string(s.c_str()) };
     if(result)
     {
       return jtl::make_ref<uuids::uuid>(result.value());

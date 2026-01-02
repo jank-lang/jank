@@ -1,6 +1,10 @@
 # Building jank
-jank requires LLVM 21+ with changes not yet merged upstream. We have
-a script to compile this from source. See the section on compiling Clang/LLVM below.
+Before building jank, consider just installing the latest binary package
+instead. You can find details for that
+[here](https://book.jank-lang.org/getting-started/01-installation.html).
+
+jank requires LLVM 22. If you don't have access to this, we have a script to
+compile it from source. See the section on compiling Clang/LLVM below.
 
 ## Dependencies
 For Debian-based distros, this should be all you need:
@@ -43,10 +47,10 @@ export CPPFLAGS="-I/opt/homebrew/opt/llvm/include ${CPPFLAGS}"
 Clone the repo as follows:
 
 ```bash
-git clone --depth 1 --single-branch --shallow-submodules --recurse-submodules https://github.com/jank-lang/jank.git
+git clone --recurse-submodules https://github.com/jank-lang/jank.git
 
 # If you didn't recurse submodules when cloning, you'll need to run this.
-git submodule update --init --recursive --depth 1 --jobs 8
+git submodule update --init --recursive --jobs 8
 ```
 
 ## Compiling Clang/LLVM

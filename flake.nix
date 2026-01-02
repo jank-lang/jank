@@ -42,6 +42,8 @@
             "-L${lib.getLib pkgs.openssl}/lib"
             "-L${lib.getLib pkgs.zlib}/lib"
             "-L${lib.getLib pkgs.zstd}/lib"
+            "-L${lib.getLib pkgs.libedit}/lib"
+            "-L${lib.getLib pkgs.libxml2}/lib"
           ];
       in {
         legacyPackages = pkgs;
@@ -81,6 +83,8 @@
                 bzip2
                 openssl
                 zstd
+                libedit
+                libxml2
               ]);
 
             checkInputs = with pkgs; [
@@ -114,6 +118,8 @@
               # jank options
               (lib.cmakeBool "jank_unity_build" true)
               (lib.cmakeBool "jank_test" finalAttrs.doCheck)
+              # We run out of memory in CI without this.
+              (lib.cmakeBool "jank_force_phase_2" true)
             ];
 
             # Use a UTF-8 locale or else tests which use UTF-8 characters will
@@ -171,6 +177,7 @@
           shellHook = ''
             export CC=${llvm.clang}/bin/clang
             export CXX=${llvm.clang}/bin/clang++
+            export CMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
 

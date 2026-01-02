@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
-  struct persistent_vector : gc
+  struct persistent_vector
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
     static constexpr bool pointer_free{ false };
@@ -38,7 +38,7 @@ namespace jank::runtime::obj
     {
     }
 
-    static persistent_vector_ref create(object_ref s);
+    static persistent_vector_ref create(object_ref const s);
 
     static persistent_vector_ref empty();
 
@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     i64 compare(persistent_vector const &) const;
 
     /* behavior::metadatable */
-    persistent_vector_ref with_meta(object_ref m) const;
+    persistent_vector_ref with_meta(object_ref const m) const;
 
     /* behavior::seqable */
     persistent_vector_sequence_ref seq() const;
@@ -66,28 +66,28 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref key) const;
-    object_ref get(object_ref key, object_ref fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get(object_ref const key) const;
+    object_ref get(object_ref const key, object_ref const fallback) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable */
-    persistent_vector_ref assoc(object_ref key, object_ref val) const;
-    persistent_vector_ref dissoc(object_ref key) const;
+    persistent_vector_ref assoc(object_ref const key, object_ref const val) const;
+    persistent_vector_ref dissoc(object_ref const key) const;
 
     /* behavior::conjable */
-    persistent_vector_ref conj(object_ref head) const;
+    persistent_vector_ref conj(object_ref const head) const;
 
     /* behavior::stackable */
     object_ref peek() const;
     persistent_vector_ref pop() const;
 
     /* behavior::indexable */
-    object_ref nth(object_ref index) const;
-    object_ref nth(object_ref index, object_ref fallback) const;
+    object_ref nth(object_ref const index) const;
+    object_ref nth(object_ref const index, object_ref const fallback) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
+    object_ref call(object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;

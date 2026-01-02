@@ -9,7 +9,7 @@ namespace jank::runtime::obj
 {
   using re_pattern_ref = oref<struct re_pattern>;
 
-  struct re_pattern : gc_cleanup
+  struct re_pattern
   {
     static constexpr object_type obj_type{ object_type::re_pattern };
     static constexpr bool pointer_free{ false };

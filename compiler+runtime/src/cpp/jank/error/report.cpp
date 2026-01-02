@@ -5,6 +5,8 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
+#include <jtl/format/style.hpp>
+
 #include <jank/util/string.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/error/report.hpp>
@@ -354,7 +356,7 @@ namespace jank::error
 
   void plan::add(read::source const &body_source, note const &n)
   {
-    if(n.source == read::source::unknown)
+    if(n.source == read::source::unknown())
     {
       return;
     }
@@ -591,5 +593,14 @@ namespace jank::error
     {
       report(e->cause.as_ref());
     }
+  }
+
+  void warn(jtl::immutable_string const &msg)
+  {
+    util::println(stderr,
+                  "{}warning:{} {}",
+                  jtl::terminal_style::yellow,
+                  jtl::terminal_style::reset,
+                  msg);
   }
 }

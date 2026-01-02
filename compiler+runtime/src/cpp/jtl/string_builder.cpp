@@ -12,16 +12,14 @@ namespace jtl
   using allocator_type = jank::native_allocator<string_builder::value_type>;
   using allocator_traits = std::allocator_traits<allocator_type>;
 
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  static allocator_type allocator;
-
   static void realloc(string_builder &sb, usize const required)
   {
     auto const new_capacity{ std::bit_ceil(required) };
-    /* TODO: Pointer-free GC alloc. */
-    auto const new_data{ allocator_traits::allocate(allocator, new_capacity) };
+    /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+    auto const new_data{ reinterpret_cast<char *>(malloc(new_capacity)) };
     string_builder::traits_type::copy(new_data, sb.buffer, sb.pos);
-    allocator_traits::deallocate(allocator, sb.buffer, sb.pos);
+    /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+    free(sb.buffer);
     sb.buffer = new_data;
     sb.capacity = new_capacity;
   }
@@ -103,7 +101,8 @@ namespace jtl
 
   string_builder::~string_builder()
   {
-    allocator_traits::deallocate(allocator, buffer, pos);
+    /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+    free(buffer);
   }
 
   string_builder &string_builder::operator()(bool const d) &
@@ -394,6 +393,11 @@ namespace jtl
   usize string_builder::size() const
   {
     return pos;
+  }
+
+  bool string_builder::empty() const
+  {
+    return pos == 0;
   }
 
   jtl::immutable_string string_builder::release()

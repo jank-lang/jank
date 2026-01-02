@@ -103,6 +103,7 @@ namespace jank::error
     analyze_invalid_cpp_member_access,
     analyze_invalid_cpp_capture,
     analyze_mismatched_if_types,
+    analyze_known_issue,
     internal_analyze_failure,
 
     internal_codegen_failure,
@@ -301,6 +302,8 @@ namespace jank::error
         return "analyze/invalid-cpp-capture";
       case kind::analyze_mismatched_if_types:
         return "analyze/mismatched-if-types";
+      case kind::analyze_known_issue:
+        return "analyze/known-issue";
       case kind::internal_analyze_failure:
         return "internal/analysis-failure";
 
@@ -376,8 +379,10 @@ namespace jank::error
 
   /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
    * is because cpptrace doesn't use our GC allocator. */
-  struct base : gc_cleanup
+  struct base
   {
+    static constexpr bool is_error{ true };
+
     base() = delete;
     base(base const &) = delete;
     base(base &&) noexcept = default;
@@ -387,17 +392,17 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ref expansion);
+         runtime::object_ref const expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ref expansion,
+         runtime::object_ref const expansion,
          std::unique_ptr<cpptrace::stacktrace> trace);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
          jtl::immutable_string const &note_message,
-         runtime::object_ref expansion);
+         runtime::object_ref const expansion);
     base(kind k, read::source const &source, jtl::immutable_string const &note_message);
     base(kind k,
          jtl::immutable_string const &message,
@@ -412,7 +417,7 @@ namespace jank::error
          jtl::immutable_string const &message,
          read::source const &source,
          note const &note,
-         runtime::object_ref expansion);
+         runtime::object_ref const expansion);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
@@ -420,12 +425,12 @@ namespace jank::error
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ref expansion,
+         runtime::object_ref const expansion,
          jtl::ref<base> cause);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
-         runtime::object_ref expansion,
+         runtime::object_ref const expansion,
          jtl::ref<base> cause,
          std::unique_ptr<cpptrace::stacktrace> trace);
 
@@ -456,5 +461,13 @@ namespace jank
   error_ref make_error(Args &&...args)
   {
     return jtl::make_ref<error::base>(jtl::forward<Args>(args)...);
+  }
+
+  namespace error
+  {
+    error_ref internal_failure(jtl::immutable_string const &message);
+    /* This can be used by jtl helpers which can't reach into jank but which fail. */
+    [[noreturn]]
+    void throw_internal_failure(jtl::immutable_string const &message);
   }
 }

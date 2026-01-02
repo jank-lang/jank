@@ -32,7 +32,7 @@ case "${command}" in
   # This follows merge, but also bundles in the Clojure core library object files, following
   # jank's phase 2 building.
   merge-phase-2)
-    object_files="$(cat "${cache_dir}"/*) ${cmake_binary_dir}/core-libs/clojure/core.o"
+    object_files="$(cat "${cache_dir}"/*) @jank_clojure_core_output_artifact@"
     merge_output="${cmake_binary_dir}/libjank-standalone.a"
     rm -f "${merge_output}"
     # shellcheck disable=SC2086
