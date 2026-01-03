@@ -22,4 +22,4 @@ both access and define new C++ types, functions, and templates, at runtime. This
 is done by JIT (just in time) compiling C++, using Clang and LLVM. The result is
 that you can write Clojure code which can access C and C++ libraries trivially.
 
-For more details on jank's status, please read the [foreward](foreward.md).
+For more details on jank's status, please read the [foreword](foreword.md).
