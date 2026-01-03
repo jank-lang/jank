@@ -1,4 +1,0 @@
-(let [bar cpp/true]
-  (try
-    (if bar
-      :success)))

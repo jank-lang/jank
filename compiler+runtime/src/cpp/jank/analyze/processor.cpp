@@ -1619,6 +1619,13 @@ namespace jank::analyze
     }
 
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
+    /* Using recur from this function is fine, even if we're in a try, since the jump target
+     * is this function. */
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
+      .expect_ok();
+    util::scope_exit const finally{ []() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame) };
 
@@ -1970,7 +1977,7 @@ namespace jank::analyze
                                                    latest_expansion(macro_expansions));
     }
 
-    /* Minus one to remove recur symbol. */
+    /* Minus one to remove the recur symbol. */
     auto const arg_count(list->count() - 1);
     auto const is_loop{ loop_details.is_some() };
     if(is_loop)
@@ -2350,12 +2357,20 @@ namespace jank::analyze
                           jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const)
   {
-    /* When we analyze a loop, we actually just set a flag and then analyze a let.
-     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
+    /* The flag is setting `loop_details` to `some(nullptr)`, which conveys that
      * we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
-    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+    /* Using recur from this loop is fine, even if we're in a try, since the jump target
+     * is this loop. */
+    __rt_ctx
+      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
+      .expect_ok();
+    util::scope_exit const finally{ [&]() {
+      loop_details = old_loop_details;
+      __rt_ctx->pop_thread_bindings().expect_ok();
+    } };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
      * tail position and it can be used within a loop. We then later reset the position
@@ -2611,7 +2626,6 @@ namespace jank::analyze
     auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
-    auto catch_frame(jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
     auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
     auto ret{ jtl::make_ref<expr::try_>(position, try_frame, true, jtl::make_ref<expr::do_>()) };
 
@@ -2696,69 +2710,128 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
-            if(has_catch)
-            {
-              /* TODO: Note where the other catch is. */
-              return error::analyze_invalid_try("Only one 'catch' form may be supplied.",
-                                                object_source(item),
-                                                latest_expansion(macro_expansions));
-            }
             has_catch = true;
 
-            /* Verify we have (catch <sym> ...) */
+            /* Verify we have (catch cpp/type <sym> ...) */
             auto const catch_list(runtime::list(item));
-            auto const catch_body_size(catch_list->count());
-            if(catch_body_size == 1)
+            if(auto const catch_body_size(catch_list->count()); catch_body_size < 2)
             {
               return error::analyze_invalid_try(
-                "A symbol is required after 'catch', which is used as the binding to "
-                "hold the exception value.",
+                "Each 'catch' form requires the type of exception to catch and a symbol for the "
+                "name of the exception value.",
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+            auto catch_it(catch_list->data.rest());
+            auto const catch_type_form(catch_it.first().unwrap());
+            catch_it = catch_it.rest();
+            auto const catch_sym_form(catch_it.first().unwrap());
+            auto const catch_type(analyze(catch_type_form, current_frame, position, fn_ctx, true));
+            if(catch_type.is_err())
+            {
+              return error::analyze_invalid_try(catch_type.expect_err()->message,
+                                                object_source(item),
+                                                error::note{
+                                                  "An exception type is required before this form.",
+                                                  object_source(catch_sym_form),
+                                                },
+                                                latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 1));
+            }
 
-            auto const sym_obj(catch_list->data.rest().first().unwrap());
-            if(sym_obj->type != runtime::object_type::symbol)
+            if(catch_type.expect_ok()->kind != expression_kind::cpp_type)
+            {
+              return error::analyze_invalid_try("Exception is not a type.",
+                                                object_source(item),
+                                                error::note{
+                                                  "An exception type is required before this form.",
+                                                  object_source(catch_sym_form),
+                                                },
+                                                latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 1));
+            }
+
+            if(catch_sym_form->type != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
-                       "A symbol required after 'catch', which is used as the binding to "
+                       "A symbol is required after 'catch', which is used as the binding to "
                        "hold the exception value.",
                        object_source(item),
                        error::note{
                          "A symbol is required before this form.",
-                         object_source(sym_obj),
+                         object_source(catch_sym_form),
                        },
                        latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
+                ->add_usage(read::parse::reparse_nth(item, 2));
             }
-
-            auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
-            if(!sym->get_namespace().empty())
+            auto const catch_sym(runtime::expect_object<runtime::obj::symbol>(catch_sym_form));
+            if(!catch_sym->get_namespace().empty())
             {
-              return error::analyze_invalid_try("The symbol after 'catch' must be unqualified.",
-                                                object_source(sym_obj),
-                                                latest_expansion(macro_expansions));
+              return error::analyze_invalid_try(
+                       "The binding symbol in 'catch' must be unqualified.",
+                       object_source(item),
+                       latest_expansion(macro_expansions))
+                ->add_usage(read::parse::reparse_nth(item, 2));
+            }
+            auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
+            /* If we're catching a C++ class/struct by value, we want to promote it to a reference
+             * to avoid object slicing and to enable polymorphism.
+             * However, we must NOT promote types in the jank::runtime namespace (like object_ref),
+             * as these are smart pointers expected to be passed by value in the runtime. */
+            if(!Cpp::IsPointerType(catch_type_ref->type)
+               && !Cpp::IsReferenceType(catch_type_ref->type)
+               && !Cpp::IsBuiltin(catch_type_ref->type))
+            {
+              /* Check if this type is in the jank::runtime namespace */
+              auto const type_scope{ Cpp::GetScopeFromType(catch_type_ref->type) };
+              auto const type_name{ cpp_util::get_qualified_name(type_scope) };
+
+              if(bool const is_jank_runtime_type{ type_name.starts_with("jank::runtime::") };
+                 !is_jank_runtime_type)
+              {
+                catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
+              }
             }
 
-            catch_frame->locals.emplace(sym, local_binding{ sym, sym->name, none, catch_frame });
+
+            /* Check for duplicate catch types. */
+            for(auto const &existing_catch : ret->catch_bodies)
+            {
+              if(existing_catch.type.data == catch_type_ref->type.data)
+              {
+                return error::analyze_invalid_try("Each catch form must specify a unique type.",
+                                                  object_source(item),
+                                                  error::note{
+                                                    "Type previously caught here.",
+                                                    object_source(existing_catch.sym),
+                                                  },
+                                                  latest_expansion(macro_expansions));
+              }
+            }
+            bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
+            auto catch_frame(
+              jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
+            catch_frame->locals.emplace(catch_sym,
+                                        local_binding{ catch_sym,
+                                                       catch_sym->name,
+                                                       none,
+                                                       catch_frame,
+                                                       is_object,
+                                                       false,
+                                                       false,
+                                                       catch_type_ref->type });
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
-            auto const do_list(
-              catch_list->data.rest().rest().conj(make_box<runtime::obj::symbol>("do")));
+            auto const do_list(catch_it.rest().conj(make_box<runtime::obj::symbol>("do")));
             auto const do_res(analyze(make_box(do_list), catch_frame, position, fn_ctx, true));
             if(do_res.is_err())
             {
               return do_res.expect_err();
             }
-
-            /* TODO: Read this from the catch form. */
-            static auto const object_ref_type{ cpp_util::resolve_literal_type(
-                                                 "jank::runtime::oref<jank::runtime::object>")
-                                                 .expect_ok() };
-
-            ret->catch_body = expr::catch_{ sym,
-                                            object_ref_type,
-                                            static_ref_cast<expr::do_>(do_res.expect_ok()) };
+            do_res.expect_ok()->frame = catch_frame;
+            ret->catch_bodies.emplace_back(catch_sym,
+                                           catch_type_ref->type,
+                                           static_ref_cast<expr::do_>(do_res.expect_ok()));
           }
           break;
         case try_expression_type::finally_:
@@ -2792,10 +2865,6 @@ namespace jank::analyze
 
     ret->body->frame = try_frame;
     ret->body->propagate_position(position);
-    if(ret->catch_body.is_some())
-    {
-      ret->catch_body.unwrap().body->frame = catch_frame;
-    }
     if(ret->finally_body.is_some())
     {
       ret->finally_body.unwrap()->frame = finally_frame;
@@ -2854,9 +2923,9 @@ namespace jank::analyze
       /* Eval the literal to resolve exprs such as quotes. */
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
-      auto const o(evaluate::eval(pre_eval_expr));
+      auto const oref(evaluate::eval(pre_eval_expr));
 
-      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, oref);
     }
 
     return jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
@@ -2879,7 +2948,8 @@ namespace jank::analyze
 
         for(auto const &kv : typed_o->data)
         {
-          object_ref const first{ kv.first }, second{ kv.second };
+          object_ref const first{ kv.first };
+          object_ref const second{ kv.second };
 
           auto k_expr(analyze(first, current_frame, expression_position::value, fn_ctx, true));
           if(k_expr.is_err())
@@ -3332,9 +3402,13 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
-      if(!Cpp::IsPointerType(type))
+      if(!Cpp::IsStaticDatamember(scope) && !Cpp::IsPointerType(type))
       {
         type = Cpp::GetLValueReferenceType(type);
+      }
+      if(Cpp::IsArrayType(Cpp::GetNonReferenceType(type)))
+      {
+        type = Cpp::GetPointerType(Cpp::GetArrayElementType(Cpp::GetNonReferenceType(type)));
       }
     }
     else if(Cpp::IsEnumConstant(scope))
@@ -4351,7 +4425,7 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
+      val->type = Cpp::GetTypeFromScope(member_scope);
       val->scope = member_scope;
       return val;
     }

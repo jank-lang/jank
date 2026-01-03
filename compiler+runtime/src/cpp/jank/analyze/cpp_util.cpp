@@ -71,6 +71,17 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
+    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
+     * handling since they are distinct types. We use resolve_literal_type to get the
+     * exact type for "char". */
+    if(sym == "char")
+    {
+      if(auto const res{ resolve_literal_type("char").expect_ok() })
+      {
+        return apply_pointers(res, ptr_count);
+      }
+    }
+
     auto const type{ Cpp::GetType(sym) };
     if(type)
     {
@@ -308,15 +319,16 @@ namespace jank::analyze::cpp_util
     {
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
-        auto alias_name{ alias_decl->getQualifiedNameAsString() };
-        if(!alias_name.empty())
-        {
-          if(Cpp::IsPointerType(type))
-          {
-            alias_name += "*";
-          }
-          return alias_name;
-        }
+        /* Type aliases already include pointer/reference semantics in their definition.
+         * Don't add extra `*` for pointer type aliases like `using void_ptr = void*;`
+         * as that would make it `void_ptr*` (void**) instead of `void_ptr` (void*).
+         *
+         * Use printQualifiedName with the default policy to get the fully qualified name. */
+        std::string qualified_name;
+        llvm::raw_string_ostream os(qualified_name);
+        alias_decl->printQualifiedName(os);
+        os.flush();
+        return qualified_name;
       }
     }
 
@@ -326,6 +338,10 @@ namespace jank::analyze::cpp_util
       if(Cpp::IsPointerType(type))
       {
         name = name + "*";
+      }
+      else if(Cpp::IsReferenceType(type))
+      {
+        name = name + "&";
       }
       return name;
     }
@@ -339,7 +355,7 @@ namespace jank::analyze::cpp_util
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
-    auto const code{ util::format("&typeid({})", Cpp::GetTypeAsString(type)) };
+    auto const code{ util::format("&typeid({})", get_qualified_type_name(type)) };
     clang::Value value;
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())

@@ -1,7 +1,0 @@
-(try
-  (try
-    (throw :success)
-    (catch e1
-      (throw e1)))
-  (catch e2
-    e2))

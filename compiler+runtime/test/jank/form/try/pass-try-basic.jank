@@ -1,0 +1,29 @@
+;; Basic try/catch form logic tests
+
+;; 1. Try expression with no throw returns body value
+(assert
+ (=
+  (try :success
+    (catch cpp/jank.runtime.object_ref _))
+  :success))
+
+;; 2. Try expression with throw returns caught value
+(assert
+ (=
+  (try
+    (throw :success)
+    (catch cpp/jank.runtime.object_ref e e))
+  :success))
+
+;; 3. Try with no catch/finally
+(let* [v (try (+ 1 2))]
+  (assert (= v 3)))
+
+;; 4. Local reference to C++ value in try block
+(let [bar cpp/true]
+  (assert
+   (= :success
+      (try
+        (if bar :success)))))
+
+:success

@@ -1,0 +1,14 @@
+;; Test catching C++ string literals
+(cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_string_literal {
+  using const_char_ptr = char const*;
+  void throw_string_literal() { throw \"abc\"; }
+}")
+
+(assert
+ (= "abc"
+    (try
+      (cpp/jank.cpp.try_.pass_catch_cpp_string_literal.throw_string_literal)
+      (catch cpp/jank.cpp.try_.pass_catch_cpp_string_literal.const_char_ptr s
+        s))))
+
+:success
