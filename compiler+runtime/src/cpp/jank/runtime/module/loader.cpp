@@ -757,7 +757,12 @@ namespace jank::runtime::module
         std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry.jank.is_some() && entry.jank.unwrap().exists())
+        if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
+        {
+          source_modified_time = entry.cpp.unwrap().last_modified_at();
+          module_type = module_type::cpp;
+        }
+        else if(entry.jank.is_some() && entry.jank.unwrap().exists())
         {
           source_modified_time = entry.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
@@ -766,11 +771,6 @@ namespace jank::runtime::module
         {
           source_modified_time = entry.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
-        }
-        else if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
-        {
-          source_modified_time = entry.cpp.unwrap().last_modified_at();
-          module_type = module_type::cpp;
         }
         else
         {
@@ -792,6 +792,10 @@ namespace jank::runtime::module
           return find_result{ entry, module_type };
         }
       }
+      else if(entry.cpp.is_some())
+      {
+        return find_result{ entry, module_type::cpp };
+      }
       else if(entry.jank.is_some())
       {
         return find_result{ entry, module_type::jank };
@@ -799,10 +803,6 @@ namespace jank::runtime::module
       else if(entry.cljc.is_some())
       {
         return find_result{ entry, module_type::cljc };
-      }
-      else if(entry.cpp.is_some())
-      {
-        return find_result{ entry, module_type::cpp };
       }
     }
 

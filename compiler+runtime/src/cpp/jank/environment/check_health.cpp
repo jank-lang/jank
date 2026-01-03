@@ -393,7 +393,6 @@ namespace jank::environment
                                       [=] { util::cli::opts = saved_opts; }
       };
 
-      runtime::__rt_ctx->module_loader.set_is_loaded("/clojure.core");
 #ifdef JANK_PHASE_2
       jank_load_clojure_core();
 #else
