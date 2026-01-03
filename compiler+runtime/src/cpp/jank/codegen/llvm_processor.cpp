@@ -520,7 +520,7 @@ namespace jank::codegen
 
   static llvm::Value *load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value * const arg)
   {
-    return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
+    return load_if_needed(ctx, arg, cpp_util::untyped_object_ref_type());
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,

@@ -76,7 +76,7 @@
     (throw "~@ cannot be used outside of syntax quote")))
 
 (def type (fn* type [o]
-            (cpp/jank.runtime.object_type_str (cpp/.-type o))))
+            (cpp/jank.runtime.object_type_str (cpp/.-type (cpp/* o)))))
 
 ; Exceptions
 (def ex-info
@@ -111,7 +111,7 @@
 (def nil?
   "Returns true if x is nil, false otherwise."
   (fn* nil? [o]
-    (cpp/== (cpp/.-type o) cpp/jank.runtime.object_type.nil)))
+    (cpp/== (cpp/.-type (cpp/* o)) cpp/jank.runtime.object_type.nil)))
 
 (def identical?
   "Tests if 2 arguments are the same object, meaning the same pointer address."

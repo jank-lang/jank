@@ -479,13 +479,13 @@ namespace jank::analyze::cpp_util
         {
           if(typed_expr->values.empty())
           {
-            return untyped_object_ptr_type();
+            return untyped_object_ref_type();
           }
           return expression_type(typed_expr->values.back());
         }
         else
         {
-          return untyped_object_ptr_type();
+          return untyped_object_ref_type();
         }
       },
       expr);
@@ -516,7 +516,7 @@ namespace jank::analyze::cpp_util
     jank_debug_assert(type);
     if(Cpp::IsVoid(type))
     {
-      return untyped_object_ptr_type();
+      return untyped_object_ref_type();
     }
     return type;
   }
