@@ -7389,12 +7389,11 @@ fails, attempts to require sym's namespace and retries."
 
 (def default-data-readers
   "Default map of data reader functions provided by Clojure. May be
-  overridden by binding *data-readers*."
-  (merge
-    ;; {'uuid #'clojure.uuid/default-uuid-reader}
-    ;; (when-class "java.sql.Timestamp"
-    ;;   {'inst #'clojure.instant/read-instant-date})
-   ))
+  overridden by binding *data-readers*.
+
+  NOTE: jank doesn't use this var in it's parser."
+  #(throw "Implementations for default tag literals are baked into jank's
+          parser for interop reasons & to allow for more detailed error reporting."))
 
 (def ^:dynamic *data-readers*
   "Map from reader tag symbols to data reader Vars.
@@ -7420,9 +7419,9 @@ fails, attempts to require sym's namespace and retries."
   as a normal Clojure data structure by the reader.
 
   Reader tags without namespace qualifiers are reserved for
-  Clojure. Default reader tags are defined in
-  clojure.core/default-data-readers but may be overridden in
-  data_readers.clj, data_readers.cljc, or by rebinding this Var."
+  Clojure. Default reader tags are baked into the jank parser but may
+  be overridden in data_readers.jank, data_readers.cljc, or by rebinding
+  this Var."
   {})
 
 (def ^:dynamic *default-data-reader-fn*
