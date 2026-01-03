@@ -8,7 +8,7 @@ namespace nrepl_server
   using namespace boost::asio::ip;
 
   // client
-  class client::impl
+  struct native_client::impl
   {
   public:
     impl(boost::asio::io_context &io_context)
@@ -56,29 +56,29 @@ namespace nrepl_server
   };
 
   // client
-  client::client(std::unique_ptr<client::impl> impl)
+  native_client::native_client(std::unique_ptr<native_client::impl> impl)
     : impl_(std::move(impl))
   {
   }
 
-  bool client::is_connected()
+  bool native_client::is_connected()
   {
     return impl_->is_connected();
   }
 
-  std::string client::read_some()
+  std::string native_client::read_some()
   {
     auto data = impl_->read_some();
     return data;
   }
 
-  void client::write_some(std::string const &data)
+  void native_client::write_some(std::string const &data)
   {
     impl_->write_some(data);
   }
 
   // server
-  class server::impl
+  struct native_server::impl
   {
   public:
     impl(tcp::endpoint const &endpoint)
@@ -87,9 +87,9 @@ namespace nrepl_server
     {
     }
 
-    std::unique_ptr<client::impl> accept()
+    std::unique_ptr<native_client::impl> accept()
     {
-      auto impl = std::make_unique<client::impl>(io_context_);
+      auto impl = std::make_unique<native_client::impl>(io_context_);
       impl->accept(acceptor_);
 
       return impl;
@@ -100,19 +100,19 @@ namespace nrepl_server
     tcp::acceptor acceptor_;
   };
 
-  server::server(int port)
-    : impl_(std::make_unique<server::impl>(tcp::endpoint(ip::address_v4::loopback(), port)))
+  native_server::native_server(int port)
+    : impl_(std::make_shared<native_server::impl>(tcp::endpoint(ip::address_v4::loopback(), port)))
   {
   }
 
-  server::~server() = default;
+  native_server::~native_server() = default;
 
-  client *server::accept()
+  native_client *native_server::accept()
   {
     auto impl = impl_->accept();
 
     // TODO: This leaks memory but jank complains about not being able to delete
-    // an opaque type if we return unique_ptr<client>.
-    return new client(std::move(impl));
+    // an opaque type if we return unique_ptr<native_client>.
+    return new native_client(std::move(impl));
   }
 }

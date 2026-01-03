@@ -8,7 +8,7 @@ namespace nrepl_server
   // Hide the implementation details behind a PIMPL so that we don't need to
   // expose ASIO in the header file.
 
-  class client final
+  class native_client final
   {
   private:
     struct impl;
@@ -24,29 +24,29 @@ namespace nrepl_server
     void write_some(std::string const &data);
 
   protected:
-    client(std::unique_ptr<client::impl> impl);
+    native_client(std::unique_ptr<native_client::impl> impl);
 
   private:
-    std::unique_ptr<client::impl> impl_;
+    std::unique_ptr<native_client::impl> impl_;
 
     // for protected ctor access
-    friend class server;
+    friend class native_server;
   };
 
-  class server final
+  class native_server final
   {
   private:
     struct impl;
 
   public:
-    server(int port);
-    ~server();
+    native_server(int port);
+    ~native_server();
 
     /* Block until a client connects. */
-    client *accept();
+    native_client *accept();
 
 
   private:
-    std::unique_ptr<impl> impl_;
+    std::shared_ptr<impl> impl_;
   };
 } // namespace nrepl_server

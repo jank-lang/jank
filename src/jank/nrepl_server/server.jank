@@ -4,22 +4,22 @@
 (cpp/raw "#include <nrepl_server/nrepl_server.hpp>")
 
 (defn listen [listen-port]
-  (cpp/box (cpp/new cpp/nrepl_server.server listen-port)))
+  (cpp/box (cpp/new cpp/nrepl_server.native_server listen-port)))
 
 (defn accept [server*]
-  (let [server (cpp/unbox cpp/nrepl_server.server* server*)]
+  (let [server (cpp/unbox cpp/nrepl_server.native_server* server*)]
     (cpp/box (cpp/.accept server))))
 
 (defn connected?
   "Is the client socket connected and available for reading/writing?"
   [client*]
-  (let [client (cpp/unbox cpp/nrepl_server.client* client*)]
+  (let [client (cpp/unbox cpp/nrepl_server.native_client* client*)]
     (cpp/.is_connected client)))
 
 (defn read-message
   "Read a complete message (TODO) from the client and decode it."
   [client*]
-  (let [client  (cpp/unbox cpp/nrepl_server.client* client*)
+  (let [client  (cpp/unbox cpp/nrepl_server.native_client* client*)
         msg-str (cpp/.read_some client)]
     ;; TODO: There is no guarantee that we read an entire message. We should
     ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
@@ -29,6 +29,7 @@
 (defn write-message
   "Encode the given message and write it to the client socket."
   [client* msg]
-  (let [client  (cpp/unbox cpp/nrepl_server.client* client*)
+  (let [client  (cpp/unbox cpp/nrepl_server.native_client* client*)
         msg-str (bencode/write msg)]
-    (cpp/.write_some client (cpp/cast cpp/std.string msg-str))))
+    (cpp/.write_some client (cpp/cast cpp/std.string msg-str))
+    nil))

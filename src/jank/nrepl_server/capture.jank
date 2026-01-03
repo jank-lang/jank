@@ -19,7 +19,7 @@
 (def temp-file-template "/tmp/jank-nrepl-XXXXXX")
 
 (defn- make-temp-file []
-  (let [name (cpp/cast cpp/std.string temp-file-template)
+  (let [name (cpp/std.string (cpp/cast cpp/std.string temp-file-template))
         fd   (cpp/mkstemp (cpp/.data name))]
     (assert (not= fd -1) "temp file could not be created")
     [name fd]))

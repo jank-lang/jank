@@ -15,7 +15,7 @@ namespace nrepl_server::eval
 
     try
     {
-      auto value = __rt_ctx->eval_string(code);
+      auto value = __rt_ctx->eval_string(code).unwrap();
 
       if (var_2->is_bound()) { var_3->bind_root(var_2->deref()); }
       if (var_1->is_bound()) { var_2->bind_root(var_1->deref()); }
