@@ -1977,7 +1977,7 @@ namespace jank::analyze
                                                    latest_expansion(macro_expansions));
     }
 
-    /* Minus one to remove recur symbol. */
+    /* Minus one to remove the recur symbol. */
     auto const arg_count(list->count() - 1);
     auto const is_loop{ loop_details.is_some() };
     if(is_loop)
@@ -2948,8 +2948,6 @@ namespace jank::analyze
 
         for(auto const &kv : typed_o->data)
         {
-          /* The two maps (hash and sorted) have slightly different iterators, so we need to
-           * pull out the entries differently. */
           object_ref const first{ kv.first };
           object_ref const second{ kv.second };
 

@@ -75,7 +75,6 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
-    /* TODO: Consider making this a on the typed object: the C++ name. */
     [[maybe_unused]]
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
     {
@@ -451,7 +450,7 @@ namespace jank::codegen
   {
     static jtl::immutable_string boxed_local_name(jtl::immutable_string const &local_name)
     {
-      return local_name; // + "__boxed";
+      return local_name;
     }
   }
 
@@ -570,7 +569,6 @@ namespace jank::codegen
     }
 
     auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
-    //util::println("lifting constant {} as {}", runtime::to_code_string(o), native_name);
     lifted_constants.emplace(o, native_name);
     return native_name;
   }
@@ -953,8 +951,8 @@ namespace jank::codegen
   {
     auto const munged_name(runtime::munge(expr->binding->native_name));
 
-    // For captures, we need to check the originating binding's type, not the capture's type
-    // This matches the logic in build_header()
+    /* For captures, we need to check the originating binding's type, not the capture's type
+       This matches the logic in build_header() */
     jtl::ptr<void> actual_type{ expr->binding->type };
     auto const originating(root_fn->frame->find_local_or_capture(expr->binding->name));
     if(originating.is_some())
@@ -962,24 +960,20 @@ namespace jank::codegen
       actual_type = originating.unwrap().binding->type;
     }
 
-    // Check if this binding has a C++ primitive type (not object_ref)
+    /* Check if this binding has a C++ primitive type (not object_ref) */
     bool const is_unboxed_type{ actual_type && !cpp_util::is_any_object(actual_type) };
 
     handle ret;
     if(expr->binding->needs_box && !is_unboxed_type)
     {
-      // Normal boxed variable (object_ref)
       ret = munged_name;
     }
     else if(is_unboxed_type)
     {
-      // Unboxed C++ primitive - no boxed variable exists,
-      // handle::str will generate make_box() on demand
       ret = handle{ "", munged_name };
     }
     else
     {
-      // Unboxed jank variable with both boxed and unboxed versions
       ret = handle{ detail::boxed_local_name(munged_name), munged_name };
     }
 

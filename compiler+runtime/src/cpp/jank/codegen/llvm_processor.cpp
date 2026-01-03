@@ -309,6 +309,7 @@ namespace jank::codegen
   {
     jank_debug_assert(type);
     usize size{ 1 };
+    //util::println("alloc_type {}, size {}", Cpp::GetTypeAsString(type), size);
     jank_debug_assert(size > 0);
     auto const alignment{ Cpp::GetAlignmentOfType(type) };
     jank_debug_assert(alignment > 0);
