@@ -41,7 +41,7 @@ Once you're ready to share your changes with use for review and merge
 consideration, please make a pull request on Github. Add a description of your
 change to your pull request, as well as a descriptive title. 
 
-To convey that your pull request is ready for review, please add me (Jeaye Wilkerson)
+To convey that your pull request is ready for review, please add me ([jeaye](https://github.com/jeaye))
 as a reviewer. I will then review your pull request when I am next available.
 
 After review, I may request iteration on your pull request. If you iterate and
@@ -60,7 +60,7 @@ Contributing to jank means vouching for the quality, license compliance, and
 utility of your submission.
 
 All contributions, whether from a human author or assisted by large language
-models (LLMs) or other generative AI tools, must meet the project’s standards
+models (LLMs) or other generative AI tools, **MUST** meet the project’s standards
 for inclusion.
 
 The contributor is always the author and is fully accountable for the entirety
@@ -75,37 +75,21 @@ You **SHOULD** disclose the other uses of AI tools, where it might be useful.
 Routine use of assistive tools for correcting grammar and spelling, or for
 clarifying language, does not require disclosure.
 
-* Information about the use of AI tools will help us evaluate their impact,
-  build new best practices, and adjust existing processes.
+Information about the use of AI tools will help us evaluate their impact,
+build new best practices, and adjust existing processes.
 	
-* Disclosures are made where authorship is normally indicated. For contributions
-  tracked in git, the recommended method is an `Assisted-by:` commit message
-  trailer and a note in the pull request. For other contributions, disclosure
-  may include document preambles, design file metadata, translation notes, etc.
+An example disclosure:
+
+> This PR was written primarily by Claude Code.
+
+Or a more detailed disclosure:
+
+> I consulted ChatGPT to understand the codebase but the solution
+> was fully authored manually by myself.
+
+Including a trailer in your Git commits is also encouraged. For example:
+
+> Assisted-by: ChatGPTv5
 	
-* Examples:
-  * `Assisted-by: generic LLM chatbot`
-  * `Assisted-by: ChatGPTv5`
-	
-### Contribution & Community Evaluation
-AI tools **MAY** be used to assist human reviewers by providing analysis and
-suggestions.
-
-You **MUST NOT** use AI as the sole or final arbiter in making a substantive or
-subjective judgment on a contribution, nor may it be used to evaluate a person’s
-standing within the community (e.g., for funding, leadership roles, or Code of
-Conduct matters).
-
-This does not prohibit the use of automated tooling for objective technical
-validation, such as CI/CD pipelines, automated testing, or spam filtering.
-
-The final accountability for accepting a contribution, even if implemented by an
-automated system, always rests with the human contributor who authorizes the
-action.
-
 Concerns about possible policy violations should be reported via
 email to conduct@jank-lang.org.
-	
-The key words **MAY**, **MUST**, **MUST NOT**, and **SHOULD** in this document
-are to be interpreted as described in
-[RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
