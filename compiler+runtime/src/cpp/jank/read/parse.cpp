@@ -1006,10 +1006,10 @@ namespace jank::read::parse
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
     auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
-    auto const data_reader{ visit_map_like([](auto const typed_o, oref<obj::symbol> const sym)
-                                             -> object_ref { return typed_o->get(sym); },
-                                           data_readers,
-                                           sym) };
+    auto const data_reader{ visit_map_like(
+      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
+      data_readers,
+      sym) };
     auto const form_token(token_current.latest.unwrap().expect_ok());
     auto form_result(next());
 
