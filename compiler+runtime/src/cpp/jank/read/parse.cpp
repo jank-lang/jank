@@ -174,6 +174,10 @@ namespace jank::read::parse
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
     : token_current{ b }
     , token_end{ e }
+    , suppress_read_var{ make_box<var>(__rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
+                                       make_box<obj::symbol>("*suppress-read*"),
+                                       jank_false)
+                           ->set_dynamic(true) }
     , splicing_allowed_var{ make_box<var>(
                               __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
                               make_box<obj::symbol>("*splicing-allowed?*"),
@@ -322,18 +326,26 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
+    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        auto const error{ it.latest.unwrap().expect_err() };
+
+        if(!is_reader_suppressed || error->kind != error::kind::parse_invalid_reader_symbolic_value)
+        {
+          return err(error);
+        }
+
+        ret.push_back(
+          make_box<obj::opaque_box>(error.data,
+                                    jtl::immutable_string{ "jank::error::base const *" }));
+        continue;
       }
       ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
@@ -996,11 +1008,6 @@ namespace jank::read::parse
     auto const sym_result(next());
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
-    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
-    auto const data_reader{ visit_map_like(
-      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
-      data_readers,
-      sym) };
     auto const form_token(token_current.latest.unwrap().expect_ok());
     auto form_result(next());
 
@@ -1017,6 +1024,11 @@ namespace jank::read::parse
 
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
+    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
+    auto const data_reader{ visit_map_like(
+      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
+      data_readers,
+      sym) };
 
     if(data_reader.is_some())
     {
@@ -1120,6 +1132,8 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    context::binding_scope const suppress_read_scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(suppress_read_var, jank_true)) };
     auto list_result(next());
     if(list_result.is_err())
     {
@@ -1147,7 +1161,6 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-
     auto const r{ make_sequence_range(list) };
     for(auto it(r.begin()); it != r.end(); ++it, ++it)
     {
@@ -1178,7 +1191,16 @@ namespace jank::read::parse
               auto const front(pending_forms.begin());
               for(auto it(++r.begin()); it != r.end(); ++it)
               {
-                pending_forms.insert(front, *it);
+                object_ref const form{ *it };
+
+                if(form->type == object_type::opaque_box)
+                {
+                  auto const typed_box{ try_object<obj::opaque_box>(form) };
+
+                  return static_cast<jank::error::base const *>(typed_box->data.data);
+                }
+
+                pending_forms.insert(front, form);
               }
 
               return object_source_info{ first, start_token, list_end };
@@ -1192,7 +1214,18 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ *(++it), start_token, list_end };
+          auto const form{ *(++it) };
+
+          if(form->type == object_type::opaque_box)
+          {
+            auto const typed_box{ try_object<obj::opaque_box>(form) };
+
+            return static_cast<jank::error::base const *>(typed_box->data.data);
+          }
+          else
+          {
+            return object_source_info{ form, start_token, list_end };
+          }
         }
       }
     }
