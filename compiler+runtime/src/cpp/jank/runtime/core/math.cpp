@@ -1971,7 +1971,7 @@ namespace jank::runtime
 
   obj::big_integer_ref to_big_integer(object_ref const o)
   {
-    return visit_number_like(
+    return visit_object(
       [&](auto const typed_o) -> obj::big_integer_ref {
         using T = typename decltype(typed_o)::value_type;
 
@@ -1979,7 +1979,7 @@ namespace jank::runtime
         {
           return typed_o;
         }
-        else if constexpr(std::same_as<T, obj::integer>)
+        else if constexpr(std::same_as<T, obj::integer> || std::same_as<T, obj::persistent_string>)
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
@@ -2004,7 +2004,7 @@ namespace jank::runtime
 
   obj::big_decimal_ref to_big_decimal(object_ref const o)
   {
-    return visit_number_like(
+    return visit_object(
       [&](auto const typed_o) -> obj::big_decimal_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
@@ -2013,7 +2013,7 @@ namespace jank::runtime
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
         else if constexpr(std::same_as<T, obj::big_integer> || std::same_as<T, obj::real>
-                          || std::same_as<T, obj::ratio>)
+                          || std::same_as<T, obj::ratio> || std::same_as<T, obj::persistent_string>)
         {
           return make_box<obj::big_decimal>(typed_o->data);
         }
