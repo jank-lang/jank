@@ -1423,11 +1423,16 @@ namespace jank::codegen
     auto const last_expr_type{ cpp_util::expression_type(
       expr->body->values[expr->body->values.size() - 1]) };
 
+    bool is_void{};
     auto const &type_name{ cpp_util::get_qualified_type_name(
       Cpp::GetNonReferenceType(last_expr_type)) };
     if(cpp_util::is_any_object(last_expr_type))
     {
       util::format_to(body_buffer, "{} {}{ }; {", type_name, ret_tmp);
+    }
+    else if(Cpp::IsVoid(last_expr_type))
+    {
+      is_void = true;
     }
     else
     {
@@ -1495,11 +1500,14 @@ namespace jank::codegen
       /* We ignore all values but the last. */
       if(++it == expr->body->values.end() && val_tmp.is_some())
       {
-        /* The last expression tmp needs to be movable. */
-        util::format_to(body_buffer,
-                        "{} = std::move({});",
-                        ret_tmp,
-                        val_tmp.unwrap().str(expr->needs_box));
+        if(!is_void)
+        {
+          /* The last expression tmp needs to be movable. */
+          util::format_to(body_buffer,
+                          "{} = std::move({});",
+                          ret_tmp,
+                          val_tmp.unwrap().str(expr->needs_box));
+        }
 
         if(expr->is_loop)
         {
@@ -1518,7 +1526,10 @@ namespace jank::codegen
       util::format_to(body_buffer, "}");
     }
 
-    util::format_to(body_buffer, "}");
+    if(!is_void)
+    {
+      util::format_to(body_buffer, "}");
+    }
 
     if(expr->position == analyze::expression_position::tail)
     {
@@ -1970,7 +1981,7 @@ namespace jank::codegen
 
       if(is_void)
       {
-        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
+        ret_tmp = "jank::runtime::jank_nil()";
       }
       else
       {
