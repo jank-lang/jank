@@ -7,6 +7,12 @@ about it. This is where most of the differences come into play.
 jank does not try to hide its C++ host. That would defeat the point of being
 Clojure.
 
+## Command line
+* You will find no Clojure CLI `-X:foo` syntax here
+* When using `jank run` or `jank run-main`, `--` is needed to separate args for
+  jank from args for your program
+    * Example: `jank -I include run test.jank -- a b c`
+
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately
 * No nested `require` support (same as ClojureScript)
