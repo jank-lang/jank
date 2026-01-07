@@ -237,9 +237,7 @@
   (fn* seqable? [o]
     (cpp/jank.runtime.is_seqable o)))
 
-(def ^{:arglists '([coll])
-       :private true}
-  reverse*
+(def ^:private reverse*
   (fn* reverse* [coll]
     (loop* [acc '()
             coll (seq coll)]
@@ -249,9 +247,7 @@
                (rest coll))))))
 
 ; XXX: The real concat will be defined later on, to be lazy.
-(def ^{:arglists '([] [x] [x y] [x y & zs])
-       :private true}
-  concat*
+(def ^:private concat*
   (fn* concat*
     ([]
      '())
@@ -530,27 +526,19 @@
 ; all of its arities. This version of apply* is used by the parser for syntax quoting.
 ; This allows us to use syntax quoting sooner and also have more easily inlinable
 ; syntax quoting code, since this version of apply is lighter than the full version.
-(def ^{:arglists '([f args])
-       :private true}
-  apply*
+(def ^:private apply*
   (fn* apply* [source args]
     (cpp/jank.runtime.apply_to source args)))
 
-(def ^{:arglists '([bindings & body])
-       :macro true}
-  let
+(def ^{:macro true} let
   (fn* let [&form &env & decl]
     `(let* ~@decl)))
 
-(def ^{:arglists '([bindings & body])
-       :macro true}
-  loop
+(def ^{:macro true} loop
   (fn* loop [&form &env & decl]
     `(loop* ~@decl)))
 
-(def ^{:arglists '([& sigs])
-       :macro true}
-  fn
+(def ^{:macro true} fn
   (fn* fn [&form &env & decl]
     (with-meta `(fn* ~@decl) (meta &form))))
 
@@ -586,9 +574,7 @@
          (cpp/jank.runtime.is_equiv y (first more)))
        false))))
 
-(def ^{:arglists '([fdecl])
-       :private true}
-  sigs
+(def ^:private sigs
   (fn* sigs [fdecl]
     (let* [asig (fn* asig [fdecl]
                   (let* [arglist (first fdecl)
