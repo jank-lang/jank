@@ -2146,11 +2146,9 @@ namespace jank::codegen
       }
       need_comma = true;
 
-      /* TODO: This doesn't handle ctor calls with multiple args? */
       auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[arg_idx]) };
       bool needs_conversion{};
       jtl::immutable_string conversion_direction, trait_type;
-      /* TODO: For aggregate initialization, consider the member type, not the expr type. */
       if(cpp_util::is_any_object(param_types[arg_idx]) && !cpp_util::is_any_object(arg_type))
       {
         needs_conversion = true;
