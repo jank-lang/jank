@@ -196,6 +196,8 @@ namespace jank::codegen
                          std::hash<runtime::object_ref>,
                          runtime::very_equal_to>
       lifted_constants;
+    /* Lifted vars which should have their roots cached for direct-calls. */
+    native_set<jtl::immutable_string> direct_call_var_roots;
     bool generated_declaration{};
     bool generated_expression{};
   };

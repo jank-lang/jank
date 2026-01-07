@@ -12,6 +12,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/util/escape.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/detail/to_runtime_data.hpp>
@@ -1027,6 +1028,19 @@ namespace jank::codegen
           elided = true;
         }
       }
+
+      if(!elided && util::cli::opts.direct_call && !ref->var->dynamic.load())
+      {
+        auto const &var_native_name(
+          lift_var(lifted_vars, ref->var->to_qualified_symbol()->to_string(), false));
+        direct_call_var_roots.emplace(var_native_name);
+        auto const source_tmp_root{ util::format("var_root_{}", var_native_name) };
+
+        /* The cached var root could be a jit fn, native fn, keyword, map, etc.
+         * Always using dynamic_call keeps semantics consistent. */
+        format_dynamic_call(source_tmp_root, ret_tmp.str(true), expr->arg_exprs, fn_arity);
+        elided = true;
+      }
     }
     else if(auto const * const fn = dynamic_cast<analyze::expr::function *>(expr->source_expr.data))
     {
@@ -1040,12 +1054,15 @@ namespace jank::codegen
       }
       if(!variadic)
       {
-        auto const &source_tmp(gen(expr->source_expr, fn_arity));
-        format_direct_call(source_tmp.unwrap().str(false),
-                           ret_tmp.str(true),
-                           expr->arg_exprs,
-                           fn_arity);
-        elided = true;
+        if(expr->arg_exprs.size() <= runtime::max_params)
+        {
+          auto const &source_tmp(gen(expr->source_expr, fn_arity));
+          format_direct_call(source_tmp.unwrap().str(false),
+                             ret_tmp.str(true),
+                             expr->arg_exprs,
+                             fn_arity);
+          elided = true;
+        }
       }
     }
 
@@ -1313,13 +1330,16 @@ namespace jank::codegen
       /* TODO: Share a context instead. */
       prc.lifted_vars = lifted_vars;
       prc.lifted_constants = lifted_constants;
+      prc.direct_call_var_roots = direct_call_var_roots;
 
       prc.build_body();
 
       lifted_vars = jtl::move(prc.lifted_vars);
       lifted_constants = jtl::move(prc.lifted_constants);
+      direct_call_var_roots = jtl::move(prc.direct_call_var_roots);
       prc.lifted_vars.clear();
       prc.lifted_constants.clear();
+      prc.direct_call_var_roots.clear();
     }
 
     util::format_to(deps_buffer, "{}", prc.declaration_str());
@@ -2532,6 +2552,13 @@ namespace jank::codegen
                         "jank::runtime::var_ref {} {};",
                         lifted_const,
                         v.second.native_name);
+        if(util::cli::opts.direct_call && direct_call_var_roots.contains(v.second.native_name))
+        {
+          util::format_to(lifted_buffer,
+                          "jank::runtime::object_ref {} var_root_{};",
+                          lifted_const,
+                          v.second.native_name);
+        }
       }
 
 
@@ -2614,6 +2641,14 @@ namespace jank::codegen
                             R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
                             v.second.native_name,
                             v.first);
+          }
+
+          if(util::cli::opts.direct_call && direct_call_var_roots.contains(v.second.native_name))
+          {
+            util::format_to(header_buffer,
+                            ", var_root_{}{ {}->get_root() }",
+                            v.second.native_name,
+                            v.second.native_name);
           }
         }
 
@@ -2795,6 +2830,17 @@ namespace jank::codegen
             ns,
             v.second.native_name,
             v.first);
+        }
+
+        if(util::cli::opts.direct_call && direct_call_var_roots.contains(v.second.native_name))
+        {
+          util::format_to(
+            footer_buffer,
+            "new (&{}::var_root_{}) jank::runtime::object_ref{{ {}::{}->get_root() }};",
+            ns,
+            v.second.native_name,
+            ns,
+            v.second.native_name);
         }
       }
 

@@ -19,9 +19,9 @@ namespace jank::util::cli
   {
     if(*it == long_flag)
     {
-      ++it;
       if(needs_value)
       {
+        ++it;
         if(it == end)
         {
           throw util::format("The '{}' flag requires an argument, but one was not provided.",
@@ -177,10 +177,12 @@ OPTIONS
       for(auto it{ flags.begin() }; it != end; ++it)
       {
         /**** These are all of the global flags which can apply to any command. ****/
-        if(check_flag(it, end, value, "--", false))
+        if(*it == "--")
         {
           /* This implies that everything coming after is meant for the running program. */
-          std::copy(it, end, std::back_inserter(opts.extra_opts));
+          auto it_next{ it };
+          ++it_next;
+          std::copy(it_next, end, std::back_inserter(opts.extra_opts));
           break;
         }
         else if(check_flag(it, end, value, "-h", "--help", false))
