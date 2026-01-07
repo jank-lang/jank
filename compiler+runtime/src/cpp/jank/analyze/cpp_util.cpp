@@ -547,7 +547,7 @@ namespace jank::analyze::cpp_util
 
     /* If any arg can be implicitly converted to multiple functions, we have an ambiguity.
      * The user will need to specify the correct type by using a cast. */
-    for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
+    for(usize arg_idx{}; arg_idx < arg_count; ++arg_idx)
     {
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */

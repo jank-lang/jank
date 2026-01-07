@@ -1995,6 +1995,7 @@ namespace jank::codegen
       {
         auto const arg_expr{ expr->arg_exprs[arg_idx] };
         auto const arg_type{ cpp_util::expression_type(arg_expr) };
+        /* This will be null in variadic positions. */
         auto const param_type{ Cpp::GetFunctionArgType(source->scope, arg_idx) };
         auto const &arg_tmp{ arg_tmps[arg_idx] };
 
@@ -2002,7 +2003,16 @@ namespace jank::codegen
         {
           util::format_to(body_buffer, ", ");
         }
-        util::format_to(body_buffer, "{}", arg_tmp.str(true));
+
+        if(param_type && Cpp::IsRvalueReferenceType(param_type))
+        {
+          util::format_to(body_buffer, "std::move({})", arg_tmp.str(true));
+        }
+        else
+        {
+          util::format_to(body_buffer, "{}", arg_tmp.str(true));
+        }
+
         if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
           util::format_to(body_buffer, ".get()");
