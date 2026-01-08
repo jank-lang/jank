@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_rvalue_ref
+          {
+            struct bar
+            {
+              bar() = default;
+              bar(int i)
+                : i{ i }
+              { }
+              bar(bar const&) = delete;
+              bar(bar &&) noexcept = default;
+
+              int i{};
+            };
+            int foo(bar &&b)
+            { return b.i; }
+          }")
+(let* [i (cpp/jank.cpp.call.global.pass_rvalue_ref.foo #cpp 107)]
+  (if (= 107 i)
+    :success))

@@ -32,9 +32,9 @@ best place to ask questions to the community. If you can't/won't use Slack,
 [Github Discussions](https://github.com/jank-lang/jank/discussions) is the next best place to ask.
 
 ## How to report bugs
-Please use jank's Github [issue tracker](https://github.com/jank-lang/jank/issues) for reporting
-bugs. Before creating a new issue, please search for an existing issue on your
-topic and use that if it exists.
+Please use jank's Github [Discussions forum](https://github.com/jank-lang/jank/discussions/new/choose) for reporting
+bugs. Before creating a new discussion, please search for an existing discussion on your
+topic and use that if it exists. **Do not just create an issue.**
 
 ## Pull request process
 Once you're ready to share your changes with use for review and merge

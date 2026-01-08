@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_aggregate_multiple_conversions
+          {
+            struct foo
+            {
+              std::string name;
+              u8 age{};
+            };
+          }")
+(let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_multiple_conversions.foo. #cpp "meow" #cpp 66)]
+  (if (and (= "meow" (cpp/.-name f))
+           (= 66 (cpp/.-age f)))
+    :success))

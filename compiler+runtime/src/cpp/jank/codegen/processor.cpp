@@ -1995,6 +1995,7 @@ namespace jank::codegen
       {
         auto const arg_expr{ expr->arg_exprs[arg_idx] };
         auto const arg_type{ cpp_util::expression_type(arg_expr) };
+        /* This will be null in variadic positions. */
         auto const param_type{ Cpp::GetFunctionArgType(source->scope, arg_idx) };
         auto const &arg_tmp{ arg_tmps[arg_idx] };
 
@@ -2002,7 +2003,16 @@ namespace jank::codegen
         {
           util::format_to(body_buffer, ", ");
         }
-        util::format_to(body_buffer, "{}", arg_tmp.str(true));
+
+        if(param_type && Cpp::IsRvalueReferenceType(param_type))
+        {
+          util::format_to(body_buffer, "std::move({})", arg_tmp.str(true));
+        }
+        else
+        {
+          util::format_to(body_buffer, "{}", arg_tmp.str(true));
+        }
+
         if(param_type && Cpp::IsPointerType(param_type) && cpp_util::is_any_object(arg_type))
         {
           util::format_to(body_buffer, ".get()");
@@ -2108,25 +2118,58 @@ namespace jank::codegen
       return ret_tmp;
     }
 
+    native_vector<void *> param_types;
+    if(expr->fn)
+    {
+      auto const param_count{ Cpp::GetFunctionNumArgs(expr->fn) };
+      for(usize i{}; i < param_count; ++i)
+      {
+        param_types.emplace_back(Cpp::GetFunctionArgType(expr->fn, i));
+      }
+    }
+    else if(cpp_util::is_primitive(expr->type))
+    {
+      param_types.emplace_back(expr->type);
+    }
+    else
+    {
+      jank_debug_assert(expr->is_aggregate);
+      auto const scope{ Cpp::GetScopeFromType(expr->type) };
+      jank_debug_assert(scope);
+      std::vector<void *> member_scopes;
+      Cpp::GetDatamembers(scope, member_scopes);
+      for(auto const member_scope : member_scopes)
+      {
+        param_types.emplace_back(Cpp::GetTypeFromScope(member_scope));
+      }
+    }
+    jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
+
     util::format_to(body_buffer, "{} {}{ ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
 
-    if(!expr->arg_exprs.empty())
+    bool need_comma{};
+    for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
     {
-      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[0]) };
+      if(need_comma)
+      {
+        util::format_to(body_buffer, ", ");
+      }
+      need_comma = true;
+
+      auto const arg_type{ cpp_util::expression_type(expr->arg_exprs[arg_idx]) };
       bool needs_conversion{};
       jtl::immutable_string conversion_direction, trait_type;
-      /* TODO: For aggregate initialization, consider the member type, not the expr type. */
-      if(cpp_util::is_any_object(expr->type) && !cpp_util::is_any_object(arg_type))
+      if(cpp_util::is_any_object(param_types[arg_idx]) && !cpp_util::is_any_object(arg_type))
       {
         needs_conversion = true;
         conversion_direction = "into_object";
         trait_type = cpp_util::get_qualified_type_name(arg_type);
       }
-      else if(!cpp_util::is_any_object(expr->type) && cpp_util::is_any_object(arg_type))
+      else if(!cpp_util::is_any_object(param_types[arg_idx]) && cpp_util::is_any_object(arg_type))
       {
         needs_conversion = true;
         conversion_direction = "from_object";
-        trait_type = cpp_util::get_qualified_type_name(expr->type);
+        trait_type = cpp_util::get_qualified_type_name(param_types[arg_idx]);
       }
 
       if(needs_conversion)
@@ -2139,24 +2182,15 @@ namespace jank::codegen
       }
       else
       {
-        auto const needs_static_cast{ expr->type != arg_type && expr->arg_exprs.size() == 1 };
+        auto const needs_static_cast{ param_types[arg_idx] != arg_type };
         if(needs_static_cast)
         {
           util::format_to(body_buffer,
                           "static_cast<{}>(",
-                          cpp_util::get_qualified_type_name(expr->type));
+                          cpp_util::get_qualified_type_name(param_types[arg_idx]));
         }
 
-        bool need_comma{};
-        for(auto const &arg_tmp : arg_tmps)
-        {
-          if(need_comma)
-          {
-            util::format_to(body_buffer, ", ");
-          }
-          util::format_to(body_buffer, "{}", arg_tmp.str(false));
-          need_comma = true;
-        }
+        util::format_to(body_buffer, "{}", arg_tmps[arg_idx].str(false));
 
         if(needs_static_cast)
         {
