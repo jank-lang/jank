@@ -68,20 +68,25 @@
 (cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
 
 ; Syntax quoting.
-(def unquote
+(def ^{:arglists '([_])}
+  unquote
   (fn* unquote [_]
     (throw "~ cannot be used outside of syntax quote")))
-(def unquote-splicing
+(def ^{:arglists '([_])}
+  unquote-splicing
   (fn* unquote-splicing [_]
     (throw "~@ cannot be used outside of syntax quote")))
 
-(def type (fn* type [o]
-            (cpp/jank.runtime.object_type_str (cpp/.-type (cpp/* o)))))
+(def ^{:arglists '([o])}
+  type
+  (fn* type [o]
+    (cpp/jank.runtime.object_type_str (cpp/.-type (cpp/* o)))))
 
 ; Exceptions
-(def ex-info
-  "Create an instance of ExceptionInfo, a RuntimeException subclass
-   that carries a map of additional data."
+(def ^{:arglists '([msg map] [msg map cause])
+       :doc "Create an instance of ExceptionInfo, a RuntimeException subclass
+   that carries a map of additional data."}
+  ex-info
   (fn* ex-info
     ([msg map]
      {:error msg
@@ -91,120 +96,144 @@
       :data map
       :cause cause})))
 
-(def ex-message
-  "Returns the message attached to ex if ex is a Throwable.
-  Otherwise returns nil."
+(def ^{:arglists '([ex])
+       :doc "Returns the message attached to ex if ex is a Throwable.
+  Otherwise returns nil."}
+  ex-message
   :error)
 
-(def ex-data
-  "Returns exception data (a map) if ex is an IExceptionInfo.
-   Otherwise returns nil."
+(def ^{:arglists '([ex])
+       :doc "Returns exception data (a map) if ex is an IExceptionInfo.
+   Otherwise returns nil."}
+  ex-data
   :data)
 
-(def ex-cause
-  "Returns the cause of ex if ex is a Throwable.
-  Otherwise returns nil."
+(def ^{:arglists '([ex])
+       :doc "Returns the cause of ex if ex is a Throwable.
+  Otherwise returns nil."}
+  ex-cause
   :cause)
 
 ; Relations.
 ;; Miscellaneous.
-(def nil?
-  "Returns true if x is nil, false otherwise."
+(def ^{:arglists '([o])
+       :doc "Returns true if x is nil, false otherwise."}
+  nil?
   (fn* nil? [o]
     (cpp/== (cpp/.-type (cpp/* o)) cpp/jank.runtime.object_type.nil)))
 
-(def identical?
-  "Tests if 2 arguments are the same object, meaning the same pointer address."
+(def ^{:arglists '([lhs rhs])
+       :doc "Tests if 2 arguments are the same object, meaning the same pointer address."}
+  identical?
   (fn* identical? [lhs rhs]
     (cpp/== lhs rhs)))
 
 ; Collections.
-(def empty?
-  "Returns true if coll has no items - same as (not (seq coll))."
+(def ^{:arglists '([coll])
+       :doc "Returns true if coll has no items - same as (not (seq coll))."}
+  empty?
   (fn* empty? [o]
     (cpp/jank.runtime.is_empty o)))
-(def empty
-  "Returns an empty collection of the same category as coll, or nil"
+(def ^{:arglists '([coll])
+       :doc "Returns an empty collection of the same category as coll, or nil"}
+  empty
   (fn* empty [o]
     (cpp/jank.runtime.empty o)))
-(def count
-  "Returns the number of items in the collection. (count nil) returns
-   0.  Also works on strings, arrays, and Java Collections and Maps"
+(def ^{:arglists '([coll])
+       :doc "Returns the number of items in the collection. (count nil) returns
+   0.  Also works on strings, arrays, and Java Collections and Maps"}
+  count
   (fn* [coll]
     (cpp/jank.runtime.sequence_length coll)))
 
 ; Numbers.
-(def boolean
-  "Coerce to boolean"
+(def ^{:arglists '([x])
+       :doc "Coerce to boolean"}
+  boolean
   (fn* boolean [o]
     (cpp/jank.runtime.truthy o)))
-(def int
-  "Coerce to int"
+(def ^{:arglists '([x])
+       :doc "Coerce to int"}
+  int
   (fn* int [o]
     (cpp/jank.runtime.to_int o)))
-(def float
-  "Coerce to float"
+(def ^{:arglists '([x])
+       :doc "Coerce to float"}
+  float
   (fn* real [o]
     (cpp/jank.runtime.to_real o)))
 
 ;; Sequences.
-(def seq
-  "Returns a seq on the collection. If the collection is
+(def ^{:arglists '([coll])
+       :doc "Returns a seq on the collection. If the collection is
    empty, returns nil.  (seq nil) returns nil. seq also works on
    Strings, native Java arrays (of reference types) and any objects
    that implement Iterable. Note that seqs cache values, thus seq
    should not be used on any Iterable whose iterator repeatedly
-   returns the same mutable object."
+   returns the same mutable object."}
+  seq
   (fn* seq [o]
     (cpp/jank.runtime.seq o)))
-(def fresh-seq
+(def ^{:arglists '([coll])}
+  fresh-seq
   (fn* fresh-seq [o]
     (cpp/jank.runtime.fresh_seq o)))
-(def first
-  "Returns the first item in the collection. Calls seq on its
-   argument. If coll is nil, returns nil."
+(def ^{:arglists '([coll])
+       :doc "Returns the first item in the collection. Calls seq on its
+   argument. If coll is nil, returns nil."}
+  first
   (fn* first [o]
     (cpp/jank.runtime.first o)))
-(def ffirst
-  "Same as (first (first x))"
+(def ^{:arglists '([x])
+       :doc "Same as (first (first x))"}
+  ffirst
   (fn* ffirst [o]
     (first (first o))))
-(def next
-  "Returns a seq of the items after the first. Calls seq on its
-   argument.  If there are no more items, returns nil."
+(def ^{:arglists '([coll])
+       :doc "Returns a seq of the items after the first. Calls seq on its
+   argument.  If there are no more items, returns nil."}
+  next
   (fn* next [o]
     (cpp/jank.runtime.next o)))
-(def next-in-place
+(def ^{:arglists '([coll])}
+  next-in-place
   (fn* next-in-place [o]
     (cpp/jank.runtime.next_in_place o)))
-(def nnext
-  "Same as (next (next x))"
+(def ^{:arglists '([x])
+       :doc "Same as (next (next x))"}
+  nnext
   (fn* nnext [o]
     (next (next o))))
-(def second
-  "Same as (first (next x))"
+(def ^{:arglists '([x])
+       :doc "Same as (first (next x))"}
+  second
   (fn* second [o]
     (cpp/jank.runtime.second o)))
-(def rest
-  "Returns a possibly empty seq of the items after the first. Calls seq on its
-   argument."
+(def ^{:arglists '([coll])
+       :doc "Returns a possibly empty seq of the items after the first. Calls seq on its
+   argument."}
+  rest
   (fn* rest [o]
     (cpp/jank.runtime.rest o)))
-(def cons
-  "Returns a new seq where x is the first element and seq is
-   the rest."
+(def ^{:arglists '([x seq])
+       :doc "Returns a new seq where x is the first element and seq is
+   the rest."}
+  cons
   (fn* cons [head tail]
     (cpp/jank.runtime.cons head tail)))
-(def coll?
-  "Returns true if x implements IPersistentCollection"
+(def ^{:arglists '([x])
+       :doc "Returns true if x implements IPersistentCollection"}
+  coll?
   (fn* coll? [o]
     (cpp/jank.runtime.is_collection o)))
-(def seq?
-  "Return true if x implements ISeq"
+(def ^{:arglists '([x])
+       :doc "Return true if x implements ISeq"}
+  seq?
   (fn* seq? [o]
     (cpp/jank.runtime.is_seq o)))
-(def seqable?
-  "Return true if the seq function is supported for x"
+(def ^{:arglists '([x])
+       :doc "Return true if the seq function is supported for x"}
+  seqable?
   (fn* seqable? [o]
     (cpp/jank.runtime.is_seqable o)))
 
@@ -238,44 +267,50 @@
          (recur r (first zs) (rest zs)))))))
 
 ; Lists.
-(def list?
-  "Returns true if x implements IPersistentList"
+(def ^{:arglists '([x])
+       :doc "Returns true if x implements IPersistentList"}
+  list?
   (fn* list? [o]
     (cpp/jank.runtime.is_list o)))
-(def list
-  "Creates a new list containing the items."
+(def ^{:arglists '([& items])
+       :doc "Creates a new list containing the items."}
+  list
   (fn* list [& args]
     (cpp/jank.runtime.list args)))
 
 ;; Vectors.
-(def vector?
-  "Return true if x implements IPersistentVector"
+(def ^{:arglists '([x])
+       :doc "Return true if x implements IPersistentVector"}
+  vector?
   (fn* vector? [o]
     (cpp/jank.runtime.is_vector o)))
-(def vec
-  "Creates a new vector containing the contents of coll. Java arrays
-   will be aliased and should not be modified."
+(def ^{:arglists '([coll])
+       :doc "Creates a new vector containing the contents of coll. Java arrays
+   will be aliased and should not be modified."}
+  vec
   (fn* vec [o]
     (cpp/jank.runtime.vec o)))
 
-(def subvec
-  "Returns a persistent vector of the items in vector from
+(def ^{:arglists '([v start] [v start end])
+       :doc "Returns a persistent vector of the items in vector from
    start (inclusive) to end (exclusive).  If end is not supplied,
    defaults to (count vector). This operation is O(1) and very fast, as
    the resulting vector shares structure with the original and no
-   trimming is done."
+   trimming is done."}
+  subvec
   (fn* subvec
     ([v start]
      (subvec v start (count v)))
     ([v start end]
      (cpp/jank.runtime.subvec v start end))))
 
-(def conj
-  "conj[oin]. Returns a new collection with the xs
+(def ^{:arglists '([] [coll] [coll x] [coll x & xs])
+       :doc "conj[oin]. Returns a new collection with the xs
    'added'. (conj nil item) returns (item).
    (conj coll) returns coll. (conj) returns [].
    The 'addition' may happen at different 'places' depending
-   on the concrete type."
+   on the concrete type."}
+  conj
   (fn* conj
     ([]
      [])
@@ -289,15 +324,17 @@
          res
          (recur res (first args) (next args)))))))
 
-(def last
-  "Return the last item in coll, in linear time."
+(def ^{:arglists '([coll])
+       :doc "Return the last item in coll, in linear time."}
+  last
   (fn* last [s]
     (if (next s)
       (recur (next s))
       (first s))))
 
-(def butlast
-  "Return a seq of all but the last item in coll, in linear time."
+(def ^{:arglists '([coll])
+       :doc "Return a seq of all but the last item in coll, in linear time."}
+  butlast
   (fn* butlast [s]
     (loop* [ret []
             s s]
@@ -306,39 +343,44 @@
              (seq ret)))))
 
 ;; Maps.
-(def hash-map
-  "keyval => key val
+(def ^{:arglists '([] [& keyvals])
+       :doc "keyval => key val
    Returns a new hash map with supplied mappings. If any keys are
-   equal, they are handled as if by repeated uses of assoc."
+   equal, they are handled as if by repeated uses of assoc."}
+  hash-map
   (fn* hash-map
     ([] (cpp/jank.runtime.obj.persistent_hash_map.empty))
     ([& keyvals]
      (cpp/jank.runtime.obj.persistent_hash_map.create_from_seq keyvals))))
 
-(def sorted-map
-  "keyval => key val
+(def ^{:arglists '([] [& keyvals])
+       :doc "keyval => key val
    Returns a new sorted map with supplied mappings. If any keys are
-   equal, they are handled as if by repeated uses of assoc."
+   equal, they are handled as if by repeated uses of assoc."}
+  sorted-map
   (fn* sorted-map
     ([] (cpp/jank.runtime.obj.persistent_sorted_map.empty))
     ([& keyvals]
      (cpp/jank.runtime.obj.persistent_sorted_map.create_from_seq keyvals))))
 
-(def map?
-  "Return true if x implements IPersistentMap"
+(def ^{:arglists '([x])
+       :doc "Return true if x implements IPersistentMap"}
+  map?
   (fn* map? [o]
     (cpp/jank.runtime.is_map o)))
 
-(def associative?
- "Returns true if coll implements Associative"
+(def ^{:arglists '([coll])
+       :doc "Returns true if coll implements Associative"}
+  associative?
   (fn* associative? [o]
     (cpp/jank.runtime.is_associative o)))
 
-(def assoc
-  "assoc[iate]. When applied to a map, returns a new map of the
+(def ^{:arglists '([map key val] [map key val & kvs])
+       :doc "assoc[iate]. When applied to a map, returns a new map of the
    same (hashed/sorted) type, that contains the mapping of key(s) to
    val(s). When applied to a vector, returns a new vector that
-   contains val at index. Note - index must be <= (count vector)."
+   contains val at index. Note - index must be <= (count vector)."}
+  assoc
   (fn* assoc
     ([map key val]
      (cpp/jank.runtime.assoc map key val))
@@ -351,20 +393,23 @@
          res)))))
 
 ;; Strings.
-(def string?
-  "Return true if x is a String"
+(def ^{:arglists '([x])
+       :doc "Return true if x is a String"}
+  string?
   (fn* string? [o]
     (cpp/jank.runtime.is_string o)))
 
-(def char?
-  "Return true if x is a Character"
+(def ^{:arglists '([x])
+       :doc "Return true if x is a Character"}
+  char?
   (fn* char? [o]
     (cpp/jank.runtime.is_char o)))
 
-(def str
-  "With no args, returns the empty string. With one arg x, returns
+(def ^{:arglists '([] [x] [x & ys])
+       :doc "With no args, returns the empty string. With one arg x, returns
    x.toString().  (str nil) returns the empty string. With more than
-   one arg, returns the concatenation of the str values of the args."
+   one arg, returns the concatenation of the str values of the args."}
+  str
   (fn* str
     ([]
      "")
@@ -376,14 +421,15 @@
      (cpp/jank.runtime.str o args))))
 
 ;; Symbols.
-(def symbol?
-  "Return true if x is a Symbol"
+(def ^{:arglists '([x])
+       :doc "Return true if x is a Symbol"}
+  symbol?
   (fn* symbol? [o]
     (cpp/jank.runtime.is_symbol o)))
-(def
+(def ^{:arglists '([name] [ns name])
+       :doc "Returns a Symbol with the given namespace and name. Arity-1 works
+   on strings, keywords, and vars."}
   symbol
-  "Returns a Symbol with the given namespace and name. Arity-1 works
-   on strings, keywords, and vars."
   (fn* symbol
     ([o]
      (cpp/jank.runtime.to_unqualified_symbol o))
@@ -391,72 +437,86 @@
      (if (nil? ns)
        (symbol o)
        (cpp/jank.runtime.to_qualified_symbol ns o)))))
-(def simple-symbol?
-  "Return true if x is a symbol without a namespace"
+(def ^{:arglists '([x])
+       :doc "Return true if x is a symbol without a namespace"}
+  simple-symbol?
   (fn* simple-symbol? [x]
     (cpp/jank.runtime.is_simple_symbol x)))
-(def qualified-symbol?
-  "Return true if x is a symbol with a namespace"
+(def ^{:arglists '([x])
+       :doc "Return true if x is a symbol with a namespace"}
+  qualified-symbol?
   (fn* qualified-symbol? [x]
     (cpp/jank.runtime.is_qualified_symbol x)))
 
 ; Relations.
 ;; Miscellaneous.
-(def true?
-  "Returns true if x is the value true, false otherwise."
+(def ^{:arglists '([x])
+       :doc "Returns true if x is the value true, false otherwise."}
+  true?
   (fn* true? [x]
     (cpp/jank.runtime.is_true x)))
-(def false?
-  "Returns true if x is the value false, false otherwise."
+(def ^{:arglists '([x])
+       :doc "Returns true if x is the value false, false otherwise."}
+  false?
   (fn* false? [x]
     (cpp/jank.runtime.is_false x)))
-(def not
-  "Returns true if x is logical false, false otherwise."
+(def ^{:arglists '([x])
+       :doc "Returns true if x is logical false, false otherwise."}
+  not
   (fn* not [x]
     (cpp/clojure.core_native.not_ x)))
-(def some?
-  "Returns true if x is not nil, false otherwise."
+(def ^{:arglists '([x])
+       :doc "Returns true if x is not nil, false otherwise."}
+  some?
   (fn* some? [x]
     (cpp/jank.runtime.is_some x)))
 
 ;; Metadata.
-(def meta
-  "Returns the metadata of obj, returns nil if there is no metadata."
+(def ^{:arglists '([obj])
+       :doc "Returns the metadata of obj, returns nil if there is no metadata."}
+  meta
   (fn* meta [obj]
     (cpp/jank.runtime.meta obj)))
-(def with-meta
-  "Returns an object of the same type and value as obj, with
-   map m as its metadata."
-   (fn* with-meta [obj m]
-     (cpp/jank.runtime.with_meta obj m)))
-(def reset-meta!
-  "Atomically resets the metadata for a namespace/var/ref/agent/atom"
+(def ^{:arglists '([obj m])
+       :doc "Returns an object of the same type and value as obj, with
+   map m as its metadata."}
+  with-meta
+  (fn* with-meta [obj m]
+    (cpp/jank.runtime.with_meta obj m)))
+(def ^{:arglists '([iref metadata-map])
+       :doc "Atomically resets the metadata for a namespace/var/ref/agent/atom"}
+  reset-meta!
   (fn* [iref metadata-map]
     (cpp/jank.runtime.reset_meta iref metadata-map)))
 
 ;; Input/output.
-(def print
-  "Prints the object(s) to the output stream that is the current value
-   of *out*.  print and println produce output for human consumption."
+(def ^{:arglists '([& more])
+       :doc "Prints the object(s) to the output stream that is the current value
+   of *out*.  print and println produce output for human consumption."}
+  print
   (fn* print [& more]
     (cpp/jank.runtime.print more)))
-(def println
-  "Same as print followed by (newline)"
+(def ^{:arglists '([& more])
+       :doc "Same as print followed by (newline)"}
+  println
   (fn* println [& more]
     (cpp/jank.runtime.println more)))
-(def pr
-  "Prints the object(s) to the output stream that is the current value
+(def ^{:arglists '([& more])
+       :doc "Prints the object(s) to the output stream that is the current value
    of *out*.  Prints the object(s), separated by spaces if there is
    more than one.  By default, pr and prn print in a way that objects
-   can be read by the reader"
-   (fn* pr [& more]
-     (cpp/jank.runtime.pr more)))
-(def prn
-  "Same as pr followed by (newline). Observes *flush-on-newline*"
+   can be read by the reader"}
+  pr
+  (fn* pr [& more]
+    (cpp/jank.runtime.pr more)))
+(def ^{:arglists '([& more])
+       :doc "Same as pr followed by (newline). Observes *flush-on-newline*"}
+  prn
   (fn* prn [& more]
     (cpp/jank.runtime.prn more)))
-(def pr-str
-  "pr to a string, returning it"
+(def ^{:arglists '([x])
+       :doc "pr to a string, returning it"}
+  pr-str
   ;; TODO: support multiple parameters, preserving current behavior
   (fn* pr-str [x]
     (cpp/jank.runtime.to_code_string x)))
@@ -482,11 +542,12 @@
   (fn* fn [&form &env & decl]
     (with-meta `(fn* ~@decl) (meta &form))))
 
-(def =
-  "Equality. Returns true if x equals y, false if not. It also works
+(def ^{:arglists '([x] [x y] [x y & more])
+       :doc "Equality. Returns true if x equals y, false if not. It also works
    for nil and compares numbers and collections in a type-independent
    manner. Clojure's immutable data structures define equals() (and
-   thus =) as a value, not an identity, comparison."
+   thus =) as a value, not an identity, comparison."}
+  =
   (fn* =
     ([x] true)
     ([x y]
@@ -498,9 +559,10 @@
          (cpp/jank.runtime.equal y (first more)))
        false))))
 
-(def ==
-  "Returns non-nil if nums all have the equivalent
-   value (type-independent), otherwise false"
+(def ^{:arglists '([x] [x y] [x y & more])
+       :doc "Returns non-nil if nums all have the equivalent
+   value (type-independent), otherwise false"}
+  ==
   (fn* ==
     ([x] true)
     ([x y]
@@ -538,7 +600,9 @@
         (list (asig fdecl))))))
 
 ; Macros.
-(def ^{:macro true
+(def ^{:arglists '([name doc-string? attr-map? [params*] prepost-map? body]
+                   [name doc-string? attr-map? ([params*] prepost-map? body) + attr-map?])
+       :macro true
        :doc "Same as (def name (fn [params* ] exprs*)) or (def
              name (fn ([params* ] exprs*)+)) with any doc-string or attrs added
              to the var metadata. prepost-map defines a map with optional keys
@@ -4405,9 +4469,6 @@
   [c x]
   ;; (. c (isInstance x))
   (throw "TODO: port instance?"))
-
-(def ^{:private true :dynamic true}
-  assert-valid-fdecl (fn [fdecl]))
 
 (defn to-array
   "Returns an array of Objects containing the contents of coll, which
