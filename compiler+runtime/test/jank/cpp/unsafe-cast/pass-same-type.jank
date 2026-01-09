@@ -1,0 +1,6 @@
+(let* [a (cpp/unsafe-cast cpp/int (cpp/int. 4))
+       b (cpp/unsafe-cast cpp/double (cpp/double. 4.0))
+       a* (cpp/& a)
+       a*2 (cpp/unsafe-cast cpp/int* a*)]
+  (if (and (= 4 a) (= 4.0 b) (= 4 (cpp/* a*2)))
+    :success))

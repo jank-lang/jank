@@ -1,0 +1,3 @@
+(let* [s (cpp/unsafe-cast cpp/std.string "meow")
+       a (cpp/unsafe-cast cpp/int s)]
+  :success)
