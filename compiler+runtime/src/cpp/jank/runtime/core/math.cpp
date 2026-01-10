@@ -376,11 +376,42 @@ namespace jank::runtime
 
   object_ref div(object_ref const l, object_ref const r)
   {
+    if(is_zero(r))
+    {
+      throw make_box("Illegal divide by zero in '/'").erase();
+    }
+
     return visit_number_like(
       [](auto const typed_l, auto const r) -> object_ref {
         return visit_number_like(
-          [](auto const typed_r, auto const &typed_l) -> object_ref {
-            return make_box(typed_l / typed_r->data).erase();
+          []<typename T>(auto const typed_r, T const &typed_l_data) -> object_ref {
+            using LeftType = std::decay_t<T>;
+            using RightType = std::decay_t<decltype(typed_r->data)>;
+
+            constexpr bool left_is_int_like{ std::is_same_v<LeftType, i64>
+                                             || std::is_same_v<LeftType, native_big_integer> };
+            constexpr bool right_is_int_like{ std::is_same_v<RightType, i64>
+                                              || std::is_same_v<RightType, native_big_integer> };
+
+            if constexpr(left_is_int_like && right_is_int_like)
+            {
+              if constexpr(std::is_same_v<LeftType, i64>
+                           && std::is_same_v<RightType, native_big_integer>)
+              {
+                return obj::ratio::create(native_big_integer(typed_l_data), typed_r->data);
+              }
+              else if constexpr(std::is_same_v<LeftType, native_big_integer>
+                                && std::is_same_v<RightType, i64>)
+              {
+                return obj::ratio::create(typed_l_data, native_big_integer(typed_r->data));
+              }
+              else
+              {
+                return obj::ratio::create(typed_l_data, typed_r->data);
+              }
+            }
+
+            return make_box(typed_l_data / typed_r->data).erase();
           },
           r,
           typed_l->data);
