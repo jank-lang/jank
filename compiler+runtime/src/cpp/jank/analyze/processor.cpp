@@ -3988,7 +3988,8 @@ namespace jank::analyze
     {
       return value_expr;
     }
-    else if(Cpp::IsConstructible(type_expr->type, value_type))
+    else if(Cpp::IsConstructible(type_expr->type, value_type)
+            || Cpp::IsImplicitlyConvertible(value_type, type_expr->type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
