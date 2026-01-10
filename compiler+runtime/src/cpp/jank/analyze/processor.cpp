@@ -4076,9 +4076,8 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    /* TODO: Add a type expression_position and only allow types there? */
     auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
     if(type_expr_res.is_err())
     {
       return type_expr_res.expect_err();
