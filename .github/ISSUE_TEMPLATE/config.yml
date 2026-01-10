@@ -3,6 +3,3 @@ contact_links:
   - name: Features, Bug Reports, Questions
     url: https://github.com/jank-lang/jank/discussions/new/choose
     about: Our preferred starting point if you have any questions or suggestions about jank.
-  - name: Report a security vulnerability
-    url: https://github.com/jank-lang/jank/security/policy
-    about: Please review our security policy for more details.
