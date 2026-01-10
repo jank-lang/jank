@@ -315,6 +315,12 @@ namespace jank::error
     return make_error(kind::analyze_invalid_cpp_type, message, source, expansion);
   }
 
+  error_ref
+  analyze_invalid_cpp_type_position(read::source const &source, runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_type_position, source, expansion);
+  }
+
   error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
                                       read::source const &source,
                                       runtime::object_ref const expansion)

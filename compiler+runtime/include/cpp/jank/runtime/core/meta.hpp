@@ -24,4 +24,5 @@ namespace jank::runtime
   source_to_meta(read::source_position const &start, read::source_position const &end);
   object_ref strip_source_from_meta(object_ref const meta);
   jtl::option<object_ref> strip_source_from_meta_opt(jtl::option<object_ref> const &meta);
+  object_ref with_source_meta(object_ref const o, read::source const &source);
 }

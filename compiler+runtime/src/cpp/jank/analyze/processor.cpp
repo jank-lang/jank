@@ -3040,7 +3040,9 @@ namespace jank::analyze
 
       pop_macro_expansions = push_macro_expansions(*this, o);
 
-      auto sym_result(analyze_symbol(sym, current_frame, expression_position::value, fn_ctx, true));
+      /* We analyze this in type position, since we support types here, but we reset to value
+       * position if what we get back isn't a type. */
+      auto sym_result(analyze_symbol(sym, current_frame, expression_position::type, fn_ctx, true));
       if(sym_result.is_err())
       {
         return sym_result;
@@ -3048,7 +3050,7 @@ namespace jank::analyze
 
       source = sym_result.expect_ok();
 
-      if(sym_result.expect_ok()->kind == expression_kind::cpp_type)
+      if(source->kind == expression_kind::cpp_type)
       {
         auto const type{ llvm::cast<expr::cpp_type>(source.data) };
         auto const value{ jtl::make_ref<expr::cpp_value>(
@@ -3061,9 +3063,12 @@ namespace jank::analyze
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
-      else if((source->kind >= expression_kind::cpp_value_min
-               && source->kind <= expression_kind::cpp_value_max)
-              || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
+
+      source->propagate_position(expression_position::value);
+
+      if((source->kind >= expression_kind::cpp_value_min
+          && source->kind <= expression_kind::cpp_value_max)
+         || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
       {
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
@@ -3138,8 +3143,10 @@ namespace jank::analyze
     {
       pop_macro_expansions = push_macro_expansions(*this, o);
 
+      /* We analyze this in type position, since we support types here, but we reset to value
+       * position if what we get back isn't a type. */
       auto const callable_expr(
-        analyze(first, current_frame, expression_position::value, fn_ctx, needs_box));
+        analyze(first, current_frame, expression_position::type, fn_ctx, needs_box));
       if(callable_expr.is_err())
       {
         return callable_expr;
@@ -3159,9 +3166,12 @@ namespace jank::analyze
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
-      else if((source->kind >= expression_kind::cpp_value_min
-               && source->kind <= expression_kind::cpp_value_max)
-              || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
+
+      source->propagate_position(expression_position::value);
+
+      if((source->kind >= expression_kind::cpp_value_min
+          && source->kind <= expression_kind::cpp_value_max)
+         || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
       {
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
@@ -3180,7 +3190,7 @@ namespace jank::analyze
                             needs_arg_box));
       if(arg_expr.is_err())
       {
-        return arg_expr;
+        return arg_expr.expect_err()->add_usage(read::parse::reparse_nth(o, i + 1));
       }
       arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
                                            cpp_util::untyped_object_ref_type(),
@@ -3248,7 +3258,6 @@ namespace jank::analyze
                   jtl::ptr<void> const scope,
                   bool const is_ctor,
                   u8 const ptr_count,
-                  bool const allow_types,
                   local_frame_ptr const current_frame,
                   expression_position const position,
                   bool const needs_box,
@@ -3309,7 +3318,8 @@ namespace jank::analyze
     }
 
     if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope)
-       || (allow_types && Cpp::IsEnumType(type) && !Cpp::IsEnumConstant(scope)))
+       || (position == expression_position::type && Cpp::IsEnumType(type)
+           && !Cpp::IsEnumConstant(scope)))
     {
       if(is_ctor)
       {
@@ -3387,7 +3397,7 @@ namespace jank::analyze
                                             vk.unwrap());
     }
 
-    if(allow_types)
+    if(position == expression_position::type)
     {
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
@@ -3511,6 +3521,12 @@ namespace jank::analyze
                                               expr::cpp_value::value_kind::constructor);
       }
 
+      if(position != expression_position::type)
+      {
+        return error::analyze_invalid_cpp_type_position(object_source(sym),
+                                                        latest_expansion(macro_expansions));
+      }
+
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, global_type);
     }
 
@@ -3531,9 +3547,10 @@ namespace jank::analyze
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
       /* So just wrap our cpp/foo into a (cpp/value "foo") and analyze that. */
-      runtime::detail::native_persistent_list const cpp_value_form{ make_box<obj::symbol>("cpp",
-                                                                                          "value"),
-                                                                    make_box(name) };
+      runtime::detail::native_persistent_list const cpp_value_form{
+        with_source_meta(make_box<obj::symbol>("cpp", "value"), object_source(sym)),
+        make_box(name)
+      };
       auto const literal_res{ analyze_cpp_value(make_box<obj::persistent_list>(cpp_value_form),
                                                 current_frame,
                                                 position,
@@ -3558,7 +3575,6 @@ namespace jank::analyze
                            scope,
                            is_ctor,
                            ptr_count,
-                           true,
                            current_frame,
                            position,
                            needs_box,
@@ -3811,6 +3827,13 @@ namespace jank::analyze
 
     if(kind == literal_kind::type)
     {
+      if(position != expression_position::type)
+      {
+        return error::analyze_invalid_cpp_type_position(object_source(l->first()),
+                                                        latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 0));
+      }
+
       u8 ptr_count{};
       while(str.ends_with('*'))
       {
@@ -3837,6 +3860,7 @@ namespace jank::analyze
       }
 
       type = cpp_util::apply_pointers(literal_type.expect_ok(), ptr_count);
+
       return jtl::make_ref<expr::cpp_type>(position,
                                            current_frame,
                                            needs_box,
@@ -3928,9 +3952,8 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    /* TODO: Add a type expression_position and only allow types there? */
     auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
     if(type_expr_res.is_err())
     {
       return type_expr_res.expect_err();
@@ -4109,9 +4132,8 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    /* TODO: Add a type expression_position and only allow types there? */
     auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
     if(type_expr_res.is_err())
     {
       return type_expr_res.expect_err();
@@ -4186,9 +4208,8 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    /* TODO: Add a type expression_position and only allow types there? */
     auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
     if(type_expr_res.is_err())
     {
       return type_expr_res.expect_err();

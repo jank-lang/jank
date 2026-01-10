@@ -12,7 +12,8 @@ namespace jank::analyze
   {
     value,
     statement,
-    tail
+    tail,
+    type
   };
 
   constexpr char const *expression_position_str(expression_position const pos)
@@ -25,6 +26,8 @@ namespace jank::analyze
         return "statement";
       case expression_position::tail:
         return "tail";
+      case expression_position::type:
+        return "type";
     }
     return "unknown";
   }
