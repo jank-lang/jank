@@ -50,6 +50,7 @@
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
 #include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_unsafe_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
 #include <jank/analyze/expr/cpp_member_call.hpp>
@@ -1187,27 +1188,28 @@ namespace jank::analyze
     using runtime::obj::symbol;
     for(auto const &p :
         std::initializer_list<std::pair<runtime::obj::symbol_ref, special_function_type>>{
-          {        make_box<symbol>("def"),        &processor::analyze_def },
-          {        make_box<symbol>("fn*"),         &processor::analyze_fn },
-          {      make_box<symbol>("recur"),      &processor::analyze_recur },
-          {         make_box<symbol>("do"),         &processor::analyze_do },
-          {       make_box<symbol>("let*"),        &processor::analyze_let },
-          {     make_box<symbol>("letfn*"),      &processor::analyze_letfn },
-          {      make_box<symbol>("loop*"),       &processor::analyze_loop },
-          {         make_box<symbol>("if"),         &processor::analyze_if },
-          {      make_box<symbol>("quote"),      &processor::analyze_quote },
-          {        make_box<symbol>("var"),   &processor::analyze_var_call },
-          {      make_box<symbol>("throw"),      &processor::analyze_throw },
-          {        make_box<symbol>("try"),        &processor::analyze_try },
-          {      make_box<symbol>("case*"),       &processor::analyze_case },
-          {    make_box<symbol>("cpp/raw"),    &processor::analyze_cpp_raw },
-          {   make_box<symbol>("cpp/type"),   &processor::analyze_cpp_type },
-          {  make_box<symbol>("cpp/value"),  &processor::analyze_cpp_value },
-          {   make_box<symbol>("cpp/cast"),   &processor::analyze_cpp_cast },
-          {    make_box<symbol>("cpp/box"),    &processor::analyze_cpp_box },
-          {  make_box<symbol>("cpp/unbox"),  &processor::analyze_cpp_unbox },
-          {    make_box<symbol>("cpp/new"),    &processor::analyze_cpp_new },
-          { make_box<symbol>("cpp/delete"), &processor::analyze_cpp_delete },
+          {             make_box<symbol>("def"),             &processor::analyze_def },
+          {             make_box<symbol>("fn*"),              &processor::analyze_fn },
+          {           make_box<symbol>("recur"),           &processor::analyze_recur },
+          {              make_box<symbol>("do"),              &processor::analyze_do },
+          {            make_box<symbol>("let*"),             &processor::analyze_let },
+          {          make_box<symbol>("letfn*"),           &processor::analyze_letfn },
+          {           make_box<symbol>("loop*"),            &processor::analyze_loop },
+          {              make_box<symbol>("if"),              &processor::analyze_if },
+          {           make_box<symbol>("quote"),           &processor::analyze_quote },
+          {             make_box<symbol>("var"),        &processor::analyze_var_call },
+          {           make_box<symbol>("throw"),           &processor::analyze_throw },
+          {             make_box<symbol>("try"),             &processor::analyze_try },
+          {           make_box<symbol>("case*"),            &processor::analyze_case },
+          {         make_box<symbol>("cpp/raw"),         &processor::analyze_cpp_raw },
+          {        make_box<symbol>("cpp/type"),        &processor::analyze_cpp_type },
+          {       make_box<symbol>("cpp/value"),       &processor::analyze_cpp_value },
+          {        make_box<symbol>("cpp/cast"),        &processor::analyze_cpp_cast },
+          { make_box<symbol>("cpp/unsafe-cast"), &processor::analyze_cpp_unsafe_cast },
+          {         make_box<symbol>("cpp/box"),         &processor::analyze_cpp_box },
+          {       make_box<symbol>("cpp/unbox"),       &processor::analyze_cpp_unbox },
+          {         make_box<symbol>("cpp/new"),         &processor::analyze_cpp_new },
+          {      make_box<symbol>("cpp/delete"),      &processor::analyze_cpp_delete },
     })
     {
       specials.insert(p);
@@ -3946,9 +3948,13 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_cast("A call to 'cpp/cast' must only have a C++ type and a "
                                              "value as arguments and nothing else.",
-                                             object_source(l->next()->next()->next()->first()),
+                                             object_source(l->next()->first()),
+                                             error::note{
+                                               "This form and all after it are unexpected.",
+                                               object_source(l->next()->next()->next()->first()),
+                                             },
                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 3));
+        ->add_usage(read::parse::reparse_nth(l, 0));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
@@ -4025,6 +4031,114 @@ namespace jank::analyze
                "and any specializations of 'jank::runtime::convert'.",
                Cpp::GetTypeAsString(value_type),
                Cpp::GetTypeAsString(type_expr->type)),
+             object_source(l->next()->next()->first()),
+             latest_expansion(macro_expansions))
+      ->add_usage(read::parse::reparse_nth(l, 2));
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_unsafe_cast(obj::persistent_list_ref const l,
+                                     local_frame_ptr const current_frame,
+                                     expression_position const position,
+                                     jtl::option<expr::function_context_ref> const &fn_ctx,
+                                     bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count < 2)
+    {
+      return error::analyze_invalid_cpp_unsafe_cast(
+               "This call to 'cpp/unsafe-cast' is missing its C++ type and value arguments.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(count < 3)
+    {
+      return error::analyze_invalid_cpp_unsafe_cast(
+               "This call to 'cpp/unsafe-cast' is missing its value argument.",
+               object_source(l->first()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    else if(3 < count)
+    {
+      return error::analyze_invalid_cpp_unsafe_cast(
+               "A call to 'cpp/unsafe-cast' must only have a C++ type and a "
+               "value as arguments and nothing else.",
+               object_source(l->next()->first()),
+               /* TODO: Reparse for the note. */
+               error::note{
+                 "This form and all after it are unexpected.",
+                 object_source(l->next()->next()->next()->first()),
+               },
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+
+    auto const type_obj(l->data.rest().first().unwrap());
+    /* TODO: Add a type expression_position and only allow types there? */
+    auto const type_expr_res(
+      analyze(type_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(type_expr_res.is_err())
+    {
+      return type_expr_res.expect_err();
+    }
+
+    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
+    {
+      return error::analyze_invalid_cpp_unsafe_cast(
+               "The first argument to 'cpp/unafe-cast' must be a C++ type.",
+               object_source(type_obj),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const value_obj(l->data.rest().rest().first().unwrap());
+    auto const value_expr_res(
+      analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
+    if(value_expr_res.is_err())
+    {
+      return value_expr_res.expect_err();
+    }
+
+    auto const value_expr{ value_expr_res.expect_ok() };
+    auto const value_type{ cpp_util::expression_type(value_expr) };
+    if(Cpp::GetCanonicalType(type_expr->type) == Cpp::GetCanonicalType(value_type))
+    {
+      return value_expr;
+    }
+    /* TODO: Share this with cpp/cast more cleanly? */
+    else if(Cpp::IsConstructible(type_expr->type, value_type))
+    {
+      auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
+        position,
+        current_frame,
+        needs_box,
+        type_expr->sym,
+        type_expr->type,
+        Cpp::GetScopeFromType(type_expr->type),
+        expr::cpp_value::value_kind::constructor) };
+
+      /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
+       * want to remove the cpp/cast and the type and then add back in a new head. Since
+       * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
+      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
+      return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
+    }
+    else if(Cpp::IsCStyleConvertible(value_type, type_expr->type))
+    {
+      return jtl::make_ref<expr::cpp_unsafe_cast>(position,
+                                                  current_frame,
+                                                  needs_box,
+                                                  type_expr->type,
+                                                  value_expr);
+    }
+
+    return error::analyze_invalid_cpp_unsafe_cast(
+             util::format("Invalid unsafe-cast from '{}' to '{}'.",
+                          Cpp::GetTypeAsString(value_type),
+                          Cpp::GetTypeAsString(type_expr->type)),
              object_source(l->next()->next()->first()),
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 2));

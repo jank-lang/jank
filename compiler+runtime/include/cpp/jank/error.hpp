@@ -97,6 +97,7 @@ namespace jank::error
     analyze_invalid_cpp_type_position,
     analyze_invalid_cpp_value,
     analyze_invalid_cpp_cast,
+    analyze_invalid_cpp_unsafe_cast,
     analyze_invalid_cpp_box,
     analyze_invalid_cpp_unbox,
     analyze_invalid_cpp_new,
@@ -291,6 +292,8 @@ namespace jank::error
         return "analyze/invalid-cpp-value";
       case kind::analyze_invalid_cpp_cast:
         return "analyze/invalid-cpp-cast";
+      case kind::analyze_invalid_cpp_unsafe_cast:
+        return "analyze/invalid-cpp-unsafe-cast";
       case kind::analyze_invalid_cpp_box:
         return "analyze/invalid-cpp-box";
       case kind::analyze_invalid_cpp_unbox:

@@ -1,0 +1,4 @@
+(let* [i #cpp 0
+       a (cpp/unsafe-cast cpp/size_t (cpp/& i))]
+  (if (< 0 a)
+    :success))

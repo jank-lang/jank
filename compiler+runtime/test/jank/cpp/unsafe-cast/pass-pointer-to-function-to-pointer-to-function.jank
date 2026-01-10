@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::unsafe_cast::pass_pointer_to_function_to_pointer_to_function
+          {
+            using fn_ptr = void (*)();
+            using foo_ptr = int (*)(int);
+
+            int foo(int i)
+            { return i; }
+          }")
+(let* [f cpp/jank.cpp.unsafe_cast.pass_pointer_to_function_to_pointer_to_function.foo
+       p (cpp/unsafe-cast cpp/jank.cpp.unsafe_cast.pass_pointer_to_function_to_pointer_to_function.fn_ptr f)
+       f* (cpp/unsafe-cast cpp/jank.cpp.unsafe_cast.pass_pointer_to_function_to_pointer_to_function.foo_ptr p)]
+  (if (= 42 (f* #cpp 42))
+    :success))

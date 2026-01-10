@@ -176,6 +176,8 @@ namespace jank::error
         return "Invalid C++ value.";
       case kind::analyze_invalid_cpp_cast:
         return "Invalid C++ cast.";
+      case kind::analyze_invalid_cpp_unsafe_cast:
+        return "Invalid C++ unsafe-cast.";
       case kind::analyze_invalid_cpp_box:
         return "Invalid C++ box.";
       case kind::analyze_invalid_cpp_unbox:
