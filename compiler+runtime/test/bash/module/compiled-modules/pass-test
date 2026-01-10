@@ -1,0 +1,89 @@
+#!/usr/bin/env bb
+
+^{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns jank.test.module.compiled-module
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.string :as string]
+            [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def module-a "jank-test.a")
+(def module-a-path "./src/jank_test/a.cljc")
+
+(def compiled-dir (fs/create-temp-dir))
+
+(def compiled-a-path
+  (fs/path compiled-dir "jank-test/a.o"))
+
+(defn jank [command module-name & {:keys [extra-module-path
+                                          out]}]
+  (proc/sh (concat
+            ["jank" "--module-path"
+             (str "src" (when-not (empty? extra-module-path)
+                          (str ":" extra-module-path)))]
+            [command module-name]
+            (when out ["-o" out]))))
+
+(defn create-jar-with-a []
+  (let [jar-name "test.jar"
+        jar-path (fs/path compiled-dir jar-name)]
+    (proc/sh {:dir compiled-dir} "jar" "cf" jar-name compiled-a-path)
+    jar-path))
+
+(defmacro with-hidden-file
+  "Temporarily renames `path` to `path.bak`, evaluates body, 
+   and restores the file in a `finally` block."
+  [path & body]
+  `(let [path# ~path
+         bak# (str path# ".bak")]
+     (fs/move path# bak#)
+     (try
+       ~@body
+       (finally
+         (fs/move bak# path#)))))
+
+(use-fixtures
+  :each
+  (fn [f]
+    (jank "compile-module" module-a :out compiled-a-path)
+    (f)
+    (fs/delete-if-exists compiled-a-path)))
+
+(deftest compiled-module-gets-loaded
+  (testing "loads a compiled module instead of the source"
+    (is (false? (-> (jank "run-main" module-a :extra-module-path compiled-dir)
+                    :out
+                    (string/includes? ":only-during-read")))))
+
+  (testing "Source fresher than the compiled module, loads from source"
+    (proc/sh ["touch" module-a-path])
+    (is (true? (-> (jank "run-main" module-a
+                         :extra-module-path compiled-dir)
+                   :out
+                   (string/includes? ":only-during-read"))))))
+
+(deftest compiled-module-loadability
+  (testing "Doesn't load a module from archive"
+    (fs/with-temp-dir [tmp-dir]
+      (let [jar (-> (create-jar-with-a)
+                    (fs/move tmp-dir))]
+        (is (true? (-> (jank "run-main" module-a :extra-module-path jar)
+                       :out
+                       (string/includes? ":only-during-read")))))))
+
+  (testing "Doesn't load module if source not found"
+    (with-hidden-file module-a-path
+      (is (true? (-> (jank "run-main" module-a :extra-module-path compiled-dir)
+                     :out
+                     (string/includes? "No sources for registered module")))))))
+
+(defn -main []
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
