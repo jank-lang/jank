@@ -20,6 +20,9 @@ TODO:
   AOT compiling programs (and distributing them)
   Printing codegen
   Known issues
+  Reference
+   Special forms
+   Error pages
 -->
 
 * [Reaching into C++](cpp-interop/index.md)

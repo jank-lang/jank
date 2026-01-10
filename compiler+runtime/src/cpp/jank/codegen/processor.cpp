@@ -15,6 +15,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/detail/to_runtime_data.hpp>
+#include <jank/error/codegen.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
  * single fn, which generates a single C++ struct. Top-level expressions and
@@ -630,6 +631,8 @@ namespace jank::codegen
                           val.str(true));
         }
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -645,6 +648,8 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {}->deref();", var);
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -660,6 +665,8 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", var);
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1093,6 +1100,8 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1297,6 +1306,8 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", ret);
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1332,6 +1343,8 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", prc.expression_str());
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1669,6 +1682,8 @@ namespace jank::codegen
           util::format_to(body_buffer, "return {};", last.unwrap().str(expr->needs_box));
         }
         return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1946,6 +1961,27 @@ namespace jank::codegen
         Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(expr->conversion_type)))),
       (expr->policy == conversion_policy::into_object ? "into_object" : "from_object"),
       value_tmp.unwrap().str(true));
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", ret_tmp);
+      return none;
+    }
+
+    return ret_tmp;
+  }
+
+  jtl::option<handle> processor::gen(analyze::expr::cpp_unsafe_cast_ref const expr,
+                                     analyze::expr::function_arity const &arity)
+  {
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_unsafe_cast")));
+    auto const value_tmp{ gen(expr->value_expr, arity) };
+
+    util::format_to(body_buffer,
+                    "auto const {}{ ({})({}) };",
+                    ret_tmp,
+                    cpp_util::get_qualified_type_name(expr->type),
+                    value_tmp.unwrap().str(true));
 
     if(expr->position == expression_position::tail)
     {

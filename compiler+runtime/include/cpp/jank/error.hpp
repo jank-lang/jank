@@ -94,8 +94,10 @@ namespace jank::error
     analyze_unresolved_cpp_symbol,
     analyze_invalid_cpp_raw,
     analyze_invalid_cpp_type,
+    analyze_invalid_cpp_type_position,
     analyze_invalid_cpp_value,
     analyze_invalid_cpp_cast,
+    analyze_invalid_cpp_unsafe_cast,
     analyze_invalid_cpp_box,
     analyze_invalid_cpp_unbox,
     analyze_invalid_cpp_new,
@@ -284,10 +286,14 @@ namespace jank::error
         return "analyze/invalid-cpp-raw";
       case kind::analyze_invalid_cpp_type:
         return "analyze/invalid-cpp-type";
+      case kind::analyze_invalid_cpp_type_position:
+        return "analyze/invalid-cpp-type-position";
       case kind::analyze_invalid_cpp_value:
         return "analyze/invalid-cpp-value";
       case kind::analyze_invalid_cpp_cast:
         return "analyze/invalid-cpp-cast";
+      case kind::analyze_invalid_cpp_unsafe_cast:
+        return "analyze/invalid-cpp-unsafe-cast";
       case kind::analyze_invalid_cpp_box:
         return "analyze/invalid-cpp-box";
       case kind::analyze_invalid_cpp_unbox:
@@ -388,6 +394,7 @@ namespace jank::error
     base(base &&) noexcept = default;
     base(kind k, read::source const &source);
     base(kind k, read::source const &source, native_vector<note> const &notes);
+    base(kind k, read::source const &source, runtime::object_ref const expansion);
     base(kind k, jtl::immutable_string const &message, read::source const &source);
     base(kind k,
          jtl::immutable_string const &message,
