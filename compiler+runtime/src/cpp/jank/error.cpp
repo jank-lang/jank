@@ -266,7 +266,9 @@ namespace jank::error
   }
 
   base::base(enum kind const k, read::source const &source, runtime::object_ref const expansion)
-    : kind{ k }
+    : kind{
+      k
+  }
     , message{ kind_to_message(k) }
     , source{ source }
     , notes{ { default_note_message, source } }
