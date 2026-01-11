@@ -403,6 +403,12 @@ namespace jank::analyze::cpp_util
     return Cpp::IsImplicitlyConvertible(from, to);
   }
 
+  bool is_pointer_to_void_conversion(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    return (Cpp::IsPointerType(from) && Cpp::IsPointerType(to))
+      && (Cpp::IsVoid(Cpp::GetPointeeType(from)) || Cpp::IsVoid(Cpp::GetPointeeType(to)));
+  }
+
   bool is_untyped_object(jtl::ptr<void> const type)
   {
     auto const can_type{ Cpp::GetCanonicalType(

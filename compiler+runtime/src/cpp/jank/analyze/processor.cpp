@@ -566,7 +566,8 @@ namespace jank::analyze
           latest_expansion(macro_expansions));
       }
       if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
-         && !cpp_util::is_trait_convertible(val->type))
+         && !cpp_util::is_trait_convertible(val->type)
+         && !cpp_util::is_pointer_to_void_conversion(val->type, arg_types[0].m_Type))
       {
         return error::analyze_invalid_cpp_constructor_call(
           util::format("'{}' cannot be constructed from a '{}'.",
@@ -3507,6 +3508,12 @@ namespace jank::analyze
       ++ptr_count;
     }
 
+    if(name == "void")
+    {
+      auto const type{ cpp_util::apply_pointers(Cpp::GetVoidType(), ptr_count) };
+      return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
+    }
+
     auto const global_type{ cpp_util::resolve_type(name, ptr_count) };
 
     /* Find a primitive type first. Then we know it's a cpp_type expression. */
@@ -3989,7 +3996,8 @@ namespace jank::analyze
       return value_expr;
     }
     else if(Cpp::IsConstructible(type_expr->type, value_type)
-            || Cpp::IsImplicitlyConvertible(value_type, type_expr->type))
+            || Cpp::IsImplicitlyConvertible(value_type, type_expr->type)
+            || cpp_util::is_pointer_to_void_conversion(value_type, type_expr->type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
