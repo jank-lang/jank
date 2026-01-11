@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -135,6 +136,10 @@ namespace jank::read::parse
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
     : token_current{ b }
     , token_end{ e }
+    , suppress_read_var{ make_box<var>(__rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
+                                       make_box<obj::symbol>("*suppress-read*"),
+                                       jank_false)
+                           ->set_dynamic(true) }
     , splicing_allowed_var{ make_box<var>(
                               __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
                               make_box<obj::symbol>("*splicing-allowed?*"),
@@ -283,18 +288,26 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
+    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        auto const error{ it.latest.unwrap().expect_err() };
+
+        if(!is_reader_suppressed)
+        {
+          return err(error);
+        }
+
+        ret.push_back(
+          make_box<obj::opaque_box>(&error.data,
+                                    jtl::immutable_string{ "jank::error::base const *" }));
+        continue;
       }
       ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
@@ -846,24 +859,10 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_uuid()
+  processor::object_result processor::parse_tagged_uuid(object_ref const &form,
+                                                        lex::token const &start_token,
+                                                        lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#uuid' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
     if(str_end.kind != lex::token_kind::string)
     {
       return error::parse_invalid_reader_tag_value(
@@ -871,7 +870,7 @@ namespace jank::read::parse
         { start_token.start, latest_token.end });
     }
 
-    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str(expect_object<obj::persistent_string>(form));
 
     try
     {
@@ -885,25 +884,10 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_inst()
+  processor::object_result processor::parse_tagged_inst(object_ref const &form,
+                                                        lex::token const &start_token,
+                                                        lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#inst' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
-
     if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
     {
       return error::parse_invalid_reader_tag_value(
@@ -911,7 +895,7 @@ namespace jank::read::parse
         { start_token.start, latest_token.end });
     }
 
-    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str(expect_object<obj::persistent_string>(form));
 
     try
     {
@@ -925,24 +909,10 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_cpp()
+  processor::object_result processor::parse_tagged_cpp(object_ref const &form,
+                                                       lex::token const &start_token,
+                                                       lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#cpp' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
     jtl::immutable_string str{};
 
 #pragma clang diagnostic push
@@ -952,26 +922,25 @@ namespace jank::read::parse
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
         {
-          auto const string{ expect_object<obj::persistent_string>(
-            str_result.expect_ok().unwrap().ptr) };
+          auto const string{ expect_object<obj::persistent_string>(form) };
           str = util::format("\"{}\"", util::escape(string->data));
           break;
         }
       case lex::token_kind::boolean:
         {
-          auto const boolean{ expect_object<obj::boolean>(str_result.expect_ok().unwrap().ptr) };
+          auto const boolean{ expect_object<obj::boolean>(form) };
           str = util::format("{}", boolean->data);
           break;
         }
       case lex::token_kind::integer:
         {
-          auto const integer{ expect_object<obj::integer>(str_result.expect_ok().unwrap().ptr) };
+          auto const integer{ expect_object<obj::integer>(form) };
           str = util::format("static_cast<jank::i64>({})", integer->data);
           break;
         }
       case lex::token_kind::real:
         {
-          auto const real{ expect_object<obj::real>(str_result.expect_ok().unwrap().ptr) };
+          auto const real{ expect_object<obj::real>(form) };
           str = util::format("static_cast<jank::f64>({})", real->data);
           break;
         }
@@ -995,24 +964,102 @@ namespace jank::read::parse
     auto const sym_result(next());
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
+    auto const form_token(token_current.latest.unwrap().expect_ok());
+    auto form_result(next());
+
+    if(form_result.is_err())
+    {
+      return form_result;
+    }
+    else if(form_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        util::format("There must be a form after the tagged literal '#{}'.", sym->name),
+        { form_token.start, latest_token.end });
+    }
+
+    auto const form_end(form_result.expect_ok().unwrap().end);
+    auto const form(form_result.expect_ok().unwrap().ptr);
+    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
+    auto const data_reader{ visit_map_like(
+      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
+      data_readers,
+      sym) };
+
+    if(data_reader.is_some())
+    {
+      auto const data{ visit_object(
+        [](auto const typed_o, object_ref const form) -> object_ref {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
+          {
+            return typed_o->call(form);
+          }
+          else
+          {
+            throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
+          }
+        },
+        data_reader,
+        form) };
+
+      return object_source_info{ data, form_token, form_end };
+    }
+
+    auto const default_data_reader_fn{
+      __rt_ctx->find_var("clojure.core", "*default-data-reader-fn*")->deref()
+    };
+
+    if(default_data_reader_fn.is_some())
+    {
+      auto const data{ visit_object(
+        [](auto const typed_o, obj::symbol_ref sym, object_ref form) -> jtl::option<object_ref> {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
+          {
+            return typed_o->call(sym, form);
+          }
+          else
+          {
+            return none;
+          }
+        },
+        default_data_reader_fn,
+        sym,
+        form) };
+
+      if(data.is_some())
+      {
+        return object_source_info{ data.unwrap(), form_token, form_end };
+      }
+      else
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "The *default-data-reader-fn* var must be a function which will be called with the tag "
+          "and the form just after the tag.",
+          { start_token.start, latest_token.end });
+      }
+    }
 
     if(sym->name == "uuid")
     {
-      return parse_tagged_uuid();
+      return parse_tagged_uuid(form, start_token, form_end);
     }
     else if(sym->name == "inst")
     {
-      return parse_tagged_inst();
+      return parse_tagged_inst(form, start_token, form_end);
     }
     else if(sym->name == "cpp")
     {
-      return parse_tagged_cpp();
+      return parse_tagged_cpp(form, start_token, form_end);
     }
     else
     {
       return error::parse_invalid_reader_symbolic_value(
-        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently "
-        "supported.",
+        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
+        "currently supported.",
         { start_token.start, latest_token.end });
     }
   }
@@ -1041,6 +1088,8 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    context::binding_scope const suppress_read_scope{ obj::persistent_hash_map::create_unique(
+      std::make_pair(suppress_read_var, jank_true)) };
     auto list_result(next());
     if(list_result.is_err())
     {
@@ -1068,7 +1117,6 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-
     auto const r{ make_sequence_range(list) };
     for(auto it(r.begin()); it != r.end(); ++it, ++it)
     {
@@ -1113,7 +1161,18 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ *(++it), start_token, list_end };
+          auto const form{ *(++it) };
+
+          if(form->type == object_type::opaque_box)
+          {
+            auto const typed_box{ try_object<obj::opaque_box>(form) };
+
+            return static_cast<jank::error::base const *>(typed_box->data.data);
+          }
+          else
+          {
+            return object_source_info{ form, start_token, list_end };
+          }
         }
       }
     }
