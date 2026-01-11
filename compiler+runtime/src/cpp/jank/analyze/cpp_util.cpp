@@ -403,6 +403,12 @@ namespace jank::analyze::cpp_util
     return Cpp::IsImplicitlyConvertible(from, to);
   }
 
+  bool is_pointer_to_void_conversion(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    return (Cpp::IsPointerType(from) && Cpp::IsPointerType(to))
+      && (Cpp::IsVoid(Cpp::GetPointeeType(from)) || Cpp::IsVoid(Cpp::GetPointeeType(to)));
+  }
+
   bool is_untyped_object(jtl::ptr<void> const type)
   {
     auto const can_type{ Cpp::GetCanonicalType(
@@ -871,8 +877,14 @@ namespace jank::analyze::cpp_util
     if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
        && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
     {
-      auto const res{ determine_implicit_conversion(Cpp::GetPointeeType(expr_type),
-                                                    Cpp::GetPointeeType(expected_type)) };
+      auto const expr_pointee_type{ Cpp::GetPointeeType(expr_type) };
+      auto const expected_pointee_type{ Cpp::GetPointeeType(expected_type) };
+      if(Cpp::IsVoid(expr_pointee_type) || Cpp::IsVoid(expected_pointee_type))
+      {
+        return implicit_conversion_action::none;
+      }
+
+      auto const res{ determine_implicit_conversion(expr_pointee_type, expected_pointee_type) };
       switch(res)
       {
         case implicit_conversion_action::none:
