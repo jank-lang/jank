@@ -395,20 +395,8 @@ namespace jank::runtime
 
             if constexpr(left_is_int_like && right_is_int_like)
             {
-              if constexpr(std::is_same_v<LeftType, i64>
-                           && std::is_same_v<RightType, native_big_integer>)
-              {
-                return obj::ratio::create(native_big_integer(typed_l_data), typed_r->data);
-              }
-              else if constexpr(std::is_same_v<LeftType, native_big_integer>
-                                && std::is_same_v<RightType, i64>)
-              {
-                return obj::ratio::create(typed_l_data, native_big_integer(typed_r->data));
-              }
-              else
-              {
-                return obj::ratio::create(typed_l_data, typed_r->data);
-              }
+              return obj::ratio::create(native_big_integer(typed_l_data),
+                                        native_big_integer(typed_r->data));
             }
 
             return make_box(typed_l_data / typed_r->data).erase();
