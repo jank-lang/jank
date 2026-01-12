@@ -296,13 +296,11 @@ namespace jank::read::parse
           processor p{ lp.begin(), lp.end() };
 
           usize offset{};
-          for(jtl::immutable_string const &ch :
-              { "\\¡", "\\ষ", "\\𐅦" })
+          for(jtl::immutable_string const &ch : { "\\¡", "\\ষ", "\\𐅦" })
           {
             auto const r(p.next());
-            CHECK(equal(
-              r.expect_ok().unwrap().ptr,
-              make_box<obj::character>(get_char_from_literal(ch.substr(1).unwrap()))));
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::character>(get_char_from_literal(ch.substr(1).unwrap()))));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
