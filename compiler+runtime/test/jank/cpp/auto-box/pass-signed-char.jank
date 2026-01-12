@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::auto_box::pass_signed_char
+          {
+            char* foo()
+            { return (char*)\"meow\"; }
+          }")
+(let* [s (cpp/jank.cpp.auto_box.pass_signed_char.foo)]
+  (if (= "meow" s)
+    :success))

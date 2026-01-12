@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::let::pass_void
+          {
+            void foo()
+            { }
+          }")
+
+(if (nil? ((fn* [& args]
+             (let* []
+               (cpp/jank.cpp.let.pass_void.foo)))))
+  :success)

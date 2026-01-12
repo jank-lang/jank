@@ -28,6 +28,7 @@ namespace jank::analyze::cpp_util
   native_vector<jtl::ptr<void>> find_adl_scopes(native_vector<jtl::ptr<void>> const &starters);
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> type);
   void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
@@ -52,6 +53,7 @@ namespace jank::analyze::cpp_util
   bool is_non_static_member_function(jtl::ptr<void> scope);
   bool is_nullptr(jtl::ptr<void> type);
   bool is_implicitly_convertible(jtl::ptr<void> from, jtl::ptr<void> to);
+  bool is_pointer_to_void_conversion(jtl::ptr<void> from, jtl::ptr<void> to);
 
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();

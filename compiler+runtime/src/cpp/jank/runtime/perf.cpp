@@ -14,7 +14,7 @@ namespace jank::runtime::perf
     auto const label_str(to_string(label));
     visit_object(
       [](auto const typed_f, jtl::immutable_string const &label) {
-        using T = typename decltype(typed_f)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_f)>::value_type;
 
         if constexpr(std::is_base_of_v<behavior::callable, T>)
         {
@@ -45,6 +45,6 @@ namespace jank::runtime::perf
       },
       f,
       label_str);
-    return jank_nil;
+    return jank_nil();
   }
 }

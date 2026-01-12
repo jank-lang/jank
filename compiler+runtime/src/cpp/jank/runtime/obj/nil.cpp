@@ -50,12 +50,12 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref nil::get_entry(object_ref)
+  object_ref nil::get_entry(object_ref const)
   {
     return &base;
   }
 
-  bool nil::contains(object_ref) const
+  bool nil::contains(object_ref const) const
   {
     return false;
   }
@@ -108,18 +108,9 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
-  static obj::nil_ref nil_const()
+  obj::nil_ref jank_nil()
   {
-    static obj::nil n;
+    static obj::nil n{};
     return &n;
-  }
-
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::nil_ref jank_nil{ nil_const() };
-
-  namespace detail
-  {
-    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-    obj::nil *jank_nil_ptr{ nil_const().data };
   }
 }

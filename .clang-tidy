@@ -47,6 +47,8 @@ misc-definitions-in-headers,\
 -bugprone-macro-parentheses,\
 -bugprone-throwing-static-initialization,\
 -readability-redundant-member-init,\
+-readability-redundant-typename,\
+-readability-redundant-casting,\
 -readability-implicit-bool-conversion,\
 -readability-magic-numbers,\
 -readability-identifier-length,\

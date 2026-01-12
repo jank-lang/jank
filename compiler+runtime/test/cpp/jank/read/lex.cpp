@@ -153,7 +153,7 @@ namespace jank::read::lex
         runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()),
         {         offset, 1,         offset + 1 },
         { offset + width, 1, offset + width + 1 },
-        runtime::jank_nil
+        runtime::jank_nil()
     });
   }
 

@@ -69,7 +69,7 @@ namespace jank::util
     fun(e);                                \
     then;                                  \
   }                                        \
-  catch(jank::error_ref const &e)          \
+  catch(jank::error_ref const e)           \
   {                                        \
     fun(e);                                \
     then;                                  \

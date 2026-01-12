@@ -1,0 +1,16 @@
+(cpp/raw "namespace jank::cpp::loop::pass_native_binding_custom_type
+          {
+            struct foo
+            {
+              foo operator +(int d)
+              { return { i + d }; }
+
+              int i{};
+            };
+          }")
+(let* [r (loop [it (cpp/jank.cpp.loop.pass_native_binding_custom_type.foo)]
+           (if (cpp/== #cpp 3 (cpp/.-i it))
+             (cpp/.-i it)
+             (recur (cpp/+ it #cpp 1))))]
+  (if (= 3 r)
+    :success))

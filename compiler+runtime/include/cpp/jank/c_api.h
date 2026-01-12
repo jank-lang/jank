@@ -49,6 +49,8 @@ extern "C"
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
 
+  jank_object_ref jank_ns_intern(jank_object_ref sym);
+  jank_object_ref jank_ns_intern_c(char const * const sym);
   void jank_ns_set_symbol_counter(char const * const ns, jank_u64 const count);
 
   jank_object_ref jank_var_intern(jank_object_ref ns, jank_object_ref name);

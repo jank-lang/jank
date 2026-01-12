@@ -169,7 +169,7 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_vector_ref persistent_vector::conj(object_ref head) const
+  persistent_vector_ref persistent_vector::conj(object_ref const head) const
   {
     auto vec(data.push_back(head));
     auto ret(make_box<persistent_vector>(meta, std::move(vec)));
@@ -196,7 +196,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get(object_ref const key) const
   {
-    return get(key, jank_nil);
+    return get(key, jank_nil());
   }
 
   object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
@@ -223,14 +223,14 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return jank_nil;
+        return jank_nil();
       }
       /* TODO: Map entry type? */
       return make_box<persistent_vector>(std::in_place, key, data[i]);
     }
     else
     {
-      return jank_nil;
+      return jank_nil();
     }
   }
 
@@ -281,7 +281,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      return jank_nil;
+      return jank_nil();
     }
 
     return data[data.size() - 1];

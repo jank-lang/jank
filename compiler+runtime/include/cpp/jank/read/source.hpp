@@ -9,7 +9,7 @@ namespace jank::read
 
   struct source_position
   {
-    static source_position const unknown;
+    static source_position unknown();
 
     bool operator==(source_position const &rhs) const;
     bool operator!=(source_position const &rhs) const;
@@ -23,7 +23,7 @@ namespace jank::read
 
   struct source
   {
-    static source const unknown;
+    static source unknown();
 
     source() = delete;
     source(source const &) = default;
@@ -38,7 +38,7 @@ namespace jank::read
            jtl::immutable_string const &module,
            source_position const &start,
            source_position const &end,
-           runtime::object_ref macro_expansion);
+           runtime::object_ref const macro_expansion);
 
     source &operator=(source const &rhs) = default;
     source &operator=(source &&rhs) = default;

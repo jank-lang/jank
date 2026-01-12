@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::loop::pass_native_binding_not_trait_convertible
+          {
+            std::vector<int> v{ 1, 2, 3, 4, 5 };
+          }")
+(let* [r (loop [it (cpp/.begin cpp/jank.cpp.loop.pass_native_binding_not_trait_convertible.v)]
+           (if (cpp/== #cpp 3 (cpp/* it))
+             (cpp/* (cpp/++ it))
+             (recur (cpp/++ it))))]
+  (if (= 4 r)
+    :success))

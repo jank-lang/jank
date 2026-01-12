@@ -37,7 +37,7 @@
     clojure.core-test.decimal-qmark
     ;clojure.core-test.denominator ; Failed a test. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.double
-    clojure.core-test.double-qmark
+    ;clojure.core-test.double-qmark
     ;clojure.core-test.drop ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     ;clojure.core-test.drop-last ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.drop-while ; Assertion failed! val.is_some(), In clojure.core-test.drop-while$fn_8-90, duplicate definition of symbol '_fn_55_1', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
@@ -75,7 +75,7 @@
     ;clojure.core-test.nth ; Uncaught exception: index out of bounds: -1, In clojure.core-test.nth$fn_2-64, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
     ;clojure.core-test.nthnext ; Uncaught exception: not a number: nil, In clojure.core-test.nthnext$fn_2-83, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
     ;clojure.core-test.nthrest ; Uncaught exception: not a number: nil, In clojure.core-test.nthrest$fn_2-85, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
-    clojure.core-test.num ; Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.num ; Disabling till we add portability support in the test suite: https://clojurians.slack.com/archives/C0A2CQQQVPB/p1766349976641339.
     clojure.core-test.number-qmark ; Expecting whitespace after the last token. due to M.
     clojure.core-test.number-range
     ;clojure.core-test.numerator ; Failed a test. Expecting whitespace after the last token. due to M.
@@ -83,7 +83,7 @@
     ;clojure.core-test.or ; unloadable, In clojure.core-test.or$fn_2-159, duplicate definition of symbol '_fn_2_0', unloadable
     ;clojure.core-test.partial ;unloadable
     ;clojure.core-test.plus ; error: Unable to resolve symbol 'Exception'
-    ;clojure.core-test.plus-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    ; clojure.core-test.plus-squote
     clojure.core-test.pos-int-qmark ; Expecting whitespace after the last token. due to M.
     ;clojure.core-test.pos-qmark ; Uncaught exception: not a number: nil. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.pr-str ; Uncaught exception: invalid call to clojure.core/pr-str with 2 args provided, In clojure.core-test.pr-str$fn_2-49, duplicate definition of symbol '_fn_2_0', unloadable
@@ -96,7 +96,7 @@
     ;clojure.core-test.quot ; Failed tests. Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rand ; unloadable, In clojure.core-test.rand$fn_2-71, duplicate definition of symbol '_jank_global_init_70', unloadable
     ;clojure.core-test.rand-int ; unloadable, In clojure.core-test.rand-int$fn_2-56, duplicate definition of symbol '_fn_2_0', unloadable
-    clojure.core-test.ratio-qmark ; Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.ratio-qmark
     ;clojure.core-test.rational-qmark ; (= true (rational? 0N))
     ;clojure.core-test.rationalize ; TODO: port rationalize, Expecting whitespace after the last token. due to M.
     ;clojure.core-test.rem ; Fails the test cases.
@@ -112,7 +112,7 @@
     ;clojure.core-test.slash ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
     ;clojure.core-test.some-qmark ;Read error (437 - 437): unsupported reader macro
     ;clojure.core-test.star ; error: Unable to resolve symbol 'Exception'.
-    ;clojure.core-test.star-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    ; clojure.core-test.star-squote
     ;clojure.core-test.str ; TODO: port double, Expecting whitespace after the last token. due to M.
     clojure.core-test.string-qmark
     ;clojure.core-test.subs ; Uncaught exception: end index 1 is less than start 2, In clojure.core-test.subs$fn_2-70, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244

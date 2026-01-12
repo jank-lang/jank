@@ -4,7 +4,6 @@
 
 namespace jank::runtime
 {
-
   native_big_decimal operator+(native_big_decimal const &l, native_big_integer const &r)
   {
     return l + native_big_decimal(r.str());

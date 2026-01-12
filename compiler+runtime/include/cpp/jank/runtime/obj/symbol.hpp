@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using symbol_ref = oref<struct symbol>;
 
-  struct symbol : gc
+  struct symbol
   {
     static constexpr object_type obj_type{ object_type::symbol };
     static constexpr bool pointer_free{ false };
@@ -21,8 +21,8 @@ namespace jank::runtime::obj
     symbol(jtl::immutable_string &&d);
     symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n);
     symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n);
-    symbol(object_ref meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
-    symbol(object_ref ns, object_ref n);
+    symbol(object_ref const meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
+    symbol(object_ref const ns, object_ref const n);
 
     symbol &operator=(symbol const &) = default;
     symbol &operator=(symbol &&) = default;
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
     i64 compare(symbol const &) const;
 
     /* behavior::metadatable */
-    symbol_ref with_meta(object_ref m) const;
+    symbol_ref with_meta(object_ref const m) const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -78,13 +78,13 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::symbol_ref>
   {
-    size_t operator()(jank::runtime::obj::symbol_ref const &o) const noexcept;
+    size_t operator()(jank::runtime::obj::symbol_ref const o) const noexcept;
   };
 
   template <>
   struct equal_to<jank::runtime::obj::symbol_ref>
   {
-    bool operator()(jank::runtime::obj::symbol_ref const &lhs,
-                    jank::runtime::obj::symbol_ref const &rhs) const noexcept;
+    bool operator()(jank::runtime::obj::symbol_ref const lhs,
+                    jank::runtime::obj::symbol_ref const rhs) const noexcept;
   };
 }

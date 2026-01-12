@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 {
   using big_integer_ref = oref<struct big_integer>;
 
-  struct big_integer : gc
+  struct big_integer
   {
     static constexpr object_type obj_type{ object_type::big_integer };
     static constexpr bool pointer_free{ true };

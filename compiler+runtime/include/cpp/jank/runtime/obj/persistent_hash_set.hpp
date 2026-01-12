@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_hash_set_ref = oref<struct persistent_hash_set>;
   using persistent_hash_set_sequence_ref = oref<struct persistent_hash_set_sequence>;
 
-  struct persistent_hash_set : gc
+  struct persistent_hash_set
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_set };
     static constexpr bool pointer_free{ false };
@@ -49,7 +49,7 @@ namespace jank::runtime::obj
     uhash to_hash() const;
 
     /* behavior::metadatable */
-    persistent_hash_set_ref with_meta(object_ref m) const;
+    persistent_hash_set_ref with_meta(object_ref const m) const;
 
     /* behavior::seqable */
     obj::persistent_hash_set_sequence_ref seq() const;
@@ -59,16 +59,16 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable */
-    persistent_hash_set_ref conj(object_ref head) const;
+    persistent_hash_set_ref conj(object_ref const head) const;
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
+    object_ref call(object_ref const) const;
 
     /* behavior::transientable */
     obj::transient_hash_set_ref to_transient() const;
 
-    bool contains(object_ref o) const;
-    persistent_hash_set_ref disj(object_ref o) const;
+    bool contains(object_ref const o) const;
+    persistent_hash_set_ref disj(object_ref const o) const;
 
     object base{ obj_type };
     value_type data;

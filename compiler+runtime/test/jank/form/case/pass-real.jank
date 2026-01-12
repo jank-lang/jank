@@ -1,9 +1,8 @@
-(assert
- (=
-  (case 3.14 3.14 :pi
-    2.71          :e
-    1.61          :phi
-    :default)
-  :pi))
+(assert (= (case 3.14
+             3.14 :pi
+             2.71 :e
+             1.61 :phi
+             :default)
+           :pi))
 
 :success

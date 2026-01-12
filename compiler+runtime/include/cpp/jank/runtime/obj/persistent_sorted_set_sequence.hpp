@@ -11,8 +11,7 @@ namespace jank::runtime::obj
   using persistent_sorted_set_sequence_ref = oref<struct persistent_sorted_set_sequence>;
 
   struct persistent_sorted_set_sequence
-    : gc
-    , obj::detail::iterator_sequence<persistent_sorted_set_sequence,
+    : obj::detail::iterator_sequence<persistent_sorted_set_sequence,
                                      runtime::detail::native_persistent_sorted_set::const_iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set_sequence };

@@ -449,7 +449,7 @@ namespace jank::read::parse
 
         parsed_keys.insert({ key.ptr, key });
 
-        if constexpr(std::same_as<T, runtime::detail::native_array_map>)
+        if constexpr(jtl::is_same<T, runtime::detail::native_array_map>)
         {
           map.insert_or_assign(key.ptr, value.unwrap().ptr);
         }
@@ -475,7 +475,7 @@ namespace jank::read::parse
 
       return object_source_info{ make_box<obj::persistent_array_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(map)),
+                                   jtl::move(map)),
                                  start_token,
                                  latest_token };
     }
@@ -493,7 +493,7 @@ namespace jank::read::parse
 
       return object_source_info{ make_box<obj::persistent_hash_map>(
                                    source_to_meta(start_token.start, latest_token.end),
-                                   std::move(map)),
+                                   jtl::move(map)),
                                  start_token,
                                  latest_token };
     }
@@ -589,10 +589,16 @@ namespace jank::read::parse
 
     auto meta_result(visit_object(
       [&](auto const typed_val) -> processor::object_result {
-        using T = typename decltype(typed_val)::value_type;
-        if constexpr(std::same_as<T, obj::keyword>)
+        using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
+        if constexpr(jtl::is_same<T, obj::keyword>)
         {
           return object_source_info{ obj::persistent_array_map::create_unique(typed_val, jank_true),
+                                     start_token,
+                                     latest_token };
+        }
+        if constexpr(std::same_as<T, obj::symbol>)
+        {
+          return object_source_info{ obj::persistent_array_map::create_unique(),
                                      start_token,
                                      latest_token };
         }
@@ -624,7 +630,7 @@ namespace jank::read::parse
 
     return visit_object(
       [&](auto const typed_val) -> processor::object_result {
-        using T = typename decltype(typed_val)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
           if(typed_val->meta.is_none())
@@ -735,7 +741,7 @@ namespace jank::read::parse
     expected_closer = prev_expected_closer;
     return object_source_info{ make_box<obj::persistent_hash_set>(
                                  source_to_meta(start_token.start, latest_token.end),
-                                 std::move(ret).persistent()),
+                                 jtl::move(ret).persistent()),
                                start_token,
                                latest_token };
   }
@@ -1203,7 +1209,7 @@ namespace jank::read::parse
                                              quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1227,7 +1233,7 @@ namespace jank::read::parse
           ret.push_back(first(item));
           ret.push_back(second(item));
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1272,7 +1278,7 @@ namespace jank::read::parse
                                              quoted_item.expect_ok()));
           }
         }
-        auto const vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;
       },
       []() -> jtl::result<object_ref, error_ref> {
@@ -1321,7 +1327,7 @@ namespace jank::read::parse
         auto gensym(get(env, sym));
         if(gensym->type == object_type::nil)
         {
-          gensym = make_box<obj::symbol>(__rt_ctx->unique_symbol(sym->name));
+          gensym = __rt_ctx->unique_symbol(sym->name);
           __rt_ctx->gensym_env_var->set(assoc(env, sym, gensym)).expect_ok();
         }
         sym = expect_object<obj::symbol>(gensym);
@@ -1364,9 +1370,9 @@ namespace jank::read::parse
        * reassemble them. */
       auto const res{ visit_seqable(
         [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
-          using T = typename decltype(typed_form)::value_type;
+          using T = typename jtl::decay_t<decltype(typed_form)>::value_type;
 
-          if constexpr(std::same_as<T, obj::persistent_vector>)
+          if constexpr(jtl::is_same<T, obj::persistent_vector>)
           {
             auto const seq(typed_form->seq());
             if(seq.is_nil())
@@ -1481,7 +1487,7 @@ namespace jank::read::parse
     }
 
     auto const meta{ runtime::meta(form) };
-    if(meta != jank_nil)
+    if(meta != jank_nil())
     {
       /* We quote the meta as well, to ensure it doesn't get evaluated.
        * Note that Clojure removes the source info from the meta here. We're keeping it
@@ -1588,7 +1594,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ jank_nil, latest_token, latest_token };
+    return object_source_info{ jank_nil(), latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()

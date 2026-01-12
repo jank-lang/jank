@@ -30,11 +30,12 @@ namespace jank::runtime::detail
     template <typename L, typename E = std::enable_if_t<std::is_integral_v<L>>>
     native_array_map(in_place_unique, jtl::ref<object_ref> const kvs, L const l)
       : data{ std::move(kvs.data) }
+      , cap{ static_cast<decltype(cap)>(l) }
       , length{ static_cast<decltype(length)>(l) }
     {
     }
 
-    ~native_array_map() = default;
+    ~native_array_map();
 
     void insert_unique(object_ref const key, object_ref const val);
 

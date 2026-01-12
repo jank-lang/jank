@@ -1,0 +1,114 @@
+labels: ["needs:maintainer-confirmation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > Please read through [the Discussion rules](https://github.com/jank-lang/jank/discussions/654) and check for both existing [Discussions](https://github.com/jank-lang/jank/discussions?discussions_q=) and [Issues](https://github.com/jank-lang/jank/issues?q=sort%3Areactions-desc) prior to opening a new Discussion.
+  - type: markdown
+    attributes:
+      value: "# Issue Details"
+  - type: textarea
+    attributes:
+      label: Issue Description
+      description: |
+        Please provide a high-level description of the issue first, so we're all on the same page.
+
+        Then dive into which ever details are relevant and helpful for the jank team to understand your issue.
+
+        If this is a regression of an existing issue that was closed or resolved, please include the previous item reference (Discussion, Issue, PR, commit) in your description.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Provide a minimal reproduction case so that the jank team can help you. If that's not possible, please narrow down your use case as much as possible and describe what led to it.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: jank health check
+      description: Paste the output of `jank check-health` here.
+      placeholder: |
+        ─ system ───────────────────────────────────────────────────────────────────────────────────────────
+        ─ ✅ operating system: macos
+        ─ ✅ default triple: arm64-apple-darwin25.0.0
+
+        ─ jank install ─────────────────────────────────────────────────────────────────────────────────────
+        ─ ✅ jank version: jank-0.1-768f8310ce0f3d61b01f2df0f0e66ab9c9df1984
+        ─ ✅ jank resource dir: ../lib/jank/0.1
+        ─ ✅ jank resolved resource dir: /opt/homebrew/Cellar/jank/0.1/bin/../lib/jank/0.1 (found)
+        ─ ✅ jank user cache dir: /Users/jeaye/.cache/jank/arm64-apple-darwin25.0.0-f33ec85999b436c281e9fba631425b57189670f96ba3166f2d327cd1543b516d (found)
+
+        ─ clang install ────────────────────────────────────────────────────────────────────────────────────
+        ─ ⚠️ configured clang path: /Users/runner/work/jank/jank/compiler+runtime/build/llvm-install/usr/local/bin/clang++ (not found)
+        ─ ✅ runtime clang path: /opt/homebrew/Cellar/jank/0.1/bin/../lib/jank/0.1/bin/clang++ (found)
+        ─ ⚠️ configured clang resource dir: /Users/runner/work/jank/jank/compiler+runtime/build/llvm-install/usr/local/lib/clang/22 (not found)
+        ─ ✅ runtime clang resource dir: /opt/homebrew/Cellar/jank/0.1/lib/jank/0.1/lib/clang/22 (found)
+
+        ─ jank runtime ─────────────────────────────────────────────────────────────────────────────────────
+        ─ ✅ jank runtime initialized
+        ─ ✅ jank pch path: /Users/jeaye/.cache/jank/arm64-apple-darwin25.0.0-f33ec85999b436c281e9fba631425b57189670f96ba3166f2d327cd1543b516d (found)
+        ─ ✅ jank can jit compile c++
+        ─ ✅ jank can aot compile working binaries
+
+        ─ support ──────────────────────────────────────────────────────────────────────────────────────────
+        If you're having issues with jank, please either ask the jank community on the Clojurians Slack or report the issue on Github.
+
+        ─ Slack: https://clojurians.slack.com/archives/C03SRH97FDK
+        ─ Github: https://github.com/jank-lang/jank
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Stack trace
+      description: |
+        If you experienced a crash, please provide a stack trace. There is documentation on how to do that [here](https://book.jank-lang.org/troubleshooting/stack-trace.html).
+      placeholder: |
+        #0  0x00007fffee6e490c in ?? () from /usr/lib/libc.so.6
+        #1  0x00007fffee68a3a0 in raise () from /usr/lib/libc.so.6
+        #2  0x00007fffee67157a in abort () from /usr/lib/libc.so.6
+        #3  0x00007fffee6714e3 in ?? () from /usr/lib/libc.so.6
+        #4  0x00005555563059d6 in clang::QualType::getCommonPtr (this=0x7fffffff8c20) at llvm-install/usr/local/include/clang/AST/TypeBase.h:953
+        #5  0x0000555556305975 in clang::QualType::getTypePtr (this=0x7fffffff8c20) at llvm-install/usr/local/include/clang/AST/TypeBase.h:8294
+        #6  0x00005555563028b5 in clang::QualType::operator-> (this=0x7fffffff8c20) at llvm-install/usr/local/include/clang/AST/TypeBase.h:997
+        #7  0x00005555564b27a2 in Cpp::IsRvalueReferenceType (type=0x0 <__cxx_global_var_init()>)
+            at /home/jeaye/projects/jank/compiler+runtime/third-party/cppinterop/lib/Interpreter/CppInterOp.cpp:2070
+        #8  0x000055555639ecc4 in jank::codegen::processor::gen (this=0x7fffffffa6b8, expr=..., arity=...)
+            at /home/jeaye/projects/jank/compiler+runtime/src/cpp/jank/codegen/processor.cpp:2006
+        #9  0x00005555563a40c4 in jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0::operator()<jtl::ref<jank::analyze::expr::cpp_call> >(jtl::ref<jank::analyze::expr::cpp_call>) const (this=0x7fffffff9580, typed_ex=...)
+            at /home/jeaye/projects/jank/compiler+runtime/src/cpp/jank/codegen/processor.cpp:511
+        #10 0x0000555556392be9 in jank::analyze::visit_expr<jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0>(jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0 const&, jtl::ref<jank::analyze::expression>) (f=..., e=...) at /home/jeaye/projects/jank/compiler+runtime/include/cpp/jank/analyze/visit.hpp:97
+        #11 0x0000555556392511 in jank::codegen::processor::gen (this=0x7fffffffa6b8, ex=..., fn_arity=...)
+            at /home/jeaye/projects/jank/compiler+runtime/src/cpp/jank/codegen/processor.cpp:511
+        #12 0x000055555639ae88 in jank::codegen::processor::gen (this=0x7fffffffa6b8, expr=..., fn_arity=...)
+            at /home/jeaye/projects/jank/compiler+runtime/src/cpp/jank/codegen/processor.cpp:1447
+        #13 0x00005555563a3ca4 in jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0::operator()<jtl::ref<jank::analyze::expr::let> >(jtl::ref<jank::analyze::expr::let>) const (this=0x7fffffff9f00, typed_ex=...)
+            at /home/jeaye/projects/jank/compiler+runtime/src/cpp/jank/codegen/processor.cpp:511
+        #14 0x000055555639291e in jank::analyze::visit_expr<jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0>(jank::codegen::processor::gen(jtl::ref<jank::analyze::expression>, jank::analyze::expr::function_arity const&)::$_0 const&, jtl::ref<jank::analyze::expression>) (f=..., e=...) at /home/jeaye/projects/jank/compiler+runtime/include/cpp/jank/analyze/visit.hpp:75
+        #15 0x0000555556392511 in jank::codegen::processor::gen (this=0x7fffffffa6b8, ex=..., fn_arity=...)
+      render: text
+  - type: input
+    attributes:
+      label: OS Version Information
+      description: |
+        Please tell us what operating system (name and version) you are using.
+      placeholder: Ubuntu 24.04
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        # User Acknowledgements
+        > [!TIP]
+        > Use these links to review the existing jank [Discussions](https://github.com/jank-lang/jank/discussions?discussions_q=) and [Issues](https://github.com/jank-lang/jank/issues?q=sort%3Areactions-desc).
+  - type: checkboxes
+    attributes:
+      label: "I acknowledge that:"
+      options:
+        - label: I have searched the jank repository (both open and closed Discussions and Issues) and confirm this is not a duplicate of an existing issue or discussion.
+          required: true
+        - label: I have checked the "Preview" tab on all text fields to ensure that everything looks right, and have wrapped all configuration and code in code blocks with a group of three backticks (` ``` `) on separate lines.
+          required: true

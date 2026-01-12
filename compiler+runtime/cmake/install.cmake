@@ -62,30 +62,14 @@ jank_glob_install_without_prefix(
 )
 
 jank_glob_install_without_prefix(
-  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/bpptree/"
-  PATTERN "${CMAKE_SOURCE_DIR}/third-party/bpptree/include/*"
-)
-
-jank_glob_install_without_prefix(
   INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/immer/"
   OUTPUT_PREFIX "include/"
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/immer/immer/*"
 )
 
 jank_glob_install_without_prefix(
-  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/cli11/"
-  PATTERN "${CMAKE_SOURCE_DIR}/third-party/cli11/include/*"
-)
-
-jank_glob_install_without_prefix(
   INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/ftxui/"
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/ftxui/include/*"
-)
-
-jank_glob_install_without_prefix(
-  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/libzippp/src/"
-  OUTPUT_PREFIX "include/"
-  PATTERN "${CMAKE_SOURCE_DIR}/third-party/libzippp/src/*"
 )
 
 jank_glob_install_without_prefix(

@@ -1,16 +1,13 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
 {
-  using persistent_array_map_ref = oref<struct persistent_array_map>;
-  using symbol_ref = oref<struct symbol>;
-  using keyword_ref = oref<struct keyword>;
-
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
-  struct keyword : gc
+  struct keyword
   {
     static constexpr object_type obj_type{ object_type::keyword };
     static constexpr bool pointer_free{ false };
@@ -43,14 +40,16 @@ namespace jank::runtime::obj
     jtl::immutable_string const &get_namespace() const;
 
     /* behavior::callable */
-    object_ref call(object_ref);
-    object_ref call(object_ref, object_ref);
+    object_ref call(object_ref const);
+    object_ref call(object_ref const, object_ref const);
 
     bool operator==(keyword const &rhs) const;
 
     object base{ obj_type };
     symbol_ref sym;
   };
+
+  using keyword_ref = oref<keyword>;
 }
 
 /* TODO: Move to .cpp */
@@ -59,7 +58,7 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::keyword_ref>
   {
-    size_t operator()(jank::runtime::obj::keyword_ref const o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword_ref const o) const
     {
       return o->to_hash();
     }
@@ -68,7 +67,7 @@ namespace std
   template <>
   struct hash<jank::runtime::obj::keyword>
   {
-    size_t operator()(jank::runtime::obj::keyword const &o) const noexcept
+    size_t operator()(jank::runtime::obj::keyword const &o) const
     {
       static auto hasher(std::hash<jank::runtime::obj::keyword_ref>{});
       return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
@@ -78,8 +77,8 @@ namespace std
   template <>
   struct equal_to<jank::runtime::obj::keyword_ref>
   {
-    bool operator()(jank::runtime::obj::keyword_ref const &lhs,
-                    jank::runtime::obj::keyword_ref const &rhs) const noexcept
+    bool operator()(jank::runtime::obj::keyword_ref const lhs,
+                    jank::runtime::obj::keyword_ref const rhs) const noexcept
     {
       return lhs == rhs;
     }

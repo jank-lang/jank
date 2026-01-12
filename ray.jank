@@ -348,5 +348,13 @@
 
         (println "meow"))))
 
-;(jank.perf/benchmark {:label "ray"} (-main))
+; macOS
+; -- main
+;
+; -- ref counting - non-atomic - no weak refs
+; |               ms/op |                op/s |    err% |     total | benchmark
+; |--------------------:|--------------------:|--------:|----------:|:----------
+; |              109.99 |                9.09 |    0.3% |     26.67 | `ray`
+
+(jank.perf/benchmark {:label "ray"} (-main))
 ;(-main)

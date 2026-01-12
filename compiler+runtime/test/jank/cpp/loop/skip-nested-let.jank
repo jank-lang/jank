@@ -1,9 +1,10 @@
-(let* [s (cpp/cast cpp/std.string "meow")
+(let* [s (cpp/std.string #cpp "meow")
        it (cpp/.begin s)
-       r (loop [letters []]
+       r (loop* [letters []]
            (if (cpp/== (cpp/.end s) it)
              letters
-             (let [letters (conj letters (cpp/* it))]
+             ; The shadowing here ends up affecting the recur assignment.
+             (let* [letters (conj letters (cpp/* it))]
                (cpp/++ it)
                (recur letters))))]
   (if (= [\m \e \o \w] r)

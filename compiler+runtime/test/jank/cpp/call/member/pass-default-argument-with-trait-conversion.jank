@@ -1,0 +1,21 @@
+(cpp/raw "namespace jank::cpp::call::member::pass_default_argument_with_trait_conversion
+          {
+            struct bar
+            {
+              int meow(int a = 0, int b = 1, int c = 2, int d = 3)
+              {
+                return a + b + c + d;
+              }
+              int foo(int a, int b = 1, int c = 2, int d = 3)
+              {
+                return a + b + c + d;
+              }
+            };
+          }")
+(let* [b (cpp/jank.cpp.call.member.pass_default_argument_with_trait_conversion.bar)
+       m1 (cpp/.meow b 1 (cpp/int 2))
+       f1 (cpp/.foo b 1)
+       f2 (cpp/.foo b 1 (cpp/int 2))
+       f3 (cpp/.foo b 1 (cpp/int 2) (cpp/int 3) (cpp/int 4))]
+  (if (and (= 8 m1) (= 7 f1) (= 8 f2) (= 10 f3))
+    :success))

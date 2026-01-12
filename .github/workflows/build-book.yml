@@ -1,0 +1,61 @@
+name: Build book
+
+on:
+  pull_request:
+    paths:
+      - 'book/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'book/**'
+  workflow_dispatch:
+
+# Only allow one build per branch at a time. New builds will cancel existing builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-book:
+    name: Check the book
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: book
+      - name: Check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          sudo mv mdbook /usr/local/bin/
+          rm -f mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          pushd ${{ github.workspace }}/book
+            mdbook build || exit 1
+          popd
+
+  publish-book:
+    name: Publish the book
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          wget -q "https://github.com/rust-lang/mdBook/releases/download/v0.5.2/mdbook-v0.5.2-x86_64-unknown-linux-gnu.tar.gz"
+          tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          sudo mv mdbook /usr/local/bin/
+          rm -f mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          pushd ${{ github.workspace }}/book
+            ./bin/publish || exit 1
+          popd
