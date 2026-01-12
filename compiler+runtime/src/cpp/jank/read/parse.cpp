@@ -22,40 +22,40 @@ namespace jank::read::parse
 
   static bool is_utf8_char(jtl::immutable_string_view s)
   {
-    if (s.size() == 1)
+    if(s.size() == 1)
     {
       return static_cast<unsigned char>(s[0]) <= 0x7F;
     }
-    else if (s.size() == 2)
+    else if(s.size() == 2)
     {
-      bool is_char0_utf8_code0 = static_cast<unsigned char>(s[0]) >= 0xC0 &&
-        static_cast<unsigned char>(s[0]) <= 0xDF;
-      bool is_char1_utf8_code1 = static_cast<unsigned char>(s[1]) >= 0x80 &&
-        static_cast<unsigned char>(s[1]) <= 0xBF;
+      bool is_char0_utf8_code0
+        = static_cast<unsigned char>(s[0]) >= 0xC0 && static_cast<unsigned char>(s[0]) <= 0xDF;
+      bool is_char1_utf8_code1
+        = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
       return is_char0_utf8_code0 && is_char1_utf8_code1;
     }
     else if(s.size() == 3)
     {
-      bool is_char0_utf8_code0 = static_cast<unsigned char>(s[0]) >= 0xE0 &&
-        static_cast<unsigned char>(s[0]) <= 0xEF;
-      bool is_char1_utf8_code1 = static_cast<unsigned char>(s[1]) >= 0x80 &&
-        static_cast<unsigned char>(s[1]) <= 0xBF;
-      bool is_char2_utf8_code2 = static_cast<unsigned char>(s[2]) >= 0x80 &&
-        static_cast<unsigned char>(s[2]) <= 0xBF;
+      bool is_char0_utf8_code0
+        = static_cast<unsigned char>(s[0]) >= 0xE0 && static_cast<unsigned char>(s[0]) <= 0xEF;
+      bool is_char1_utf8_code1
+        = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
+      bool is_char2_utf8_code2
+        = static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF;
       return is_char0_utf8_code0 && is_char1_utf8_code1 && is_char2_utf8_code2;
     }
     else if(s.size() == 4)
     {
-      bool is_char0_utf8_code0 = static_cast<unsigned char>(s[0]) >= 0xF0 &&
-        static_cast<unsigned char>(s[0]) <= 0xF7;
-      bool is_char1_utf8_code1 = static_cast<unsigned char>(s[1]) >= 0x80 &&
-        static_cast<unsigned char>(s[1]) <= 0xBF;
-      bool is_char2_utf8_code2 = static_cast<unsigned char>(s[2]) >= 0x80 &&
-        static_cast<unsigned char>(s[2]) <= 0xBF;
-      bool is_char3_utf8_code3 = static_cast<unsigned char>(s[3]) >= 0x80 &&
-        static_cast<unsigned char>(s[3]) <= 0xBF;
-      return is_char0_utf8_code0 && is_char1_utf8_code1 &&
-        is_char2_utf8_code2 && is_char3_utf8_code3;
+      bool is_char0_utf8_code0
+        = static_cast<unsigned char>(s[0]) >= 0xF0 && static_cast<unsigned char>(s[0]) <= 0xF7;
+      bool is_char1_utf8_code1
+        = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
+      bool is_char2_utf8_code2
+        = static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF;
+      bool is_char3_utf8_code3
+        = static_cast<unsigned char>(s[3]) >= 0x80 && static_cast<unsigned char>(s[3]) <= 0xBF;
+      return is_char0_utf8_code0 && is_char1_utf8_code1 && is_char2_utf8_code2
+        && is_char3_utf8_code3;
     }
     return false;
   }
@@ -556,15 +556,13 @@ namespace jank::read::parse
       {
         auto const str(sv.substr(1));
 
-        if (!is_utf8_char(str))
+        if(!is_utf8_char(str))
         {
           auto const err("Invalid Unicode character.");
           return error::parse_invalid_unicode({ start_token.start, latest_token.end }, err);
         }
 
-        return object_source_info{ make_box<obj::character>(str),
-                                   start_token,
-                                   start_token };
+        return object_source_info{ make_box<obj::character>(str), start_token, start_token };
       }
 
       return error::parse_invalid_character(start_token);
