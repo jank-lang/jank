@@ -1444,7 +1444,6 @@ namespace jank::read::lex
                   { 119, 6, token_kind::character, "\\u3000"sv }
           }));
         }
-
       }
 
       SUBCASE("Unicode Literal")
@@ -1458,7 +1457,7 @@ namespace jank::read::lex
                 { 0, 2, token_kind::character, "\\¡"sv },
                 { 3, 2, token_kind::character, "\\ষ"sv },
                 { 6, 2, token_kind::character, "\\𐅦"sv }
-              }));
+        }));
       }
 
       SUBCASE("Dangling \\")
