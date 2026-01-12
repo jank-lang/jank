@@ -1,0 +1,3 @@
+(let* [f #cpp 3.0
+       i (cpp/cast int f)]
+  :success)

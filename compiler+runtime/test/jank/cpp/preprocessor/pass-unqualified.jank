@@ -1,0 +1,11 @@
+(cpp/raw "#define JANK_FOO \"foo\"
+          #define JANK_SYM jank::cpp::preprocessor::pass_unqualified::sym
+
+          namespace jank::cpp::preprocessor::pass_unqualified
+          {
+            auto const sym{ 865 };
+          }")
+(let* [f JANK_FOO
+       s JANK_SYM]
+  (if (and (= "foo" f) (= 865 s))
+    :success))
