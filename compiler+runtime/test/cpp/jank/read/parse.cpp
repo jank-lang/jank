@@ -302,7 +302,7 @@ namespace jank::read::parse
             auto const r(p.next());
             CHECK(equal(
               r.expect_ok().unwrap().ptr,
-              make_box<obj::character>(get_char_from_literal(ch.substr(1)).expect_ok())));
+              make_box<obj::character>(get_char_from_literal(ch.substr(1).unwrap())));
 
             auto const len(ch.size());
             CHECK(r.expect_ok().unwrap().start
