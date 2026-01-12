@@ -1454,9 +1454,9 @@ namespace jank::read::lex
         native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
         CHECK(tokens
               == make_tokens({
-                { 0, 2, token_kind::character, "\\¡"sv },
-                { 3, 2, token_kind::character, "\\ষ"sv },
-                { 6, 2, token_kind::character, "\\𐅦"sv }
+                { 0, 3, token_kind::character, "\\¡"sv },
+                { 4, 4, token_kind::character, "\\ষ"sv },
+                { 9, 5, token_kind::character, "\\𐅦"sv }
         }));
       }
 
