@@ -1365,7 +1365,7 @@ namespace jank::codegen
       for(usize i{}; i < expr->arg_exprs.size(); ++i)
       {
         auto const &pair{ let->pairs[i] };
-        auto const local(expr->frame->find_local_or_capture(pair.first));
+        auto const local{ let->frame->find_local_or_capture(pair.first) };
         auto const &local_name(runtime::munge(local.unwrap().binding->native_name));
         auto const &val_name(arg_tmp_it->str(true));
 
