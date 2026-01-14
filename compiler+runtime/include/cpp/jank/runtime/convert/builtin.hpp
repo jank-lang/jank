@@ -284,32 +284,32 @@ namespace jank::runtime
   };
 
   /* Support for both native_vector and std::vector of anything which itself is convertible. */
-  template <template <typename> typename V, typename T>
+  template <template <typename, typename> typename V, typename T, typename A>
   requires(convertible<T>
-           && (jtl::is_same<V<T>, native_vector<T>> || jtl::is_same<V<T>, std::vector<T>>))
-  struct convert<V<T>>
+           && (jtl::is_same<V<T, A>, native_vector<T>> || jtl::is_same<V<T, A>, std::vector<T>>))
+  struct convert<V<T, A>>
   {
-    static obj::persistent_vector_ref into_object(V<T> const &o)
+    static obj::persistent_vector_ref into_object(V<T, A> const &o)
     {
       runtime::detail::native_transient_vector trans;
       for(auto const &e : o)
       {
         trans.push_back(convert<T>::into_object(e));
       }
-      return make_box<obj::persistent_vector>(trans);
+      return make_box<obj::persistent_vector>(trans.persistent());
     }
 
-    static V<T> from_object(object_ref const o)
+    static V<T, A> from_object(object_ref const o)
     {
-      return from_object(try_object<obj::persistent_string>(o));
+      return from_object(try_object<obj::persistent_vector>(o));
     }
 
-    static V<T> from_object(obj::persistent_vector_ref const o)
+    static V<T, A> from_object(obj::persistent_vector_ref const o)
     {
-      V<T> ret;
+      V<T, A> ret;
       for(auto const &e : o->data)
       {
-        ret.push_back(e);
+        ret.push_back(convert<T>::from_object(e));
       }
       return ret;
     }
