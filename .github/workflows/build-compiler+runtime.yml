@@ -173,7 +173,7 @@ jobs:
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       HOMEBREW_NO_AUTO_UPDATE: 1
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
