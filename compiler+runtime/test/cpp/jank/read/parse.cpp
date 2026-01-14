@@ -311,6 +311,18 @@ namespace jank::read::parse
             offset += len + 1;
           }
         }
+
+        SUBCASE("Invalid")
+        {
+          lex::processor lp{ R"(\𐅪a \vϴ)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(usize i{}; i < 2; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
       }
 
       SUBCASE("Hex unicode")
