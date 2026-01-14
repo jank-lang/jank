@@ -28,31 +28,31 @@ namespace jank::read::parse
     }
     else if(s.size() == 2)
     {
-      bool is_char0_utf8_code0
+      bool const is_char0_utf8_code0
         = static_cast<unsigned char>(s[0]) >= 0xC0 && static_cast<unsigned char>(s[0]) <= 0xDF;
-      bool is_char1_utf8_code1
+      bool const is_char1_utf8_code1
         = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
       return is_char0_utf8_code0 && is_char1_utf8_code1;
     }
     else if(s.size() == 3)
     {
-      bool is_char0_utf8_code0
+      bool const is_char0_utf8_code0
         = static_cast<unsigned char>(s[0]) >= 0xE0 && static_cast<unsigned char>(s[0]) <= 0xEF;
-      bool is_char1_utf8_code1
+      bool const is_char1_utf8_code1
         = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
-      bool is_char2_utf8_code2
+      bool const is_char2_utf8_code2
         = static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF;
       return is_char0_utf8_code0 && is_char1_utf8_code1 && is_char2_utf8_code2;
     }
     else if(s.size() == 4)
     {
-      bool is_char0_utf8_code0
+      bool const is_char0_utf8_code0
         = static_cast<unsigned char>(s[0]) >= 0xF0 && static_cast<unsigned char>(s[0]) <= 0xF7;
-      bool is_char1_utf8_code1
+      bool const is_char1_utf8_code1
         = static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF;
-      bool is_char2_utf8_code2
+      bool const is_char2_utf8_code2
         = static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF;
-      bool is_char3_utf8_code3
+      bool const is_char3_utf8_code3
         = static_cast<unsigned char>(s[3]) >= 0x80 && static_cast<unsigned char>(s[3]) <= 0xBF;
       return is_char0_utf8_code0 && is_char1_utf8_code1 && is_char2_utf8_code2
         && is_char3_utf8_code3;
