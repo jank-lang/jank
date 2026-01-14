@@ -1449,15 +1449,13 @@ namespace jank::read::lex
         {
           /* These cases test 2 bytes, 3 bytes, and 4 bytes Unicode variants
            * (the 1 byte variant is covered by ASCII tests). */
-          processor p{
-            R"(\¡ \ষ \𐅦)"
-          };
+          processor p{ R"(\¡ \ষ \𐅦)" };
           native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
           CHECK(tokens
                 == make_tokens({
-                  {   0, 2, token_kind::character, "\\¡"sv },
-                  {   3, 2, token_kind::character, "\\ষ"sv },
-                  {   6, 2, token_kind::character, "\\𐅦"sv }
+                  { 0, 2, token_kind::character, "\\¡"sv },
+                  { 3, 2, token_kind::character, "\\ষ"sv },
+                  { 6, 2, token_kind::character, "\\𐅦"sv }
           }));
         }
       }
