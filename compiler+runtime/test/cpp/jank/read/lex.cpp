@@ -1416,7 +1416,7 @@ namespace jank::read::lex
           }));
         }
 
-        SUBCASE("Unicode")
+        SUBCASE("Unicode Hexadecimal")
         {
           processor p{
             R"(\u00a0 \u1680 \u2000 \u2001 \u2002 \u2003 \u2004 \u2005 \u2006 \u2007 \u2008 \u2009 \u200a \u2028 \u2029 \u202f \u205f \u3000)"
@@ -1442,6 +1442,22 @@ namespace jank::read::lex
                   { 105, 6, token_kind::character, "\\u202f"sv },
                   { 112, 6, token_kind::character, "\\u205f"sv },
                   { 119, 6, token_kind::character, "\\u3000"sv }
+          }));
+        }
+
+        SUBCASE("Unicode Literal")
+        {
+          /* These cases test 2 bytes, 3 bytes, and 4 bytes Unicode variants
+           * (the 1 byte variant is covered by ASCII tests). */
+          processor p{
+            R"(\¡ \ষ \𐅦)"
+          };
+          native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  {   0, 2, token_kind::character, "\\¡"sv },
+                  {   3, 2, token_kind::character, "\\ষ"sv },
+                  {   6, 2, token_kind::character, "\\𐅦"sv }
           }));
         }
       }
