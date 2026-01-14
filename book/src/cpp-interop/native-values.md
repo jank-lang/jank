@@ -31,7 +31,7 @@ jank also has explicit support for `cpp/true`, `cpp/false`, and `cpp/nullptr`,
 which all correspond to the C++ primitive.
 
 ## Member values
-Member values can be accessed from a native object using the `cpp/.-foo` syntax.
+Member values can be accessed from a native object using the `.-foo` syntax.
 For example, let's create a `person` and then pull out the name.
 
 ```clojure
@@ -39,8 +39,8 @@ For example, let's create a `person` and then pull out the name.
           { std::string name; };")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))
-        n (cpp/.-name p)]
+  (let [p (person (cpp/cast std.string name))
+        n (.-name p)]
     ))
 ```
 
@@ -50,8 +50,8 @@ needing an explicit dereference.
 
 ```clojure
 (defn create-person [name]
-  (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
-        n (cpp/.-name p)]
+  (let [p (cpp/new person (cpp/cast std.string name))
+        n (.-name p)]
     ))
 ```
 
@@ -73,13 +73,13 @@ which calls a C++ function which operates on `std::string`.
           }")
 
 (defn to-upper [o]
-  (let [upper (cpp/to_upper o)]
+  (let [upper (to_upper o)]
     upper))
 ```
 
 In this code, `o` is a `jank::runtime::object_ref`. This is basically like
 Clojure's `Object` type. It's a garbage collected, type-erased value. When the
-jank compiler analyzes the call to `(cpp/to_upper o)`, it resolves that
+jank compiler analyzes the call to `(to_upper o)`, it resolves that
 `to_upper` expects a `std::string` and that there is a conversion trait for it.
 So the jank compiler will automatically handle converting from `object_ref` into
 a `std::string`. On the other side, `upper` is a `std::string`, which is the
@@ -98,7 +98,7 @@ compiler error. For example, given this source:
           { std::string name; };")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+  (let [p (person (cpp/cast std.string name))]
     p))
 ```
 
@@ -157,7 +157,7 @@ intended for C++ developers who're using jank.
           }")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+  (let [p (person (cpp/cast std.string name))]
     p))
 
 (println (create-person "foo"))
@@ -195,12 +195,12 @@ Given a hypothetical `my_db` C++ database library, boxing is done like this:
 (defn query! [db-box q]
   (let [; db-box is an object_ref
         ; db is a my_db.connection*
-        db (cpp/unbox cpp/my_db.connection* db-box)]
-    (cpp/.query db q)))
+        db (cpp/unbox my_db.connection* db-box)]
+    (.query db q)))
 
 (defn -main [& args]
   (let [; db is a my_db.connection*
-        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection #cpp "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -222,10 +222,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ─────┼─────────────────────────────────────────────────────────────────────────
  21  │   (let [; db-box is an object_ref
  22  │         ; db is a my_db.connection*
- 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+ 23  │         db (cpp/unbox my_db.secure_connection* db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.
