@@ -48,6 +48,7 @@ namespace jank::analyze::cpp_util
 
       if(Cpp::IsTemplatedFunction(scope))
       {
+        //util::println("\tinstantiating fn return type");
         return instantiate_if_needed(Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(scope)));
       }
     }

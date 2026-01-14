@@ -714,7 +714,7 @@ namespace jank::codegen
     {
       ret_box = "jank::runtime::make_box(";
     }
-    util::format_to(body_buffer, "auto const {}({}{}", ret_tmp, ret_box, start);
+    util::format_to(body_buffer, "auto &&{}({}{}", ret_tmp, ret_box, start);
     bool need_comma{};
     for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
     {
