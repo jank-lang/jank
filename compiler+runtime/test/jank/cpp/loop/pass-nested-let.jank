@@ -3,7 +3,6 @@
        r (loop* [letters []]
            (if (cpp/== (cpp/.end s) it)
              letters
-             ; The shadowing here ends up affecting the recur assignment.
              (let* [letters (conj letters (cpp/* it))]
                (cpp/++ it)
                (recur letters))))]

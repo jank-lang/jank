@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::call::member::pass_variadic_template
+          {
+            struct bar
+            {
+              template <typename ...Args>
+              int foo(Args ...args)
+              {
+                int sum{};
+                int dummy[]{ (sum += args, 0)... };
+                return sum;
+              }
+            };
+
+            int a{ 7 };
+          }")
+(let* [b (cpp/jank.cpp.call.member.pass_variadic_template.bar.)
+       a (cpp/.foo b #cpp 1 cpp/jank.cpp.call.member.pass_variadic_template.a)]
+  (if (= 8 a)
+    :success))
