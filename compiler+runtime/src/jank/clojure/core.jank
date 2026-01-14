@@ -1597,21 +1597,6 @@
   [s]
   (cpp/jank.runtime.is_chunked_seq s))
 
-; TODO: Support more bindings
-; TODO: Support `for` functionality
-(defmacro doseq
-  "Repeatedly executes body (presumably for side-effects) with
-   bindings and filtering as provided by `for`.  Does not retain
-   the head of the sequence. Returns nil."
-  [bindings & body]
-  (let [arg (first bindings)
-        s (second bindings)]
-    (list 'clojure.core/reduce (concat* (list 'clojure.core/fn ['_ arg])
-                                        body
-                                        [nil])
-          nil
-          s)))
-
 (defn concat
   "Returns a lazy seq representing the concatenation of the elements in the supplied colls."
   ([] (lazy-seq nil))
@@ -2057,6 +2042,58 @@
   [& vars]
   (every? #(cpp/clojure.core_native.is_var_thread_bound %) vars))
 
+;; Keywords.
+(defn keyword?
+  "Return true if x is a Keyword"
+  [x]
+  (cpp/jank.runtime.is_keyword x))
+(defn simple-keyword?
+  "Return true if x is a keyword without a namespace"
+  [x]
+  (cpp/jank.runtime.is_simple_keyword x))
+(defn qualified-keyword?
+  "Return true if x is a keyword with a namespace"
+  [x]
+  (cpp/jank.runtime.is_qualified_keyword x))
+
+(defn keyword
+  "Returns a Keyword with the given namespace and name.  Do not use :
+   in the keyword strings, it will be added automatically."
+  ([name]
+   (cond
+     (keyword? name) name
+     (symbol? name) (cpp/jank.runtime.keyword nil (str name))
+     (string? name) (cpp/jank.runtime.keyword nil name)))
+  ([ns name]
+   (cpp/jank.runtime.keyword ns name)))
+
+(defn ident?
+  "Returns true if x is a symbol or keyword"
+  [x]
+  (or (keyword? x) (symbol? x)))
+
+(defn simple-ident?
+  "Returns true if x is a symbol or keyword without a namespace"
+  [x]
+  (and (ident? x) (nil? (namespace x))))
+
+(defn qualified-ident?
+  "Returns true if x is a symbol or keyword with a namespace"
+  [x]
+  (boolean (and (ident? x) (namespace x) true)))
+
+;; Pre-macro sequences.
+(defn nth
+  "Returns the value at the index. get returns nil if index out of
+   bounds, nth throws an exception unless not-found is supplied.  nth
+   also works for strings, Java arrays, regex Matchers and Lists, and,
+   in O(n) time, for sequences."
+  ([coll index]
+   (cpp/jank.runtime.nth coll index))
+  ([coll index not-found]
+   (cpp/jank.runtime.nth coll index not-found)))
+
+;; Macros.
 (defmacro ^:private assert-macro-args
   [& pairs]
   (list 'do
@@ -2130,6 +2167,13 @@
           (let [~form temp#]
             ~then))))))
 
+(defmacro if-not
+  "Evaluates test. If logical false, evaluates and returns then expr,
+  otherwise else expr, if supplied, else nil."
+  ([test then] `(if-not ~test ~then nil))
+  ([test then else]
+   `(if (not ~test) ~then ~else)))
+
 (defmacro when-some
   "bindings => binding-form test
 
@@ -2164,6 +2208,62 @@
            ~@body
            ; TODO: unchecked-inc
            (recur (inc ~i)))))))
+
+(defmacro doseq
+  "Repeatedly executes body (presumably for side-effects) with
+   bindings and filtering as provided by `for`.  Does not retain
+   the head of the sequence. Returns nil."
+  [seq-exprs & body]
+  (assert-macro-args
+     (vector? seq-exprs) "a vector for its binding"
+     (even? (count seq-exprs)) "an even number of forms in binding vector")
+  (let [step (fn step [recform exprs]
+               (if-not exprs
+                 [true `(do ~@body)]
+                 (let [k (first exprs)
+                       v (second exprs)]
+                   (if (keyword? k)
+                     (let [steppair (step recform (nnext exprs))
+                           needrec (steppair 0)
+                           subform (steppair 1)]
+                       (cond
+                         (= k :let) [needrec `(let ~v ~subform)]
+                         (= k :while) [false `(when ~v
+                                                ~subform
+                                                ~@(when needrec [recform]))]
+                         (= k :when) [false `(if ~v
+                                               (do
+                                                 ~subform
+                                                 ~@(when needrec [recform]))
+                                               ~recform)]))
+                     (let [seq- (gensym "seq_")
+                           chunk- (gensym "chunk_")
+                           count- (gensym "count_")
+                           i- (gensym "i_")
+                           recform `(recur (next ~seq-) nil 0 0)
+                           steppair (step recform (nnext exprs))
+                           needrec (steppair 0)
+                           subform (steppair 1)
+                           ; TODO: unchecked-inc
+                           recform-chunk `(recur ~seq- ~chunk- ~count- (inc ~i-))
+                           steppair-chunk (step recform-chunk (nnext exprs))
+                           subform-chunk (steppair-chunk 1)]
+                       [true
+                        `(loop [~seq- (seq ~v), ~chunk- nil,
+                                ~count- 0, ~i- 0]
+                           (if (< ~i- ~count-)
+                             (let [~k (nth ~chunk- ~i-)]
+                               ~subform-chunk
+                               ~@(when needrec [recform-chunk]))
+                             (when-let [~seq- (seq ~seq-)]
+                               (if (chunked-seq? ~seq-)
+                                 (let [c# (chunk-first ~seq-)]
+                                   (recur (chunk-rest ~seq-) c#
+                                          (int (count c#)) (int 0)))
+                                 (let [~k (first ~seq-)]
+                                   ~subform
+                                   ~@(when needrec [recform]))))))])))))]
+    (nth (step nil (seq seq-exprs)) 1)))
 
 (defn push-thread-bindings
   "WARNING: This is a low-level function. Prefer high-level macros like
@@ -2219,46 +2319,6 @@
          (finally
            (pop-thread-bindings))))))
 
-;; Keywords.
-(defn keyword?
-  "Return true if x is a Keyword"
-  [x]
-  (cpp/jank.runtime.is_keyword x))
-(defn simple-keyword?
-  "Return true if x is a keyword without a namespace"
-  [x]
-  (cpp/jank.runtime.is_simple_keyword x))
-(defn qualified-keyword?
-  "Return true if x is a keyword with a namespace"
-  [x]
-  (cpp/jank.runtime.is_qualified_keyword x))
-
-(defn keyword
-  "Returns a Keyword with the given namespace and name.  Do not use :
-   in the keyword strings, it will be added automatically."
-  ([name]
-   (cond
-     (keyword? name) name
-     (symbol? name) (cpp/jank.runtime.keyword nil (str name))
-     (string? name) (cpp/jank.runtime.keyword nil name)))
-  ([ns name]
-   (cpp/jank.runtime.keyword ns name)))
-
-(defn ident?
-  "Returns true if x is a symbol or keyword"
-  [x]
-  (or (keyword? x) (symbol? x)))
-
-(defn simple-ident?
-  "Returns true if x is a symbol or keyword without a namespace"
-  [x]
-  (and (ident? x) (nil? (namespace x))))
-
-(defn qualified-ident?
-  "Returns true if x is a symbol or keyword with a namespace"
-  [x]
-  (boolean (and (ident? x) (namespace x) true)))
-
 ;; Sequences.
 (defn iterate
   "Returns a lazy (infinite!) sequence of x, (f x), (f (f x)) etc.
@@ -2285,16 +2345,6 @@
    (if (and (integer? start) (integer? end) (integer? step))
      (cpp/jank.runtime.obj.integer_range.create start end step)
      (cpp/jank.runtime.obj.range.create start end step))))
-
-(defn nth
-  "Returns the value at the index. get returns nil if index out of
-   bounds, nth throws an exception unless not-found is supplied.  nth
-   also works for strings, Java arrays, regex Matchers and Lists, and,
-   in O(n) time, for sequences."
-  ([coll index]
-   (cpp/jank.runtime.nth coll index))
-  ([coll index not-found]
-   (cpp/jank.runtime.nth coll index not-found)))
 
 (defn nthnext
   "Returns the nth next of coll, (seq coll) when n is 0."
@@ -4515,13 +4565,6 @@
   [x]
   ;; (instance? clojure.lang.Delay x)
   (throw "TODO: port delay?"))
-
-(defmacro if-not
-  "Evaluates test. If logical false, evaluates and returns then expr,
-  otherwise else expr, if supplied, else nil."
-  ([test then] `(if-not ~test ~then nil))
-  ([test then else]
-   `(if (not ~test) ~then ~else)))
 
 (defn compare
   "Comparator. Returns a negative number, zero, or a positive number

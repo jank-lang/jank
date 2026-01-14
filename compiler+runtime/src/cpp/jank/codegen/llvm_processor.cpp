@@ -1236,6 +1236,8 @@ namespace jank::codegen
           arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
 
+        /* TODO: Provide access to higher local, so we can access the local from the
+         * original loop. We could be in a nested let right now, which shadows that name. */
         auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
         jank_debug_assert(arg_alloc);
         deferred_stores.emplace_back(arg_handle, arg_alloc);
