@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -xeuo pipefail
+
+tmp="/tmp/jank-book-publish"
+mdbook build
+mv live "${tmp}"
+
+git fetch --no-recurse-submodules
+git checkout gh-pages
+git merge origin/gh-pages
+
+if [[ "${GITHUB_TOKEN}x" != "x" ]];
+then
+  git config --global user.email "github-actions@notadomain"
+  git config --global user.name "Github Actions"
+fi
+
+# We're currently in book/, so we want to go to the root of the repo.
+cd ..
+for file in $(git ls-files);
+do
+  rm -rf "${file}";
+done
+mv "${tmp}"/* "${tmp}"/.* .
+git add .
+git commit -m "Automated publish" --allow-empty
+
+# Pushing from CI requires an access token.
+if [[ "${GITHUB_TOKEN}x" != "x" ]];
+then
+  git remote remove ci-origin || true
+  git remote add ci-origin "https://${GITHUB_TOKEN}@github.com/jank-lang/jank.git"
+  git push ci-origin gh-pages
+else
+  git push origin gh-pages
+fi
+
+git checkout -

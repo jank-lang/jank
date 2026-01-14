@@ -171,6 +171,40 @@ namespace jank::runtime
     return l + r;
   }
 
+  object_ref promoting_add(object_ref const l, object_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const r) -> object_ref {
+        using LT = typename decltype(typed_l)::value_type;
+
+        return visit_number_like(
+          [](auto const typed_r, auto const &l_val) -> object_ref {
+            using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            {
+              i64 res{};
+
+              if(static_cast<bool>(__builtin_add_overflow(l_val, typed_r->data, &res)))
+              {
+                native_big_integer const l{ l_val };
+                return make_box<obj::big_integer>(l + typed_r->data);
+              }
+
+              return make_box<obj::integer>(res);
+            }
+            else
+            {
+              return make_box(l_val + typed_r->data);
+            }
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
   object_ref sub(object_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -304,6 +338,40 @@ namespace jank::runtime
   i64 sub(i64 const l, i64 const r)
   {
     return l - r;
+  }
+
+  object_ref promoting_sub(object_ref const l, object_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const r) -> object_ref {
+        using LT = typename decltype(typed_l)::value_type;
+
+        return visit_number_like(
+          [](auto const typed_r, auto const &l_val) -> object_ref {
+            using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            {
+              i64 res{};
+
+              if(__builtin_sub_overflow(l_val, typed_r->data, &res))
+              {
+                native_big_integer const l{ l_val };
+                return make_box<obj::big_integer>(l_val - typed_r->data);
+              }
+
+              return make_box<obj::integer>(res);
+            }
+            else
+            {
+              return make_box(l_val - typed_r->data);
+            }
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
   }
 
   object_ref div(object_ref const l, object_ref const r)
@@ -576,6 +644,40 @@ namespace jank::runtime
     return l * r;
   }
 
+  object_ref promoting_mul(object_ref const l, object_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const r) -> object_ref {
+        using LT = typename decltype(typed_l)::value_type;
+
+        return visit_number_like(
+          [](auto const typed_r, auto const &l_val) -> object_ref {
+            using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            {
+              i64 res{};
+
+              if(__builtin_mul_overflow(l_val, typed_r->data, &res))
+              {
+                native_big_integer const l{ l_val };
+                return make_box<obj::big_integer>(l * typed_r->data);
+              }
+
+              return make_box<obj::integer>(res);
+            }
+            else
+            {
+              return make_box(l_val * typed_r->data);
+            }
+          },
+          r,
+          typed_l->data);
+      },
+      l,
+      r);
+  }
+
   object_ref rem(object_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -659,10 +761,62 @@ namespace jank::runtime
       l);
   }
 
+  object_ref promoting_inc(object_ref const l)
+  {
+    return visit_number_like(
+      [](auto const typed_l) -> object_ref {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(std::same_as<T, obj::integer>)
+        {
+          i64 res{};
+
+          if(__builtin_add_overflow(typed_l->data, 1ll, &res))
+          {
+            native_big_integer const v{ typed_l->data };
+            return make_box<obj::big_integer>(v + 1ll);
+          }
+
+          return make_box<obj::integer>(res);
+        }
+        else
+        {
+          return make_box(typed_l->data + 1ll);
+        }
+      },
+      l);
+  }
+
   object_ref dec(object_ref const l)
   {
     return visit_number_like(
       [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1ll).erase(); },
+      l);
+  }
+
+  object_ref promoting_dec(object_ref const l)
+  {
+    return visit_number_like(
+      [](auto const typed_l) -> object_ref {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(std::same_as<T, obj::integer>)
+        {
+          i64 res{};
+
+          if(__builtin_sub_overflow(typed_l->data, 1ll, &res))
+          {
+            native_big_integer const v{ typed_l->data };
+            return make_box<obj::big_integer>(v - 1ll);
+          }
+
+          return make_box<obj::integer>(res);
+        }
+        else
+        {
+          return make_box(typed_l->data - 1ll);
+        }
+      },
       l);
   }
 
@@ -749,7 +903,8 @@ namespace jank::runtime
             auto const data_l{ to_real(typed_l) };
             auto const data_r{ to_real(typed_r->data) };
 
-            using C = std::common_type_t<decltype(data_l), decltype(data_r)>;
+            using C
+              = std::common_type_t<jtl::decay_t<decltype(data_l)>, jtl::decay_t<decltype(data_r)>>;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
             return static_cast<C>(data_l) == static_cast<C>(data_r);
@@ -923,7 +1078,8 @@ namespace jank::runtime
 
   f64 rand()
   {
-    static std::mt19937 gen;
+    static std::random_device dev;
+    static std::mt19937 gen{ dev() };
     static std::uniform_real_distribution<f64> dis(0.0, 1.0);
     return dis(gen);
   }
@@ -1215,7 +1371,8 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> f64 {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>,
+                                     jtl::decay_t<decltype(typed_r_data)>>;
         return std::min(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
       r,
@@ -1227,7 +1384,8 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l_data)>,
+                                     jtl::decay_t<decltype(typed_r)>>;
         return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
       l,
@@ -1249,7 +1407,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return std::min(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
       l,
@@ -1261,7 +1419,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> f64 {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_r_data), decltype(typed_l)>;
+        using C = std::common_type_t<decltype(typed_r_data), jtl::decay_t<decltype(typed_l)>>;
         return std::min(static_cast<C>(typed_r_data), static_cast<C>(typed_l));
       },
       r,
@@ -1358,7 +1516,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> f64 {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>, decltype(typed_r_data)>;
         return std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
       r,
@@ -1370,7 +1528,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data));
       },
       l,
@@ -1392,7 +1550,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ref {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return make_box(std::max(static_cast<C>(typed_r), static_cast<C>(typed_l_data)));
       },
       l,
@@ -1404,7 +1562,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ref {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>, decltype(typed_r_data)>;
         return make_box(std::max(static_cast<C>(typed_l), static_cast<C>(typed_r_data)));
       },
       r,
@@ -1549,7 +1707,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
       l,
@@ -1571,7 +1729,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> f64 {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>, decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
       r,
@@ -1583,7 +1741,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
       l,
@@ -1605,7 +1763,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> object_ref {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return make_box(std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r)));
       },
       l,
@@ -1617,7 +1775,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> object_ref {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>, decltype(typed_r_data)>;
         return make_box(std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data)));
       },
       r,
@@ -1644,7 +1802,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_l, auto const typed_r) -> f64 {
         auto const typed_l_data{ to_real(typed_l->data) };
-        using C = std::common_type_t<decltype(typed_l_data), decltype(typed_r)>;
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
         return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
       },
       l,
@@ -1656,7 +1814,7 @@ namespace jank::runtime
     return visit_number_like(
       [](auto const typed_r, auto const typed_l) -> f64 {
         auto const typed_r_data{ to_real(typed_r->data) };
-        using C = std::common_type_t<decltype(typed_l), decltype(typed_r_data)>;
+        using C = std::common_type_t<jtl::decay_t<decltype(typed_l)>, decltype(typed_r_data)>;
         return std::pow(static_cast<C>(typed_l), static_cast<C>(typed_r_data));
       },
       r,
@@ -1703,11 +1861,24 @@ namespace jank::runtime
     return static_cast<i64>(l);
   }
 
+  f64 to_real(object_ref const o)
+  {
+    return visit_number_like(
+      [](auto const typed_o) -> f64 { return typed_o->to_real(); },
+      [=]() -> f64 { throw std::runtime_error{ util::format("not a number: {}", to_string(o)) }; },
+      o);
+  }
+
   bool is_number(object_ref const o)
   {
     return visit_number_like([=](auto const) -> bool { return true; },
                              [=]() -> bool { return false; },
                              o);
+  }
+
+  object_ref number(object_ref const o)
+  {
+    return visit_number_like([](auto const typed_l) -> object_ref { return typed_l; }, o);
   }
 
   bool is_integer(object_ref const o)
@@ -1734,7 +1905,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::real>)
         {
@@ -1752,7 +1923,7 @@ namespace jank::runtime
   {
     return visit_number_like(
       [=](auto const typed_o) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::real>)
         {
@@ -1793,9 +1964,14 @@ namespace jank::runtime
     }
   }
 
+  bool is_big_integer(object_ref const o)
+  {
+    return o->type == object_type::big_integer;
+  }
+
   obj::big_integer_ref to_big_integer(object_ref const o)
   {
-    return visit_number_like(
+    return visit_object(
       [&](auto const typed_o) -> obj::big_integer_ref {
         using T = typename decltype(typed_o)::value_type;
 
@@ -1803,7 +1979,7 @@ namespace jank::runtime
         {
           return typed_o;
         }
-        else if constexpr(std::same_as<T, obj::integer>)
+        else if constexpr(std::same_as<T, obj::integer> || std::same_as<T, obj::persistent_string>)
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
@@ -1828,16 +2004,16 @@ namespace jank::runtime
 
   obj::big_decimal_ref to_big_decimal(object_ref const o)
   {
-    return visit_number_like(
+    return visit_object(
       [&](auto const typed_o) -> obj::big_decimal_ref {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::integer>)
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
         else if constexpr(std::same_as<T, obj::big_integer> || std::same_as<T, obj::real>
-                          || std::same_as<T, obj::ratio>)
+                          || std::same_as<T, obj::ratio> || std::same_as<T, obj::persistent_string>)
         {
           return make_box<obj::big_decimal>(typed_o->data);
         }

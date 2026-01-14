@@ -18,7 +18,7 @@ namespace jank::analyze::expr
     cpp_type(expression_position position,
              local_frame_ptr frame,
              bool needs_box,
-             runtime::obj::symbol_ref sym,
+             runtime::obj::symbol_ref const sym,
              jtl::ptr<void> type);
 
     void propagate_position(expression_position const pos) override;

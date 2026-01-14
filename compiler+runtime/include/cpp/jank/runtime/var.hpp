@@ -5,8 +5,10 @@
 #include <folly/Synchronized.h>
 
 #include <jtl/result.hpp>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 
 namespace jank::runtime
 {
@@ -15,21 +17,16 @@ namespace jank::runtime
   using var_thread_binding_ref = oref<struct var_thread_binding>;
   using var_unbound_root_ref = oref<struct var_unbound_root>;
 
-  namespace obj
-  {
-    using persistent_hash_map_ref = oref<struct persistent_hash_map>;
-  }
-
-  struct var : gc
+  struct var
   {
     static constexpr object_type obj_type{ object_type::var };
     static constexpr bool pointer_free{ false };
 
     var() = delete;
-    var(ns_ref const &n, obj::symbol_ref const &name);
-    var(ns_ref const &n, obj::symbol_ref const &name, object_ref root);
-    var(ns_ref const &n,
-        obj::symbol_ref const &name,
+    var(ns_ref const n, obj::symbol_ref const name);
+    var(ns_ref const n, obj::symbol_ref const name, object_ref const root);
+    var(ns_ref const n,
+        obj::symbol_ref const name,
         object_ref const root,
         bool dynamic,
         bool thread_bound);
@@ -45,19 +42,20 @@ namespace jank::runtime
     bool equal(var const &) const;
 
     /* behavior::metadatable */
-    var_ref with_meta(object_ref m);
+    var_ref with_meta(object_ref const m);
 
     bool is_bound() const;
     object_ref get_root() const;
     /* Binding a root changes it for all threads. */
-    var_ref bind_root(object_ref r);
-    object_ref alter_root(object_ref f, object_ref args);
+    var_ref bind_root(object_ref const r);
+    object_ref alter_root(object_ref const f, object_ref const args);
     /* Setting a var does not change its root, it only affects the current thread
      * binding. If there is no thread binding, a var cannot be set. */
-    jtl::string_result<void> set(object_ref r) const;
+    jtl::string_result<void> set(object_ref const r) const;
 
     var_ref set_dynamic(bool dyn);
 
+    obj::symbol_ref to_qualified_symbol() const;
     var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::derefable */
@@ -82,12 +80,12 @@ namespace jank::runtime
     std::atomic_bool thread_bound{ false };
   };
 
-  struct var_thread_binding : gc
+  struct var_thread_binding
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
     static constexpr bool pointer_free{ false };
 
-    var_thread_binding(object_ref value, std::thread::id id);
+    var_thread_binding(object_ref const value, std::thread::id id);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -106,12 +104,12 @@ namespace jank::runtime
     obj::persistent_hash_map_ref bindings{};
   };
 
-  struct var_unbound_root : gc
+  struct var_unbound_root
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
     static constexpr bool pointer_free{ true };
 
-    var_unbound_root(var_ref var);
+    var_unbound_root(var_ref const var);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -125,36 +123,24 @@ namespace jank::runtime
   };
 }
 
-/* TODO: Move these to the .cpp */
 namespace std
 {
   template <>
   struct hash<jank::runtime::var>
   {
-    size_t operator()(jank::runtime::var const &o) const noexcept
-    {
-      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
-      return hasher(*o.name);
-    }
+    size_t operator()(jank::runtime::var const &o) const noexcept;
   };
 
   template <>
   struct hash<jank::runtime::var_ref>
   {
-    size_t operator()(jank::runtime::var_ref const &o) const noexcept
-    {
-      static auto hasher(std::hash<jank::runtime::obj::symbol>{});
-      return hasher(*o->name);
-    }
+    size_t operator()(jank::runtime::var_ref const o) const noexcept;
   };
 
   template <>
   struct equal_to<jank::runtime::var_ref>
   {
     bool
-    operator()(jank::runtime::var_ref const &lhs, jank::runtime::var_ref const &rhs) const noexcept
-    {
-      return lhs->equal(*rhs);
-    }
+    operator()(jank::runtime::var_ref const lhs, jank::runtime::var_ref const rhs) const noexcept;
   };
 }

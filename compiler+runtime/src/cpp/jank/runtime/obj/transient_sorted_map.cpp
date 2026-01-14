@@ -9,17 +9,12 @@
 
 namespace jank::runtime::obj
 {
-  transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d)
-    : data{ std::move(d).transient() }
-  {
-  }
-
   transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map const &d)
-    : data{ d.transient() }
+    : data{ d }
   {
   }
 
-  transient_sorted_map::transient_sorted_map(runtime::detail::native_transient_sorted_map &&d)
+  transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d)
     : data{ std::move(d) }
   {
   }
@@ -72,7 +67,7 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref transient_sorted_map::get(object_ref const key, object_ref const fallback) const
@@ -94,27 +89,27 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   bool transient_sorted_map::contains(object_ref const key) const
   {
     assert_active();
-    return data.find(key) != data.end();
+    return data.contains(key);
   }
 
   transient_sorted_map_ref
   transient_sorted_map::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
-    data.insert_or_assign(key, val);
+    data[key] = val;
     return this;
   }
 
   transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
-    data.erase_key(key);
+    data.erase(key);
     return this;
   }
 
@@ -151,7 +146,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     active = false;
-    return make_box<persistent_sorted_map>(std::move(data).persistent());
+    return make_box<persistent_sorted_map>(std::move(data));
   }
 
   object_ref transient_sorted_map::call(object_ref const o) const

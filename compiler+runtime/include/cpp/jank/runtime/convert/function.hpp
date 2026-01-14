@@ -7,13 +7,14 @@ namespace jank::runtime
   template <typename T>
   struct always_object_ref
   {
-    using type = object_ref;
+    using type = object_ref const;
   };
 
   template <typename R, typename... Args>
   auto convert_function(R (* const fn)(Args...))
   {
-    if constexpr(std::conjunction_v<std::is_same<object_ref, R>, std::is_same<object_ref, Args>...>)
+    if constexpr(std::conjunction_v<std::is_same<object_ref, R>,
+                                    std::is_same<object_ref const, Args>...>)
     {
       return fn;
     }
@@ -23,13 +24,13 @@ namespace jank::runtime
         [fn](Args &&...args) -> object_ref {
           if constexpr(jtl::is_void<R>)
           {
-            fn(convert<Args>::into_object(jtl::forward<Args>(args))...);
+            fn(convert<jtl::decay_t<Args>>::into_object(jtl::forward<Args>(args))...);
             return convert<R>::into_object();
           }
           else
           {
             return convert<R>::into_object(
-              fn(convert<Args>::into_object(jtl::forward<Args>(args))...));
+              fn(convert<jtl::decay_t<Args>>::into_object(jtl::forward<Args>(args))...));
           }
         }
       };

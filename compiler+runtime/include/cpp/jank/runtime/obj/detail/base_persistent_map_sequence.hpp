@@ -5,8 +5,8 @@
 
 namespace jank::runtime
 {
-  void to_string(object_ref o, jtl::string_builder &buff);
-  void to_code_string(object_ref o, jtl::string_builder &buff);
+  void to_string(object_ref const o, jtl::string_builder &buff);
+  void to_code_string(object_ref const o, jtl::string_builder &buff);
 
   namespace obj
   {
@@ -17,7 +17,7 @@ namespace jank::runtime
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename IT>
-  struct base_persistent_map_sequence : gc
+  struct base_persistent_map_sequence
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };

@@ -6,17 +6,12 @@
 
 namespace jank::runtime::obj
 {
-  transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
-    : data{ std::move(d).transient() }
-  {
-  }
-
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d)
-    : data{ d.transient() }
+    : data{ d }
   {
   }
 
-  transient_sorted_set::transient_sorted_set(runtime::detail::native_transient_sorted_set &&d)
+  transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
     : data{ std::move(d) }
   {
   }
@@ -64,7 +59,7 @@ namespace jank::runtime::obj
   transient_sorted_set_ref transient_sorted_set::conj_in_place(object_ref const elem)
   {
     assert_active();
-    data.insert_v(elem);
+    data.insert(elem);
     return this;
   }
 
@@ -72,7 +67,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     active = false;
-    return make_box<persistent_sorted_set>(data.persistent());
+    return make_box<persistent_sorted_set>(data);
   }
 
   object_ref transient_sorted_set::call(object_ref const elem)
@@ -81,9 +76,9 @@ namespace jank::runtime::obj
     auto const found(data.find(elem));
     if(found != data.end())
     {
-      return found.get();
+      return *found;
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
@@ -92,7 +87,7 @@ namespace jank::runtime::obj
     auto const found(data.find(elem));
     if(found != data.end())
     {
-      return found.get();
+      return *found;
     }
     return fallback;
   }
@@ -109,11 +104,10 @@ namespace jank::runtime::obj
 
   object_ref transient_sorted_set::get_entry(object_ref const elem)
   {
-    auto const found = call(elem);
-    auto const nil(jank_nil);
-    if(found == nil)
+    auto found{ call(elem) };
+    if(found == jank_nil())
     {
-      return nil;
+      return found;
     }
 
     return make_box<persistent_vector>(std::in_place, found, found);
@@ -122,13 +116,13 @@ namespace jank::runtime::obj
   bool transient_sorted_set::contains(object_ref const elem) const
   {
     assert_active();
-    return data.find(elem) != data.end();
+    return data.contains(elem);
   }
 
   transient_sorted_set_ref transient_sorted_set::disjoin_in_place(object_ref const elem)
   {
     assert_active();
-    data.erase_key(elem);
+    data.erase(elem);
     return this;
   }
 

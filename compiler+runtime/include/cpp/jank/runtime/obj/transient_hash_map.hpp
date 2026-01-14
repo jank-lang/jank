@@ -12,7 +12,7 @@ namespace jank::runtime::obj
 {
   using transient_hash_map_ref = oref<struct transient_hash_map>;
 
-  struct transient_hash_map : gc
+  struct transient_hash_map
   {
     static constexpr object_type obj_type{ object_type::transient_hash_map };
     static constexpr bool pointer_free{ false };
@@ -43,22 +43,22 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::associatively_writable_in_place */
     transient_hash_map_ref assoc_in_place(object_ref const key, object_ref const val);
     transient_hash_map_ref dissoc_in_place(object_ref const key);
 
     /* behavior::conjable_in_place */
-    transient_hash_map_ref conj_in_place(object_ref head);
+    transient_hash_map_ref conj_in_place(object_ref const head);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref) const;
-    object_ref call(object_ref, object_ref) const;
+    object_ref call(object_ref const) const;
+    object_ref call(object_ref const, object_ref const) const;
 
     void assert_active() const;
 

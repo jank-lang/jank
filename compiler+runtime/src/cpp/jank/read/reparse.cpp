@@ -65,7 +65,7 @@ namespace jank::read::parse
   source reparse_nth(obj::persistent_list_ref const o, usize const n)
   {
     auto source(object_source(o));
-    if(source == source::unknown)
+    if(source == source::unknown())
     {
       return source;
     }
@@ -76,7 +76,7 @@ namespace jank::read::parse
     };
     if(res.is_err())
     {
-      return source::unknown;
+      return source::unknown();
     }
     return res.expect_ok();
   }
@@ -84,7 +84,7 @@ namespace jank::read::parse
   source reparse_nth(runtime::obj::persistent_vector_ref const o, usize const n)
   {
     auto source(object_source(o));
-    if(source == source::unknown)
+    if(source == source::unknown())
     {
       return source;
     }
@@ -95,7 +95,7 @@ namespace jank::read::parse
     };
     if(res.is_err())
     {
-      return source::unknown;
+      return source::unknown();
     }
     return res.expect_ok();
   }
@@ -108,7 +108,7 @@ namespace jank::read::parse
      * but this will be fine for now. */
     return visit_seqable(
       [](auto const typed_o, usize const n) -> source {
-        using T = typename decltype(typed_o)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::persistent_list>
                      || std::same_as<T, obj::persistent_vector>)

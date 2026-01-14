@@ -10,7 +10,7 @@ namespace jank::ui
   using namespace ftxui;
 
   /* TODO: Also support core fns? */
-  static std::set<jtl::immutable_string_view> const specials{
+  static native_set<jtl::immutable_string_view> const specials{
     "def", "fn*",   "fn",  "let*", "let",   "loop*",   "loop",  "do",
     "if",  "quote", "var", "try",  "catch", "finally", "throw", "letfn*",
   };

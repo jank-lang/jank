@@ -40,6 +40,12 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_hash_map_ref persistent_hash_map::empty()
+  {
+    static auto const ret(make_box<persistent_hash_map>());
+    return ret;
+  }
+
   persistent_hash_map_ref persistent_hash_map::create_from_seq(object_ref const seq)
   {
     return make_box<persistent_hash_map>(visit_seqable(
@@ -73,7 +79,7 @@ namespace jank::runtime::obj
     {
       return *res;
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref persistent_hash_map::get(object_ref const key, object_ref const fallback) const
@@ -93,7 +99,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, *res);
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   bool persistent_hash_map::contains(object_ref const key) const

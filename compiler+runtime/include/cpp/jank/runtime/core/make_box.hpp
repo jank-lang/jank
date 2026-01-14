@@ -16,7 +16,7 @@ namespace jank::runtime
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
   inline auto make_box(std::nullptr_t const &)
   {
-    return jank_nil;
+    return jank_nil();
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
@@ -84,6 +84,13 @@ namespace jank::runtime
   {
     jank_assert(s != nullptr);
     return make_box<obj::persistent_string>(s);
+  }
+
+  [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
+  inline obj::persistent_string_ref make_box(signed char const * const s)
+  {
+    jank_assert(s != nullptr);
+    return make_box<obj::persistent_string>(reinterpret_cast<char const *>(s));
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]

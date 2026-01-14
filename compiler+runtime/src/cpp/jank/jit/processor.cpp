@@ -21,16 +21,18 @@
 #include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang.hpp>
+#include <jank/util/clang_format.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::jit
 {
   static jtl::immutable_string default_shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
-    return util::format("{}.dylib", lib);
+    return util::format("lib{}.dylib", lib);
   }
 #elif defined(__linux__)
   {
@@ -165,6 +167,9 @@ namespace jank::jit
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
 
+    args.emplace_back("-w");
+    args.emplace_back("-Wno-c++11-narrowing");
+
     util::add_system_flags(args);
 
     /********* Every flag after this line is user-provided. *********/
@@ -240,11 +245,22 @@ namespace jank::jit
 
   void processor::eval_string(jtl::immutable_string const &s) const
   {
+    eval_string(s, nullptr);
+  }
+
+  void processor::eval_string(jtl::immutable_string const &s, clang::Value * const ret) const
+  {
     profile::timer const timer{ "jit eval_string" };
-    //util::println("// eval_string:\n{}\n", s);
-    auto err(interpreter->ParseAndExecute({ s.data(), s.size() }));
-    /* TODO: Throw on errors. */
-    llvm::logAllUnhandledErrors(std::move(err), llvm::errs(), "error: ");
+    auto const &formatted{ s };
+    /* TODO: There is some sort of immutable_string or result bug here. */
+    //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
+    //util::println("// eval_string:\n{}\n", formatted);
+    auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
+    if(err)
+    {
+      llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
+      throw error::internal_codegen_failure("Unable to compile C++ source.");
+    }
     register_jit_stack_frames();
   }
 

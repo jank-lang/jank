@@ -5,4 +5,5 @@
 namespace jank::error
 {
   void report(error_ref e);
+  void warn(jtl::immutable_string const &);
 }

@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::let::pass_void_binding
+          {
+            void foo()
+            { }
+          }")
+
+((fn* [& args]
+   (let* [v (cpp/jank.cpp.let.pass_void_binding.foo)]
+     (if (nil? v)
+       :success))))

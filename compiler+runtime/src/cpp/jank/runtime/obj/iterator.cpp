@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     if(cached_next.is_some())
     {
       current = cached_next->first();
-      cached_next = jank_nil;
+      cached_next = jank_nil();
     }
     else
     {

@@ -8,6 +8,7 @@
 namespace jank::runtime
 {
   struct context;
+  using var_ref = oref<struct var>;
 
   namespace obj
   {
@@ -17,7 +18,7 @@ namespace jank::runtime
 
 namespace jank::analyze::cpp_util
 {
-  jtl::ptr<void> untyped_object_ptr_type();
+  jtl::ptr<void> untyped_object_ref_type();
 }
 
 namespace jank::analyze
@@ -28,25 +29,6 @@ namespace jank::analyze
   {
     using function_context_ref = jtl::ref<struct function_context>;
   }
-
-  struct lifted_var
-  {
-    jtl::immutable_string native_name{};
-    runtime::obj::symbol_ref var_name{};
-
-    runtime::object_ref to_runtime_data() const;
-  };
-
-  /* TODO: Track constant usages to figure out if boxing is needed at all,
-   * rather than just doing both. */
-  struct lifted_constant
-  {
-    jtl::immutable_string native_name{};
-    jtl::option<jtl::immutable_string> unboxed_native_name{};
-    runtime::object_ref data{};
-
-    runtime::object_ref to_runtime_data() const;
-  };
 
   struct local_binding
   {
@@ -59,14 +41,14 @@ namespace jank::analyze
     bool has_unboxed_usage{};
     /* TODO: This gets stomped when a binding is shadowed. Do we
      * need to handle shadowing more delicately? */
-    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ptr_type() };
+    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ref_type() };
 
     runtime::object_ref to_runtime_data() const;
   };
 
   using local_binding_ptr = jtl::ptr<local_binding>;
 
-  struct local_frame : gc
+  struct local_frame
   {
     enum class frame_type : u8
     {
@@ -122,26 +104,19 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref const sym);
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
-    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref const sym);
 
-    jtl::option<named_recursion_find_result> find_named_recursion(runtime::obj::symbol_ref sym);
+    jtl::option<named_recursion_find_result>
+    find_named_recursion(runtime::obj::symbol_ref const sym);
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
-
-    runtime::obj::symbol_ref lift_var(runtime::obj::symbol_ref const &);
-    jtl::option<std::reference_wrapper<lifted_var const>>
-    find_lifted_var(runtime::obj::symbol_ref const &) const;
-
-    void lift_constant(runtime::object_ref);
-    jtl::option<std::reference_wrapper<lifted_constant const>>
-      find_lifted_constant(runtime::object_ref) const;
 
     static local_frame const &find_closest_fn_frame(local_frame const &frame);
     static local_frame &find_closest_fn_frame(local_frame &frame);
@@ -152,12 +127,6 @@ namespace jank::analyze
     jtl::option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> captures;
-    native_unordered_map<runtime::obj::symbol_ref, lifted_var> lifted_vars;
-    native_unordered_map<runtime::object_ref,
-                         lifted_constant,
-                         std::hash<runtime::object_ref>,
-                         runtime::very_equal_to>
-      lifted_constants;
     /* This is only set if the frame type is fn. */
     jtl::ptr<expr::function_context> fn_ctx;
   };

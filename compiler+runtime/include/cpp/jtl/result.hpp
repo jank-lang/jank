@@ -6,6 +6,12 @@
 #include <jtl/immutable_string.hpp>
 #include <jtl/trait/type_name.hpp>
 
+namespace jank::error
+{
+  [[noreturn]]
+  void throw_internal_failure(jtl::immutable_string const &message);
+}
+
 namespace jtl
 {
   namespace detail
@@ -30,6 +36,37 @@ namespace jtl
     struct result<Ok, void>
     {
     };
+
+    template <typename Result>
+    [[noreturn]]
+    constexpr void panic(Result const &r)
+    {
+      using E = typename Result::error_type;
+
+      /* A result can hold any type of error type, but when we expect a value
+       * and it's not there, we only want to throw a jank::error_ref. This
+       * not only makes catching easier, it also fits into our error reporting.
+       *
+       * So we need to do some work here to see if we have an error_ref, something
+       * we can use to build an error_ref (like a string), or just something else. */
+
+      /* This is a roundabout way of looking for error_ref. */
+      if constexpr(requires(E t) { E::value_type::is_error; })
+      {
+        throw r.expect_err();
+      }
+      else if constexpr(jtl::is_same<E, immutable_string>)
+      {
+        jank::error::throw_internal_failure(r.expect_err());
+      }
+      else
+      {
+        immutable_string s{ "Unexpected result<" };
+        s = s + type_name<E>().data();
+        s = s + ">";
+        jank::error::throw_internal_failure(s);
+      }
+    }
   }
 
   constexpr detail::result<true, void> ok() noexcept
@@ -53,6 +90,9 @@ namespace jtl
   struct [[nodiscard]] result
   {
     static_assert(!std::same_as<R, E>, "Result and error type must be different.");
+
+    using value_type = R;
+    using error_type = E;
 
     constexpr result(detail::result<true, R> &&r) noexcept
       : data{ R{ std::move(r.data) } }
@@ -112,9 +152,13 @@ namespace jtl
         return;
       }
 
-      /* TODO: Update all of these throws to throw a consistent type, regardless of the
-       * error type. This simplifies our catching logic. */
-      throw expect_err();
+      detail::panic(*this);
+    }
+
+    constexpr R &expect_ok()
+    {
+      assert_ok();
+      return std::get<R>(data);
     }
 
     constexpr R const &expect_ok() const
@@ -183,9 +227,8 @@ namespace jtl
     constexpr R unwrap_move()
     {
       if(!is_ok())
-      /* TODO: Panic function. */
       {
-        throw expect_err();
+        detail::panic(*this);
       }
       return std::move(std::get<R>(data));
     }
@@ -245,6 +288,8 @@ namespace jtl
   template <typename E>
   struct [[nodiscard]] result<void, E>
   {
+    using error_type = E;
+
     constexpr result(detail::result<true, void> &&) noexcept
       : data{ void_t{} }
     {
@@ -288,7 +333,7 @@ namespace jtl
         return;
       }
 
-      throw expect_err();
+      detail::panic(*this);
     }
 
     constexpr void expect_ok() const

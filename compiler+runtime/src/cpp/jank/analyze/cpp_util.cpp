@@ -292,6 +292,44 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    if(type == untyped_object_ptr_type())
+    {
+      return "jank::runtime::object_ref";
+    }
+    /* TODO: Handle typed object refs, too. */
+
+    /* TODO: We probably want a recursive approach to this, for types and scopes. */
+    auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
+    if(qual_type->isNullPtrType())
+    {
+      return "std::nullptr_t";
+    }
+
+    if(auto const *alias{
+         llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()) };
+       alias)
+    {
+      if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
+      {
+        return get_qualified_name(alias_decl);
+      }
+    }
+
+    if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
+    {
+      auto name{ get_qualified_name(scope) };
+      if(Cpp::IsPointerType(type))
+      {
+        name = name + "*";
+      }
+      return name;
+    }
+
+    return Cpp::GetTypeAsString(type);
+  }
+
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)
@@ -363,6 +401,12 @@ namespace jank::analyze::cpp_util
     }
 
     return Cpp::IsImplicitlyConvertible(from, to);
+  }
+
+  bool is_pointer_to_void_conversion(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    return (Cpp::IsPointerType(from) && Cpp::IsPointerType(to))
+      && (Cpp::IsVoid(Cpp::GetPointeeType(from)) || Cpp::IsVoid(Cpp::GetPointeeType(to)));
   }
 
   bool is_untyped_object(jtl::ptr<void> const type)
@@ -441,13 +485,13 @@ namespace jank::analyze::cpp_util
         {
           if(typed_expr->values.empty())
           {
-            return untyped_object_ptr_type();
+            return untyped_object_ref_type();
           }
           return expression_type(typed_expr->values.back());
         }
         else
         {
-          return untyped_object_ptr_type();
+          return untyped_object_ref_type();
         }
       },
       expr);
@@ -478,7 +522,7 @@ namespace jank::analyze::cpp_util
     jank_debug_assert(type);
     if(Cpp::IsVoid(type))
     {
-      return untyped_object_ptr_type();
+      return untyped_object_ref_type();
     }
     return type;
   }
@@ -509,7 +553,7 @@ namespace jank::analyze::cpp_util
 
     /* If any arg can be implicitly converted to multiple functions, we have an ambiguity.
      * The user will need to specify the correct type by using a cast. */
-    for(usize arg_idx{}; arg_idx < max_arg_count; ++arg_idx)
+    for(usize arg_idx{}; arg_idx < arg_count; ++arg_idx)
     {
       /* If our input argument here isn't an object ptr, there's no implicit conversion
        * we're going to consider. Skip to the next argument. */
@@ -833,8 +877,14 @@ namespace jank::analyze::cpp_util
     if((Cpp::IsPointerType(expr_type) || Cpp::IsArrayType(expr_type))
        && (Cpp::IsPointerType(expected_type) || Cpp::IsArrayType(expected_type)))
     {
-      auto const res{ determine_implicit_conversion(Cpp::GetPointeeType(expr_type),
-                                                    Cpp::GetPointeeType(expected_type)) };
+      auto const expr_pointee_type{ Cpp::GetPointeeType(expr_type) };
+      auto const expected_pointee_type{ Cpp::GetPointeeType(expected_type) };
+      if(Cpp::IsVoid(expr_pointee_type) || Cpp::IsVoid(expected_pointee_type))
+      {
+        return implicit_conversion_action::none;
+      }
+
+      auto const res{ determine_implicit_conversion(expr_pointee_type, expected_pointee_type) };
       switch(res)
       {
         case implicit_conversion_action::none:

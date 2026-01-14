@@ -100,12 +100,14 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref form);
-    jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_seq(runtime::object_ref seq);
-    jtl::result<runtime::object_ref, error_ref> syntax_quote_expand_set(runtime::object_ref seq);
+    jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
+    jtl::result<runtime::object_ref, error_ref>
+    syntax_quote_expand_seq(runtime::object_ref const seq);
+    jtl::result<runtime::object_ref, error_ref>
+    syntax_quote_expand_set(runtime::object_ref const seq);
     static jtl::result<runtime::object_ref, error_ref>
-    syntax_quote_flatten_map(runtime::object_ref seq);
-    static bool syntax_quote_is_unquote(runtime::object_ref form, bool splice);
+    syntax_quote_flatten_map(runtime::object_ref const seq);
+    static bool syntax_quote_is_unquote(runtime::object_ref const form, bool splice);
 
   public:
     lex::processor::iterator token_current, token_end;
@@ -117,7 +119,7 @@ namespace jank::read::parse
      * token, we should check this list to see if there's already a form we should pull out.
      * This is needed because parse iteration works one form at a time and splicing potentially
      * turns one form into many. */
-    std::list<runtime::object_ref> pending_forms;
+    native_list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
     /* Whether or not the next form is considered quoted. */
