@@ -3043,9 +3043,7 @@ namespace jank::analyze
 
       pop_macro_expansions = push_macro_expansions(*this, o);
 
-      /* We analyze this in type position, since we support types here, but we reset to value
-       * position if what we get back isn't a type. */
-      auto sym_result(analyze_symbol(sym, current_frame, expression_position::type, fn_ctx, true));
+      auto sym_result(analyze_symbol(sym, current_frame, expression_position::call, fn_ctx, true));
       if(sym_result.is_err())
       {
         return sym_result;
@@ -3066,8 +3064,6 @@ namespace jank::analyze
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
-
-      source->propagate_position(expression_position::value);
 
       if((source->kind >= expression_kind::cpp_value_min
           && source->kind <= expression_kind::cpp_value_max)
@@ -3146,10 +3142,8 @@ namespace jank::analyze
     {
       pop_macro_expansions = push_macro_expansions(*this, o);
 
-      /* We analyze this in type position, since we support types here, but we reset to value
-       * position if what we get back isn't a type. */
       auto const callable_expr(
-        analyze(first, current_frame, expression_position::type, fn_ctx, needs_box));
+        analyze(first, current_frame, expression_position::call, fn_ctx, needs_box));
       if(callable_expr.is_err())
       {
         return callable_expr;
@@ -3169,8 +3163,6 @@ namespace jank::analyze
           expr::cpp_value::value_kind::constructor) };
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
-
-      source->propagate_position(expression_position::value);
 
       if((source->kind >= expression_kind::cpp_value_min
           && source->kind <= expression_kind::cpp_value_max)
@@ -3321,8 +3313,8 @@ namespace jank::analyze
     }
 
     if(Cpp::IsClass(scope) || Cpp::IsTemplateSpecialization(scope)
-       || (position == expression_position::type && Cpp::IsEnumType(type)
-           && !Cpp::IsEnumConstant(scope)))
+       || ((position == expression_position::type || position == expression_position::call)
+           && Cpp::IsEnumType(type) && !Cpp::IsEnumConstant(scope)))
     {
       if(is_ctor)
       {
@@ -3400,7 +3392,7 @@ namespace jank::analyze
                                             vk.unwrap());
     }
 
-    if(position == expression_position::type)
+    if(position == expression_position::type || position == expression_position::call)
     {
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
@@ -3471,6 +3463,13 @@ namespace jank::analyze
     auto const op{ cpp_util::match_operator(name) };
     if(op.is_some())
     {
+      if(position != expression_position::call)
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym),
+                                                   latest_expansion(macro_expansions));
+      }
+
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
@@ -3482,6 +3481,13 @@ namespace jank::analyze
 
     if(name.starts_with(".-"))
     {
+      if(position != expression_position::call)
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym),
+                                                   latest_expansion(macro_expansions));
+      }
+
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
@@ -3492,6 +3498,13 @@ namespace jank::analyze
     }
     else if(name.starts_with('.'))
     {
+      if(position != expression_position::call)
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym),
+                                                   latest_expansion(macro_expansions));
+      }
+
       return jtl::make_ref<expr::cpp_value>(position,
                                             current_frame,
                                             needs_box,
@@ -3530,7 +3543,7 @@ namespace jank::analyze
                                               expr::cpp_value::value_kind::constructor);
       }
 
-      if(position != expression_position::type)
+      if(position != expression_position::type && position != expression_position::call)
       {
         return error::analyze_invalid_cpp_type_position(object_source(sym),
                                                         latest_expansion(macro_expansions));
@@ -3836,7 +3849,7 @@ namespace jank::analyze
 
     if(kind == literal_kind::type)
     {
-      if(position != expression_position::type)
+      if(position != expression_position::type && position != expression_position::call)
       {
         return error::analyze_invalid_cpp_type_position(object_source(l->first()),
                                                         latest_expansion(macro_expansions))

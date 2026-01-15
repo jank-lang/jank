@@ -1,0 +1,3 @@
+(fn* []
+  cpp/.foo)
+:success

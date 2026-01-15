@@ -10,9 +10,17 @@ namespace jank::analyze
 
   enum class expression_position : u8
   {
+    /* Used for function arguments, let bindings, and other places where the value is
+     * immediately consumed (not ignored). */
     value,
+    /* Used for the first form of a call. */
+    call,
+    /* Used for body forms within a `do` which are not the last. */
     statement,
+    /* Used for the very last form of a function. */
     tail,
+    /* Used when only types are permitted (cpp/cast, cpp/new, etc). Types are also viable
+     * in call position, in case we're calling a constructor. */
     type
   };
 
@@ -22,6 +30,8 @@ namespace jank::analyze
     {
       case expression_position::value:
         return "value";
+      case expression_position::call:
+        return "call";
       case expression_position::statement:
         return "statement";
       case expression_position::tail:
