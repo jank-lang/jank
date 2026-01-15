@@ -1,4 +1,4 @@
-# The reasoning for the `cpp` namespace
+# The `cpp` namespace
 The special `cpp/` namespace has two purposes, in jank.
 
 1. To contain all special C++ forms like `cpp/type`, `cpp/cast`, `cpp/&`, etc.

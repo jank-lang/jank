@@ -32,7 +32,7 @@ TODO:
   * [Working with native types](cpp-interop/native-types.md)
   * [Working with native functions](cpp-interop/native-functions.md)
   * [Casting between native types](cpp-interop/cast.md)
-  * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
+  * [The cpp namespace](cpp-interop/cpp-ns.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
 * [For C++ Developers](for-cpp-developers.md)
