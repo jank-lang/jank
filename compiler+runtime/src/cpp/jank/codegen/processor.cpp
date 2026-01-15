@@ -587,6 +587,7 @@ namespace jank::codegen
     switch(expr->position)
     {
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         if(meta.is_some())
         {
           auto const dynamic{ truthy(
@@ -644,6 +645,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return util::format("{}->deref()", var);
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {}->deref();", var);
@@ -661,6 +663,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return var;
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", var);
@@ -1096,6 +1099,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return ret;
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", ret.str(expr->needs_box));
@@ -1302,6 +1306,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return ret;
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", ret);
@@ -1339,6 +1344,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return prc.expression_str();
       case analyze::expression_position::tail:
         util::format_to(body_buffer, "return {};", prc.expression_str());
@@ -1671,6 +1677,7 @@ namespace jank::codegen
     {
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
+      case analyze::expression_position::call:
         return last;
       case analyze::expression_position::tail:
         if(last.is_none())

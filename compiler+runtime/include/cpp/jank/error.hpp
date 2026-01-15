@@ -104,6 +104,7 @@ namespace jank::error
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
     analyze_invalid_cpp_capture,
+    analyze_invalid_cpp_position,
     analyze_mismatched_if_types,
     analyze_known_issue,
     internal_analyze_failure,
@@ -306,6 +307,8 @@ namespace jank::error
         return "analyze/invalid-cpp-member-access";
       case kind::analyze_invalid_cpp_capture:
         return "analyze/invalid-cpp-capture";
+      case kind::analyze_invalid_cpp_position:
+        return "analyze/invalid-cpp-position";
       case kind::analyze_mismatched_if_types:
         return "analyze/mismatched-if-types";
       case kind::analyze_known_issue:

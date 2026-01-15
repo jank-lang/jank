@@ -259,6 +259,19 @@ namespace jank::error
                       expansion);
   }
 
+  error_ref analyze_invalid_cpp_position(jtl::immutable_string const &sym,
+                                         read::source const &source,
+                                         runtime::object_ref const expansion)
+  {
+    return make_error(
+      kind::analyze_invalid_cpp_position,
+      util::format("Unable to use this form as a value. It needs to be called directly. For "
+                   "example, `({} ...)`.",
+                   sym),
+      source,
+      expansion);
+  }
+
   error_ref analyze_mismatched_if_types(jtl::immutable_string const &message,
                                         read::source const &source,
                                         runtime::object_ref const expansion)
