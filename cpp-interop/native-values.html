@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-8f4941ef.js";
+            window.path_to_searchindex_js = "../searchindex-067d4cd5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8202078a.js"></script>
+        <script src="../toc-9b148d04.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -205,22 +205,22 @@ supported for the following literals:</p>
 <p>jank also has explicit support for <code>cpp/true</code>, <code>cpp/false</code>, and <code>cpp/nullptr</code>,
 which all correspond to the C++ primitive.</p>
 <h2 id="member-values"><a class="header" href="#member-values">Member values</a></h2>
-<p>Member values can be accessed from a native object using the <code>cpp/.-foo</code> syntax.
+<p>Member values can be accessed from a native object using the <code>.-foo</code> syntax.
 For example, let’s create a <code>person</code> and then pull out the name.</p>
 <pre><code class="language-clojure">(cpp/raw "struct person
           { std::string name; };")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))
-        n (cpp/.-name p)]
+  (let [p (person (cpp/cast std.string name))
+        n (.-name p)]
     ))
 </code></pre>
 <p>Whenever a member is accessed, you will get a reference to it, not a copy. Also,
 note that members can be access through a pointer to the native object, without
 needing an explicit dereference.</p>
 <pre><code class="language-clojure">(defn create-person [name]
-  (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
-        n (cpp/.-name p)]
+  (let [p (cpp/new person (cpp/cast std.string name))
+        n (.-name p)]
     ))
 </code></pre>
 <h2 id="trait-convertible"><a class="header" href="#trait-convertible">Trait-convertible</a></h2>
@@ -239,12 +239,12 @@ which calls a C++ function which operates on <code>std::string</code>.</p>
           }")
 
 (defn to-upper [o]
-  (let [upper (cpp/to_upper o)]
+  (let [upper (to_upper o)]
     upper))
 </code></pre>
 <p>In this code, <code>o</code> is a <code>jank::runtime::object_ref</code>. This is basically like
 Clojure’s <code>Object</code> type. It’s a garbage collected, type-erased value. When the
-jank compiler analyzes the call to <code>(cpp/to_upper o)</code>, it resolves that
+jank compiler analyzes the call to <code>(to_upper o)</code>, it resolves that
 <code>to_upper</code> expects a <code>std::string</code> and that there is a conversion trait for it.
 So the jank compiler will automatically handle converting from <code>object_ref</code> into
 a <code>std::string</code>. On the other side, <code>upper</code> is a <code>std::string</code>, which is the
@@ -260,7 +260,7 @@ compiler error. For example, given this source:</p>
           { std::string name; };")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+  (let [p (person (cpp/cast std.string name))]
     p))
 </code></pre>
 <p>If we try to run this file, we’ll get a compiler error telling us that we can’t
@@ -313,7 +313,7 @@ intended for C++ developers who’re using jank.</p>
           }")
 
 (defn create-person [name]
-  (let [p (cpp/person (cpp/cast cpp/std.string name))]
+  (let [p (person (cpp/cast std.string name))]
     p))
 
 (println (create-person "foo"))
@@ -345,12 +345,12 @@ Given a hypothetical <code>my_db</code> C++ database library, boxing is done lik
 <pre><code class="language-clojure">(defn query! [db-box q]
   (let [; db-box is an object_ref
         ; db is a my_db.connection*
-        db (cpp/unbox cpp/my_db.connection* db-box)]
-    (cpp/.query db q)))
+        db (cpp/unbox my_db.connection* db-box)]
+    (.query db q)))
 
 (defn -main [&amp; args]
   (let [; db is a my_db.connection*
-        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection #cpp "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -369,10 +369,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ─────┼─────────────────────────────────────────────────────────────────────────
  21  │   (let [; db-box is an object_ref
  22  │         ; db is a my_db.connection*
- 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+ 23  │         db (cpp/unbox my_db.secure_connection* db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.

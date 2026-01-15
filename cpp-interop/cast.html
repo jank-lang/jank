@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Getting Started - The jank Programming Language</title>
+        <title>Casting between native types - The jank Programming Language</title>
 
 
         <!-- Custom HTML head -->
@@ -177,24 +177,45 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
-<p>Let’s jump into jank! There’s a lot to learn, but we all have to start
-somewhere. In this chapter, we’ll discuss:</p>
+                        <h1 id="casting-between-native-types"><a class="header" href="#casting-between-native-types">Casting between native types</a></h1>
+<p>jank has two primary means of casting between native types.</p>
 <ol>
-<li>Installing jank on macOS and Linux</li>
-<li>Writing a program which prints <code>Hello, world!</code></li>
-<li>Using Leiningen to manage jank projects</li>
+<li><code>cpp/cast</code></li>
+<li><code>cpp/unsafe-cast</code></li>
 </ol>
+<p>They both have the same syntax, but they perform different actions.</p>
+<h2 id="cppcast"><a class="header" href="#cppcast"><code>cpp/cast</code></a></h2>
+<p>This is the most common style of cast which you’ll see in jank. It closely maps
+to C++ <code>static_cast</code>, but it has additional functionality to support jank’s
+<a href="./native-values.html#trait-convertible">trait conversions</a>. This will allow you
+to cast to/from jank runtime object and supported native C++ values.</p>
+<pre><code class="language-clojure">(fn [o]
+  (let [f #cpp 3.14
+        ; Normal static_cast support.
+        i (cpp/cast cpp/int f)
+        ; Explicit trait conversion, since `o` is a jank object.
+        oi (cpp/cast cpp/int o)])
+</code></pre>
+<h2 id="cppunsafe-cast"><a class="header" href="#cppunsafe-cast"><code>cpp/unsafe-cast</code></a></h2>
+<p>When <code>cpp/cast</code> is not enough, jank supports a more cutting cast which is the
+equivalent of C-style casting in C++. This is a combination of <code>static_cast</code>,
+<code>reinterpret_cast</code>, and <code>const_cast</code>. For example, if you need to cast between unrelated
+pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</code> will. However,
+note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
+dedicated to native type construction and reinterpretation.</p>
+<pre><code class="language-clojure">(let [s #cpp "meow"
+      us (cpp/cast (cpp/type "unsigned char*") s)])
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../foreword.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../cpp-interop/native-functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../getting-started/01-installation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -204,11 +225,11 @@ somewhere. In this chapter, we’ll discuss:</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../foreword.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../cpp-interop/native-functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../getting-started/01-installation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../cpp-interop/cpp-ns.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
