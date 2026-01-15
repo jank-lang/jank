@@ -165,7 +165,7 @@ function within `main.jank` to look like the following.
   (if (empty? args)
     (println "Try passing some data to compress!")
     (let [input (first args)
-          output (cpp/native_lib.compress input)]
+          output (native_lib.compress input)]
       (println "input size" (count input) "output size" (count output)))))
 ```
 

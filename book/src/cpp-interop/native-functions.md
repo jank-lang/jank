@@ -6,16 +6,16 @@ The simplest case is global functions, as well as static member functions. This
 applies to both C and C++ functions. In order to call these, just take the fully
 qualified name of the function and replace `::` with `.`. For example:
 
-* `std::rand` becomes `cpp/rand`
-* `std::this_thread::get_id()` becomes `cpp/std.this_thread.get_id`
+* `std::rand` becomes `rand`
+* `std::this_thread::get_id()` becomes `std.this_thread.get_id`
 
 For example, we can use the C functions `srand`, `time`, and `rand` to seed the
 pseudo-random number generator with the current time and then get a number.
 
 ```clojure
 (defn -main [& args]
-  (cpp/srand (cpp/time cpp/nullptr))
-  (println "rand:" (cpp/rand)))
+  (srand (time cpp/nullptr))
+  (println "rand:" (rand)))
 ```
 
 ## Overload resolution
@@ -34,7 +34,7 @@ function has many different overloads. Here, we specifically create `i` to be an
 ```clojure
 (defn -main [& args]
   (let [i #cpp 42
-        s (cpp/std.to_string i)]
+        s (std.to_string i)]
     s))
 ```
 
@@ -44,7 +44,7 @@ type, we'll get a compiler error.
 ```clojure
 (defn -main [& args]
   (let [i 42
-        s (cpp/std.to_string i)]
+        s (std.to_string i)]
     s))
 ```
 
@@ -60,7 +60,7 @@ error: No normal overload match was found. When considering automatic trait
   1  │ (defn -main [& args]
   2  │   (let [i 42
      │   ^ Expanded from this macro.
-  3  │         s (cpp/std.to_string i)]
+  3  │         s (std.to_string i)]
      │            ^^^^^^^^^^^^^^^^^ Found here.
 ─────┴─────────────────────────────────────────────────────────────────────────
 ```
@@ -70,19 +70,19 @@ We could opt into a specific conversion, and thus a specific overload, by using 
 ```clojure
 (defn -main [& args]
   (let [i 42
-        s (cpp/std.to_string (cpp/cast cpp/int i))]
+        s (std.to_string (cpp/cast cpp/int i))]
     s))
 ```
 
 ## Member functions
-Member functions can be accessed using the `cpp/.foo` syntax. For example, let's
+Member functions can be accessed using the `.foo` syntax. For example, let's
 convert a jank object to a `std::string` and then see if it's empty.
 
 ```clojure
 (defn empty? [o]
   (let [s (str o)
-        native-s (cpp/cast cpp/std.string s)]
-    (cpp/.empty native-s)))
+        native-s (cpp/cast std.string s)]
+    (.empty native-s)))
 ```
 
 Also note that member functions can be called through a pointer to the native
@@ -104,7 +104,7 @@ and then returns it when called.
           };")
 
 (defn -main [& args]
-  (let [f (cpp/call_me. "meow")]
+  (let [f (call_me. "meow")]
     (f)))
 ```
 

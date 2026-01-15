@@ -1588,6 +1588,14 @@ namespace jank::analyze
     auto const var(__rt_ctx->find_var(qualified_sym));
     if(var.is_nil())
     {
+      /* We tried to resolve this as a jank symbol, but we didn't find anything.
+       * Now we'll try again as a C++ symbol. We only do this if the ns is empty,
+       * since namespaces from C++ are encoded via '.' not '/'. */
+      if(sym->get_namespace().empty())
+      {
+        return analyze_cpp_symbol(sym, current_frame, position, fc, needs_box);
+      }
+
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
         meta_source(sym->meta),
@@ -3413,7 +3421,6 @@ namespace jank::analyze
                                 bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
-    jank_debug_assert(sym->ns == "cpp");
 
     /* TODO: Error if sym ends in . and we're not in a cpp call. */
 
@@ -3583,9 +3590,20 @@ namespace jank::analyze
         return literal_res;
       }
 
-      return error::analyze_unresolved_cpp_symbol(util::format("{}", scope_res.expect_err()),
-                                                  object_source(sym),
-                                                  latest_expansion(macro_expansions));
+      /* If the ns doesn't include cpp/, this may not actually be a C++ symbol
+       * the user wanted. We should indicate that it was ambiguous. */
+      if(sym->get_namespace() == "cpp")
+      {
+        return error::analyze_unresolved_symbol(util::format("{}", scope_res.expect_err()),
+                                                object_source(sym),
+                                                latest_expansion(macro_expansions));
+      }
+
+      return error::analyze_unresolved_symbol(
+        util::format("Unable to resolve '{}' as either a jank symbol or C++ symbol.",
+                     sym->to_code_string()),
+        object_source(sym),
+        latest_expansion(macro_expansions));
     }
 
     /* The scope could represent either a type or a value, if it's valid. However, it's
